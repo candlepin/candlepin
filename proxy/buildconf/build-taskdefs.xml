@@ -1,0 +1,44 @@
+<project name="build-taskdefs">
+  <target name="init-ivy" depends="boot-deps" unless="installbuild">
+    <taskdef name="ivy-retrieve"
+             classname="fr.jayasoft.ivy.ant.IvyRetrieve"
+             classpathref="bootjars"/>
+    <taskdef name="ivy-configure"
+             classname="fr.jayasoft.ivy.ant.IvyConfigure"
+             classpathref="bootjars"/>
+    <taskdef name="ivy-resolve"
+             classname="fr.jayasoft.ivy.ant.IvyResolve"
+             classpathref="bootjars"/>
+    <taskdef name="ivy-publish"
+             classname="fr.jayasoft.ivy.ant.IvyPublish"
+             classpathref="bootjars"/>
+  </target>
+
+  <target name="init-taskdefs" depends="link-jars,compile-internal"
+          unless="init-taskdefs.notrequired">
+    <!-- pull in checkstyle's properties defining its tasks -->
+    <taskdef resource="checkstyletask.properties"
+             classpathref="alljars" />
+
+    <!-- =================== Jspc Tasks ======================= -->
+    <taskdef name="jasper2"
+             classname="org.apache.jasper.JspC"
+             classpathref="buildjars"/>
+
+    <!-- =================== Ant Contrib Tasks ======================= -->
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"
+             classpathref="buildjars"/>
+
+    <!-- ant-contrib 1.0 has this commented out :( -->
+    <taskdef name="for"
+             classname="net.sf.antcontrib.logic.For"
+             classpathref="buildjars"/>
+
+    <property name="init-taskdefs.notrequired" value="true" />
+
+    <!-- ======================= EMMA Tasks ========================== -->
+    <taskdef resource="emma_ant.properties" classpathref="testjars" />
+
+  </target>
+  
+</project>

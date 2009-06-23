@@ -1,0 +1,895 @@
+<?xml version="1.0"?>
+
+<!--
+  Spacewalk build file, please indent 2 spaces. NO TABS!
+-->
+<project name="RHN" default="all" basedir=".">
+  <import file="buildconf/build-props.xml" />
+  <import file="buildconf/build-taskdefs.xml" />
+  <import file="buildconf/build-utils.xml" />
+
+  <target name= "build-all" depends="clean, create-webapp-dir, all"/>
+
+  <target name="prepare" depends="init-taskdefs">
+        <mkdir dir="${build.dir}/src"/>
+  </target>
+
+  <target name="boot-deps" unless="installbuild">
+    <mkdir dir="${boot.lib.dir}" />
+    <jpackage-deps jars="${boot.jar.dependencies}" dir="${boot.lib.dir}" />
+  </target>
+
+  <!-- only runs if we are missing a jpackage dir; speeds builds -->
+  <target name="link-jars" depends="test-deps,resolve" if="missing-deps">
+    <mkdir dir="${build.lib.dir}" />
+    <mkdir dir="${run.lib.dir}" />
+    <mkdir dir="${run-external.lib.dir}" />
+    <mkdir dir="${test.lib.dir}" />
+
+    <link-jars ivyxml="${rhn-home}/ivy.xml" libdir="${lib.dir}"
+               jars="${build.jar.dependencies}" dir="${build.lib.dir}" />
+    <link-jars ivyxml="${rhn-home}/ivy.xml" libdir="${lib.dir}"
+               jars="${test.jar.dependencies}" dir="${test.lib.dir}"/>
+    <link-jars ivyxml="${rhn-home}/ivy.xml" libdir="${lib.dir}"
+               jars="${run.jar.dependencies}" dir="${run-external.lib.dir}"/>
+    <!--
+         allows adding jar files for quick testing of tools
+         that do not have RPMs yet.
+     -->
+    <copy toDir="${build.lib.dir}" overwrite="true">
+      <fileset dir="${rhn-home}/buildconf/tempjars">
+          <include name="**/*.jar" />
+          <include name="**/*.properties" />
+      </fileset>
+    </copy>
+    <copy toDir="${run-external.lib.dir}" overwrite="true">
+      <fileset dir="${rhn-home}/buildconf/tempjars">
+          <include name="**/*.jar" />
+          <include name="**/*.properties" />
+      </fileset>
+    </copy>
+    </target>
+
+  <!-- Generates Eclipse classpath   -->
+  <target name="gen-eclipse" depends="link-jars"
+          description = "Generates eclipse .classpath file">
+      <exec executable="${basedir}/scripts/gen-eclipse.py"
+        output="${basedir}/.classpath" >
+        <arg value="${eclipse.lib.dirs}:${rhn-home}/buildconf/tempjars:${env.JAVA_HOME}/lib/tools.jar" />
+        <arg value="${eclipse.libsrc.dirs}" />
+    </exec>
+  </target>
+
+  <target name="missingstrings"
+          description="prints out a report with untranslated strings.">
+    <mkdir dir="${report.dir}" />
+    <exec executable="${basedir}/scripts/missingstrings.sh"
+          output="${report.dir}/missingstrings.txt"
+          dir="${rhn-home}/scripts" />
+  </target>
+
+  <!-- see if any of the jpackage managed dirs are missing -->
+  <target name="test-deps">
+    <condition property="missing-deps">
+      <not>
+        <and>
+          <available file="${build.lib.dir}" type="dir" />
+          <available file="${run.lib.dir}" type="dir" />
+          <available file="${test.lib.dir}" type="dir" />
+        </and>
+      </not>
+    </condition>
+  </target>
+
+  <target name="coverage-report" depends="instrument" if="ccbuild">
+    <!-- This is really stupid, but jcoverage can't deal with having code
+         with different top-level directories, so we copy all code to a
+         single root dir.  :-(  -->
+    <mkdir dir="${build.dir}/src-copy" />
+    <copy toDir="${build.dir}/src-copy">
+      <fileset dir="code/src">
+        <include name="**/*.java" />
+        <exclude name="**/*Task.java" />
+      </fileset>
+    </copy>
+
+    <emma enabled="true">
+      <report sourcepath="${build.dir}/src-copy"
+              sort="+block,+name,+method,+class"
+              metrics="method:70,block:80,line:80,class:100">
+        <infileset dir="${rhn-home}" includes="*.em, *.ec" />
+        <!-- txt outfile="${report.dir}/emma.txt"
+             depth="package"
+             columns="class,method,block,line,name" / -->
+        <html outfile="${report.dir}/emma.html"
+              depth="method"
+              columns="name,class,method,block,line" />
+        <xml outfile="${report.dir}/emma.xml"
+             depth="method"
+             columns="name,class,method,block,line" />
+      </report>
+    </emma>
+
+    <delete dir="${build.dir}/src-copy" />
+  </target>
+
+  <target name="comment-ratio-report">
+    <mkdir dir="${report.dir}" />
+    <exec executable="/bin/sh" dir="${src.dir}"
+          output="${report.dir}/comment-ratio.txt" >
+      <arg value="${rhn-home}/scripts/slocc.sh" />
+      <arg value="-findopt" />
+      <arg value="-name *.java" />
+      <arg value="." />
+    </exec>
+  </target>
+
+  <target name="init"
+          depends="resolve,link-jars,init-taskdefs, set-default-config-dir">
+    <tstamp />
+  </target>
+
+  <target name="all" depends="init,compile,pack"
+          description="Compile and pack - no code generation in this step" />
+
+  <target name="init-cc" depends="set-cc-config-dir,boot-deps,init-ivy">
+    <property name="ccbuild" value="true" />
+  </target>
+
+  <target name="init-install" depends="set-default-config-dir">
+    <property name="installbuild" value="true" />
+  </target>
+
+  <target name="cctarget"
+          depends="init-cc,all,cc-test,test-report,coverage-report,comment-ratio-report,apidoc-jsp,jspcompile,javadoc"
+          description="Target called by cruisecontrol process">
+  </target>
+
+  <target name="cc-test" depends ="set-cc-config-dir, test"/>
+
+  <target name="set-default-config-dir">
+    <property name="rhn.config.dir" value="/etc/rhn" />
+  </target>
+
+  <target name="set-cc-config-dir">
+    <property name="rhn.config.dir"
+              value="${rhn-home}/buildconf/builder/config/satellite" />
+  </target>
+
+  <target name="testdebug">
+    <property name="debug"
+              value="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"/>
+    <antcall target="dotest" />
+  </target>
+
+  <target name="test">
+    <property name="debug" value=""/>
+    <antcall target="dotest"/>
+  </target>
+
+  <target name="dotest"
+          description="Run the tests (use -Dtestsubsystem=&lt;subsystem&gt; or -Dtestcase=&lt;testcase&gt;)"
+          depends="set-default-config-dir,compile-main,init-tests,invoke-tests-testcase,invoke-tests-subsystem,invoke-tests-all" >
+
+    <fail if="junit_test_failure" message="One or more tests failed" />
+  </target>
+
+  <target name="run" description="runs a class with a main method" depends="compile">
+    <java fork="true"
+          classname="${classname}"
+          failonerror="true" >
+          <classpath>
+            <pathelement path="${build.dir}/classes" />
+            <path refid="alljars"/>
+          </classpath>
+    </java>
+  </target>
+
+  <target name="test-report" depends="init-tests"
+          description="Pretty-print the results of a previous test run.">
+    <junitreport todir="${testresults.dir}">
+      <fileset dir="${testresults.dir}">
+        <include name="TEST-*.xml"/>
+        <exclude name="${testresults.exclude}"/>
+      </fileset>
+      <report format="frames" todir="${report.dir}/test-report"/>
+    </junitreport>
+  </target>
+
+  <target name="create-local-repo" description="Create a local Ivy repo">
+     <mkdir dir="${user.home}/.ivy/rhn/local/" />
+  </target>
+
+  <target name="clean-cache" description="Removes the Ivy jar cache">
+     <delete dir="${lib.dir}" quiet="true" />
+     <delete dir="${user.home}/.ivy/rhn/cache/" quiet="true" />
+  </target>
+
+  <target name="clean" description="Remove all build artifacts">
+    <delete dir="${build.dir}" quiet="true"/>
+    <delete>
+      <fileset dir="${rhn-home}" includes="junit*.properties" />
+    </delete>
+    <delete>
+      <fileset defaultexcludes="no" dir="${rhn-home}">
+        <include name="**/*~" />
+        <include name="velocity.log*" />
+        <include name="coverage.ec" />
+        <include name="coverage.em" />
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="apidoc-singlepage" description="Generate the api for jsps" depends="init">
+    <property name="doclet.class" value="SinglePageDoclet" />
+    <property name="template.dir" value="singlepage" />
+    <antcall target="apidoc" />
+  </target>
+
+  <target name="apidoc-jsp" description="Generate the api for jsps" depends="init">
+    <property name="doclet.class" value="JSPDoclet" />
+    <property name="template.dir" value="jsp" />
+    <antcall target="apidoc" />
+  </target>
+
+  <target name="apidoc-list" description="Generate the api for jsps" depends="init">
+    <property name="doclet.class" value="ListDoclet" />
+    <property name="template.dir" value="list" />
+    <antcall target="apidoc" />
+  </target>
+
+  <target name="apidoc-html" description="Generate the api for jsps" depends="init">
+    <property name="doclet.class" value="HtmlDoclet" />
+    <property name="template.dir" value="html" />
+    <antcall target="apidoc" />
+  </target>
+
+  <target name="apidoc" description="Generate the api documentation" depends="init">
+    <path id="javadocpath">
+    <path refid="buildjars" />
+      <pathelement location="build/classes" />
+    </path>
+
+    <mkdir dir="${report.dir}/apidocs" />
+    <mkdir dir="${report.dir}/apidocs/${template.dir}/" />
+    <mkdir dir="${report.dir}/apidocs/${template.dir}/handlers/" />
+    <javadoc doclet="com.redhat.rhn.internal.doclet.${doclet.class}" docletpathref="javadocpath" classpathref="buildjars" sourcepath="code/src" additionalparam="-quiet">
+      <fileset dir="code" >
+        <include name="**/src/com/redhat/rhn/frontend/xmlrpc/**/*Handler.java" />
+        <include name="**/src/com/redhat/rhn/frontend/xmlrpc/serializer/*Serializer.java" />
+        <include name="**/src/com/redhat/rhn/domain/config/xmlrpc/serializer/*Serializer.java" />
+      </fileset>
+      <excludepackage name="**/*" />
+    </javadoc>
+
+  </target>
+
+  <target name="enforce" description="Check actions" depends="init">
+    <path id="javadocpath">
+      <path refid="buildjars" />
+      <pathelement location="build/classes" />
+    </path>
+
+    <javadoc doclet="com.redhat.rhn.internal.doclet.EnforcementDoclet" docletpathref="javadocpath" classpathref="buildjars" sourcepath="code/src" access="private" additionalparam="-quiet">
+      <fileset dir="code" >
+        <include  name="**/src/com/redhat/rhn/frontend/action/**/*.java" />
+      </fileset>
+      <excludepackage name="**/*" />
+    </javadoc>
+  </target>
+
+  <target name="javadoc" description="Generate the java-doc" depends="init">
+    <javadoc destdir="${report.dir}/javadoc" author="true" version="true"
+             use="true" failonerror="true" classpathref="buildjars"
+             stylesheetfile="${src.dir}/webapp/css/rhnjavadoc.css"
+             breakiterator="yes" useexternalfile="true" maxmemory="128m" >
+      <tag name="todo" scope="all" description="To do:" />
+      <tag name="xmlrpc.param" scope="methods" enabled="false"/>
+      <tag name="xmlrpc.returntype" scope="methods" enabled="false"/>
+      <tag name="xmlrpc.namespace" scope="types" enabled="false"/>
+      <tag name="xmlrpc.doc" scope="all" enabled="false"/>
+      <tag name="xmlrpc.serializer" scope="methods" enabled="false"/>
+      <fileset dir="code" >
+        <include name="**/src/**/*.java" />
+        <exclude name="**/test/**" />
+        <exclude name="**/testing/*TestUtils.java" />
+        <exclude name="**/testing/*Test.java" />
+        <exclude name="**/internal/**" />
+        <exclude name="**/playpen/**" />
+      </fileset>
+      <fileset dir="${build.dir}/src" >
+        <include name="**/*.java" />
+      </fileset>
+    </javadoc>
+    <echo message="javadoc finished."/>
+    <copy file="${src.dir}/webapp/img/inherit.gif"
+          tofile="${report.dir}/javadoc/resources/inherit.gif"
+          overwrite="yes" />
+  </target>
+
+  <target name="javadoc-deploy" description="Locally deploy javadocs"
+          depends="javadoc">
+    <delete quiet="true">
+      <fileset dir="${javadoc.deploydir}"
+               includes="**/*.html"
+               followsymlinks="false"/>
+    </delete>
+    <copy todir="${javadoc.deploydir}">
+      <fileset dir="${report.dir}/javadoc"
+               includes="**/*.html" />
+    </copy>
+  </target>
+
+  <!-- We may want to break this down so that we can specify directories or
+       classes to operate on.  But, hopefully our checkstyle report will
+       generally be clean, so we may be able to always check all classes. -->
+  <target name="checkstyle" depends="init">
+    <mkdir dir="${report.dir}" />
+    <checkstyle config="buildconf/checkstyle.xml" failOnViolation="true" >
+      <property key="javadoc.method.scope" value="public" />
+      <property key="javadoc.type.scope" value="package" />
+      <property key="javadoc.var.scope" value="package" />
+      <property key="javadoc.lazy" value="${javadoc.lazy}" />
+      <property key="checkstyle.cache.file" value="${checkstyle.cache.src}" />
+      <fileset dir="code" >
+        <include name="**/src/**/*.java" />
+        <exclude name="**/test/*.java" />
+        <exclude name="**/playpen/*.java" />
+      </fileset>
+      <classpath>
+          <path refid="buildjars" />
+          <pathelement path="${build.dir}/classes" />
+      </classpath>
+      <formatter type="plain" />
+      <formatter type="xml" toFile="${report.dir}/checkstyle_report.xml" />
+    </checkstyle>
+    <checkstyle config="buildconf/checkstyle.xml" failOnViolation="true" >
+      <property key="javadoc.method.scope" value="nothing" />
+      <property key="javadoc.type.scope" value="nothing" />
+      <property key="javadoc.var.scope" value="nothing" />
+      <property key="javadoc.lazy" value="true" />
+      <property key="checkstyle.cache.file" value="${checkstyle.cache.test}" />
+      <fileset dir="code" >
+        <include name="**/test/*.java" />
+        <exclude name="**/playpen/*.java" />
+      </fileset>
+      <formatter type="plain" />
+      <formatter type="xml" toFile="${report.dir}/checkstyle_report_test.xml" />
+    </checkstyle>
+    <antcall target="enforce" />
+  </target>
+
+  <target name="init-pack">
+    <mkdir dir="${build.dir}/webapp" />
+  </target>
+
+  <target name="pack" depends="init,init-pack,pack-megajar,pack-webapp"
+          description="Create jars and copy descriptors" />
+
+  <target name="pack-all"
+          depends="init,init-pack,pack-megajar,pack-playpen,pack-webapp"
+          description="Create jars and copy descriptors" />
+
+  <target name="instrument" depends="init-taskdefs" if="ccbuild">
+    <emma enabled="true">
+      <instr outdir="${build.instrument.dir}" merge="no"
+          instrpath="${build.dir}/classes" mode="fullcopy"
+          outfile="${rhn-home}/coverage.em" >
+        <filter excludes="*.internal.*" />
+        <filter excludes="*.scripts.*" />
+        <filter excludes="*Mock*" />
+        <filter excludes="*Constants" />
+        <filter excludes="*Exception" />
+        <filter excludes="*.test.*" />
+        <filter excludes="com.redhat.common.*" />
+        <filter excludes="com.redhat.services.*" />
+        <filter excludes="com.redhat.rhn.testing.*" />
+      </instr>
+    </emma>
+
+    <copy toDir="${build.instrument.dir}/classes">
+      <fileset dir="${build.dir}/classes">
+        <include name="**/*.xml" />
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- Anything below this line should not generally be run from the command
+       line.  These are the tasks that actually implement the public tasks -->
+
+  <!-- ============== Compile tasks ================== -->
+  <target name="compile" depends="init, compile-main, compile-notests"
+          description="Compile source" />
+
+  <target name="compile-playpen" depends="init,compile-main"
+          description="Compile playpen source">
+    <mkdir dir="${build.dir}/playpen/classes" />
+    <javac destdir="${build.dir}/playpen/classes"
+           optimize="off"
+           debug="on"
+           source="1.5"
+           target="1.5"
+           nowarn="on">
+      <classpath>
+          <path refid="buildjars" />
+          <pathelement path="${build.dir}/classes" />
+      </classpath>
+      <src>
+        <path location="code/playpen/src" />
+      </src>
+      <exclude name="**/test/*.java" />
+    </javac>
+    <copy toDir="${build.dir}/playpen/classes">
+      <fileset dir="${src.dir}/playpen/src">
+        <exclude name="**/*.java" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="compile-internal" depends="link-jars"
+          description="Compile build helpers">
+    <mkdir dir="${build.dir}/classes" />
+    <javac destdir="${build.dir}/classes"
+           optimize="off"
+           debug="on"
+           deprecation="${deprecation}"
+           nowarn="${nowarn}"
+           srcdir="code/internal/src"
+           source="1.5"
+           target="1.5"
+           classpathref="buildjars" >
+    </javac>
+  </target>
+
+  <target name="compile-main" depends="do-compile-main, setup-log4j"/>
+
+  <target name="do-compile-main" depends="link-jars,prepare"
+          description="Compile the main codebase" unless="installbuild">
+    <mkdir dir="${build.dir}/classes" />
+    <javac destdir="${build.dir}/classes"
+           optimize="off"
+           debug="on"
+           source="1.5"
+           target="1.5"
+           deprecation="${deprecation}"
+           nowarn="${nowarn}"
+           encoding="utf-8"
+           fork="yes"
+           memoryMaximumSize="256m"
+           classpathref="buildjars" >
+      <src>
+        <path location="${build.dir}/src" />
+        <path location="code/src" />
+        <path location="code/scripts/src" />
+      </src>
+    </javac>
+
+    <copy toDir="${build.dir}/classes">
+      <fileset dir="${src.dir}/src">
+        <exclude name="**/*.java" />
+        <exclude name="**/package.html" />
+         <exclude name="**/log4j.properties" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name ="setup-log4j" >
+    <property name="dest.log4j" location = "${build.dir}/classes/log4j.properties"/>
+    <if>
+      <available file="${custom.log4j}"/>
+      <then>
+        <copy tofile="${dest.log4j}" file="${custom.log4j}"/>
+      </then>
+      <else>
+        <copy tofile="${dest.log4j}" file="${src.dir}/src/log4j.properties"/>
+      </else>
+    </if>
+  </target>
+
+  <target name="compile-notests" depends="link-jars,prepare"
+          description="compiles the main codebase without testcases"
+          if="installbuild">
+    <mkdir dir="${build.dir}/classes" />
+    <javac destdir="${build.dir}/classes"
+           optimize="off"
+           debug="on"
+           source="1.5"
+           target="1.5"
+           deprecation="${deprecation}"
+           nowarn="${nowarn}"
+           encoding="utf-8"
+           fork="yes"
+           memoryMaximumSize="256m"
+           classpathref="alljars" >
+      <src>
+        <path location="${build.dir}/src" />
+        <path location="code/src" />
+        <path location="code/scripts/src" />
+      </src>
+      <exclude name="**/test/**" />
+      <exclude name="**/*/testing/**" />
+    </javac>
+
+    <copy toDir="${build.dir}/classes">
+      <fileset dir="${src.dir}/src">
+        <exclude name="**/*.java" />
+        <exclude name="**/package.html" />
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- =================== Testing ======================= -->
+  <target name="setup-tests-cc" if="ccbuild">
+    <property name="test.bin.dir" value="${build.instrument.dir}/classes" />
+  </target>
+
+  <target name="setup-tests" unless="ccbuild">
+    <property name="test.bin.dir" value="${build.dir}/classes" />
+  </target>
+
+  <target name="init-tests" depends="instrument,setup-tests-cc,setup-tests">
+    <property name="testresults.dir" value="${report.dir}/tests" />
+
+    <path id="tests.buildpath" >
+      <path location="${build.dir}/classes" />
+      <path refid="alljars" />
+    </path>
+
+    <path id="tests.runpath" >
+      <path location="${test.bin.dir}" />
+      <path refid="testjars" />
+      <path refid="alljars" />
+      <path location="${src.dir}/webapp/" />
+    </path>
+
+    <mkdir dir="${testresults.dir}" />
+  </target>
+
+  <target name="check-testcase-name" if="testcase">
+    <propertyregex property="valid.testcase"
+                   input="${testcase}"
+                   regexp="(.*)Test$"
+                   select="\1"
+                   casesensitive="true" />
+  </target>
+
+  <target name="check-testcase" depends="check-testcase-name" if="testcase"
+      unless="valid.testcase">
+    <fail message="Invalid testcase name: ${testcase}. Class name must look like .*Test"/>
+  </target>
+
+  <!-- ================= Invoke tests ==================== -->
+  <target name="invoke-tests-testcase" depends="check-testcase" if="testcase">
+    <property name="testcaseorsubsystem" value="true" />
+    <run-junit include="**/test/${testcase}.class" banner="${testcase}"
+        testbuilddir="${build.dir}/classes"
+        classpathid="tests.runpath" reportdir="${testresults.dir}"
+        debug="${debug}"/>
+  </target>
+
+  <target name="invoke-tests-subsystem" if="testsubsystem">
+    <property name="testcaseorsubsystem" value="true" />
+    <run-junit include="**/${testsubsystem}/**/test/*Test.class"
+                banner="all tests in ${testsubsystem} subsystem"
+                testbuilddir="${build.dir}/classes"
+                classpathid="tests.runpath" reportdir="${testresults.dir}"
+                debug="${debug}" />
+  </target>
+
+  <target name="invoke-tests-all" unless="testcaseorsubsystem">
+    <antcall target="checkstyle" />
+    <run-junit include="**/test/*Test.class"
+               banner="all tests"
+               testbuilddir="${build.dir}/classes"
+               exclude="**/AuthenticationServiceTest.class"
+               classpathid="tests.runpath"
+               reportdir="${testresults.dir}"/>
+  </target>
+
+  <target name="unwar-webapp" depends="pack" >
+    <unjar src="${rhn.war}"
+           dest="${build.dir}/webapp/rhnjava" />
+  </target>
+
+  <target name="jspcompile" depends="pack,unwar-webapp"
+          description="precompile jsp's">
+    <mkdir dir="${build.dir}/jsp-temp" />
+    <mkdir dir="${build.dir}/webapp/rhnjava/WEB-INF/classes" />
+    <jasper2
+        validateXml="false"
+        verbose="2"
+        uriroot="${build.dir}/webapp/rhnjava"
+        webXmlFragment="${build.dir}/webapp/generated_web.xml"
+        outputDir="${build.dir}/jsp-temp" />
+    <javac destdir="${build.dir}/webapp/rhnjava/WEB-INF/classes"
+           debug="off" optimize="on"
+           source="1.5"
+           target="1.5"
+           deprecation="${deprecation}"
+           fork="yes"
+           memoryMaximumSize="256m"
+           classpathref="alljars">
+       <src path="${build.dir}/jsp-temp"/>
+    </javac>
+    <loadfile property="jspc.web.fragment"
+              srcfile="${build.dir}/webapp/generated_web.xml" />
+    <replace file="${build.dir}/webapp/rhnjava/WEB-INF/web.xml">
+      <replacefilter token="&lt;!-- add precompiled jsp servlets --&gt;"
+              value="${jspc.web.fragment}"/>
+    </replace>
+    <delete file="${rhn.war}"/>
+    <jar basedir="${build.dir}/webapp/rhnjava"
+         destfile="${rhn.war}"
+         excludes="**/*.java"/>
+  </target>
+
+  <!-- =================== Packaging Tasks ======================= -->
+  <target name="megajar-init">
+    <mkdir dir="${run.lib.dir}" />
+  </target>
+
+  <target name="pack-megajar" depends="megajar-init, compile">
+    <delete file="${megajar.jar}" />
+    <jar destfile="${megajar.jar}">
+      <fileset dir="${build.dir}/classes">
+        <!-- internal is not for publication; tlds go in META-INF;
+             html go as javadoc elsewhere -->
+        <exclude name="**/internal/**" />
+        <exclude name="**/*.tld" />
+        <exclude name="**/*.html" />
+        <exclude name="**/test/*" />
+        <exclude name="**/log4j.properties" />
+        <exclude name="**/*.conf" />
+        <exclude name="**/*.conf.rpmsave" />
+        <exclude name="**/test/validation/userCreateForm.xsd" />
+      </fileset>
+      <!-- ugh, we can't flatten this like we would with a <copy> tag
+           or use a mapper, alas -->
+      <metainf dir="${build.dir}/classes/com/redhat/rhn/frontend/taglibs">
+        <include name="*.tld" />
+      </metainf>
+    </jar>
+  </target>
+
+  <target name="pack-playpen" depends="compile-playpen" />
+
+  <target name="pack-webapp" depends="compile">
+    <war destfile="${rhn.war}" webxml="${src.dir}/webapp/WEB-INF/web.xml">
+      <fileset dir="${src.dir}/webapp">
+        <exclude name="WEB-INF/web.xml"/>
+        <exclude name="help/**" unless="includehelp"/>
+      </fileset>
+      <classes dir="${build.dir}/classes">
+        <include name="log4j.properties" />
+      </classes>
+      <lib dir="${run.lib.dir}">
+        <include name="rhn.jar"/>
+      </lib>
+      <lib dir="${run-external.lib.dir}">
+        <!-- Don't want the Oracle drivers which use JNI in the war. -->
+        <exclude name="**/ojdbc*" />
+        <exclude name="**/oracle-jdbc*" />
+        <exclude name="**/servlet*" />
+      </lib>
+    </war>
+  </target>
+
+  <target name="gen-explain-plan" depends="compile-internal,init-taskdefs"
+          description="Generate explain plans for the DataSource queries.">
+    <mkdir dir="${report.dir}/explainplan" />
+    <java fork="true"
+          classname="com.redhat.rhn.scripts.ExplainPlanGenerator"
+          failonerror="true" >
+          <env key="ORACLE_HOME" value="/opt/oracle" />
+          <env key="LD_LIBRARY_PATH" value="/opt/oracle/lib" />
+          <classpath>
+              <pathelement path="${build.dir}/classes" />
+              <path refid="alljars"/>
+          </classpath>
+          <arg value="${rhn.checkout.dir}" />
+          <arg value="${report.dir}/explainplan/explain.txt" />
+    </java>
+  </target>
+
+  <target name="init-playpen-tests" depends="init">
+    <property name="playpen.build.dir" value="${build.dir}/playpen" />
+    <property name="playpen.testclasses.dir" value="${playpen.build.dir}/classes" />
+    <property name="playpen.testresults.dir" value="${report.dir}/playpen/tests" />
+
+    <path id="playpen.tests.buildpath" >
+      <path location="${playpen.build.dir}/classes" />
+      <path refid="alljars" />
+      <path location="${playpen.testclasses.dir}" />
+    </path>
+
+    <path id="playpen.tests.runpath" >
+      <path location="${playpen.build.dir}/classes" />
+      <path location="${playpen.testclasses.dir}" />
+      <path location="${build.dir}/classes" />
+      <path refid="testjars" />
+      <path refid="alljars" />
+    </path>
+
+    <mkdir dir="${playpen.testclasses.dir}" />
+    <mkdir dir="${playpen.testresults.dir}" />
+  </target>
+
+  <target name="compile-playpen-tests" depends="init-playpen-tests,compile-playpen"
+          description="Compile playpen tests">
+    <javac destdir="${playpen.testclasses.dir}"
+           optimize="off"
+           debug="on"
+           nowarn="on"
+           source="1.5"
+           target="1.5"
+           classpathref="playpen.tests.buildpath" >
+      <src>
+        <path location="code/playpen/src" />
+      </src>
+      <include name="**/test/*.java" />
+    </javac>
+    <copy toDir="${playpen.testclasses.dir}">
+      <fileset dir="${src.dir}/playpen/src">
+        <exclude name="**/*.java" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="test-playpen"
+          description="Run the tests (use -Dtestsubsystem=&lt;subsystem&gt; or -Dtestcase=&lt;testcase&gt;)"
+          depends="compile-playpen,compile-playpen-tests,init-playpen-tests,invoke-playpen-testcase,invoke-playpen-subsystem,invoke-playpen-all" >
+    <fail if="junit_test_failure" message="One or more tests failed" />
+  </target>
+
+  <!-- ================= Invoke tests ==================== -->
+  <target name="invoke-playpen-testcase" depends="check-testcase" if="testcase">
+    <property name="testcaseorsubsystem" value="true" />
+    <run-junit include="**/test/${testcase}.class" banner="${testcase}"
+       testbuilddir="${build.dir}/playpen/classes"
+       classpathid="playpen.tests.runpath" reportdir="${playpen.testresults.dir}"/>
+  </target>
+
+  <target name="invoke-playpen-subsystem" if="testsubsystem">
+    <property name="testcaseorsubsystem" value="true" />
+    <run-junit include="**/${testsubsystem}/**/test/*Test.class" banner="all tests in ${testsubsystem} subsystem"
+       testbuilddir="${build.dir}/playpen/classes"
+       classpathid="playpen.tests.runpath" reportdir="${playpen.testresults.dir}"/>
+  </target>
+
+  <target name="invoke-playpen-all" unless="testcaseorsubsystem" >
+    <run-junit include="**/test/*Test.class" banner="all tests"
+       testbuilddir="${build.dir}/playpen/classes"
+       classpathid="playpen.tests.runpath" reportdir="${playpen.testresults.dir}"/>
+  </target>
+
+  <target name="install"
+          depends="init-install,init,compile-notests,pack,apidoc-jsp,jspcompile"
+          description="Install the webapp to the directory specified by $prefix">
+    <delete dir="${prefix}/var/lib/tomcat5/webapps/rhn" />
+    <delete dir="${prefix}/usr/share/rhn/lib" />
+    <mkdir dir="${prefix}/var/lib/tomcat5/webapps/rhn" />
+    <mkdir dir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc" />
+    <mkdir dir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc/handlers" />
+    <mkdir dir="${prefix}/usr/share/rhn/lib" />
+    <unjar src="${rhn.war}" dest="${prefix}/var/lib/tomcat5/webapps/rhn" />
+
+    <!--
+     - copy the apidocs to the right place
+     -->
+    <copy file="${build.dir}/reports/apidocs/jsp/index.jsp"
+          toDir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc"
+          overwrite="true" />
+
+    <copy file="${build.dir}/reports/apidocs/jsp/faqs.jsp"
+          toDir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc"
+          overwrite="true" />
+
+    <copy file="${build.dir}/reports/apidocs/jsp/scripts.jsp"
+          toDir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc"
+          overwrite="true" />
+
+    <copy toDir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc/handlers/">
+        <fileset dir="${report.dir}/apidocs/jsp/handlers/" />
+    </copy>
+
+    <!--
+     - copy the jar that contains our code to /usr/share/rhn/lib to be shared
+     - with taskomatic and the webapp.
+     -->
+    <copy file="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib/rhn.jar"
+          toDir="${prefix}/usr/share/rhn/lib"
+          overwrite="true"  />
+
+    <!--
+     - Delete ALL of the jars, including rhn.jar, from the webapp so that
+     - they can be replaced with symlinks.
+     -->
+    <delete>
+      <fileset dir="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib" >
+        <include name="*.jar" />
+      </fileset>
+    </delete>
+
+    <!-- create symlinks for everything -->
+    <jpackage-deps jars="${dist.jar.dependencies}"
+        dir="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib"/>
+    <symlink link="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib/rhn.jar"
+             resource="/usr/share/rhn/lib/rhn.jar"
+             failonerror="false"
+             overwrite="true" />
+
+    <copy toDir="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib" overwrite="true">
+      <fileset dir="${rhn-home}/buildconf/tempjars">
+        <include name="**/*.jar" />
+      </fileset>
+    </copy>
+
+    <!--
+     - delete the symlinks for the jars that break the webapp.  Basically
+     - these are the oracle jars and the servlet jar.
+     -->
+    <delete>
+      <fileset dir="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib">
+        <include name="**/ojdbc*" />
+        <include name="**/oracle-jdbc*" />
+        <include name="**/servlet*" />
+        <include name="**/logdriver*" />
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="make-eclipse-project" depends = "gen-eclipse"
+          description="Configures this checkout as an eclipse project.">
+    <copy toDir="${rhn-home}" overwrite="false">
+      <fileset dir="${rhn-home}/conf/eclipse/">
+        <include name=".project" />
+        <include name=".externalToolBuilders/*" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="wtf"
+          description="Use this target to help you diagnose development problems.">
+      <echo message="Hi, this task helps you get out your frustration when" />
+      <echo message="writing code.  Please feel free to bop your cubemate" />
+      <echo message="in the head for some comic relief." />
+  </target>
+
+  <target name="resolve" depends="resolve-ivy,resolve-local" />
+
+  <target name="resolve-local" if="installbuild">
+    <mkdir dir="${build.lib.dir}" />
+    <mkdir dir="${test.lib.dir}" />
+    <mkdir dir="${run-external.lib.dir}" />
+    <jpackage-deps jars="${install.build.jar.dependencies}"
+                   dir="${build.lib.dir}" />
+    <jpackage-deps jars="${install.run.jar.dependencies}"
+                   dir="${run-external.lib.dir}"/>
+    <copy toDir="${build.lib.dir}" overwrite="true">
+      <fileset dir="${rhn-home}/buildconf/tempjars">
+          <include name="**/*.jar" />
+          <include name="**/*.properties" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="resolve-ivy" description="retrieve dependencies with ivy"
+          depends="boot-deps,init-ivy" unless="installbuild">
+
+    <!-- properties set here to show we are overriding default ivy values -->
+
+    <!-- local directory -->
+    <property name="ivy.default.ivy.user.dir" value="${user.home}/.ivy/rhn"/>
+    <property name="ivy.local.default.artifact.pattern"
+              value="[artifact]-[revision].[ext]" />
+    <!-- public directory -->
+    <property name="ivy.ivyrep.default.ivy.root" value="${ivyserver}/ivy/" />
+    <property name="ivy.ivyrep.default.artifact.root"
+              value="${ivyserver}/ivy/" />
+    <property name="ivy.ivyrep.default.artifact.pattern"
+              value="[artifact]-[revision].[ext]" />
+
+    <ivy-retrieve/>
+  </target>
+
+</project>
