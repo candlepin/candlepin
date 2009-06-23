@@ -20,11 +20,6 @@
     <taskdef resource="checkstyletask.properties"
              classpathref="alljars" />
 
-    <!-- =================== Jspc Tasks ======================= -->
-    <taskdef name="jasper2"
-             classname="org.apache.jasper.JspC"
-             classpathref="buildjars"/>
-
     <!-- =================== Ant Contrib Tasks ======================= -->
     <taskdef resource="net/sf/antcontrib/antcontrib.properties"
              classpathref="buildjars"/>
