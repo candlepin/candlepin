@@ -4,10 +4,43 @@
   Spacewalk build file, please indent 2 spaces. NO TABS!
 -->
 <project name="candlepin" default="all" basedir=".">
-  <import file="buildconf/build-props.xml" />
+
+  <!-- setup properties -->
+  <property environment="env" />
+  <property file="${user.home}/.candlepin.properties" />
+  <property file="buildconf/build.properties" />
+
+  <path id="bootjars">
+    <fileset dir="${boot.lib.dir}" includes="*.jar" />
+  </path>
+  
+  <path id="testjars">
+    <fileset dir="${test.lib.dir}" includes="*.jar" />
+  </path>
+  
+  <path id="runjars">
+    <fileset dir="${run.lib.dir}" includes="**/*.jar" />
+  </path>
+  
+  <path id="buildjars">
+    <path refid="testjars" />
+      <fileset dir="${build.lib.dir}">
+        <include name="*.jar" />
+        <include name="log4j.properties" />
+        <include name="${build.dir}/classes/" />
+      </fileset>
+    </path>
+  
+    <path id="alljars">
+    <path refid="buildjars" />
+    <path refid="runjars" />
+  </path>
+
+  <!-- setup macros -->
   <import file="buildconf/build-taskdefs.xml" />
   <import file="buildconf/build-utils.xml" />
 
+  <!-- define tasks -->
   <target name="prepare" depends="init-taskdefs">
         <mkdir dir="${build.dir}/src"/>
   </target>
@@ -34,13 +67,13 @@
          allows adding jar files for quick testing of tools
          that do not have RPMs yet.
      -->
-    <copy toDir="${build.lib.dir}" overwrite="true">
+    <copy toDir="${build.lib.dir}" overwrite="true" failonerror="false">
       <fileset dir="${candlepin-home}/buildconf/tempjars">
           <include name="**/*.jar" />
           <include name="**/*.properties" />
       </fileset>
     </copy>
-    <copy toDir="${run-external.lib.dir}" overwrite="true">
+    <copy toDir="${run-external.lib.dir}" overwrite="true" failonerror="false">
       <fileset dir="${candlepin-home}/buildconf/tempjars">
           <include name="**/*.jar" />
           <include name="**/*.properties" />
@@ -315,11 +348,7 @@
     <mkdir dir="${build.dir}/webapp" />
   </target>
 
-  <target name="pack" depends="init,init-pack,pack-megajar,pack-webapp"
-          description="Create jars and copy descriptors" />
-
-  <target name="pack-all"
-          depends="init,init-pack,pack-megajar,pack-webapp"
+  <target name="pack" depends="init,init-pack,pack-megajar"
           description="Create jars and copy descriptors" />
 
   <target name="instrument" depends="init-taskdefs" if="ccbuild">
@@ -370,7 +399,6 @@
       <src>
         <path location="${build.dir}/src" />
         <path location="code/src" />
-        <path location="code/scripts/src" />
       </src>
     </javac>
 
@@ -478,9 +506,9 @@
       </fileset>
       <!-- ugh, we can't flatten this like we would with a <copy> tag
            or use a mapper, alas -->
-      <metainf dir="${build.dir}/classes/com/redhat/rhn/frontend/taglibs">
+      <!-- metainf dir="${build.dir}/classes/com/redhat/rhn/frontend/taglibs">
         <include name="*.tld" />
-      </metainf>
+      </metainf -->
     </jar>
   </target>
 
@@ -503,83 +531,6 @@
         <exclude name="**/servlet*" />
       </lib>
     </war>
-  </target>
-
-  <!-- ================= Invoke tests ==================== -->
-  <target name="install"
-          depends="init-install,init,compile-main,pack,apidoc-jsp"
-          description="Install the webapp to the directory specified by $prefix">
-    <delete dir="${prefix}/var/lib/tomcat5/webapps/rhn" />
-    <delete dir="${prefix}/usr/share/rhn/lib" />
-    <mkdir dir="${prefix}/var/lib/tomcat5/webapps/rhn" />
-    <mkdir dir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc" />
-    <mkdir dir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc/handlers" />
-    <mkdir dir="${prefix}/usr/share/rhn/lib" />
-    <unjar src="${rhn.war}" dest="${prefix}/var/lib/tomcat5/webapps/rhn" />
-
-    <!--
-     - copy the apidocs to the right place
-     -->
-    <copy file="${build.dir}/reports/apidocs/jsp/index.jsp"
-          toDir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc"
-          overwrite="true" />
-
-    <copy file="${build.dir}/reports/apidocs/jsp/faqs.jsp"
-          toDir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc"
-          overwrite="true" />
-
-    <copy file="${build.dir}/reports/apidocs/jsp/scripts.jsp"
-          toDir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc"
-          overwrite="true" />
-
-    <copy toDir="${prefix}/var/lib/tomcat5/webapps/rhn/apidoc/handlers/">
-        <fileset dir="${report.dir}/apidocs/jsp/handlers/" />
-    </copy>
-
-    <!--
-     - copy the jar that contains our code to /usr/share/rhn/lib to be shared
-     - with taskomatic and the webapp.
-     -->
-    <copy file="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib/rhn.jar"
-          toDir="${prefix}/usr/share/rhn/lib"
-          overwrite="true"  />
-
-    <!--
-     - Delete ALL of the jars, including rhn.jar, from the webapp so that
-     - they can be replaced with symlinks.
-     -->
-    <delete>
-      <fileset dir="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib" >
-        <include name="*.jar" />
-      </fileset>
-    </delete>
-
-    <!-- create symlinks for everything -->
-    <jpackage-deps jars="${dist.jar.dependencies}"
-        dir="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib"/>
-    <symlink link="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib/rhn.jar"
-             resource="/usr/share/rhn/lib/rhn.jar"
-             failonerror="false"
-             overwrite="true" />
-
-    <copy toDir="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib" overwrite="true">
-      <fileset dir="${candlepin-home}/buildconf/tempjars">
-        <include name="**/*.jar" />
-      </fileset>
-    </copy>
-
-    <!--
-     - delete the symlinks for the jars that break the webapp.  Basically
-     - these are the oracle jars and the servlet jar.
-     -->
-    <delete>
-      <fileset dir="${prefix}/var/lib/tomcat5/webapps/rhn/WEB-INF/lib">
-        <include name="**/ojdbc*" />
-        <include name="**/oracle-jdbc*" />
-        <include name="**/servlet*" />
-        <include name="**/logdriver*" />
-      </fileset>
-    </delete>
   </target>
 
   <!-- ================== resolver ===================== -->
