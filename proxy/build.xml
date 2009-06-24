@@ -480,8 +480,8 @@
   </target>
 
   <target name="unwar-webapp" depends="pack" >
-    <unjar src="${rhn.war}"
-           dest="${build.dir}/webapp/rhnjava" />
+    <unjar src="${candlepin.war}"
+           dest="${build.dir}/webapp/candlepin" />
   </target>
 
   <!-- =================== Packaging Tasks ======================= -->
@@ -513,7 +513,7 @@
   </target>
 
   <target name="pack-webapp" depends="compile">
-    <war destfile="${rhn.war}" webxml="${src.dir}/webapp/WEB-INF/web.xml">
+    <war destfile="${candlepin.war}" webxml="${src.dir}/webapp/WEB-INF/web.xml">
       <fileset dir="${src.dir}/webapp">
         <exclude name="WEB-INF/web.xml"/>
         <exclude name="help/**" unless="includehelp"/>
@@ -522,7 +522,7 @@
         <include name="log4j.properties" />
       </classes>
       <lib dir="${run.lib.dir}">
-        <include name="rhn.jar"/>
+        <include name="candlepin.jar"/>
       </lib>
       <lib dir="${run-external.lib.dir}">
         <!-- Don't want the Oracle drivers which use JNI in the war. -->
@@ -558,7 +558,7 @@
     <!-- properties set here to show we are overriding default ivy values -->
 
     <!-- local directory -->
-    <property name="ivy.default.ivy.user.dir" value="${user.home}/.ivy/rhn"/>
+    <property name="ivy.default.ivy.user.dir" value="${user.home}/.ivy/candlepin"/>
     <property name="ivy.local.default.artifact.pattern"
               value="[artifact]-[revision].[ext]" />
     <!-- public directory -->
