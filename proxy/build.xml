@@ -24,14 +24,14 @@
   
   <path id="buildjars">
     <path refid="testjars" />
-      <fileset dir="${build.lib.dir}">
-        <include name="*.jar" />
-        <include name="log4j.properties" />
-        <include name="${build.dir}/classes/" />
-      </fileset>
-    </path>
-  
-    <path id="alljars">
+    <fileset dir="${build.lib.dir}">
+      <include name="*.jar" />
+      <include name="log4j.properties" />
+      <include name="${build.dir}/classes/" />
+    </fileset>
+  </path>
+
+  <path id="alljars">
     <path refid="buildjars" />
     <path refid="runjars" />
   </path>
@@ -199,12 +199,12 @@
   </target>
 
   <target name="create-local-repo" description="Create a local Ivy repo">
-     <mkdir dir="${user.home}/.ivy/rhn/local/" />
+     <mkdir dir="${user.home}/.ivy/candlepin/local/" />
   </target>
 
   <target name="clean-cache" description="Removes the Ivy jar cache">
      <delete dir="${lib.dir}" quiet="true" />
-     <delete dir="${user.home}/.ivy/rhn/cache/" quiet="true" />
+     <delete dir="${user.home}/.ivy/candlepin/cache/" quiet="true" />
   </target>
 
   <target name="clean" description="Remove all build artifacts">
