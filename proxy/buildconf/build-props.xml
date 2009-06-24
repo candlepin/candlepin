@@ -1,13 +1,13 @@
 <project name="build-props">
-  <property name="rhn-home" location="." />
+  <property name="candlepin-home" location="." />
 
   <property environment="env" />
   
   <property file="${user.home}/.rhn.properties" />
   <property name="custom.log4j" location="${user.home}/.log4j.properties" />
-  <property name="src.dir" location="${rhn-home}/code" />
-  <property name="build.dir" location="${rhn-home}/build" />
-  <property name="lib.dir" location="${rhn-home}/lib" />
+  <property name="src.dir" location="${candlepin-home}/code" />
+  <property name="build.dir" location="${candlepin-home}/build" />
+  <property name="lib.dir" location="${candlepin-home}/lib" />
   <property name="build.lib.dir" location="${build.dir}/build-lib" />
 
   <property name="run.lib.dir" location="${build.dir}/run-lib" />
@@ -24,10 +24,10 @@
   <property name="log4j.threshold" value="warn" />
   <property name="rhn.checkout.dir" value="" />
   <property name="halt-tests-on-failure" value="false" />
-  <property name="checkstyle.header.file" value="${rhn-home}/buildconf/LICENSE.txt" />
-  <property name="checkstyle.cache.src" value="${rhn-home}/build/checkstyle.cache.src" />
-  <property name="checkstyle.cache.test" value="${rhn-home}/build/checkstyle.cache.test" />
-  <property name="coverage.out.file" value="${rhn-home}/coverage.ec" />
+  <property name="checkstyle.header.file" value="${candlepin-home}/buildconf/LICENSE.txt" />
+  <property name="checkstyle.cache.src" value="${candlepin-home}/build/checkstyle.cache.src" />
+  <property name="checkstyle.cache.test" value="${candlepin-home}/build/checkstyle.cache.test" />
+  <property name="coverage.out.file" value="${candlepin-home}/coverage.ec" />
   <property name="javadoc.lazy" value="false" />
   <property name="deprecation" value="off" />
   <property name="nowarn" value="!${deprecation}" />
@@ -145,7 +145,7 @@
   <property name="catalina.password" value="spacewalk" />
   <property name="rhnapp"            value="rhn" />
   <!-- Used for local dir deployment -->
-  <property name="webapp.basedir"    value="${rhn-home}" />
+  <property name="webapp.basedir"    value="${candlepin-home}" />
   <property name="webapp.name"       value="rhnwebapp" />
   <property name="webapp.dir"        value="${webapp.basedir}/${webapp.name}" />
 
