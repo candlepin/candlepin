@@ -14,7 +14,7 @@
              classpathref="bootjars"/>
   </target>
 
-  <target name="init-taskdefs" depends="link-jars,compile-internal"
+  <target name="init-taskdefs" depends="link-jars"
           unless="init-taskdefs.notrequired">
     <!-- pull in checkstyle's properties defining its tasks -->
     <taskdef resource="checkstyletask.properties"
