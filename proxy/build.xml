@@ -7,7 +7,7 @@
 
   <!-- setup properties -->
   <property environment="env" />
-  <property file="${user.home}/.candlepin.properties" />
+  <property file="${user.home}/.${ant.project.name}.properties" />
   <property file="buildconf/build.properties" />
 
   <path id="bootjars">
@@ -199,12 +199,12 @@
   </target>
 
   <target name="create-local-repo" description="Create a local Ivy repo">
-     <mkdir dir="${user.home}/.ivy/candlepin/local/" />
+     <mkdir dir="${user.home}/.ivy/${ant.project.name}/local/" />
   </target>
 
   <target name="clean-cache" description="Removes the Ivy jar cache">
      <delete dir="${lib.dir}" quiet="true" />
-     <delete dir="${user.home}/.ivy/candlepin/cache/" quiet="true" />
+     <delete dir="${user.home}/.ivy/${ant.project.name}/cache/" quiet="true" />
   </target>
 
   <target name="clean" description="Remove all build artifacts">
@@ -481,7 +481,7 @@
 
   <target name="unwar-webapp" depends="pack" >
     <unjar src="${candlepin.war}"
-           dest="${build.dir}/webapp/candlepin" />
+           dest="${build.dir}/webapp/${ant.project.name}" />
   </target>
 
   <!-- =================== Packaging Tasks ======================= -->
@@ -522,7 +522,7 @@
         <include name="log4j.properties" />
       </classes>
       <lib dir="${run.lib.dir}">
-        <include name="candlepin.jar"/>
+        <include name="${ant.project.name}.jar"/>
       </lib>
       <lib dir="${run-external.lib.dir}">
         <!-- Don't want the Oracle drivers which use JNI in the war. -->
@@ -558,13 +558,13 @@
     <!-- properties set here to show we are overriding default ivy values -->
 
     <!-- local directory -->
-    <property name="ivy.default.ivy.user.dir" value="${user.home}/.ivy/candlepin"/>
+    <property name="ivy.default.ivy.user.dir" value="${user.home}/.ivy/${ant.project.name}/"/>
     <property name="ivy.local.default.artifact.pattern"
               value="[artifact]-[revision].[ext]" />
     <!-- public directory -->
-    <property name="ivy.ivyrep.default.ivy.root" value="${ivyserver}/ivy/" />
+    <property name="ivy.ivyrep.default.ivy.root" value="${ivyserver}/ivy/${ant.project.name}/" />
     <property name="ivy.ivyrep.default.artifact.root"
-              value="${ivyserver}/ivy/" />
+              value="${ivyserver}/ivy/${ant.project.name}/" />
     <property name="ivy.ivyrep.default.artifact.pattern"
               value="[artifact]-[revision].[ext]" />
 
