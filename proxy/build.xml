@@ -3,7 +3,7 @@
 <!--
   Spacewalk build file, please indent 2 spaces. NO TABS!
 -->
-<project name="candlepin" default="all" basedir=".">
+<project name="candlepin" default="all">
 
   <!-- setup properties -->
   <property environment="env" />
@@ -57,24 +57,24 @@
     <mkdir dir="${run-external.lib.dir}" />
     <mkdir dir="${test.lib.dir}" />
 
-    <link-jars ivyxml="${candlepin-home}/ivy.xml" libdir="${lib.dir}"
+    <link-jars ivyxml="${candlepin.home}/ivy.xml" libdir="${lib.dir}"
                jars="${build.jar.dependencies}" dir="${build.lib.dir}" />
-    <link-jars ivyxml="${candlepin-home}/ivy.xml" libdir="${lib.dir}"
+    <link-jars ivyxml="${candlepin.home}/ivy.xml" libdir="${lib.dir}"
                jars="${test.jar.dependencies}" dir="${test.lib.dir}"/>
-    <link-jars ivyxml="${candlepin-home}/ivy.xml" libdir="${lib.dir}"
+    <link-jars ivyxml="${candlepin.home}/ivy.xml" libdir="${lib.dir}"
                jars="${run.jar.dependencies}" dir="${run-external.lib.dir}"/>
     <!--
          allows adding jar files for quick testing of tools
          that do not have RPMs yet.
      -->
     <copy toDir="${build.lib.dir}" overwrite="true" failonerror="false">
-      <fileset dir="${candlepin-home}/buildconf/tempjars">
+      <fileset dir="${candlepin.home}/buildconf/tempjars">
           <include name="**/*.jar" />
           <include name="**/*.properties" />
       </fileset>
     </copy>
     <copy toDir="${run-external.lib.dir}" overwrite="true" failonerror="false">
-      <fileset dir="${candlepin-home}/buildconf/tempjars">
+      <fileset dir="${candlepin.home}/buildconf/tempjars">
           <include name="**/*.jar" />
           <include name="**/*.properties" />
       </fileset>
@@ -110,7 +110,7 @@
       <report sourcepath="${build.dir}/src-copy"
               sort="+block,+name,+method,+class"
               metrics="method:70,block:80,line:80,class:100">
-        <infileset dir="${candlepin-home}" includes="*.em, *.ec" />
+        <infileset dir="${candlepin.home}" includes="*.em, *.ec" />
         <!-- txt outfile="${report.dir}/emma.txt"
              depth="package"
              columns="class,method,block,line,name" / -->
@@ -155,7 +155,7 @@
 
   <target name="set-cc-config-dir">
     <property name="rhn.config.dir"
-              value="${candlepin-home}/buildconf/builder/config/satellite" />
+              value="${candlepin.home}/buildconf/builder/config/satellite" />
   </target>
 
   <target name="testdebug">
@@ -210,10 +210,10 @@
   <target name="clean" description="Remove all build artifacts">
     <delete dir="${build.dir}" quiet="true"/>
     <delete>
-      <fileset dir="${candlepin-home}" includes="junit*.properties" />
+      <fileset dir="${candlepin.home}" includes="junit*.properties" />
     </delete>
     <delete>
-      <fileset defaultexcludes="no" dir="${candlepin-home}">
+      <fileset defaultexcludes="no" dir="${candlepin.home}">
         <include name="**/*~" />
         <include name="velocity.log*" />
         <include name="coverage.ec" />
@@ -344,18 +344,14 @@
     <antcall target="enforce" />
   </target>
 
-  <target name="init-pack">
-    <mkdir dir="${build.dir}/webapp" />
-  </target>
-
-  <target name="pack" depends="init,init-pack,pack-megajar"
+  <target name="pack" depends="init,pack-megajar"
           description="Create jars and copy descriptors" />
 
   <target name="instrument" depends="init-taskdefs" if="ccbuild">
     <emma enabled="true">
       <instr outdir="${build.instrument.dir}" merge="no"
           instrpath="${build.dir}/classes" mode="fullcopy"
-          outfile="${candlepin-home}/coverage.em" >
+          outfile="${candlepin.home}/coverage.em" >
         <filter excludes="*.internal.*" />
         <filter excludes="*.scripts.*" />
         <filter excludes="*Mock*" />
@@ -512,11 +508,11 @@
     </jar>
   </target>
 
-  <target name="pack-webapp" depends="compile">
+  <target name="pack-webapp" depends="compile,pack-megajar">
+    <mkdir dir="${build.dir}/webapp" />
     <war destfile="${candlepin.war}" webxml="${src.dir}/webapp/WEB-INF/web.xml">
       <fileset dir="${src.dir}/webapp">
         <exclude name="WEB-INF/web.xml"/>
-        <exclude name="help/**" unless="includehelp"/>
       </fileset>
       <classes dir="${build.dir}/classes">
         <include name="log4j.properties" />
@@ -545,7 +541,7 @@
     <jpackage-deps jars="${install.run.jar.dependencies}"
                    dir="${run-external.lib.dir}"/>
     <copy toDir="${build.lib.dir}" overwrite="true">
-      <fileset dir="${candlepin-home}/buildconf/tempjars">
+      <fileset dir="${candlepin.home}/buildconf/tempjars">
           <include name="**/*.jar" />
           <include name="**/*.properties" />
       </fileset>

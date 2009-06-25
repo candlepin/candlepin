@@ -30,7 +30,7 @@
     <attribute name="dir" />
  
     <sequential>
-      <exec executable="${candlepin-home}/scripts/build-jar-dir" failonerror="true" >
+      <exec executable="${candlepin.home}/scripts/build-jar-dir" failonerror="true" >
         <arg value="-s" />
         <arg value="@{ivyxml}" />
         <arg value="@{libdir}" />
@@ -65,7 +65,7 @@ Running @{banner} ...
              test to work.  This keeps people from breaking until we move
              the DataSource xml files into rhn-java. -->
         <sysproperty key="emma.coverage.out.file" value="${coverage.out.file}" />
-        <sysproperty key="candlepin-home" value="${candlepin-home}" />
+        <sysproperty key="candlepin-home" value="${candlepin.home}" />
         <sysproperty key="java.awt.headless" value="true" />
         <sysproperty key="log4j.threshold" value="${log4j.threshold}" />
         <sysproperty key="rhn.config.dir" value="${rhn.config.dir}" />
