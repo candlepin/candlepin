@@ -28,9 +28,8 @@ exit 2
 do_find_jar() {
    unset _jar
 
-   _jar=$(grep "name=\"$1\"" $_IVY_XML | awk '{print $3,$4}' | sed 's/\"//g' | \
-      sed 's/name=//g' | sed 's/ rev=/-/g')
-
+   _jar=$(grep "name=\"$1\"" $_IVY_XML | grep -v "<\!--" | awk '{print $3,$4}' | \
+      sed 's/\"//g' | sed 's/name=//g' | sed 's/ rev=/-/g')
    if ! [ -z "$_jar" ] ; then
        echo "$lib_directory/$_jar.jar"
        return 0
@@ -94,7 +93,7 @@ for jar in $jar_list ; do
 
    if ! [ -z "$_jar" ] ; then
        if ! [ -z "$debug" ] ; then
-          echo "linking: $_LINK_CMD $_jar $repository"
+          echo "linking: $_LINK_CMD '$_jar' $repository"
        fi
        $_LINK_CMD $_jar $repository
    else
