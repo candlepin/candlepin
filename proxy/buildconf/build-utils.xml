@@ -74,8 +74,6 @@ Running @{banner} ...
         <jvmarg value="-ea" />
         <jvmarg line="@{debug}" />
         <classpath refid="@{classpathid}" />
-        <formatter usefile="no"
-            classname="com.redhat.rhn.internal.junit.RhnCustomFormatter" />
         <formatter type="xml" />
         <batchtest todir="@{reportdir}">
           <fileset dir="@{testbuilddir}">
