@@ -26,6 +26,7 @@
     <servlet-name>Jersey Web Application</servlet-name>
     <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
     <init-param>
+      <!-- this is a semi-colon separated list of package names -->
       <param-name>com.sun.jersey.config.property.packages</param-name>
       <param-value>org.fedoraproject.candlepin</param-value>
     </init-param>
