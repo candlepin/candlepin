@@ -16,6 +16,12 @@ package org.fedoraproject.candlepin.model;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.fedoraproject.candlepin.util.MethodUtil;
 
 /**
  * @author mmccune
@@ -24,8 +30,11 @@ import java.lang.reflect.InvocationTargetException;
 public class ObjectFactory {
 
 	private static ObjectFactory instance = new ObjectFactory();
+	private Map objects;
+	
 	
 	private ObjectFactory() {
+		objects = new HashMap();
 	}
 
 	public static ObjectFactory get() {
@@ -38,10 +47,34 @@ public class ObjectFactory {
 	 * @return Organization
 	 */
 	public BaseModel lookupByUUID(Class<?> clazz, String uuid) {
-		BaseModel retval = (BaseModel) callNewMethod(clazz.getName(), 
-				(Object[]) null);
-		retval.setUuid(uuid);
-		return retval; 
+		return (BaseModel) lookupByFieldName(clazz, "uuid", uuid);
+	}
+
+	/**
+	 * Lookup an object by a field name
+	 * @param clazz
+	 * @param fieldName
+	 * @return BaseModel if found.
+	 */
+	public Object lookupByFieldName(Class<?> clazz, String fieldName, String value) {
+		String key = clazz.getName();
+		if (!objects.containsKey(key)) {
+			return null;
+		}
+		List typelist = (List) objects.get(key);
+		for (int i = 0; i < typelist.size(); i++) {
+			Object o = typelist.get(i);
+			System.out.println("O: " + o);
+			String getter = "get" +  fieldName.substring(0, 1).toUpperCase() +
+				fieldName.substring(1);
+			System.out.println("getter: " + getter);
+			Object v = MethodUtil.callMethod(o, getter, new Object[0]);
+			System.out.println("v: " + v);
+			if (v.equals(value)) {
+				return o;
+			}
+		}
+		return null;
 	}
 	
 	   /**
@@ -107,6 +140,21 @@ public class ObjectFactory {
         }
         return true;
     }
+
+    /**
+     * Store an object
+     * @param u
+     */
+	public void store(Object u) {
+		String key = u.getClass().getName();
+		if (!objects.containsKey(key)) {
+			List newtype = new LinkedList();
+			newtype.add(u);
+			objects.put(u.getClass().getName(), newtype);
+		}
+		List typelist = (List) objects.get(key);
+		typelist.add(u);
+	}
     
 
 }
