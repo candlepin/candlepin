@@ -202,6 +202,9 @@
      <mkdir dir="${user.home}/.ivy/${ant.project.name}/local/" />
   </target>
 
+  <target name="clean-all" description="Nukes EVERYTHING including jar cache"
+          depends="clean,clean-cache" />
+
   <target name="clean-cache" description="Removes the Ivy jar cache">
      <delete dir="${lib.dir}" quiet="true" />
      <delete dir="${user.home}/.ivy/${ant.project.name}/cache/" quiet="true" />
@@ -566,7 +569,17 @@
 
     <ivy-retrieve/>
   </target>
-	
+
+  <!-- Generates Eclipse classpath   -->
+  <target name="gen-dot-classpath" depends="link-jars"
+          description="Generates eclipse .classpath file">
+    <exec executable="${basedir}/scripts/gen-eclipse-dot-classpath.py"
+          output="${basedir}/.classpath" >
+      <arg value="${eclipse.lib.dirs}:${candlepin.home}/buildconf/tempjars:${env.JAVA_HOME}/lib/tools.jar" />
+      <arg value="${eclipse.libsrc.dirs}" />
+    </exec>
+  </target>
+
   <!-- fileset definition for eclipse plugins -->
   <fileset id="eclipse.lib" dir="/opt/eclipse/plugins">
         <include name="**/*.jar" />
@@ -575,29 +588,28 @@
   <fileset id="jdbc.lib" dir="/usr/share/java">
         <include name="**/*.jar" />
   </fileset>
+
   <property name="dir.genhbm" value="genhbm-test" />
 
   <target name="gen_hibernate" >
-	<taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask"> 
-		<classpath>
-			<fileset refid="eclipse.lib" />
-			<fileset refid="jdbc.lib" />
-			<pathelement path="${dir.lib}" />
-			<pathelement path="${basedir}" /> 
-		</classpath>
-	</taskdef>
-	     <delete dir="${dir.genhbm}" />
-	     <mkdir dir="${dir.genhbm}" />
-	     <hibernatetool destdir="${dir.genhbm}">
-	       <jdbcconfiguration
-	         packagename="demo"
-	         configurationfile="hibernate.cfg.xml"
-	         revengfile="hibernate.reveng.xml"
-	         detectmanytomany="true" />
-	         <!-- detectoptmisticlock="true" -->
-	        <hbm2hbmxml destdir="${dir.genhbm}"/>
-	    </hibernatetool>
-	    </target>
-	
-
+    <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask"> 
+      <classpath>
+        <fileset refid="eclipse.lib" />
+        <fileset refid="jdbc.lib" />
+        <pathelement path="${dir.lib}" />
+        <pathelement path="${basedir}" /> 
+      </classpath>
+    </taskdef>
+    <delete dir="${dir.genhbm}" />
+    <mkdir dir="${dir.genhbm}" />
+    <hibernatetool destdir="${dir.genhbm}">
+      <jdbcconfiguration packagename="demo"
+                         configurationfile="hibernate.cfg.xml"
+                         revengfile="hibernate.reveng.xml"
+                         detectmanytomany="true" />
+             <!-- detectoptmisticlock="true" -->
+      <hbm2hbmxml destdir="${dir.genhbm}"/>
+    </hibernatetool>
+  </target>
+    
 </project>
