@@ -17,9 +17,6 @@ package org.fedoraproject.candlepin.model;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import org.apache.commons.lang.ClassUtils;
-
-
 /**
  * @author mmccune
  *
