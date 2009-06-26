@@ -2,7 +2,7 @@
     <info organisation="candlepin" module="rhn-java" />
     <dependencies>
         <!-- dependency org="candlepin" name="antlr" rev="2.7.6" / -->
-        <!-- dependency org="candlepin" name="ant-contrib" rev="1.0" / -->
+        <dependency org="candlepin" name="ant-contrib" rev="1.0" />
         <!-- dependency org="candlepin" name="asm" rev="1.5.3" / -->
         <!-- dependency org="candlepin" name="asm-attrs" rev="1.5.3" / -->
         <!-- dependency org="candlepin" name="bcel" rev="5.1" / -->
