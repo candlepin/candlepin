@@ -45,9 +45,9 @@
         <!-- dependency org="candlepin" name="jpam" rev="0.4" / -->
         <!-- dependency org="candlepin" name="jspapi" rev="5.0.18" / -->
         <!-- dependency org="candlepin" name="jta" rev="1.0.1" / -->
-        <!-- dependency org="candlepin" name="junit" rev="3.8.2" / -->
+        <dependency org="candlepin" name="junit" rev="3.8.2" />
         <dependency org="candlepin" name="log4j" rev="1.2.14" />
-        <!-- dependency org="candlepin" name="logdriver" rev="0.1" / -->
+        <dependency org="candlepin" name="logdriver" rev="0.1" />
         <!-- dependency org="candlepin" name="mailapi" rev="1.3.1" / -->
         <!-- dependency org="candlepin" name="redstone-xmlrpc" rev="1.1_20071120" / -->
         <!-- dependency org="candlepin" name="redstone-xmlrpc-client" rev="1.1_20071120" / -->
@@ -58,6 +58,7 @@
         <!-- dependency org="candlepin" name="ojdbc14" rev="1.10" / -->
         <!-- dependency org="candlepin" name="oro" rev="2.0.8" / -->
         <!-- dependency org="candlepin" name="oscache" rev="2.0.2" / -->
+        <dependency org="candlepin" name="persistence-api" rev="1.0.2" />
         <!-- dependency org="candlepin" name="pop3" rev="1.3.1" / -->
         <!-- dependency org="candlepin" name="quartz" rev="1.5.1" / -->
         <!-- dependency org="candlepin" name="regexp" rev="1.3" / -->
@@ -71,7 +72,7 @@
         <!-- dependency org="candlepin" name="taglibs-standard" rev="1.1.0" / -->
         <!-- dependency org="candlepin" name="tanukiwrapper" rev="3.1.2" / -->
         <!-- dependency org="candlepin" name="tyrex" rev="1.0" / -->
-        <!-- dependency org="candlepin" name="xalan-j2" rev="2.6.0" / -->
+        <dependency org="candlepin" name="xalan-j2" rev="2.6.0" />
         <!-- dependency org="candlepin" name="xerces-j2" rev="2.6.2" / -->
         <!-- dependency org="candlepin" name="xml-commons-apis" rev="1.0" / -->
         
