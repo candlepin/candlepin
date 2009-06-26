@@ -30,7 +30,7 @@
     <attribute name="dir" />
  
     <sequential>
-      <exec executable="${candlepin.home}/scripts/build-jar-dir" failonerror="true" >
+      <exec executable="${candlepin.home}/buildconf/scripts/build-jar-dir" failonerror="true" >
         <arg value="-s" />
         <arg value="@{ivyxml}" />
         <arg value="@{libdir}" />

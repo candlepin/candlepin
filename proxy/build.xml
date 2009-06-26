@@ -573,7 +573,7 @@
   <!-- Generates Eclipse classpath   -->
   <target name="gen-dot-classpath" depends="link-jars"
           description="Generates eclipse .classpath file">
-    <exec executable="${basedir}/scripts/gen-eclipse-dot-classpath.py"
+    <exec executable="${basedir}/buildconf/scripts/gen-eclipse-dot-classpath.py"
           output="${basedir}/.classpath" >
       <arg value="${eclipse.lib.dirs}:${candlepin.home}/buildconf/tempjars:${env.JAVA_HOME}/lib/tools.jar" />
       <arg value="${eclipse.libsrc.dirs}" />
