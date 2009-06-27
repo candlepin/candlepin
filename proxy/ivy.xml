@@ -1,5 +1,5 @@
 <ivy-module version="1.0">
-    <info organisation="candlepin" module="rhn-java" />
+    <info organisation="candlepin" module="proxy" />
     <dependencies>
         <dependency org="candlepin" name="ant-contrib" rev="1.0" />
         <dependency org="candlepin" name="antlr" rev="2.7.6" />
