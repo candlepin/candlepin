@@ -1,0 +1,4 @@
+ant pack-webapp
+sudo rm -rf /var/lib/tomcat5/webapps/candlepin/
+sudo cp build/webapp/candlepin.war /var/lib/tomcat5/webapps/
+sudo /sbin/service tomcat5 restart
