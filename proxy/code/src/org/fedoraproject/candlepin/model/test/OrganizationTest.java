@@ -24,26 +24,44 @@ import org.fedoraproject.candlepin.model.Organization;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 
+import java.util.List;
+
 /**
  * 
  *
  */
 public class OrganizationTest extends TestCase {
 
+    public static Organization createOrg() {
+        String lookedUp = BaseModel.generateUUID();
+        Organization o = new Organization();
+        o.setUuid(lookedUp);
+        ObjectFactory.get().store(o);
+        return o;
+    }
+    
 	public void testOrg() throws Exception {
 		Organization o = new Organization(BaseModel.generateUUID());
 		assertNotNull(o);
 	}
 	
 	public void testLookup() throws Exception {
-		String lookedUp = BaseModel.generateUUID();
-		Organization o = new Organization();
-		o.setUuid(lookedUp);
-		ObjectFactory.get().store(o);
 		
+		Organization o = createOrg();
+		String lookedUp = o.getUuid();
 		o = (Organization) ObjectFactory.get().
 			lookupByUUID(Organization.class, lookedUp);
 		assertNotNull(o);
+	}
+	
+	public void testList() throws Exception {
+	    for (int i = 0; i < 10; i++) {
+	        createOrg();
+	    }
+	    
+	    List orgs =  ObjectFactory.get().listObjectsByClass(Organization.class);
+	    assertNotNull(orgs);
+	    assertTrue(orgs.size() >= 10);
 	}
 	
 	public void testObjectRelationships() throws Exception {

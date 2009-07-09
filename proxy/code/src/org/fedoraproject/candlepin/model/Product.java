@@ -17,9 +17,8 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
-
 public class Product extends BaseModel {
-    
+
     private List<Product> childProducts;
 
     /**
@@ -29,7 +28,7 @@ public class Product extends BaseModel {
     public Product(String uuid) {
         super(uuid);
     }
-    
+
     /**
      * Default constructor
      */
@@ -49,7 +48,7 @@ public class Product extends BaseModel {
     public void setChildProducts(List<Product> childProducts) {
         this.childProducts = childProducts;
     }
-    
+
     /**
      * Add a child of this Product.
      * @param p to add

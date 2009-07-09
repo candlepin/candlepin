@@ -17,69 +17,85 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
-
 public class Consumer extends BaseModel {
-    
-    private String type;
+
     private Organization organization;
     private Consumer parent;
     private List<Product> consumedProducts;
-    
+    private ConsumerInfo info;
+
     /**
      * @param uuid
      */
     public Consumer(String uuid) {
         super(uuid);
     }
+
     /**
      * @return the type
      */
     public String getType() {
-        return type;
+        if (this.info == null) {
+            return null;
+        }
+        else {
+            return info.getType();
+        }
     }
+
     /**
-     * @param type the type to set
+     * Set the type of this Consumer.  
+     * @param typeIn to set
      */
-    public void setType(String type) {
-        this.type = type;
+    public void setType(String typeIn) {
+        if (this.info == null) {
+            this.info = new ConsumerInfo();
+        }
+        this.info.setType(typeIn);
     }
+    
     /**
      * @return the parent
      */
     public Consumer getParent() {
         return parent;
     }
+
     /**
      * @param parent the parent to set
      */
     public void setParent(Consumer parent) {
         this.parent = parent;
     }
+
     /**
      * @return the consumedProducts
      */
     public List<Product> getConsumedProducts() {
         return consumedProducts;
     }
+
     /**
      * @param consumedProducts the consumedProducts to set
      */
     public void setConsumedProducts(List<Product> consumedProducts) {
         this.consumedProducts = consumedProducts;
     }
+
     /**
      * @return the organization
      */
     public Organization getOrganization() {
         return organization;
     }
+
     /**
      * @param organization the organization to set
      */
     public void setOrganization(Organization organization) {
         this.organization = organization;
     }
-    
+
     /**
      * Add a Product to this Consumer.
      * 
@@ -89,8 +105,32 @@ public class Consumer extends BaseModel {
             this.consumedProducts = new LinkedList<Product>();
         }
         this.consumedProducts.add(p);
-        
+
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "Consumer [type=" + this.getType() + ", getName()=" + getName()
+                + ", getUuid()=" + getUuid() + "]";
+    }
+
     
+    /**
+     * @return Returns the info.
+     */
+    public ConsumerInfo getInfo() {
+        return info;
+    }
+
     
+    /**
+     * @param infoIn The info to set.
+     */
+    public void setInfo(ConsumerInfo infoIn) {
+        info = infoIn;
+    }
+
 }

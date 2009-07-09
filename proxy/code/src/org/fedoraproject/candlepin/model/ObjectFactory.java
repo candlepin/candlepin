@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.util.MethodUtil;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -21,13 +24,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.fedoraproject.candlepin.util.MethodUtil;
-
 /**
  * @author mmccune
  *
  */
 public class ObjectFactory {
+
+    /**
+     * Logger for this class
+     */
+    private static final Logger logger = Logger.getLogger(ObjectFactory.class);
 
     private static ObjectFactory instance = new ObjectFactory();
     private Map objects;
@@ -35,10 +41,51 @@ public class ObjectFactory {
     
     private ObjectFactory() {
         objects = new HashMap();
+        initMockObjects();
+    }
+
+    private void initMockObjects() {
+        Organization org = new Organization(BaseModel.generateUUID());
+        org.setName("test-org");
+        // Product
+        Product rhel = new Product(BaseModel.generateUUID());
+        rhel.setName("Red Hat Enterprise Linux");
+        
+        // User
+        User u = new User();
+        u.setLogin("test-login");
+        u.setPassword("redhat");
+        org.addUser(u);
+        
+        // Consumer
+        Consumer c = new Consumer(BaseModel.generateUUID());
+        c.setName("fake-consumer-i386");
+        c.setOrganization(org);
+        org.addConsumer(c);
+        c.addConsumedProduct(rhel);
+        
+        // EntitlementPool
+        EntitlementPool pool = new EntitlementPool(BaseModel.generateUUID());
+        org.addEntitlementPool(pool);
+        pool.setProduct(rhel);
+
+        this.store(org);
+        this.store(u);
+        this.store(c);
+        this.store(pool);
     }
 
     public static ObjectFactory get() {
         return instance;
+    }
+    
+    /**
+     * Get a List of objects by type
+     * @param clazz
+     * @return List if found.  null if not.
+     */
+    public List listObjectsByClass(Class<?> clazz) {
+        return (List) objects.get(clazz.getName());
     }
 
     /**
@@ -64,13 +111,13 @@ public class ObjectFactory {
         List typelist = (List) objects.get(key);
         for (int i = 0; i < typelist.size(); i++) {
             Object o = typelist.get(i);
-            System.out.println("O: " + o);
+            logger.debug("O: " + o);
             String getter = "get" +  fieldName.substring(0, 1).toUpperCase() +
                 fieldName.substring(1);
-            System.out.println("getter: " + getter);
+            logger.debug("getter: " + getter);
             Object v = MethodUtil.callMethod(o, getter, new Object[0]);
-            System.out.println("v: " + v);
-            if (v.equals(value)) {
+            logger.debug("v: " + v);
+            if (v != null && v.equals(value)) {
                 return o;
             }
         }

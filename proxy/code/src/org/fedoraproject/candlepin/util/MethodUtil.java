@@ -56,6 +56,11 @@ public class MethodUtil {
         return true;
     }
     
+    public static void callSetter(Object o, String fieldName, Object param) {
+        String setter = "set" +  fieldName.substring(0, 1).toUpperCase() +
+            fieldName.substring(1);
+        MethodUtil.callMethod(o, setter, param);
+    }
    
     /**
      * Call the specified method with the specified arguments, converting
@@ -178,12 +183,13 @@ public class MethodUtil {
      * @param className
      * @return instance of class passed in.
      */
-    private static Object callNewMethod(String className, Object... args) {
+    public static Object callNewMethod(String className, Object... args) {
         Object retval = null;
         
         try {
             Class clazz = Thread.currentThread().
                             getContextClassLoader().loadClass(className);
+            System.out.println("cz: " + clazz.getName());
             if (args == null || args.length == 0) {
                 retval = clazz.newInstance();                
             }

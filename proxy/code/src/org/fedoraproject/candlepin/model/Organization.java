@@ -108,4 +108,13 @@ public class Organization extends BaseModel {
         }
         this.entitlementPools.add(pool);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "Organization [getName()=" + getName() + ", getUuid()="
+                + getUuid() + "]";
+    }
 }
