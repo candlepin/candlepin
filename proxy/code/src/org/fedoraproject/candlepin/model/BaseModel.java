@@ -16,14 +16,20 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.UUID;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * @author mmccune
  *
  */
+@XmlRootElement
 public class BaseModel {
 
-    private String uuid;
-    private String name;
+    @XmlElement
+	private String uuid;
+    @XmlElement
+	private String name;
 
     /**
      * Construct new with UUID

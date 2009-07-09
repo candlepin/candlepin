@@ -4,8 +4,8 @@ from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
 from sqlalchemy.orm import mapper
 from sqlalchemy.orm import sessionmaker
 
-# engine = create_engine('sqlite:///:memory:', echo=True)
-engine = create_engine('postgres://mmccune:mmccune@127.0.0.1:5432/candlepin')
+engine = create_engine('sqlite:///:memory:', echo=True)
+#engine = create_engine('postgres://mmccune:mmccune@127.0.0.1:5432/candlepin')
 
 metadata = MetaData()
 

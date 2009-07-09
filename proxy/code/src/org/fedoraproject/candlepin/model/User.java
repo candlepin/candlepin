@@ -14,12 +14,34 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
+@XmlRootElement
 public class User extends BaseModel {
     
+    @XmlElement
     private Organization organization;
+    @XmlElement
     private String login;
+    @XmlElement
     private String password;
+
+    /**
+     * @param login
+     * @param password
+     */
+    public User(String login, String password) {
+        this.login = login;
+        this.password = password;
+    }
+    
+    /**
+     * Default ctor
+     */
+    public User() {
+        this("", "");
+    }
 
     /**
      * @return the login

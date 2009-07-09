@@ -17,11 +17,17 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
+@XmlRootElement
 public class Organization extends BaseModel {
     
+    @XmlElement
     private List<Consumer> consumers;
+    @XmlElement
     private List<EntitlementPool> entitlementPools;
+    @XmlElement
     private List<User> users;
     
     /**
