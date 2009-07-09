@@ -18,36 +18,36 @@ import java.util.List;
 
 
 public class Entitlement extends BaseModel {
-	
-	private Organization org;
-	private List<Entitlement> childEntitlements;
+    
+    private Organization org;
+    private List<Entitlement> childEntitlements;
 
-	/**
-	 * @return the org
-	 */
-	public Organization getOrg() {
-		return org;
-	}
+    /**
+     * @return the org
+     */
+    public Organization getOrg() {
+        return org;
+    }
 
-	/**
-	 * @param org the org to set
-	 */
-	public void setOrg(Organization org) {
-		this.org = org;
-	}
+    /**
+     * @param org the org to set
+     */
+    public void setOrg(Organization org) {
+        this.org = org;
+    }
 
-	/**
-	 * @return the childEntitlements
-	 */
-	public List<Entitlement> getChildEntitlements() {
-		return childEntitlements;
-	}
+    /**
+     * @return the childEntitlements
+     */
+    public List<Entitlement> getChildEntitlements() {
+        return childEntitlements;
+    }
 
-	/**
-	 * @param childEntitlements the childEntitlements to set
-	 */
-	public void setChildEntitlements(List<Entitlement> childEntitlements) {
-		this.childEntitlements = childEntitlements;
-	}
+    /**
+     * @param childEntitlements the childEntitlements to set
+     */
+    public void setChildEntitlements(List<Entitlement> childEntitlements) {
+        this.childEntitlements = childEntitlements;
+    }
 
 }

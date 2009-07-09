@@ -19,78 +19,78 @@ import java.util.List;
 
 
 public class Consumer extends BaseModel {
-	
-	private String type;
-	private Organization organization;
-	private Consumer parent;
-	private List<Product> consumedProducts;
-	
-	/**
-	 * @param uuid
-	 */
-	public Consumer(String uuid) {
-		super(uuid);
-	}
-	/**
-	 * @return the type
-	 */
-	public String getType() {
-		return type;
-	}
-	/**
-	 * @param type the type to set
-	 */
-	public void setType(String type) {
-		this.type = type;
-	}
-	/**
-	 * @return the parent
-	 */
-	public Consumer getParent() {
-		return parent;
-	}
-	/**
-	 * @param parent the parent to set
-	 */
-	public void setParent(Consumer parent) {
-		this.parent = parent;
-	}
-	/**
-	 * @return the consumedProducts
-	 */
-	public List<Product> getConsumedProducts() {
-		return consumedProducts;
-	}
-	/**
-	 * @param consumedProducts the consumedProducts to set
-	 */
-	public void setConsumedProducts(List<Product> consumedProducts) {
-		this.consumedProducts = consumedProducts;
-	}
-	/**
-	 * @return the organization
-	 */
-	public Organization getOrganization() {
-		return organization;
-	}
-	/**
-	 * @param organization the organization to set
-	 */
-	public void setOrganization(Organization organization) {
-		this.organization = organization;
-	}
-	
-	/**
-	 * Add a Product to this Consumer.
-	 * 
-	 */
-	public void addConsumedProduct(Product p) {
-		if (this.consumedProducts == null) {
-			this.consumedProducts = new LinkedList<Product>();
-		}
-		this.consumedProducts.add(p);
-		
-	}
-	
-	
+    
+    private String type;
+    private Organization organization;
+    private Consumer parent;
+    private List<Product> consumedProducts;
+    
+    /**
+     * @param uuid
+     */
+    public Consumer(String uuid) {
+        super(uuid);
+    }
+    /**
+     * @return the type
+     */
+    public String getType() {
+        return type;
+    }
+    /**
+     * @param type the type to set
+     */
+    public void setType(String type) {
+        this.type = type;
+    }
+    /**
+     * @return the parent
+     */
+    public Consumer getParent() {
+        return parent;
+    }
+    /**
+     * @param parent the parent to set
+     */
+    public void setParent(Consumer parent) {
+        this.parent = parent;
+    }
+    /**
+     * @return the consumedProducts
+     */
+    public List<Product> getConsumedProducts() {
+        return consumedProducts;
+    }
+    /**
+     * @param consumedProducts the consumedProducts to set
+     */
+    public void setConsumedProducts(List<Product> consumedProducts) {
+        this.consumedProducts = consumedProducts;
+    }
+    /**
+     * @return the organization
+     */
+    public Organization getOrganization() {
+        return organization;
+    }
+    /**
+     * @param organization the organization to set
+     */
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
+    }
+    
+    /**
+     * Add a Product to this Consumer.
+     * 
+     */
+    public void addConsumedProduct(Product p) {
+        if (this.consumedProducts == null) {
+            this.consumedProducts = new LinkedList<Product>();
+        }
+        this.consumedProducts.add(p);
+        
+    }
+    
+    
 }

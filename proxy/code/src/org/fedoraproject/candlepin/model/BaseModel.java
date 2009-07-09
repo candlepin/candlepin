@@ -22,45 +22,45 @@ import java.util.UUID;
  */
 public class BaseModel {
 
-	private String uuid;
-	private String name;
+    private String uuid;
+    private String name;
 
-	/**
-	 * Construct new with UUID
-	 * @param uuid
-	 */
-	public BaseModel(String uuid) {
-		this.uuid = uuid;
-	}
-	
-	/**
-	 * Default constructor
-	 */
-	public BaseModel() {
-		
-	}
-	
-	public String getUuid() {
-		return uuid;
-	}
+    /**
+     * Construct new with UUID
+     * @param uuid
+     */
+    public BaseModel(String uuid) {
+        this.uuid = uuid;
+    }
+    
+    /**
+     * Default constructor
+     */
+    public BaseModel() {
+        
+    }
+    
+    public String getUuid() {
+        return uuid;
+    }
 
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/**
-	 * Generate a UUID for an object.
-	 * @return String UUID.
-	 */
-	public static String generateUUID() {
-		return UUID.randomUUID().toString(); 
-	}
+    /**
+     * Generate a UUID for an object.
+     * @return String UUID.
+     */
+    public static String generateUUID() {
+        return UUID.randomUUID().toString(); 
+    }
 }

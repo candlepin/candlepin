@@ -20,13 +20,13 @@ package org.fedoraproject.candlepin.api;
  */
 public class AuthenticationException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
-	
-	/**
-	 * @param message
-	 */
-	public AuthenticationException(String message) {
-		super(message);
-	}
+    private static final long serialVersionUID = 1L;
+    
+    /**
+     * @param message
+     */
+    public AuthenticationException(String message) {
+        super(message);
+    }
 
 }

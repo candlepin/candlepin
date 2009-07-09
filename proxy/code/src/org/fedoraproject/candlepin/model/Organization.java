@@ -19,87 +19,87 @@ import java.util.List;
 
 
 public class Organization extends BaseModel {
-	
-	private List<Consumer> consumers;
-	private List<EntitlementPool> entitlementPools;
-	private List<User> users;
-	
-	/**
-	 * @param uuid
-	 */
-	public Organization(String uuid) {
-		super(uuid);
-	}
-	
-	/**
-	 * Default
-	 */
-	public Organization() {
-	}
-	
-	/**
-	 * @return the consumers
-	 */
-	public List<Consumer> getConsumers() {
-		return consumers;
-	}
-	/**
-	 * @param consumers the consumers to set
-	 */
-	public void setConsumers(List<Consumer> consumers) {
-		this.consumers = consumers;
-	}
-	/**
-	 * @return the entitlementPools
-	 */
-	public List<EntitlementPool> getEntitlementPools() {
-		return entitlementPools;
-	}
-	/**
-	 * @param entitlementPools the entitlementPools to set
-	 */
-	public void setEntitlementPools(List<EntitlementPool> entitlementPools) {
-		this.entitlementPools = entitlementPools;
-	}
-	/**
-	 * @return the users
-	 */
-	public List<User> getUsers() {
-		return users;
-	}
-	/**
-	 * @param users the users to set
-	 */
-	public void setUsers(List<User> users) {
-		this.users = users;
-	}
-	
-	/**
-	 * Add a user.
-	 * @param u to add to this org.
-	 */
-	public void addUser(User u) {
-		u.setOrganization(this);
-		if (this.users == null) {
-			this.users = new LinkedList<User>();
-		}
-		this.users.add(u);
-	}
+    
+    private List<Consumer> consumers;
+    private List<EntitlementPool> entitlementPools;
+    private List<User> users;
+    
+    /**
+     * @param uuid
+     */
+    public Organization(String uuid) {
+        super(uuid);
+    }
+    
+    /**
+     * Default
+     */
+    public Organization() {
+    }
+    
+    /**
+     * @return the consumers
+     */
+    public List<Consumer> getConsumers() {
+        return consumers;
+    }
+    /**
+     * @param consumers the consumers to set
+     */
+    public void setConsumers(List<Consumer> consumers) {
+        this.consumers = consumers;
+    }
+    /**
+     * @return the entitlementPools
+     */
+    public List<EntitlementPool> getEntitlementPools() {
+        return entitlementPools;
+    }
+    /**
+     * @param entitlementPools the entitlementPools to set
+     */
+    public void setEntitlementPools(List<EntitlementPool> entitlementPools) {
+        this.entitlementPools = entitlementPools;
+    }
+    /**
+     * @return the users
+     */
+    public List<User> getUsers() {
+        return users;
+    }
+    /**
+     * @param users the users to set
+     */
+    public void setUsers(List<User> users) {
+        this.users = users;
+    }
+    
+    /**
+     * Add a user.
+     * @param u to add to this org.
+     */
+    public void addUser(User u) {
+        u.setOrganization(this);
+        if (this.users == null) {
+            this.users = new LinkedList<User>();
+        }
+        this.users.add(u);
+    }
 
-	public void addConsumer(Consumer c) {
-		c.setOrganization(this);
-		if (this.consumers == null) {
-			this.consumers = new LinkedList<Consumer>();
-		}
-		this.consumers.add(c);
-		
-	}
+    public void addConsumer(Consumer c) {
+        c.setOrganization(this);
+        if (this.consumers == null) {
+            this.consumers = new LinkedList<Consumer>();
+        }
+        this.consumers.add(c);
+        
+    }
 
-	public void addEntitlementPool(EntitlementPool pool) {
-		pool.setOrganization(this);
-		if (this.entitlementPools == null) {
-			this.entitlementPools = new LinkedList<EntitlementPool>();
-		}
-		this.entitlementPools.add(pool);
-	}
+    public void addEntitlementPool(EntitlementPool pool) {
+        pool.setOrganization(this);
+        if (this.entitlementPools == null) {
+            this.entitlementPools = new LinkedList<EntitlementPool>();
+        }
+        this.entitlementPools.add(pool);
+    }
 }

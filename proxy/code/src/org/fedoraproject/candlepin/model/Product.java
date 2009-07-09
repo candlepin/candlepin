@@ -19,45 +19,45 @@ import java.util.List;
 
 
 public class Product extends BaseModel {
-	
-	private List<Product> childProducts;
+    
+    private List<Product> childProducts;
 
-	/**
-	 * Create product with UUID
-	 * @param uuid
-	 */
-	public Product(String uuid) {
-		super(uuid);
-	}
-	
-	/**
-	 * Default constructor
-	 */
-	public Product() {
-	}
+    /**
+     * Create product with UUID
+     * @param uuid
+     */
+    public Product(String uuid) {
+        super(uuid);
+    }
+    
+    /**
+     * Default constructor
+     */
+    public Product() {
+    }
 
-	/**
-	 * @return the childProducts
-	 */
-	public List<Product> getChildProducts() {
-		return childProducts;
-	}
+    /**
+     * @return the childProducts
+     */
+    public List<Product> getChildProducts() {
+        return childProducts;
+    }
 
-	/**
-	 * @param childProducts the childProducts to set
-	 */
-	public void setChildProducts(List<Product> childProducts) {
-		this.childProducts = childProducts;
-	}
-	
-	/**
-	 * Add a child of this Product.
-	 * @param p to add
-	 */
-	public void addChildProduct(Product p) {
-		if (this.childProducts == null) {
-			this.childProducts = new LinkedList<Product>();
-		}
-		this.childProducts.add(p);
-	}
+    /**
+     * @param childProducts the childProducts to set
+     */
+    public void setChildProducts(List<Product> childProducts) {
+        this.childProducts = childProducts;
+    }
+    
+    /**
+     * Add a child of this Product.
+     * @param p to add
+     */
+    public void addChildProduct(Product p) {
+        if (this.childProducts == null) {
+            this.childProducts = new LinkedList<Product>();
+        }
+        this.childProducts.add(p);
+    }
 }
