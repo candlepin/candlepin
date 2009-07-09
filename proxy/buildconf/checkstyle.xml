@@ -188,7 +188,7 @@ MINUS_ASSIGN, MOD, MOD_ASSIGN, NOT_EQUAL, PLUS, PLUS_ASSIGN, QUESTION, RCURLY, S
         <module name="DoubleCheckedLocking"/>    <!-- MY FAVOURITE -->
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
-        <module name="HiddenField"/>
+        <!-- module name="HiddenField"/ -->
         <module name="IllegalInstantiation"/>
         <module name="InnerAssignment"/>
         <!--        <module name="MagicNumber" /> -->
