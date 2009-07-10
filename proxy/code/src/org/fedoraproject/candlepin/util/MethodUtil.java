@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 
 /**
  * A simple class that assists with method invocation.  We should just use 
@@ -56,6 +55,13 @@ public class MethodUtil {
         return true;
     }
     
+    /**
+     * Calls the setter for the <code>fieldName</code> of the object
+     * <code>o</code> with the given <code>param</code> 
+     * @param o object being modified
+     * @param fieldName field to be set
+     * @param param value to be used
+     */
     public static void callSetter(Object o, String fieldName, Object param) {
         String setter = "set" +  fieldName.substring(0, 1).toUpperCase() +
             fieldName.substring(1);
@@ -180,7 +186,8 @@ public class MethodUtil {
     /**
      * Create a new instance of the classname passed in.
      * 
-     * @param className
+     * @param className the class to construct
+     * @param args arguments to the ctor of the given className
      * @return instance of class passed in.
      */
     public static Object callNewMethod(String className, Object... args) {
