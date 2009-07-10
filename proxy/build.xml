@@ -520,6 +520,9 @@
       <classes dir="${build.dir}/classes">
         <include name="log4j.properties" />
       </classes>
+      <classes dir="${build.dir}/classes">
+        <include name="logging.properties" />
+      </classes>
       <lib dir="${run.lib.dir}">
         <include name="${ant.project.name}.jar"/>
       </lib>
