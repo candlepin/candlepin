@@ -10,7 +10,7 @@
         <!-- dependency org="candlepin" name="bcprov" rev="1.37" / -->
         <!-- dependency org="candlepin" name="c3p0" rev="0.9.0" / -->
         <!-- dependency org="candlepin" name="cglib" rev="2.1.3" / -->
-        <!-- dependency org="candlepin" name="checkstyle" rev="4.1" / -->
+        <dependency org="candlepin" name="checkstyle" rev="4.1" />
         <!-- dependency org="candlepin" name="commons-beanutils" rev="1.7.0" / -->
         <!-- dependency org="candlepin" name="commons-cli" rev="1.0" / -->
         <!-- dependency org="candlepin" name="commons-codec" rev="1.2" / -->
