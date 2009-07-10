@@ -14,17 +14,18 @@
  */
 package org.fedoraproject.candlepin.api;
 
-import org.apache.log4j.Logger;
-
-import com.sun.jersey.api.representation.Form;
-
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.util.MethodUtil;
 
+import com.sun.jersey.api.representation.Form;
+
+import org.apache.log4j.Logger;
+
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -43,8 +44,7 @@ public abstract class BaseApi {
     @GET @Path("/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     public Object get(@PathParam("uuid") String uuid) {
-        Object o = ObjectFactory.get().
-            lookupByUUID(getApiClass(), uuid);
+        Object o = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
         return o;
     }
     
@@ -62,15 +62,14 @@ public abstract class BaseApi {
     }
     
     @POST
-    @Produces("text/plain")
-    public void create(Form form) {
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Object create(Form form) {
         String newuuid = BaseModel.generateUUID();
         Object args[] = new Object[1];
         args[0] = newuuid;
         BaseModel newobject = (BaseModel) 
             MethodUtil.callNewMethod(getApiClass().getName(), args);
-        // newobject.setName(name);
-        // newobject.setUuid(newuuid);
         Iterator i = form.keySet().iterator();
         while (i.hasNext()) {
             String key = (String) i.next();
@@ -82,7 +81,7 @@ public abstract class BaseApi {
             log.debug("before store name: " + newobject.getName());
             log.debug("before store uuid: " + newobject.getUuid());
         }
-        ObjectFactory.get().store(newobject);
+        return ObjectFactory.get().store(newobject);
     }
 
     protected abstract Class getApiClass();
