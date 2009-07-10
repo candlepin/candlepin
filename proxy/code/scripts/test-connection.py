@@ -11,7 +11,7 @@ param = sys.argv[1]
 
 params = urllib.urlencode({'message':sys.argv[1]})
 headers = {"Content-type":"application/x-www-form-urlencoded",
-           "Accept": "text/plain"}
+           "Accept": "application/json"}
 conn = httplib.HTTPConnection("localhost", 8080)
 conn.request("POST", '/candlepin/helloworld', params, headers)
 #response = conn.getresponse()
