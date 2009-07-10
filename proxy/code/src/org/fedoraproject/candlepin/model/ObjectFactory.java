@@ -14,8 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.util.MethodUtil;
+
+import org.apache.log4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -25,25 +26,31 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * ObjectFactory is used to create and persist the data model.
  * @author mmccune
- *
  */
 public class ObjectFactory {
 
-    /**
-     * Logger for this class
-     */
+    /** Logger for this class */
     private static final Logger logger = Logger.getLogger(ObjectFactory.class);
 
+    /** the singleton instance of the ObjectFactory */
     private static ObjectFactory instance = new ObjectFactory();
+    
     private Map objects;
     
-    
+
+    /**
+     * default constructor
+     */
     private ObjectFactory() {
         objects = new HashMap();
         initMockObjects();
     }
 
+    /**
+     * @deprecated demo method
+     */
     private void initMockObjects() {
         Organization org = new Organization(BaseModel.generateUUID());
         org.setName("test-org");
@@ -75,6 +82,10 @@ public class ObjectFactory {
         this.store(pool);
     }
 
+    /**
+     * Returns the instance of the ObjectFactory.
+     * @return the instance of the ObjectFactory.
+     */
     public static ObjectFactory get() {
         return instance;
     }
@@ -82,10 +93,10 @@ public class ObjectFactory {
     /**
      * Get a List of objects by type
      * @param clazz
-     * @return List if found.  null if not.
+     * @return List if found. null if not.
      */
-    public List listObjectsByClass(Class<?> clazz) {
-        return (List) objects.get(clazz.getName());
+    public List<Object> listObjectsByClass(Class<?> clazz) {
+        return (List<Object>) objects.get(clazz.getName());
     }
 
     /**
