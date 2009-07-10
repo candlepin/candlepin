@@ -17,6 +17,8 @@ package org.fedoraproject.candlepin.api.test;
 import org.fedoraproject.candlepin.api.UserApi;
 import org.fedoraproject.candlepin.model.User;
 
+import com.sun.jersey.api.representation.Form;
+
 import junit.framework.TestCase;
 
 
@@ -28,17 +30,26 @@ public class UserApiTest extends TestCase {
     private UserApi api = new UserApi();
     
     public void testNewUser() {
-        User user = api.create("candlepin", "cp_p@$sw0rd");
+        Form f = new Form();
+        f.add("login", "candlepin");
+        f.add("password", "cp_p@$sw0rd");
+        User user = (User) api.create(f);
         assertNotNull(user);
         assertEquals("candlepin", user.getLogin());
         assertEquals("cp_p@$sw0rd", user.getPassword());
         
-        user = api.create(null, null);
+        f.clear();
+        f.add("login", null);
+        f.add("password", null);
+        user = (User) api.create(f);
         assertNotNull(user);
-        assertNull(user.getLogin());
-        assertNull(user.getPassword());
+        assertEquals("", user.getLogin());
+        assertEquals("", user.getPassword());
         
-        user = api.create("", "");
+        f.clear();
+        f.add("login", "");
+        f.add("password", "");
+        user = (User) api.create(f);
         assertNotNull(user);
         assertEquals("", user.getLogin());
         assertEquals("", user.getPassword());

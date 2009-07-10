@@ -139,7 +139,7 @@ public class ObjectFactory {
      * Store an object
      * @param u
      */
-    public void store(Object u) {
+    public Object store(Object u) {
         String key = u.getClass().getName();
         if (!objects.containsKey(key)) {
             List newtype = new LinkedList();
@@ -148,6 +148,7 @@ public class ObjectFactory {
         }
         List typelist = (List) objects.get(key);
         typelist.add(u);
+        return u;
     }
     
 

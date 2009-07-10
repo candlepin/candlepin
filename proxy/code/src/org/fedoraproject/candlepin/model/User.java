@@ -27,19 +27,17 @@ public class User extends BaseModel {
     private String password;
 
     /**
-     * @param login
-     * @param password
+     * @param uuid unique id
      */
-    public User(String login, String password) {
-        this.login = login;
-        this.password = password;
+    public User(String uuid) {
+        super(uuid);
     }
     
     /**
      * Default ctor
      */
     public User() {
-        this("", "");
+        this(null);
     }
 
     /**
