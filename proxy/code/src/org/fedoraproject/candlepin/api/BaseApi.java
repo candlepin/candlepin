@@ -30,6 +30,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 
 public abstract class BaseApi {
@@ -40,7 +41,8 @@ public abstract class BaseApi {
     private static final Logger log = Logger.getLogger(BaseApi.class);
 
     @GET @Path("/{uuid}")
-    @Produces("text/plain")
+    // @Produces("text/plain")
+    @Produces(MediaType.APPLICATION_JSON)
     public Object get(@PathParam("uuid") String uuid) {
         Object o = ObjectFactory.get().
             lookupByUUID(getApiClass(), uuid);
@@ -49,14 +51,15 @@ public abstract class BaseApi {
     
     @GET @Path("/list")
     @Produces("text/plain")
+    // @Produces(MediaType.APPLICATION_JSON)
     public String list() {
         StringBuffer retval = new StringBuffer();
         List objects =  ObjectFactory.get().listObjectsByClass(getApiClass());
+        //return objects;
         for (int i = 0; i < objects.size(); i++) {
             retval.append(objects.get(i).toString());
             retval.append("\n");
         }
-        
         return retval.toString();
     }
     
