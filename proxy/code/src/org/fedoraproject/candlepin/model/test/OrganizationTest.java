@@ -32,13 +32,6 @@ import java.util.List;
  */
 public class OrganizationTest extends TestCase {
 
-    public static Organization createOrg() {
-        String lookedUp = BaseModel.generateUUID();
-        Organization o = new Organization();
-        o.setUuid(lookedUp);
-        ObjectFactory.get().store(o);
-        return o;
-    }
     
 	public void testOrg() throws Exception {
 		Organization o = new Organization(BaseModel.generateUUID());
@@ -47,7 +40,7 @@ public class OrganizationTest extends TestCase {
 	
 	public void testLookup() throws Exception {
 		
-		Organization o = createOrg();
+		Organization o = TestUtil.createOrg();
 		String lookedUp = o.getUuid();
 		o = (Organization) ObjectFactory.get().
 			lookupByUUID(Organization.class, lookedUp);
@@ -56,7 +49,7 @@ public class OrganizationTest extends TestCase {
 	
 	public void testList() throws Exception {
 	    for (int i = 0; i < 10; i++) {
-	        createOrg();
+	        TestUtil.createOrg();
 	    }
 	    
 	    List orgs =  ObjectFactory.get().listObjectsByClass(Organization.class);

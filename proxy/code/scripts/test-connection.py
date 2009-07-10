@@ -35,3 +35,8 @@ response = conn.getresponse()
 print response.status, response.reason
 rsp = response.read()
 print(rsp)
+
+response = urllib.urlopen('http://localhost:8080/candlepin/consumer/list')
+rsp = response.read()
+print(rsp)
+

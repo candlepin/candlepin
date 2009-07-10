@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.List;
 
-
 public class Entitlement extends BaseModel {
     
     private Organization org;

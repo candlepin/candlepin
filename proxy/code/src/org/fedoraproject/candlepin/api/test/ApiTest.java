@@ -14,6 +14,7 @@ import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Organization;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.test.OrganizationTest;
+import org.fedoraproject.candlepin.model.test.TestUtil;
 
 import junit.framework.TestCase;
 
@@ -67,12 +68,12 @@ public class ApiTest extends TestCase {
 	
 	public void testCreateConsumer() throws Exception {
 	    String newname = "test-consumer-" + System.currentTimeMillis();
-	    Organization o = OrganizationTest.createOrg();
+	    Organization o = TestUtil.createOrg();
 	    ConsumerApi capi = new ConsumerApi();
 	    Form f = new Form();
 	    f.add("name", newname);
 	    f.add("type", "standard-system");
-	    capi.post(f);
+	    capi.create(f);
 	    assertNotNull(ObjectFactory.get().lookupByFieldName(Consumer.class, 
 	            "name", newname));
 	    

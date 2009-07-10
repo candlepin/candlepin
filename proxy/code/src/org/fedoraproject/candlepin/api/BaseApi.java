@@ -41,7 +41,6 @@ public abstract class BaseApi {
     private static final Logger log = Logger.getLogger(BaseApi.class);
 
     @GET @Path("/{uuid}")
-    // @Produces("text/plain")
     @Produces(MediaType.APPLICATION_JSON)
     public Object get(@PathParam("uuid") String uuid) {
         Object o = ObjectFactory.get().
@@ -50,8 +49,7 @@ public abstract class BaseApi {
     }
     
     @GET @Path("/list")
-    @Produces("text/plain")
-    // @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public String list() {
         StringBuffer retval = new StringBuffer();
         List objects =  ObjectFactory.get().listObjectsByClass(getApiClass());
@@ -65,11 +63,7 @@ public abstract class BaseApi {
     
     @POST
     @Produces("text/plain")
-    public void post(Form form) {
-        String name = form.getFirst("name");
-        if (name == null) {
-            throw new RuntimeException("Missing name parameter.");
-        }
+    public void create(Form form) {
         String newuuid = BaseModel.generateUUID();
         Object args[] = new Object[1];
         args[0] = newuuid;
