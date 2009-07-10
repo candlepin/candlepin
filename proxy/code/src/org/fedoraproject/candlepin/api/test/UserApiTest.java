@@ -28,17 +28,17 @@ public class UserApiTest extends TestCase {
     private UserApi api = new UserApi();
     
     public void testNewUser() {
-        User user = api.newUser("candlepin", "cp_p@$sw0rd");
+        User user = api.create("candlepin", "cp_p@$sw0rd");
         assertNotNull(user);
         assertEquals("candlepin", user.getLogin());
         assertEquals("cp_p@$sw0rd", user.getPassword());
         
-        user = api.newUser(null, null);
+        user = api.create(null, null);
         assertNotNull(user);
         assertNull(user.getLogin());
         assertNull(user.getPassword());
         
-        user = api.newUser("", "");
+        user = api.create("", "");
         assertNotNull(user);
         assertEquals("", user.getLogin());
         assertEquals("", user.getPassword());

@@ -18,6 +18,6 @@ rsp = response.read()
 conn.close()
 print rsp
 
-#response = urllib.urlopen('http://localhost:8080/candlepin/helloworld')
-#rsp = response.read()
-#print(rsp)
+response = urllib.urlopen('http://localhost:8080/candlepin/user/candlepin')
+rsp = response.read()
+print(rsp)

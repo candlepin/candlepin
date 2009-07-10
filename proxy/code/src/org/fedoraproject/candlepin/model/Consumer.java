@@ -23,6 +23,13 @@ public class Consumer extends BaseModel {
     private Consumer parent;
     private List<Product> consumedProducts;
     private ConsumerInfo info;
+    
+    /**
+     * default ctor
+     */
+    public Consumer() {
+        this(null);
+    }
 
     /**
      * @param uuid
