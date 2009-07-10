@@ -20,11 +20,6 @@ conn.request("POST", '/candlepin/helloworld', params, headers)
 conn.close()
 #print rsp
 
-response = urllib.urlopen('http://localhost:8080/candlepin/helloworld')
-rsp = response.read()
-print(rsp)
-
-
 # test creating org
 params = urllib.urlencode({'name':'test-org-client-created-' + param})
 conn.request("POST", '/candlepin/org', params, headers)
