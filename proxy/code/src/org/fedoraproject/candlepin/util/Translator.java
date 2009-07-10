@@ -38,7 +38,7 @@ public class Translator extends Translations {
      * @param want The Class to convert to.
      * @return the converted object 
      */ 
-    public static Object convert(Object have, Class want) {
+    public static Object convert(Object have, Class<?> want) {
         return convert(Translator.class, have, want);
     }
 
@@ -50,7 +50,7 @@ public class Translator extends Translations {
     public static String int2String(Integer i) {
         return (i == null) ? "" : i.toString();
     }
-    
+
     /**
      * Convert an Integer object into a list containing the integer
      * @param i The integer to add to the list
