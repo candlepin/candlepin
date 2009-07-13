@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Formatter;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -75,6 +77,11 @@ public class User extends BaseModel {
      */
     public void setOrganization(Organization organization) {
         this.organization = organization;
+    }
+    
+    public String toString() {
+        return new Formatter().format("User :{login: %s, password: %s}",
+                login, password).toString();
     }
 
 }
