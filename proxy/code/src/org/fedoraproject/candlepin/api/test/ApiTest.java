@@ -65,18 +65,4 @@ public class ApiTest extends TestCase {
 		assertTrue(failed);
 		
 	}
-	
-	public void testCreateConsumer() throws Exception {
-	    String newname = "test-consumer-" + System.currentTimeMillis();
-	    Organization o = TestUtil.createOrg();
-	    ConsumerApi capi = new ConsumerApi();
-	    Form f = new Form();
-	    f.add("name", newname);
-	    f.add("type", "standard-system");
-	    capi.create(f);
-	    assertNotNull(ObjectFactory.get().lookupByFieldName(Consumer.class, 
-	            "name", newname));
-	    
-	    
-	}
 }
