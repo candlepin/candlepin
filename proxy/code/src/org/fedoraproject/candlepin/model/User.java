@@ -19,6 +19,7 @@ import java.util.Formatter;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -69,6 +70,7 @@ public class User extends BaseModel {
     /**
      * @return the organization
      */
+    @XmlTransient
     public Organization getOrganization() {
         return organization;
     }

@@ -13,11 +13,31 @@ headers = {"Content-type":"application/json",
 conn = httplib.HTTPConnection("localhost", 8080)
 conn.request("POST", '/candlepin/user', params, headers)
 response = conn.getresponse()
-print response.status, response.reason
+print("Status: %d Response: %s" % (response.status, response.reason))
 rsp = response.read()
 conn.close()
-print rsp
+print("create: %s" % rsp)
 
 response = urllib.urlopen('http://localhost:8080/candlepin/user/candlepin')
 rsp = response.read()
-print(rsp)
+print("get: %s" % rsp)
+
+response = urllib.urlopen('http://localhost:8080/candlepin/user/list')
+rsp = response.read()
+print("list: %s" % rsp)
+
+response = urllib.urlopen('http://localhost:8080/candlepin/user/listusers')
+rsp = response.read()
+print("listusers: %s" % rsp)
+
+response = urllib.urlopen('http://localhost:8080/candlepin/user/uselist')
+rsp = response.read()
+print("uselist: %s" % rsp)
+
+response = urllib.urlopen('http://localhost:8080/candlepin/user/listobjects')
+rsp = response.read()
+print("listobjects: %s" % rsp)
+
+response = urllib.urlopen('http://localhost:8080/candlepin/user/listbasemodel')
+rsp = response.read()
+print("listbasemodel: %s" % rsp)

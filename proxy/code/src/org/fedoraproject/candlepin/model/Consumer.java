@@ -20,11 +20,13 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Consumer extends BaseModel {
 
+    
     private Organization organization;
     private Consumer parent;
     private List<Product> consumedProducts;
@@ -98,6 +100,7 @@ public class Consumer extends BaseModel {
     /**
      * @return the organization
      */
+    @XmlTransient
     public Organization getOrganization() {
         return organization;
     }

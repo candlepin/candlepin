@@ -14,8 +14,13 @@
  */
 package org.fedoraproject.candlepin.api;
 
+import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.Users;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -41,5 +46,45 @@ public class UserApi extends BaseApi {
     @Override
     protected Class getApiClass() {
         return User.class;
+    }
+    
+    @GET @Path("/listusers")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Users listUsers() {
+        List<Object> objects = ObjectFactory.get().listObjectsByClass(getApiClass());
+        Users users = new Users();
+        users.userList = new ArrayList<User>();
+        for (Object o : objects) {
+            users.userList.add((User)o);
+        }
+        return users;
+    }
+    
+    @GET @Path("/uselist")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<User> listUsers1() {
+        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
+        List<User> users = new ArrayList<User>();
+        for (Object o : u) {
+            users.add((User)o);
+        }
+        return users;
+    }
+    
+    @GET @Path("/listobjects")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Object> listObjects() {
+        return ObjectFactory.get().listObjectsByClass(getApiClass());
+    }
+    
+    @GET @Path("/listbasemodel")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<BaseModel> listUsers2() {
+        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
+        List<BaseModel> users = new ArrayList<BaseModel>();
+        for (Object o : u) {
+            users.add((BaseModel)o);
+        }
+        return users;
     }
 }

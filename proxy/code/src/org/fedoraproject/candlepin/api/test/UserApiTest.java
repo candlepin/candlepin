@@ -19,6 +19,10 @@ import org.fedoraproject.candlepin.model.User;
 
 import com.sun.jersey.api.representation.Form;
 
+import org.apache.log4j.Logger;
+
+import java.util.List;
+
 import junit.framework.TestCase;
 
 
@@ -53,5 +57,34 @@ public class UserApiTest extends TestCase {
         assertNotNull(user);
         assertEquals("", user.getLogin());
         assertEquals("", user.getPassword());
+    }
+    
+//    public void testList() {
+//        List<Object> users = api.list();
+//        int origSize = users.length;
+//        // create 1
+//        Form f = new Form();
+//        f.add("login", "candlepin");
+//        f.add("password", "cp_p@$sw0rd");
+//        api.create(f);
+//        
+//        // create 2
+//        f.clear();
+//        f.add("login", "jesusr");
+//        f.add("password", "n0P@$sw0rD");
+//        api.create(f);
+//        
+//        // get the list back
+//        users = api.list();
+//        System.out.println("Users: " + users.toString());
+//        assertNotNull(users);
+//        assertEquals(origSize + 2, users.length);
+//        assertEquals(User.class, users[0].getClass());
+//    }
+    
+    public void testGet() {
+        User user = api.get("test-login");
+        assertNotNull(user);
+        assertEquals("test-login", user.getLogin());
     }
 }
