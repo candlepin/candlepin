@@ -16,14 +16,36 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class Entitlement extends BaseModel {
     
     private Organization org;
     private List<Entitlement> childEntitlements;
 
     /**
+     * default ctor
+     */
+    public Entitlement() {
+        super(null);
+    }
+    
+    /**
+     * @param uuid
+     */
+    public Entitlement(String uuid) {
+        super(uuid);
+    }
+    
+    /**
      * @return the org
      */
+    @XmlTransient
     public Organization getOrg() {
         return org;
     }

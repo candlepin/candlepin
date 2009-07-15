@@ -48,6 +48,10 @@ public class UserApi extends BaseApi {
         return User.class;
     }
     
+    /*
+     * this works great but requires create a new class for each
+     * model type
+     */
     @GET @Path("/listusers")
     @Produces(MediaType.APPLICATION_JSON)
     public Users listUsers() {
@@ -60,6 +64,10 @@ public class UserApi extends BaseApi {
         return users;
     }
     
+    /*
+     * this works the best only requires that each api method
+     * have its own list method
+     */
     @GET @Path("/uselist")
     @Produces(MediaType.APPLICATION_JSON)
     public List<User> listUsers1() {
@@ -73,10 +81,17 @@ public class UserApi extends BaseApi {
     
     @GET @Path("/listobjects")
     @Produces(MediaType.APPLICATION_JSON)
+    /*
+     * does not work shown here for example
+     */
     public List<Object> listObjects() {
         return ObjectFactory.get().listObjectsByClass(getApiClass());
     }
     
+    /*
+     * This produces the output of a BaseModel but not
+     * that of the real object i.e. User.
+     */
     @GET @Path("/listbasemodel")
     @Produces(MediaType.APPLICATION_JSON)
     public List<BaseModel> listUsers2() {
