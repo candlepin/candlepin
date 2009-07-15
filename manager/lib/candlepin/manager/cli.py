@@ -22,6 +22,7 @@ import os
 import random
 import commands
 import ConfigParser
+import httplib, urllib
 
 from optparse import OptionParser
 from string import strip
@@ -37,8 +38,8 @@ SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(
 #        check_tag_exists, get_latest_tagged_version
 
 #BUILD_PROPS_FILENAME = "build.py.props"
-#GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
-#GLOBALCONFIG_SECTION = "globalconfig"
+GLOBAL_BUILD_PROPS_FILENAME = "candlepin.conf"
+GLOBALCONFIG_SECTION = "globalconfig"
 #DEFAULT_BUILDER = "default_builder"
 #DEFAULT_TAGGER = "default_tagger"
 #ASSUMED_NO_TAR_GZ_PROPS = """
@@ -104,7 +105,7 @@ class CLI:
             self._usage()
             sys.exit(1)
 
-        module_class = CLI_MODULES[sys.argv[1]]
+        module_class = CLI_MODULES[sys.argv[1]]["class"]
         module = module_class()
         module.main()
 
@@ -112,11 +113,11 @@ class CLI:
         print("Usage: %s MODULENAME --help" %
                 (os.path.basename(sys.argv[0])))
         print("Supported modules:")
-        print("   entitle  - Entitle a product.")
-#        print("   build    - Build packages.")
-#        print("   report   - Display various reports on the repo.")
-#        print("   init     - Initialize directory for use by tito.")
-
+        
+        for key in CLI_MODULES:
+            pad = len(max(CLI_MODULES, key=len))
+            print("  %s - %s" % (key.rjust(pad), CLI_MODULES[key]["help"]))
+        
 class BaseCliModule(object):
     """ Common code used amongst all CLI modules. """
 
@@ -126,7 +127,16 @@ class BaseCliModule(object):
         self.options = None
         self.pkg_config = None
         self.user_config = read_user_config()
+        self.server_url = "localhost:8080"
 
+    def _set_server(self, url):
+        if url is not None:
+            if not url.startswith("http://"):
+                url = "http://" + url
+            #if not url.endswith("/"):
+            #    url = url + "/"
+        self.server_url = url
+        
     def _add_common_options(self):
         """
         Add options to the command line parser which are relevant to all
@@ -139,6 +149,9 @@ class BaseCliModule(object):
                 help="do not attempt any remote communication (avoid using " +
                     "this please)",
                 default=False)
+        self.parser.add_option("--server_url", nargs=1, dest="url",
+                help="Candlepin Server URL i.e. localhost, localhost:8080, \
+                    http://server.com:8080/")
 
     def main(self):
         (self.options, args) = self.parser.parse_args()
@@ -148,21 +161,23 @@ class BaseCliModule(object):
         if len(sys.argv) < 2:
             print parser.error("Must supply an argument. Try -h for help.")
 
-        self.global_config = self._read_global_config()
+#        self.global_config = self._read_global_config()
 
         if self.options.debug:
             os.environ['DEBUG'] = "true"
-
+            
+        if self.options.url:
+            self._set_server(self.options.url)
+            
 #    def _read_global_config(self):
 #        """
-#        Read global candlepin configuration from the rel-eng dir of the git
-#        repository we're being run from.
+#        Read global candlepin configuration from
 #        """
-#        rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
-#        filename = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
+#        config_dir = os.path.join("/etc/candlepin")
+#        filename = os.path.join(config_dir, GLOBAL_BUILD_PROPS_FILENAME)
 #        if not os.path.exists(filename):
 #            # HACK: Try the old filename location, pre-tito rename:
-#            oldfilename = os.path.join(rel_eng_dir, "global.build.py.props")
+#            oldfilename = os.path.join(config_dir, "global.build.py.props")
 #            if not os.path.exists(oldfilename):
 #                error_out("Unable to locate branch configuration: %s\nPlease run 'tito init'" %
 #                        filename)
@@ -189,10 +204,32 @@ class BaseCliModule(object):
         """
         pass
 
-class EntitleModule(BaseCliModule):
-
+class ListModule(BaseCliModule):
     def __init__(self):
         BaseCliModule.__init__(self)
+        
+        usage = "usage: %prog list [options]"
+        self.parser = OptionParser(usage)
+        
+        self._add_common_options()
+        
+    def main(self):
+        BaseCliModule.main(self)
+
+        conn = httplib.HTTPConnection(self.server_url)
+        headers = {"Content-type":"application/json",
+                   "Accept":"application/json"}
+        conn.request("GET", '/candlepin/consumer/list', None, headers)
+        response = conn.getresponse()
+        rsp = response.read()
+        conn.close()
+        print("Consumers: %s" % rsp)
+        
+class EntitleModule(BaseCliModule):
+    
+    def __init__(self):
+        BaseCliModule.__init__(self)
+        
         usage = "usage: %prog entitle [options]"
         self.parser = OptionParser(usage)
         
@@ -205,12 +242,28 @@ class EntitleModule(BaseCliModule):
         
         # decide what needs to happen based on options
         
+        # login
+        # create a consumer
+        
+        print("Creating Consumer")
+        params = urllib.urlencode({'name':'client'})
+        headers = {"Content-type":"application/json",
+                   "Accept":"application/json"}
+        conn = httplib.HTTPConnection(self.server_url)
+        conn.request("POST", '/candlepin/consumer', params, headers)
+        response = conn.getresponse()
+        rsp = response.read()
+        conn.close()
+        print("consumer created: %s" % rsp)
+        # ask to be entitled
+        
     def _validate_options(self):
         # validate the options here if need be
         pass
 
 CLI_MODULES = {
-    "entitle": EntitleModule
+    "entitle": {"class":EntitleModule, "help":"Entitle a product."},
+    "list": {"class":ListModule, "help":"List consumers."}
 #    "tag": TagModule,
 #    "report": ReportModule,
 #    "init": InitModule
