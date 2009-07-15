@@ -47,7 +47,7 @@ public abstract class BaseApi {
         Object o = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
         return o;
     }
-    
+
     @GET @Path("/list")
     @Produces(MediaType.APPLICATION_JSON)
     public String list() {
@@ -60,7 +60,7 @@ public abstract class BaseApi {
         }
         return retval.toString();
     }
-    
+
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
     @Produces(MediaType.APPLICATION_JSON)
