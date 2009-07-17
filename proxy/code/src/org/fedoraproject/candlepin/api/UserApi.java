@@ -35,7 +35,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/user")
 public class UserApi extends BaseApi {
     @GET @Path("/{login}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public User get(@PathParam("login") String login) {
         return (User) ObjectFactory.get().lookupByFieldName(User.class, "login", login);
     }
@@ -53,7 +53,7 @@ public class UserApi extends BaseApi {
      * model type
      */
     @GET @Path("/listusers")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Users listUsers() {
         List<Object> objects = ObjectFactory.get().listObjectsByClass(getApiClass());
         Users users = new Users();
@@ -69,7 +69,7 @@ public class UserApi extends BaseApi {
      * have its own list method
      */
     @GET @Path("/uselist")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<User> listUsers1() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
         List<User> users = new ArrayList<User>();

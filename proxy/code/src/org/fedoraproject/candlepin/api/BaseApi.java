@@ -42,14 +42,14 @@ public abstract class BaseApi {
     private static final Logger log = Logger.getLogger(BaseApi.class);
 
     @GET @Path("/{uuid}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Object get(@PathParam("uuid") String uuid) {
         Object o = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
         return o;
     }
 
     @GET @Path("/list")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public String list() {
         StringBuffer retval = new StringBuffer();
         List objects =  ObjectFactory.get().listObjectsByClass(getApiClass());
@@ -63,7 +63,7 @@ public abstract class BaseApi {
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Object create(Form form) {
         String newuuid = BaseModel.generateUUID();
         Object args[] = new Object[1];
