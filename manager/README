@@ -2,3 +2,7 @@ the manager is a client-side program that allows the user
 to manage their entitlements as specified by an entitlement
 certificate.
 
+* need a library to gather system information (smolt?)
+  - create a module 'gather.py' used to get the system information.
+    if we use smolt or rhn_check doesn't matter.
+
