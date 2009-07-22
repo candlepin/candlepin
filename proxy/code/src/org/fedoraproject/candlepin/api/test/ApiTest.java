@@ -3,18 +3,12 @@
  */
 package org.fedoraproject.candlepin.api.test;
 
-import com.sun.jersey.api.representation.Form;
-
 import org.fedoraproject.candlepin.api.ApiHandler;
-import org.fedoraproject.candlepin.api.ConsumerApi;
 import org.fedoraproject.candlepin.api.OrgApi;
 import org.fedoraproject.candlepin.model.BaseModel;
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Organization;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.test.OrganizationTest;
-import org.fedoraproject.candlepin.model.test.TestUtil;
 
 import junit.framework.TestCase;
 

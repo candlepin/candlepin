@@ -14,14 +14,10 @@
  */
 package org.fedoraproject.candlepin.api.test;
 
-import org.fedoraproject.candlepin.api.UserApi;
-import org.fedoraproject.candlepin.model.User;
-
 import com.sun.jersey.api.representation.Form;
 
-import org.apache.log4j.Logger;
-
-import java.util.List;
+import org.fedoraproject.candlepin.api.UserApi;
+import org.fedoraproject.candlepin.model.User;
 
 import junit.framework.TestCase;
 

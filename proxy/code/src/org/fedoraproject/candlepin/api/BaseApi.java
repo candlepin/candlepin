@@ -14,13 +14,12 @@
  */
 package org.fedoraproject.candlepin.api;
 
-import org.fedoraproject.candlepin.model.BaseModel;
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.util.MethodUtil;
-
 import com.sun.jersey.api.representation.Form;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.BaseModel;
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.util.MethodUtil;
 
 import java.util.Iterator;
 import java.util.List;

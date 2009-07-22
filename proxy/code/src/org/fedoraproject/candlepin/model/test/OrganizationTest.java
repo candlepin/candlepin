@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import junit.framework.TestCase;
-
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
@@ -25,6 +23,8 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 
 import java.util.List;
+
+import junit.framework.TestCase;
 
 /**
  * 

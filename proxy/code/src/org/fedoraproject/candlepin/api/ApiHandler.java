@@ -1,16 +1,13 @@
 package org.fedoraproject.candlepin.api;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
-
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Organization;
 import org.fedoraproject.candlepin.model.User;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ApiHandler {
     
