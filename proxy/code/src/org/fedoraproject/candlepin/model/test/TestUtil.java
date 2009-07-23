@@ -17,23 +17,23 @@ package org.fedoraproject.candlepin.model.test;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Organization;
+import org.fedoraproject.candlepin.model.Owner;
 
 
 
 public class TestUtil {
 
-    public static Organization createOrg() {
+    public static Owner createOwner() {
         String lookedUp = BaseModel.generateUUID();
-        Organization o = new Organization();
+        Owner o = new Owner();
         o.setUuid(lookedUp);
         ObjectFactory.get().store(o);
         return o;
     }
 
-    public static Consumer createConsumer(Organization org) {
+    public static Consumer createConsumer(Owner owner) {
         Consumer c = new Consumer(BaseModel.generateUUID());
-        c.setOrganization(org);
+        c.setOwner(owner);
         ObjectFactory.get().store(c);
         return c;
     }

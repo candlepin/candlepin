@@ -14,16 +14,16 @@
  */
 package org.fedoraproject.candlepin.api;
 
-import org.fedoraproject.candlepin.model.Organization;
+import org.fedoraproject.candlepin.model.Owner;
 
 import javax.ws.rs.Path;
 
-@Path("/org")
-public class OrgApi extends BaseApi {
+@Path("/owner")
+public class OwnerApi extends BaseApi {
     
     @Override
     protected Class getApiClass() {
-        return Organization.class;
+        return Owner.class;
     }
     
     

@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.model.test;
 
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Organization;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
 import junit.framework.TestCase;
@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 public class ConsumerTest extends TestCase {
 
     public void testConsumedProduct() throws Exception {
-        Organization o = TestUtil.createOrg();
+        Owner o = TestUtil.createOwner();
         
         Product rhel = new Product(BaseModel.generateUUID());
         rhel.setName("Red Hat Enterprise Linux");
@@ -35,5 +35,13 @@ public class ConsumerTest extends TestCase {
         
         
         
+    }
+    
+    public void testProperties() {
+        Owner o = TestUtil.createOwner();
+        Consumer c = TestUtil.createConsumer(o);
+        c.setMetadataField("cpu", "2");
+        
+        assertEquals(c.getMetadataField("cpu"), "2");
     }
 }

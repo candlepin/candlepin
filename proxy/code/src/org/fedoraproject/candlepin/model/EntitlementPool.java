@@ -18,7 +18,7 @@ import java.util.Date;
 
 public class EntitlementPool extends BaseModel {
 
-    private Organization organization;
+    private Owner owner;
     private Product product;
     private long maxMembers;
     private long currentMembers;
@@ -111,17 +111,17 @@ public class EntitlementPool extends BaseModel {
     }
 
     /**
-     * @return the organization
+     * @return the owner
      */
-    public Organization getOrganization() {
-        return organization;
+    public Owner getOwner() {
+        return owner;
     }
 
     /**
-     * @param organization the organization to set
+     * @param owner the owner to set
      */
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
+    public void setOwner(Owner owner) {
+        this.owner = owner;
     }
 
 }

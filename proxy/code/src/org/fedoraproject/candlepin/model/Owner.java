@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Organization extends BaseModel {
+public class Owner extends BaseModel {
     
     private List<Consumer> consumers;
     private List<EntitlementPool> entitlementPools;
@@ -32,14 +32,14 @@ public class Organization extends BaseModel {
     /**
      * @param uuid
      */
-    public Organization(String uuid) {
+    public Owner(String uuid) {
         super(uuid);
     }
     
     /**
      * Default
      */
-    public Organization() {
+    public Owner() {
     }
     
     /**
@@ -84,7 +84,7 @@ public class Organization extends BaseModel {
      * @param u to add to this org.
      */
     public void addUser(User u) {
-        u.setOrganization(this);
+        u.setOwner(this);
         if (this.users == null) {
             this.users = new LinkedList<User>();
         }
@@ -92,7 +92,7 @@ public class Organization extends BaseModel {
     }
 
     public void addConsumer(Consumer c) {
-        c.setOrganization(this);
+        c.setOwner(this);
         if (this.consumers == null) {
             this.consumers = new LinkedList<Consumer>();
         }
@@ -101,7 +101,7 @@ public class Organization extends BaseModel {
     }
 
     public void addEntitlementPool(EntitlementPool pool) {
-        pool.setOrganization(this);
+        pool.setOwner(this);
         if (this.entitlementPools == null) {
             this.entitlementPools = new LinkedList<EntitlementPool>();
         }
@@ -113,7 +113,7 @@ public class Organization extends BaseModel {
      */
     @Override
     public String toString() {
-        return "Organization [getName()=" + getName() + ", getUuid()="
+        return "Owner [getName()=" + getName() + ", getUuid()="
                 + getUuid() + "]";
     }
 }

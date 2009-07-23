@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Entitlement extends BaseModel {
     
-    private Organization org;
+    private Owner owner;
     private List<Entitlement> childEntitlements;
 
     /**
@@ -46,15 +46,15 @@ public class Entitlement extends BaseModel {
      * @return the org
      */
     @XmlTransient
-    public Organization getOrg() {
-        return org;
+    public Owner getOwner() {
+        return owner;
     }
 
     /**
      * @param org the org to set
      */
-    public void setOrg(Organization org) {
-        this.org = org;
+    public void setOwner(Owner ownerIn) {
+        this.owner = ownerIn;
     }
 
     /**

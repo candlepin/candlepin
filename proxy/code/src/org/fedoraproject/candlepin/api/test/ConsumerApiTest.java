@@ -19,8 +19,6 @@ import com.sun.jersey.api.representation.Form;
 import org.fedoraproject.candlepin.api.ConsumerApi;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Organization;
-import org.fedoraproject.candlepin.model.test.TestUtil;
 
 import junit.framework.TestCase;
 
@@ -33,7 +31,7 @@ public class ConsumerApiTest extends TestCase {
 
     public void testCreateConsumer() throws Exception {
         String newname = "test-consumer-" + System.currentTimeMillis();
-        Organization o = TestUtil.createOrg();
+        
         ConsumerApi capi = new ConsumerApi();
         Form f = new Form();
         f.add("name", newname);

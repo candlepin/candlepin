@@ -49,7 +49,7 @@ public class ObjectFactory {
      * @deprecated demo method
      */
     private void initMockObjects() {
-        Organization org = new Organization(BaseModel.generateUUID());
+        Owner org = new Owner(BaseModel.generateUUID());
         org.setName("test-org");
         // Product
         Product rhel = new Product(BaseModel.generateUUID());
@@ -64,7 +64,7 @@ public class ObjectFactory {
         // Consumer
         Consumer c = new Consumer(BaseModel.generateUUID());
         c.setName("fake-consumer-i386");
-        c.setOrganization(org);
+        c.setOwner(org);
         org.addConsumer(c);
         c.addConsumedProduct(rhel);
         
@@ -97,9 +97,9 @@ public class ObjectFactory {
     }
 
     /**
-     * Lookup an Organization by UUID
+     * Lookup an Owner by UUID
      * @param uuid to lookup
-     * @return Organization
+     * @return Owner
      */
     public BaseModel lookupByUUID(Class<?> clazz, String uuid) {
         return (BaseModel) lookupByFieldName(clazz, "uuid", uuid);

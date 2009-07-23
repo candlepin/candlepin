@@ -18,7 +18,7 @@ import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Organization;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 
@@ -30,36 +30,36 @@ import junit.framework.TestCase;
  * 
  *
  */
-public class OrganizationTest extends TestCase {
+public class OwnerTest extends TestCase {
 
     
-	public void testOrg() throws Exception {
-		Organization o = new Organization(BaseModel.generateUUID());
+	public void testOwner() throws Exception {
+		Owner o = new Owner(BaseModel.generateUUID());
 		assertNotNull(o);
 	}
 	
 	public void testLookup() throws Exception {
 		
-		Organization o = TestUtil.createOrg();
+		Owner o = TestUtil.createOwner();
 		String lookedUp = o.getUuid();
-		o = (Organization) ObjectFactory.get().
-			lookupByUUID(Organization.class, lookedUp);
+		o = (Owner) ObjectFactory.get().
+			lookupByUUID(Owner.class, lookedUp);
 		assertNotNull(o);
 	}
 	
 	public void testList() throws Exception {
 	    for (int i = 0; i < 10; i++) {
-	        TestUtil.createOrg();
+	        TestUtil.createOwner();
 	    }
 	    
-	    List orgs =  ObjectFactory.get().listObjectsByClass(Organization.class);
+	    List orgs =  ObjectFactory.get().listObjectsByClass(Owner.class);
 	    assertNotNull(orgs);
 	    assertTrue(orgs.size() >= 10);
 	}
 	
 	public void testObjectRelationships() throws Exception {
-		Organization org = new Organization(BaseModel.generateUUID());
-		org.setName("test-org");
+		Owner owner = new Owner(BaseModel.generateUUID());
+		owner.setName("test-owner");
 		// Product
 		Product rhel = new Product(BaseModel.generateUUID());
 		rhel.setName("Red Hat Enterprise Linux");
@@ -68,22 +68,22 @@ public class OrganizationTest extends TestCase {
 		User u = new User();
 		u.setLogin("test-login");
 		u.setPassword("redhat");
-		org.addUser(u);
-		assertEquals(1, org.getUsers().size());
+		owner.addUser(u);
+		assertEquals(1, owner.getUsers().size());
 		
 		// Consumer
 		Consumer c = new Consumer(BaseModel.generateUUID());
-		c.setOrganization(org);
-		org.addConsumer(c);
+		c.setOwner(owner);
+		owner.addConsumer(c);
 		c.addConsumedProduct(rhel);
-		assertEquals(1, org.getConsumers().size());
+		assertEquals(1, owner.getConsumers().size());
 		assertEquals(1, c.getConsumedProducts().size());
 		
 		// EntitlementPool
 		EntitlementPool pool = new EntitlementPool(BaseModel.generateUUID());
-		org.addEntitlementPool(pool);
+		owner.addEntitlementPool(pool);
 		pool.setProduct(rhel);
-		assertEquals(1, org.getEntitlementPools().size());
+		assertEquals(1, owner.getEntitlementPools().size());
 		
 	}
 }

@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class User extends BaseModel {
     
-    private Organization organization;
+    private Owner owner;
     private String login;
     private String password;
 
@@ -68,17 +68,17 @@ public class User extends BaseModel {
         this.password = password;
     }
     /**
-     * @return the organization
+     * @return the owner
      */
     @XmlTransient
-    public Organization getOrganization() {
-        return organization;
+    public Owner getOwner() {
+        return owner;
     }
     /**
-     * @param organization the organization to set
+     * @param owner the owner to set
      */
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
+    public void setOwner(Owner owner) {
+        this.owner = owner;
     }
     
     public String toString() {

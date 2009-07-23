@@ -3,7 +3,7 @@ package org.fedoraproject.candlepin.api;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Organization;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 
 import java.util.HashSet;
@@ -52,16 +52,16 @@ public class ApiHandler {
         }
     }
     
-    /** Organizations */
+    /** Owners */
     
-    /** Fetch an org 
+    /** Fetch an owner
      * 
      */
-    public Organization getOrg(String authToken, String uuid) {
+    public Owner getOwner(String authToken, String uuid) {
         checkToken(authToken);
         logger.debug("getOrg(String) - start: " + uuid);
-        Organization retval = (Organization) ObjectFactory.get()
-                .lookupByUUID(Organization.class, uuid);
+        Owner retval = (Owner) ObjectFactory.get()
+                .lookupByUUID(Owner.class, uuid);
         if (logger.isDebugEnabled()) {
             logger.debug("getOrg(String) - end.  returning: " + retval);
         }

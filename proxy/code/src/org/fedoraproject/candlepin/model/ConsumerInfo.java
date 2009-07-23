@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -21,7 +22,7 @@ public class ConsumerInfo {
     
     private Consumer parent;
     private String type;
-    private Map<String, String> properties;
+    private Map<String, String> metadata;
     
     /**
      * @return Returns the parent.
@@ -38,20 +39,6 @@ public class ConsumerInfo {
     }
     
     /**
-     * @return Returns the properties.
-     */
-    public Map<String, String> getProperties() {
-        return properties;
-    }
-
-    /**
-     * @param propertiesIn The properties to set.
-     */
-    public void setProperties(Map<String, String> propertiesIn) {
-        properties = propertiesIn;
-    }
-
-    /**
      * @return Returns the type.
      */
     public String getType() {
@@ -63,5 +50,45 @@ public class ConsumerInfo {
      */
     public void setType(String typeIn) {
         type = typeIn;
+    }
+
+    
+    /**
+     * @return Returns the metadata.
+     */
+    public Map<String, String> getMetadata() {
+        return metadata;
+    }
+
+    
+    /**
+     * @param metadataIn The metadata to set.
+     */
+    public void setMetadata(Map<String, String> metadataIn) {
+        metadata = metadataIn;
+    }
+    
+    /**
+     * Set a metadata field
+     * @param name to set
+     * @param value to set
+     */
+    public void setMetadataField(String name, String value) {
+        if (this.metadata == null) {
+            metadata = new HashMap();
+        }
+        
+    }
+    
+    /**
+     * Get a metadata field value
+     * @param name of field to fetch
+     * @return String field value.
+     */
+    public String getMetadataField(String name) {
+       if (this.metadata != null) {
+           return metadata.get(name);
+       }
+       return null;
     }
 }

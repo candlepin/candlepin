@@ -4,10 +4,10 @@
 package org.fedoraproject.candlepin.api.test;
 
 import org.fedoraproject.candlepin.api.ApiHandler;
-import org.fedoraproject.candlepin.api.OrgApi;
+import org.fedoraproject.candlepin.api.OwnerApi;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Organization;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 
 import junit.framework.TestCase;
@@ -32,8 +32,8 @@ public class ApiTest extends TestCase {
 		assertNotNull(token);
 	}
 	
-	public void testLookupOrg() throws Exception {
-		Organization o = new Organization(BaseModel.generateUUID());
+	public void testLookupOwner() throws Exception {
+		Owner o = new Owner(BaseModel.generateUUID());
 		ObjectFactory.get().store(o);
 
 		User u = new User();
@@ -43,16 +43,16 @@ public class ApiTest extends TestCase {
 		
 		String token = ApiHandler.get().login(u.getLogin(), u.getPassword());
 		
-		OrgApi oapi = new OrgApi();
-		Organization lookedup = (Organization) oapi.get("BAD-UUID-NOTFOUND");
+		OwnerApi oapi = new OwnerApi();
+		Owner lookedup = (Owner) oapi.get("BAD-UUID-NOTFOUND");
 		assertNull(lookedup);
-		lookedup = ApiHandler.get().getOrg(token, o.getUuid());
+		lookedup = ApiHandler.get().getOwner(token, o.getUuid());
 		assertNotNull(lookedup);
 		
 		// Check bad token
 		boolean failed = false;
 		try {
-			lookedup = ApiHandler.get().getOrg("BAD-TOKEN", o.getUuid());
+			lookedup = ApiHandler.get().getOwner("BAD-TOKEN", o.getUuid());
 		} catch (Exception e) {
 			failed = true;
 		}

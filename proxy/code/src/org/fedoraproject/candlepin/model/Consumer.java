@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ import javax.xml.bind.annotation.XmlTransient;
 public class Consumer extends BaseModel {
 
     
-    private Organization organization;
+    private Owner owner;
     private Consumer parent;
     private List<Product> consumedProducts;
     private ConsumerInfo info;
@@ -37,6 +38,8 @@ public class Consumer extends BaseModel {
      */
     public Consumer() {
         this(null);
+        this.info = new ConsumerInfo();
+        this.info.setParent(this);
     }
 
     /**
@@ -44,6 +47,8 @@ public class Consumer extends BaseModel {
      */
     public Consumer(String uuid) {
         super(uuid);
+        this.info = new ConsumerInfo();
+        this.info.setParent(this);
     }
 
     /**
@@ -98,18 +103,18 @@ public class Consumer extends BaseModel {
     }
 
     /**
-     * @return the organization
+     * @return the owner
      */
     @XmlTransient
-    public Organization getOrganization() {
-        return organization;
+    public Owner getOwner() {
+        return owner;
     }
 
     /**
-     * @param organization the organization to set
+     * @param owner the owner to set
      */
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
+    public void setOwner(Owner owner) {
+        this.owner = owner;
     }
 
     /**
@@ -148,5 +153,30 @@ public class Consumer extends BaseModel {
     public void setInfo(ConsumerInfo infoIn) {
         info = infoIn;
     }
+    
+    /**
+     * Set a metadata field
+     * @param name to set
+     * @param value to set
+     */
+    public void setMetadataField(String name, String value) {
+        if (this.getInfo().getMetadata() == null) {
+            this.getInfo().setMetadata(new HashMap());
+        }
+        this.getInfo().getMetadata().put(name, value);
+    }
+    
+    /**
+     * Get a metadata field value
+     * @param name of field to fetch
+     * @return String field value.
+     */
+    public String getMetadataField(String name) {
+       if (this.getInfo().getMetadata() != null) {
+           return getInfo().getMetadata().get(name);
+       }
+       return null;
+    }
+
 
 }
