@@ -30,6 +30,7 @@ from string import strip
 SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(
         os.path.abspath(sys.argv[0])), "../"))
 
+import gather
 #from spacewalk.releng.builder import Builder, NoTgzBuilder
 #from spacewalk.releng.tagger import VersionTagger, ReleaseTagger
 #from spacewalk.releng.common import DEFAULT_BUILD_DIR
@@ -204,15 +205,31 @@ class BaseCliModule(object):
         """
         pass
 
-class ListModule(BaseCliModule):
+class ShowHardwareModule(BaseCliModule):
     def __init__(self):
         BaseCliModule.__init__(self)
-        
+
         usage = "usage: %prog list [options]"
         self.parser = OptionParser(usage)
         
         self._add_common_options()
+
+    def main(self):
+        BaseCliModule.main(self)
+
+        hardware = gather.get_hardware()
+        for hw in hardware:
+            print(hw)
+
+class ListModule(BaseCliModule):
+    def __init__(self):
+        BaseCliModule.__init__(self)
+
+        usage = "usage: %prog list [options]"
+        self.parser = OptionParser(usage)
         
+        self._add_common_options()
+
     def main(self):
         BaseCliModule.main(self)
 
@@ -263,7 +280,8 @@ class EntitleModule(BaseCliModule):
 
 CLI_MODULES = {
     "entitle": {"class":EntitleModule, "help":"Entitle a product."},
-    "list": {"class":ListModule, "help":"List consumers."}
+    "list": {"class":ListModule, "help":"List consumers."},
+    "show": {"class":ShowHardwareModule, "help":"show hardware."}
 #    "tag": TagModule,
 #    "report": ReportModule,
 #    "init": InitModule
