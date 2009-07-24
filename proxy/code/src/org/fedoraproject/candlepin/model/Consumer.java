@@ -31,6 +31,7 @@ public class Consumer extends BaseModel {
     private Owner owner;
     private Consumer parent;
     private List<Product> consumedProducts;
+    private List<Entitlement> entitlements;
     private ConsumerInfo info;
     
     /**
@@ -176,6 +177,34 @@ public class Consumer extends BaseModel {
            return getInfo().getMetadata().get(name);
        }
        return null;
+    }
+
+    /**
+     * @return Returns the entitlements.
+     */
+    public List<Entitlement> getEntitlements() {
+        return entitlements;
+    }
+
+    
+    /**
+     * @param entitlementsIn The entitlements to set.
+     */
+    public void setEntitlements(List<Entitlement> entitlementsIn) {
+        entitlements = entitlementsIn;
+    }
+
+    /**
+     * Add an Entitlement to this Consumer
+     * @param entitlementIn to add to this consumer
+     * 
+     */
+    public void addEntitlement(Entitlement entitlementIn) {
+        if (this.entitlements == null) {
+            this.entitlements = new LinkedList<Entitlement>();
+        }
+        this.entitlements.add(entitlementIn);
+        
     }
 
 

@@ -124,4 +124,11 @@ public class EntitlementPool extends BaseModel {
         this.owner = owner;
     }
 
+    /**
+     * Add 1 to the current members.
+     */
+    public void bumpCurrentMembers() {
+        this.currentMembers = this.currentMembers + 1;
+    }
+
 }

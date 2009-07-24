@@ -18,6 +18,7 @@ import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
 
 
 
@@ -36,5 +37,20 @@ public class TestUtil {
         c.setOwner(owner);
         ObjectFactory.get().store(c);
         return c;
+    }
+
+    /**
+     * Create a consumer with a new owner
+     * @return Consumer
+     */
+    public static Consumer createConsumer() {
+        return createConsumer(createOwner());
+    }
+
+    public static Product createProduct() {
+        Product rhel = new Product(BaseModel.generateUUID());
+        rhel.setName("Red Hat Enterprise Linux");
+        ObjectFactory.get().store(rhel);
+        return rhel;
     }
 }

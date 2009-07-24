@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -26,7 +27,10 @@ import javax.xml.bind.annotation.XmlTransient;
 public class Entitlement extends BaseModel {
     
     private Owner owner;
+    private EntitlementPool pool;
     private List<Entitlement> childEntitlements;
+    
+    private Date startDate;
 
     /**
      * default ctor
@@ -71,4 +75,45 @@ public class Entitlement extends BaseModel {
         this.childEntitlements = childEntitlements;
     }
 
+    
+    /**
+     * @return Returns the product.
+     */
+    public Product getProduct() {
+        return this.pool.getProduct();
+    }
+
+    
+    /**
+     * @return Returns the pool.
+     */
+    public EntitlementPool getPool() {
+        return pool;
+    }
+
+    
+    /**
+     * @param poolIn The pool to set.
+     */
+    public void setPool(EntitlementPool poolIn) {
+        pool = poolIn;
+    }
+
+    
+    /**
+     * @return Returns the startDate.
+     */
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    
+    /**
+     * @param startDateIn The startDate to set.
+     */
+    public void setStartDate(Date startDateIn) {
+        startDate = startDateIn;
+    }
+
+    
 }
