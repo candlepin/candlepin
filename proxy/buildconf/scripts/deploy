@@ -1,4 +1,14 @@
 ant pack-webapp
-sudo rm -rf /var/lib/tomcat5/webapps/candlepin/
-sudo cp build/webapp/candlepin.war /var/lib/tomcat5/webapps/
-sudo /sbin/service tomcat5 restart
+TC=tomcat6
+rpm -q $TC > /dev/null
+if [ "$?" -ne 0 ]; then
+    TC=tomcat5
+    rpm -q $TC > /dev/null
+    if [ "$?" -ne 0 ]; then
+       echo "DEPLOYMENT FAILED: you don't have tomcat installed"
+       exit 1
+    fi
+fi
+sudo rm -rf /var/lib/$TC/webapps/candlepin/
+sudo cp build/webapp/candlepin.war /var/lib/$TC/webapps/
+sudo /sbin/service $TC restart
