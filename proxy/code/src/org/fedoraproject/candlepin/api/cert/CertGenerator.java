@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.api.cert;
 
 import org.bouncycastle.asn1.DEREncodable;
 import org.bouncycastle.asn1.DEREnumerated;
-import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;

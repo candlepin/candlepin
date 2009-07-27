@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.api;
 import com.sun.jersey.api.representation.Form;
 
 import org.apache.log4j.Logger;
-import org.bouncycastle.jce.provider.test.CertUniqueIDTest;
 import org.fedoraproject.candlepin.api.cert.CertGenerator;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
