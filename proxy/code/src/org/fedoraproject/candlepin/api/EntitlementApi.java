@@ -58,6 +58,7 @@ public class EntitlementApi extends BaseApi {
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Path("/entitle")
     public Object entitle(Form form) {
         String retval = null;
         String consumerUuid = form.getFirst("consumer_uuid");
