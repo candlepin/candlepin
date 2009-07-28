@@ -33,7 +33,6 @@ public class EntitlementPoolApi extends BaseApi {
         return EntitlementPool.class;
     }
     
-    
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<EntitlementPool> list() {

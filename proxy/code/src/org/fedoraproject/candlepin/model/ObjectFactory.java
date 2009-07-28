@@ -93,7 +93,12 @@ public class ObjectFactory {
      * @return List if found. null if not.
      */
     public List<Object> listObjectsByClass(Class<?> clazz) {
-        return (List<Object>) objects.get(clazz.getName());
+        List<Object> retval = null;
+        retval = (List<Object>) objects.get(clazz.getName());
+        if (retval == null) {
+            retval = new LinkedList();
+        }
+        return retval;
     }
 
     /**
