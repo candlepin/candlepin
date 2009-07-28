@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.util.MethodUtil;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,19 +46,6 @@ public abstract class BaseApi {
     public Object get(@PathParam("uuid") String uuid) {
         Object o = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
         return o;
-    }
-
-    @GET @Path("/list")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public String list() {
-        StringBuffer retval = new StringBuffer();
-        List objects =  ObjectFactory.get().listObjectsByClass(getApiClass());
-        //return objects;
-        for (int i = 0; i < objects.size(); i++) {
-            retval.append(objects.get(i).toString());
-            retval.append("\n");
-        }
-        return retval.toString();
     }
 
     @POST

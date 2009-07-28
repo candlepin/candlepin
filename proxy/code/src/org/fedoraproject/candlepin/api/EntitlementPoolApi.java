@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.api;
 
-import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 
 import java.util.ArrayList;
@@ -25,24 +25,24 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/consumer")
-public class ConsumerApi extends BaseApi {
+@Path("/entitlementpool")
+public class EntitlementPoolApi extends BaseApi {
 
     @Override
     protected Class getApiClass() {
-        return Consumer.class;
+        return EntitlementPool.class;
     }
     
-
+    
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public List<Consumer> list() {
+    public List<EntitlementPool> list() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
-        List<Consumer> consumers = new ArrayList<Consumer>();
+        List<EntitlementPool> pools = new ArrayList<EntitlementPool>();
         for (Object o : u) {
-            consumers.add((Consumer) o);
+            pools.add((EntitlementPool) o);
         }
-        return consumers;
+        return pools;
     }
-    
+
 }

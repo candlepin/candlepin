@@ -25,10 +25,12 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -60,7 +62,6 @@ public class EntitlementApi extends BaseApi {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("/entitle")
     public Object entitle(Form form) {
-        String retval = null;
         String consumerUuid = form.getFirst("consumer_uuid");
         String productUuid = form.getFirst("product_uuid");
         log.debug("UUID: " + consumerUuid);
@@ -108,13 +109,18 @@ public class EntitlementApi extends BaseApi {
                 return CertGenerator.getCertString(); 
             }
         }
-        
-        
-        
-        
-        
-        
         return null;
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public List<Entitlement> list() {
+        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        for (Object o : u) {
+            entitlements.add((Entitlement) o);
+        }
+        return entitlements;
     }
 
 }

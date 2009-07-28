@@ -17,6 +17,8 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 
 public class ConsumerInfo {
     
@@ -27,6 +29,7 @@ public class ConsumerInfo {
     /**
      * @return Returns the parent.
      */
+    @XmlTransient
     public Consumer getParent() {
         return parent;
     }

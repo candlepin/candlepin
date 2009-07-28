@@ -16,6 +16,13 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class EntitlementPool extends BaseModel {
 
     private Owner owner;
@@ -120,6 +127,7 @@ public class EntitlementPool extends BaseModel {
     /**
      * @param owner the owner to set
      */
+    @XmlTransient
     public void setOwner(Owner owner) {
         this.owner = owner;
     }

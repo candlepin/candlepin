@@ -14,10 +14,8 @@
  */
 package org.fedoraproject.candlepin.api;
 
-import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.Users;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,58 +46,15 @@ public class UserApi extends BaseApi {
         return User.class;
     }
     
-    /*
-     * this works great but requires create a new class for each
-     * model type
-     */
-    @GET @Path("/listusers")
+    @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Users listUsers() {
-        List<Object> objects = ObjectFactory.get().listObjectsByClass(getApiClass());
-        Users users = new Users();
-        users.userList = new ArrayList<User>();
-        for (Object o : objects) {
-            users.userList.add((User)o);
-        }
-        return users;
-    }
-    
-    /*
-     * this works the best only requires that each api method
-     * have its own list method
-     */
-    @GET @Path("/uselist")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public List<User> listUsers1() {
+    public List<User> list() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
         List<User> users = new ArrayList<User>();
         for (Object o : u) {
-            users.add((User)o);
+            users.add((User) o);
         }
         return users;
     }
-    
-    @GET @Path("/listobjects")
-    @Produces(MediaType.APPLICATION_JSON)
-    /*
-     * does not work shown here for example
-     */
-    public List<Object> listObjects() {
-        return ObjectFactory.get().listObjectsByClass(getApiClass());
-    }
-    
-    /*
-     * This produces the output of a BaseModel but not
-     * that of the real object i.e. User.
-     */
-    @GET @Path("/listbasemodel")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<BaseModel> listUsers2() {
-        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
-        List<BaseModel> users = new ArrayList<BaseModel>();
-        for (Object o : u) {
-            users.add((BaseModel)o);
-        }
-        return users;
-    }
+
 }

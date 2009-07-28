@@ -14,9 +14,16 @@
  */
 package org.fedoraproject.candlepin.api;
 
+import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 @Path("/owner")
 public class OwnerApi extends BaseApi {
@@ -25,6 +32,16 @@ public class OwnerApi extends BaseApi {
     protected Class getApiClass() {
         return Owner.class;
     }
-    
-    
+
+    @GET
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public List<Owner> list() {
+        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
+        List<Owner> owners = new ArrayList<Owner>();
+        for (Object o : u) {
+            owners.add((Owner) o);
+        }
+        return owners;
+    }
+
 }
