@@ -26,6 +26,15 @@ public class ConsumerInfo {
     private String type;
     private Map<String, String> metadata;
     
+    public static final String TYPE_XENVM = "xenvm"; 
+    public static final String TYPE_QEMUVM = "qemuvm";
+    public static final String TYPE_VMWAREVM = "vmwarevm";
+    public static final String TYPE_XENHOST = "xenhost";
+    public static final String TYPE_VMWAREHOST = "vmwarehost";
+    public static final String TYPE_SYSTEM = "system";
+    public static final String TYPE_BLADE_SYSTEM = "bladesystem";
+    
+    
     /**
      * @return Returns the parent.
      */

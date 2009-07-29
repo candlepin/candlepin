@@ -50,7 +50,7 @@ public class CertTest extends TestCase {
         System.out.println("Cert: " + cert);
     }
     
-    public void zzzzCertExample() throws Exception {
+    public void testCertExample() throws Exception {
 
         Security.addProvider(new BouncyCastleProvider());
 

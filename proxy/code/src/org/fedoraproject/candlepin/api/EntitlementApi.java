@@ -56,26 +56,24 @@ public class EntitlementApi extends BaseApi {
         return Entitlement.class;
     }
  
+    private Object validateObjectInput(Form form, String fieldName, Class clazz) {
+        String uuid = form.getFirst(fieldName);
+        log.debug("UUID: " + uuid);
+        Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
+        if (o == null) {
+            throw new RuntimeException(clazz.getName() + " with UUID: [" + 
+                    uuid + "] not found");
+        }
+        return o;
+    }
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("/entitle")
     public Object entitle(Form form) {
-        String consumerUuid = form.getFirst("consumer_uuid");
-        String productUuid = form.getFirst("product_uuid");
-        log.debug("UUID: " + consumerUuid);
-        Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class, 
-                consumerUuid);
-        if (c == null) {
-            throw new RuntimeException("Consumer with UUID: [" + 
-                    consumerUuid + "] not found");
-        }
-        Product p = (Product) ObjectFactory.get().lookupByUUID(Product.class, productUuid);
-        if (p == null) {
-            throw new RuntimeException("Product with UUID: [" + 
-                    productUuid + "] not found");
-        }
+        Consumer c = (Consumer) validateObjectInput(form, "consumer_uuid", Consumer.class);
+        Product p = (Product) validateObjectInput(form, "product_uuid", Product.class);
 
         // Possibly refactor this down into some 'business layer'
         // Check for a matching EntitlementPool
@@ -112,6 +110,55 @@ public class EntitlementApi extends BaseApi {
         return null;
     }
 
+    /**
+     * Check to see if a given Consumer is entitled to given Product
+     * @param form with consumer_uuid and product_uuid to check if entitled or not
+     * @return boolean if entitled or not
+     */
+    @GET
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public boolean hasEntitlement(Form form) {
+        Consumer c = (Consumer) validateObjectInput(form, "consumer_uuid", Consumer.class);
+        Product p = (Product) validateObjectInput(form, "product_uuid", Product.class);
+        for (Entitlement e : c.getEntitlements()) {
+            if (e.getProduct().equals(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Match/List the available entitlements for a given Consumer.  Right now this returns 
+     * ALL entitlements because we haven't built any filtering logic.
+     * @param form containing consumer_uuid
+     * @return List<Entitlement> of applicable 
+     */
+    public List<EntitlementPool> listAvailableEntitlements(Form form) { 
+        Consumer c = (Consumer) validateObjectInput(form, "consumer_uuid", Consumer.class);
+        List<EntitlementPool> entitlementPools = new EntitlementPoolApi().list();
+        List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
+        EntitlementMatcher matcher = new EntitlementMatcher();
+        for (EntitlementPool ep : entitlementPools) {
+            boolean add = false;
+            if (ep.getMaxMembers() > ep.getCurrentMembers()) {
+                add = true;
+            }
+            if (matcher.isCompatible(c, ep.getProduct())) {
+                add = true;
+            }
+            if (add) {
+                retval.add(ep);
+            }
+        }
+        return retval;
+    }
+
+    
+    // TODO:
+    // EntitlementLib.UnentitleProduct(Consumer, Entitlement) 
+    
+    
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<Entitlement> list() {

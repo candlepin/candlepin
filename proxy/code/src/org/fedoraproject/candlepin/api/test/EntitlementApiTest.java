@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.test.TestUtil;
 
 import java.sql.Date;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -33,23 +34,34 @@ import junit.framework.TestCase;
  * @version $Rev$
  */
 public class EntitlementApiTest extends TestCase {
-
-    public void testEntitle() throws Exception {
-        
-        Consumer c = TestUtil.createConsumer();
-        Product p = TestUtil.createProduct();
-        EntitlementPool ep = new EntitlementPool();
+    
+    private Consumer c;
+    private Product p;
+    private EntitlementPool ep;
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setUp() throws Exception {
+        // TODO Auto-generated method stub
+        super.setUp();
+        c = TestUtil.createConsumer();
+        p = TestUtil.createProduct();
+        ep = new EntitlementPool();
         ep.setProduct(p);
         ep.setOwner(c.getOwner());
         ep.setMaxMembers(10);
         ep.setCurrentMembers(0);
         
         Date futuredate = new Date(System.currentTimeMillis() + 1000000000);
-        Date pastdate = new Date(System.currentTimeMillis() - 1000000000);
-        System.out.println("future: " + futuredate);
-        System.out.println("past: " + pastdate);
         ep.setEndDate(futuredate);
         ObjectFactory.get().store(ep);
+
+    }
+    
+    public void testEntitle() throws Exception {
+        
         
         EntitlementApi eapi = new EntitlementApi();
         Form f = new Form();
@@ -77,6 +89,7 @@ public class EntitlementApiTest extends TestCase {
         assertTrue("we didnt hit max members", failed);
 
         // Test expiration
+        Date pastdate = new Date(System.currentTimeMillis() - 1000000000);
         ep.setEndDate(pastdate);
         failed = false;
         try {
@@ -88,6 +101,30 @@ public class EntitlementApiTest extends TestCase {
         assertTrue("we didnt expire", failed);
         
 
+        
+    }
+    
+    public void testHasEntitlement() {
+        System.out.println("Foo");
+        
+        EntitlementApi eapi = new EntitlementApi();
+        Form f = new Form();
+        f.add("consumer_uuid", c.getUuid());
+        f.add("product_uuid", p.getUuid());
+        eapi.entitle(f);
+
+        assertTrue(eapi.hasEntitlement(f));
+    }
+
+    public void testListAvailableEntitlements() {
+        EntitlementApi eapi = new EntitlementApi();
+        Form f = new Form();
+        f.add("consumer_uuid", c.getUuid());
+        f.add("product_uuid", p.getUuid());
+
+        List avail = eapi.listAvailableEntitlements(f);
+        assertNotNull(avail);
+        assertTrue(avail.size() > 0);
         
     }
 }

@@ -109,8 +109,8 @@ public class CertGenerator {
             // the CA for the attribute certificate should be different to that of
             // the client certificate
             //
-            X509Certificate clientCert = createClientCert(pubKey,
-                    caPrivKey, caPubKey);
+            X509Certificate clientCert = createClientCert("Tito Walker", 
+                    "dev-null@fedoraproject.org", pubKey, caPrivKey, caPubKey);
             retval = clientCert;
         }
         catch (Exception e) {
@@ -123,8 +123,8 @@ public class CertGenerator {
     /**
      * we generate a certificate signed by our CA's intermediate certficate
      */
-    public static X509Certificate createClientCert(PublicKey pubKey,
-            PrivateKey caPrivKey, PublicKey caPubKey) throws Exception {
+    public static X509Certificate createClientCert(String name, String email,
+            PublicKey pubKey, PrivateKey caPrivKey, PublicKey caPubKey) throws Exception {
         //
         // issuer
         //
@@ -139,9 +139,9 @@ public class CertGenerator {
         attrs.put(X509Principal.C, "US");
         attrs.put(X509Principal.O, "The Players of Candlepin");
         attrs.put(X509Principal.L, "Raleigh");
-        attrs.put(X509Principal.CN, "Tito Walker");
+        attrs.put(X509Principal.CN, name);
         attrs.put(X509Principal.EmailAddress,
-                "dev-null@fedoraproject.org");
+                email);
 
         order.addElement(X509Principal.C);
         order.addElement(X509Principal.O);
