@@ -42,6 +42,9 @@ def main():
                         elif f[:-4] + "-" +"src.jar" in src_entries:
                             entries[f] = classpath_sourcepath_entry % (os.path.join(dr,f) ,
                                                                 src_entries[f[:-4] + "-" +"src.jar"])
+                        elif f[:-4] + "-" +"sources.jar" in src_entries:
+                            entries[f] = classpath_sourcepath_entry % (os.path.join(dr,f) ,
+                                                                src_entries[f[:-4] + "-" +"sources.jar"])
                         else:
                             entries[f] = classpath_entry % os.path.join(dr,f)
             if os.path.isfile(dr):

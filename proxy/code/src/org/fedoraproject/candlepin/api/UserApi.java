@@ -14,13 +14,17 @@
  */
 package org.fedoraproject.candlepin.api;
 
+import org.fedoraproject.candlepin.model.BaseModel;
+import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -56,5 +60,24 @@ public class UserApi extends BaseApi {
         }
         return users;
     }
-
+    
+    @GET @Path("/testobject")
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonTestObject returnJsonObject() {
+        JsonTestObject jto = new JsonTestObject();
+        jto.setName("namevalue");
+        jto.setUuid("uuidvalue");
+        return jto;
+    }
+    
+    @POST @Path("/createtestobject")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void createJsonTestObject(JsonTestObject obj) {
+        if (obj == null) {
+            throw new RuntimeException("obj is null");
+        }
+        System.out.println("object.name" + obj.getName());
+        //return obj;
+    }
+    
 }
