@@ -405,7 +405,6 @@
       <fileset dir="${src.dir}/src">
         <exclude name="**/*.java" />
         <exclude name="**/package.html" />
-         <exclude name="**/log4j.properties" />
       </fileset>
     </copy>
   </target>
