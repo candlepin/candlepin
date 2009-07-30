@@ -42,14 +42,10 @@ response = urllib.urlopen('http://localhost:8080/candlepin/user/listbasemodel')
 rsp = response.read()
 print("listbasemodel: %s" % rsp)
 
-print("TESTING json get")
-response = urllib.urlopen("http://localhost:8080/candlepin/user/testobject")
-rsp = response.read()
-print("testjsonobject get: %s" % rsp)
 """
-
-print("TESTING json create")
-params = urllib.urlencode({"name":"rhim","uuid":"joprsucks"})
+print("------------ TESTING json create")
+#params = urllib.urlencode({"name":"rhim","uuid":"joprsucks"})
+params = '{"name":"now","uuid":"thiswork"}'
 headers = {"Content-type":"application/json",
            "Accept": "application/json"}
 conn = httplib.HTTPConnection("localhost", 8080)
@@ -58,3 +54,7 @@ response = conn.getresponse()
 print("Status: %d Response: %s" % (response.status, response.reason))
 rsp = response.read()
 conn.close()
+print("------------ TESTING json get")
+response = urllib.urlopen("http://localhost:8080/candlepin/user/testobject")
+rsp = response.read()
+print("testjsonobject get: %s" % rsp)
