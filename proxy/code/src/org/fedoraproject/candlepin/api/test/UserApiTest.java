@@ -15,13 +15,8 @@
 package org.fedoraproject.candlepin.api.test;
 
 import org.fedoraproject.candlepin.api.UserApi;
-import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.User;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.representation.Form;
 
 import junit.framework.TestCase;
@@ -33,24 +28,7 @@ import junit.framework.TestCase;
  */
 public class UserApiTest extends TestCase {
     private UserApi api = new UserApi();
-    
-    public void testJson() {
-        ClientConfig cc = new DefaultClientConfig();
-        Client c = Client.create(cc);
-        
-        WebResource r1 = c.resource("http://localhost:8080/candlepin/user/testobject");
-        JsonTestObject jto = new JsonTestObject();
-        jto.setName("rhim");
-        jto.setUuid("joprsucks");
-        WebResource r = c.resource("http://localhost:8080/candlepin/user/createtestobject");
-        r.accept("application/json").type("application/json").post(jto);
-        
-        System.out.println(jto.getName());
-        jto = r1.accept("application/json").get(JsonTestObject.class);
-        assertEquals("rhim", jto.getName());
-        assertEquals("joprsucks", jto.getUuid());
-    }
-    
+   
     public void testNewUser() {
         Form f = new Form();
         f.add("login", "candlepin");
