@@ -347,7 +347,7 @@
     <antcall target="enforce" />
   </target>
 
-  <target name="pack" depends="init,pack-megajar"
+  <target name="pack" depends="init,pack-megajar,pack-webapp"
           description="Create jars and copy descriptors" />
 
   <target name="instrument" depends="init-taskdefs" if="ccbuild">
