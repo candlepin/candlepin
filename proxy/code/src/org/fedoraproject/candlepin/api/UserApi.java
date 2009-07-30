@@ -36,6 +36,12 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/user")
 public class UserApi extends BaseApi {
+    private static JsonTestObject jto = null;
+    
+    public UserApi() {
+        System.out.println("hello from ctor");
+    }
+    
     @GET @Path("/{login}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public User get(@PathParam("login") String login) {
@@ -64,20 +70,18 @@ public class UserApi extends BaseApi {
     @GET @Path("/testobject")
     @Produces(MediaType.APPLICATION_JSON)
     public JsonTestObject returnJsonObject() {
-        JsonTestObject jto = new JsonTestObject();
-        jto.setName("namevalue");
-        jto.setUuid("uuidvalue");
         return jto;
     }
     
     @POST @Path("/createtestobject")
     @Consumes(MediaType.APPLICATION_JSON)
     public void createJsonTestObject(JsonTestObject obj) {
+        jto = obj;
         if (obj == null) {
             throw new RuntimeException("obj is null");
         }
-        System.out.println("object.name" + obj.getName());
-        //return obj;
+        System.out.println("object.name:" + obj.getName());
+        System.out.println("jto.name:" + jto.getName());
     }
     
 }
