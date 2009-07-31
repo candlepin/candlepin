@@ -113,16 +113,15 @@ public class EntitlementApiTest extends TestCase {
         f.add("product_uuid", p.getUuid());
         eapi.entitle(f);
 
-        assertTrue(eapi.hasEntitlement(f));
+        assertTrue(eapi.hasEntitlement(c.getUuid(), p.getUuid()));
     }
 
     public void testListAvailableEntitlements() {
         EntitlementApi eapi = new EntitlementApi();
         Form f = new Form();
         f.add("consumer_uuid", c.getUuid());
-        f.add("product_uuid", p.getUuid());
-
-        List avail = eapi.listAvailableEntitlements(f);
+        
+        List avail = eapi.listAvailableEntitlements(c.getUuid());
         assertNotNull(avail);
         assertTrue(avail.size() > 0);
         

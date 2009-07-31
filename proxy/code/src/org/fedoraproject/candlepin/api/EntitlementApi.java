@@ -33,6 +33,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -66,6 +67,17 @@ public class EntitlementApi extends BaseApi {
         }
         return o;
     }
+    
+    private Object validateObjectInput(String uuid, Class clazz) {
+        log.debug("UUID: " + uuid);
+        Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
+        if (o == null) {
+            throw new RuntimeException(clazz.getName() + " with UUID: [" + 
+                    uuid + "] not found");
+        }
+        return o;
+    }
+
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
@@ -117,9 +129,11 @@ public class EntitlementApi extends BaseApi {
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public boolean hasEntitlement(Form form) {
-        Consumer c = (Consumer) validateObjectInput(form, "consumer_uuid", Consumer.class);
-        Product p = (Product) validateObjectInput(form, "product_uuid", Product.class);
+    @Path("/has")
+    public boolean hasEntitlement(@PathParam("consumer_uuid") String consumer_uuid, 
+            @PathParam("product_uuid") String product_uuid) {
+        Consumer c = (Consumer) validateObjectInput(consumer_uuid, Consumer.class);
+        Product p = (Product) validateObjectInput(product_uuid, Product.class);
         for (Entitlement e : c.getEntitlements()) {
             if (e.getProduct().equals(p)) {
                 return true;
@@ -134,8 +148,11 @@ public class EntitlementApi extends BaseApi {
      * @param form containing consumer_uuid
      * @return List<Entitlement> of applicable 
      */
-    public List<EntitlementPool> listAvailableEntitlements(Form form) { 
-        Consumer c = (Consumer) validateObjectInput(form, "consumer_uuid", Consumer.class);
+    @GET
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Path("/listavailable")
+    public List<EntitlementPool> listAvailableEntitlements(@PathParam("uuid") String uuid) {
+        Consumer c = (Consumer) validateObjectInput(uuid, Consumer.class);
         List<EntitlementPool> entitlementPools = new EntitlementPoolApi().list();
         List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
         EntitlementMatcher matcher = new EntitlementMatcher();
