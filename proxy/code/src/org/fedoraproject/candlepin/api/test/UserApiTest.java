@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.api.test;
 
 import org.fedoraproject.candlepin.api.UserApi;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.test.TestUtil;
 
 import com.sun.jersey.api.representation.Form;
 
@@ -83,4 +84,5 @@ public class UserApiTest extends TestCase {
         assertNotNull(user);
         assertEquals("test-login", user.getLogin());
     }
+
 }

@@ -45,5 +45,6 @@ public class TestApiTest extends TestCase {
         jto = getresource.accept("application/json").get(JsonTestObject.class);
         assertEquals("testname", jto.getName());
         assertEquals("AEF", jto.getUuid());
+        
     }
 }

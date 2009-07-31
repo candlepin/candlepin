@@ -152,6 +152,17 @@ public class ObjectFactory {
         typelist.add(u);
         return u;
     }
+
+    /**
+     * Delete an object 
+     * @param clazz to lookup  
+     * @param uuidIn to lookup and delete
+     */
+    public void delete(Class clazz, BaseModel removeMe) {
+        String key = clazz.getName();
+        List typelist = (List) objects.get(key);
+        typelist.remove(removeMe);
+    }
     
 
 }

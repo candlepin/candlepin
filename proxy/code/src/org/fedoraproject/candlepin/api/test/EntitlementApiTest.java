@@ -23,12 +23,12 @@ import com.sun.jersey.api.representation.Form;
 import org.fedoraproject.candlepin.api.EntitlementApi;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.test.TestUtil;
 
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -40,8 +40,8 @@ import junit.framework.TestCase;
  */
 public class EntitlementApiTest extends TestCase {
     
-    private Consumer c;
-    private Product p;
+    private Consumer consumer;
+    private Product product;
     private EntitlementPool ep;
     
     /**
@@ -51,11 +51,11 @@ public class EntitlementApiTest extends TestCase {
     protected void setUp() throws Exception {
         // TODO Auto-generated method stub
         super.setUp();
-        c = TestUtil.createConsumer();
-        p = TestUtil.createProduct();
+        consumer = TestUtil.createConsumer();
+        product = TestUtil.createProduct();
         ep = new EntitlementPool();
-        ep.setProduct(p);
-        ep.setOwner(c.getOwner());
+        ep.setProduct(product);
+        ep.setOwner(consumer.getOwner());
         ep.setMaxMembers(10);
         ep.setCurrentMembers(0);
         
@@ -70,21 +70,21 @@ public class EntitlementApiTest extends TestCase {
         
         EntitlementApi eapi = new EntitlementApi();
         Form f = new Form();
-        f.add("consumer_uuid", c.getUuid());
-        f.add("product_uuid", p.getUuid());
-        String cert = (String) eapi.entitle(f);
+        f.add("consumer_uuid", consumer.getUuid());
+        f.add("product_uuid", product.getUuid());
+        String cert = (String) eapi.entitle(consumer, product);
         
         assertNotNull(cert);
-        assertNotNull(c.getConsumedProducts());
-        assertNotNull(c.getEntitlements());
+        assertNotNull(consumer.getConsumedProducts());
+        assertNotNull(consumer.getEntitlements());
      
         // Test max membership
         boolean failed = false;
         for (int i = 0; i < ep.getMaxMembers() + 10; i++) {
-            Consumer ci = TestUtil.createConsumer(c.getOwner());
+            Consumer ci = TestUtil.createConsumer(consumer.getOwner());
             f.add("consumer_uuid", ci.getUuid());
             try {
-                eapi.entitle(f);
+                eapi.entitle(consumer, product);
             }
             catch (Exception e) {
                 System.out.println("Failed: " + e);
@@ -98,7 +98,7 @@ public class EntitlementApiTest extends TestCase {
         ep.setEndDate(pastdate);
         failed = false;
         try {
-            eapi.entitle(f);
+            eapi.entitle(consumer, product);
         } catch (Exception e) {
             System.out.println("expired:  ? " + e);
             failed = true;
@@ -113,23 +113,45 @@ public class EntitlementApiTest extends TestCase {
         System.out.println("Foo");
         
         EntitlementApi eapi = new EntitlementApi();
-        Form f = new Form();
-        f.add("consumer_uuid", c.getUuid());
-        f.add("product_uuid", p.getUuid());
-        eapi.entitle(f);
+        eapi.entitle(consumer, product);
 
-        assertTrue(eapi.hasEntitlement(c.getUuid(), p.getUuid()));
+        assertTrue(eapi.hasEntitlement(consumer.getUuid(), product.getUuid()));
     }
 
     public void testListAvailableEntitlements() {
         EntitlementApi eapi = new EntitlementApi();
         Form f = new Form();
-        f.add("consumer_uuid", c.getUuid());
+        f.add("consumer_uuid", consumer.getUuid());
         
-        List avail = eapi.listAvailableEntitlements(c.getUuid());
+        List avail = eapi.listAvailableEntitlements(consumer.getUuid());
         assertNotNull(avail);
         assertTrue(avail.size() > 0);
         
     }
+    
+    public void testJson() {
+        ClientConfig cc = new DefaultClientConfig();
+        Client c = Client.create(cc);
+        
+        // WebResource getresource = c.resource("http://localhost:8080/candlepin/entitle/");
+        
+
+        Object[] params = new Object[2];
+        params[0] = consumer;
+        params[1] = product;
+        List aparams = new ArrayList();
+        aparams.add(consumer);
+        aparams.add(product);
+        
+        WebResource postresource = 
+            c.resource("http://localhost:8080/candlepin/entitlement/foo/");
+        postresource.accept("application/json").type("application/json").post(consumer);
+        
+        // System.out.println(jto.getName());
+        // jto = getresource.accept("application/json").get(JsonTestObject.class);
+        // assertEquals("testname", jto.getName());
+        // assertEquals("AEF", jto.getUuid());
+    }
+
     
 }

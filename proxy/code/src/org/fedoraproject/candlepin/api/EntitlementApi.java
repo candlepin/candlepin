@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 
@@ -78,14 +79,20 @@ public class EntitlementApi extends BaseApi {
         return o;
     }
 
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Path("/foo")
+    public Object foo(Consumer c) {
+        System.out.println("Consumer uuid: " + c.getUuid());
+        return "return value";
+    }
 
     @POST
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
+    @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("/entitle")
-    public Object entitle(Form form) {
-        Consumer c = (Consumer) validateObjectInput(form, "consumer_uuid", Consumer.class);
-        Product p = (Product) validateObjectInput(form, "product_uuid", Product.class);
+    public Object entitle(Consumer c, Product p) {
 
         // Possibly refactor this down into some 'business layer'
         // Check for a matching EntitlementPool

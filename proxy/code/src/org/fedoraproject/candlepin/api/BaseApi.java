@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.util.MethodUtil;
 import java.util.Iterator;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -69,6 +70,15 @@ public abstract class BaseApi {
         return ObjectFactory.get().store(newobject);
     }
 
+    
+    @DELETE
+    @Consumes({MediaType.APPLICATION_JSON})
+    public void delete(BaseModel object) {
+        log.debug("Delete called: " + object);
+        ObjectFactory.get().delete(getApiClass(), object);
+        log.debug("Deleted.");
+    }
+    
     protected abstract Class getApiClass();
 
 }

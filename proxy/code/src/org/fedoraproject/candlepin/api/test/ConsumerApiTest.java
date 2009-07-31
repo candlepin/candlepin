@@ -14,11 +14,16 @@
  */
 package org.fedoraproject.candlepin.api.test;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.representation.Form;
 
 import org.fedoraproject.candlepin.api.ConsumerApi;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.test.TestUtil;
 
 import junit.framework.TestCase;
 
@@ -41,5 +46,28 @@ public class ConsumerApiTest extends TestCase {
                 "name", newname));
         
         
+    }
+    
+    public void testDelete() {
+        Consumer c = TestUtil.createConsumer();
+        String uuid = c.getUuid();
+        ConsumerApi capi = new ConsumerApi();
+        assertNotNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
+        capi.delete(c);
+        assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
+    }
+
+    public void testJSON() { 
+        ClientConfig cc = new DefaultClientConfig();
+        Client c = Client.create(cc);
+
+        Consumer consumer = TestUtil.createConsumer();
+        String uuid = consumer.getUuid();
+        
+        WebResource deleteResource = c.resource("http://localhost:8080/candlepin/consumer/");
+        deleteResource.accept("application/json").type("application/json").delete(consumer);
+        
+        assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
+
     }
 }
