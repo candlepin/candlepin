@@ -132,7 +132,4 @@ public class EntitlementApiTest extends TestCase {
         
     }
     
-    public void testFoo() {
-        
-    }
 }
