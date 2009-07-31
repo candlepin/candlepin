@@ -14,11 +14,16 @@
  */
 package org.fedoraproject.candlepin.api.test;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.representation.Form;
 
 import org.fedoraproject.candlepin.api.EntitlementApi;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.test.TestUtil;
@@ -124,6 +129,10 @@ public class EntitlementApiTest extends TestCase {
         List avail = eapi.listAvailableEntitlements(c.getUuid());
         assertNotNull(avail);
         assertTrue(avail.size() > 0);
+        
+    }
+    
+    public void testFoo() {
         
     }
 }
