@@ -14,68 +14,24 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Product extends BaseModel {
+public class ConsumerType extends BaseModel {
 
     private String label;
-    private List<Product> childProducts;
-
-    /**
-     * Create product with UUID
-     * @param uuid
-     */
-    public Product(String uuid) {
-        super(uuid);
-    }
-
-    /**
-     * Default constructor
-     */
-    public Product() {
-    }
-
-    /**
-     * @return the childProducts
-     */
-    public List<Product> getChildProducts() {
-        return childProducts;
-    }
-
-    /**
-     * @param childProducts the childProducts to set
-     */
-    public void setChildProducts(List<Product> childProducts) {
-        this.childProducts = childProducts;
-    }
-
-    /**
-     * Add a child of this Product.
-     * @param p to add
-     */
-    public void addChildProduct(Product p) {
-        if (this.childProducts == null) {
-            this.childProducts = new LinkedList<Product>();
-        }
-        this.childProducts.add(p);
-    }
     
-    /** 
-     * Get the list of 
-     * @return
+    /**
+     * ConsumerType constructor with label
+     * @param labelIn to set
      */
-    public List<String> getCompatibleConsumerTypes() {
-        
-        return null;
+    public ConsumerType(String labelIn) {
+        super(BaseModel.generateUUID());
+        this.label = labelIn;
     }
-
     
     /**
      * @return Returns the label.
@@ -83,7 +39,6 @@ public class Product extends BaseModel {
     public String getLabel() {
         return label;
     }
-
     
     /**
      * @param labelIn The label to set.
@@ -97,6 +52,8 @@ public class Product extends BaseModel {
      */
     @Override
     public String toString() {
-        return "Product [label=" + label + "]";
+        return "ConsumerType [label=" + label + "]";
     }
+
+    
 }

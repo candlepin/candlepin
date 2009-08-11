@@ -34,13 +34,13 @@ public class ObjectFactory {
     /** the singleton instance of the ObjectFactory */
     private static ObjectFactory instance = new ObjectFactory();
     
-    private Map objects;
+    private static Map objects;
     
 
     /**
      * default constructor
      */
-    private ObjectFactory() {
+    protected ObjectFactory() {
         objects = new HashMap();
         initMockObjects();
     }
@@ -51,9 +51,6 @@ public class ObjectFactory {
     private void initMockObjects() {
         Owner org = new Owner(BaseModel.generateUUID());
         org.setName("test-org");
-        // Product
-        Product rhel = new Product(BaseModel.generateUUID());
-        rhel.setName("Red Hat Enterprise Linux");
         
         // User
         User u = new User();
@@ -66,17 +63,10 @@ public class ObjectFactory {
         c.setName("fake-consumer-i386");
         c.setOwner(org);
         org.addConsumer(c);
-        c.addConsumedProduct(rhel);
         
-        // EntitlementPool
-        EntitlementPool pool = new EntitlementPool(BaseModel.generateUUID());
-        org.addEntitlementPool(pool);
-        pool.setProduct(rhel);
-
         this.store(org);
         this.store(u);
         this.store(c);
-        this.store(pool);
     }
 
     /**

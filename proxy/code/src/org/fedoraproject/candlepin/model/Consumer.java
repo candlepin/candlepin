@@ -55,7 +55,7 @@ public class Consumer extends BaseModel {
     /**
      * @return the type
      */
-    public String getType() {
+    public ConsumerType getType() {
         if (this.info == null) {
             return null;
         }
@@ -68,7 +68,7 @@ public class Consumer extends BaseModel {
      * Set the type of this Consumer.  
      * @param typeIn to set
      */
-    public void setType(String typeIn) {
+    public void setType(ConsumerType typeIn) {
         if (this.info == null) {
             this.info = new ConsumerInfo();
         }

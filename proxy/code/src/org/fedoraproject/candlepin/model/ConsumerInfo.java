@@ -23,16 +23,9 @@ import javax.xml.bind.annotation.XmlTransient;
 public class ConsumerInfo {
     
     private Consumer parent;
-    private String type;
+    private ConsumerType type;
     private Map<String, String> metadata;
     
-    public static final String TYPE_XENVM = "xenvm"; 
-    public static final String TYPE_QEMUVM = "qemuvm";
-    public static final String TYPE_VMWAREVM = "vmwarevm";
-    public static final String TYPE_XENHOST = "xenhost";
-    public static final String TYPE_VMWAREHOST = "vmwarehost";
-    public static final String TYPE_SYSTEM = "system";
-    public static final String TYPE_BLADE_SYSTEM = "bladesystem";
     
     
     /**
@@ -53,14 +46,14 @@ public class ConsumerInfo {
     /**
      * @return Returns the type.
      */
-    public String getType() {
+    public ConsumerType getType() {
         return type;
     }
     
     /**
      * @param typeIn The type to set.
      */
-    public void setType(String typeIn) {
+    public void setType(ConsumerType typeIn) {
         type = typeIn;
     }
 

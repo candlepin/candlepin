@@ -16,8 +16,13 @@ package org.fedoraproject.candlepin.api.test;
 
 import org.fedoraproject.candlepin.api.EntitlementMatcher;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductFactory;
 import org.fedoraproject.candlepin.model.test.TestUtil;
+
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -28,11 +33,25 @@ import junit.framework.TestCase;
 public class EntitlementMatcherTest extends TestCase {
 
     public void testIsCompatable() throws Exception {
-        Consumer c = TestUtil.createConsumer();
-        Product p = TestUtil.createProduct();
+        Consumer consumer = TestUtil.createConsumer();
+        ConsumerType typeSystem = ProductFactory.get().lookupConsumerTypeByLabel("system");
+        consumer.setType(typeSystem);
         
-        EntitlementMatcher m = new EntitlementMatcher();
-        assertTrue(m.isCompatible(c, p));
-    }
+        List f = ObjectFactory.get().listObjectsByClass(Product.class);
+        Product rhel = (Product) ObjectFactory.get().lookupByFieldName(
+                Product.class, "label", "rhel");
+        Product rhelvirt = (Product) ObjectFactory.get().lookupByFieldName(
+                Product.class, "label", "rhel-virt");
 
+        EntitlementMatcher m = new EntitlementMatcher();
+        
+        assertTrue(m.isCompatible(consumer, rhel));
+        
+        ConsumerType vmwarehost = 
+            ProductFactory.get().lookupConsumerTypeByLabel("vmwarehost");
+        consumer.setType(vmwarehost);
+        
+        // Check that you can't use rhelvirt on a vmware host
+        assertFalse(m.isCompatible(consumer, rhelvirt));
+    }
 }

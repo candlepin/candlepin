@@ -69,4 +69,31 @@ public class BaseModel {
     public static String generateUUID() {
         return UUID.randomUUID().toString(); 
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        BaseModel other = (BaseModel) obj;
+        if (this.getUuid() == null) {
+            if (other.getUuid() != null) return false;
+        }
+        else if (!this.getUuid().equals(other.getUuid())) return false;
+        return true;
+    }
 }
