@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.api;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ public class ConsumerApi extends BaseApi {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public ConsumerInfo getInfo() {
         ConsumerInfo ci = new ConsumerInfo();
-        ci.setType(ConsumerInfo.TYPE_SYSTEM);
+        ci.setType(new ConsumerType("system"));
         ci.setParent(null);
 //        Map<String,String> m = new HashMap<String,String>();
 //        m.put("cpu", "i386");

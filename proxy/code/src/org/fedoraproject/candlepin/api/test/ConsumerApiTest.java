@@ -69,7 +69,9 @@ public class ConsumerApiTest extends TestCase {
         deleteResource.accept("application/json").type("application/json").delete(consumer);
         
         assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
+    }
 
+/*
     public void testJson() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);
@@ -103,4 +105,5 @@ public class ConsumerApiTest extends TestCase {
 //        assertEquals("testname", jto.getName());
 //        assertEquals("AEF", jto.getUuid());
     }
+    */
 }
