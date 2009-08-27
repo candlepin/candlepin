@@ -14,13 +14,19 @@
  */
 package org.fedoraproject.candlepin.api;
 
+import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -33,7 +39,6 @@ public class ConsumerApi extends BaseApi {
         return Consumer.class;
     }
     
-
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<Consumer> list() {
@@ -45,4 +50,32 @@ public class ConsumerApi extends BaseApi {
         return consumers;
     }
     
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Consumer create(ConsumerInfo ci) {
+        System.out.println("metadata: " + ci.getMetadata());
+        System.out.println("ci: " + ci);
+        //Owner owner = (Owner) ObjectFactory.get().lookupByUUID(Owner.class, owneruuid);
+        Consumer c = new Consumer(BaseModel.generateUUID());
+        //c.setOwner(owner);
+        c.setInfo(ci);
+        return c;
+    }
+
+    @GET @Path("/info")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public ConsumerInfo getInfo() {
+        ConsumerInfo ci = new ConsumerInfo();
+        ci.setType(ConsumerInfo.TYPE_SYSTEM);
+        ci.setParent(null);
+//        Map<String,String> m = new HashMap<String,String>();
+//        m.put("cpu", "i386");
+//        m.put("hey", "biteme");
+//        ci.setMetadata(m);
+        ci.setMetadataField("cpu", "i386");
+        ci.setMetadataField("hey", "foobar");
+        System.out.println(ci.getMetadata());
+        return ci;
+    }
 }

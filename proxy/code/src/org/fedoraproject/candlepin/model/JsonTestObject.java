@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,4 +30,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class JsonTestObject extends BaseModel {
 
+    private List<String> stringlist = new ArrayList<String>();
+    //private String[] stringarray = new String[1];
+
+    public void setStringList(List<String> items) {
+        stringlist = items;
+    }
+
+    public List<String> getStringList() {
+        return stringlist;
+    }
 }

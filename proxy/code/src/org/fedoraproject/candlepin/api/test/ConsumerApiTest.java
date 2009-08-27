@@ -14,16 +14,17 @@
  */
 package org.fedoraproject.candlepin.api.test;
 
+import org.fedoraproject.candlepin.api.ConsumerApi;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerInfo;
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.test.TestUtil;
+
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.representation.Form;
-
-import org.fedoraproject.candlepin.api.ConsumerApi;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.test.TestUtil;
 
 import junit.framework.TestCase;
 
@@ -69,5 +70,37 @@ public class ConsumerApiTest extends TestCase {
         
         assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
 
+    public void testJson() {
+        ClientConfig cc = new DefaultClientConfig();
+        Client c = Client.create(cc);
+        ConsumerInfo ci = new ConsumerInfo();
+        ci.setParent(null);
+        ci.setType("system");
+        ci.setMetadataField("mata1", "value1");
+        WebResource postresource = c.resource("http://localhost:8080/candlepin/consumer");
+        ConsumerInfo pci = postresource.accept("application/json").type("application/json").post(ConsumerInfo.class, ci);
+        assertNotNull(pci);
+        assertEquals("system", pci.getType());
+        assertNotNull(pci.getMetadata());
+        assertEquals("value1", pci.getMetadataField("mata1"));
+
+//        WebResource getresource = c.resource("http://localhost:8080/candlepin/consumer/info");
+//        ConsumerInfo nci = getresource.accept("application/json").get(ConsumerInfo.class);
+//        assertNotNull(nci);
+//        assertEquals("system", nci.getType());
+//        assertNotNull(nci.getMetadata());
+//        assertEquals("value1", nci.getMetadataField("mata1"));
+//        System.out.println(nci.getType());
+//        System.out.println(nci.getMetadata());
+
+
+
+//        WebResource postresource = c.resource("http://localhost:8080/candlepin/test/");
+//        postresource.accept("application/json").type("application/json").post(jto);
+//
+//        System.out.println(jto.getName());
+//        jto = getresource.accept("application/json").get(JsonTestObject.class);
+//        assertEquals("testname", jto.getName());
+//        assertEquals("AEF", jto.getUuid());
     }
 }

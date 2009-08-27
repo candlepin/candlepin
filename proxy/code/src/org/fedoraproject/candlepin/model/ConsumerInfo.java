@@ -17,9 +17,13 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class ConsumerInfo {
     
     private Consumer parent;
@@ -70,6 +74,7 @@ public class ConsumerInfo {
      * @param metadataIn The metadata to set.
      */
     public void setMetadata(Map<String, String> metadataIn) {
+        System.out.println("set metadata called");
         metadata = metadataIn;
     }
     
@@ -79,9 +84,11 @@ public class ConsumerInfo {
      * @param value to set
      */
     public void setMetadataField(String name, String value) {
+        System.out.println("set meta field called");
         if (this.metadata == null) {
-            metadata = new HashMap();
+            metadata = new HashMap<String,String>();
         }
+        metadata.put(name, value);
         
     }
     

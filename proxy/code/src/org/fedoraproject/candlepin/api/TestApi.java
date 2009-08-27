@@ -50,5 +50,7 @@ public class TestApi {
         jto = obj;
         System.out.println("object.name:" + obj.getName());
         System.out.println("jto.name:" + jto.getName());
+        System.out.println("jto.uuid:" + jto.getUuid());
+        System.out.println("jto.list:" + jto.getStringList());
     }
 }

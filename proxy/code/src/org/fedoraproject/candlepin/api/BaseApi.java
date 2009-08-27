@@ -47,9 +47,9 @@ public abstract class BaseApi {
         return o;
     }
 
-    @POST
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+//    @POST
+//    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
+//    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Object create(Form form) {
         String newuuid = BaseModel.generateUUID();
         Object args[] = new Object[1];

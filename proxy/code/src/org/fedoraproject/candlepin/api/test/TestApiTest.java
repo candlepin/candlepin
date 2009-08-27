@@ -21,6 +21,9 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 
@@ -33,18 +36,25 @@ public class TestApiTest extends TestCase {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);
         
-        WebResource getresource = c.resource("http://localhost:8080/candlepin/test/");
+
         JsonTestObject jto = new JsonTestObject();
         jto.setName("testname");
         jto.setUuid("AEF");
+        List<String> l = new ArrayList<String>();
+        l.add("hey there");
+        l.add("how are you?");
+        jto.setStringList(l);
 
         WebResource postresource = c.resource("http://localhost:8080/candlepin/test/");
         postresource.accept("application/json").type("application/json").post(jto);
         
+        WebResource getresource = c.resource("http://localhost:8080/candlepin/test/");
         System.out.println(jto.getName());
         jto = getresource.accept("application/json").get(JsonTestObject.class);
         assertEquals("testname", jto.getName());
         assertEquals("AEF", jto.getUuid());
-        
+        assertNotNull(jto.getStringList());
+        assertEquals(2, jto.getStringList().size());
+        System.out.println(jto.getStringList());
     }
 }
