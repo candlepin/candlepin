@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.resource.test;
 
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.test.TestUtil;
-import org.fedoraproject.candlepin.resource.UserApi;
+import org.fedoraproject.candlepin.resource.UserResource;
 
 import com.sun.jersey.api.representation.Form;
 
@@ -24,11 +24,11 @@ import junit.framework.TestCase;
 
 
 /**
- * UserApiTest
+ * UserResourceTest
  * @version $Rev$
  */
-public class UserApiTest extends TestCase {
-    private UserApi api = new UserApi();
+public class UserResourceTest extends TestCase {
+    private UserResource api = new UserResource();
    
     public void testNewUser() {
         Form f = new Form();

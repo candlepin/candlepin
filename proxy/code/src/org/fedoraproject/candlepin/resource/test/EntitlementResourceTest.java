@@ -25,7 +25,7 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.test.TestUtil;
-import org.fedoraproject.candlepin.resource.EntitlementApi;
+import org.fedoraproject.candlepin.resource.EntitlementResource;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -35,10 +35,10 @@ import junit.framework.TestCase;
 
 
 /**
- * ConsumerApiTest
+ * ConsumerResourceTest
  * @version $Rev$
  */
-public class EntitlementApiTest extends TestCase {
+public class EntitlementResourceTest extends TestCase {
     
     private Consumer consumer;
     private Product product;
@@ -68,7 +68,7 @@ public class EntitlementApiTest extends TestCase {
     public void testEntitle() throws Exception {
         
         
-        EntitlementApi eapi = new EntitlementApi();
+        EntitlementResource eapi = new EntitlementResource();
         Form f = new Form();
         f.add("consumer_uuid", consumer.getUuid());
         f.add("product_uuid", product.getUuid());
@@ -112,14 +112,14 @@ public class EntitlementApiTest extends TestCase {
     public void testHasEntitlement() {
         System.out.println("Foo");
         
-        EntitlementApi eapi = new EntitlementApi();
+        EntitlementResource eapi = new EntitlementResource();
         eapi.entitle(consumer, product);
 
         assertTrue(eapi.hasEntitlement(consumer.getUuid(), product.getUuid()));
     }
 
     public void testListAvailableEntitlements() {
-        EntitlementApi eapi = new EntitlementApi();
+        EntitlementResource eapi = new EntitlementResource();
         Form f = new Form();
         f.add("consumer_uuid", consumer.getUuid());
         

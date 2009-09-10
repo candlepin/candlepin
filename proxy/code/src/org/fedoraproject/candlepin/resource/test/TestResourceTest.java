@@ -28,10 +28,10 @@ import junit.framework.TestCase;
 
 
 /**
- * TestApiTest
+ * TestResourceTest
  * @version $Rev$
  */
-public class TestApiTest extends TestCase {
+public class TestResourceTest extends TestCase {
     public void testJson() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);

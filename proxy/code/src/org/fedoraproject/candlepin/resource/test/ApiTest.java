@@ -8,7 +8,7 @@ import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.ApiHandler;
-import org.fedoraproject.candlepin.resource.OwnerApi;
+import org.fedoraproject.candlepin.resource.OwnerResource;
 
 import junit.framework.TestCase;
 
@@ -43,7 +43,7 @@ public class ApiTest extends TestCase {
 		
 		String token = ApiHandler.get().login(u.getLogin(), u.getPassword());
 		
-		OwnerApi oapi = new OwnerApi();
+		OwnerResource oapi = new OwnerResource();
 		Owner lookedup = (Owner) oapi.get("BAD-UUID-NOTFOUND");
 		assertNull(lookedup);
 		lookedup = ApiHandler.get().getOwner(token, o.getUuid());

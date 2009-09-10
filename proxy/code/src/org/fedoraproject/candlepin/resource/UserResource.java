@@ -34,7 +34,7 @@ import javax.ws.rs.core.MediaType;
  * REST api gateway for the User object.
  */
 @Path("/user")
-public class UserApi extends BaseApi {
+public class UserResource extends BaseResource {
 
     /**
      * Returns the User identified by the given login.

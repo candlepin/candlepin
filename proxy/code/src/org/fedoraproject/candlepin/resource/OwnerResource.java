@@ -26,7 +26,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("/owner")
-public class OwnerApi extends BaseApi {
+public class OwnerResource extends BaseResource {
     
     @Override
     protected Class getApiClass() {

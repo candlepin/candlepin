@@ -43,12 +43,12 @@ import javax.ws.rs.core.MediaType;
  * REST api gateway for the User object.
  */
 @Path("/entitlement")
-public class EntitlementApi extends BaseApi {
+public class EntitlementResource extends BaseResource {
 
     /**
      * Logger for this class
      */
-    private static final Logger log = Logger.getLogger(EntitlementApi.class);
+    private static final Logger log = Logger.getLogger(EntitlementResource.class);
 
     /**
      * {@inheritDoc}

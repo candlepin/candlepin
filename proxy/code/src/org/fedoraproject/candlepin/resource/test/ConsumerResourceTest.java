@@ -18,7 +18,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.test.TestUtil;
-import org.fedoraproject.candlepin.resource.ConsumerApi;
+import org.fedoraproject.candlepin.resource.ConsumerResource;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -30,15 +30,15 @@ import junit.framework.TestCase;
 
 
 /**
- * ConsumerApiTest
+ * ConsumerResourceTest
  * @version $Rev$
  */
-public class ConsumerApiTest extends TestCase {
+public class ConsumerResourceTest extends TestCase {
 
     public void testCreateConsumer() throws Exception {
         String newname = "test-consumer-" + System.currentTimeMillis();
         
-        ConsumerApi capi = new ConsumerApi();
+        ConsumerResource capi = new ConsumerResource();
         Form f = new Form();
         f.add("name", newname);
         f.add("type", "standard-system");
@@ -52,7 +52,7 @@ public class ConsumerApiTest extends TestCase {
     public void testDelete() {
         Consumer c = TestUtil.createConsumer();
         String uuid = c.getUuid();
-        ConsumerApi capi = new ConsumerApi();
+        ConsumerResource capi = new ConsumerResource();
         assertNotNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
         capi.delete(c);
         assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));

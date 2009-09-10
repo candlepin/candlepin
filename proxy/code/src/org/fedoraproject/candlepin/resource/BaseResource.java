@@ -33,12 +33,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 
-public abstract class BaseApi {
+public abstract class BaseResource {
 
     /**
      * Logger for this class
      */
-    private static final Logger log = Logger.getLogger(BaseApi.class);
+    private static final Logger log = Logger.getLogger(BaseResource.class);
 
     @GET @Path("/{uuid}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

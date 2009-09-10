@@ -33,7 +33,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("/consumer")
-public class ConsumerApi extends BaseApi {
+public class ConsumerResource extends BaseResource {
 
     @Override
     protected Class getApiClass() {

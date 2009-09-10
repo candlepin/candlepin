@@ -25,17 +25,17 @@ import javax.ws.rs.core.MediaType;
 
 
 /**
- * TestApi - used to prototype RESTful things without mucking up real
+ * TestResource - used to prototype RESTful things without mucking up real
  * test classes.
  * @version $Rev$
  */
 @Path("/test")
-public class TestApi {
+public class TestResource {
 
     private static JsonTestObject jto = null;
     
-    public TestApi() {
-        System.out.println("hello from TestApi ctor");
+    public TestResource() {
+        System.out.println("hello from TestResource ctor");
     }
     
     @GET
