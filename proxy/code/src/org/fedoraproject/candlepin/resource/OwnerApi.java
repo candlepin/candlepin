@@ -12,10 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.api;
+package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Owner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,23 +25,23 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/entitlementpool")
-public class EntitlementPoolApi extends BaseApi {
-
+@Path("/owner")
+public class OwnerApi extends BaseApi {
+    
     @Override
     protected Class getApiClass() {
-        return EntitlementPool.class;
+        return Owner.class;
     }
-    
+
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public List<EntitlementPool> list() {
+    public List<Owner> list() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
-        List<EntitlementPool> pools = new ArrayList<EntitlementPool>();
+        List<Owner> owners = new ArrayList<Owner>();
         for (Object o : u) {
-            pools.add((EntitlementPool) o);
+            owners.add((Owner) o);
         }
-        return pools;
+        return owners;
     }
 
 }

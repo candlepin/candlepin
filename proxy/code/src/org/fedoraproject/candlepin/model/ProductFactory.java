@@ -31,7 +31,7 @@ public class ProductFactory extends ObjectFactory {
     /**
      * Logger for this class
      */
-    private static final Logger log = Logger.getLogger(ProductFactory.class);
+    private static Logger log = Logger.getLogger(ProductFactory.class);
     
     private static ProductFactory instance = new ProductFactory();
     

@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.api.cert.test;
+package org.fedoraproject.candlepin.resource.cert.test;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERSequence;
@@ -24,7 +24,8 @@ import org.bouncycastle.x509.X509Attribute;
 import org.bouncycastle.x509.X509V2AttributeCertificate;
 import org.bouncycastle.x509.X509V2AttributeCertificateGenerator;
 import org.bouncycastle.x509.examples.AttrCertExample;
-import org.fedoraproject.candlepin.api.cert.CertGenerator;
+
+import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;

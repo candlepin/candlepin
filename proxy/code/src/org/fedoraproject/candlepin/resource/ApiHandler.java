@@ -1,4 +1,4 @@
-package org.fedoraproject.candlepin.api;
+package org.fedoraproject.candlepin.resource;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.BaseModel;

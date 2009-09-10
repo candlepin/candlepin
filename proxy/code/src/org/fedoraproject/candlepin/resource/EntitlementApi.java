@@ -12,12 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.api;
+package org.fedoraproject.candlepin.resource;
 
 import com.sun.jersey.api.representation.Form;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.api.cert.CertGenerator;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -25,6 +24,7 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 
 import java.util.ArrayList;
 import java.util.Date;

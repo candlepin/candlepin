@@ -80,7 +80,11 @@ public class User extends BaseModel {
     public void setOwner(Owner owner) {
         this.owner = owner;
     }
-    
+   
+    /**
+     * Return string representation of the user object
+     * @return string representation of the user object
+     */
     public String toString() {
         return new Formatter().format("User :{login: %s, password: %s}",
                 login, password).toString();

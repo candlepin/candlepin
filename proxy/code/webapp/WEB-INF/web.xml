@@ -28,7 +28,7 @@
     <init-param>
       <!-- this is a semi-colon separated list of package names -->
       <param-name>com.sun.jersey.config.property.packages</param-name>
-      <param-value>org.fedoraproject.candlepin.api</param-value>
+      <param-value>org.fedoraproject.candlepin.resource</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>

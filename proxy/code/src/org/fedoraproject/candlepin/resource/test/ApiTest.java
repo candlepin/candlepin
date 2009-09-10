@@ -1,14 +1,14 @@
 /**
  * 
  */
-package org.fedoraproject.candlepin.api.test;
+package org.fedoraproject.candlepin.resource.test;
 
-import org.fedoraproject.candlepin.api.ApiHandler;
-import org.fedoraproject.candlepin.api.OwnerApi;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.resource.ApiHandler;
+import org.fedoraproject.candlepin.resource.OwnerApi;
 
 import junit.framework.TestCase;
 
