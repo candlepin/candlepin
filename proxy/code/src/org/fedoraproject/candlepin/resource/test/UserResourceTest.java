@@ -15,10 +15,11 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.test.TestUtil;
 import org.fedoraproject.candlepin.resource.UserResource;
 
 import com.sun.jersey.api.representation.Form;
+
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -56,28 +57,28 @@ public class UserResourceTest extends TestCase {
         assertEquals("", user.getPassword());
     }
     
-//    public void testList() {
-//        List<Object> users = api.list();
-//        int origSize = users.length;
-//        // create 1
-//        Form f = new Form();
-//        f.add("login", "candlepin");
-//        f.add("password", "cp_p@$sw0rd");
-//        api.create(f);
-//        
-//        // create 2
-//        f.clear();
-//        f.add("login", "jesusr");
-//        f.add("password", "n0P@$sw0rD");
-//        api.create(f);
-//        
-//        // get the list back
-//        users = api.list();
-//        System.out.println("Users: " + users.toString());
-//        assertNotNull(users);
-//        assertEquals(origSize + 2, users.length);
-//        assertEquals(User.class, users[0].getClass());
-//    }
+    public void testList() {
+        List<User> users = api.list();
+        int origSize = users.size();
+        // create 1
+        Form f = new Form();
+        f.add("login", "candlepin");
+        f.add("password", "cp_p@$sw0rd");
+        api.create(f);
+        
+        // create 2
+        f.clear();
+        f.add("login", "jesusr");
+        f.add("password", "n0P@$sw0rD");
+        api.create(f);
+        
+        // get the list back
+        users = api.list();
+        System.out.println("Users: " + users.toString());
+        assertNotNull(users);
+        assertEquals(origSize + 2, users.size());
+        assertEquals(User.class, users.get(0).getClass());
+    }
     
     public void testGet() {
         User user = api.get("test-login");
