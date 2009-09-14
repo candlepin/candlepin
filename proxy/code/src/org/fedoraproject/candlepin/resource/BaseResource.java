@@ -34,7 +34,16 @@ import javax.ws.rs.core.MediaType;
 
 
 public abstract class BaseResource {
+    private Class model;
 
+    /**
+     * Ctor
+     * @param model
+     */
+    public BaseResource(Class modelClass) {
+        this.model = modelClass;
+    }
+    
     /**
      * Logger for this class
      */
@@ -79,6 +88,8 @@ public abstract class BaseResource {
         log.debug("Deleted.");
     }
     
-    protected abstract Class getApiClass();
+    protected Class getApiClass() {
+        return model;
+    }
 
 }

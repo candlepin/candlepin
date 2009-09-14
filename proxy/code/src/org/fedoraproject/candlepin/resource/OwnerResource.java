@@ -28,9 +28,11 @@ import javax.ws.rs.core.MediaType;
 @Path("/owner")
 public class OwnerResource extends BaseResource {
     
-    @Override
-    protected Class getApiClass() {
-        return Owner.class;
+    /**
+     * @param modelClassIn
+     */
+    public OwnerResource() {
+        super(Owner.class);
     }
 
     @GET

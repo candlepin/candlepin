@@ -35,9 +35,11 @@ import javax.ws.rs.core.MediaType;
 @Path("/consumer")
 public class ConsumerResource extends BaseResource {
 
-    @Override
-    protected Class getApiClass() {
-        return Consumer.class;
+    /**
+     * default ctor
+     */
+    public ConsumerResource() {
+        super(Consumer.class);
     }
     
     @GET

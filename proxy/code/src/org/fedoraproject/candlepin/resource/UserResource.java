@@ -37,6 +37,13 @@ import javax.ws.rs.core.MediaType;
 public class UserResource extends BaseResource {
 
     /**
+     * default ctor
+     */
+    public UserResource() {
+        super(User.class);
+    }
+
+    /**
      * Returns the User identified by the given login.
      * @return user whose login is 'login'
      */
@@ -44,14 +51,6 @@ public class UserResource extends BaseResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public User get(@PathParam("login") String login) {
         return (User) ObjectFactory.get().lookupByFieldName(User.class, "login", login);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Class getApiClass() {
-        return User.class;
     }
 
     /**

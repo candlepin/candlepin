@@ -14,17 +14,17 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import com.sun.jersey.api.representation.Form;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
+
+import com.sun.jersey.api.representation.Form;
+
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,18 +46,17 @@ import javax.ws.rs.core.MediaType;
 public class EntitlementResource extends BaseResource {
 
     /**
+     * default ctor
+     */
+    public EntitlementResource() {
+        super(Entitlement.class);
+    }
+
+    /**
      * Logger for this class
      */
     private static final Logger log = Logger.getLogger(EntitlementResource.class);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Class getApiClass() {
-        return Entitlement.class;
-    }
- 
     private Object validateObjectInput(Form form, String fieldName, Class clazz) {
         String uuid = form.getFirst(fieldName);
         log.debug("UUID: " + uuid);
@@ -160,7 +159,7 @@ public class EntitlementResource extends BaseResource {
     @Path("/listavailable")
     public List<EntitlementPool> listAvailableEntitlements(@PathParam("uuid") String uuid) {
         Consumer c = (Consumer) validateObjectInput(uuid, Consumer.class);
-        List<EntitlementPool> entitlementPools = new EntitlementPoolApi().list();
+        List<EntitlementPool> entitlementPools = new EntitlementPoolResource().list();
         List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
         EntitlementMatcher matcher = new EntitlementMatcher();
         for (EntitlementPool ep : entitlementPools) {

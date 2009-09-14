@@ -26,11 +26,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("/entitlementpool")
-public class EntitlementPoolApi extends BaseResource {
+public class EntitlementPoolResource extends BaseResource {
 
-    @Override
-    protected Class getApiClass() {
-        return EntitlementPool.class;
+    /**
+     * default ctor
+     */
+    public EntitlementPoolResource() {
+        super(EntitlementPool.class);
     }
     
     @GET
