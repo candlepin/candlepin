@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import org.fedoraproject.candlepin.model.JsonTestObject;
+import org.fedoraproject.candlepin.resource.TestResource;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -32,11 +33,8 @@ import junit.framework.TestCase;
  * @version $Rev$
  */
 public class TestResourceTest extends TestCase {
-    public void testJson() {
-        ClientConfig cc = new DefaultClientConfig();
-        Client c = Client.create(cc);
-        
-
+    
+    private JsonTestObject createTestObject() {
         JsonTestObject jto = new JsonTestObject();
         jto.setName("testname");
         jto.setUuid("AEF");
@@ -44,6 +42,15 @@ public class TestResourceTest extends TestCase {
         l.add("hey there");
         l.add("how are you?");
         jto.setStringList(l);
+        return jto;
+    }
+    
+    public void testJson() {
+        ClientConfig cc = new DefaultClientConfig();
+        Client c = Client.create(cc);
+        
+
+        JsonTestObject jto = createTestObject();
 
         WebResource postresource = c.resource("http://localhost:8080/candlepin/test/");
         postresource.accept("application/json").type("application/json").post(jto);
@@ -55,6 +62,16 @@ public class TestResourceTest extends TestCase {
         assertEquals("AEF", jto.getUuid());
         assertNotNull(jto.getStringList());
         assertEquals(2, jto.getStringList().size());
+        assertNull(jto.getParent());
         System.out.println(jto.getStringList());
+    }
+    
+    public void testGet() {
+        TestResource tr = new TestResource();
+        assertNull(tr.get());
+        
+        JsonTestObject jto = createTestObject();
+        tr.create(jto);
+        assertEquals(jto, tr.get());
     }
 }

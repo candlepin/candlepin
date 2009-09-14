@@ -9,7 +9,8 @@ if len(sys.argv) < 1:
     sys.exit(1)
 
 print("------------ TESTING json create")
-params = {"name":"now","uuid":"thiswork","stringList":["string1", "string2"]}
+parent = {"name":"parentname","uuid":"parentuuid","stringList":["string3", "string4"]}
+params = {"name":"now","uuid":"thiswork","stringList":["string1", "string2"],"parent":parent}
 print(type(params['stringList']))
 headers = {"Content-type":"application/json",
            "Accept": "application/json"}
