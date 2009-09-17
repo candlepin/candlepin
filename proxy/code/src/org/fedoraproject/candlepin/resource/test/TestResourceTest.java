@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.resource.TestResource;
 
@@ -73,5 +74,15 @@ public class TestResourceTest extends TestCase {
         JsonTestObject jto = createTestObject();
         tr.create(jto);
         assertEquals(jto, tr.get());
+    }
+    
+    public void testConsumerType() {
+        ClientConfig cc = new DefaultClientConfig();
+        Client c = Client.create(cc);
+
+        WebResource getresource = c.resource("http://localhost:8080/candlepin/test/consumertype");
+        ConsumerType ct = getresource.accept("application/json").get(ConsumerType.class);
+        assertNotNull(ct);
+        assertEquals("testtype", ct.getLabel());
     }
 }

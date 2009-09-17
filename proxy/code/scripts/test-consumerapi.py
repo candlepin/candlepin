@@ -34,5 +34,10 @@ response = urllib.urlopen('http://localhost:8080/candlepin/consumer/info')
 rsp = response.read()
 print("get info: %s" % rsp)
 
-{
-}
+#print("delete consumer")
+#conn = httplib.HTTPConnection("localhost", 8080)
+#conn.request("DELETE", '/candlepin/consumer/')
+#response = conn.getresponse()
+#
+#print("Status: %d Response: %s" % (response.status, response.reason))
+#conn.close()

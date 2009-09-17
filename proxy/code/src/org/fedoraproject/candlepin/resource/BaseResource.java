@@ -14,19 +14,13 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import com.sun.jersey.api.representation.Form;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.util.MethodUtil;
 
-import java.util.Iterator;
+import org.apache.log4j.Logger;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -59,33 +53,32 @@ public abstract class BaseResource {
 //    @POST
 //    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
 //    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Object create(Form form) {
-        String newuuid = BaseModel.generateUUID();
-        Object args[] = new Object[1];
-        args[0] = newuuid;
-        BaseModel newobject = (BaseModel) 
-            MethodUtil.callNewMethod(getApiClass().getName(), args);
-        Iterator i = form.keySet().iterator();
-        while (i.hasNext()) {
-            String key = (String) i.next();
-            String value = form.getFirst(key); 
-            log.debug("value : " + value);
-            MethodUtil.callSetter(newobject, key, value);
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("before store name: " + newobject.getName());
-            log.debug("before store uuid: " + newobject.getUuid());
-        }
-        return ObjectFactory.get().store(newobject);
-    }
+//    public Object create(Form form) {
+//        String newuuid = BaseModel.generateUUID();
+//        Object args[] = new Object[1];
+//        args[0] = newuuid;
+//        BaseModel newobject = (BaseModel) 
+//            MethodUtil.callNewMethod(getApiClass().getName(), args);
+//        Iterator i = form.keySet().iterator();
+//        while (i.hasNext()) {
+//            String key = (String) i.next();
+//            String value = form.getFirst(key); 
+//            log.debug("value : " + value);
+//            MethodUtil.callSetter(newobject, key, value);
+//        }
+//        if (log.isDebugEnabled()) {
+//            log.debug("before store name: " + newobject.getName());
+//            log.debug("before store uuid: " + newobject.getUuid());
+//        }
+//        return ObjectFactory.get().store(newobject);
+//    }
 
     
-    @DELETE
-    @Consumes({MediaType.APPLICATION_JSON})
-    public void delete(BaseModel object) {
-        log.debug("Delete called: " + object);
-        ObjectFactory.get().delete(getApiClass(), object);
-        log.debug("Deleted.");
+    @DELETE @Path("/{uuid}")
+    public void delete(String uuid) {
+        System.out.println("Delete called: " + uuid);
+        BaseModel obj = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
+        ObjectFactory.get().delete(getApiClass(), obj);
     }
     
     protected Class getApiClass() {

@@ -21,9 +21,7 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -61,8 +59,10 @@ public class ConsumerResource extends BaseResource {
         System.out.println("ci: " + ci);
         //Owner owner = (Owner) ObjectFactory.get().lookupByUUID(Owner.class, owneruuid);
         Consumer c = new Consumer(BaseModel.generateUUID());
+        c.setName(ci.getMetadataField("name"));
         //c.setOwner(owner);
         c.setInfo(ci);
+        ObjectFactory.get().store(c);
         return c;
     }
 

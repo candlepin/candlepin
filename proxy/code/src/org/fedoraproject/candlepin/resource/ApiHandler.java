@@ -1,10 +1,11 @@
 package org.fedoraproject.candlepin.resource;
 
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
+
+import org.apache.log4j.Logger;
 
 import java.util.HashSet;
 import java.util.Set;

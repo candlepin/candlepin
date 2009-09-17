@@ -23,7 +23,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class ConsumerType extends BaseModel {
 
     private String label;
-    
+
+    /**
+     * default noarg ctor
+     */
+    public ConsumerType() {
+        label = null;
+    }
+
     /**
      * ConsumerType constructor with label
      * @param labelIn to set

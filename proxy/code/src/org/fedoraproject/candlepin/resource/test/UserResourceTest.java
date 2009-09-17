@@ -17,8 +17,6 @@ package org.fedoraproject.candlepin.resource.test;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.UserResource;
 
-import com.sun.jersey.api.representation.Form;
-
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -32,26 +30,17 @@ public class UserResourceTest extends TestCase {
     private UserResource api = new UserResource();
    
     public void testNewUser() {
-        Form f = new Form();
-        f.add("login", "candlepin");
-        f.add("password", "cp_p@$sw0rd");
-        User user = (User) api.create(f);
+        User user = api.create("candlepin", "cp_p@$sw0rd");
         assertNotNull(user);
         assertEquals("candlepin", user.getLogin());
         assertEquals("cp_p@$sw0rd", user.getPassword());
         
-        f.clear();
-        f.add("login", null);
-        f.add("password", null);
-        user = (User) api.create(f);
+        user = api.create(null, null);
         assertNotNull(user);
-        assertEquals("", user.getLogin());
-        assertEquals("", user.getPassword());
+        assertEquals(null, user.getLogin());
+        assertEquals(null, user.getPassword());
         
-        f.clear();
-        f.add("login", "");
-        f.add("password", "");
-        user = (User) api.create(f);
+        user = api.create("", "");
         assertNotNull(user);
         assertEquals("", user.getLogin());
         assertEquals("", user.getPassword());
@@ -61,16 +50,10 @@ public class UserResourceTest extends TestCase {
         List<User> users = api.list();
         int origSize = users.size();
         // create 1
-        Form f = new Form();
-        f.add("login", "candlepin");
-        f.add("password", "cp_p@$sw0rd");
-        api.create(f);
+        api.create("candlepin", "cp_p@$sw0rd");
         
         // create 2
-        f.clear();
-        f.add("login", "jesusr");
-        f.add("password", "n0P@$sw0rD");
-        api.create(f);
+        api.create("jesusr", "n0P@$sw0rD");
         
         // get the list back
         users = api.list();

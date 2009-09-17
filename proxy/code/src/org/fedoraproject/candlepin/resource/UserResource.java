@@ -74,6 +74,8 @@ public class UserResource extends BaseResource {
     public User create(String login, String password) {
         String newuuid = BaseModel.generateUUID();
         User u = new User(newuuid);
+        u.setLogin(login);
+        u.setPassword(password);
         ObjectFactory.get().store(u);
         return u;
     }

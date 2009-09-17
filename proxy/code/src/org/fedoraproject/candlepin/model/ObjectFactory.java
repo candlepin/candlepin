@@ -14,8 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.util.MethodUtil;
+
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -153,6 +154,4 @@ public class ObjectFactory {
         List typelist = (List) objects.get(key);
         typelist.remove(removeMe);
     }
-    
-
 }

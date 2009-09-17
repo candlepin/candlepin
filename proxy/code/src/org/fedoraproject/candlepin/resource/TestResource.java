@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 
 import javax.ws.rs.Consumes;
@@ -54,5 +55,11 @@ public class TestResource {
         System.out.println("jto.list:" + jto.getStringList());
         System.out.println("jto.parent.name:" + jto.getParent() == null ? jto.getParent().getName() : "");
         System.out.println("jto.parent.list:" + jto.getParent() == null ? jto.getParent().getStringList() : "" );
+    }
+    
+    @GET @Path("/consumertype")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public ConsumerType getConsumerType() {
+        return new ConsumerType("testtype");
     }
 }

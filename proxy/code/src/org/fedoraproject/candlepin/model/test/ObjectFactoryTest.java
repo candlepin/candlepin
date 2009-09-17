@@ -39,7 +39,8 @@ public class ObjectFactoryTest extends TestCase {
     
     public void testListObjectsByClass() {
         List<Object> l = ObjectFactory.get().listObjectsByClass(Object.class);
-        assertNull(l);
+        assertNotNull(l);
+        assertTrue(l.isEmpty());
         
         l = ObjectFactory.get().listObjectsByClass(Owner.class);
         assertNotNull(l);
@@ -52,7 +53,8 @@ public class ObjectFactoryTest extends TestCase {
     public void testStore() {
         // make sure we don't have one stored already
         List<Object> list = ObjectFactory.get().listObjectsByClass(Long.class);
-        assertNull(list);
+        assertNotNull(list);
+        assertTrue(list.isEmpty());
         
         Long l = new Long(10);
         ObjectFactory.get().store(l);

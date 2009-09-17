@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.apache.log4j.Logger;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductFactory;
+
+import org.apache.log4j.Logger;
 
 import java.util.List;
 

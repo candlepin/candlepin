@@ -14,18 +14,19 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.representation.Form;
-
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.test.TestUtil;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.representation.Form;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -120,13 +121,13 @@ public class EntitlementResourceTest extends TestCase {
 
     public void testListAvailableEntitlements() {
         EntitlementResource eapi = new EntitlementResource();
+        consumer.setType(new ConsumerType("standard-system"));
         Form f = new Form();
         f.add("consumer_uuid", consumer.getUuid());
         
-        List avail = eapi.listAvailableEntitlements(consumer.getUuid());
+        List<EntitlementPool> avail = eapi.listAvailableEntitlements(consumer.getUuid());
         assertNotNull(avail);
         assertTrue(avail.size() > 0);
-        
     }
     
     public void testJson() {
