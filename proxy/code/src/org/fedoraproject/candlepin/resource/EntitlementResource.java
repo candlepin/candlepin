@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008 Red Hat, Inc.
+ * Copyright (c) 2009 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -45,16 +45,12 @@ import javax.ws.rs.core.MediaType;
 @Path("/entitlement")
 public class EntitlementResource extends BaseResource {
 
-    /**
-     * default ctor
-     */
+    /** default ctor */
     public EntitlementResource() {
         super(Entitlement.class);
     }
 
-    /**
-     * Logger for this class
-     */
+    /** Logger for this class */
     private static final Logger log = Logger.getLogger(EntitlementResource.class);
 
     private Object validateObjectInput(Form form, String fieldName, Class clazz) {
@@ -78,6 +74,10 @@ public class EntitlementResource extends BaseResource {
         return o;
     }
 
+    /**
+     * Test method
+     * @param c consumer test
+     */
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -87,6 +87,11 @@ public class EntitlementResource extends BaseResource {
         return "return value";
     }
 
+    /**
+     * Entitles the given Consumer with the given Product.
+     * @param c Consumer to be entitled
+     * @param p The Product
+     */
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -107,7 +112,8 @@ public class EntitlementResource extends BaseResource {
                 // Check expiration
                 Date today = new Date();
                 if (ep.getEndDate().before(today)) {
-                    throw new RuntimeException("Entitlement expired on: " + ep.getEndDate());
+                    throw new RuntimeException("Entitlement expired on: " +
+                        ep.getEndDate());
                 }
                 
                 Entitlement e = new Entitlement(BaseModel.generateUUID());
@@ -130,7 +136,8 @@ public class EntitlementResource extends BaseResource {
 
     /**
      * Check to see if a given Consumer is entitled to given Product
-     * @param form with consumer_uuid and product_uuid to check if entitled or not
+     * @param consumer_uuid consumer_uuid to check if entitled or not
+     * @param product_uuid product_uuid to check if entitled or not
      * @return boolean if entitled or not
      */
     @GET
@@ -149,15 +156,17 @@ public class EntitlementResource extends BaseResource {
     }
     
     /**
-     * Match/List the available entitlements for a given Consumer.  Right now this returns 
-     * ALL entitlements because we haven't built any filtering logic.
-     * @param form containing consumer_uuid
+     * Match/List the available entitlements for a given Consumer.  Right now
+     * this returns ALL entitlements because we haven't built any filtering logic.
+     * @param uuid consumer_uuid
      * @return List<Entitlement> of applicable 
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("/listavailable")
-    public List<EntitlementPool> listAvailableEntitlements(@PathParam("uuid") String uuid) {
+    public List<EntitlementPool> listAvailableEntitlements(
+        @PathParam("uuid") String uuid) {
+
         Consumer c = (Consumer) validateObjectInput(uuid, Consumer.class);
         List<EntitlementPool> entitlementPools = new EntitlementPoolResource().list();
         List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
@@ -181,7 +190,11 @@ public class EntitlementResource extends BaseResource {
     // TODO:
     // EntitlementLib.UnentitleProduct(Consumer, Entitlement) 
     
-    
+   
+    /**
+     * Return list of Entitlements
+     * @return list of Entitlements
+     */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<Entitlement> list() {

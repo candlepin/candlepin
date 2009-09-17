@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008 Red Hat, Inc.
+ * Copyright (c) 2009 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -34,17 +34,28 @@ import javax.ws.rs.core.MediaType;
 public class TestResource {
 
     private static JsonTestObject jto = null;
-    
+   
+    /**
+     * default ctor
+     */
     public TestResource() {
         System.out.println("hello from TestResource ctor");
     }
-    
+   
+    /**
+     * Returns the test object
+     * @return the test object
+     */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public JsonTestObject get() {
         return jto;
     }
-    
+   
+    /**
+     * Creates a test json object
+     * @param obj test object
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void create(JsonTestObject obj) {
@@ -53,10 +64,16 @@ public class TestResource {
         System.out.println("jto.name:" + jto.getName());
         System.out.println("jto.uuid:" + jto.getUuid());
         System.out.println("jto.list:" + jto.getStringList());
-        System.out.println("jto.parent.name:" + jto.getParent() == null ? jto.getParent().getName() : "");
-        System.out.println("jto.parent.list:" + jto.getParent() == null ? jto.getParent().getStringList() : "" );
+        System.out.println("jto.parent.name:" +
+            jto.getParent() == null ? jto.getParent().getName() : "");
+        System.out.println("jto.parent.list:" +
+            jto.getParent() == null ? jto.getParent().getStringList() : "");
     }
-    
+   
+    /**
+     * Returns a ConsumerType
+     * @return a ConsumerType
+     */
     @GET @Path("/consumertype")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public ConsumerType getConsumerType() {

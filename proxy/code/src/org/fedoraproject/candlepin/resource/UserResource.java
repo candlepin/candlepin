@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008 Red Hat, Inc.
+ * Copyright (c) 2009 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -45,6 +45,7 @@ public class UserResource extends BaseResource {
 
     /**
      * Returns the User identified by the given login.
+     * @param login the user's login
      * @return user whose login is 'login'
      */
     @GET @Path("/{login}")
@@ -68,6 +69,12 @@ public class UserResource extends BaseResource {
         return users;
     }
 
+    /**
+     * Creates the user with the given login and password.
+     * @param login desired login
+     * @param password desired password
+     * @return User
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

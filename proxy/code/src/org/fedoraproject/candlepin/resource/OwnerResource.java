@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008 Red Hat, Inc.
+ * Copyright (c) 2009 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -25,6 +25,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+/**
+ * Owner Resource
+ */
 @Path("/owner")
 public class OwnerResource extends BaseResource {
     
@@ -35,6 +38,10 @@ public class OwnerResource extends BaseResource {
         super(Owner.class);
     }
 
+    /**
+     * Return list of Owners
+     * @return list of Owners
+     */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<Owner> list() {
