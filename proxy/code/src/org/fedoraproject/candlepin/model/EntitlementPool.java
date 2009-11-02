@@ -21,6 +21,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+/**
+ * Represents a collection of entitlements for a given order.
+ */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class EntitlementPool extends BaseModel {
@@ -34,7 +37,7 @@ public class EntitlementPool extends BaseModel {
     private Date endDate;
 
     /**
-     * @param uuid
+     * @param uuid unique id of the pool
      */
     public EntitlementPool(String uuid) {
         super(uuid);

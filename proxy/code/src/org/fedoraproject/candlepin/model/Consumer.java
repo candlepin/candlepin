@@ -23,6 +23,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+/**
+ * Represents Consumer entity
+ */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Consumer extends BaseModel {
@@ -44,7 +47,7 @@ public class Consumer extends BaseModel {
     }
 
     /**
-     * @param uuid
+     * @param uuid unique id of consumer
      */
     public Consumer(String uuid) {
         super(uuid);
@@ -120,7 +123,7 @@ public class Consumer extends BaseModel {
 
     /**
      * Add a Product to this Consumer.
-     * 
+     * @param p Product to be consumed.
      */
     public void addConsumedProduct(Product p) {
         if (this.consumedProducts == null) {
@@ -135,8 +138,8 @@ public class Consumer extends BaseModel {
      */
     @Override
     public String toString() {
-        return "Consumer [type=" + this.getType() + ", getName()=" + getName()
-                + ", getUuid()=" + getUuid() + "]";
+        return "Consumer [type=" + this.getType() + ", getName()=" +
+            getName() + ", getUuid()=" + getUuid() + "]";
     }
 
     

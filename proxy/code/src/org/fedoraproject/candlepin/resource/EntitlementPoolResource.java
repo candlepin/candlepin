@@ -25,6 +25,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+/**
+ * API gateway for the EntitlementPool
+ */
 @Path("/entitlementpool")
 public class EntitlementPoolResource extends BaseResource {
 
@@ -34,7 +37,11 @@ public class EntitlementPoolResource extends BaseResource {
     public EntitlementPoolResource() {
         super(EntitlementPool.class);
     }
-    
+   
+    /**
+     * Returns the list of available entitlement pools.
+     * @return the list of available entitlement pools.
+     */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<EntitlementPool> list() {

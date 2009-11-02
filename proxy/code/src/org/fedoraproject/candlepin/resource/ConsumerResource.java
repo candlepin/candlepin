@@ -30,6 +30,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+/**
+ * API Gateway for Consumers
+ */
 @Path("/consumer")
 public class ConsumerResource extends BaseResource {
 
@@ -39,7 +42,11 @@ public class ConsumerResource extends BaseResource {
     public ConsumerResource() {
         super(Consumer.class);
     }
-    
+   
+    /**
+     * List available Consumers
+     * @return list of available consumers.
+     */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<Consumer> list() {
@@ -50,7 +57,12 @@ public class ConsumerResource extends BaseResource {
         }
         return consumers;
     }
-    
+   
+    /**
+     * Create a Consumer
+     * @param ci Consumer metadata encapsulated in a ConsumerInfo.
+     * @return newly created Consumer
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -66,6 +78,10 @@ public class ConsumerResource extends BaseResource {
         return c;
     }
 
+    /**
+     * Returns the ConsumerInfo for the given Consumer.
+     * @return the ConsumerInfo for the given Consumer.
+     */
     @GET @Path("/info")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public ConsumerInfo getInfo() {

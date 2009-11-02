@@ -28,12 +28,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class BaseModel {
 
-	private String uuid;
-	private String name;
+    private String uuid;
+    private String name;
 
     /**
      * Construct new with UUID
-     * @param uuid
+     * @param uuid unique idea for the model object
      */
     public BaseModel(String uuid) {
         this.uuid = uuid;
@@ -45,19 +45,35 @@ public class BaseModel {
     public BaseModel() {
         
     }
-    
+   
+    /**
+     * Returns the unique id of the model object.
+     * @return the unique id of the model object.
+     */
     public String getUuid() {
         return uuid;
     }
 
+    /**
+     * Sets the unique id of the model object.
+     * @param uuid unique id of the model.
+     */
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
 
+    /**
+     * Returns the name of the object.
+     * @return the name of the object.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Set the name of the model object.
+     * @param name name of the object
+     */
     public void setName(String name) {
         this.name = name;
     }
@@ -86,14 +102,29 @@ public class BaseModel {
      */
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        BaseModel other = (BaseModel) obj;
-        if (this.getUuid() == null) {
-            if (other.getUuid() != null) return false;
+        if (this == obj) {
+            return true;
         }
-        else if (!this.getUuid().equals(other.getUuid())) return false;
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        BaseModel other = (BaseModel) obj;
+
+        if (this.getUuid() == null) {
+            if (other.getUuid() != null) {
+                return false;
+            }
+        }
+        else if (!this.getUuid().equals(other.getUuid())) {
+            return false;
+        }
+
         return true;
     }
 }

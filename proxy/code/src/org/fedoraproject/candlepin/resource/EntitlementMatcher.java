@@ -25,8 +25,8 @@ import org.apache.log4j.Logger;
 import java.util.List;
 
 /** 
- * EntitlementMatcher - initial class for matching products compatability with 
- * an entitlement.
+ * EntitlementMatcher - initial class for matching products compatability
+ * with an entitlement.
  * @version $Rev$
  */
 public class EntitlementMatcher {
@@ -34,14 +34,13 @@ public class EntitlementMatcher {
     /**
      * Logger for this class
      */
-    private static final Logger log = Logger
+    private static Logger log = Logger
             .getLogger(EntitlementMatcher.class);
-    
     
     /**
      * Check if a given consumer is compat with given product.
-     * @param consumer to check 
-     * @param product to check
+     * @param c consumer to check 
+     * @param p product to check
      * @return boolean if compat or not
      */
     public boolean isCompatible(Consumer c, Product p) {
@@ -54,5 +53,4 @@ public class EntitlementMatcher {
         
         return (types != null && types.contains(c.getType())); 
     }
-
 }

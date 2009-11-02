@@ -15,18 +15,17 @@
 package org.fedoraproject.candlepin.resource;
 
 /**
+ * Represents an error while authenticating.
  * @author mmccune
- *
  */
 public class AuthenticationException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
     
     /**
-     * @param message
+     * @param message exception message
      */
     public AuthenticationException(String message) {
         super(message);
     }
-
 }

@@ -51,7 +51,7 @@ public class EntitlementResource extends BaseResource {
     }
 
     /** Logger for this class */
-    private static final Logger log = Logger.getLogger(EntitlementResource.class);
+    private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     private Object validateObjectInput(Form form, String fieldName, Class clazz) {
         String uuid = form.getFirst(fieldName);
@@ -77,6 +77,7 @@ public class EntitlementResource extends BaseResource {
     /**
      * Test method
      * @param c consumer test
+     * @return test object
      */
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
@@ -91,6 +92,7 @@ public class EntitlementResource extends BaseResource {
      * Entitles the given Consumer with the given Product.
      * @param c Consumer to be entitled
      * @param p The Product
+     * @return Entitled object
      */
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
@@ -136,17 +138,17 @@ public class EntitlementResource extends BaseResource {
 
     /**
      * Check to see if a given Consumer is entitled to given Product
-     * @param consumer_uuid consumer_uuid to check if entitled or not
-     * @param product_uuid product_uuid to check if entitled or not
+     * @param consumerUuid consumerUuid to check if entitled or not
+     * @param productUuid productUuid to check if entitled or not
      * @return boolean if entitled or not
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("/has")
-    public boolean hasEntitlement(@PathParam("consumer_uuid") String consumer_uuid, 
-            @PathParam("product_uuid") String product_uuid) {
-        Consumer c = (Consumer) validateObjectInput(consumer_uuid, Consumer.class);
-        Product p = (Product) validateObjectInput(product_uuid, Product.class);
+    public boolean hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
+            @PathParam("product_uuid") String productUuid) {
+        Consumer c = (Consumer) validateObjectInput(consumerUuid, Consumer.class);
+        Product p = (Product) validateObjectInput(productUuid, Product.class);
         for (Entitlement e : c.getEntitlements()) {
             if (e.getProduct().equals(p)) {
                 return true;
@@ -158,7 +160,7 @@ public class EntitlementResource extends BaseResource {
     /**
      * Match/List the available entitlements for a given Consumer.  Right now
      * this returns ALL entitlements because we haven't built any filtering logic.
-     * @param uuid consumer_uuid
+     * @param uuid consumerUuid
      * @return List<Entitlement> of applicable 
      */
     @GET

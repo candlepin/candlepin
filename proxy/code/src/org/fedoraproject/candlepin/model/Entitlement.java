@@ -22,6 +22,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+/**
+ * Represents the actual Entitlement record.
+ */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Entitlement extends BaseModel {
@@ -40,7 +43,7 @@ public class Entitlement extends BaseModel {
     }
     
     /**
-     * @param uuid
+     * @param uuid unique id of the entitlement
      */
     public Entitlement(String uuid) {
         super(uuid);
@@ -55,7 +58,7 @@ public class Entitlement extends BaseModel {
     }
 
     /**
-     * @param org the org to set
+     * @param ownerIn the owner to set
      */
     public void setOwner(Owner ownerIn) {
         this.owner = ownerIn;

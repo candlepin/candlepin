@@ -34,18 +34,34 @@ public class JsonTestObject extends BaseModel {
     //private String[] stringarray = new String[1];
     private JsonTestObject parent;
 
+    /**
+     * sets the parent
+     * @param p Parent
+     */
     public void setParent(JsonTestObject p) {
         parent = p;
     }
-    
+   
+    /**
+     * returns parent object
+     * @return parent object
+     */
     public JsonTestObject getParent() {
         return parent;
     }
-    
+   
+    /**
+     * sets the list string
+     * @param items items to set
+     */
     public void setStringList(List<String> items) {
         stringlist = items;
     }
 
+    /**
+     * returns the string list
+     * @return the string list
+     */
     public List<String> getStringList() {
         return stringlist;
     }

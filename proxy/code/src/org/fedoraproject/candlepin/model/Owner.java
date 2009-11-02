@@ -21,6 +21,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * Represents the owner of entitlements
+ */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Owner extends BaseModel {
@@ -30,7 +33,7 @@ public class Owner extends BaseModel {
     private List<User> users;
     
     /**
-     * @param uuid
+     * @param uuid unique id for the owner
      */
     public Owner(String uuid) {
         super(uuid);
@@ -91,6 +94,10 @@ public class Owner extends BaseModel {
         this.users.add(u);
     }
 
+    /**
+     * Add a consumer to this owner
+     * @param c consumer for this owner.
+     */
     public void addConsumer(Consumer c) {
         c.setOwner(this);
         if (this.consumers == null) {
@@ -100,6 +107,10 @@ public class Owner extends BaseModel {
         
     }
 
+    /**
+     * add owner to the pool, and reference to the pool.
+     * @param pool EntitlementPool for this owner.
+     */
     public void addEntitlementPool(EntitlementPool pool) {
         pool.setOwner(this);
         if (this.entitlementPools == null) {
@@ -113,7 +124,7 @@ public class Owner extends BaseModel {
      */
     @Override
     public String toString() {
-        return "Owner [getName()=" + getName() + ", getUuid()="
-                + getUuid() + "]";
+        return "Owner [getName()=" + getName() + ", getUuid()=" +
+            getUuid() + "]";
     }
 }

@@ -21,6 +21,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * Represents a Product that can be consumed and entitled.
+ */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Product extends BaseModel {
@@ -30,7 +33,7 @@ public class Product extends BaseModel {
 
     /**
      * Create product with UUID
-     * @param uuid
+     * @param uuid unique id for the product
      */
     public Product(String uuid) {
         super(uuid);
@@ -68,8 +71,8 @@ public class Product extends BaseModel {
     }
     
     /** 
-     * Get the list of 
-     * @return
+     * Get the list of compatible consumer types
+     * @return list of compatible consumer types
      */
     public List<String> getCompatibleConsumerTypes() {
         

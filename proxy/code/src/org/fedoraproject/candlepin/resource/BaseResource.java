@@ -27,12 +27,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 
+/**
+ * Base api gateway for all model objects.
+ */
 public abstract class BaseResource {
+
     private Class model;
 
     /**
      * Ctor
-     * @param model
+     * @param modelClass class of derived model class.
      */
     public BaseResource(Class modelClass) {
         this.model = modelClass;
@@ -41,8 +45,13 @@ public abstract class BaseResource {
     /**
      * Logger for this class
      */
-    private static final Logger log = Logger.getLogger(BaseResource.class);
+    private static Logger log = Logger.getLogger(BaseResource.class);
 
+    /**
+     * Returns the model object matching the given uuid.
+     * @param uuid unique id of model sought.
+     * @return the model object matching the given uuid.
+     */
     @GET @Path("/{uuid}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Object get(@PathParam("uuid") String uuid) {
@@ -73,7 +82,11 @@ public abstract class BaseResource {
 //        return ObjectFactory.get().store(newobject);
 //    }
 
-    
+   
+    /**
+     * Delete the model object matching the given uuid.
+     * @param uuid unique id of object to be deleted.
+     */
     @DELETE @Path("/{uuid}")
     public void delete(String uuid) {
         System.out.println("Delete called: " + uuid);

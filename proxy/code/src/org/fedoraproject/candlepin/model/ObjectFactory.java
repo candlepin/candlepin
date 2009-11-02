@@ -30,7 +30,7 @@ import java.util.Map;
 public class ObjectFactory {
 
     /** Logger for this class */
-    private static final Logger logger = Logger.getLogger(ObjectFactory.class);
+    private static Logger logger = Logger.getLogger(ObjectFactory.class);
 
     /** the singleton instance of the ObjectFactory */
     private static ObjectFactory instance = new ObjectFactory();
@@ -80,7 +80,7 @@ public class ObjectFactory {
     
     /**
      * Get a List of objects by type
-     * @param clazz
+     * @param clazz class to lookup
      * @return List if found. null if not.
      */
     public List<Object> listObjectsByClass(Class<?> clazz) {
@@ -94,8 +94,9 @@ public class ObjectFactory {
 
     /**
      * Lookup an Owner by UUID
+     * @param clazz class to lookup
      * @param uuid to lookup
-     * @return Owner
+     * @return BaseModel if found, null otherwise.
      */
     public BaseModel lookupByUUID(Class<?> clazz, String uuid) {
         return (BaseModel) lookupByFieldName(clazz, "uuid", uuid);
@@ -103,9 +104,10 @@ public class ObjectFactory {
 
     /**
      * Lookup an object by a field name
-     * @param clazz
-     * @param fieldName
-     * @return BaseModel if found.
+     * @param clazz class to lookup
+     * @param fieldName field to use
+     * @param value value to match
+     * @return BaseModel if found, null otherwise.
      */
     public Object lookupByFieldName(Class<?> clazz, String fieldName, String value) {
         String key = clazz.getName();
@@ -130,7 +132,8 @@ public class ObjectFactory {
 
     /**
      * Store an object
-     * @param u
+     * @param u object to store
+     * @return The stored object
      */
     public Object store(Object u) {
         String key = u.getClass().getName();
@@ -147,7 +150,7 @@ public class ObjectFactory {
     /**
      * Delete an object 
      * @param clazz to lookup  
-     * @param uuidIn to lookup and delete
+     * @param removeMe model to remove
      */
     public void delete(Class clazz, BaseModel removeMe) {
         String key = clazz.getName();
