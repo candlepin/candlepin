@@ -344,7 +344,6 @@
       <formatter type="plain" />
       <formatter type="xml" toFile="${report.dir}/checkstyle_report_test.xml" />
     </checkstyle>
-    <antcall target="enforce" />
   </target>
 
   <target name="pack" depends="init,pack-megajar,pack-webapp"
