@@ -47,7 +47,7 @@ public class TestResource {
      * @return the test object
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public JsonTestObject get() {
         return jto;
     }
@@ -75,7 +75,7 @@ public class TestResource {
      * @return a ConsumerType
      */
     @GET @Path("/consumertype")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public ConsumerType getConsumerType() {
         return new ConsumerType("testtype");
     }

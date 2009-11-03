@@ -64,14 +64,16 @@ public class ConsumerResourceTest extends TestCase {
         ci.setMetadataField("name", "jsontestname");
         ci.setType(new ConsumerType("standard-system"));
         
-        WebResource createResource = c.resource("http://localhost:8080/candlepin/consumer/");
-        Consumer rc = createResource.type("application/json").post(Consumer.class, ci);
+        WebResource res =
+            c.resource("http://localhost:8080/candlepin/consumer/");
+        Consumer rc = res.type("application/json").post(Consumer.class, ci);
         assertNotNull(rc);
         assertNotNull(rc.getUuid());
         System.out.println(rc.getUuid());
         
-//        WebResource deleteResource = c.resource("http://localhost:8080/candlepin/consumer/");
-//        deleteResource.accept("application/json").delete(rc.getUuid());
+//        WebResource delres =
+//          c.resource("http://localhost:8080/candlepin/consumer/");
+//        delres.accept("application/json").delete(rc.getUuid());
 //        
 //        assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), rc.getUuid()));
     }

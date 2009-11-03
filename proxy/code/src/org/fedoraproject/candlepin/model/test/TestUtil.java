@@ -23,6 +23,8 @@ import org.fedoraproject.candlepin.model.Product;
 
 
 public class TestUtil {
+    private TestUtil() {
+    }
 
     public static Owner createOwner() {
         String lookedUp = BaseModel.generateUUID();

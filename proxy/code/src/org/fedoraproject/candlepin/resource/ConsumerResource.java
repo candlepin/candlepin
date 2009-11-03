@@ -48,7 +48,7 @@ public class ConsumerResource extends BaseResource {
      * @return list of available consumers.
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Consumer> list() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
         List<Consumer> consumers = new ArrayList<Consumer>();
@@ -65,7 +65,7 @@ public class ConsumerResource extends BaseResource {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer create(ConsumerInfo ci) {
         System.out.println("metadata: " + ci.getMetadata());
         System.out.println("ci: " + ci);
@@ -83,7 +83,7 @@ public class ConsumerResource extends BaseResource {
      * @return the ConsumerInfo for the given Consumer.
      */
     @GET @Path("/info")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public ConsumerInfo getInfo() {
         ConsumerInfo ci = new ConsumerInfo();
         ci.setType(new ConsumerType("system"));

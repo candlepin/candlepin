@@ -43,7 +43,7 @@ public class OwnerResource extends BaseResource {
      * @return list of Owners
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Owner> list() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
         List<Owner> owners = new ArrayList<Owner>();

@@ -49,7 +49,7 @@ public class UserResource extends BaseResource {
      * @return user whose login is 'login'
      */
     @GET @Path("/{login}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public User get(@PathParam("login") String login) {
         return (User) ObjectFactory.get().lookupByFieldName(User.class, "login", login);
     }
@@ -59,7 +59,7 @@ public class UserResource extends BaseResource {
      * @return a list of Users.
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<User> list() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
         List<User> users = new ArrayList<User>();
@@ -77,7 +77,7 @@ public class UserResource extends BaseResource {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public User create(String login, String password) {
         String newuuid = BaseModel.generateUUID();
         User u = new User(newuuid);

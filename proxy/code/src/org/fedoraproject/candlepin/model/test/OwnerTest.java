@@ -33,57 +33,57 @@ import junit.framework.TestCase;
 public class OwnerTest extends TestCase {
 
     
-	public void testOwner() throws Exception {
-		Owner o = new Owner(BaseModel.generateUUID());
-		assertNotNull(o);
-	}
-	
-	public void testLookup() throws Exception {
-		
-		Owner o = TestUtil.createOwner();
-		String lookedUp = o.getUuid();
-		o = (Owner) ObjectFactory.get().
-			lookupByUUID(Owner.class, lookedUp);
-		assertNotNull(o);
-	}
-	
-	public void testList() throws Exception {
-	    for (int i = 0; i < 10; i++) {
-	        TestUtil.createOwner();
-	    }
-	    
-	    List orgs =  ObjectFactory.get().listObjectsByClass(Owner.class);
-	    assertNotNull(orgs);
-	    assertTrue(orgs.size() >= 10);
-	}
-	
-	public void testObjectRelationships() throws Exception {
-		Owner owner = new Owner(BaseModel.generateUUID());
-		owner.setName("test-owner");
-		// Product
-		Product rhel = new Product(BaseModel.generateUUID());
-		rhel.setName("Red Hat Enterprise Linux");
-		
-		// User
-		User u = new User();
-		u.setLogin("test-login");
-		u.setPassword("redhat");
-		owner.addUser(u);
-		assertEquals(1, owner.getUsers().size());
-		
-		// Consumer
-		Consumer c = new Consumer(BaseModel.generateUUID());
-		c.setOwner(owner);
-		owner.addConsumer(c);
-		c.addConsumedProduct(rhel);
-		assertEquals(1, owner.getConsumers().size());
-		assertEquals(1, c.getConsumedProducts().size());
-		
-		// EntitlementPool
-		EntitlementPool pool = new EntitlementPool(BaseModel.generateUUID());
-		owner.addEntitlementPool(pool);
-		pool.setProduct(rhel);
-		assertEquals(1, owner.getEntitlementPools().size());
-		
-	}
+    public void testOwner() throws Exception {
+        Owner o = new Owner(BaseModel.generateUUID());
+        assertNotNull(o);
+    }
+    
+    public void testLookup() throws Exception {
+        
+        Owner o = TestUtil.createOwner();
+        String lookedUp = o.getUuid();
+        o = (Owner) ObjectFactory.get().
+            lookupByUUID(Owner.class, lookedUp);
+        assertNotNull(o);
+    }
+    
+    public void testList() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            TestUtil.createOwner();
+        }
+        
+        List orgs =  ObjectFactory.get().listObjectsByClass(Owner.class);
+        assertNotNull(orgs);
+        assertTrue(orgs.size() >= 10);
+    }
+    
+    public void testObjectRelationships() throws Exception {
+        Owner owner = new Owner(BaseModel.generateUUID());
+        owner.setName("test-owner");
+        // Product
+        Product rhel = new Product(BaseModel.generateUUID());
+        rhel.setName("Red Hat Enterprise Linux");
+        
+        // User
+        User u = new User();
+        u.setLogin("test-login");
+        u.setPassword("redhat");
+        owner.addUser(u);
+        assertEquals(1, owner.getUsers().size());
+        
+        // Consumer
+        Consumer c = new Consumer(BaseModel.generateUUID());
+        c.setOwner(owner);
+        owner.addConsumer(c);
+        c.addConsumedProduct(rhel);
+        assertEquals(1, owner.getConsumers().size());
+        assertEquals(1, c.getConsumedProducts().size());
+        
+        // EntitlementPool
+        EntitlementPool pool = new EntitlementPool(BaseModel.generateUUID());
+        owner.addEntitlementPool(pool);
+        pool.setProduct(rhel);
+        assertEquals(1, owner.getEntitlementPools().size());
+        
+    }
 }

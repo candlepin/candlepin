@@ -89,7 +89,7 @@ public class ConsumerInfo {
     public void setMetadataField(String name, String value) {
         System.out.println("set meta field called");
         if (this.metadata == null) {
-            metadata = new HashMap<String,String>();
+            metadata = new HashMap<String, String>();
         }
         metadata.put(name, value);
         

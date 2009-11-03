@@ -165,7 +165,7 @@ public class Consumer extends BaseModel {
      */
     public void setMetadataField(String name, String value) {
         if (this.getInfo().getMetadata() == null) {
-            this.getInfo().setMetadata(new HashMap<String,String>());
+            this.getInfo().setMetadata(new HashMap<String, String>());
         }
         this.getInfo().getMetadata().put(name, value);
     }

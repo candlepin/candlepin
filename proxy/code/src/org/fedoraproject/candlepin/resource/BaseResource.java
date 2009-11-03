@@ -53,15 +53,15 @@ public abstract class BaseResource {
      * @return the model object matching the given uuid.
      */
     @GET @Path("/{uuid}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({  MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML  })
     public Object get(@PathParam("uuid") String uuid) {
         Object o = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
         return o;
     }
 
 //    @POST
-//    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
-//    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+//    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 //    public Object create(Form form) {
 //        String newuuid = BaseModel.generateUUID();
 //        Object args[] = new Object[1];

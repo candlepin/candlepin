@@ -80,8 +80,8 @@ public class EntitlementResource extends BaseResource {
      * @return test object
      */
     @POST
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/foo")
     public Object foo(Consumer c) {
         System.out.println("Consumer uuid: " + c.getUuid());
@@ -95,8 +95,8 @@ public class EntitlementResource extends BaseResource {
      * @return Entitled object
      */
     @POST
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/entitle")
     public Object entitle(Consumer c, Product p) {
 
@@ -143,7 +143,7 @@ public class EntitlementResource extends BaseResource {
      * @return boolean if entitled or not
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/has")
     public boolean hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_uuid") String productUuid) {
@@ -164,7 +164,7 @@ public class EntitlementResource extends BaseResource {
      * @return List<Entitlement> of applicable 
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/listavailable")
     public List<EntitlementPool> listAvailableEntitlements(
         @PathParam("uuid") String uuid) {
@@ -198,7 +198,7 @@ public class EntitlementResource extends BaseResource {
      * @return list of Entitlements
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Entitlement> list() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
         List<Entitlement> entitlements = new ArrayList<Entitlement>();

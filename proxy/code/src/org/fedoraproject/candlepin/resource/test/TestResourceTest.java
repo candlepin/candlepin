@@ -80,7 +80,8 @@ public class TestResourceTest extends TestCase {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);
 
-        WebResource getresource = c.resource("http://localhost:8080/candlepin/test/consumertype");
+        WebResource getresource =
+            c.resource("http://localhost:8080/candlepin/test/consumertype");
         ConsumerType ct = getresource.accept("application/json").get(ConsumerType.class);
         assertNotNull(ct);
         assertEquals("testtype", ct.getLabel());

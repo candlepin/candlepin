@@ -43,7 +43,7 @@ public class EntitlementPoolResource extends BaseResource {
      * @return the list of available entitlement pools.
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<EntitlementPool> list() {
         List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
         List<EntitlementPool> pools = new ArrayList<EntitlementPool>();

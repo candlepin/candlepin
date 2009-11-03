@@ -100,7 +100,8 @@ public class EntitlementResourceTest extends TestCase {
         failed = false;
         try {
             eapi.entitle(consumer, product);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println("expired:  ? " + e);
             failed = true;
         }
