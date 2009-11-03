@@ -197,7 +197,7 @@ public class CertTest extends TestCase {
         
 
         String encoded = new String(att.getEncoded());
-        System.out.println("CERT CERT: " + encoded);
+        //System.out.println("CERT CERT: " + encoded);
         KeyStore store = KeyStore.getInstance("PKCS12");
         String pass = "redhat";
         
