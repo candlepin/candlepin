@@ -21,14 +21,16 @@ import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.ApiHandler;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * @author mmccune
  *
  */
-public class ApiTest extends TestCase {
+public class ApiTest {
 
+    @Test
     public void testAuthentication() throws Exception {
         User u = new User();
         u.setLogin("admin");
@@ -43,6 +45,7 @@ public class ApiTest extends TestCase {
         assertNotNull(token);
     }
     
+    @Test
     public void testLookupOwner() throws Exception {
         Owner o = new Owner(BaseModel.generateUUID());
         ObjectFactory.get().store(o);

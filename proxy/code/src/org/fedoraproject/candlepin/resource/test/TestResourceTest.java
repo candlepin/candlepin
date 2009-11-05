@@ -26,14 +26,15 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 
 /**
  * TestResourceTest
  * @version $Rev$
  */
-public class TestResourceTest extends TestCase {
+public class TestResourceTest {
     
     private JsonTestObject createTestObject() {
         JsonTestObject jto = new JsonTestObject();
@@ -46,6 +47,7 @@ public class TestResourceTest extends TestCase {
         return jto;
     }
     
+    @Test
     public void testJson() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);
@@ -67,6 +69,7 @@ public class TestResourceTest extends TestCase {
         System.out.println(jto.getStringList());
     }
     
+    @Test
     public void testGet() {
         TestResource tr = new TestResource();
         assertNull(tr.get());
@@ -76,6 +79,7 @@ public class TestResourceTest extends TestCase {
         assertEquals(jto, tr.get());
     }
     
+    @Test
     public void testConsumerType() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);

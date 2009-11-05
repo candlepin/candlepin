@@ -24,14 +24,16 @@ import org.fedoraproject.candlepin.resource.EntitlementMatcher;
 
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * EntitlementMatcherTest
  * @version $Rev$
  */
-public class EntitlementMatcherTest extends TestCase {
+public class EntitlementMatcherTest {
 
+    @Test
     public void testIsCompatable() throws Exception {
         Consumer consumer = TestUtil.createConsumer();
         ConsumerType typeSystem = ProductFactory.get().lookupConsumerTypeByLabel("system");

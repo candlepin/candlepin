@@ -26,15 +26,16 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * ConsumerResourceTest
  * @version $Rev$
  */
-public class ConsumerResourceTest extends TestCase {
+public class ConsumerResourceTest {
 
+    @Test
     public void testCreateConsumer() throws Exception {
         String newname = "test-consumer-" + System.currentTimeMillis();
         
@@ -47,6 +48,7 @@ public class ConsumerResourceTest extends TestCase {
                 "name", newname));
     }
     
+    @Test
     public void testDelete() {
         Consumer c = TestUtil.createConsumer();
         String uuid = c.getUuid();
@@ -56,6 +58,7 @@ public class ConsumerResourceTest extends TestCase {
         assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
     }
 
+    @Test
     public void testJSON() { 
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);

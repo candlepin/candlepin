@@ -24,20 +24,22 @@ import org.fedoraproject.candlepin.model.User;
 
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * 
  *
  */
-public class OwnerTest extends TestCase {
+public class OwnerTest {
 
-    
+    @Test
     public void testOwner() throws Exception {
         Owner o = new Owner(BaseModel.generateUUID());
         assertNotNull(o);
     }
     
+    @Test
     public void testLookup() throws Exception {
         
         Owner o = TestUtil.createOwner();
@@ -47,6 +49,7 @@ public class OwnerTest extends TestCase {
         assertNotNull(o);
     }
     
+    @Test
     public void testList() throws Exception {
         for (int i = 0; i < 10; i++) {
             TestUtil.createOwner();
@@ -57,6 +60,7 @@ public class OwnerTest extends TestCase {
         assertTrue(orgs.size() >= 10);
     }
     
+    @Test
     public void testObjectRelationships() throws Exception {
         Owner owner = new Owner(BaseModel.generateUUID());
         owner.setName("test-owner");

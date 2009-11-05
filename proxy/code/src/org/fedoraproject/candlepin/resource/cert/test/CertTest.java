@@ -38,19 +38,21 @@ import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Date;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 /**
  * CertTest
  * @version $Rev$
  */
-public class CertTest extends TestCase {
+public class CertTest {
 
+    @Test
     public void testCertGenerator() {
         String cert = CertGenerator.getCertString();
         System.out.println("Cert: " + cert);
     }
     
+    @Test
     public void testCertExample() throws Exception {
 
         Security.addProvider(new BouncyCastleProvider());

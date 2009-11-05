@@ -19,16 +19,19 @@ import org.fedoraproject.candlepin.resource.UserResource;
 
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 
 /**
  * UserResourceTest
  * @version $Rev$
  */
-public class UserResourceTest extends TestCase {
+public class UserResourceTest {
+    
     private UserResource api = new UserResource();
    
+    @Test
     public void testNewUser() {
         User user = api.create("candlepin", "cp_p@$sw0rd");
         assertNotNull(user);
@@ -46,6 +49,7 @@ public class UserResourceTest extends TestCase {
         assertEquals("", user.getPassword());
     }
     
+    @Test
     public void testList() {
         List<User> users = api.list();
         int origSize = users.size();
@@ -63,6 +67,7 @@ public class UserResourceTest extends TestCase {
         assertEquals(User.class, users.get(0).getClass());
     }
     
+    @Test
     public void testGet() {
         User user = api.get("test-login");
         assertNotNull(user);

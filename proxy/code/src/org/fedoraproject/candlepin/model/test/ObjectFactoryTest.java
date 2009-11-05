@@ -18,16 +18,18 @@ import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 
+
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * ObjectFactoryTest
  */
-public class ObjectFactoryTest extends TestCase {
+public class ObjectFactoryTest {
 
+    @Test
     public void testGet() {
         ObjectFactory o1 = ObjectFactory.get();
         ObjectFactory o2 = ObjectFactory.get();
@@ -37,6 +39,7 @@ public class ObjectFactoryTest extends TestCase {
         assertEquals(o1, o2);
     }
     
+    @Test
     public void testListObjectsByClass() {
         List<Object> l = ObjectFactory.get().listObjectsByClass(Object.class);
         assertNotNull(l);
@@ -50,6 +53,7 @@ public class ObjectFactoryTest extends TestCase {
         assertEquals(o.getClass(), Owner.class);
     }
     
+    @Test
     public void testStore() {
         // make sure we don't have one stored already
         List<Object> list = ObjectFactory.get().listObjectsByClass(Long.class);
@@ -67,6 +71,7 @@ public class ObjectFactoryTest extends TestCase {
         assertEquals(l, l2);
     }
     
+    @Test
     public void testLookupByUUID() {
         String uuid = BaseModel.generateUUID();
         assertNull(ObjectFactory.get().lookupByUUID(Owner.class, uuid));
@@ -80,6 +85,7 @@ public class ObjectFactoryTest extends TestCase {
         assertEquals(((Owner)o).getUuid(), owner.getUuid());
     }
     
+    @Test
     public void testLookupByFieldName() {
         String uuid = BaseModel.generateUUID();
         assertNull(ObjectFactory.get().lookupByUUID(Owner.class, uuid));

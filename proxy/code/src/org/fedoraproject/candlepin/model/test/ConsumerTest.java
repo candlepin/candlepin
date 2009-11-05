@@ -19,11 +19,14 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 
-public class ConsumerTest extends TestCase {
 
+public class ConsumerTest {
+
+    @Test
     public void testConsumedProduct() throws Exception {
         Owner o = TestUtil.createOwner();
         
@@ -37,6 +40,7 @@ public class ConsumerTest extends TestCase {
         
     }
     
+    @Test
     public void testProperties() {
         Owner o = TestUtil.createOwner();
         Consumer c = TestUtil.createConsumer(o);

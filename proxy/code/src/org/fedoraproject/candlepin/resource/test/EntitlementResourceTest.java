@@ -32,14 +32,16 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 
 /**
  * ConsumerResourceTest
  * @version $Rev$
  */
-public class EntitlementResourceTest extends TestCase {
+public class EntitlementResourceTest {
     
     private Consumer consumer;
     private Product product;
@@ -48,10 +50,8 @@ public class EntitlementResourceTest extends TestCase {
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected void setUp() throws Exception {
-        // TODO Auto-generated method stub
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         consumer = TestUtil.createConsumer();
         product = TestUtil.createProduct();
         ep = new EntitlementPool();
@@ -66,6 +66,7 @@ public class EntitlementResourceTest extends TestCase {
 
     }
     
+    @Test
     public void testEntitle() throws Exception {
         
         
@@ -111,6 +112,7 @@ public class EntitlementResourceTest extends TestCase {
         
     }
     
+    @Test
     public void testHasEntitlement() {
         System.out.println("Foo");
         
@@ -120,6 +122,7 @@ public class EntitlementResourceTest extends TestCase {
         assertTrue(eapi.hasEntitlement(consumer.getUuid(), product.getUuid()));
     }
 
+    @Test
     public void testListAvailableEntitlements() {
         EntitlementResource eapi = new EntitlementResource();
         consumer.setType(new ConsumerType("standard-system"));
@@ -131,6 +134,7 @@ public class EntitlementResourceTest extends TestCase {
         assertTrue(avail.size() > 0);
     }
     
+    @Test
     public void testJson() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);
