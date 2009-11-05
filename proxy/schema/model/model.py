@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Sequence
@@ -82,7 +84,6 @@ if __name__ == "__main__":
         const="sqlite", default=False, help="use SQLite engine")
 
     (options, args) = parser.parse_args()
-
 
     # validate options
     if not options.db:
