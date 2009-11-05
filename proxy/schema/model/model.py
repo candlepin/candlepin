@@ -53,7 +53,7 @@ def get_engine(db):
     if db == "postgresql":
         return create_engine('postgres://candlepin:candlepin@127.0.0.1:5432/candlepin')
     elif db == "hsqldb":
-        return
+        raise NotImplementedError
     elif db == "sqlite":
         return create_engine('sqlite:///:memory:', echo=True)
 
