@@ -1,7 +1,7 @@
 <ivy-module version="1.0">
     <info organisation="candlepin" module="rhn-java" />
     <dependencies>
-        <!-- dependency org="candlepin" name="antlr" rev="2.7.6" / -->
+        <dependency org="candlepin" name="antlr" rev="2.7.6" />
         <dependency org="candlepin" name="ant-contrib" rev="1.0" />
         <!-- dependency org="candlepin" name="asm" rev="1.5.3" / -->
         <!-- dependency org="candlepin" name="asm-attrs" rev="1.5.3" / -->
@@ -14,7 +14,7 @@
         <!-- dependency org="candlepin" name="commons-beanutils" rev="1.7.0" / -->
         <!-- dependency org="candlepin" name="commons-cli" rev="1.0" / -->
         <!-- dependency org="candlepin" name="commons-codec" rev="1.2" / -->
-        <!-- dependency org="candlepin" name="commons-collections" rev="3.1" / -->
+        <dependency org="candlepin" name="commons-collections" rev="3.1" />
         <!-- dependency org="candlepin" name="commons-digester" rev="1.6" / -->
         <!-- dependency org="candlepin" name="commons-discovery" rev="0.2" / -->
         <!-- dependency org="candlepin" name="commons-el" rev="1.0" / -->
@@ -24,11 +24,18 @@
         <!-- dependency org="candlepin" name="commons-logging" rev="1.0.4" / -->
         <!-- dependency org="candlepin" name="commons-validator" rev="1.1.4" / -->
         <!-- dependency org="candlepin" name="concurrent" rev="1.3.2" / -->
-        <!-- dependency org="candlepin" name="dom4j" rev="1.6.1" / -->
+        <dependency org="candlepin" name="dom4j" rev="1.6.1" />
+        <dependency org="candlepin" name="javassist" rev="3.9.0.GA" />
+        <dependency org="candlepin" name="slf4j-api" rev="1.5.8" />
+        <dependency org="candlepin" name="slf4j-simple" rev="1.5.8" />
         <!-- dependency org="candlepin" name="ehcache" rev="1.1" / -->
         <!-- dependency org="candlepin" name="emma" rev="20040713" / -->
         <!-- dependency org="candlepin" name="emma_ant" rev="20040713" / -->
-        <dependency org="candlepin" name="hibernate3" rev="3.2.4.1" />
+        <dependency org="candlepin" name="hibernate3" rev="3.3.2" />
+        <dependency org="candlepin" name="hibernate-annotations" rev="3.4.0" />
+        <dependency org="candlepin" name="hibernate-commons-annotations" rev="3.4.0" />
+        <dependency org="candlepin" name="hibernate-entitymanager" rev="3.4.0" />
+        <dependency org="candlepin" name="ejb3-persistence" rev="3.4.0" />
         <dependency org="candlepin" name="asm" rev="3.1" />
         <dependency org="candlepin" name="jersey-core" rev="1.1.2-ea" />
         <dependency org="candlepin" name="jersey-client" rev="1.1.2-ea" />
@@ -47,7 +54,7 @@
         <!-- dependency org="candlepin" name="jmock-cglib" rev="1.2.0" / -->
         <!-- dependency org="candlepin" name="jpam" rev="0.4" / -->
         <!-- dependency org="candlepin" name="jspapi" rev="5.0.18" / -->
-        <!-- dependency org="candlepin" name="jta" rev="1.0.1" / -->
+        <dependency org="candlepin" name="jta" rev="1.1" />
         <!--dependency org="candlepin" name="junit" rev="3.8.2" /-->
         <dependency org="candlepin" name="junit4" rev="4.5" />
         <dependency org="candlepin" name="hsqldb" rev="1.8.0.10" />
