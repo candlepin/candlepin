@@ -36,7 +36,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name="cp_consumer_type")
 public class ConsumerType extends BaseModel implements Serializable {
 
-    private Long id;
     private String label;
 
     /**
@@ -52,25 +51,9 @@ public class ConsumerType extends BaseModel implements Serializable {
      */
     public ConsumerType(String labelIn) {
         super(BaseModel.generateUUID());
-        this.label = labelIn;
+        setLabel(labelIn);
     }
     
-    /**
-     * @return the id
-     */
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     /**
      * @return Returns the label.
      */
