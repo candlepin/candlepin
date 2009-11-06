@@ -21,6 +21,10 @@
   <path id="runjars">
     <fileset dir="${run.lib.dir}" includes="**/*.jar" />
   </path>
+
+  <path id="libjars">
+    <fileset dir="lib/" includes="**/*.jar" />
+  </path>
   
   <path id="buildjars">
     <path refid="testjars" />
@@ -592,15 +596,9 @@
 
   <property name="dir.genhbm" value="genhbm-test" />
 
-  <target name="gen_hibernate" >
-    <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask"> 
-      <classpath>
-        <fileset refid="eclipse.lib" />
-        <fileset refid="jdbc.lib" />
-        <pathelement path="${dir.lib}" />
-        <pathelement path="${basedir}" /> 
-      </classpath>
-    </taskdef>
+  <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask" classpathref="libjars"/> 
+
+  <target name="gen-schema">
     <delete dir="${dir.genhbm}" />
     <mkdir dir="${dir.genhbm}" />
     <hibernatetool destdir="${dir.genhbm}">

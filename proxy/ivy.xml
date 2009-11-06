@@ -9,7 +9,7 @@
         <!-- dependency org="candlepin" name="bcpg" rev="1.37" / -->
         <dependency org="candlepin" name="bcprov" rev="1.43" />
         <!-- dependency org="candlepin" name="c3p0" rev="0.9.0" / -->
-        <!-- dependency org="candlepin" name="cglib" rev="2.1.3" / -->
+        <dependency org="candlepin" name="cglib" rev="2.2" />
         <dependency org="candlepin" name="checkstyle" rev="4.1" />
         <!-- dependency org="candlepin" name="commons-beanutils" rev="1.7.0" / -->
         <!-- dependency org="candlepin" name="commons-cli" rev="1.0" / -->
@@ -21,7 +21,8 @@
         <!-- dependency org="candlepin" name="commons-fileupload" rev="1.0" / -->
         <!-- dependency org="candlepin" name="commons-httpclient" rev="3.0" / -->
         <!-- dependency org="candlepin" name="commons-lang" rev="2.3" / -->
-        <!-- dependency org="candlepin" name="commons-logging" rev="1.0.4" / -->
+        <dependency org="candlepin" name="commons-logging" rev="1.1.1" />
+        <dependency org="candlepin" name="postgresql" rev="8.4-701" />
         <!-- dependency org="candlepin" name="commons-validator" rev="1.1.4" / -->
         <!-- dependency org="candlepin" name="concurrent" rev="1.3.2" / -->
         <dependency org="candlepin" name="dom4j" rev="1.6.1" />
@@ -35,6 +36,7 @@
         <dependency org="candlepin" name="hibernate-annotations" rev="3.4.0" />
         <dependency org="candlepin" name="hibernate-commons-annotations" rev="3.4.0" />
         <dependency org="candlepin" name="hibernate-entitymanager" rev="3.4.0" />
+        <dependency org="candlepin" name="hibernate-tools" rev="3.2.4" />
         <dependency org="candlepin" name="ejb3-persistence" rev="3.4.0" />
         <dependency org="candlepin" name="asm" rev="3.1" />
         <dependency org="candlepin" name="jersey-core" rev="1.1.2-ea" />
