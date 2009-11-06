@@ -17,6 +17,12 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -26,9 +32,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
+@Entity
+@Table(name="cp_product")
 public class Product extends BaseModel {
 
+    private Long id;
     private String label;
+    
+    // TODO:
     private List<Product> childProducts;
 
     /**
@@ -46,8 +57,25 @@ public class Product extends BaseModel {
     }
 
     /**
+     * @return the id
+     */
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
      * @return the childProducts
      */
+    @Transient
     public List<Product> getChildProducts() {
         return childProducts;
     }
@@ -70,14 +98,14 @@ public class Product extends BaseModel {
         this.childProducts.add(p);
     }
     
-    /** 
-     * Get the list of compatible consumer types
-     * @return list of compatible consumer types
-     */
-    public List<String> getCompatibleConsumerTypes() {
-        
-        return null;
-    }
+//    /** 
+//     * Get the list of compatible consumer types
+//     * @return list of compatible consumer types
+//     */
+//    public List<String> getCompatibleConsumerTypes() {
+//        
+//        return null;
+//    }
 
     
     /**

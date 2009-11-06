@@ -27,6 +27,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Represents the type of consumer.
+ * 
+ * TODO: Examples?
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
