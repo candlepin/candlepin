@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -23,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
+@Entity
 public class ConsumerType extends BaseModel {
 
     private String label;
@@ -46,6 +49,7 @@ public class ConsumerType extends BaseModel {
     /**
      * @return Returns the label.
      */
+    @Id
     public String getLabel() {
         return label;
     }
