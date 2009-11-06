@@ -594,21 +594,34 @@
         <include name="**/*.jar" />
   </fileset>
 
-  <property name="dir.genhbm" value="genhbm-test" />
+  <property name="dir.genhbm" value="build/schemagen/" />
 
   <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask" classpathref="libjars"/> 
 
   <target name="gen-schema">
     <delete dir="${dir.genhbm}" />
     <mkdir dir="${dir.genhbm}" />
+
     <hibernatetool destdir="${dir.genhbm}">
-      <jdbcconfiguration packagename="demo"
-                         configurationfile="hibernate.cfg.xml"
-                         revengfile="hibernate.reveng.xml"
-                         detectmanytomany="true" />
-             <!-- detectoptmisticlock="true" -->
-      <hbm2hbmxml destdir="${dir.genhbm}"/>
-    </hibernatetool>
+        <property key="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
+        <property key="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+
+        <classpath>
+            <path location="build/classes"/>
+        </classpath>
+
+        <jpaconfiguration persistenceunit="test"/>
+
+        <hbm2ddl export="false"
+                 update="false"
+                 drop="false"
+                 create="true"
+                 outputfilename="candlepin-proxy.sql"
+                 delimiter=";"
+                 format="false"
+                 haltonerror="true"/>
+
+        </hibernatetool>
   </target>
     
 </project>

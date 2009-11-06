@@ -23,6 +23,7 @@
         <!-- dependency org="candlepin" name="commons-lang" rev="2.3" / -->
         <dependency org="candlepin" name="commons-logging" rev="1.1.1" />
         <dependency org="candlepin" name="postgresql" rev="8.4-701" />
+        <dependency org="candlepin" name="freemarker" rev="2.3.15" />
         <!-- dependency org="candlepin" name="commons-validator" rev="1.1.4" / -->
         <!-- dependency org="candlepin" name="concurrent" rev="1.3.2" / -->
         <dependency org="candlepin" name="dom4j" rev="1.6.1" />
