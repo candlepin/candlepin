@@ -131,7 +131,7 @@
   </target>
 
   <target name="init"
-          depends="resolve,link-jars,init-taskdefs, set-default-config-dir">
+          depends="resolve,link-jars,init-taskdefs">
     <tstamp />
   </target>
 
@@ -142,20 +142,12 @@
     <property name="ccbuild" value="true" />
   </target>
 
-  <target name="init-install" depends="set-default-config-dir">
-    <property name="installbuild" value="true" />
-  </target>
-
   <target name="cctarget"
           depends="init-cc,all,cc-test,test-report,coverage-report,apidoc-jsp,javadoc"
           description="Target called by cruisecontrol process">
   </target>
 
   <target name="cc-test" depends ="set-cc-config-dir, test"/>
-
-  <target name="set-default-config-dir">
-    <property name="rhn.config.dir" value="/etc/rhn" />
-  </target>
 
   <target name="set-cc-config-dir">
     <property name="rhn.config.dir"
@@ -175,7 +167,7 @@
 
   <target name="dotest"
           description="Run the tests (use -Dtestsubsystem=&lt;subsystem&gt; or -Dtestcase=&lt;testcase&gt;)"
-          depends="set-default-config-dir,compile-main,init-tests,invoke-tests-testcase,invoke-tests-subsystem,invoke-tests-all" >
+          depends="compile-main,init-tests,invoke-tests-testcase,invoke-tests-subsystem,invoke-tests-all" >
 
     <fail if="junit_test_failure" message="One or more tests failed" />
   </target>
@@ -471,7 +463,9 @@
   </target>
 
   <target name="invoke-tests-all" unless="testcaseorsubsystem">
+    <!--
     <antcall target="checkstyle" />
+    -->
     <run-junit include="**/test/*Test.class"
                banner="all tests"
                testbuilddir="${build.dir}/classes"
