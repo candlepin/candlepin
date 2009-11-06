@@ -14,20 +14,27 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.io.Serializable;
+
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents the tyep of consumer.
+ * Represents the type of consumer.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-public class ConsumerType extends BaseModel {
+@Table(name="cp_consumer_type")
+public class ConsumerType extends BaseModel implements Serializable {
 
+    private Long id;
     private String label;
 
     /**
@@ -46,6 +53,22 @@ public class ConsumerType extends BaseModel {
         this.label = labelIn;
     }
     
+    /**
+     * @return the id
+     */
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     /**
      * @return Returns the label.
      */

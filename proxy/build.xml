@@ -589,15 +589,10 @@
   <fileset id="eclipse.lib" dir="/opt/eclipse/plugins">
         <include name="**/*.jar" />
   </fileset>
-  <!-- fileset definition for JDBC -->
-  <fileset id="jdbc.lib" dir="/usr/share/java">
-        <include name="**/*.jar" />
-  </fileset>
+
 
   <property name="dir.genhbm" value="build/schemagen/" />
-
   <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask" classpathref="libjars"/> 
-
   <target name="gen-schema">
     <delete dir="${dir.genhbm}" />
     <mkdir dir="${dir.genhbm}" />
