@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model.test;
+package org.fedoraproject.candlepin.model;
 
 import static org.junit.Assert.*;
 
