@@ -32,7 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name="cp_consumer_type")
-public class ConsumerType extends BaseModel implements Serializable {
+public class ConsumerType implements Serializable {
 
     private String label;
 
@@ -48,7 +48,6 @@ public class ConsumerType extends BaseModel implements Serializable {
      * @param labelIn to set
      */
     public ConsumerType(String labelIn) {
-        super(BaseModel.generateUUID());
         setLabel(labelIn);
     }
     
