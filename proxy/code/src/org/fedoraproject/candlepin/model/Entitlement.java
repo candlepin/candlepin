@@ -23,7 +23,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Represents the actual Entitlement record.
+ * Entitlements are documents either signed XML or other certificate which 
+ * control what a particular Consumer can use. There are a number of types
+ * of Entitlements:
+ * 
+ *  1. Quantity Limited (physical & virtual)
+ *  2. Version Limited
+ *  3. Hardware Limited (i.e # of sockets, # of cores, etc)
+ *  4. Functional Limited (i.e. Update, Management, Provisioning, etc)
+ *  5. Site License
+ *  6. Floating License
+ *  7. Value-Based or "Metered" (i.e. per unit of time, per hardware
+ *     consumption, etc)
+ *  8. Draw-Down (i.e. 100 hours or training classes to be consumed over
+ *     some period of time or limited number of support calls)
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)

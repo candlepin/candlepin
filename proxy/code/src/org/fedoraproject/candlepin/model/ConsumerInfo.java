@@ -23,7 +23,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Consumer metadata stored as ConsumerInfo
+ * ConsumerInfo contains the metadata about a given Consumer (parent). It is 
+ * a series of (name,value) pairs which allows for a more flexible model of
+ * defining attributes about a Consumer.
+ * 
+ * For example, for a system we might capture CPU type and architecture.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)

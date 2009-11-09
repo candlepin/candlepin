@@ -28,7 +28,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents a Product that can be consumed and entitled.
+ * Represents a Product that can be consumed and entitled. Products define
+ * the software or entity they want to entitle i.e. RHEL Server. They also 
+ * contain descriptive meta data that might limit the Product i.e. 4 cores
+ * per server with 4 guests. 
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)

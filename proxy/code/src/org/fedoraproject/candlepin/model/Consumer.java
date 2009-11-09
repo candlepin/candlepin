@@ -23,10 +23,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import javax.persistence.*;
-
 /**
- * Represents Consumer entity
+ * A Consumer is the entity that uses a given Entitlement. It can be a user,
+ * system, or anything else we want to track as using the Entitlement.
+ * 
+ * Every Consumer has an Owner which may or may not own the Entitlment. The
+ * Consumer's attributes or metadata is stored in a ConsumerInfo object which
+ * boils down to a series of name/value pairs.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
