@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -37,10 +38,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name="cp_product")
-public class Product extends BaseModel {
+public class Product {
 
     private Long id;
+    
+    // TODO: Drop one of these?
     private String label;
+    private String name;
+    
+    // TODO: Drop this?
+    private String uuid;
     
     // TODO:
     private List<Product> childProducts;
@@ -50,7 +57,21 @@ public class Product extends BaseModel {
      * @param uuid unique id for the product
      */
     public Product(String uuid) {
-        super(uuid);
+        setUuid(uuid);
+    }
+    
+    /**
+     * Constructor
+     * 
+     * Use this variant when creating a new object to persist.
+     * 
+     * @param label
+     * @param name
+     */
+    public Product(String label, String name) {
+        // TODO: Do we want to drop one of these?
+        setLabel(label);
+        setName(name);
     }
 
     /**
@@ -114,6 +135,7 @@ public class Product extends BaseModel {
     /**
      * @return Returns the label.
      */
+    @Column(nullable=false)
     public String getLabel() {
         return label;
     }
@@ -133,4 +155,38 @@ public class Product extends BaseModel {
     public String toString() {
         return "Product [label=" + label + "]";
     }
+    
+    /**
+     * Returns the name of the object.
+     * @return the name of the object.
+     */
+    @Column(nullable=false)
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Set the name of the model object.
+     * @param name name of the object
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns the unique id of the model object.
+     * @return the unique id of the model object.
+     */
+    public String getUuid() {
+        return uuid;
+    }
+
+    /**
+     * Sets the unique id of the model object.
+     * @param uuid unique id of the model.
+     */
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
 }
