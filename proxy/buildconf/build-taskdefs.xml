@@ -29,6 +29,9 @@
     <!-- ======================= EMMA Tasks ========================== -->
     <taskdef resource="emma_ant.properties" classpathref="testjars" />
 
+    <!-- =================== Hibernate tools ======================= -->
+    <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask" classpathref="libjars"/> 
+
   </target>
   
 </project>
