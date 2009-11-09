@@ -1,4 +1,4 @@
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
