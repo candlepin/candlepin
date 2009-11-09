@@ -6,7 +6,7 @@ import javax.persistence.Persistence;
 
 public class EntityManagerUtil {
     
-    public static final String DEFAULT_PERSISTENCE_UNIT = "production";
+    public static final String DEFAULT_PERSISTENCE_UNIT = "test";
     public static final String PERSISTENCE_UNIT_PROPERTY = "persistenceUnit";
     public static final EntityManagerFactory emf = buildEntityManagerFactory();
     

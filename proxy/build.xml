@@ -392,12 +392,13 @@
            classpathref="buildjars" >
       <src>
         <path location="${build.dir}/src" />
-        <path location="code/src" />
+        <path location="${src.dir}/java" />
+        <path location="src/test/java" />
       </src>
     </javac>
 
     <copy toDir="${build.dir}/classes">
-      <fileset dir="${src.dir}/src">
+      <fileset dir="${src.dir}/java">
         <exclude name="**/*.java" />
         <exclude name="**/package.html" />
       </fileset>
@@ -447,7 +448,7 @@
   <!-- ================= Invoke tests ==================== -->
   <target name="invoke-tests-testcase" depends="check-testcase" if="testcase">
     <property name="testcaseorsubsystem" value="true" />
-    <run-junit include="**/test/${testcase}.class" banner="${testcase}"
+    <run-junit include="**/${testcase}.class" banner="${testcase}"
         testbuilddir="${build.dir}/classes"
         classpathid="tests.runpath" reportdir="${testresults.dir}"
         debug="${debug}"/>
@@ -455,7 +456,7 @@
 
   <target name="invoke-tests-subsystem" if="testsubsystem">
     <property name="testcaseorsubsystem" value="true" />
-    <run-junit include="**/${testsubsystem}/**/test/*Test.class"
+    <run-junit include="**/${testsubsystem}/**/*Test.class"
                 banner="all tests in ${testsubsystem} subsystem"
                 testbuilddir="${build.dir}/classes"
                 classpathid="tests.runpath" reportdir="${testresults.dir}"
@@ -466,7 +467,7 @@
     <!--
     <antcall target="checkstyle" />
     -->
-    <run-junit include="**/test/*Test.class"
+    <run-junit include="**/*Test.class"
                banner="all tests"
                testbuilddir="${build.dir}/classes"
                exclude="**/AuthenticationServiceTest.class"
@@ -509,8 +510,8 @@
 
   <target name="pack-webapp" depends="compile,pack-megajar">
     <mkdir dir="${build.dir}/webapp" />
-    <war destfile="${candlepin.war}" webxml="${src.dir}/webapp/WEB-INF/web.xml">
-      <fileset dir="${src.dir}/webapp">
+    <war destfile="${candlepin.war}" webxml="${src.dir}/resources/WEB-INF/web.xml">
+      <fileset dir="${src.dir}/resources">
         <exclude name="WEB-INF/web.xml"/>
       </fileset>
       <classes dir="${build.dir}/classes">

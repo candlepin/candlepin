@@ -27,8 +27,8 @@ BOUNCYCASTLE = group('bcprov', :under=>'org.bouncycastle', :version=>'1.43')
 
 #repositories.remote << "http://download.java.net/maven/2/"
 # Specify Maven 2.0 remote repositories here, like this:
-#repositories.remote << "http://www.ibiblio.org/maven2/"
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin"
+repositories.remote << "http://www.ibiblio.org/maven2/"
 #repositories.remote << "http://127.0.0.1/"
 
 desc "The Proxy project"

@@ -12,13 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
+package org.fedoraproject.candlepin.resource.test;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.TestUtil;
+import org.fedoraproject.candlepin.model.test.TestUtil;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 
 import com.sun.jersey.api.client.Client;
