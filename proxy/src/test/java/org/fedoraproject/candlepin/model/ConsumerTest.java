@@ -12,47 +12,40 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model.test;
+package org.fedoraproject.candlepin.model;
 
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 
-public class TestUtil {
-    private TestUtil() {
-    }
 
-    public static Owner createOwner() {
-        String lookedUp = BaseModel.generateUUID();
-        Owner o = new Owner();
-        o.setUuid(lookedUp);
-        ObjectFactory.get().store(o);
-        return o;
-    }
+public class ConsumerTest {
 
-    public static Consumer createConsumer(Owner owner) {
-        Consumer c = new Consumer(BaseModel.generateUUID());
-        c.setOwner(owner);
-        ObjectFactory.get().store(c);
-        return c;
-    }
-
-    /**
-     * Create a consumer with a new owner
-     * @return Consumer
-     */
-    public static Consumer createConsumer() {
-        return createConsumer(createOwner());
-    }
-
-    public static Product createProduct() {
+    @Test
+    public void testConsumedProduct() throws Exception {
+        Owner o = TestUtil.createOwner();
+        
         Product rhel = new Product(BaseModel.generateUUID());
         rhel.setName("Red Hat Enterprise Linux");
-        ObjectFactory.get().store(rhel);
-        return rhel;
+        
+        Consumer c = TestUtil.createConsumer(o);
+        c.addConsumedProduct(rhel);
+        
+        
+        
+    }
+    
+    @Test
+    public void testProperties() {
+        Owner o = TestUtil.createOwner();
+        Consumer c = TestUtil.createConsumer(o);
+        c.setMetadataField("cpu", "2");
+        
+        assertEquals(c.getMetadataField("cpu"), "2");
     }
 }

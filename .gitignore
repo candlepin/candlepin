@@ -21,6 +21,7 @@ proxy/velocity.log*
 proxy/*.jar
 proxy/*.txt
 proxy/*.out
+proxy/target
 *~
 .project
 .pydevproject
