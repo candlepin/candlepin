@@ -14,9 +14,21 @@ JERSEY = [group('jersey-core', 'jersey-json', 'jersey-server', 'jersey-client', 
         'javax.ws:jsr311-api:jar:1.1' ]
 JUNIT = 'junit:junit:jar:4.5'
 LOG4J = 'log4j:log4j:jar:1.2.14'
-HIBERNATE = ['org.hibernate:hibernate3:jar:3.2.4.1',
+HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
+             'org.hibernate:hibernate-annotations:jar:3.4.0',
+             'org.hibernate:hibernate-commons-annotations:jar:3.4.0',
+             'org.hibernate:hibernate-entitymanager:jar:3.4.0',
+             'org.hibernate:hibernate-tools:jar:3.2.4',
+             'antlr:antlr:jar:2.7.6',
              'org.objectweb.asm:asm:jar:3.1',
-             'org.objectweb.asm:asm:jar:3.1']
+             'net.sf.cglib:cglib:jar:2.2',
+             'javassist:javassist:jar:3.9.0.GA',
+             'javax.transaction:jta:jar:1.1',
+             'org.slf4j:slf4j-api:jar:1.5.8',
+             'org.slf4j:slf4j-simple:jar:1.5.8' ]
+DB = 'org.postgresql:postgresql:jar:8.4-701'
+COMMONS = ['org.apache.commons:commons-collections:jar:3.1',
+           'org.apache.commons:commons-logging:jar:1.1.1']
 BOUNCYCASTLE = group('bcprov', :under=>'org.bouncycastle', :version=>'1.43')
 # causes GET /org/apache/axis2/axis2/1.2/axis2-1.2.jar
 # we want GET /candlepin/axis2-1.2.jar
@@ -38,8 +50,8 @@ define "candlepin" do
   project.group = GROUP
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.5'
-  compile.with JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE # Add classpath dependencies
-  test.with JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE # Add classpath dependencies
+  compile.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE # Add classpath dependencies
+  test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE # Add classpath dependencies
   javadoc projects
   package :war
 
