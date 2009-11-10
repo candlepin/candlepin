@@ -22,4 +22,5 @@ proxy/*.jar
 proxy/*.txt
 proxy/*.out
 proxy/target
+proxy/reports
 *~
