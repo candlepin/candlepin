@@ -1,0 +1,45 @@
+<web-app xmlns= "http://java.sun.com/xml/ns/j2ee"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+     version="2.4">
+  <!--
+   =======================================================================
+                             FILTERS
+   =======================================================================
+   -->
+  <!--
+   =======================================================================
+                             FILTER MAPPINGS
+   =======================================================================
+   -->
+  <!--
+   =======================================================================
+                             LISTENERS
+   =======================================================================
+   -->
+  <!--
+   =======================================================================
+                             SERVLETS
+   =======================================================================
+   -->
+  <servlet>
+    <servlet-name>Jersey Web Application</servlet-name>
+    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+    <init-param>
+      <!-- this is a semi-colon separated list of package names -->
+      <param-name>com.sun.jersey.config.property.packages</param-name>
+      <param-value>org.fedoraproject.candlepin.resource</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <!--
+   =======================================================================
+                             SERVLET MAPPINGS
+   =======================================================================
+   -->
+  <servlet-mapping>
+    <servlet-name>Jersey Web Application</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+</web-app>
