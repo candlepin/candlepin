@@ -6,7 +6,7 @@
         <!-- dependency org="candlepin" name="asm" rev="1.5.3" / -->
         <!-- dependency org="candlepin" name="asm-attrs" rev="1.5.3" / -->
         <dependency org="candlepin" name="bcel" rev="5.2" />
-        <!-- dependency org="candlepin" name="bcpg" rev="1.37" / -->
+        <dependency org="candlepin" name="bcpg" rev="1.43" />
         <dependency org="candlepin" name="bcprov" rev="1.43" />
         <!-- dependency org="candlepin" name="c3p0" rev="0.9.0" / -->
         <dependency org="candlepin" name="cglib" rev="2.2" />
@@ -51,7 +51,7 @@
         <!-- dependency org="candlepin" name="jasper5-compiler" rev="5.0.19" / -->
         <!-- dependency org="candlepin" name="jasper5-runtime" rev="5.0.19" / -->
         <!-- dependency org="candlepin" name="jcommon" rev="1.0.12" / -->
-        <!-- dependency org="candlepin" name="jdom" rev="1.0" / -->
+        <dependency org="candlepin" name="jdom" rev="1.0" />
         <!-- dependency org="candlepin" name="jfreechart" rev="1.0.9" / -->
         <!-- dependency org="candlepin" name="jmock" rev="1.2.0" / -->
         <!-- dependency org="candlepin" name="jmock-cglib" rev="1.2.0" / -->
