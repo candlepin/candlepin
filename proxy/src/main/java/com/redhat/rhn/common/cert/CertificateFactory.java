@@ -108,8 +108,8 @@ public class CertificateFactory {
         Certificate result = new Certificate();
         Element root = doc.getRootElement();
         if (!ELEM_CERT.equals(root.getName())) {
-            throw new JDOMException("Expected root element in " + source + " to be " +
-                    ELEM_CERT + " but found " + root.getName());
+            throw new JDOMException("Expected root element in " + source + 
+                    " to be " + ELEM_CERT + " but found " + root.getName());
         }
         Element signature = root.getChild(ELEM_SIGNATURE);
         if (signature == null) {
