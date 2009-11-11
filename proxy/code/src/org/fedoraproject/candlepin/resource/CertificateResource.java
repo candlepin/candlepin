@@ -61,6 +61,7 @@ public class CertificateResource extends BaseResource {
             String decoded = Base64.base64Decode(base64cert);
             System.out.println(decoded);
             cert = CertificateFactory.read(decoded);
+            System.out.println(cert.getExpires());
         }
         catch (JDOMException e) {
             // TODO Auto-generated catch block
