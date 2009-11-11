@@ -1,10 +1,9 @@
 <ivy-module version="1.0">
     <info organisation="candlepin" module="rhn-java" />
     <dependencies>
-        <dependency org="candlepin" name="antlr" rev="2.7.6" />
         <dependency org="candlepin" name="ant-contrib" rev="1.0" />
-        <!-- dependency org="candlepin" name="asm" rev="1.5.3" / -->
-        <!-- dependency org="candlepin" name="asm-attrs" rev="1.5.3" / -->
+        <dependency org="candlepin" name="antlr" rev="2.7.6" />
+        <dependency org="candlepin" name="asm" rev="3.1" />
         <dependency org="candlepin" name="bcel" rev="5.2" />
         <dependency org="candlepin" name="bcpg" rev="1.43" />
         <dependency org="candlepin" name="bcprov" rev="1.43" />
@@ -12,84 +11,33 @@
         <dependency org="candlepin" name="cglib" rev="2.2" />
         <dependency org="candlepin" name="checkstyle" rev="4.1" />
         <dependency org="candlepin" name="commons-beanutils" rev="1.7.0" />
-        <!-- dependency org="candlepin" name="commons-cli" rev="1.0" / -->
-        <!-- dependency org="candlepin" name="commons-codec" rev="1.2" / -->
         <dependency org="candlepin" name="commons-collections" rev="3.1" />
-        <!-- dependency org="candlepin" name="commons-digester" rev="1.6" / -->
-        <!-- dependency org="candlepin" name="commons-discovery" rev="0.2" / -->
-        <!-- dependency org="candlepin" name="commons-el" rev="1.0" / -->
-        <!-- dependency org="candlepin" name="commons-fileupload" rev="1.0" / -->
-        <!-- dependency org="candlepin" name="commons-httpclient" rev="3.0" / -->
-        <!-- dependency org="candlepin" name="commons-lang" rev="2.3" / -->
         <dependency org="candlepin" name="commons-logging" rev="1.1.1" />
-        <dependency org="candlepin" name="postgresql" rev="8.4-701" />
-        <dependency org="candlepin" name="freemarker" rev="2.3.15" />
-        <!-- dependency org="candlepin" name="commons-validator" rev="1.1.4" / -->
-        <!-- dependency org="candlepin" name="concurrent" rev="1.3.2" / -->
         <dependency org="candlepin" name="dom4j" rev="1.6.1" />
-        <dependency org="candlepin" name="javassist" rev="3.9.0.GA" />
-        <dependency org="candlepin" name="slf4j-api" rev="1.5.8" />
-        <dependency org="candlepin" name="slf4j-simple" rev="1.5.8" />
-        <!-- dependency org="candlepin" name="ehcache" rev="1.1" / -->
-        <!-- dependency org="candlepin" name="emma" rev="20040713" / -->
-        <!-- dependency org="candlepin" name="emma_ant" rev="20040713" / -->
+        <dependency org="candlepin" name="ejb3-persistence" rev="3.4.0" />
+        <dependency org="candlepin" name="freemarker" rev="2.3.15" />
         <dependency org="candlepin" name="hibernate3" rev="3.3.2" />
         <dependency org="candlepin" name="hibernate-annotations" rev="3.4.0" />
         <dependency org="candlepin" name="hibernate-commons-annotations" rev="3.4.0" />
         <dependency org="candlepin" name="hibernate-entitymanager" rev="3.4.0" />
         <dependency org="candlepin" name="hibernate-tools" rev="3.2.4" />
-        <dependency org="candlepin" name="ejb3-persistence" rev="3.4.0" />
-        <dependency org="candlepin" name="asm" rev="3.1" />
-        <dependency org="candlepin" name="jersey-core" rev="1.1.2-ea" />
+        <dependency org="candlepin" name="hsqldb" rev="1.8.0.10" />
+        <dependency org="candlepin" name="javassist" rev="3.9.0.GA" />
+        <dependency org="candlepin" name="jdom" rev="1.0" />
         <dependency org="candlepin" name="jersey-client" rev="1.1.2-ea" />
-        <dependency org="candlepin" name="jersey-server" rev="1.1.2-ea" />
+        <dependency org="candlepin" name="jersey-core" rev="1.1.2-ea" />
         <dependency org="candlepin" name="jersey-json" rev="1.1.2-ea" />
+        <dependency org="candlepin" name="jersey-server" rev="1.1.2-ea" />
         <dependency org="candlepin" name="jettison" rev="1.1" />
         <dependency org="candlepin" name="jsr311-api" rev="1.1" />
-        <!-- dependency org="candlepin" name="imap" rev="1.3.1" / -->
-        <!-- dependency org="candlepin" name="jaf" rev="1.0.2" / -->
-        <!-- dependency org="candlepin" name="jasper5-compiler" rev="5.0.19" / -->
-        <!-- dependency org="candlepin" name="jasper5-runtime" rev="5.0.19" / -->
-        <!-- dependency org="candlepin" name="jcommon" rev="1.0.12" / -->
-        <dependency org="candlepin" name="jdom" rev="1.0" />
-        <!-- dependency org="candlepin" name="jfreechart" rev="1.0.9" / -->
-        <!-- dependency org="candlepin" name="jmock" rev="1.2.0" / -->
-        <!-- dependency org="candlepin" name="jmock-cglib" rev="1.2.0" / -->
-        <!-- dependency org="candlepin" name="jpam" rev="0.4" / -->
-        <!-- dependency org="candlepin" name="jspapi" rev="5.0.18" / -->
         <dependency org="candlepin" name="jta" rev="1.1" />
-        <!--dependency org="candlepin" name="junit" rev="3.8.2" /-->
         <dependency org="candlepin" name="junit4" rev="4.5" />
-        <dependency org="candlepin" name="hsqldb" rev="1.8.0.10" />
         <dependency org="candlepin" name="log4j" rev="1.2.14" />
         <dependency org="candlepin" name="logdriver" rev="0.1" />
-        <!-- dependency org="candlepin" name="mailapi" rev="1.3.1" / -->
-        <!-- dependency org="candlepin" name="redstone-xmlrpc" rev="1.1_20071120" / -->
-        <!-- dependency org="candlepin" name="redstone-xmlrpc-client" rev="1.1_20071120" / -->
-        <!-- dependency org="candlepin" name="gsbase" rev="2.0.1" / -->
-        <!-- dependency org="candlepin" name="mockobjects" rev="0.09" / -->
-        <!-- dependency org="candlepin" name="mockobjects-core" rev="0.09" / -->
-        <!-- dependency org="candlepin" name="mockobjects-jdk1.4-j2ee1.3" rev="0.09" / -->
-        <!-- dependency org="candlepin" name="ojdbc14" rev="1.10" / -->
-        <!-- dependency org="candlepin" name="oro" rev="2.0.8" / -->
-        <!-- dependency org="candlepin" name="oscache" rev="2.0.2" / -->
         <dependency org="candlepin" name="persistence-api" rev="1.0.2" />
-        <!-- dependency org="candlepin" name="pop3" rev="1.3.1" / -->
-        <!-- dependency org="candlepin" name="quartz" rev="1.5.1" / -->
-        <!-- dependency org="candlepin" name="regexp" rev="1.3" / -->
-        <!-- dependency org="candlepin" name="servlet-api" rev="2.5" / -->
-        <!-- dependency org="candlepin" name="sitemesh" rev="2.1" / -->
-        <!-- dependency org="candlepin" name="smtp" rev="1.3.1" / -->
-        <!-- dependency org="candlepin" name="stringtree-json" rev="2.0.9" / -->
-        <!-- dependency org="candlepin" name="struts" rev="1.2.9" / -->
-        <!-- dependency org="candlepin" name="strutstest" rev="2.1.3" / -->
-        <!-- dependency org="candlepin" name="taglibs-core" rev="1.1.0" / -->
-        <!-- dependency org="candlepin" name="taglibs-standard" rev="1.1.0" / -->
-        <!-- dependency org="candlepin" name="tanukiwrapper" rev="3.1.2" / -->
-        <!-- dependency org="candlepin" name="tyrex" rev="1.0" / -->
+        <dependency org="candlepin" name="postgresql" rev="8.4-701" />
+        <dependency org="candlepin" name="slf4j-api" rev="1.5.8" />
+        <dependency org="candlepin" name="slf4j-simple" rev="1.5.8" />
         <dependency org="candlepin" name="xalan-j2" rev="2.6.0" />
-        <!-- dependency org="candlepin" name="xerces-j2" rev="2.6.2" / -->
-        <!-- dependency org="candlepin" name="xml-commons-apis" rev="1.0" / -->
-        
     </dependencies>
 </ivy-module>
