@@ -28,8 +28,12 @@ HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
              'org.slf4j:slf4j-simple:jar:1.5.8' ]
 DB = 'org.postgresql:postgresql:jar:8.4-701'
 COMMONS = ['org.apache.commons:commons-collections:jar:3.1',
-           'org.apache.commons:commons-logging:jar:1.1.1']
-BOUNCYCASTLE = group('bcprov', :under=>'org.bouncycastle', :version=>'1.43')
+           'org.apache.commons:commons-logging:jar:1.1.1',
+           'org.apache.commons:commons-beanutils:jar:1.7.0']
+JDOM = 'org.jdom:jdom:jar:1.0'
+BOUNCYCASTLE = group('bcprov', 'bcpg', :under=>'org.bouncycastle', :version=>'1.43')
+
+
 # causes GET /org/apache/axis2/axis2/1.2/axis2-1.2.jar
 # we want GET /candlepin/axis2-1.2.jar
 
@@ -50,8 +54,9 @@ define "candlepin" do
   project.group = GROUP
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.5'
-  compile.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE # Add classpath dependencies
-  test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE # Add classpath dependencies
+  # Add classpath dependencies
+  compile.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM
+  test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM # Add classpath dependencies
   javadoc projects
   package :war
 
