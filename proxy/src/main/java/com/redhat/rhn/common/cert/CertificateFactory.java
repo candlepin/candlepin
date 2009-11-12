@@ -54,7 +54,8 @@ public class CertificateFactory {
             new SimpleExtractor("generation"),
             new ChannelFamilyExtractor("channel-families") };
 
-    private static final HashMap FIELD_MAP = new HashMap();
+    private static final HashMap<String,FieldExtractor> FIELD_MAP =
+            new HashMap<String,FieldExtractor>();
 
     static {
         for (int i = 0; i < FIELD_EXTRACTORS.length; i++) {
@@ -103,6 +104,7 @@ public class CertificateFactory {
         return readDocument(new SAXBuilder().build(url), url.toExternalForm());
     }
 
+    @SuppressWarnings("unchecked")
     private static Certificate readDocument(Document doc, String source)
         throws JDOMException {
         Certificate result = new Certificate();
@@ -127,7 +129,7 @@ public class CertificateFactory {
     private static void extractField(Certificate result, Element child)
         throws JDOMException {
         String name = child.getAttributeValue("name");
-        FieldExtractor e = (FieldExtractor) FIELD_MAP.get(name);
+        FieldExtractor e = FIELD_MAP.get(name);
         if (name == null) {
             throw new JDOMException("The field " + name +
                     " is not one of the possible fields for " + ELEM_FIELD);

@@ -16,7 +16,6 @@ package com.redhat.rhn.common.cert;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,10 +27,10 @@ import java.util.Map;
 public class XmlTag {
 
     private String tag;
-    private Map attribs;
-    private List body;
+    private Map<String, String> attribs;
+    private List<Object> body;
     private boolean spaceBeforeEndTag;
-    private List keys;
+    private List<String> keys;
 
     /**
      * Standard xml header with utf-8 encoding. Example usage:<br />
@@ -73,10 +72,10 @@ public class XmlTag {
      */
 
     protected XmlTag(String tagIn, boolean spaceBefore) {
-        attribs = new HashMap();
+        attribs = new HashMap<String, String>();
         tag = tagIn;
-        body = new ArrayList();
-        keys = new ArrayList();
+        body = new ArrayList<Object>();
+        keys = new ArrayList<String>();
         spaceBeforeEndTag = spaceBefore;
     }
 
@@ -146,13 +145,11 @@ public class XmlTag {
         StringBuffer ret = new StringBuffer("<");
         ret.append(tag);
 
-        Iterator i = keys.iterator();
-        while (i.hasNext()) {
-            String attrib = (String) i.next();
+        for (String attrib : keys) {
             ret.append(" ");
             ret.append(attrib);
             ret.append("=\"");
-            ret.append((String) attribs.get(attrib));
+            ret.append(attribs.get(attrib));
             ret.append("\"");
         }
         ret.append(">");
@@ -166,9 +163,9 @@ public class XmlTag {
      */
     public String renderBody() {
         StringBuffer buf = new StringBuffer();
-
-        for (Iterator itr = body.iterator(); itr.hasNext();) {
-            buf.append(convertToString(itr.next()));
+        
+        for (Object obj : body) {
+            buf.append(convertToString(obj));
         }
 
         return buf.toString();
