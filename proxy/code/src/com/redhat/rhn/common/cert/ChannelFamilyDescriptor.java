@@ -22,6 +22,7 @@ import com.redhat.rhn.common.cert.XmlTag;
  * 
  * Borrowed from project Spacewalk: http://spacewalk.redhat.com
  */
+@SuppressWarnings("unchecked")
 public class ChannelFamilyDescriptor implements Comparable {
 
     private String family;

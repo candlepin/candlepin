@@ -49,7 +49,7 @@ public class Certificate {
     private String satelliteVersion;
     private String generation;
     private String signature;
-    private List channelFamilies;
+    private List<ChannelFamilyDescriptor> channelFamilies;
     private static final String XML_HEADER =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
@@ -57,7 +57,7 @@ public class Certificate {
      * Construct an empty certificate.
      */
     Certificate() {
-        channelFamilies = new ArrayList();
+        channelFamilies = new ArrayList<ChannelFamilyDescriptor>();
     }
 
     /**
@@ -76,14 +76,15 @@ public class Certificate {
      * 
      * @return the certificate in the canonical form used for signing
      */
+    @SuppressWarnings("unchecked")
     public String asChecksumString() {
         StringBuffer result = new StringBuffer();
         // Fields must appear in the output in alphabetical order
         // The channelFamilies are sorted in their very own way
         // (see ChannelFamily.compareTo)
         Collections.sort(channelFamilies);
-        for (int i = 0; i < channelFamilies.size(); i++) {
-            ChannelFamilyDescriptor cf = (ChannelFamilyDescriptor) channelFamilies.get(i);
+        
+        for (ChannelFamilyDescriptor cf : channelFamilies) {
             result.append(cf.asChecksumString()).append("\n");
         }
         appendField(result, "expires", getExpires());
@@ -128,7 +129,7 @@ public class Certificate {
                 .getVirtualizationPlatformSlots());
 
         for (int i = 0; i < channelFamilies.size(); i++) {
-            ChannelFamilyDescriptor cf = (ChannelFamilyDescriptor) channelFamilies.get(i);
+            ChannelFamilyDescriptor cf = channelFamilies.get(i);
             buf.append("  ").append(cf.asXmlString()).append("\n");
         }
 
@@ -287,7 +288,7 @@ public class Certificate {
      * Return an unmodifiable list of the channel families
      * @return an unmodifiable list of the channel families
      */
-    public List getChannelFamilies() {
+    public List<ChannelFamilyDescriptor> getChannelFamilies() {
         return Collections.unmodifiableList(channelFamilies);
     }
 
@@ -300,7 +301,7 @@ public class Certificate {
      */
     public ChannelFamilyDescriptor getChannelFamily(String family) {
         for (int i = 0; i < channelFamilies.size(); i++) {
-            ChannelFamilyDescriptor f = (ChannelFamilyDescriptor) channelFamilies.get(i);
+            ChannelFamilyDescriptor f = channelFamilies.get(i);
             if (f.getFamily().equals(family)) {
                 return f;
             }
@@ -326,6 +327,18 @@ public class Certificate {
     public Date getExpiresDate() throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return sdf.parse(expires);
+    }
+    
+    /**
+     * Convenience function, returns java.util.Date equivalent of
+     * <code>issued</code>
+     * @return Date obj equivalent of <code>issued</code>
+     * @throws ParseException format of <code>issued</code> not what we
+     * expected
+     */
+    public Date getIssuedDate() throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return sdf.parse(issued);
     }
 
     /**

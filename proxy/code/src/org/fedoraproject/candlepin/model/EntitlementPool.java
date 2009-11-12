@@ -22,7 +22,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Represents a collection of entitlements for a given order.
+ * Represents a pool of products eligible to be consumed (entitled).
+ * For every Product there will be a corresponding Pool.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
