@@ -586,7 +586,7 @@
 
 
   <property name="dir.genhbm" value="build/schemagen/" />
-  <target name="gen-schema">
+  <target name="gen-schema" depends="init-taskdefs">
     <delete dir="${dir.genhbm}" />
     <mkdir dir="${dir.genhbm}" />
 
