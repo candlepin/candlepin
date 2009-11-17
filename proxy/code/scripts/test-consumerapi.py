@@ -41,3 +41,6 @@ print("get info: %s" % rsp)
 #
 #print("Status: %d Response: %s" % (response.status, response.reason))
 #conn.close()
+
+#print("delete product from consumer")
+#conn.request("DELETE", '/candlepin/consumer/%s/product/%s' % ())

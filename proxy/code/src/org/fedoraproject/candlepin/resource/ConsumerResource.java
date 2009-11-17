@@ -19,14 +19,19 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Product;
+
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -36,6 +41,8 @@ import javax.ws.rs.core.MediaType;
 @Path("/consumer")
 public class ConsumerResource extends BaseResource {
 
+    private static Logger log = Logger.getLogger(ConsumerResource.class);
+    
     /**
      * default ctor
      */
@@ -96,5 +103,27 @@ public class ConsumerResource extends BaseResource {
         ci.setMetadataField("hey", "foobar");
         System.out.println(ci.getMetadata());
         return ci;
+    }
+    
+    /**
+     * removes the product whose id matches pid, from the consumer, cid.
+     * @param cid Consumer ID to affect
+     * @param pid Product ID to remove from Consumer.
+     */
+    @DELETE @Path("{cid}/products/{pid}")
+    public void delete(@PathParam("cid") String cid,
+                       @PathParam("pid") String pid) {
+        System.out.println("cid " + cid + " pid = " + pid);
+        Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class, cid);
+        if (!c.getConsumedProducts().remove(pid)) {
+            log.error("no product " + pid + " found.");
+        }
+    }
+    
+    @GET @Path("{cid}/products/{pid}")
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public Product getProduct(@PathParam("cid") String cid,
+                       @PathParam("pid") String pid) {
+        return null;
     }
 }
