@@ -31,6 +31,7 @@ import java.text.ParseException;
 import java.util.Date;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -46,6 +47,7 @@ import javax.ws.rs.core.Response;
 @Path("/certificate")
 public class CertificateResource extends BaseResource {
     public static Certificate cert;
+    public static String encodedCert = ""; // bad bad bad
 
     /**
      * default ctor
@@ -69,6 +71,7 @@ public class CertificateResource extends BaseResource {
                 throw new WebApplicationException(Response.Status.BAD_REQUEST);
             }
             
+            encodedCert = base64cert;
             String decoded = Base64.base64Decode(base64cert);
             System.out.println(decoded);
             cert = CertificateFactory.read(decoded);
@@ -90,14 +93,27 @@ public class CertificateResource extends BaseResource {
         return "uuid";
     }
     
-//    @GET
-//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    public String get() {
-//        return "Hello Certificate";
-//    }
+    private String createString(byte[] bytes) {
+        StringBuffer buf = new StringBuffer();
+        for (byte b : bytes) {
+            buf.append((char) Integer.parseInt(Integer.toHexString(b), 16));
+        }
+                
+        return buf.toString();
+    }
     
-    public static Certificate get() {
-        return cert;
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public String get() {
+//        byte[] s = null;
+//        if (cert != null) {
+//            s = Base64.encode(cert.asXmlString());
+//        }
+//        
+//        String str = createString(s);
+//        System.out.println(str);
+//        return str;
+        return encodedCert;
     }
     
     private void addProducts(Certificate cert) throws ParseException {
