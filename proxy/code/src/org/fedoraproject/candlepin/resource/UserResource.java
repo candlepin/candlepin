@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -76,9 +77,11 @@ public class UserResource extends BaseResource {
      * @return User
      */
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public User create(String login, String password) {
+    public User create(@FormParam("login") String login, @FormParam("password") String password) {
+        System.out.println("login: " + login);
+        System.out.println("password: " + password);
         String newuuid = BaseModel.generateUUID();
         User u = new User(newuuid);
         u.setLogin(login);
