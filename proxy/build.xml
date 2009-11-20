@@ -134,7 +134,6 @@ Running @{banner} ...
         <!-- kind of hokey, but we need a property for the DataSourceParser
              test to work.  This keeps people from breaking until we move
              the DataSource xml files into rhn-java. -->
-        <sysproperty key="emma.coverage.out.file" value="${coverage.out.file}" />
         <sysproperty key="candlepin-home" value="${candlepin.home}" />
         <sysproperty key="java.awt.headless" value="true" />
         <sysproperty key="log4j.threshold" value="${log4j.threshold}" />
@@ -156,24 +155,6 @@ Running @{banner} ...
     </sequential>
   </macrodef>
 
-  <!--
-    copies srcfiles to destfile and filters it.
-    requires: none
-    other: none
-  -->
-  <macrodef name="copy-and-filter">
-    <attribute name="srcfile"/>
-    <attribute name="destfile"/>
-    <attribute name="filtersfile"/>
-
-    <sequential>
-      <copy file="@{srcfile}" tofile="@{destfile}" overwrite="true">
-        <filterset>
-          <filtersfile file="@{filtersfile}"/>
-        </filterset>
-      </copy>
-    </sequential>
-  </macrodef>
   <!-- define tasks -->
   <target name="prepare" depends="init-taskdefs">
         <mkdir dir="${build.dir}/src"/>
