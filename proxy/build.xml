@@ -237,14 +237,10 @@ Running @{banner} ...
           description="Compile and pack - no code generation in this step" />
 
 
-  <target name="test">
-    <property name="debug" value=""/>
-    <antcall target="dotest"/>
-  </target>
-
-  <target name="dotest"
+  <target name="test"
           description="Run the tests (use -Dtestsubsystem=&lt;subsystem&gt; or -Dtestcase=&lt;testcase&gt;)"
           depends="compile-main,init-tests,invoke-tests-testcase,invoke-tests-subsystem,invoke-tests-all" >
+    <property name="debug" value=""/>
 
     <fail if="junit_test_failure" message="One or more tests failed" />
   </target>
@@ -441,11 +437,8 @@ Running @{banner} ...
     </copy>
   </target>
 
-  <target name="setup-tests">
+  <target name="init-tests">
     <property name="test.bin.dir" value="${build.dir}/classes" />
-  </target>
-
-  <target name="init-tests" depends="setup-tests">
     <property name="testresults.dir" value="${report.dir}/tests" />
 
     <path id="tests.buildpath" >
@@ -505,13 +498,6 @@ Running @{banner} ...
                classpathid="tests.runpath"
                reportdir="${testresults.dir}"/>
   </target>
-
-  <target name="unwar-webapp" depends="pack" >
-    <unjar src="${candlepin.war}"
-           dest="${build.dir}/webapp/${ant.project.name}" />
-  </target>
-
-  <!-- =================== Packaging Tasks ======================= -->
 
   <target name="pack-megajar" depends="compile">
     <mkdir dir="${run.lib.dir}" />
@@ -609,8 +595,8 @@ Running @{banner} ...
     </exec>
   </target>
 
-  <property name="dir.genhbm" value="build/schemagen/" />
   <target name="gen-schema" depends="init-taskdefs" description="Generates database schema from Hibernate annotations.">
+    <property name="dir.genhbm" value="build/schemagen/" />
     <delete dir="${dir.genhbm}" />
     <mkdir dir="${dir.genhbm}" />
 
