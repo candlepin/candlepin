@@ -40,10 +40,140 @@
     <path refid="runjars" />
   </path>
 
-  <!-- setup macros -->
-  <import file="buildconf/build-taskdefs.xml" />
-  <import file="buildconf/build-utils.xml" />
+  <target name="init-ivy" depends="boot-deps" unless="installbuild">
+    <taskdef name="ivy-retrieve"
+             classname="fr.jayasoft.ivy.ant.IvyRetrieve"
+             classpathref="bootjars"/>
+    <taskdef name="ivy-configure"
+             classname="fr.jayasoft.ivy.ant.IvyConfigure"
+             classpathref="bootjars"/>
+    <taskdef name="ivy-resolve"
+             classname="fr.jayasoft.ivy.ant.IvyResolve"
+             classpathref="bootjars"/>
+    <taskdef name="ivy-publish"
+             classname="fr.jayasoft.ivy.ant.IvyPublish"
+             classpathref="bootjars"/>
+  </target>
 
+  <target name="init-taskdefs" depends="link-jars"
+          unless="init-taskdefs.notrequired">
+    <!-- pull in checkstyle's properties defining its tasks -->
+    <taskdef resource="checkstyletask.properties"
+             classpathref="alljars" />
+    <!-- =================== Ant Contrib Tasks ======================= -->
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"
+             classpathref="buildjars"/>
+    <property name="init-taskdefs.notrequired" value="true" />
+    <!-- =================== Hibernate tools ======================= -->
+    <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask" classpathref="libjars"/>
+  </target>
+
+  <!--
+    creates symlinks for jpackage jars
+    requires: jpackage-utils
+    other: requires rpms of the jars specified to be installed
+  -->
+  <macrodef name="jpackage-deps">
+    <attribute name="jars" />
+    <attribute name="dir" />
+
+    <sequential>
+      <exec executable="build-jar-repository" failonerror="true" >
+        <arg value="--preserve-naming" />
+        <arg value="-s @{dir}" />
+        <arg line="@{jars}" />
+      </exec>
+    </sequential>
+  </macrodef>
+
+  <!--
+    creates symlinks for jars downloaded from the ivy repository
+    requires: ivy jpackage rpm
+              ivy.xml
+              build-jar-dir script
+  -->
+  <macrodef name="link-jars">
+    <attribute name="ivyxml" />
+    <attribute name="libdir" />
+    <attribute name="jars" />
+    <attribute name="dir" />
+
+    <sequential>
+      <exec executable="${candlepin.home}/buildconf/scripts/build-jar-dir" failonerror="true" >
+        <arg value="-s" />
+        <arg value="@{ivyxml}" />
+        <arg value="@{libdir}" />
+        <arg value="@{dir}" />
+        <arg line="@{jars}" />
+      </exec>
+    </sequential>
+  </macrodef>
+
+  <!-- TODO: Would very much like to simplify this and *all* the other test tasks. -->
+  <macrodef name="run-junit">
+    <attribute name="include" />
+    <attribute name="exclude" default=""/>
+    <attribute name="banner" />
+    <attribute name="testbuilddir" />
+    <attribute name="classpathid" />
+    <attribute name="reportdir" />
+    <attribute name="debug" default="" />
+
+    <sequential>
+      <echo level="info">
+--------------------------------------------------------------------
+Running @{banner} ...
+--------------------------------------------------------------------
+      </echo>
+
+      <!-- forkmode requires using Ant 1.6.2.  If you don't have
+           1.6.2, remove forkmode attribute -->
+      <junit forkmode="once" fork="yes" printsummary="off" showoutput="yes"
+             haltonfailure="${halt-tests-on-failure}"
+             failureproperty="junit_test_failure" >
+        <!-- kind of hokey, but we need a property for the DataSourceParser
+             test to work.  This keeps people from breaking until we move
+             the DataSource xml files into rhn-java. -->
+        <sysproperty key="emma.coverage.out.file" value="${coverage.out.file}" />
+        <sysproperty key="candlepin-home" value="${candlepin.home}" />
+        <sysproperty key="java.awt.headless" value="true" />
+        <sysproperty key="log4j.threshold" value="${log4j.threshold}" />
+        <sysproperty key="rhn.config.dir" value="${rhn.config.dir}" />
+        <sysproperty key="persistenceUnit" value="test" />
+        <env key="ORACLE_HOME" value="/opt/oracle" />
+        <env key="LD_LIBRARY_PATH" path="/opt/oracle/lib:/usr/lib" />
+        <jvmarg value="-ea" />
+        <jvmarg line="@{debug}" />
+        <classpath refid="@{classpathid}" />
+        <formatter type="plain" />
+        <batchtest todir="@{reportdir}">
+          <fileset dir="@{testbuilddir}">
+            <include name="@{include}" />
+            <exclude name="@{exclude}"/>
+          </fileset>
+        </batchtest>
+      </junit>
+    </sequential>
+  </macrodef>
+
+  <!--
+    copies srcfiles to destfile and filters it.
+    requires: none
+    other: none
+  -->
+  <macrodef name="copy-and-filter">
+    <attribute name="srcfile"/>
+    <attribute name="destfile"/>
+    <attribute name="filtersfile"/>
+
+    <sequential>
+      <copy file="@{srcfile}" tofile="@{destfile}" overwrite="true">
+        <filterset>
+          <filtersfile file="@{filtersfile}"/>
+        </filterset>
+      </copy>
+    </sequential>
+  </macrodef>
   <!-- define tasks -->
   <target name="prepare" depends="init-taskdefs">
         <mkdir dir="${build.dir}/src"/>
@@ -107,12 +237,6 @@
           description="Compile and pack - no code generation in this step" />
 
 
-  <target name="testdebug">
-    <property name="debug"
-              value="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"/>
-    <antcall target="dotest" />
-  </target>
-
   <target name="test">
     <property name="debug" value=""/>
     <antcall target="dotest"/>
@@ -125,17 +249,6 @@
     <fail if="junit_test_failure" message="One or more tests failed" />
   </target>
 
-  <target name="run" description="runs a class with a main method" depends="compile">
-    <java fork="true"
-          classname="${classname}"
-          failonerror="true" >
-          <classpath>
-            <pathelement path="${build.dir}/classes" />
-            <path refid="alljars"/>
-          </classpath>
-    </java>
-  </target>
-
   <target name="test-report" depends="init-tests"
           description="Pretty-print the results of a previous test run.">
     <junitreport todir="${testresults.dir}">
@@ -145,10 +258,6 @@
       </fileset>
       <report format="frames" todir="${report.dir}/test-report"/>
     </junitreport>
-  </target>
-
-  <target name="create-local-repo" description="Create a local Ivy repo">
-     <mkdir dir="${user.home}/.ivy/${ant.project.name}/local/" />
   </target>
 
   <target name="clean-all" description="Nukes EVERYTHING including jar cache"
@@ -332,7 +441,7 @@
     </copy>
   </target>
 
-  <target name="setup-tests" unless="ccbuild">
+  <target name="setup-tests">
     <property name="test.bin.dir" value="${build.dir}/classes" />
   </target>
 
@@ -403,11 +512,9 @@
   </target>
 
   <!-- =================== Packaging Tasks ======================= -->
-  <target name="megajar-init">
-    <mkdir dir="${run.lib.dir}" />
-  </target>
 
-  <target name="pack-megajar" depends="megajar-init, compile">
+  <target name="pack-megajar" depends="compile">
+    <mkdir dir="${run.lib.dir}" />
     <delete file="${megajar.jar}" />
     <jar destfile="${megajar.jar}">
       <fileset dir="${build.dir}/classes">
@@ -454,6 +561,7 @@
     </war>
   </target>
 
+  <!-- TODO: what is the resolver? -->
   <!-- ================== resolver ===================== -->
   <target name="resolve" depends="resolve-ivy,resolve-local" />
 
@@ -492,9 +600,8 @@
     <ivy-retrieve/>
   </target>
 
-  <!-- Generates Eclipse classpath   -->
   <target name="gen-dot-classpath" depends="link-jars"
-          description="Generates eclipse .classpath file">
+          description="Generates eclipse .classpath file.">
     <exec executable="${basedir}/buildconf/scripts/gen-eclipse-dot-classpath.py"
           output="${basedir}/.classpath" >
       <arg value="${eclipse.lib.dirs}:${candlepin.home}/buildconf/tempjars:${env.JAVA_HOME}/lib/tools.jar" />
@@ -502,14 +609,8 @@
     </exec>
   </target>
 
-  <!-- fileset definition for eclipse plugins -->
-  <fileset id="eclipse.lib" dir="/opt/eclipse/plugins">
-        <include name="**/*.jar" />
-  </fileset>
-
-
   <property name="dir.genhbm" value="build/schemagen/" />
-  <target name="gen-schema" depends="init-taskdefs">
+  <target name="gen-schema" depends="init-taskdefs" description="Generates database schema from Hibernate annotations.">
     <delete dir="${dir.genhbm}" />
     <mkdir dir="${dir.genhbm}" />
 
