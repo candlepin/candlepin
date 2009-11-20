@@ -98,38 +98,6 @@
     </condition>
   </target>
 
-  <target name="coverage-report" depends="instrument" if="ccbuild">
-    <!-- This is really stupid, but jcoverage can't deal with having code
-         with different top-level directories, so we copy all code to a
-         single root dir.  :-(  -->
-    <mkdir dir="${build.dir}/src-copy" />
-    <copy toDir="${build.dir}/src-copy">
-      <fileset dir="code/src">
-        <include name="**/*.java" />
-        <exclude name="**/*Task.java" />
-      </fileset>
-    </copy>
-
-    <emma enabled="true">
-      <report sourcepath="${build.dir}/src-copy"
-              sort="+block,+name,+method,+class"
-              metrics="method:70,block:80,line:80,class:100">
-        <infileset dir="${candlepin.home}" includes="*.em, *.ec" />
-        <!-- txt outfile="${report.dir}/emma.txt"
-             depth="package"
-             columns="class,method,block,line,name" / -->
-        <html outfile="${report.dir}/emma.html"
-              depth="method"
-              columns="name,class,method,block,line" />
-        <xml outfile="${report.dir}/emma.xml"
-             depth="method"
-             columns="name,class,method,block,line" />
-      </report>
-    </emma>
-
-    <delete dir="${build.dir}/src-copy" />
-  </target>
-
   <target name="init"
           depends="resolve,link-jars,init-taskdefs">
     <tstamp />
@@ -138,21 +106,6 @@
   <target name="all" depends="init,compile,pack"
           description="Compile and pack - no code generation in this step" />
 
-  <target name="init-cc" depends="set-cc-config-dir,boot-deps,init-ivy">
-    <property name="ccbuild" value="true" />
-  </target>
-
-  <target name="cctarget"
-          depends="init-cc,all,cc-test,test-report,coverage-report,apidoc-jsp,javadoc"
-          description="Target called by cruisecontrol process">
-  </target>
-
-  <target name="cc-test" depends ="set-cc-config-dir, test"/>
-
-  <target name="set-cc-config-dir">
-    <property name="rhn.config.dir"
-              value="${candlepin.home}/buildconf/builder/config/satellite" />
-  </target>
 
   <target name="testdebug">
     <property name="debug"
@@ -215,8 +168,6 @@
       <fileset defaultexcludes="no" dir="${candlepin.home}">
         <include name="**/*~" />
         <include name="velocity.log*" />
-        <include name="coverage.ec" />
-        <include name="coverage.em" />
       </fileset>
     </delete>
   </target>
@@ -345,29 +296,6 @@
   <target name="pack" depends="init,pack-megajar,pack-webapp"
           description="Create jars and copy descriptors" />
 
-  <target name="instrument" depends="init-taskdefs" if="ccbuild">
-    <emma enabled="true">
-      <instr outdir="${build.instrument.dir}" merge="no"
-          instrpath="${build.dir}/classes" mode="fullcopy"
-          outfile="${candlepin.home}/coverage.em" >
-        <filter excludes="*.internal.*" />
-        <filter excludes="*.scripts.*" />
-        <filter excludes="*Mock*" />
-        <filter excludes="*Constants" />
-        <filter excludes="*Exception" />
-        <filter excludes="*.test.*" />
-        <filter excludes="com.redhat.common.*" />
-        <filter excludes="com.redhat.services.*" />
-        <filter excludes="com.redhat.rhn.testing.*" />
-      </instr>
-    </emma>
-
-    <copy toDir="${build.instrument.dir}/classes">
-      <fileset dir="${build.dir}/classes">
-        <include name="**/*.xml" />
-      </fileset>
-    </copy>
-  </target>
 
   <!-- Anything below this line should not generally be run from the command
        line.  These are the tasks that actually implement the public tasks -->
@@ -404,16 +332,11 @@
     </copy>
   </target>
 
-  <!-- =================== Testing ======================= -->
-  <target name="setup-tests-cc" if="ccbuild">
-    <property name="test.bin.dir" value="${build.instrument.dir}/classes" />
-  </target>
-
   <target name="setup-tests" unless="ccbuild">
     <property name="test.bin.dir" value="${build.dir}/classes" />
   </target>
 
-  <target name="init-tests" depends="instrument,setup-tests-cc,setup-tests">
+  <target name="init-tests" depends="setup-tests">
     <property name="testresults.dir" value="${report.dir}/tests" />
 
     <path id="tests.buildpath" >
