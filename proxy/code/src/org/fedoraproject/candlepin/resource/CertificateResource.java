@@ -42,7 +42,6 @@ import javax.ws.rs.core.Response;
 
 /**
  * CertificateResource
- * @version $Rev$
  */
 @Path("/certificate")
 public class CertificateResource extends BaseResource {

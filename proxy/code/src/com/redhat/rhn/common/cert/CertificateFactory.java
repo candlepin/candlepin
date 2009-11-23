@@ -27,8 +27,7 @@ import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
 /**
- * A class for parsing certificates from their XML form. The XML
- * format is identical to the one used by the perl code.
+ * A class for parsing certificates from their XML form. 
  *
  * Borrowed from project Spacewalk: http://spacewalk.redhat.com
  */
