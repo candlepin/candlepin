@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -43,7 +44,10 @@ public class Owner {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
     
+    @Column(nullable=false)
     private String name;
+
+    // TODO: Remove these transients once the appropriate objects are mapped:
     
     @Transient
     private List<Consumer> consumers;

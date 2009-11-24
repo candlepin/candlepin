@@ -40,26 +40,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name="cp_product")
 public class Product {
 
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
     
     // TODO: Drop one of these?
+    @Column(nullable=false)
     private String label;
+    
+    @Column(nullable=false)
     private String name;
     
     // TODO: Drop this?
     private String uuid;
-    
-    // TODO:
+
+    // TODO
+    @Transient
     private List<Product> childProducts;
 
-    /**
-     * Create product with UUID
-     * @param uuid unique id for the product
-     */
-    public Product(String uuid) {
-        setUuid(uuid);
-    }
-    
     /**
      * Constructor
      * 
@@ -81,10 +79,16 @@ public class Product {
     }
 
     /**
+     * Create product with UUID
+     * @param uuid unique id for the product
+     */
+    public Product(String uuid) {
+        setUuid(uuid);
+    }
+    
+    /**
      * @return the id
      */
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
     public Long getId() {
         return id;
     }
@@ -99,7 +103,6 @@ public class Product {
     /**
      * @return the childProducts
      */
-    @Transient
     public List<Product> getChildProducts() {
         return childProducts;
     }
@@ -135,7 +138,6 @@ public class Product {
     /**
      * @return Returns the label.
      */
-    @Column(nullable=false)
     public String getLabel() {
         return label;
     }
