@@ -44,29 +44,29 @@ public class ProductFactory extends ObjectFactory {
         
         // TODO: Move this all into the DB for definition
         // Create some Products
-        Product rhel = new Product(BaseModel.generateUUID());
+        Product rhel = new Product();
         rhel.setName("Red Hat Enterprise Linux");
         rhel.setLabel("rhel");
         this.store(rhel);
         
-        Product jboss = new Product(BaseModel.generateUUID());
+        Product jboss = new Product();
         jboss.setName("JBoss Application Server");
         jboss.setLabel("jboss-as");
         this.store(jboss);
         
-        Product virt = new Product(BaseModel.generateUUID());
+        Product virt = new Product();
         virt.setName("RHEL Virtualization");
         virt.setLabel("rhel-virt");
         rhel.addChildProduct(virt);
         this.store(virt);
         
-        Product cluster = new Product(BaseModel.generateUUID());
+        Product cluster = new Product();
         cluster.setName("RHEL Cluster-Storage");
         cluster.setLabel("rhel-cluster");
         rhel.addChildProduct(cluster);
         this.store(cluster);
         
-        Product jbossdev = new Product(BaseModel.generateUUID());
+        Product jbossdev = new Product();
         jbossdev.setName("JBoss Developer Studio (v1) for Linux");
         this.store(jbossdev);
         

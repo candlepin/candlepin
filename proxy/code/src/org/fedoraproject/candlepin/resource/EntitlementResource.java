@@ -139,16 +139,16 @@ public class EntitlementResource extends BaseResource {
     /**
      * Check to see if a given Consumer is entitled to given Product
      * @param consumerUuid consumerUuid to check if entitled or not
-     * @param productUuid productUuid to check if entitled or not
+     * @param productId productUuid to check if entitled or not
      * @return boolean if entitled or not
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/has")
     public boolean hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
-            @PathParam("product_uuid") String productUuid) {
+            @PathParam("product_id") String productId) {
         Consumer c = (Consumer) validateObjectInput(consumerUuid, Consumer.class);
-        Product p = (Product) validateObjectInput(productUuid, Product.class);
+        Product p = (Product) validateObjectInput(productId, Product.class);
         for (Entitlement e : c.getEntitlements()) {
             if (e.getProduct().equals(p)) {
                 return true;

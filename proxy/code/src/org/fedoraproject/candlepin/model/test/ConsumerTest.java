@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -30,7 +29,7 @@ public class ConsumerTest {
     public void testConsumedProduct() throws Exception {
         Owner o = TestUtil.createOwner();
         
-        Product rhel = new Product(BaseModel.generateUUID());
+        Product rhel = new Product();
         rhel.setName("Red Hat Enterprise Linux");
         
         Consumer c = TestUtil.createConsumer(o);

@@ -67,7 +67,7 @@ public class OwnerTest extends ModelTestFixture {
     public void testObjectRelationships() throws Exception {
         Owner owner = new Owner("test-owner");
         // Product
-        Product rhel = new Product(BaseModel.generateUUID());
+        Product rhel = new Product();
         rhel.setName("Red Hat Enterprise Linux");
         
         // User

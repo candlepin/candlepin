@@ -51,7 +51,7 @@ public class TestUtil {
     }
 
     public static Product createProduct() {
-        Product rhel = new Product(BaseModel.generateUUID());
+        Product rhel = new Product();
         rhel.setName("Red Hat Enterprise Linux");
         ObjectFactory.get().store(rhel);
         return rhel;

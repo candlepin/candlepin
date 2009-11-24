@@ -51,9 +51,6 @@ public class Product {
     @Column(nullable=false)
     private String name;
     
-    // TODO: Drop this?
-    private String uuid;
-
     // TODO
     @Transient
     private List<Product> childProducts;
@@ -78,14 +75,6 @@ public class Product {
     public Product() {
     }
 
-    /**
-     * Create product with UUID
-     * @param uuid unique id for the product
-     */
-    public Product(String uuid) {
-        setUuid(uuid);
-    }
-    
     /**
      * @return the id
      */
@@ -162,7 +151,6 @@ public class Product {
      * Returns the name of the object.
      * @return the name of the object.
      */
-    @Column(nullable=false)
     public String getName() {
         return name;
     }
@@ -173,22 +161,6 @@ public class Product {
      */
     public void setName(String name) {
         this.name = name;
-    }
-
-    /**
-     * Returns the unique id of the model object.
-     * @return the unique id of the model object.
-     */
-    public String getUuid() {
-        return uuid;
-    }
-
-    /**
-     * Sets the unique id of the model object.
-     * @param uuid unique id of the model.
-     */
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
     }
 
 }

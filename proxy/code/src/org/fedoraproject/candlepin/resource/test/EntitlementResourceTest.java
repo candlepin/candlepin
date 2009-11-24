@@ -47,9 +47,6 @@ public class EntitlementResourceTest {
     private Product product;
     private EntitlementPool ep;
     
-    /**
-     * {@inheritDoc}
-     */
     @Before
     public void setUp() throws Exception {
         consumer = TestUtil.createConsumer();
@@ -73,7 +70,7 @@ public class EntitlementResourceTest {
         EntitlementResource eapi = new EntitlementResource();
         Form f = new Form();
         f.add("consumer_uuid", consumer.getUuid());
-        f.add("product_uuid", product.getUuid());
+        f.add("product_id", product.getId());
         String cert = (String) eapi.entitle(consumer, product);
         
         assertNotNull(cert);
