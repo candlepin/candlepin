@@ -124,7 +124,6 @@ public class CertificateResource extends BaseResource {
             owner = new Owner();
             owner.setName(cert.getOwner());
             owner = (Owner) ObjectFactory.get().store(owner);
-            System.out.println(owner.getUuid());
         }
         
         // get the product the cert is for (and the channel families 

@@ -17,34 +17,86 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents the owner of entitlements
+ * Represents the owner of entitlements.
+ * 
+ * This is akin to an organization, whereas a User is an individual account within that
+ * organization.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Owner extends BaseModel {
+@Entity
+@Table(name="cp_owner")
+public class Owner {
     
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    
+    private String name;
+    
+    @Transient
     private List<Consumer> consumers;
+    
+    @Transient
     private List<EntitlementPool> entitlementPools;
+    
+    @Transient
     private List<User> users;
     
     /**
-     * @param uuid unique id for the owner
-     */
-    public Owner(String uuid) {
-        super(uuid);
-    }
-    
-    /**
-     * Default
+     * Default constructor.
      */
     public Owner() {
     }
     
+    /**
+     * Constructor with required parameters.
+     * 
+     * @param name Owner's name.
+     */
+    public Owner(String nameIn) {
+        this.name = nameIn;
+    }
+    
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
     /**
      * @return the consumers
      */
@@ -124,7 +176,7 @@ public class Owner extends BaseModel {
      */
     @Override
     public String toString() {
-        return "Owner [getName()=" + getName() + ", getUuid()=" +
-            getUuid() + "]";
+        return "Owner [name = " + getName() + ", id = " +
+            getId() + "]";
     }
 }

@@ -50,7 +50,7 @@ public class ObjectFactory {
      * @deprecated demo method
      */
     private void initMockObjects() {
-        Owner org = new Owner(BaseModel.generateUUID());
+        Owner org = new Owner();
         org.setName("test-org");
         
         // User

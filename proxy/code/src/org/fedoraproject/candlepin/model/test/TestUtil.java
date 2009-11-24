@@ -26,10 +26,11 @@ public class TestUtil {
     private TestUtil() {
     }
 
+    @Deprecated
     public static Owner createOwner() {
         String lookedUp = BaseModel.generateUUID();
         Owner o = new Owner();
-        o.setUuid(lookedUp);
+//        o.setUuid(lookedUp);
         ObjectFactory.get().store(o);
         return o;
     }

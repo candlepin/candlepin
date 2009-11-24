@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.model.test;
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
@@ -27,43 +26,46 @@ import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-/**
- * 
- *
- */
-public class OwnerTest {
+public class OwnerTest extends ModelTestFixture {
 
     @Test
-    public void testOwner() throws Exception {
-        Owner o = new Owner(BaseModel.generateUUID());
-        assertNotNull(o);
-    }
-    
-    @Test
-    public void testLookup() throws Exception {
-        
-        Owner o = TestUtil.createOwner();
-        String lookedUp = o.getUuid();
-        o = (Owner) ObjectFactory.get().
-            lookupByUUID(Owner.class, lookedUp);
-        assertNotNull(o);
+    public void testCreate() throws Exception {
+        String ownerName = "Example Corporation";
+        Owner o = new Owner(ownerName);
+        persistAndCommit(o);
+        Owner result = (Owner)em.createQuery(
+                "select o from Owner o where o.name = :name")
+                .setParameter("name", ownerName).getSingleResult();
+        assertNotNull(result);
+        assertEquals(ownerName, result.getName());
+//        assertEquals(0, result.getConsumers().size());
+//        assertEquals(0, result.getEntitlementPools().size());
+//        assertEquals(0, result.getUsers().size());
+        assertTrue(result.getId() > 0);
+        assertEquals(o.getId(), result.getId());
     }
     
     @Test
     public void testList() throws Exception {
+        em.getTransaction().begin();
+
+        List<Owner> orgs =  em.createQuery("select o from Owner as o")
+        .getResultList();
+        int beforeCount = orgs.size();
+        
         for (int i = 0; i < 10; i++) {
-            TestUtil.createOwner();
+            em.persist(new Owner("Corp " + i));
         }
         
-        List orgs =  ObjectFactory.get().listObjectsByClass(Owner.class);
-        assertNotNull(orgs);
-        assertTrue(orgs.size() >= 10);
+        orgs =  em.createQuery("select o from Owner as o")
+            .getResultList();
+        int afterCount = orgs.size();
+        assertEquals(10, afterCount - beforeCount);
     }
     
     @Test
     public void testObjectRelationships() throws Exception {
-        Owner owner = new Owner(BaseModel.generateUUID());
-        owner.setName("test-owner");
+        Owner owner = new Owner("test-owner");
         // Product
         Product rhel = new Product(BaseModel.generateUUID());
         rhel.setName("Red Hat Enterprise Linux");
