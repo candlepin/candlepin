@@ -14,9 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,10 +25,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -55,11 +54,11 @@ public class Product {
     @Column(nullable=false, unique=true)
     private String name;
 
-    @OneToMany(targetEntity=Product.class)
+    @OneToMany(targetEntity=Product.class, cascade=CascadeType.ALL)
     @JoinTable(name="cp_product_hierarchy", 
             joinColumns=@JoinColumn(name="PARENT_PRODUCT_ID"), 
             inverseJoinColumns=@JoinColumn(name="CHILD_PRODUCT_ID"))
-    private List<Product> childProducts;
+    private Set<Product> childProducts;
 
     /**
      * Constructor
@@ -98,14 +97,14 @@ public class Product {
     /**
      * @return the childProducts
      */
-    public List<Product> getChildProducts() {
+    public Set<Product> getChildProducts() {
         return childProducts;
     }
 
     /**
      * @param childProducts the childProducts to set
      */
-    public void setChildProducts(List<Product> childProducts) {
+    public void setChildProducts(Set<Product> childProducts) {
         this.childProducts = childProducts;
     }
 
@@ -115,20 +114,10 @@ public class Product {
      */
     public void addChildProduct(Product p) {
         if (this.childProducts == null) {
-            this.childProducts = new LinkedList<Product>();
+            this.childProducts = new HashSet<Product>();
         }
         this.childProducts.add(p);
     }
-    
-//    /** 
-//     * Get the list of compatible consumer types
-//     * @return list of compatible consumer types
-//     */
-//    public List<String> getCompatibleConsumerTypes() {
-//        
-//        return null;
-//    }
-
     
     /**
      * @return Returns the label.
@@ -137,7 +126,6 @@ public class Product {
         return label;
     }
 
-    
     /**
      * @param labelIn The label to set.
      */

@@ -23,10 +23,6 @@ public class ProductTest extends ModelTestFixture {
         List<Product> results = em.createQuery("select p from Product as p")
             .getResultList();
         assertEquals(1, results.size());
-        
-        em.getTransaction().begin();
-        em.remove(prod);
-        em.getTransaction().commit();
     }
     
     @Test(expected = PersistenceException.class)
@@ -63,14 +59,7 @@ public class ProductTest extends ModelTestFixture {
         Product prod2 = new Product("label1", "name2");
         persistAndCommit(prod);
         
-        try {
-            persistAndCommit(prod2);
-        }
-        catch (PersistenceException e) {
-            em.remove(prod);
-            em.getTransaction().commit();
-            throw e;
-        }
+        persistAndCommit(prod2);
     }
     
     @Test
@@ -93,12 +82,6 @@ public class ProductTest extends ModelTestFixture {
                 .setParameter("name", parent.getName())
                 .getSingleResult();
         assertEquals(2, result.getChildProducts().size());
-        
-        em.getTransaction().begin();
-        em.remove(parent);
-        em.remove(child1);
-        em.remove(child2);
-        em.getTransaction().commit();
     }
 
     @Test
@@ -108,6 +91,8 @@ public class ProductTest extends ModelTestFixture {
         Product parent1 = new Product("parent-product1", "Parent Product 1");
         Product child1 = new Product("child-product1", "Child Product 1");
         Product parent2 = new Product("parent-product2", "Parent Product 2");
+        
+        List objects = em.createQuery("from Product p").getResultList();
         
         parent1.addChildProduct(child1);
 //        parent2.addChildProduct(child1);
