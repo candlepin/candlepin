@@ -1,6 +1,6 @@
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
@@ -71,8 +71,6 @@ public class ProductTest extends ModelTestFixture {
         
         parent.addChildProduct(child1);
         parent.addChildProduct(child2);
-        em.persist(child1);
-        em.persist(child2);
         em.persist(parent);
         em.getTransaction().commit();
         
@@ -92,8 +90,6 @@ public class ProductTest extends ModelTestFixture {
         Product child1 = new Product("child-product1", "Child Product 1");
         Product parent2 = new Product("parent-product2", "Parent Product 2");
         
-        List objects = em.createQuery("from Product p").getResultList();
-        
         parent1.addChildProduct(child1);
         parent2.addChildProduct(child1); // should cause the failure
         
@@ -101,6 +97,35 @@ public class ProductTest extends ModelTestFixture {
         em.persist(parent1);
         em.persist(parent2);
         em.getTransaction().commit();
+    }
+    
+    @Test
+    public void testCascading() {
+        em.getTransaction().begin();
+        
+        Product parent1 = new Product("parent-product1", "Parent Product 1");
+        Product child1 = new Product("child-product1", "Child Product 1");
+        parent1.addChildProduct(child1);
+        em.persist(parent1);
+        em.getTransaction().commit();
+        
+        EntityManager em2 = EntityManagerUtil.createEntityManager();
+        Product result = (Product)em2.createQuery(
+                "select p from Product as p where name = :name")
+                .setParameter("name", child1.getName())
+                .getSingleResult();
+        assertNotNull(result);
+        
+        em.getTransaction().begin();
+        em.remove(parent1);
+        em.getTransaction().commit();
+
+        em2 = EntityManagerUtil.createEntityManager();
+        List<Product> results = em2.createQuery(
+                "select p from Product as p where name = :name")
+                .setParameter("name", child1.getName())
+                .getResultList();
+        assertEquals(0, results.size());
     }
 
 }
