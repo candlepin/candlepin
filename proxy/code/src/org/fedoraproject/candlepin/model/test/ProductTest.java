@@ -84,7 +84,7 @@ public class ProductTest extends ModelTestFixture {
         assertEquals(2, result.getChildProducts().size());
     }
 
-    @Test
+    @Test(expected = PersistenceException.class)
     public void childHasSingleParentOnly() {
         em.getTransaction().begin();
         
@@ -95,7 +95,7 @@ public class ProductTest extends ModelTestFixture {
         List objects = em.createQuery("from Product p").getResultList();
         
         parent1.addChildProduct(child1);
-//        parent2.addChildProduct(child1);
+        parent2.addChildProduct(child1); // should cause the failure
         
         em.persist(child1);
         em.persist(parent1);
