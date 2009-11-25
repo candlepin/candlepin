@@ -118,7 +118,7 @@ public class EntitlementResource extends BaseResource {
                         ep.getEndDate());
                 }
                 
-                Entitlement e = new Entitlement(BaseModel.generateUUID());
+                Entitlement e = new Entitlement();
                 e.setPool(ep);
                 e.setStartDate(new Date());
                 ep.bumpCurrentMembers();

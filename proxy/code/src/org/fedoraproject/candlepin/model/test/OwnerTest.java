@@ -56,6 +56,7 @@ public class OwnerTest extends ModelTestFixture {
         for (int i = 0; i < 10; i++) {
             em.persist(new Owner("Corp " + i));
         }
+        em.getTransaction().commit();
         
         orgs =  em.createQuery("select o from Owner as o")
             .getResultList();

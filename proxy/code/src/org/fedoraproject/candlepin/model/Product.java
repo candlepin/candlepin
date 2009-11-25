@@ -22,6 +22,10 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -45,14 +49,16 @@ public class Product {
     private Long id;
     
     // TODO: Drop one of these?
-    @Column(nullable=false)
+    @Column(nullable=false, unique=true)
     private String label;
     
-    @Column(nullable=false)
+    @Column(nullable=false, unique=true)
     private String name;
-    
-    // TODO
-    @Transient
+
+    @OneToMany(targetEntity=Product.class)
+    @JoinTable(name="cp_product_hierarchy", 
+            joinColumns=@JoinColumn(name="PARENT_PRODUCT_ID"), 
+            inverseJoinColumns=@JoinColumn(name="CHILD_PRODUCT_ID"))
     private List<Product> childProducts;
 
     /**

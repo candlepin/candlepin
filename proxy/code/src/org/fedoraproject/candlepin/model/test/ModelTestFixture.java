@@ -9,7 +9,7 @@ import org.junit.Before;
 public class ModelTestFixture {
     
     protected EntityManager em;
-
+    
     @Before
     public void setUp() {
         em = EntityManagerUtil.createEntityManager();
@@ -26,7 +26,12 @@ public class ModelTestFixture {
         tx.begin();
         
         em.persist(storeMe);
-        tx.commit();
+        try {
+            tx.commit();
+        }
+        catch (Exception e) {
+            tx.rollback();
+        }
     }
 
 

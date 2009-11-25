@@ -56,13 +56,6 @@ public class Entitlement extends BaseModel {
     }
     
     /**
-     * @param uuid unique id of the entitlement
-     */
-    public Entitlement(String uuid) {
-        super(uuid);
-    }
-    
-    /**
      * @return the org
      */
     @XmlTransient
