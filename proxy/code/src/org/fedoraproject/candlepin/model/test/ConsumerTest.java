@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model.test;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -29,6 +30,10 @@ public class ConsumerTest extends DatabaseTestFixture {
     
     private Owner owner;
     private Product rhel;
+    private Consumer consumer;
+    private ConsumerType consumerType;
+    private static final String CONSUMER_TYPE_NAME = "test-consumer-type";
+    private static final String CONSUMER_NAME = "Test Consumer";
     
     @Before
     public void setUpTestObjects() {
@@ -40,17 +45,27 @@ public class ConsumerTest extends DatabaseTestFixture {
         em.persist(owner);
         em.persist(rhel);
         
+        consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
+        em.persist(consumerType);
+        consumer = new Consumer(CONSUMER_NAME, owner, consumerType);
+        em.persist(consumer);
+        
         em.getTransaction().commit();
     }
 
     @Test
-    public void testConsumedProduct() throws Exception {
+    public void testLookup() throws Exception {
+        
+        Consumer lookedUp = (Consumer)em.createQuery(
+                "from Consumer c where c.name = :name").
+                setParameter("name", CONSUMER_NAME).
+                getSingleResult();
+        assertEquals(consumer.getId(), lookedUp.getId());
+        assertEquals(consumer.getName(), lookedUp.getName());
+        assertEquals(consumer.getType().getLabel(), lookedUp.getType().getLabel());
 //        
 //        Consumer c = TestUtil.createConsumer(o);
 //        c.addConsumedProduct(rhel);
-        
-        
-        
     }
     
 //    @Test
