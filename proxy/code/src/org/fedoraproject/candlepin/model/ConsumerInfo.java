@@ -34,7 +34,6 @@ import javax.xml.bind.annotation.XmlTransient;
 public class ConsumerInfo {
     
     private Consumer parent;
-    private ConsumerType type;
     private Map<String, String> metadata;
     
     /**
@@ -51,21 +50,6 @@ public class ConsumerInfo {
     public void setParent(Consumer parentIn) {
         parent = parentIn;
     }
-    
-    /**
-     * @return Returns the type.
-     */
-    public ConsumerType getType() {
-        return type;
-    }
-    
-    /**
-     * @param typeIn The type to set.
-     */
-    public void setType(ConsumerType typeIn) {
-        type = typeIn;
-    }
-
     
     /**
      * @return Returns the metadata.

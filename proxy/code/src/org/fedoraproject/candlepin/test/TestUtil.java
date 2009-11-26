@@ -14,15 +14,15 @@
  */
 package org.fedoraproject.candlepin.test;
 
-import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
 // TODO: Do we want to keep this style of creating objects for testing?
-@Deprecated
 public class TestUtil {
+    
     private TestUtil() {
     }
 
@@ -33,8 +33,8 @@ public class TestUtil {
         return o;
     }
 
-    public static Consumer createConsumer(Owner owner) {
-        Consumer c = new Consumer("Consumer Name", owner);
+    public static Consumer createConsumer(ConsumerType type, Owner owner) {
+        Consumer c = new Consumer("Consumer Name", owner, type);
         ObjectFactory.get().store(c);
         return c;
     }
@@ -44,7 +44,7 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer() {
-        return createConsumer(createOwner());
+        return createConsumer(new ConsumerType("some-consumer-type"), createOwner());
     }
 
     public static Product createProduct() {

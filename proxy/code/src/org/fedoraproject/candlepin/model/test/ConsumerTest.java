@@ -33,11 +33,13 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Before
     public void setUpTestObjects() {
         em.getTransaction().begin();
+        
         String ownerName = "Example Corporation";
         owner = new Owner(ownerName);
         rhel = new Product("label", "Red Hat Enterprise Linux");
         em.persist(owner);
         em.persist(rhel);
+        
         em.getTransaction().commit();
     }
 

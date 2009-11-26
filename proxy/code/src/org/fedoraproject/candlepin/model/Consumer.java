@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -54,6 +53,9 @@ public class Consumer {
     private String name;
     
     @ManyToOne
+    private ConsumerType type;
+    
+    @ManyToOne
     private Owner owner;
     
     // TODO: Is this worth mapping? Do we need a hierarchy amidst consumers?
@@ -69,9 +71,10 @@ public class Consumer {
     @Transient // TODO
     private ConsumerInfo info;
     
-    public Consumer(String name, Owner owner) {
+    public Consumer(String name, Owner owner, ConsumerType type) {
         this.name = name;
         this.owner = owner;
+        this.type = type;
         
         this.info = new ConsumerInfo();
         this.info.setParent(this); // TODO: ???
@@ -111,28 +114,19 @@ public class Consumer {
     }
 
     /**
-     * @return the type
+     * @return Returns the type.
      */
     public ConsumerType getType() {
-        if (this.info == null) {
-            return null;
-        }
-        else {
-            return info.getType();
-        }
-    }
-
-    /**
-     * Set the type of this Consumer.  
-     * @param typeIn to set
-     */
-    public void setType(ConsumerType typeIn) {
-        if (this.info == null) {
-            this.info = new ConsumerInfo();
-        }
-        this.info.setType(typeIn);
+        return type;
     }
     
+    /**
+     * @param typeIn The type to set.
+     */
+    public void setType(ConsumerType typeIn) {
+        type = typeIn;
+    }
+
     /**
      * @return the parent
      */

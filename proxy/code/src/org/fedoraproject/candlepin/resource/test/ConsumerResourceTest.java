@@ -42,8 +42,8 @@ public class ConsumerResourceTest {
         ConsumerResource capi = new ConsumerResource();
         ConsumerInfo ci = new ConsumerInfo();
         ci.setMetadataField("name", newname);
-        ci.setType(new ConsumerType("standard-system"));
-        capi.create(ci);
+        ConsumerType type = new ConsumerType("standard-system");
+        capi.create(ci, type);
         assertNotNull(ObjectFactory.get().lookupByFieldName(Consumer.class, 
                 "name", newname));
     }

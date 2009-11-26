@@ -29,7 +29,5 @@ public class ConsumerTypeTest {
         List<EntityManager> results = em.createQuery("select ct from ConsumerType as ct")
             .getResultList();
         assertEquals(1, results.size());
-        
-    
     }
 }

@@ -73,12 +73,14 @@ public class ConsumerResource extends BaseResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(ConsumerInfo ci) {
-        System.out.println("metadata: " + ci.getMetadata());
-        System.out.println("ci: " + ci);
+    public Consumer create(ConsumerInfo ci, ConsumerType type) {
+//        System.out.println("metadata: " + ci.getMetadata());
+//        System.out.println("ci: " + ci);
         //Owner owner = (Owner) ObjectFactory.get().lookupByUUID(Owner.class, owneruuid);
         Consumer c = new Consumer();
         c.setName(ci.getMetadataField("name"));
+        c.setType(type);
+        // TODO: Need owner specified here:
         //c.setOwner(owner);
         c.setInfo(ci);
         ObjectFactory.get().store(c);
@@ -91,9 +93,10 @@ public class ConsumerResource extends BaseResource {
      */
     @GET @Path("/info")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    // TODO: What consumer?
     public ConsumerInfo getInfo() {
         ConsumerInfo ci = new ConsumerInfo();
-        ci.setType(new ConsumerType("system"));
+//        ci.setType(new ConsumerType("system"));
         ci.setParent(null);
 //        Map<String,String> m = new HashMap<String,String>();
 //        m.put("cpu", "i386");
@@ -101,7 +104,6 @@ public class ConsumerResource extends BaseResource {
 //        ci.setMetadata(m);
         ci.setMetadataField("cpu", "i386");
         ci.setMetadataField("hey", "foobar");
-        System.out.println(ci.getMetadata());
         return ci;
     }
     

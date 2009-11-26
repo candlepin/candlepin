@@ -54,10 +54,13 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         em.getTransaction().begin();
         
         Owner o = TestUtil.createOwner();
-        consumer = TestUtil.createConsumer(o);
+        ConsumerType type = new ConsumerType("some-consumer-type");
+        
+        consumer = TestUtil.createConsumer(type, o);
         product = TestUtil.createProduct();
         
         em.persist(o);
+        em.persist(type);
         em.persist(consumer);
         em.persist(product);
         em.getTransaction().commit();
@@ -87,11 +90,13 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         assertNotNull(cert);
         assertNotNull(consumer.getConsumedProducts());
         assertNotNull(consumer.getEntitlements());
+        
+        ConsumerType type = new ConsumerType("some-consumer-type");
      
         // Test max membership
         boolean failed = false;
         for (int i = 0; i < ep.getMaxMembers() + 10; i++) {
-            Consumer ci = TestUtil.createConsumer(consumer.getOwner());
+            Consumer ci = TestUtil.createConsumer(type, consumer.getOwner());
             f.add("consumer_id", ci.getId());
             try {
                 eapi.entitle(consumer, product);
@@ -133,7 +138,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     @Test
     public void testListAvailableEntitlements() {
         EntitlementResource eapi = new EntitlementResource();
-        consumer.setType(new ConsumerType("standard-system"));
+//        consumer.setType(new ConsumerType("standard-system"));
         Form f = new Form();
         f.add("consumer_id", consumer.getId());
         
