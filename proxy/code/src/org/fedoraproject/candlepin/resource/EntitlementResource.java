@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
+import org.fedoraproject.candlepin.util.EntityManagerUtil;
 
 import com.sun.jersey.api.representation.Form;
 
@@ -30,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -55,7 +58,6 @@ public class EntitlementResource extends BaseResource {
 
     private Object validateObjectInput(Form form, String fieldName, Class clazz) {
         String uuid = form.getFirst(fieldName);
-        log.debug("UUID: " + uuid);
         Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
         if (o == null) {
             throw new RuntimeException(clazz.getName() + " with UUID: [" + 
@@ -65,13 +67,23 @@ public class EntitlementResource extends BaseResource {
     }
     
     private Object validateObjectInput(String uuid, Class clazz) {
-        log.debug("UUID: " + uuid);
         Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
         if (o == null) {
             throw new RuntimeException(clazz.getName() + " with UUID: [" + 
                     uuid + "] not found");
         }
         return o;
+    }
+
+    private Object newValidateObjectInput(EntityManager em, Long id, Class clazz) {
+        Query q = em.createQuery("from " + clazz.getName() + " o where o.id = :id");
+        q.setParameter("id", id);
+//        if (o == null) {
+//            throw new RuntimeException(clazz.getName() + " with UUID: [" + 
+//                    uuid + "] not found");
+//        }
+        Object result = q.getSingleResult();
+        return result;
     }
 
     /**
@@ -84,7 +96,6 @@ public class EntitlementResource extends BaseResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/foo")
     public Object foo(Consumer c) {
-        System.out.println("Consumer uuid: " + c.getUuid());
         return "return value";
     }
 
@@ -167,9 +178,10 @@ public class EntitlementResource extends BaseResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/listavailable")
     public List<EntitlementPool> listAvailableEntitlements(
-        @PathParam("uuid") String uuid) {
+        @PathParam("consumerId") Long consumerId) {
+        EntityManager em = EntityManagerUtil.createEntityManager();
 
-        Consumer c = (Consumer) validateObjectInput(uuid, Consumer.class);
+        Consumer c = (Consumer) newValidateObjectInput(em, consumerId, Consumer.class);
         List<EntitlementPool> entitlementPools = new EntitlementPoolResource().list();
         List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
         EntitlementMatcher matcher = new EntitlementMatcher();

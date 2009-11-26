@@ -18,6 +18,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,37 +36,78 @@ import javax.xml.bind.annotation.XmlTransient;
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
  * system, or anything else we want to track as using the Entitlement.
  * 
- * Every Consumer has an Owner which may or may not own the Entitlment. The
+ * Every Consumer has an Owner which may or may not own the Entitlement. The
  * Consumer's attributes or metadata is stored in a ConsumerInfo object which
  * boils down to a series of name/value pairs.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Consumer extends BaseModel {
+@Entity
+@Table(name="cp_consumer")
+public class Consumer {
 
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
     
+    @Column(nullable=false)
+    private String name;
+    
+    @ManyToOne
     private Owner owner;
+    
+    // TODO: Is this worth mapping? Do we need a hierarchy amidst consumers?
+    @Transient
     private Consumer parent;
+    
+    @Transient // TODO
     private List<Product> consumedProducts;
+    
+    @Transient // TODO
     private List<Entitlement> entitlements;
+    
+    @Transient // TODO
     private ConsumerInfo info;
     
-    /**
-     * default ctor
-     */
-    public Consumer() {
-        this(null);
+    public Consumer(String name, Owner owner) {
+        this.name = name;
+        this.owner = owner;
+        
         this.info = new ConsumerInfo();
-        this.info.setParent(this);
+        this.info.setParent(this); // TODO: ???
+    }
+
+    public Consumer() {
+        this.info = new ConsumerInfo();
+        this.info.setParent(this); // TODO: ???
     }
 
     /**
-     * @param uuid unique id of consumer
+     * @return the id
      */
-    public Consumer(String uuid) {
-        super(uuid);
-        this.info = new ConsumerInfo();
-        this.info.setParent(this);
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -144,7 +194,7 @@ public class Consumer extends BaseModel {
     @Override
     public String toString() {
         return "Consumer [type=" + this.getType() + ", getName()=" +
-            getName() + ", getUuid()=" + getUuid() + "]";
+            getName() + "]";
     }
 
     

@@ -37,8 +37,6 @@ public class ConsumerInfo {
     private ConsumerType type;
     private Map<String, String> metadata;
     
-    
-    
     /**
      * @return Returns the parent.
      */
@@ -81,7 +79,6 @@ public class ConsumerInfo {
      * @param metadataIn The metadata to set.
      */
     public void setMetadata(Map<String, String> metadataIn) {
-        System.out.println("set metadata called");
         metadata = metadataIn;
     }
     
@@ -91,7 +88,6 @@ public class ConsumerInfo {
      * @param value to set
      */
     public void setMetadataField(String name, String value) {
-        System.out.println("set meta field called");
         if (this.metadata == null) {
             metadata = new HashMap<String, String>();
         }

@@ -18,9 +18,11 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.test.TestUtil;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -39,18 +41,27 @@ import static org.junit.Assert.*;
 
 /**
  * ConsumerResourceTest
- * @version $Rev$
  */
-public class EntitlementResourceTest {
+public class EntitlementResourceTest extends DatabaseTestFixture {
     
     private Consumer consumer;
     private Product product;
     private EntitlementPool ep;
     
     @Before
-    public void setUp() throws Exception {
-        consumer = TestUtil.createConsumer();
+    public void createTestObjects() {
+        
+        em.getTransaction().begin();
+        
+        Owner o = TestUtil.createOwner();
+        consumer = TestUtil.createConsumer(o);
         product = TestUtil.createProduct();
+        
+        em.persist(o);
+        em.persist(consumer);
+        em.persist(product);
+        em.getTransaction().commit();
+        
         ep = new EntitlementPool();
         ep.setProduct(product);
         ep.setOwner(consumer.getOwner());
@@ -69,7 +80,7 @@ public class EntitlementResourceTest {
         
         EntitlementResource eapi = new EntitlementResource();
         Form f = new Form();
-        f.add("consumer_uuid", consumer.getUuid());
+        f.add("consumer_id", consumer.getId());
         f.add("product_id", product.getId());
         String cert = (String) eapi.entitle(consumer, product);
         
@@ -81,7 +92,7 @@ public class EntitlementResourceTest {
         boolean failed = false;
         for (int i = 0; i < ep.getMaxMembers() + 10; i++) {
             Consumer ci = TestUtil.createConsumer(consumer.getOwner());
-            f.add("consumer_uuid", ci.getUuid());
+            f.add("consumer_id", ci.getId());
             try {
                 eapi.entitle(consumer, product);
             }
@@ -124,9 +135,9 @@ public class EntitlementResourceTest {
         EntitlementResource eapi = new EntitlementResource();
         consumer.setType(new ConsumerType("standard-system"));
         Form f = new Form();
-        f.add("consumer_uuid", consumer.getUuid());
+        f.add("consumer_id", consumer.getId());
         
-        List<EntitlementPool> avail = eapi.listAvailableEntitlements(consumer.getUuid());
+        List<EntitlementPool> avail = eapi.listAvailableEntitlements(consumer.getId());
         assertNotNull(avail);
         assertTrue(avail.size() > 0);
     }

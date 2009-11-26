@@ -1,17 +1,21 @@
-package org.fedoraproject.candlepin.model.test;
+package org.fedoraproject.candlepin.test;
 
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.util.EntityManagerUtil;
 import org.junit.After;
 import org.junit.Before;
 
-public class ModelTestFixture {
+/**
+ * Test fixture for test classes requiring access to the database.
+ */
+public class DatabaseTestFixture {
     
     protected EntityManager em;
     
@@ -49,6 +53,12 @@ public class ModelTestFixture {
         for (Owner o : owners) {
             em.remove(o);
         }
+        
+        List<Consumer> consumers = em.createQuery("from Consumer c").getResultList();
+        for (Consumer c : consumers) {
+            em.remove(c);
+        }
+
         em.getTransaction().commit();
         em.close();
     }

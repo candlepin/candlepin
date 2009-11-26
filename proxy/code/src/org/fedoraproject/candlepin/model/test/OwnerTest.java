@@ -20,13 +20,14 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 
 import java.util.List;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public class OwnerTest extends ModelTestFixture {
+public class OwnerTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() throws Exception {
@@ -79,7 +80,7 @@ public class OwnerTest extends ModelTestFixture {
         assertEquals(1, owner.getUsers().size());
         
         // Consumer
-        Consumer c = new Consumer(BaseModel.generateUUID());
+        Consumer c = new Consumer();
         c.setOwner(owner);
         owner.addConsumer(c);
         c.addConsumedProduct(rhel);

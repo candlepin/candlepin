@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model.test;
+package org.fedoraproject.candlepin.test;
 
 import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -20,24 +20,21 @@ import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
-
-
+// TODO: Do we want to keep this style of creating objects for testing?
+@Deprecated
 public class TestUtil {
     private TestUtil() {
     }
 
-    @Deprecated
     public static Owner createOwner() {
-        String lookedUp = BaseModel.generateUUID();
-        Owner o = new Owner();
+        Owner o = new Owner("Test Owner");
 //        o.setUuid(lookedUp);
         ObjectFactory.get().store(o);
         return o;
     }
 
     public static Consumer createConsumer(Owner owner) {
-        Consumer c = new Consumer(BaseModel.generateUUID());
-        c.setOwner(owner);
+        Consumer c = new Consumer("Consumer Name", owner);
         ObjectFactory.get().store(c);
         return c;
     }
@@ -51,8 +48,7 @@ public class TestUtil {
     }
 
     public static Product createProduct() {
-        Product rhel = new Product();
-        rhel.setName("Red Hat Enterprise Linux");
+        Product rhel = new Product("rhel-label", "Red Hat Enterprise Linux");
         ObjectFactory.get().store(rhel);
         return rhel;
     }

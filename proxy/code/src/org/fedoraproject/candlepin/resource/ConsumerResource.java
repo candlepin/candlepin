@@ -77,7 +77,7 @@ public class ConsumerResource extends BaseResource {
         System.out.println("metadata: " + ci.getMetadata());
         System.out.println("ci: " + ci);
         //Owner owner = (Owner) ObjectFactory.get().lookupByUUID(Owner.class, owneruuid);
-        Consumer c = new Consumer(BaseModel.generateUUID());
+        Consumer c = new Consumer();
         c.setName(ci.getMetadataField("name"));
         //c.setOwner(owner);
         c.setInfo(ci);
@@ -110,15 +110,15 @@ public class ConsumerResource extends BaseResource {
      * @param cid Consumer ID to affect
      * @param pid Product ID to remove from Consumer.
      */
-    @DELETE @Path("{cid}/products/{pid}")
-    public void delete(@PathParam("cid") String cid,
-                       @PathParam("pid") String pid) {
-        System.out.println("cid " + cid + " pid = " + pid);
-        Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class, cid);
-        if (!c.getConsumedProducts().remove(pid)) {
-            log.error("no product " + pid + " found.");
-        }
-    }
+//    @DELETE @Path("{cid}/products/{pid}")
+//    public void delete(@PathParam("cid") String cid,
+//                       @PathParam("pid") String pid) {
+//        System.out.println("cid " + cid + " pid = " + pid);
+//        Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class, cid);
+//        if (!c.getConsumedProducts().remove(pid)) {
+//            log.error("no product " + pid + " found.");
+//        }
+//    }
     
     @GET @Path("{cid}/products/{pid}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

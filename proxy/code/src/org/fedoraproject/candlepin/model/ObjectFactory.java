@@ -60,7 +60,7 @@ public class ObjectFactory {
         org.addUser(u);
         
         // Consumer
-        Consumer c = new Consumer(BaseModel.generateUUID());
+        Consumer c = new Consumer();
         c.setName("fake-consumer-i386");
         c.setOwner(org);
         org.addConsumer(c);

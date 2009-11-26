@@ -8,10 +8,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.util.EntityManagerUtil;
 import org.junit.Test;
 
-public class ProductTest extends ModelTestFixture {
+public class ProductTest extends DatabaseTestFixture {
     
     
     @Test
