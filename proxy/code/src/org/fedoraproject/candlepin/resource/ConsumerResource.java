@@ -97,7 +97,7 @@ public class ConsumerResource extends BaseResource {
     public ConsumerInfo getInfo() {
         ConsumerInfo ci = new ConsumerInfo();
 //        ci.setType(new ConsumerType("system"));
-        ci.setParent(null);
+        ci.setConsumer(null);
 //        Map<String,String> m = new HashMap<String,String>();
 //        m.put("cpu", "i386");
 //        m.put("hey", "biteme");

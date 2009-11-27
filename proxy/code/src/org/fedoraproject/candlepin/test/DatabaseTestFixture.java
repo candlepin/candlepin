@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -38,6 +39,8 @@ public class DatabaseTestFixture {
      */
     @After
     public void cleanDb() {
+        em.close();
+        em = EntityManagerUtil.createEntityManager();
         if (!em.getTransaction().isActive()) {
             beginTransaction();
         }
@@ -59,6 +62,11 @@ public class DatabaseTestFixture {
         for (Consumer c : consumers) {
             em.remove(c);
         }
+
+//        List<ConsumerInfo> consumerInfos = em.createQuery("from ConsumerInfo c").getResultList();
+//        for (ConsumerInfo c : consumerInfos) {
+//            em.remove(c);
+//        }
 
         // TODO: Is this right? Or should we pre-populate default defined types, and always
         // reference these in the tests instead of creating them everywhere?

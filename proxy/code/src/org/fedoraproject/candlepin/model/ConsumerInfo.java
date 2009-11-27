@@ -91,8 +91,8 @@ public class ConsumerInfo {
     /**
      * @param parentIn The parent to set.
      */
-    public void setParent(Consumer parentIn) {
-        consumer = parentIn;
+    public void setConsumer(Consumer consumerIn) {
+        consumer = consumerIn;
     }
     
     /**

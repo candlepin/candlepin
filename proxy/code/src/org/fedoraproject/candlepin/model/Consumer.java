@@ -59,6 +59,7 @@ public class Consumer {
     private String name;
     
     @ManyToOne
+    @JoinColumn(nullable=false)
     private ConsumerType type;
     
     @ManyToOne
@@ -89,14 +90,14 @@ public class Consumer {
         this.type = type;
         
         this.info = new ConsumerInfo();
-        this.info.setParent(this); // TODO: ???
+        this.info.setConsumer(this); // TODO: ???
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }
 
     public Consumer() {
         this.info = new ConsumerInfo();
-        this.info.setParent(this); // TODO: ???
+        this.info.setConsumer(this); // TODO: ???
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }

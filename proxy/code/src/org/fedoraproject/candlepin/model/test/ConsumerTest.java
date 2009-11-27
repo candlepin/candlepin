@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.model.test;
 
 import java.util.Map;
 
+import javax.persistence.PersistenceException;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -60,6 +62,16 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.addConsumedProduct(jboss);
         em.persist(consumer);
         
+        commitTransaction();
+    }
+    
+    @Test(expected = PersistenceException.class)
+    public void testConsumerTypeRequired() {
+        Consumer newConsumer = new Consumer();
+        newConsumer.setName("cname");
+        newConsumer.setOwner(owner);
+        beginTransaction();
+        em.persist(newConsumer);
         commitTransaction();
     }
 
