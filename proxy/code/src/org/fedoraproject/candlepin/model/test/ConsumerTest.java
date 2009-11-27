@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model.test;
 import java.util.Map;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -32,6 +33,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     
     private Owner owner;
     private Product rhel;
+    private Product jboss;
     private Consumer consumer;
     private ConsumerType consumerType;
     private static final String CONSUMER_TYPE_NAME = "test-consumer-type";
@@ -43,15 +45,19 @@ public class ConsumerTest extends DatabaseTestFixture {
         
         String ownerName = "Example Corporation";
         owner = new Owner(ownerName);
-        rhel = new Product("label", "Red Hat Enterprise Linux");
+        rhel = new Product("rhel", "Red Hat Enterprise Linux");
+        jboss = new Product("jboss", "JBoss");
         em.persist(owner);
         em.persist(rhel);
+        em.persist(jboss);
         
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         em.persist(consumerType);
         consumer = new Consumer(CONSUMER_NAME, owner, consumerType);
         consumer.setMetadataField("foo", "bar");
         consumer.setMetadataField("foo1", "bar1");
+        consumer.addConsumedProduct(rhel);
+        consumer.addConsumedProduct(jboss);
         em.persist(consumer);
         
         commitTransaction();
@@ -60,24 +66,15 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testLookup() throws Exception {
         
-        Consumer lookedUp = (Consumer)em.createQuery(
-                "from Consumer c where c.name = :name").
-                setParameter("name", CONSUMER_NAME).
-                getSingleResult();
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
         assertEquals(consumer.getId(), lookedUp.getId());
         assertEquals(consumer.getName(), lookedUp.getName());
         assertEquals(consumer.getType().getLabel(), lookedUp.getType().getLabel());
-//        
-//        Consumer c = TestUtil.createConsumer(o);
-//        c.addConsumedProduct(rhel);
     }
     
     @Test
     public void testInfo() {
-        Consumer lookedUp = (Consumer)em.createQuery(
-            "from Consumer c where c.name = :name").
-            setParameter("name", CONSUMER_NAME).
-            getSingleResult();
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
         Map<String, String> metadata = lookedUp.getInfo().getMetadata();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
@@ -88,12 +85,9 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void testModifyInfo() {
+    public void testMetadataInfo() {
         beginTransaction();
-        Consumer lookedUp = (Consumer)em.createQuery(
-            "from Consumer c where c.name = :name").
-            setParameter("name", CONSUMER_NAME).
-            getSingleResult();
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
         Map<String, String> metadata = lookedUp.getInfo().getMetadata();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
@@ -102,5 +96,48 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals("bar1", lookedUp.getInfo().getMetadataField("foo1"));
         commitTransaction();
     }
+    
+    @Test
+    public void testModifyMetadata() {
+        beginTransaction();
+        consumer.setMetadataField("foo", "notbar");
+        commitTransaction();
+        
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
+        assertEquals("notbar", lookedUp.getMetadataField("foo"));
+    }
+    
+    @Test
+    public void testMetadataDeleteCascading() {
+        ConsumerInfo info = consumer.getInfo();
+        Long infoId = info.getId();
+        
+        ConsumerInfo lookedUp = (ConsumerInfo)em.find(ConsumerInfo.class, infoId);
+        assertNotNull(lookedUp);
+        
+        beginTransaction();
+        em.remove(consumer);
+        commitTransaction();
+        
+        lookedUp = (ConsumerInfo)em.find(ConsumerInfo.class, infoId);
+        assertNull(lookedUp);
+    }
 
+    @Test
+    public void testConsumedProducts() {
+        em.clear();
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
+        assertEquals(2, lookedUp.getConsumedProducts().size());
+    }
+    
+    @Test
+    public void testRemoveConsumedProducts() {
+        beginTransaction();
+        em.remove(consumer);
+        commitTransaction();
+        
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
+        assertNull(lookedUp);
+    }
+    
 }

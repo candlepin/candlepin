@@ -108,7 +108,5 @@ public class DatabaseTestFixture {
      */
     protected void commitTransaction() {
         em.getTransaction().commit();
-//        em.close();
-//        em = EntityManagerUtil.createEntityManager();
     }
 }

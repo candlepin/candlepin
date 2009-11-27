@@ -15,8 +15,8 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -24,7 +24,10 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
@@ -64,12 +67,17 @@ public class Consumer {
     // TODO: Is this worth mapping? Do we need a hierarchy amidst consumers?
     @Transient
     private Consumer parent;
+
+    // TODO: Are we sure we want to track this explicitly? Wouldn't we examine the 
+    // entitlements we're consuming and the products associated to them for this info?
+    @OneToMany
+    @JoinTable(name="cp_consumer_products",
+            joinColumns=@JoinColumn(name="consumer_id"),
+            inverseJoinColumns=@JoinColumn(name="product_id"))
+    private Set<Product> consumedProducts;
     
     @Transient // TODO
-    private List<Product> consumedProducts;
-    
-    @Transient // TODO
-    private List<Entitlement> entitlements;
+    private Set<Entitlement> entitlements;
     
     @OneToOne(cascade=CascadeType.ALL)
     @PrimaryKeyJoinColumn
@@ -82,11 +90,15 @@ public class Consumer {
         
         this.info = new ConsumerInfo();
         this.info.setParent(this); // TODO: ???
+        this.consumedProducts = new HashSet<Product>();
+        this.entitlements = new HashSet<Entitlement>();
     }
 
     public Consumer() {
         this.info = new ConsumerInfo();
         this.info.setParent(this); // TODO: ???
+        this.consumedProducts = new HashSet<Product>();
+        this.entitlements = new HashSet<Entitlement>();
     }
 
     /**
@@ -148,15 +160,23 @@ public class Consumer {
     /**
      * @return the consumedProducts
      */
-    public List<Product> getConsumedProducts() {
+    public Set<Product> getConsumedProducts() {
         return consumedProducts;
     }
 
     /**
      * @param consumedProducts the consumedProducts to set
      */
-    public void setConsumedProducts(List<Product> consumedProducts) {
+    public void setConsumedProducts(Set<Product> consumedProducts) {
         this.consumedProducts = consumedProducts;
+    }
+
+    /**
+     * Add a Product to this Consumer.
+     * @param p Product to be consumed.
+     */
+    public void addConsumedProduct(Product p) {
+        this.consumedProducts.add(p);
     }
 
     /**
@@ -172,18 +192,6 @@ public class Consumer {
      */
     public void setOwner(Owner owner) {
         this.owner = owner;
-    }
-
-    /**
-     * Add a Product to this Consumer.
-     * @param p Product to be consumed.
-     */
-    public void addConsumedProduct(Product p) {
-        if (this.consumedProducts == null) {
-            this.consumedProducts = new LinkedList<Product>();
-        }
-        this.consumedProducts.add(p);
-
     }
 
     /**
@@ -238,7 +246,7 @@ public class Consumer {
     /**
      * @return Returns the entitlements.
      */
-    public List<Entitlement> getEntitlements() {
+    public Set<Entitlement> getEntitlements() {
         return entitlements;
     }
 
@@ -246,7 +254,7 @@ public class Consumer {
     /**
      * @param entitlementsIn The entitlements to set.
      */
-    public void setEntitlements(List<Entitlement> entitlementsIn) {
+    public void setEntitlements(Set<Entitlement> entitlementsIn) {
         entitlements = entitlementsIn;
     }
 
@@ -256,9 +264,6 @@ public class Consumer {
      * 
      */
     public void addEntitlement(Entitlement entitlementIn) {
-        if (this.entitlements == null) {
-            this.entitlements = new LinkedList<Entitlement>();
-        }
         this.entitlements.add(entitlementIn);
         
     }
