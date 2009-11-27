@@ -65,7 +65,7 @@ public class ProductTest extends DatabaseTestFixture {
     
     @Test
     public void addChildProducts() {
-        em.getTransaction().begin();
+        beginTransaction();
         Product parent = new Product("parent-product", "Parent Product");
         Product child1 = new Product("child-product1", "Child Product 1");
         Product child2 = new Product("child-product2", "Child Product 2");
@@ -73,7 +73,7 @@ public class ProductTest extends DatabaseTestFixture {
         parent.addChildProduct(child1);
         parent.addChildProduct(child2);
         em.persist(parent);
-        em.getTransaction().commit();
+        commitTransaction();
         
         EntityManager em2 = EntityManagerUtil.createEntityManager();
         Product result = (Product)em2.createQuery(
@@ -85,7 +85,7 @@ public class ProductTest extends DatabaseTestFixture {
 
     @Test(expected = PersistenceException.class)
     public void childHasSingleParentOnly() {
-        em.getTransaction().begin();
+        beginTransaction();
         
         Product parent1 = new Product("parent-product1", "Parent Product 1");
         Product child1 = new Product("child-product1", "Child Product 1");
@@ -97,18 +97,18 @@ public class ProductTest extends DatabaseTestFixture {
         em.persist(child1);
         em.persist(parent1);
         em.persist(parent2);
-        em.getTransaction().commit();
+        commitTransaction();
     }
     
     @Test
     public void testCascading() {
-        em.getTransaction().begin();
+        beginTransaction();
         
         Product parent1 = new Product("parent-product1", "Parent Product 1");
         Product child1 = new Product("child-product1", "Child Product 1");
         parent1.addChildProduct(child1);
         em.persist(parent1);
-        em.getTransaction().commit();
+        commitTransaction();
         
         EntityManager em2 = EntityManagerUtil.createEntityManager();
         Product result = (Product)em2.createQuery(
@@ -117,9 +117,9 @@ public class ProductTest extends DatabaseTestFixture {
                 .getSingleResult();
         assertNotNull(result);
         
-        em.getTransaction().begin();
+        beginTransaction();
         em.remove(parent1);
-        em.getTransaction().commit();
+        commitTransaction();
 
         em2 = EntityManagerUtil.createEntityManager();
         List<Product> results = em2.createQuery(

@@ -48,7 +48,7 @@ public class OwnerTest extends DatabaseTestFixture {
     
     @Test
     public void testList() throws Exception {
-        em.getTransaction().begin();
+        beginTransaction();
 
         List<Owner> orgs =  em.createQuery("select o from Owner as o")
         .getResultList();
@@ -57,7 +57,7 @@ public class OwnerTest extends DatabaseTestFixture {
         for (int i = 0; i < 10; i++) {
             em.persist(new Owner("Corp " + i));
         }
-        em.getTransaction().commit();
+        commitTransaction();
         
         orgs =  em.createQuery("select o from Owner as o")
             .getResultList();

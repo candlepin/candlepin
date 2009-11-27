@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
+import java.util.Map;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
@@ -37,7 +39,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     
     @Before
     public void setUpTestObjects() {
-        em.getTransaction().begin();
+        beginTransaction();
         
         String ownerName = "Example Corporation";
         owner = new Owner(ownerName);
@@ -48,9 +50,11 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         em.persist(consumerType);
         consumer = new Consumer(CONSUMER_NAME, owner, consumerType);
+        consumer.setMetadataField("foo", "bar");
+        consumer.setMetadataField("foo1", "bar1");
         em.persist(consumer);
         
-        em.getTransaction().commit();
+        commitTransaction();
     }
 
     @Test
@@ -68,12 +72,35 @@ public class ConsumerTest extends DatabaseTestFixture {
 //        c.addConsumedProduct(rhel);
     }
     
-//    @Test
-//    public void testProperties() {
-//        Owner o = TestUtil.createOwner();
-//        Consumer c = TestUtil.createConsumer(o);
-//        c.setMetadataField("cpu", "2");
-//        
-//        assertEquals(c.getMetadataField("cpu"), "2");
-//    }
+    @Test
+    public void testInfo() {
+        Consumer lookedUp = (Consumer)em.createQuery(
+            "from Consumer c where c.name = :name").
+            setParameter("name", CONSUMER_NAME).
+            getSingleResult();
+        Map<String, String> metadata = lookedUp.getInfo().getMetadata();
+        assertEquals(2, metadata.keySet().size());
+        assertEquals("bar", metadata.get("foo"));
+        assertEquals("bar", lookedUp.getInfo().getMetadataField("foo"));
+        assertEquals("bar1", metadata.get("foo1"));
+        assertEquals("bar1", lookedUp.getInfo().getMetadataField("foo1"));
+        
+    }
+    
+    @Test
+    public void testModifyInfo() {
+        beginTransaction();
+        Consumer lookedUp = (Consumer)em.createQuery(
+            "from Consumer c where c.name = :name").
+            setParameter("name", CONSUMER_NAME).
+            getSingleResult();
+        Map<String, String> metadata = lookedUp.getInfo().getMetadata();
+        assertEquals(2, metadata.keySet().size());
+        assertEquals("bar", metadata.get("foo"));
+        assertEquals("bar", lookedUp.getInfo().getMetadataField("foo"));
+        assertEquals("bar1", metadata.get("foo1"));
+        assertEquals("bar1", lookedUp.getInfo().getMetadataField("foo1"));
+        commitTransaction();
+    }
+
 }

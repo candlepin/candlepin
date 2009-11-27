@@ -39,7 +39,7 @@ public class DatabaseTestFixture {
     @After
     public void cleanDb() {
         if (!em.getTransaction().isActive()) {
-            em.getTransaction().begin();
+            beginTransaction();
         }
         
         // TODO: Would rather be doing this, but such a bulk delete does not seem to respect
@@ -68,7 +68,7 @@ public class DatabaseTestFixture {
             em.remove(c);
         }
 
-        em.getTransaction().commit();
+        commitTransaction();
         em.close();
     }
     
@@ -94,5 +94,21 @@ public class DatabaseTestFixture {
         }
     }
 
+    /**
+     * Helper to open a new db transaction. Pretty simple for now, but may 
+     * require additional logic and error handling down the road.
+     */
+    protected void beginTransaction() {
+        em.getTransaction().begin();
+    }
 
+    /**
+     * Helper to commit the current db transaction. Pretty simple for now, but may 
+     * require additional logic and error handling down the road.
+     */
+    protected void commitTransaction() {
+        em.getTransaction().commit();
+//        em.close();
+//        em = EntityManagerUtil.createEntityManager();
+    }
 }

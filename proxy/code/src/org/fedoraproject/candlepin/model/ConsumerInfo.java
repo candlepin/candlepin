@@ -17,10 +17,20 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.MapKeyManyToMany;
 
 /**
  * ConsumerInfo contains the metadata about a given Consumer (parent). It is 
@@ -31,24 +41,58 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
+@Entity
+@Table(name="cp_consumer_info")
 public class ConsumerInfo {
     
-    private Consumer parent;
+    // TODO: Don't know if this is a good idea, technically the consumer + metadata data
+    // key should be the identifier. 
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    
+    @OneToOne(mappedBy="info")
+    private Consumer consumer;
+    
+    // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem possible
+    // to map strings without an unplesant hack: 
+    // http://stackoverflow.com/questions/287201/how-to-persist-a-property-of-type-liststringin-jpa
+    @MapKeyManyToMany(targetEntity = String.class)
+    @CollectionOfElements(targetElement = String.class)
+    @Cascade(value={org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> metadata;
     
+    public ConsumerInfo() {
+        metadata = new HashMap<String, String>();
+    }
+    
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     /**
      * @return Returns the parent.
      */
     @XmlTransient
-    public Consumer getParent() {
-        return parent;
+    public Consumer getConsumer() {
+        return consumer;
     }
 
     /**
      * @param parentIn The parent to set.
      */
     public void setParent(Consumer parentIn) {
-        parent = parentIn;
+        consumer = parentIn;
     }
     
     /**

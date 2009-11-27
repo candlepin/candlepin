@@ -8,23 +8,21 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.util.EntityManagerUtil;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public class ConsumerTypeTest {
+public class ConsumerTypeTest extends DatabaseTestFixture {
 
     @Test
     public void testSomething() {
-        EntityManager em = EntityManagerUtil.createEntityManager();
-        EntityTransaction tx = null;
-        tx = em.getTransaction();
-        tx.begin();
+        beginTransaction();
         
         ConsumerType ct = new ConsumerType("standard-system");
         em.persist(ct);
         
-        tx.commit();
+        commitTransaction();
         
         List<EntityManager> results = em.createQuery("select ct from ConsumerType as ct")
             .getResultList();

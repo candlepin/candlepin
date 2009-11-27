@@ -51,7 +51,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     @Before
     public void createTestObjects() {
         
-        em.getTransaction().begin();
+        beginTransaction();
         
         Owner o = TestUtil.createOwner();
         ConsumerType type = new ConsumerType("some-consumer-type");
@@ -63,7 +63,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         em.persist(type);
         em.persist(consumer);
         em.persist(product);
-        em.getTransaction().commit();
+        commitTransaction();
         
         ep = new EntitlementPool();
         ep.setProduct(product);
