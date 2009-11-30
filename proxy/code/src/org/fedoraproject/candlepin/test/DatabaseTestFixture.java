@@ -8,6 +8,7 @@ import javax.persistence.EntityTransaction;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.util.EntityManagerUtil;
@@ -74,6 +75,12 @@ public class DatabaseTestFixture {
             getResultList();
         for (ConsumerType c : consumerTypes) {
             em.remove(c);
+        }
+        
+        List<EntitlementPool> pools = em.createQuery("from EntitlementPool p").
+            getResultList();
+        for (EntitlementPool p : pools) {
+            em.remove(p);
         }
 
         commitTransaction();

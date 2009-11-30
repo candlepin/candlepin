@@ -113,7 +113,7 @@ public class ProductFactory extends ObjectFactory {
         
         // EntitlementPool
         Owner owner = (Owner) listObjectsByClass(Owner.class).get(0);
-        EntitlementPool pool = new EntitlementPool(BaseModel.generateUUID());
+        EntitlementPool pool = new EntitlementPool();
         owner.addEntitlementPool(pool);
         pool.setProduct(rhel);
         store(pool);

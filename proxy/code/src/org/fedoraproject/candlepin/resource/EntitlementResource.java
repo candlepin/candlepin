@@ -187,6 +187,8 @@ public class EntitlementResource extends BaseResource {
         EntitlementMatcher matcher = new EntitlementMatcher();
         for (EntitlementPool ep : entitlementPools) {
             boolean add = false;
+            System.out.println("max = " + ep.getMaxMembers());
+            System.out.println("cur = " + ep.getCurrentMembers());
             if (ep.getMaxMembers() > ep.getCurrentMembers()) {
                 add = true;
             }

@@ -54,7 +54,6 @@ public class Pinsetter {
         ep.setMaxMembers(maxmem);
         ep.setStartDate(start);
         ep.setEndDate(end);
-        ep.setName(pname);
         
         pools.add(ep);
         ObjectFactory.get().store(ep);
