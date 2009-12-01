@@ -68,13 +68,6 @@ public class Entitlement {
     @JoinColumn(nullable=false)
     private EntitlementPool pool;
 
-    @Transient
-//    @OneToMany(targetEntity=Product.class, cascade=CascadeType.ALL)
-//    @JoinTable(name="cp_product_hierarchy", 
-//            joinColumns=@JoinColumn(name="PARENT_PRODUCT_ID"), 
-//            inverseJoinColumns=@JoinColumn(name="CHILD_PRODUCT_ID"))
-    private List<Entitlement> childEntitlements;
-    
     private Date startDate;
 
     public Entitlement() {
@@ -116,28 +109,12 @@ public class Entitlement {
     }
 
     /**
-     * @return the childEntitlements
-     */
-    public List<Entitlement> getChildEntitlements() {
-        return childEntitlements;
-    }
-
-    /**
-     * @param childEntitlements the childEntitlements to set
-     */
-    public void setChildEntitlements(List<Entitlement> childEntitlements) {
-        this.childEntitlements = childEntitlements;
-    }
-
-    
-    /**
      * @return Returns the product.
      */
     public Product getProduct() {
         return this.pool.getProduct();
     }
 
-    
     /**
      * @return Returns the pool.
      */
@@ -145,7 +122,6 @@ public class Entitlement {
         return pool;
     }
 
-    
     /**
      * @param poolIn The pool to set.
      */
@@ -153,7 +129,6 @@ public class Entitlement {
         pool = poolIn;
     }
 
-    
     /**
      * @return Returns the startDate.
      */
@@ -161,13 +136,11 @@ public class Entitlement {
         return startDate;
     }
 
-    
     /**
      * @param startDateIn The startDate to set.
      */
     public void setStartDate(Date startDateIn) {
         startDate = startDateIn;
     }
-
     
 }

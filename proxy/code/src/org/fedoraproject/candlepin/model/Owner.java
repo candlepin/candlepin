@@ -53,6 +53,7 @@ public class Owner {
     @Transient
     private List<Consumer> consumers;
     
+    // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy="owner", targetEntity=EntitlementPool.class)
     private List<EntitlementPool> entitlementPools;
     
