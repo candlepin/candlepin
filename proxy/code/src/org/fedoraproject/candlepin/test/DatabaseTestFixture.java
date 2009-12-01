@@ -8,6 +8,7 @@ import javax.persistence.EntityTransaction;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -46,6 +47,18 @@ public class DatabaseTestFixture {
             beginTransaction();
         }
         
+        List<Entitlement> ents = em.createQuery("from Entitlement e").
+            getResultList();
+        for (Entitlement e : ents) {
+            em.remove(e);
+        }
+
+        List<EntitlementPool> pools = em.createQuery("from EntitlementPool p").
+            getResultList();
+        for (EntitlementPool p : pools) {
+            em.remove(p);
+        }
+
         // TODO: Would rather be doing this, but such a bulk delete does not seem to respect
         // the cascade to child products and thus fails.
         // em.createQuery("delete from Product").executeUpdate();
@@ -77,12 +90,6 @@ public class DatabaseTestFixture {
             em.remove(c);
         }
         
-        List<EntitlementPool> pools = em.createQuery("from EntitlementPool p").
-            getResultList();
-        for (EntitlementPool p : pools) {
-            em.remove(p);
-        }
-
         commitTransaction();
         em.close();
     }

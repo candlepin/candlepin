@@ -16,10 +16,12 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -42,17 +44,23 @@ public class EntitlementPool {
     private Long id;
     
     @ManyToOne
+    @JoinColumn(nullable=false)
     private Owner owner;
     
     @ManyToOne
+    @JoinColumn(nullable=false)
     private Product product;
     
+    @Column(nullable=false)
     private Long maxMembers;
-    
+
+    @Column(nullable=false)
     private Long currentMembers;
 
+    @Column(nullable=false)
     private Date startDate;
     
+    @Column(nullable=false)
     private Date endDate;
 
     public EntitlementPool() {
@@ -65,6 +73,9 @@ public class EntitlementPool {
         this.maxMembers = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
+        
+        // Always assume no current members if creating a new pool.
+        this.currentMembers = new Long(0);
     }
 
     /**
