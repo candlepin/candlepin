@@ -11,6 +11,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.util.EntityManagerUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -46,6 +47,12 @@ public class DatabaseTestFixture {
             beginTransaction();
         }
         
+        List<User> users = em.createQuery("from User u").
+            getResultList();
+        for (User u : users) {
+            em.remove(u);
+        }
+
         List<Entitlement> ents = em.createQuery("from Entitlement e").
             getResultList();
         for (Entitlement e : ents) {
