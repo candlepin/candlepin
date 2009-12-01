@@ -98,8 +98,8 @@ public class ObjectFactory {
      * @param uuid to lookup
      * @return BaseModel if found, null otherwise.
      */
-    public BaseModel lookupByUUID(Class<?> clazz, String uuid) {
-        return (BaseModel) lookupByFieldName(clazz, "uuid", uuid);
+    public Object lookupByUUID(Class<?> clazz, String uuid) {
+        return (Object) lookupByFieldName(clazz, "uuid", uuid);
     }
 
     /**
@@ -152,7 +152,7 @@ public class ObjectFactory {
      * @param clazz to lookup  
      * @param removeMe model to remove
      */
-    public void delete(Class clazz, BaseModel removeMe) {
+    public void delete(Class clazz, Object removeMe) {
         String key = clazz.getName();
         List typelist = (List) objects.get(key);
         typelist.remove(removeMe);

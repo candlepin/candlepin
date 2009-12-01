@@ -39,7 +39,6 @@ public class TestResourceTest {
     private JsonTestObject createTestObject() {
         JsonTestObject jto = new JsonTestObject();
         jto.setName("testname");
-        jto.setUuid("AEF");
         List<String> l = new ArrayList<String>();
         l.add("hey there");
         l.add("how are you?");
@@ -62,7 +61,6 @@ public class TestResourceTest {
         System.out.println(jto.getName());
         jto = getresource.accept("application/json").get(JsonTestObject.class);
         assertEquals("testname", jto.getName());
-        assertEquals("AEF", jto.getUuid());
         assertNotNull(jto.getStringList());
         assertEquals(2, jto.getStringList().size());
         assertNull(jto.getParent());

@@ -62,7 +62,6 @@ public class TestResource {
         jto = obj;
         System.out.println("object.name:" + obj.getName());
         System.out.println("jto.name:" + jto.getName());
-        System.out.println("jto.uuid:" + jto.getUuid());
         System.out.println("jto.list:" + jto.getStringList());
         System.out.println("jto.parent.name:" +
             jto.getParent() == null ? jto.getParent().getName() : "");
