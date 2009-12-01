@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
