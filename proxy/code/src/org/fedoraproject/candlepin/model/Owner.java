@@ -22,6 +22,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -52,7 +53,7 @@ public class Owner {
     @Transient
     private List<Consumer> consumers;
     
-    @Transient
+    @OneToMany(mappedBy="owner", targetEntity=EntitlementPool.class)
     private List<EntitlementPool> entitlementPools;
     
     @Transient

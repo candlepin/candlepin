@@ -17,6 +17,18 @@ package org.fedoraproject.candlepin.model;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -40,23 +52,56 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Entitlement extends BaseModel {
+@Entity
+@Table(name="cp_entitlement")
+public class Entitlement {
     
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    
+    @ManyToOne
+    @JoinColumn(nullable=false)
     private Owner owner;
+    
+    @ManyToOne
+    @JoinColumn(nullable=false)
     private EntitlementPool pool;
+
+    @Transient
+//    @OneToMany(targetEntity=Product.class, cascade=CascadeType.ALL)
+//    @JoinTable(name="cp_product_hierarchy", 
+//            joinColumns=@JoinColumn(name="PARENT_PRODUCT_ID"), 
+//            inverseJoinColumns=@JoinColumn(name="CHILD_PRODUCT_ID"))
     private List<Entitlement> childEntitlements;
     
     private Date startDate;
 
-    /**
-     * default ctor
-     */
     public Entitlement() {
-        super(null);
     }
     
     /**
-     * @return the org
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Entitlement(EntitlementPool poolIn, Owner ownerIn, Date startDateIn) {
+        pool = poolIn;
+        owner = ownerIn;
+        startDate = startDateIn;
+    }
+    
+    /**
+     * @return the owner
      */
     @XmlTransient
     public Owner getOwner() {
