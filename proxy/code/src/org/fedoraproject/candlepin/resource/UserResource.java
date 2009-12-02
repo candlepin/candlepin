@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.User;
 
@@ -82,8 +81,7 @@ public class UserResource extends BaseResource {
     public User create(@FormParam("login") String login, @FormParam("password") String password) {
         System.out.println("login: " + login);
         System.out.println("password: " + password);
-        String newuuid = BaseModel.generateUUID();
-        User u = new User(newuuid);
+        User u = new User();
         u.setLogin(login);
         u.setPassword(password);
         ObjectFactory.get().store(u);

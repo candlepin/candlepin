@@ -28,11 +28,21 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class JsonTestObject extends BaseModel {
+public class JsonTestObject {
 
     private List<String> stringlist = new ArrayList<String>();
     //private String[] stringarray = new String[1];
     private JsonTestObject parent;
+
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /**
      * sets the parent

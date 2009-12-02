@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.BaseModel;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 
 import org.apache.log4j.Logger;
@@ -90,7 +89,7 @@ public abstract class BaseResource {
     @DELETE @Path("/{uuid}")
     public void delete(String uuid) {
         System.out.println("Delete called: " + uuid);
-        BaseModel obj = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
+        Object obj = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
         ObjectFactory.get().delete(getApiClass(), obj);
     }
     
