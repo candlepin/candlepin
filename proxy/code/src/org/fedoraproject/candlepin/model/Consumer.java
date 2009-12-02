@@ -26,6 +26,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -72,9 +73,9 @@ public class Consumer {
             inverseJoinColumns=@JoinColumn(name="CHILD_CONSUMER_ID"))
     private Set<Consumer> childConsumers;
 
-    // TODO: Are we sure we want to track this explicitly? Wouldn't we examine the 
-    // entitlements we're consuming and the products associated to them for this info?
-    @OneToMany
+    // Separate mapping because in theory, a consumer could be consuming products they're
+    // not entitled to.
+    @ManyToMany
     @JoinTable(name="cp_consumer_products",
             joinColumns=@JoinColumn(name="consumer_id"),
             inverseJoinColumns=@JoinColumn(name="product_id"))

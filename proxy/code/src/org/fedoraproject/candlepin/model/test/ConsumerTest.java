@@ -156,16 +156,14 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testConsumerHierarchy() {
         beginTransaction();
 
-        Consumer child1 = new Consumer("child1asd", owner, consumerType);
-        child1.setMetadataField("foo6", "bar");
-//        child1.addConsumedProduct(rhel);
+        Consumer child1 = new Consumer("child1", owner, consumerType);
+        child1.setMetadataField("foo", "bar");
         em.persist(child1);
         commitTransaction();
 
         beginTransaction();
         Consumer child2 = new Consumer("child2", owner, consumerType);
-        child2.setMetadataField("foo87", "bar");
-//        child2.addConsumedProduct(rhel);
+        child2.setMetadataField("foo", "bar");
         em.persist(child2);
         commitTransaction();
 
@@ -177,6 +175,19 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
         assertEquals(2, lookedUp.getChildConsumers().size());
+    }
+    
+    // This this looks like a stupid test but this was actually failing at one point. :)
+    @Test
+    public void testMultipleConsumersSameConsumedProduct() {
+        beginTransaction();
+        
+        // Default consumer already consumes RHEL:
+        Consumer child1 = new Consumer("child1", owner, consumerType);
+        child1.setMetadataField("foo", "bar");
+        child1.addConsumedProduct(rhel);
+        em.persist(child1);
+        commitTransaction();
     }
 
 }
