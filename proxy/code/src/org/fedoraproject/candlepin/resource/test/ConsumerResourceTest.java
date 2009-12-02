@@ -14,27 +14,39 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.*;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
+import org.fedoraproject.candlepin.model.ConsumerRepository;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.ConsumerTypeRepository;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
-import org.fedoraproject.candlepin.test.TestUtil;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.hibernate.Session;
+import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * ConsumerResourceTest
  * @version $Rev$
  */
-public class ConsumerResourceTest {
+public class ConsumerResourceTest extends DatabaseTestFixture {
+    
+    private ConsumerRepository consumerRepository;
+    private ConsumerTypeRepository consumerTypeRepository;
+    private ConsumerType standardSystemType;
 
+    @Before
+    public void setUp() {
+        super.setUp();
+        consumerTypeRepository = new ConsumerTypeRepository((Session) em.getDelegate());
+        consumerRepository = new ConsumerRepository((Session) em.getDelegate());
+        
+        standardSystemType = new ConsumerType("standard-system");
+        consumerTypeRepository.create(standardSystemType);
+    }
+    
     @Test
     public void testCreateConsumer() throws Exception {
         String newname = "test-consumer-" + System.currentTimeMillis();
@@ -42,10 +54,16 @@ public class ConsumerResourceTest {
         ConsumerResource capi = new ConsumerResource();
         ConsumerInfo ci = new ConsumerInfo();
         ci.setMetadataField("name", newname);
-        ConsumerType type = new ConsumerType("standard-system");
-        capi.create(ci, type);
-        assertNotNull(ObjectFactory.get().lookupByFieldName(Consumer.class, 
-                "name", newname));
+        
+        Consumer c = new Consumer();
+        c.setName(ci.getMetadataField("name"));
+        c.setType(standardSystemType);
+        c.setInfo(ci);
+        
+        Consumer saved = consumerRepository.create(c);
+        
+        assertEquals(saved, consumerRepository.find(saved.getId()));
+        //capi.create(ci, type);
     }
     
 //    @Test
