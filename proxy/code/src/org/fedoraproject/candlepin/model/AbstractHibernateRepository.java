@@ -3,16 +3,18 @@ package org.fedoraproject.candlepin.model;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 
+import javax.persistence.EntityManager;
+
 import org.hibernate.Session;
 
 public abstract class AbstractHibernateRepository<E> {
     
-    protected final Session session;
+    protected final EntityManager em;
     private final Class<E> entityType;
     
     @SuppressWarnings("unchecked")
-    protected AbstractHibernateRepository(Session session) {
-        this.session = session;
+    protected AbstractHibernateRepository(EntityManager em) {
+        this.em = em;
         entityType = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
     
@@ -22,19 +24,23 @@ public abstract class AbstractHibernateRepository<E> {
     
     public E create(E entity) {
         save(entity);
-        flush();
+//        flush();
         return entity;
     }
     
     protected final <T> T get(Class<T> clazz, Serializable id) {
-        return clazz.cast(session.get(clazz, id));
+        return clazz.cast(currentSession().get(clazz, id));
     }
     
     protected final void save(Object anObject) {
-        session.save(anObject);
+        currentSession().save(anObject);
     }
     
     protected final void flush() {
-        session.flush();
+        em.flush();
+    }
+    
+    protected Session currentSession() {
+        return (Session) em.getDelegate();
     }
 }

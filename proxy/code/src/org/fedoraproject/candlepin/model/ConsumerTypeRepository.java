@@ -1,9 +1,9 @@
 package org.fedoraproject.candlepin.model;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
 
 public class ConsumerTypeRepository extends AbstractHibernateRepository<ConsumerType> {
-    public ConsumerTypeRepository(Session session) {
-        super(session);
+    public ConsumerTypeRepository(EntityManager em) {
+        super(em);
     }
 }

@@ -23,7 +23,6 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeRepository;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,8 +39,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         super.setUp();
-        consumerTypeRepository = new ConsumerTypeRepository((Session) em.getDelegate());
-        consumerRepository = new ConsumerRepository((Session) em.getDelegate());
+        consumerTypeRepository = new ConsumerTypeRepository(em);
+        consumerRepository = new ConsumerRepository(em);
         
         standardSystemType = new ConsumerType("standard-system");
         consumerTypeRepository.create(standardSystemType);
