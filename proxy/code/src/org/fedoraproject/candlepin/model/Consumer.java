@@ -66,8 +66,11 @@ public class Consumer {
     private Owner owner;
     
     // TODO: Is this worth mapping? Do we need a hierarchy amidst consumers?
-    @Transient
-    private Consumer parent;
+    @OneToMany(targetEntity=Consumer.class, cascade=CascadeType.ALL)
+    @JoinTable(name="cp_consumer_hierarchy",
+            joinColumns=@JoinColumn(name="PARENT_CONSUMER_ID"),
+            inverseJoinColumns=@JoinColumn(name="CHILD_CONSUMER_ID"))
+    private Set<Consumer> childConsumers;
 
     // TODO: Are we sure we want to track this explicitly? Wouldn't we examine the 
     // entitlements we're consuming and the products associated to them for this info?
@@ -91,6 +94,7 @@ public class Consumer {
         
         this.info = new ConsumerInfo();
         this.info.setConsumer(this); // TODO: ???
+        this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }
@@ -98,6 +102,7 @@ public class Consumer {
     public Consumer() {
         this.info = new ConsumerInfo();
         this.info.setConsumer(this); // TODO: ???
+        this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }
@@ -144,18 +149,16 @@ public class Consumer {
         type = typeIn;
     }
 
-    /**
-     * @return the parent
-     */
-    public Consumer getParent() {
-        return parent;
+    public Set<Consumer> getChildConsumers() {
+        return childConsumers;
     }
 
-    /**
-     * @param parent the parent to set
-     */
-    public void setParent(Consumer parent) {
-        this.parent = parent;
+    public void setChildConsumers(Set<Consumer> childConsumers) {
+        this.childConsumers = childConsumers;
+    }
+
+    public void addChildConsumer(Consumer child) {
+        this.childConsumers.add(child);
     }
 
     /**

@@ -152,4 +152,31 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertNull(lookedUp);
     }
     
+    @Test
+    public void testConsumerHierarchy() {
+        beginTransaction();
+
+        Consumer child1 = new Consumer("child1asd", owner, consumerType);
+        child1.setMetadataField("foo6", "bar");
+//        child1.addConsumedProduct(rhel);
+        em.persist(child1);
+        commitTransaction();
+
+        beginTransaction();
+        Consumer child2 = new Consumer("child2", owner, consumerType);
+        child2.setMetadataField("foo87", "bar");
+//        child2.addConsumedProduct(rhel);
+        em.persist(child2);
+        commitTransaction();
+
+        beginTransaction();
+        consumer.addChildConsumer(child1);
+        consumer.addChildConsumer(child2);
+        em.persist(consumer);
+        commitTransaction();
+
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
+        assertEquals(2, lookedUp.getChildConsumers().size());
+    }
+
 }
