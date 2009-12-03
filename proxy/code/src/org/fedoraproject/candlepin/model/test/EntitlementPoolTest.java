@@ -14,15 +14,12 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import java.sql.Date;
-
-import java.util.Calendar;
-
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,42 +35,24 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     @Before
     public void createObjects() {
         beginTransaction();
-        String ownerName = "Example Corporation";
-        owner = new Owner(ownerName);
+        
+        pool = TestUtil.createEntitlementPool();
+        owner = pool.getOwner();
+        prod = pool.getProduct();
         em.persist(owner);
-        prod = new Product("cptest-label", "My Product");
         em.persist(prod);
-        commitTransaction();
-        beginTransaction();
-        pool = new EntitlementPool(owner, prod, new Long(1000),
-               createDate(2009, 11, 30), createDate(2015, 11, 30)); 
         em.persist(pool);
+        
         commitTransaction();
-    }
-
-    private Date createDate(int year, int month, int day) {
-        Calendar cal = Calendar.getInstance();
-            
-        cal.set(Calendar.YEAR, year);
-        cal.set(Calendar.MONTH, month);
-        cal.set(Calendar.DATE, day);
-
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-
-        Date jsqlD = new Date(cal.getTime().getTime());
-        return jsqlD;
     }
 
     @Test
     public void testCreate() {
-        EntitlementPool lookedUp = (EntitlementPool)em.find(EntitlementPool.class, pool.getId());
+        EntitlementPool lookedUp = (EntitlementPool)em.find(EntitlementPool.class, 
+                pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod.getId(), lookedUp.getProduct().getId());
-
     }
 
 }

@@ -21,9 +21,12 @@ import javax.persistence.PersistenceException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -152,4 +155,66 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertNull(lookedUp);
     }
     
+    @Test
+    public void testConsumerHierarchy() {
+        beginTransaction();
+
+        Consumer child1 = new Consumer("child1", owner, consumerType);
+        child1.setMetadataField("foo", "bar");
+        em.persist(child1);
+        commitTransaction();
+
+        beginTransaction();
+        Consumer child2 = new Consumer("child2", owner, consumerType);
+        child2.setMetadataField("foo", "bar");
+        em.persist(child2);
+        commitTransaction();
+
+        beginTransaction();
+        consumer.addChildConsumer(child1);
+        consumer.addChildConsumer(child2);
+        em.persist(consumer);
+        commitTransaction();
+
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
+        assertEquals(2, lookedUp.getChildConsumers().size());
+    }
+    
+    // This this looks like a stupid test but this was actually failing at one point. :)
+    @Test
+    public void testMultipleConsumersSameConsumedProduct() {
+        beginTransaction();
+        
+        // Default consumer already consumes RHEL:
+        Consumer child1 = new Consumer("child1", owner, consumerType);
+        child1.setMetadataField("foo", "bar");
+        child1.addConsumedProduct(rhel);
+        em.persist(child1);
+        commitTransaction();
+    }
+    
+    @Test
+    public void testEntitlements() {
+        beginTransaction();
+        EntitlementPool pool = TestUtil.createEntitlementPool();
+        em.persist(pool.getProduct());
+        em.persist(pool.getOwner());
+        em.persist(pool);
+        
+        Entitlement e1 = TestUtil.createEntitlement(pool);
+        Entitlement e2 = TestUtil.createEntitlement(pool);
+        Entitlement e3 = TestUtil.createEntitlement(pool);
+        em.persist(e1);
+        em.persist(e2);
+        em.persist(e3);
+        
+        consumer.addEntitlement(e1);
+        consumer.addEntitlement(e2);
+        consumer.addEntitlement(e3);
+        commitTransaction();
+        
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
+        assertEquals(3, lookedUp.getEntitlements().size());
+    }
+
 }

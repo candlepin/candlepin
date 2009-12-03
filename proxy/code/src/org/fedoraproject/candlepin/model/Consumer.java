@@ -26,12 +26,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -68,22 +68,29 @@ public class Consumer {
     @ForeignKey(name="fk_consumer_owner")
     private Owner owner;
     
-    // TODO: Is this worth mapping? Do we need a hierarchy amidst consumers?
-    @Transient
-    private Consumer parent;
+    // Consumer hierarchy it meant to be useful to represent the relationship between 
+    // hosts and guests.
+    @OneToMany(targetEntity=Consumer.class, cascade=CascadeType.ALL)
+    @JoinTable(name="cp_consumer_hierarchy",
+            joinColumns=@JoinColumn(name="PARENT_CONSUMER_ID"),
+            inverseJoinColumns=@JoinColumn(name="CHILD_CONSUMER_ID"))
+    private Set<Consumer> childConsumers;
 
-    // TODO: Are we sure we want to track this explicitly? Wouldn't we examine the 
-    // entitlements we're consuming and the products associated to them for this info?
-    @OneToMany
-    @ForeignKey(name = "fk_consumer_product_consumer_id",
+
+    // Separate mapping because in theory, a consumer could be consuming products they're
+    // not entitled to.
+    @ManyToMany
+    @ForeignKey(name = "fk_consumer_product_consumer_id",	
                 inverseName = "fk_consumer_product_product_id")
-
     @JoinTable(name="cp_consumer_products",
             joinColumns=@JoinColumn(name="consumer_id"),
             inverseJoinColumns=@JoinColumn(name="product_id"))
     private Set<Product> consumedProducts;
     
-    @Transient // TODO
+    @OneToMany
+    @JoinTable(name="cp_consumer_entitlements",
+            joinColumns=@JoinColumn(name="consumer_id"),
+            inverseJoinColumns=@JoinColumn(name="entitlement_id"))
     private Set<Entitlement> entitlements;
     
     @OneToOne(cascade=CascadeType.ALL)
@@ -97,6 +104,7 @@ public class Consumer {
         
         this.info = new ConsumerInfo();
         this.info.setConsumer(this); // TODO: ???
+        this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }
@@ -104,6 +112,7 @@ public class Consumer {
     public Consumer() {
         this.info = new ConsumerInfo();
         this.info.setConsumer(this); // TODO: ???
+        this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }
@@ -150,18 +159,16 @@ public class Consumer {
         type = typeIn;
     }
 
-    /**
-     * @return the parent
-     */
-    public Consumer getParent() {
-        return parent;
+    public Set<Consumer> getChildConsumers() {
+        return childConsumers;
     }
 
-    /**
-     * @param parent the parent to set
-     */
-    public void setParent(Consumer parent) {
-        this.parent = parent;
+    public void setChildConsumers(Set<Consumer> childConsumers) {
+        this.childConsumers = childConsumers;
+    }
+
+    public void addChildConsumer(Consumer child) {
+        this.childConsumers.add(child);
     }
 
     /**

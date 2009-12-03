@@ -14,27 +14,39 @@
  */
 package org.fedoraproject.candlepin.test;
 
+import java.sql.Date;
+
+import java.util.Calendar;
+import java.util.Random;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
-// TODO: Do we want to keep this style of creating objects for testing?
+/**
+ * TestUtil for creating various testing objects.
+ * 
+ * Objects backed by the database are not persisted, the caller is expected to persist
+ * the entities returned and any dependent objects.
+ */
 public class TestUtil {
     
     private TestUtil() {
     }
 
     public static Owner createOwner() {
-        Owner o = new Owner("Test Owner");
+        Owner o = new Owner("Test Owner " + randomInt());
 //        o.setUuid(lookedUp);
         ObjectFactory.get().store(o);
         return o;
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
-        Consumer c = new Consumer("Consumer Name", owner, type);
+        Consumer c = new Consumer("Test Consumer " + randomInt(), owner, type);
         ObjectFactory.get().store(c);
         return c;
     }
@@ -44,12 +56,48 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer() {
-        return createConsumer(new ConsumerType("some-consumer-type"), createOwner());
+        return createConsumer(new ConsumerType("test-consumer-type-" + randomInt()), 
+                createOwner());
+    }
+    
+    public static int randomInt() {
+        return new Random().nextInt(10000);
     }
 
     public static Product createProduct() {
-        Product rhel = new Product("rhel-label", "Red Hat Enterprise Linux");
+        int random =  randomInt();
+        Product rhel = new Product("test-product-" + random, 
+                "Test Product " + random);
         ObjectFactory.get().store(rhel);
         return rhel;
     }
+    
+    public static EntitlementPool createEntitlementPool() {
+        EntitlementPool pool = new EntitlementPool(createOwner(), createProduct(), 
+                new Long(1000),
+                TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
+        return pool;
+    }
+    
+    public static Entitlement createEntitlement(EntitlementPool pool) {
+        Entitlement e = new Entitlement(pool, pool.getOwner(), pool.getStartDate());
+        return e;
+    }
+    
+    public static Date createDate(int year, int month, int day) {
+        Calendar cal = Calendar.getInstance();
+            
+        cal.set(Calendar.YEAR, year);
+        cal.set(Calendar.MONTH, month);
+        cal.set(Calendar.DATE, day);
+
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        Date jsqlD = new Date(cal.getTime().getTime());
+        return jsqlD;
+    }
+
 }
