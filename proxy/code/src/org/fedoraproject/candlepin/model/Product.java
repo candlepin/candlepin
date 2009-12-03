@@ -48,7 +48,6 @@ public class Product {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
     
-    // TODO: Drop one of these?
     @Column(nullable=false, unique=true)
     private String label;
     
@@ -72,7 +71,6 @@ public class Product {
      * @param name
      */
     public Product(String label, String name) {
-        // TODO: Do we want to drop one of these?
         setLabel(label);
         setName(name);
     }
