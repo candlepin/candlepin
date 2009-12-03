@@ -115,4 +115,28 @@ public class OwnerTest extends DatabaseTestFixture {
         Owner lookedUp = (Owner)em.find(Owner.class, o.getId());
         assertEquals(2, lookedUp.getConsumers().size());
     }
+    
+    @Test
+    public void bidirectionalUsers() throws Exception {
+        beginTransaction();
+        Owner o = TestUtil.createOwner();
+        
+        User u1 = TestUtil.createUser(o);
+        User u2 = TestUtil.createUser(o);
+        
+        o.addUser(u1);
+        o.addUser(u2);
+        em.persist(o);
+        em.persist(u1);
+        em.persist(u2);
+        
+        commitTransaction();
+        
+        assertEquals(2, o.getUsers().size());
+        
+        em.clear();
+        Owner lookedUp = (Owner)em.find(Owner.class, o.getId());
+        assertEquals(2, lookedUp.getUsers().size());
+    }
+
 }

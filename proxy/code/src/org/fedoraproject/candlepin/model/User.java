@@ -19,6 +19,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -44,6 +45,7 @@ public class User {
 
     @ManyToOne
     @ForeignKey(name="fk_user_owner_id")
+    @JoinColumn(nullable=false)
     private Owner owner;
 
     private String login;

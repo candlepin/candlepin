@@ -66,7 +66,7 @@ public class Consumer {
     
     @ManyToOne
     @ForeignKey(name="fk_consumer_owner")
-    @JoinColumn(nullable=false, name="owner_id", referencedColumnName="id")
+    @JoinColumn(nullable=false)
     private Owner owner;
     
     // Consumer hierarchy it meant to be useful to represent the relationship between 

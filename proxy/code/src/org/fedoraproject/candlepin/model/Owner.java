@@ -51,8 +51,6 @@ public class Owner {
     @Column(nullable=false)
     private String name;
 
-    // TODO: Remove these transients once the appropriate objects are mapped:
-    
     @OneToMany(mappedBy="owner", targetEntity=Consumer.class)
     private Set<Consumer> consumers;
     
@@ -61,7 +59,7 @@ public class Owner {
     @ForeignKey(name="fk_user_owner_id")
     private Set<EntitlementPool> entitlementPools;
     
-    @Transient
+    @OneToMany(mappedBy="owner", targetEntity=User.class)
     private Set<User> users;
     
     /**
