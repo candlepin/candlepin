@@ -32,7 +32,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -66,7 +65,8 @@ public class Consumer {
     @ManyToOne
     private Owner owner;
     
-    // TODO: Is this worth mapping? Do we need a hierarchy amidst consumers?
+    // Consumer hierarchy it meant to be useful to represent the relationship between 
+    // hosts and guests.
     @OneToMany(targetEntity=Consumer.class, cascade=CascadeType.ALL)
     @JoinTable(name="cp_consumer_hierarchy",
             joinColumns=@JoinColumn(name="PARENT_CONSUMER_ID"),
@@ -81,7 +81,10 @@ public class Consumer {
             inverseJoinColumns=@JoinColumn(name="product_id"))
     private Set<Product> consumedProducts;
     
-    @Transient // TODO
+    @OneToMany
+    @JoinTable(name="cp_consumer_entitlements",
+            joinColumns=@JoinColumn(name="consumer_id"),
+            inverseJoinColumns=@JoinColumn(name="entitlement_id"))
     private Set<Entitlement> entitlements;
     
     @OneToOne(cascade=CascadeType.ALL)
