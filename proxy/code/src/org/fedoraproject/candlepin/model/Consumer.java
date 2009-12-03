@@ -80,14 +80,16 @@ public class Consumer {
     // Separate mapping because in theory, a consumer could be consuming products they're
     // not entitled to.
     @ManyToMany
-    @ForeignKey(name = "fk_consumer_product_consumer_id",	
-                inverseName = "fk_consumer_product_product_id")
+    @ForeignKey(name="fk_consumer_product_consumer_id",	
+                inverseName="fk_consumer_product_product_id")
     @JoinTable(name="cp_consumer_products",
             joinColumns=@JoinColumn(name="consumer_id"),
             inverseJoinColumns=@JoinColumn(name="product_id"))
     private Set<Product> consumedProducts;
     
     @OneToMany
+    @ForeignKey(name="fk_consumer_product_consumer_id",
+                inverseName="fk_consumer_produce_product_id")
     @JoinTable(name="cp_consumer_entitlements",
             joinColumns=@JoinColumn(name="consumer_id"),
             inverseJoinColumns=@JoinColumn(name="entitlement_id"))
