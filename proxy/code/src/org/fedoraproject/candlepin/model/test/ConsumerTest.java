@@ -109,6 +109,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals("bar", lookedUp.getInfo().getMetadataField("foo"));
         assertEquals("bar1", metadata.get("foo1"));
         assertEquals("bar1", lookedUp.getInfo().getMetadataField("foo1"));
+        assertEquals(consumer.getId(), lookedUp.getInfo().getConsumer().getId());
         commitTransaction();
     }
     

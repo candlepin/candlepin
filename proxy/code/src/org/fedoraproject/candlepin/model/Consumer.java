@@ -104,16 +104,14 @@ public class Consumer {
         this.owner = owner;
         this.type = type;
         
-        this.info = new ConsumerInfo();
-        this.info.setConsumer(this); // TODO: ???
+        this.info = new ConsumerInfo(this);
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }
 
     public Consumer() {
-        this.info = new ConsumerInfo();
-        this.info.setConsumer(this); // TODO: ???
+        this.info = new ConsumerInfo(this);
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
