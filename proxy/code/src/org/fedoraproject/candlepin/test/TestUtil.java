@@ -56,8 +56,11 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer() {
-        return createConsumer(new ConsumerType("test-consumer-type-" + randomInt()), 
-                createOwner());
+        return createConsumer(createConsumerType(), createOwner());
+    }
+    
+    public static ConsumerType createConsumerType() {
+        return new ConsumerType("test-consumer-type-" + randomInt());
     }
     
     public static int randomInt() {
