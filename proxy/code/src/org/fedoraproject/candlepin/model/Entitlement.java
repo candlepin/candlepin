@@ -27,6 +27,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.hibernate.annotations.ForeignKey;
+
+
 
 /**
  * Entitlements are documents either signed XML or other certificate which 
@@ -55,10 +58,12 @@ public class Entitlement {
     private Long id;
     
     @ManyToOne
+    @ForeignKey(name="fk_entitlement_owner")
     @JoinColumn(nullable=false)
     private Owner owner;
     
     @ManyToOne
+    @ForeignKey(name="fk_entitlement_entitlement_pool")
     @JoinColumn(nullable=false)
     private EntitlementPool pool;
 

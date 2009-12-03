@@ -29,6 +29,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.ForeignKey;
+
+
 /**
  * Represents the owner of entitlements.
  * 
@@ -55,6 +58,7 @@ public class Owner {
     
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy="owner", targetEntity=EntitlementPool.class)
+    @ForeignKey(name="fk_user_owner_id")
     private List<EntitlementPool> entitlementPools;
     
     @Transient

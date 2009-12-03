@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
@@ -60,9 +61,11 @@ public class Consumer {
     
     @ManyToOne
     @JoinColumn(nullable=false)
+    @ForeignKey(name="fk_consumer_consumer_type")
     private ConsumerType type;
     
     @ManyToOne
+    @ForeignKey(name="fk_consumer_owner")
     private Owner owner;
     
     // TODO: Is this worth mapping? Do we need a hierarchy amidst consumers?
@@ -72,6 +75,9 @@ public class Consumer {
     // TODO: Are we sure we want to track this explicitly? Wouldn't we examine the 
     // entitlements we're consuming and the products associated to them for this info?
     @OneToMany
+    @ForeignKey(name = "fk_consumer_product_consumer_id",
+                inverseName = "fk_consumer_product_product_id")
+
     @JoinTable(name="cp_consumer_products",
             joinColumns=@JoinColumn(name="consumer_id"),
             inverseJoinColumns=@JoinColumn(name="product_id"))

@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -44,10 +45,12 @@ public class EntitlementPool {
     private Long id;
     
     @ManyToOne
+    @ForeignKey(name="fk_entitlement_pool_owner")
     @JoinColumn(nullable=false)
     private Owner owner;
     
     @ManyToOne
+    @ForeignKey(name="fk_entitlement_pool_product")
     @JoinColumn(nullable=false)
     private Product product;
     
