@@ -47,7 +47,7 @@ public class CertTest {
     @Test
     public void testCertGenerator() {
         String cert = CertGenerator.getCertString();
-        System.out.println("Cert: " + cert);
+//        System.out.println("Cert: " + cert);
     }
     
     @Test
@@ -146,8 +146,8 @@ public class CertTest {
                 caPrivKey);
         X509Certificate clientCert = AttrCertExample.createClientCert(pubKey,
                 caPrivKey, caPubKey);
-        System.out.println("CaCert: " + caCert);
-        System.out.println("clientCert: " + clientCert);
+//        System.out.println("CaCert: " + caCert);
+//        System.out.println("clientCert: " + clientCert);
         // Instantiate a new AC generator
         X509V2AttributeCertificateGenerator acGen =
             new X509V2AttributeCertificateGenerator();
@@ -216,15 +216,15 @@ public class CertTest {
         AttributeCertificateHolder h = att.getHolder();
         if (h.match(clientCert)) {
             if (h.getEntityNames() != null) {
-                System.out.println(h.getEntityNames().length +
-                    " entity names found");
+//                System.out.println(h.getEntityNames().length +
+//                    " entity names found");
             }
             if (h.getIssuer() != null) {
-                System.out.println(h.getIssuer().length +
-                    " issuer names found, serial number " +
-                    h.getSerialNumber());
+//                System.out.println(h.getIssuer().length +
+//                    " issuer names found, serial number " +
+//                    h.getSerialNumber());
             }
-            System.out.println("Matches original client x509 cert");
+//            System.out.println("Matches original client x509 cert");
         }
 
         // Issuer
@@ -232,15 +232,15 @@ public class CertTest {
         AttributeCertificateIssuer issuer = att.getIssuer();
         if (issuer.match(caCert)) {
             if (issuer.getPrincipals() != null) {
-                System.out.println(issuer.getPrincipals().length +
-                    " entity names found");
+//                System.out.println(issuer.getPrincipals().length +
+//                    " entity names found");
             }
-            System.out.println("Matches original ca x509 cert");
+//            System.out.println("Matches original ca x509 cert");
         }
 
         // Dates
-        System.out.println("valid not before: " + att.getNotBefore());
-        System.out.println("valid not before: " + att.getNotAfter());
+//        System.out.println("valid not before: " + att.getNotBefore());
+//        System.out.println("valid not before: " + att.getNotAfter());
 
         // check the dates, an exception is thrown in checkValidity()...
 
@@ -263,16 +263,16 @@ public class CertTest {
 
         // Attribute
         X509Attribute[] attribs = att.getAttributes();
-        System.out.println("cert has " + attribs.length + " attributes:");
+//        System.out.println("cert has " + attribs.length + " attributes:");
         for (int i = 0; i < attribs.length; i++) {
             X509Attribute a = attribs[i];
-            System.out.println("OID: " + a.getOID());
+//            System.out.println("OID: " + a.getOID());
 
             // currently we only check for the presence of a 'RoleSyntax'
             // attribute
 
             if (a.getOID().equals("2.5.24.72")) {
-                System.out.println("rolesyntax read from cert!");
+//                System.out.println("rolesyntax read from cert!");
             }
         }
         
