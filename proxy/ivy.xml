@@ -46,7 +46,7 @@
         <dependency org="candlepin" name="guice-assistedinject" rev="2.0" />
         <dependency org="candlepin" name="guice-multibindings" rev="2.0" />
         <dependency org="candlepin" name="guice-throwingproviders" rev="2.0" />
-        <dependency org="candlepin" name="warp-persist" rev="2.0-20090214-src" />
+        <dependency org="candlepin" name="warp-persist-src" rev="2.0-20090214" />
         <dependency org="candlepin" name="warp-persist" rev="2.0-20090214" />
         
     </dependencies>
