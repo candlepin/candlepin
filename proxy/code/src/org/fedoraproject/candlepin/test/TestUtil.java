@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.test;
 
 import java.sql.Date;
-
 import java.util.Calendar;
 import java.util.Random;
 

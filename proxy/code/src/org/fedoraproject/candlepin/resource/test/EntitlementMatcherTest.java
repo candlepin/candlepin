@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.*;
+
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
@@ -21,11 +25,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductFactory;
 import org.fedoraproject.candlepin.resource.EntitlementMatcher;
 import org.fedoraproject.candlepin.test.TestUtil;
-
-import java.util.List;
-
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * EntitlementMatcherTest

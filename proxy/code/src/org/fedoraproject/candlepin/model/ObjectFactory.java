@@ -14,14 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.util.MethodUtil;
-
-import org.apache.log4j.Logger;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.util.MethodUtil;
 
 /**
  * ObjectFactory is used to create and persist the data model.

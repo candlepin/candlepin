@@ -14,20 +14,20 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.resource.TestResource;
+import org.junit.Test;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 
 /**

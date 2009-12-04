@@ -1,8 +1,6 @@
 package org.fedoraproject.candlepin.model;
 
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 
 import javax.persistence.EntityManager;
 

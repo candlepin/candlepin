@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.User;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +25,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.User;
 
 
 /**

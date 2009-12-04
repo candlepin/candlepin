@@ -14,18 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pinsetter;
-import org.fedoraproject.candlepin.model.User;
-
-import com.redhat.rhn.common.cert.Certificate;
-import com.redhat.rhn.common.cert.CertificateFactory;
-import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
-import com.sun.jersey.core.util.Base64;
-
-import org.jdom.JDOMException;
-
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
@@ -38,6 +26,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pinsetter;
+import org.fedoraproject.candlepin.model.User;
+import org.jdom.JDOMException;
+
+import com.redhat.rhn.common.cert.Certificate;
+import com.redhat.rhn.common.cert.CertificateFactory;
+import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
+import com.sun.jersey.core.util.Base64;
 
 
 /**

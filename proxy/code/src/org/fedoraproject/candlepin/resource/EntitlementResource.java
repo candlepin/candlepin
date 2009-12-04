@@ -14,18 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.cert.CertGenerator;
-import org.fedoraproject.candlepin.util.EntityManagerUtil;
-
-import com.sun.jersey.api.representation.Form;
-
-import org.apache.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -39,6 +27,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.resource.cert.CertGenerator;
+import org.fedoraproject.candlepin.util.EntityManagerUtil;
+
+import com.sun.jersey.api.representation.Form;
 
 
 /**

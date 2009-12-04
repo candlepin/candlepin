@@ -14,12 +14,12 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
+import static org.junit.Assert.*;
+
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class UserTest extends DatabaseTestFixture {
 

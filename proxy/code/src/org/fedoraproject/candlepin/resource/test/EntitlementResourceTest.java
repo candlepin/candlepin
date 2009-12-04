@@ -14,6 +14,12 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.*;
+
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.EntitlementPool;
@@ -23,20 +29,14 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.representation.Form;
-
-import java.sql.Date;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 
 /**

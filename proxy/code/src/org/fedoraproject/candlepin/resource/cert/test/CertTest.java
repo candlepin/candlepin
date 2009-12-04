@@ -14,19 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource.cert.test;
 
-import org.fedoraproject.candlepin.resource.cert.CertGenerator;
-
-import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.x509.AttributeCertificateHolder;
-import org.bouncycastle.x509.AttributeCertificateIssuer;
-import org.bouncycastle.x509.X509Attribute;
-import org.bouncycastle.x509.X509V2AttributeCertificate;
-import org.bouncycastle.x509.X509V2AttributeCertificateGenerator;
-import org.bouncycastle.x509.examples.AttrCertExample;
-
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyStore;
@@ -38,6 +25,17 @@ import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Date;
 
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.x509.AttributeCertificateHolder;
+import org.bouncycastle.x509.AttributeCertificateIssuer;
+import org.bouncycastle.x509.X509Attribute;
+import org.bouncycastle.x509.X509V2AttributeCertificate;
+import org.bouncycastle.x509.X509V2AttributeCertificateGenerator;
+import org.bouncycastle.x509.examples.AttrCertExample;
+import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.junit.Test;
 
 /**

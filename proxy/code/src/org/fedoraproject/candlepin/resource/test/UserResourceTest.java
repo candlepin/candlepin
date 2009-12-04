@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.resource.UserResource;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.resource.UserResource;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 
 /**

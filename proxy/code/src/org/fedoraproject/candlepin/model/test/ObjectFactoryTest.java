@@ -14,14 +14,13 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Owner;
-
+import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Owner;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * ObjectFactoryTest

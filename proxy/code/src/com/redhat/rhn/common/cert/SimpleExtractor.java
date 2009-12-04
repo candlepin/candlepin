@@ -19,7 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.jdom.Element;
-import org.jdom.JDOMException; 
+import org.jdom.JDOMException;
 
 /**
  * SimpleExtractor.
