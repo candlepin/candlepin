@@ -2,29 +2,33 @@ package org.fedoraproject.candlepin.model;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
 
-public abstract class AbstractHibernateRepository<E> {
-    
-    protected final EntityManager em;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.wideplay.warp.persist.Transactional;
+
+public class AbstractHibernateRepository<E> {
+    @Inject protected Provider<EntityManager> entityManager;
     private final Class<E> entityType;
     
-    @SuppressWarnings("unchecked")
-    protected AbstractHibernateRepository(EntityManager em) {
-        this.em = em;
-        entityType = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+    protected AbstractHibernateRepository(Class<E> entityType) {
+        //entityType = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        this.entityType = entityType;        
     }
     
     public E find(Serializable id) {
         return get(entityType, id);
     }
     
+    @Transactional
     public E create(E entity) {
         save(entity);
-//        flush();
+        flush();
         return entity;
     }
     
@@ -37,10 +41,18 @@ public abstract class AbstractHibernateRepository<E> {
     }
     
     protected final void flush() {
-        em.flush();
+        entityManager.get().flush();
     }
     
     protected Session currentSession() {
-        return (Session) em.getDelegate();
+        return (Session) entityManager.get().getDelegate();
     }
+    
+    protected Provider<EntityManager> getEntityManager() {
+        return entityManager;
+    }
+
+    protected void setEntityManager(Provider<EntityManager> entityManager) {
+        this.entityManager = entityManager;
+    }    
 }

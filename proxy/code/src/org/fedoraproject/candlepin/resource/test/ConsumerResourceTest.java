@@ -26,6 +26,11 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.wideplay.warp.persist.PersistenceService;
+import com.wideplay.warp.persist.UnitOfWork;
+
 /**
  * ConsumerResourceTest
  * @version $Rev$
@@ -39,8 +44,17 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         super.setUp();
-        consumerTypeRepository = new ConsumerTypeRepository(em);
-        consumerRepository = new ConsumerRepository(em);
+        
+        Injector injector = Guice.createInjector(
+                new CandlePingTestingModule(), 
+                PersistenceService.usingJpa()
+                    .across(UnitOfWork.TRANSACTION)
+                    .buildModule()
+        );
+        
+        
+        consumerRepository = injector.getInstance(ConsumerRepository.class);
+        consumerTypeRepository = injector.getInstance(ConsumerTypeRepository.class);
         
         standardSystemType = new ConsumerType("standard-system");
         consumerTypeRepository.create(standardSystemType);
@@ -61,7 +75,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         Consumer saved = consumerRepository.create(c);
         
-        assertEquals(saved, consumerRepository.find(saved.getId()));
+        assertEquals(saved.getId(), consumerRepository.find(saved.getId()).getId());
         //capi.create(ci, type);
     }
     
