@@ -39,5 +39,15 @@
         <dependency org="candlepin" name="slf4j-api" rev="1.5.8" />
         <dependency org="candlepin" name="slf4j-simple" rev="1.5.8" />
         <dependency org="candlepin" name="xalan-j2" rev="2.6.0" />
+        
+        <!--  guice and warp-persist dependencies -->
+        <dependency org="candlepin" name="aopalliance" rev="5_19_09" />
+        <dependency org="candlepin" name="guice-2.0" rev="2.0" />
+        <dependency org="candlepin" name="guice-assistedinject-2.0" rev="2.0" />
+        <dependency org="candlepin" name="guice-multibindings-2.0" rev="2.0" />
+        <dependency org="candlepin" name="guice-throwingproviders-2.0" rev="2.0" />
+        <dependency org="candlepin" name="warp-persist-2.0-20090214-src" rev="2.0" />
+        <dependency org="candlepin" name="warp-persist-2.0-20090214" rev="2.0" />
+        
     </dependencies>
 </ivy-module>
