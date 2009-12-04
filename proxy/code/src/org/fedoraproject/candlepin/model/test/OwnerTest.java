@@ -15,11 +15,13 @@
 package org.fedoraproject.candlepin.model.test;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 
 import java.util.List;
 
@@ -38,9 +40,6 @@ public class OwnerTest extends DatabaseTestFixture {
                 .setParameter("name", ownerName).getSingleResult();
         assertNotNull(result);
         assertEquals(ownerName, result.getName());
-//        assertEquals(0, result.getConsumers().size());
-//        assertEquals(0, result.getEntitlementPools().size());
-//        assertEquals(0, result.getUsers().size());
         assertTrue(result.getId() > 0);
         assertEquals(o.getId(), result.getId());
     }
@@ -93,4 +92,51 @@ public class OwnerTest extends DatabaseTestFixture {
         assertEquals(1, owner.getEntitlementPools().size());
         
     }
+    
+    @Test
+    public void bidirectionalConsumers() throws Exception {
+        beginTransaction();
+        Owner o = TestUtil.createOwner();
+        ConsumerType consumerType = TestUtil.createConsumerType();
+        Consumer c1 = TestUtil.createConsumer(consumerType, o);
+        Consumer c2 = TestUtil.createConsumer(consumerType, o);
+        o.addConsumer(c1);
+        o.addConsumer(c2);
+        em.persist(o);
+        em.persist(consumerType);
+        em.persist(c1);
+        em.persist(c2);
+        
+        commitTransaction();
+        
+        assertEquals(2, o.getConsumers().size());
+        
+        em.clear();
+        Owner lookedUp = (Owner)em.find(Owner.class, o.getId());
+        assertEquals(2, lookedUp.getConsumers().size());
+    }
+    
+    @Test
+    public void bidirectionalUsers() throws Exception {
+        beginTransaction();
+        Owner o = TestUtil.createOwner();
+        
+        User u1 = TestUtil.createUser(o);
+        User u2 = TestUtil.createUser(o);
+        
+        o.addUser(u1);
+        o.addUser(u2);
+        em.persist(o);
+        em.persist(u1);
+        em.persist(u2);
+        
+        commitTransaction();
+        
+        assertEquals(2, o.getUsers().size());
+        
+        em.clear();
+        Owner lookedUp = (Owner)em.find(Owner.class, o.getId());
+        assertEquals(2, lookedUp.getUsers().size());
+    }
+
 }

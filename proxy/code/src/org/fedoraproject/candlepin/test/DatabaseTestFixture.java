@@ -73,14 +73,14 @@ public class DatabaseTestFixture {
             em.remove(p);
         }
         
-        List<Owner> owners = em.createQuery("from Owner o").getResultList();
-        for (Owner o : owners) {
-            em.remove(o);
-        }
-        
         List<Consumer> consumers = em.createQuery("from Consumer c").getResultList();
         for (Consumer c : consumers) {
             em.remove(c);
+        }
+
+        List<Owner> owners = em.createQuery("from Owner o").getResultList();
+        for (Owner o : owners) {
+            em.remove(o);
         }
 
 //        List<ConsumerInfo> consumerInfos = em.createQuery("from ConsumerInfo c").getResultList();

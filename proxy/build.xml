@@ -482,22 +482,9 @@ Running @{banner} ...
     <delete file="${megajar.jar}" />
     <jar destfile="${megajar.jar}">
       <fileset dir="${build.dir}/classes">
-        <!-- internal is not for publication; tlds go in META-INF;
-             html go as javadoc elsewhere -->
-        <exclude name="**/internal/**" />
-        <exclude name="**/*.tld" />
-        <exclude name="**/*.html" />
         <exclude name="**/test/*" />
         <exclude name="**/log4j.properties" />
-        <exclude name="**/*.conf" />
-        <exclude name="**/*.conf.rpmsave" />
-        <exclude name="**/test/validation/userCreateForm.xsd" />
       </fileset>
-      <!-- ugh, we can't flatten this like we would with a <copy> tag
-           or use a mapper, alas -->
-      <!-- metainf dir="${build.dir}/classes/com/redhat/rhn/frontend/taglibs">
-        <include name="*.tld" />
-      </metainf -->
     </jar>
   </target>
 
@@ -509,6 +496,9 @@ Running @{banner} ...
       </fileset>
       <classes dir="${build.dir}/classes">
         <include name="log4j.properties" />
+      </classes>
+      <classes dir="${build.dir}/classes">
+        <include name="persistence.xml" />
       </classes>
       <classes dir="${build.dir}/classes">
         <include name="logging.properties" />
@@ -573,20 +563,22 @@ Running @{banner} ...
     </exec>
   </target>
 
-  <target name="gen-schema" depends="init-taskdefs" description="Generates database schema from Hibernate annotations.">
+  <target name="gen-schema" depends="init-taskdefs,all" description="Generates database schema from Hibernate annotations.">
     <property name="dir.genhbm" value="build/schemagen/" />
     <delete dir="${dir.genhbm}" />
     <mkdir dir="${dir.genhbm}" />
 
     <hibernatetool destdir="${dir.genhbm}">
+<!--
         <property key="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
         <property key="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+-->
 
         <classpath>
             <path location="build/classes"/>
         </classpath>
 
-        <jpaconfiguration persistenceunit="test"/>
+        <jpaconfiguration persistenceunit="production"/>
 
         <hbm2ddl export="false"
                  update="false"

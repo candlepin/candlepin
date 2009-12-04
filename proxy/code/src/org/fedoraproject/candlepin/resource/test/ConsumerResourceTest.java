@@ -21,8 +21,10 @@ import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerRepository;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeRepository;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -68,9 +70,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerInfo ci = new ConsumerInfo();
         ci.setMetadataField("name", newname);
         
-        Consumer c = new Consumer();
-        c.setName(ci.getMetadataField("name"));
-        c.setType(standardSystemType);
+        Owner owner = TestUtil.createOwner();
+        beginTransaction();
+        em.persist(owner);
+        commitTransaction();
+
+        Consumer c = new Consumer(ci.getMetadataField("name"), owner, standardSystemType);
         c.setInfo(ci);
         
         Consumer saved = consumerRepository.create(c);

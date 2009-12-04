@@ -14,8 +14,8 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,6 +28,9 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.hibernate.annotations.ForeignKey;
+
 
 /**
  * Represents the owner of entitlements.
@@ -48,22 +51,24 @@ public class Owner {
     @Column(nullable=false)
     private String name;
 
-    // TODO: Remove these transients once the appropriate objects are mapped:
-    
-    @Transient
-    private List<Consumer> consumers;
+    @OneToMany(mappedBy="owner", targetEntity=Consumer.class)
+    private Set<Consumer> consumers;
     
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy="owner", targetEntity=EntitlementPool.class)
-    private List<EntitlementPool> entitlementPools;
+    @ForeignKey(name="fk_user_owner_id")
+    private Set<EntitlementPool> entitlementPools;
     
-    @Transient
-    private List<User> users;
+    @OneToMany(mappedBy="owner", targetEntity=User.class)
+    private Set<User> users;
     
     /**
      * Default constructor.
      */
     public Owner() {
+        consumers = new HashSet<Consumer>();
+        entitlementPools = new HashSet<EntitlementPool>();
+        users = new HashSet<User>();
     }
     
     /**
@@ -73,6 +78,10 @@ public class Owner {
      */
     public Owner(String nameIn) {
         this.name = nameIn;
+        
+        consumers = new HashSet<Consumer>();
+        entitlementPools = new HashSet<EntitlementPool>();
+        users = new HashSet<User>();
     }
     
     /**
@@ -106,37 +115,37 @@ public class Owner {
     /**
      * @return the consumers
      */
-    public List<Consumer> getConsumers() {
+    public Set<Consumer> getConsumers() {
         return consumers;
     }
     /**
      * @param consumers the consumers to set
      */
-    public void setConsumers(List<Consumer> consumers) {
+    public void setConsumers(Set<Consumer> consumers) {
         this.consumers = consumers;
     }
     /**
      * @return the entitlementPools
      */
-    public List<EntitlementPool> getEntitlementPools() {
+    public Set<EntitlementPool> getEntitlementPools() {
         return entitlementPools;
     }
     /**
      * @param entitlementPools the entitlementPools to set
      */
-    public void setEntitlementPools(List<EntitlementPool> entitlementPools) {
+    public void setEntitlementPools(Set<EntitlementPool> entitlementPools) {
         this.entitlementPools = entitlementPools;
     }
     /**
      * @return the users
      */
-    public List<User> getUsers() {
+    public Set<User> getUsers() {
         return users;
     }
     /**
      * @param users the users to set
      */
-    public void setUsers(List<User> users) {
+    public void setUsers(Set<User> users) {
         this.users = users;
     }
     
@@ -147,7 +156,7 @@ public class Owner {
     public void addUser(User u) {
         u.setOwner(this);
         if (this.users == null) {
-            this.users = new LinkedList<User>();
+            this.users = new HashSet<User>();
         }
         this.users.add(u);
     }
@@ -158,9 +167,6 @@ public class Owner {
      */
     public void addConsumer(Consumer c) {
         c.setOwner(this);
-        if (this.consumers == null) {
-            this.consumers = new LinkedList<Consumer>();
-        }
         this.consumers.add(c);
         
     }
@@ -172,7 +178,7 @@ public class Owner {
     public void addEntitlementPool(EntitlementPool pool) {
         pool.setOwner(this);
         if (this.entitlementPools == null) {
-            this.entitlementPools = new LinkedList<EntitlementPool>();
+            this.entitlementPools = new HashSet<EntitlementPool>();
         }
         this.entitlementPools.add(pool);
     }

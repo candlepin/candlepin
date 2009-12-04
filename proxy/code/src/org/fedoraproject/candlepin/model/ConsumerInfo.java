@@ -66,6 +66,11 @@ public class ConsumerInfo {
         metadata = new HashMap<String, String>();
     }
     
+    public ConsumerInfo(Consumer consumerIn) {
+        metadata = new HashMap<String, String>();
+        consumer = consumerIn;
+    }
+
     /**
      * @return the id
      */

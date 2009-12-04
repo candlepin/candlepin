@@ -30,6 +30,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a Product that can be consumed and entitled. Products define
@@ -47,7 +48,6 @@ public class Product {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
     
-    // TODO: Drop one of these?
     @Column(nullable=false, unique=true)
     private String label;
     
@@ -55,6 +55,8 @@ public class Product {
     private String name;
 
     @OneToMany(targetEntity=Product.class, cascade=CascadeType.ALL)
+    @ForeignKey(name = "fk_product_product_id",
+                inverseName = "fk_product_child_product_id")
     @JoinTable(name="cp_product_hierarchy", 
             joinColumns=@JoinColumn(name="PARENT_PRODUCT_ID"), 
             inverseJoinColumns=@JoinColumn(name="CHILD_PRODUCT_ID"))
@@ -69,7 +71,6 @@ public class Product {
      * @param name
      */
     public Product(String label, String name) {
-        // TODO: Do we want to drop one of these?
         setLabel(label);
         setName(name);
     }

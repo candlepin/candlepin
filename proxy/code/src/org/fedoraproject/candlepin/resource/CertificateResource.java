@@ -72,7 +72,7 @@ public class CertificateResource extends BaseResource {
             
             encodedCert = base64cert;
             String decoded = Base64.base64Decode(base64cert);
-            System.out.println(decoded);
+//            System.out.println(decoded);
             cert = CertificateFactory.read(decoded);
             
             addProducts(cert);

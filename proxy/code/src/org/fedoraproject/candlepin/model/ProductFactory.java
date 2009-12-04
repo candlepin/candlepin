@@ -131,7 +131,7 @@ public class ProductFactory extends ObjectFactory {
     }
 
     /**
-     * Lookup a ConsumerTYpe by name
+     * Lookup a ConsumerType by name
      * @param labelIn to lookup by
      * @return ConsumerType found
      */
