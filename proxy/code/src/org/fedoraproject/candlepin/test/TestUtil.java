@@ -27,6 +27,8 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 
+import com.sun.jersey.core.util.Base64;
+
 /**
  * TestUtil for creating various testing objects.
  * 
@@ -106,6 +108,18 @@ public class TestUtil {
 
         Date jsqlD = new Date(cal.getTime().getTime());
         return jsqlD;
+    }
+    
+    public static String xmlToBase64String(String xml) {
+        
+        byte[] bytes = Base64.encode(xml);
+        
+        StringBuffer buf = new StringBuffer();
+        for (byte b : bytes) {
+            buf.append((char) Integer.parseInt(Integer.toHexString(b), 16));
+        }
+                
+        return buf.toString();
     }
 
 }

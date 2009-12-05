@@ -91,15 +91,7 @@ public class CertificateResource extends BaseResource {
         return "uuid";
     }
     
-    private String createString(byte[] bytes) {
-        StringBuffer buf = new StringBuffer();
-        for (byte b : bytes) {
-            buf.append((char) Integer.parseInt(Integer.toHexString(b), 16));
-        }
-                
-        return buf.toString();
-    }
-    
+
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public String get() {

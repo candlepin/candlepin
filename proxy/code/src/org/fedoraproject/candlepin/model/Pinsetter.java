@@ -45,6 +45,7 @@ public class Pinsetter {
      */
     public void addProduct(Owner owner, String pname, long maxmem,
             Date start, Date end) {
+        System.out.println("Adding product " + pname);
         
         Product p = new Product(pname, pname);
         

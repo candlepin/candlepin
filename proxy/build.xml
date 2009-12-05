@@ -569,10 +569,6 @@ Running @{banner} ...
     <mkdir dir="${dir.genhbm}" />
 
     <hibernatetool destdir="${dir.genhbm}">
-<!--
-        <property key="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
-        <property key="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
--->
 
         <classpath>
             <path location="build/classes"/>
