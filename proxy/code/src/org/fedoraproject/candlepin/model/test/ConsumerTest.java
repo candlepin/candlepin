@@ -187,8 +187,58 @@ public class ConsumerTest extends DatabaseTestFixture {
         em.persist(consumer);
         commitTransaction();
 
+        em.clear();
         Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
         assertEquals(2, lookedUp.getChildConsumers().size());
+    }
+    
+    @Test
+    public void testChildDeleteNoCascade() {
+        beginTransaction();
+
+        Consumer child1 = new Consumer("child1", owner, consumerType);
+        child1.setMetadataField("foo", "bar");
+        consumer.addChildConsumer(child1);
+        em.persist(consumer);
+        commitTransaction();
+
+        em.clear();
+        Long childId = child1.getId();
+        child1 = (Consumer)em.find(Consumer.class, childId);
+        beginTransaction();
+        em.remove(child1);
+        commitTransaction();
+        
+        child1 = (Consumer)em.find(Consumer.class, childId);
+        assertNull(child1);
+        
+        em.clear();
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
+        assertEquals(0, lookedUp.getChildConsumers().size());
+    }
+    
+    @Test
+    public void testParentDeleteCascadesToChildren() {
+        beginTransaction();
+
+        Consumer child1 = new Consumer("child1", owner, consumerType);
+        child1.setMetadataField("foo", "bar");
+        consumer.addChildConsumer(child1);
+        em.persist(consumer);
+        commitTransaction();
+        
+        Long childId = child1.getId();
+        Long parentId = consumer.getId();
+        
+        beginTransaction();
+        em.remove(consumer);
+        commitTransaction();
+        
+        em.clear();
+        Consumer lookedUp = (Consumer)em.find(Consumer.class, parentId);
+        assertNull(lookedUp);
+        lookedUp = (Consumer)em.find(Consumer.class, childId);
+        assertNull(lookedUp);
     }
     
     // This this looks like a stupid test but this was actually failing at one point. :)

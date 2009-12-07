@@ -69,12 +69,13 @@ public class Consumer {
     @JoinColumn(nullable=false)
     private Owner owner;
     
-    // Consumer hierarchy it meant to be useful to represent the relationship between 
-    // hosts and guests.
-    @OneToMany(targetEntity=Consumer.class, cascade=CascadeType.ALL)
-    @JoinTable(name="cp_consumer_hierarchy",
-            joinColumns=@JoinColumn(name="PARENT_CONSUMER_ID"),
-            inverseJoinColumns=@JoinColumn(name="CHILD_CONSUMER_ID"))
+    // Consumers *can* be organized into a hierarchy, could be useful in cases
+    // such as host/guests. 
+    @ManyToOne(targetEntity=Consumer.class)
+    @JoinColumn(name="parent_consumer_id")
+    private Consumer parent;
+
+    @OneToMany(mappedBy="parent", cascade=CascadeType.ALL)
     private Set<Consumer> childConsumers;
 
 
@@ -167,9 +168,18 @@ public class Consumer {
     public void setChildConsumers(Set<Consumer> childConsumers) {
         this.childConsumers = childConsumers;
     }
-
+    
     public void addChildConsumer(Consumer child) {
+        child.setParent(this);
         this.childConsumers.add(child);
+    }
+
+    public Consumer getParent() {
+        return parent;
+    }
+
+    public void setParent(Consumer parent) {
+        this.parent = parent;
     }
 
     /**
