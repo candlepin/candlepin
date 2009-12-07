@@ -102,6 +102,11 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testMetadataInfo() {
         beginTransaction();
+        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        consumer2.setMetadataField("foo", "bar2");
+        em.persist(consumer2);
+        commitTransaction();
+        
         Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
         Map<String, String> metadata = lookedUp.getInfo().getMetadata();
         assertEquals(2, metadata.keySet().size());
@@ -110,7 +115,12 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals("bar1", metadata.get("foo1"));
         assertEquals("bar1", lookedUp.getInfo().getMetadataField("foo1"));
         assertEquals(consumer.getId(), lookedUp.getInfo().getConsumer().getId());
-        commitTransaction();
+        
+        Consumer lookedUp2 = (Consumer)em.find(Consumer.class, consumer2.getId());
+        metadata = lookedUp2.getInfo().getMetadata();
+        assertEquals(1, metadata.keySet().size());
+        assertEquals("bar2", metadata.get("foo"));
+
     }
     
     @Test

@@ -30,7 +30,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -98,7 +97,7 @@ public class Consumer {
     private Set<Entitlement> entitlements;
     
     @OneToOne(cascade=CascadeType.ALL)
-    @PrimaryKeyJoinColumn
+    @JoinColumn(name="consumer_info_id")
     private ConsumerInfo info;
     
     public Consumer(String name, Owner owner, ConsumerType type) {
