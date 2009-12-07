@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
-public class EntitlementPoolCurator extends AbstractHibernateRepository<Entitlement> {
+public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement> {
 
     protected EntitlementPoolCurator() {
         super(Entitlement.class);

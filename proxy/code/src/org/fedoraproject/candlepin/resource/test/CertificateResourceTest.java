@@ -20,7 +20,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import org.fedoraproject.candlepin.model.ConsumerRepository;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -41,7 +41,7 @@ import static org.junit.Assert.*;
 public class CertificateResourceTest extends DatabaseTestFixture {
     
     private CertificateResource certResource;
-    private ConsumerRepository consumerRepository;
+    private ConsumerCurator consumerRepository;
     private EntitlementPoolCurator entitlementPoolRepository;
     private OwnerCurator ownerCurator;
     private String sampleCertXml;
@@ -56,7 +56,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
                     .buildModule()
         );
 
-        consumerRepository = injector.getInstance(ConsumerRepository.class);
+        consumerRepository = injector.getInstance(ConsumerCurator.class);
         entitlementPoolRepository = injector.getInstance(EntitlementPoolCurator.class);
         ownerCurator = injector.getInstance(OwnerCurator.class);
         certResource = new CertificateResource();

@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
-public class OwnerCurator extends AbstractHibernateRepository<Owner> {
+public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     
     protected OwnerCurator() {
         super(Owner.class);
