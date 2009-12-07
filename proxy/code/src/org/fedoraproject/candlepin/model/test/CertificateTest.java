@@ -17,7 +17,10 @@
 
 package org.fedoraproject.candlepin.model.test;
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Certificate;
 
@@ -25,6 +28,7 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,10 +53,48 @@ public class CertificateTest extends DatabaseTestFixture {
     
     @Test
     public void testGetCertificate() {
-//        Certificate newCertificate = new Certificate();
+        Certificate newCertificate = new Certificate();
         
-        // doesn't actually do anything yet
+        // doesn't actually do anything yet        
+    }
+    
+    @Test
+    public void testList() throws Exception {
+        beginTransaction();
         
+        List<Certificate> certificates = em.createQuery("select c from Certificate as c").getResultList();
+        int beforeCount = certificates.size();
+        
+     
+        String certname = "this is a test";
+        for (int i = 0; i < 10; i++) {
+            Owner owner = new Owner("owner" + i);
+            em.persist(owner);
+//            em.persist(new Certificate());
+            em.persist(new Certificate(certname, owner));
+        }
+        commitTransaction();
+        
+        certificates =  em.createQuery("select c from Certificate as c").getResultList();
+        int afterCount = certificates.size();
+        assertEquals(10, afterCount - beforeCount);
+        
+    }
+    
+    @Test
+    public void testLookup() throws Exception {
+        
+        Owner owner = new Owner("test company");
+        Certificate certificate = new Certificate("not a cert", owner);
+        
+        beginTransaction();
+        em.persist(owner);
+        em.persist(certificate);
+        commitTransaction();
+        Certificate lookedUp = (Certificate)em.find(Certificate.class, certificate.getId());
+        assertEquals(certificate.getId(), lookedUp.getId());
+        assertEquals(certificate.getCertificate(), lookedUp.getCertificate());
+
     }
 }
 
