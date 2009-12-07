@@ -79,6 +79,11 @@ public class DatabaseTestFixture {
             em.remove(c);
         }
 
+        List<Certificate> certificates = em.createQuery("from Certificate c").getResultList();
+        for (Certificate c : certificates){
+            em.remove(c);
+        }
+        
         List<Owner> owners = em.createQuery("from Owner o").getResultList();
         for (Owner o : owners) {
             em.remove(o);
@@ -97,10 +102,7 @@ public class DatabaseTestFixture {
             em.remove(c);
         }
         
-        List<Certificate> certificates = em.createQuery("from Certificate c").getResultList();
-        for (Certificate c : certificates){
-            em.remove(c);
-        }
+ 
         
         commitTransaction();
         em.close();
