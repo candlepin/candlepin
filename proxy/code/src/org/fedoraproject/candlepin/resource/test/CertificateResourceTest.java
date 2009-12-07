@@ -87,4 +87,9 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         assertEquals(5, entPools.size());
     }
     
+    @Test
+    public void channelFamilyCreation() {
+        // TODO!!!!!! Current test cert has no channel families.
+    }
+
 }
