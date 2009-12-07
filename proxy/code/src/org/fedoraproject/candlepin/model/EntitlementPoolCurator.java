@@ -14,18 +14,27 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.hibernate.criterion.Restrictions;
 
-public class ConsumerRepository extends AbstractHibernateRepository<Consumer> {
-    
-    protected ConsumerRepository() {
-        super(Consumer.class);
+public class EntitlementPoolCurator extends AbstractHibernateRepository<Entitlement> {
+
+    protected EntitlementPoolCurator() {
+        super(Entitlement.class);
     }
-    
-    public Consumer lookupByName(String name) {
-        return (Consumer) currentSession().createCriteria(Consumer.class)
-        .add(Restrictions.like("name", name))
-        .uniqueResult();
+
+    public List<EntitlementPool> listByOwner(Owner o) {
+        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
+            .createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("owner", o)).list();
+        if (results == null) {
+            return new LinkedList<EntitlementPool>();
+        }
+        else {
+            return results;
+        }
     }
-    
+
 }
