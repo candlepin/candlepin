@@ -5,6 +5,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import org.fedoraproject.candlepin.model.Certificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -93,6 +94,11 @@ public class DatabaseTestFixture {
         List<ConsumerType> consumerTypes = em.createQuery("from ConsumerType c").
             getResultList();
         for (ConsumerType c : consumerTypes) {
+            em.remove(c);
+        }
+        
+        List<Certificate> certificates = em.createQuery("from Certificate c").getResultList();
+        for (Certificate c : certificates){
             em.remove(c);
         }
         
