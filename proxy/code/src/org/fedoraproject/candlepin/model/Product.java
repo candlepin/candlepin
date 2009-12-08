@@ -68,8 +68,8 @@ public class Product {
      * 
      * Use this variant when creating a new object to persist.
      * 
-     * @param label
-     * @param name
+     * @param label Product label
+     * @param name Human readable Product name
      */
     public Product(String label, String name) {
         setLabel(label);

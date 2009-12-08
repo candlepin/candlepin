@@ -65,6 +65,7 @@ public class ConsumerResource extends BaseResource {
     /**
      * Create a Consumer
      * @param ci Consumer metadata encapsulated in a ConsumerInfo.
+     * @param type Consumer type
      * @return newly created Consumer
      */
     @POST

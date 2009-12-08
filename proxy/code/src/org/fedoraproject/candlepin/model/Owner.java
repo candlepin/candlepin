@@ -80,7 +80,7 @@ public class Owner {
     /**
      * Constructor with required parameters.
      * 
-     * @param name Owner's name.
+     * @param nameIn Owner's name.
      */
     public Owner(String nameIn) {
         this.name = nameIn;

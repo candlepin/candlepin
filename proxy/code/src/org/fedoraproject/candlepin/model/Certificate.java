@@ -72,7 +72,7 @@ public class Certificate {
     
     /**
      * 
-     * @param certificate
+     * @param certificate the certificate's content.
      */
     public void setCertificate(String certificate) {
         this.certificate = certificate;

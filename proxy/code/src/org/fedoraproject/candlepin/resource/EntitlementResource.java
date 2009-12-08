@@ -169,7 +169,7 @@ public class EntitlementResource extends BaseResource {
     /**
      * Match/List the available entitlements for a given Consumer.  Right now
      * this returns ALL entitlements because we haven't built any filtering logic.
-     * @param uuid consumerUuid
+     * @param consumerId Unique id of Consumer
      * @return List<Entitlement> of applicable 
      */
     @GET
