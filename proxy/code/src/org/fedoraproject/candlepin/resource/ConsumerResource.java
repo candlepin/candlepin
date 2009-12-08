@@ -119,7 +119,13 @@ public class ConsumerResource extends BaseResource {
 //            log.error("no product " + pid + " found.");
 //        }
 //    }
-    
+
+    /**
+     * Returns the product whose id matches pid, from the consumer, cid.
+     * @param cid Consumer ID to affect
+     * @param pid Product ID to remove from Consumer.
+     * @return the product whose id matches pid, from the consumer, cid.
+     */
     @GET @Path("{cid}/products/{pid}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Product getProduct(@PathParam("cid") String cid,
