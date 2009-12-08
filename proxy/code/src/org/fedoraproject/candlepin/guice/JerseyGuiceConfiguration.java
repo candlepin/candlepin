@@ -13,6 +13,7 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import com.wideplay.warp.persist.jpa.JpaUnit;
 
 
 public class JerseyGuiceConfiguration extends GuiceServletContextListener {
@@ -23,6 +24,9 @@ public class JerseyGuiceConfiguration extends GuiceServletContextListener {
 
                 @Override
                 protected void configureServlets() {
+                    bind(JPAInitializer.class).asEagerSingleton();
+                    bindConstant().annotatedWith(JpaUnit.class).to("production");
+                    
                     bind(CertificateResource.class);
                     bind(ConsumerResource.class);
                     bind(EntitlementPoolResource.class);
