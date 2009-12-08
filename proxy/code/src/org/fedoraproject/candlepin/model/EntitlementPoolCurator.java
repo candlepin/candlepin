@@ -19,10 +19,10 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
-public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement> {
+public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
     protected EntitlementPoolCurator() {
-        super(Entitlement.class);
+        super(EntitlementPool.class);
     }
 
     public List<EntitlementPool> listByOwner(Owner o) {

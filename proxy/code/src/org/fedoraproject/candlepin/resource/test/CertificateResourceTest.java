@@ -25,6 +25,8 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -43,6 +45,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     private CertificateResource certResource;
     private ConsumerCurator consumerRepository;
     private EntitlementPoolCurator epCurator;
+    private ProductCurator productCurator;
     private OwnerCurator ownerCurator;
     private String sampleCertXml;
     
@@ -58,11 +61,14 @@ public class CertificateResourceTest extends DatabaseTestFixture {
 
         consumerRepository = injector.getInstance(ConsumerCurator.class);
         epCurator = injector.getInstance(EntitlementPoolCurator.class);
+        productCurator = injector.getInstance(ProductCurator.class);
         ownerCurator = injector.getInstance(OwnerCurator.class);
         
         certResource = new CertificateResource();
+        // Inject our curators.
         certResource.setOwnerCurator(ownerCurator);
-        
+        certResource.setProductCurator(productCurator);
+        certResource.setEntitlementPoolCurator(epCurator);
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");
@@ -77,8 +83,11 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     
     @Test
     public void simpleUploadCertProductsCreated() {
+        Owner o = TestUtil.createOwner();
+        ownerCurator.create(o);
         certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
-        // TODO: check that products got created!
+        List<Product> products = productCurator.listAll();
+        assertEquals(5, products.size());
     }
 
     @Test
@@ -94,6 +103,11 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     @Test
     public void channelFamilyCreation() {
         // TODO!!!!!! Current test cert has no channel families.
+    }
+    
+    @Test
+    public void uploadCertWithPreExistingProducts() {
+        // TODO
     }
 
 }
