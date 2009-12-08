@@ -50,9 +50,7 @@ import com.sun.jersey.core.util.Base64;
  */
 @Path("/certificate")
 public class CertificateResource extends BaseResource {
-    public static Certificate cert;
-    public static org.fedoraproject.candlepin.model.Certificate cert_blob;
-    public static String encodedCert = ""; // bad bad bad
+    private static String encodedCert = ""; // bad bad bad
 
     
     private OwnerCurator ownerCurator;
@@ -102,11 +100,12 @@ public class CertificateResource extends BaseResource {
             
             encodedCert = base64cert;
             String decoded = Base64.base64Decode(base64cert);
-            cert = CertificateFactory.read(decoded);
+            Certificate cert = CertificateFactory.read(decoded);
             
             Owner owner = addOwner(cert);
-            cert_blob = new org.fedoraproject.candlepin.model.Certificate(decoded, owner);
-            certificateCurator.create(cert_blob);
+            org.fedoraproject.candlepin.model.Certificate certBlob =
+                new org.fedoraproject.candlepin.model.Certificate(decoded, owner);
+            certificateCurator.create(certBlob);
            
             addProducts(cert, owner);
         }
