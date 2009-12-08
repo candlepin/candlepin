@@ -17,8 +17,6 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.hibernate.criterion.Restrictions;
 
 public class ProductCurator extends AbstractHibernateCurator<Product> {
