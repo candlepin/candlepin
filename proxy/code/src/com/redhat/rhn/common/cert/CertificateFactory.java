@@ -53,8 +53,8 @@ public class CertificateFactory {
             new SimpleExtractor("generation"),
             new ChannelFamilyExtractor("channel-families") };
 
-    private static final HashMap<String,FieldExtractor> FIELD_MAP =
-            new HashMap<String,FieldExtractor>();
+    private static final HashMap<String, FieldExtractor> FIELD_MAP =
+            new HashMap<String, FieldExtractor>();
 
     static {
         for (int i = 0; i < FIELD_EXTRACTORS.length; i++) {

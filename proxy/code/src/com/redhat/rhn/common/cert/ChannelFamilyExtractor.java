@@ -17,7 +17,8 @@ package com.redhat.rhn.common.cert;
 import org.jdom.Element;
 
 /**
- * ChannelFamilyExtractor
+ * ChannelFamilyExtractor - extracts the channel family information
+ * from the field whose name is passed into the ctor.
  *
  * Borrowed from project Spacewalk: http://spacewalk.redhat.com
  */
@@ -26,7 +27,8 @@ public class ChannelFamilyExtractor implements FieldExtractor {
     private String fieldName;
 
     /**
-     * 
+     * Constructs a new extractor
+     * @param fieldName0 name of field used to extract the channel family data
      */
     public ChannelFamilyExtractor(String fieldName0) {
         fieldName = fieldName0;
@@ -42,10 +44,18 @@ public class ChannelFamilyExtractor implements FieldExtractor {
         target.addChannelFamily(cf);
     }
 
+    /**
+     * Returns FALSE, as this is not REQUIRED.
+     * @return FALSE, as this is not REQUIRED.
+     */
     public boolean isRequired() {
         return false;
     }
 
+    /**
+     * Returns the name of the field being worked on.
+     * @return the name of the field being worked on.
+     */
     public String getFieldName() {
         return fieldName;
     }
