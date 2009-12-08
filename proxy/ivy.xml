@@ -51,6 +51,7 @@
         <dependency org="candlepin" name="warp-persist" rev="2.0-20090214" />
         
         <!-- jersey and guice -->
+        <dependency org="candlepin" name="servlet-api" rev="2.5" />
         <dependency org="candlepin" name="guice-servlet" rev="2.0" />
         <dependency org="candlepin" name="jersey-guice" rev="1.1.4.1" />
         <dependency org="candlepin" name="guiceyfruit" rev="2.0" />
