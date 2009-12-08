@@ -38,6 +38,7 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.jdom.JDOMException;
 
+import com.google.inject.Inject;
 import com.redhat.rhn.common.cert.Certificate;
 import com.redhat.rhn.common.cert.CertificateFactory;
 import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
@@ -59,21 +60,22 @@ public class CertificateResource extends BaseResource {
     private EntitlementPoolCurator entitlementPoolCurator;
     private CertificateCurator certificateCurator;
 
-    /**
-     * default ctor
-     */
+    
     public CertificateResource() {
         super(User.class);
     }
     
+    @Inject
     public void setOwnerCurator(OwnerCurator ownerCuratorIn) {
         ownerCurator = ownerCuratorIn;
     }
 
+    @Inject
     public void setProductCurator(ProductCurator productCuratorIn) {
         productCurator = productCuratorIn;
     }
 
+    @Inject
     public void setEntitlementPoolCurator(EntitlementPoolCurator 
             entitlementPoolCuratorIn) {
         entitlementPoolCurator = entitlementPoolCuratorIn;
