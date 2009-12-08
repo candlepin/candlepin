@@ -31,16 +31,13 @@ public class EntityManagerUtil {
     private static EntityManagerFactory buildEntityManagerFactory() {
         // Allow test environments to override the persistence unit to load 
         // with a system property: 
-        String persistenceUnit = System.getProperty(PERSISTENCE_UNIT_PROPERTY, 
+        String persistenceUnit = System.getProperty(PERSISTENCE_UNIT_PROPERTY,
                 DEFAULT_PERSISTENCE_UNIT);
         System.out.println("Loading persistence unit: " + persistenceUnit);
-        EntityManagerFactory EMF =
-            Persistence.createEntityManagerFactory(persistenceUnit);
-        return EMF;
+        return Persistence.createEntityManagerFactory(persistenceUnit);
     }
-    
+
     public static EntityManager createEntityManager() {
         return EMF.createEntityManager();
     }
-
 }
