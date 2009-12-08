@@ -29,7 +29,8 @@ public class AbstractHibernateCurator<E> {
     private final Class<E> entityType;
 
     protected AbstractHibernateCurator(Class<E> entityType) {
-        //entityType = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        //entityType = (Class<E>) ((ParameterizedType)
+        //getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.entityType = entityType;
     }
 

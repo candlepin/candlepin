@@ -36,22 +36,22 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_certificate")
+@Table(name = "cp_certificate")
 public class Certificate {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
    
     @Lob
-    @Column(name="certificate_blob")
+    @Column(name = "certificate_blob")
     private String certificate;
     
     
     @ManyToOne
-    @ForeignKey(name="fk_certificate_owner")
-    @JoinColumn(nullable=false)
+    @ForeignKey(name = "fk_certificate_owner")
+    @JoinColumn(nullable = false)
     private Owner owner;
     
     
