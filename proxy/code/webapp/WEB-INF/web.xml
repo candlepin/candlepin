@@ -44,7 +44,7 @@
   </servlet-mapping>
   
   <listener>
-    <listener-class>foo.MyGuiceConfig</listener-class>
+    <listener-class>org.fedoraproject.candlepin.guice.JerseyGuiceConfiguration</listener-class>
   </listener>
   <filter>
     <filter-name>Guice Filter</filter-name>
