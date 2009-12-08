@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
@@ -43,6 +44,7 @@ import static org.junit.Assert.*;
 public class CertificateResourceTest extends DatabaseTestFixture {
     
     private CertificateResource certResource;
+    private CertificateCurator certificateCurator;
     private ConsumerCurator consumerRepository;
     private EntitlementPoolCurator epCurator;
     private ProductCurator productCurator;
@@ -63,9 +65,11 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         epCurator = injector.getInstance(EntitlementPoolCurator.class);
         productCurator = injector.getInstance(ProductCurator.class);
         ownerCurator = injector.getInstance(OwnerCurator.class);
+        certificateCurator = injector.getInstance(CertificateCurator.class);
         
         certResource = new CertificateResource();
         // Inject our curators.
+        certResource.setCertificateCurator(certificateCurator);
         certResource.setOwnerCurator(ownerCurator);
         certResource.setProductCurator(productCurator);
         certResource.setEntitlementPoolCurator(epCurator);
@@ -85,6 +89,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void ownerCreated() {
         certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
         Owner owner = ownerCurator.lookupByName("Spacewalk Public Cert");
+//        certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
         assertNotNull(owner);
     }
     

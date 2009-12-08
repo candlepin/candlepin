@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.resource;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -28,9 +27,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+//import org.fedoraproject.candlepin.model.Certificate;
+import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
-import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -50,11 +50,13 @@ import com.sun.jersey.core.util.Base64;
 @Path("/certificate")
 public class CertificateResource extends BaseResource {
     public static Certificate cert;
+    public static org.fedoraproject.candlepin.model.Certificate cert_blob;
     public static String encodedCert = ""; // bad bad bad
 
     private OwnerCurator ownerCurator;
     private ProductCurator productCurator;
     private EntitlementPoolCurator entitlementPoolCurator;
+    private CertificateCurator certificateCurator;
 
     /**
      * default ctor
@@ -76,6 +78,10 @@ public class CertificateResource extends BaseResource {
         entitlementPoolCurator = entitlementPoolCuratorIn;
     }
     
+    public void setCertificateCurator(CertificateCurator certificateCuratorIn) {
+        certificateCurator = certificateCuratorIn;
+    }
+    
     /**
      * Uploads the certificate containing list of entitlements.
      * @param base64cert base64 encoded certificate.
@@ -95,6 +101,13 @@ public class CertificateResource extends BaseResource {
             String decoded = Base64.base64Decode(base64cert);
             cert = CertificateFactory.read(decoded);
             
+            Owner owner = ownerCurator.lookupByName(cert.getOwner());
+            System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+            System.out.println(cert.getOwner());
+            System.out.println(owner.getName());
+            cert_blob = new org.fedoraproject.candlepin.model.Certificate(decoded, owner);
+            certificateCurator.create(cert_blob);
+           
             addProducts(cert);
         }
         catch (JDOMException e) {
