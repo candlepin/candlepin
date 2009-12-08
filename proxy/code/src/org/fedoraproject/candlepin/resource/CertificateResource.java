@@ -53,6 +53,7 @@ public class CertificateResource extends BaseResource {
     public static org.fedoraproject.candlepin.model.Certificate cert_blob;
     public static String encodedCert = ""; // bad bad bad
 
+    
     private OwnerCurator ownerCurator;
     private ProductCurator productCurator;
     private EntitlementPoolCurator entitlementPoolCurator;
@@ -101,14 +102,11 @@ public class CertificateResource extends BaseResource {
             String decoded = Base64.base64Decode(base64cert);
             cert = CertificateFactory.read(decoded);
             
-            Owner owner = ownerCurator.lookupByName(cert.getOwner());
-            System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-            System.out.println(cert.getOwner());
-//            System.out.println(owner.getName());
+            Owner owner = addOwner(cert);
             cert_blob = new org.fedoraproject.candlepin.model.Certificate(decoded, owner);
             certificateCurator.create(cert_blob);
            
-            addProducts(cert);
+            addProducts(cert, owner);
         }
         catch (JDOMException e) {
             e.printStackTrace();
@@ -157,16 +155,17 @@ public class CertificateResource extends BaseResource {
         
     }
 
-    private void addProducts(Certificate cert) throws ParseException {
-        // Look up the owner by the same name, if none found, create a new one.
-        // TODO: Should this use the authentication of the user doing the cert upload
-        // instead?
+    private Owner addOwner(Certificate cert) throws ParseException {
         Owner owner = ownerCurator.lookupByName(cert.getOwner());
         if (owner == null) {
             owner = new Owner(cert.getOwner());
             ownerCurator.create(owner);
         }
-        
+        return owner;
+    }
+    
+    private void addProducts(Certificate cert, Owner owner) throws ParseException {
+
         // get the product the cert is for (and the channel families 
         // which have the other products you can have)
         Date issued = cert.getIssuedDate();
