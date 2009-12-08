@@ -82,9 +82,14 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     }
     
     @Test
+    public void ownerCreated() {
+        certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
+        Owner owner = ownerCurator.lookupByName("Spacewalk Public Cert");
+        assertNotNull(owner);
+    }
+    
+    @Test
     public void simpleUploadCertProductsCreated() {
-        Owner o = TestUtil.createOwner();
-        ownerCurator.create(o);
         certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
         List<Product> products = productCurator.listAll();
         assertEquals(5, products.size());
@@ -92,11 +97,10 @@ public class CertificateResourceTest extends DatabaseTestFixture {
 
     @Test
     public void entitlementPoolCreation() {
-        Owner o = TestUtil.createOwner();
-        ownerCurator.create(o);
         String encoded = TestUtil.xmlToBase64String(sampleCertXml);
         certResource.upload(encoded);
-        List<EntitlementPool> entPools = epCurator.listByOwner(o);
+        Owner owner = ownerCurator.lookupByName("Spacewalk Public Cert");
+        List<EntitlementPool> entPools = epCurator.listByOwner(owner);
         assertEquals(5, entPools.size());
     }
 

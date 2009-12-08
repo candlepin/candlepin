@@ -145,14 +145,14 @@ public class CertificateResource extends BaseResource {
     }
 
     private void addProducts(Certificate cert) throws ParseException {
-        // look up the owner by the same name, if none found, create a new one.
-//        Owner owner = (Owner) ObjectFactory.get().lookupByFieldName(
-//                Owner.class, "name", cert.getOwner());
-        
-        // TODO: horrible temporary hack until we sort out authentication
-        // Lookup all owners and use the first one. :(
-        List<Owner> owners = ownerCurator.listAll();
-        Owner owner = owners.get(0);
+        // Look up the owner by the same name, if none found, create a new one.
+        // TODO: Should this use the authentication of the user doing the cert upload
+        // instead?
+        Owner owner = ownerCurator.lookupByName(cert.getOwner());
+        if (owner == null) {
+            owner = new Owner(cert.getOwner());
+            ownerCurator.create(owner);
+        }
         
         // get the product the cert is for (and the channel families 
         // which have the other products you can have)
