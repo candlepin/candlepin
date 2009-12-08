@@ -50,5 +50,12 @@
         <dependency org="candlepin" name="warp-persist-src" rev="2.0-20090214" />
         <dependency org="candlepin" name="warp-persist" rev="2.0-20090214" />
         
+        <!-- jersey and guice -->
+        <dependency org="candlepin" name="jersey-guice" rev="1.1.4.1" />
+        <dependency org="candlepin" name="guiceyfruit" rev="2.0" />
+        <dependency org="candlepin" name="guiceyfruit-core" rev="2.0" />
+        <dependency org="candlepin" name="guiceyfruit-jpa" rev="2.0" />
+        <dependency org="candlepin" name="guiceyfruit-junit4" rev="2.0" />
+        
     </dependencies>
 </ivy-module>

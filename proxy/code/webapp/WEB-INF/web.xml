@@ -42,4 +42,17 @@
     <servlet-name>Jersey Web Application</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
+  
+  <listener>
+    <listener-class>foo.MyGuiceConfig</listener-class>
+  </listener>
+  <filter>
+    <filter-name>Guice Filter</filter-name>
+    <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>Guice Filter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
 </web-app>

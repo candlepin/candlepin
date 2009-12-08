@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.resource;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -30,7 +29,6 @@ import javax.ws.rs.core.Response;
 
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
-import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -38,6 +36,7 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.jdom.JDOMException;
 
+import com.google.inject.Inject;
 import com.redhat.rhn.common.cert.Certificate;
 import com.redhat.rhn.common.cert.CertificateFactory;
 import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
@@ -56,21 +55,22 @@ public class CertificateResource extends BaseResource {
     private ProductCurator productCurator;
     private EntitlementPoolCurator entitlementPoolCurator;
 
-    /**
-     * default ctor
-     */
+    
     public CertificateResource() {
         super(User.class);
     }
     
+    @Inject
     public void setOwnerCurator(OwnerCurator ownerCuratorIn) {
         ownerCurator = ownerCuratorIn;
     }
 
+    @Inject
     public void setProductCurator(ProductCurator productCuratorIn) {
         productCurator = productCuratorIn;
     }
 
+    @Inject
     public void setEntitlementPoolCurator(EntitlementPoolCurator 
             entitlementPoolCuratorIn) {
         entitlementPoolCurator = entitlementPoolCuratorIn;
