@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -58,7 +59,7 @@ public class Owner {
     @ForeignKey(name="fk_user_owner_id")
     private Set<EntitlementPool> entitlementPools;
     
-    @OneToMany(mappedBy="owner", targetEntity=User.class)
+    @OneToMany(mappedBy="owner", targetEntity=User.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private Set<User> users;
     
     @OneToMany(mappedBy="owner", targetEntity=Certificate.class)

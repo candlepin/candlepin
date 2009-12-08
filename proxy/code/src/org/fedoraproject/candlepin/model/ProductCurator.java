@@ -4,9 +4,9 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.criterion.Restrictions;
 
-public class ProductRepository extends AbstractHibernateRepository<Product> {
-    
-    public ProductRepository(EntityManager em) {
+public class ProductCurator extends AbstractHibernateCurator<Product> {
+
+    public ProductCurator(EntityManager em) {
         super(Product.class);
     }
 
@@ -15,7 +15,7 @@ public class ProductRepository extends AbstractHibernateRepository<Product> {
             .add(Restrictions.like("name", name))
             .uniqueResult();
     }
-    
+
     public Product lookupByLabel(String label) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.like("label", label))

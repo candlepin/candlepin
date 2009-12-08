@@ -18,23 +18,51 @@ package org.fedoraproject.candlepin.resource.test;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
-import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.wideplay.warp.persist.PersistenceService;
+import com.wideplay.warp.persist.UnitOfWork;
+
 import static org.junit.Assert.*;
 
 public class CertificateResourceTest extends DatabaseTestFixture {
     
     private CertificateResource certResource;
+    private ConsumerCurator consumerRepository;
+    private EntitlementPoolCurator epCurator;
+    private OwnerCurator ownerCurator;
     private String sampleCertXml;
     
     @Before
     public void createObjects() throws Exception {
+
+        Injector injector = Guice.createInjector(
+                new CandlePingTestingModule(),
+                PersistenceService.usingJpa()
+                    .across(UnitOfWork.TRANSACTION)
+                    .buildModule()
+        );
+
+        consumerRepository = injector.getInstance(ConsumerCurator.class);
+        epCurator = injector.getInstance(EntitlementPoolCurator.class);
+        ownerCurator = injector.getInstance(OwnerCurator.class);
+        
         certResource = new CertificateResource();
+        certResource.setOwnerCurator(ownerCurator);
+        
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");
@@ -53,5 +81,19 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         // TODO: check that products got created!
     }
 
-    
+    @Test
+    public void entitlementPoolCreation() {
+        Owner o = TestUtil.createOwner();
+        ownerCurator.create(o);
+        String encoded = TestUtil.xmlToBase64String(sampleCertXml);
+        certResource.upload(encoded);
+        List<EntitlementPool> entPools = epCurator.listByOwner(o);
+        assertEquals(5, entPools.size());
+    }
+
+    @Test
+    public void channelFamilyCreation() {
+        // TODO!!!!!! Current test cert has no channel families.
+    }
+
 }

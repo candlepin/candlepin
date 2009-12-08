@@ -18,9 +18,9 @@ import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
-import org.fedoraproject.candlepin.model.ConsumerRepository;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerTypeRepository;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -39,8 +39,8 @@ import com.wideplay.warp.persist.UnitOfWork;
  */
 public class ConsumerResourceTest extends DatabaseTestFixture {
     
-    private ConsumerRepository consumerRepository;
-    private ConsumerTypeRepository consumerTypeRepository;
+    private ConsumerCurator consumerRepository;
+    private ConsumerTypeCurator consumerTypeRepository;
     private ConsumerType standardSystemType;
 
     @Before
@@ -55,8 +55,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         );
         
         
-        consumerRepository = injector.getInstance(ConsumerRepository.class);
-        consumerTypeRepository = injector.getInstance(ConsumerTypeRepository.class);
+        consumerRepository = injector.getInstance(ConsumerCurator.class);
+        consumerTypeRepository = injector.getInstance(ConsumerTypeCurator.class);
         
         standardSystemType = new ConsumerType("standard-system");
         consumerTypeRepository.create(standardSystemType);

@@ -11,33 +11,30 @@
  * Red Hat trademarks are not licensed under GPLv2. No permission is
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
- */package org.fedoraproject.candlepin.model;
+ */
+package org.fedoraproject.candlepin.model;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
-public class OwnerCurator extends AbstractHibernateCurator<Owner> {
-    
-    protected OwnerCurator() {
-        super(Owner.class);
+public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement> {
+
+    protected EntitlementPoolCurator() {
+        super(Entitlement.class);
     }
 
-    public Owner lookupByName(String name) {
-        return (Owner) currentSession().createCriteria(Owner.class)
-        .add(Restrictions.like("name", name))
-        .uniqueResult();
-    }
-
-    public List<Owner> listAll() {
-        List<Owner> results = (List<Owner>) currentSession()
-            .createCriteria(Owner.class).list();
+    public List<EntitlementPool> listByOwner(Owner o) {
+        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
+            .createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("owner", o)).list();
         if (results == null) {
-            return new LinkedList<Owner>();
+            return new LinkedList<EntitlementPool>();
         }
         else {
             return results;
         }
     }
+
 }

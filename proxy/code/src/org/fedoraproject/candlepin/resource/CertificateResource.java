@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resource;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -27,9 +28,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pinsetter;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 import org.jdom.JDOMException;
 
@@ -47,11 +50,17 @@ public class CertificateResource extends BaseResource {
     public static Certificate cert;
     public static String encodedCert = ""; // bad bad bad
 
+    private OwnerCurator ownerCurator;
+
     /**
      * default ctor
      */
     public CertificateResource() {
         super(User.class);
+    }
+    
+    public void setOwnerCurator(OwnerCurator ownerCuratorIn) {
+        ownerCurator = ownerCuratorIn;
     }
 
     /**
@@ -106,60 +115,76 @@ public class CertificateResource extends BaseResource {
         return encodedCert;
     }
     
+    private void addProduct(Owner owner, String pname, long maxmem,
+            Date start, Date end) {
+       Product p = new Product(pname, pname);
+
+       // TODO: does product already exist?
+       // TODO: store product
+
+        EntitlementPool ep = new EntitlementPool();
+        ep.setOwner(owner);
+        ep.setProduct(p);
+        ep.setMaxMembers(maxmem);
+        ep.setStartDate(start);
+        ep.setEndDate(end);
+
+        // TODO: store entitlement pool
+    }
+
     private void addProducts(Certificate cert) throws ParseException {
         // look up the owner by the same name, if none found, create a new one.
-        Owner owner = (Owner) ObjectFactory.get().lookupByFieldName(
-                Owner.class, "name", cert.getOwner());
+//        Owner owner = (Owner) ObjectFactory.get().lookupByFieldName(
+//                Owner.class, "name", cert.getOwner());
         
-        if (owner == null) {
-            owner = new Owner();
-            owner.setName(cert.getOwner());
-            owner = (Owner) ObjectFactory.get().store(owner);
-        }
+        // TODO: horrible temporary hack until we sort out authentication
+        // Lookup all owners and use the first one. :(
+        List<Owner> owners = ownerCurator.listAll();
+        Owner owner = owners.get(0);
         
         // get the product the cert is for (and the channel families 
         // which have the other products you can have)
         Date issued = cert.getIssuedDate();
         Date expires = cert.getExpiresDate();
         
-        Pinsetter.get().addProduct(owner, cert.getProduct(),
+        addProduct(owner, cert.getProduct(),
                 new Long(cert.getSlots()).longValue(),
                 issued, expires);
         
         // create products for the channel families
         for (ChannelFamilyDescriptor cfd : cert.getChannelFamilies()) {
-            Pinsetter.get().addProduct(owner, cfd.getFamily(),
+            addProduct(owner, cfd.getFamily(),
                     new Long(cfd.getQuantity()).longValue(),
                     issued, expires);
         }
         
         // create products for each of the add-on entitlements.
         if (!isEmpty(cert.getMonitoringSlots())) {
-            Pinsetter.get().addProduct(owner, "monitoring",
+            addProduct(owner, "monitoring",
                     new Long(cert.getMonitoringSlots()).longValue(),
                     issued, expires);
         }
         
         if (!isEmpty(cert.getNonlinuxSlots())) {
-            Pinsetter.get().addProduct(owner, "nonlinux",
+            addProduct(owner, "nonlinux",
                     new Long(cert.getNonlinuxSlots()).longValue(),
                     issued, expires);
         }
         
         if (!isEmpty(cert.getProvisioningSlots())) {
-            Pinsetter.get().addProduct(owner, "provisioning",
+            addProduct(owner, "provisioning",
                     new Long(cert.getProvisioningSlots()).longValue(),
                     issued, expires);
         }
         
         if (!isEmpty(cert.getVirtualizationSlots())) {
-            Pinsetter.get().addProduct(owner, "virtualization_host",
+            addProduct(owner, "virtualization_host",
                     new Long(cert.getVirtualizationSlots()).longValue(),
                     issued, expires);           
         }
         
         if (!isEmpty(cert.getVirtualizationPlatformSlots())) {
-            Pinsetter.get().addProduct(owner, "virtualization_host_platform",
+            addProduct(owner, "virtualization_host_platform",
                     new Long(cert.getVirtualizationPlatformSlots()).longValue(),
                     issued, expires);
         }
