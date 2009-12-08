@@ -104,7 +104,7 @@ public class CertificateResource extends BaseResource {
             Owner owner = ownerCurator.lookupByName(cert.getOwner());
             System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
             System.out.println(cert.getOwner());
-            System.out.println(owner.getName());
+//            System.out.println(owner.getName());
             cert_blob = new org.fedoraproject.candlepin.model.Certificate(decoded, owner);
             certificateCurator.create(cert_blob);
            
