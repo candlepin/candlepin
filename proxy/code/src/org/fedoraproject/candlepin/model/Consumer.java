@@ -49,56 +49,56 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_consumer")
+@Table(name = "cp_consumer")
 public class Consumer {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
-    @Column(nullable=false)
+    @Column(nullable = false)
     private String name;
     
     @ManyToOne
-    @JoinColumn(nullable=false)
-    @ForeignKey(name="fk_consumer_consumer_type")
+    @JoinColumn(nullable = false)
+    @ForeignKey(name = "fk_consumer_consumer_type")
     private ConsumerType type;
     
     @ManyToOne
-    @ForeignKey(name="fk_consumer_owner")
-    @JoinColumn(nullable=false)
+    @ForeignKey(name = "fk_consumer_owner")
+    @JoinColumn(nullable = false)
     private Owner owner;
     
     // Consumers *can* be organized into a hierarchy, could be useful in cases
     // such as host/guests. 
-    @ManyToOne(targetEntity=Consumer.class)
-    @JoinColumn(name="parent_consumer_id")
+    @ManyToOne(targetEntity = Consumer.class)
+    @JoinColumn(name = "parent_consumer_id")
     private Consumer parent;
 
-    @OneToMany(mappedBy="parent", cascade=CascadeType.ALL)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private Set<Consumer> childConsumers;
 
 
     // Separate mapping because in theory, a consumer could be consuming products they're
     // not entitled to.
     @ManyToMany
-    @ForeignKey(name="fk_consumer_product_consumer_id",	
-                inverseName="fk_consumer_product_product_id")
-    @JoinTable(name="cp_consumer_products",
-            joinColumns=@JoinColumn(name="consumer_id"),
-            inverseJoinColumns=@JoinColumn(name="product_id"))
+    @ForeignKey(name = "fk_consumer_product_consumer_id",
+                inverseName = "fk_consumer_product_product_id")
+    @JoinTable(name = "cp_consumer_products",
+            joinColumns = @JoinColumn(name = "consumer_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> consumedProducts;
     
     @OneToMany
-    @ForeignKey(name="fk_consumer_product_consumer_id",
-                inverseName="fk_consumer_produce_product_id")
-    @JoinTable(name="cp_consumer_entitlements",
-            joinColumns=@JoinColumn(name="consumer_id"),
-            inverseJoinColumns=@JoinColumn(name="entitlement_id"))
+    @ForeignKey(name = "fk_consumer_product_consumer_id",
+                inverseName = "fk_consumer_produce_product_id")
+    @JoinTable(name = "cp_consumer_entitlements",
+            joinColumns = @JoinColumn(name = "consumer_id"),
+            inverseJoinColumns = @JoinColumn(name = "entitlement_id"))
     private Set<Entitlement> entitlements;
     
-    @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name="consumer_info_id")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "consumer_info_id")
     private ConsumerInfo info;
     
     public Consumer(String name, Owner owner, ConsumerType type) {
@@ -224,7 +224,7 @@ public class Consumer {
      */
     @Override
     public String toString() {
-        return "Consumer [type=" + this.getType() + ", getName()=" +
+        return "Consumer [type = " + this.getType() + ", getName() = " +
             getName() + "]";
     }
 
@@ -250,7 +250,7 @@ public class Consumer {
      * @param value to set
      */
     public void setMetadataField(String name, String value) {
-        if (this.getInfo().getMetadata() == null) {
+        if (this.getInfo().getMetadata() ==  null) {
             this.getInfo().setMetadata(new HashMap<String, String>());
         }
         this.getInfo().getMetadata().put(name, value);
@@ -262,7 +262,7 @@ public class Consumer {
      * @return String field value.
      */
     public String getMetadataField(String name) {
-       if (this.getInfo().getMetadata() != null) {
+       if (this.getInfo().getMetadata() !=  null) {
            return getInfo().getMetadata().get(name);
        }
        return null;

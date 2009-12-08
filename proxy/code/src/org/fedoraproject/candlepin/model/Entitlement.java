@@ -51,21 +51,21 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_entitlement")
+@Table(name = "cp_entitlement")
 public class Entitlement {
     
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
     @ManyToOne
-    @ForeignKey(name="fk_entitlement_owner")
-    @JoinColumn(nullable=false)
+    @ForeignKey(name = "fk_entitlement_owner")
+    @JoinColumn(nullable = false)
     private Owner owner;
     
     @ManyToOne
-    @ForeignKey(name="fk_entitlement_entitlement_pool")
-    @JoinColumn(nullable=false)
+    @ForeignKey(name = "fk_entitlement_entitlement_pool")
+    @JoinColumn(nullable = false)
     private EntitlementPool pool;
 
     private Date startDate;

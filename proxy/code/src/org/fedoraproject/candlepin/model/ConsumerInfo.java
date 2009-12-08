@@ -42,16 +42,16 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_consumer_info")
+@Table(name = "cp_consumer_info")
 public class ConsumerInfo {
     
     // TODO: Don't know if this is a good idea, technically the consumer + metadata data
     // key should be the identifier. 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
-    @OneToOne(mappedBy="info")
+    @OneToOne(mappedBy = "info")
     private Consumer consumer;
     
     // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem possible
@@ -59,7 +59,7 @@ public class ConsumerInfo {
     // http://stackoverflow.com/questions/287201/how-to-persist-a-property-of-type-liststringin-jpa
     @MapKeyManyToMany(targetEntity = String.class)
     @CollectionOfElements(targetElement = String.class)
-    @Cascade(value={org.hibernate.annotations.CascadeType.ALL})
+    @Cascade(value = {org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> metadata;
     
     public ConsumerInfo() {
@@ -121,7 +121,7 @@ public class ConsumerInfo {
      * @param value to set
      */
     public void setMetadataField(String name, String value) {
-        if (this.metadata == null) {
+        if (this.metadata ==  null) {
             metadata = new HashMap<String, String>();
         }
         metadata.put(name, value);
@@ -134,7 +134,7 @@ public class ConsumerInfo {
      * @return String field value.
      */
     public String getMetadataField(String name) {
-       if (this.metadata != null) {
+       if (this.metadata !=  null) {
            return metadata.get(name);
        }
        return null;

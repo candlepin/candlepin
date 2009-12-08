@@ -38,33 +38,33 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_entitlement_pool")
+@Table(name = "cp_entitlement_pool")
 public class EntitlementPool {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
     @ManyToOne
-    @ForeignKey(name="fk_entitlement_pool_owner")
-    @JoinColumn(nullable=false)
+    @ForeignKey(name = "fk_entitlement_pool_owner")
+    @JoinColumn(nullable = false)
     private Owner owner;
     
     @ManyToOne
-    @ForeignKey(name="fk_entitlement_pool_product")
-    @JoinColumn(nullable=false)
+    @ForeignKey(name = "fk_entitlement_pool_product")
+    @JoinColumn(nullable = false)
     private Product product;
     
-    @Column(nullable=false)
+    @Column(nullable = false)
     private Long maxMembers;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private Long currentMembers;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private Date startDate;
     
-    @Column(nullable=false)
+    @Column(nullable = false)
     private Date endDate;
 
     public EntitlementPool() {

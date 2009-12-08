@@ -41,28 +41,28 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_owner")
+@Table(name = "cp_owner")
 public class Owner {
     
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
-    @Column(nullable=false)
+    @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy="owner", targetEntity=Consumer.class)
+    @OneToMany(mappedBy = "owner", targetEntity = Consumer.class)
     private Set<Consumer> consumers;
     
     // EntitlementPool is the owning side of this relationship.
-    @OneToMany(mappedBy="owner", targetEntity=EntitlementPool.class)
-    @ForeignKey(name="fk_user_owner_id")
+    @OneToMany(mappedBy = "owner", targetEntity = EntitlementPool.class)
+    @ForeignKey(name = "fk_user_owner_id")
     private Set<EntitlementPool> entitlementPools;
     
-    @OneToMany(mappedBy="owner", targetEntity=User.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+    @OneToMany(mappedBy = "owner", targetEntity = User.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private Set<User> users;
     
-    @OneToMany(mappedBy="owner", targetEntity=Certificate.class)
+    @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)
     private Set<Certificate> certificates;
     
     
@@ -161,7 +161,7 @@ public class Owner {
      */
     public void addUser(User u) {
         u.setOwner(this);
-        if (this.users == null) {
+        if (this.users ==  null) {
             this.users = new HashSet<User>();
         }
         this.users.add(u);
@@ -183,7 +183,7 @@ public class Owner {
      */
     public void addEntitlementPool(EntitlementPool pool) {
         pool.setOwner(this);
-        if (this.entitlementPools == null) {
+        if (this.entitlementPools ==  null) {
             this.entitlementPools = new HashSet<EntitlementPool>();
         }
         this.entitlementPools.add(pool);

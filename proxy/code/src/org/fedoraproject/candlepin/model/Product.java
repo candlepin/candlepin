@@ -42,25 +42,25 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_product")
+@Table(name = "cp_product")
 public class Product {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
-    @Column(nullable=false, unique=true)
+    @Column(nullable = false, unique = true)
     private String label;
     
-    @Column(nullable=false, unique=true)
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(targetEntity=Product.class, cascade=CascadeType.ALL)
+    @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL)
     @ForeignKey(name = "fk_product_product_id",
                 inverseName = "fk_product_child_product_id")
-    @JoinTable(name="cp_product_hierarchy", 
-            joinColumns=@JoinColumn(name="PARENT_PRODUCT_ID"), 
-            inverseJoinColumns=@JoinColumn(name="CHILD_PRODUCT_ID"))
+    @JoinTable(name = "cp_product_hierarchy",
+            joinColumns = @JoinColumn(name = "PARENT_PRODUCT_ID"),
+            inverseJoinColumns = @JoinColumn(name = "CHILD_PRODUCT_ID"))
     private Set<Product> childProducts;
 
     /**
@@ -115,7 +115,7 @@ public class Product {
      * @param p to add
      */
     public void addChildProduct(Product p) {
-        if (this.childProducts == null) {
+        if (this.childProducts ==  null) {
             this.childProducts = new HashSet<Product>();
         }
         this.childProducts.add(p);
@@ -140,7 +140,7 @@ public class Product {
      */
     @Override
     public String toString() {
-        return "Product [label=" + label + "]";
+        return "Product [label = " + label + "]";
     }
     
     /**
