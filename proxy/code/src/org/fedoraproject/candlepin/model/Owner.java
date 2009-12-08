@@ -60,7 +60,7 @@ public class Owner {
     private Set<EntitlementPool> entitlementPools;
     
     @OneToMany(mappedBy = "owner", targetEntity = User.class, cascade =
-        {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+        { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE })
     private Set<User> users;
     
     @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)

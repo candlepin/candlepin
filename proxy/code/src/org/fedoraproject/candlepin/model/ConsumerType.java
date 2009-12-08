@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_consumer_type")
+@Table(name = "cp_consumer_type")
 public class ConsumerType {
 
     @Id

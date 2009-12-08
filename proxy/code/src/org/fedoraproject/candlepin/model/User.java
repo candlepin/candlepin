@@ -38,16 +38,16 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_user")
+@Table(name = "cp_user")
 public class User {
     
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @ManyToOne
-    @ForeignKey(name="fk_user_owner_id")
-    @JoinColumn(nullable=false)
+    @ForeignKey(name = "fk_user_owner_id")
+    @JoinColumn(nullable = false)
     private Owner owner;
 
     private String login;

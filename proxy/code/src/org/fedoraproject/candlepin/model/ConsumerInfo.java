@@ -59,7 +59,7 @@ public class ConsumerInfo {
     // http://bit.ly/liststringjpa
     @MapKeyManyToMany(targetEntity = String.class)
     @CollectionOfElements(targetElement = String.class)
-    @Cascade(value = {org.hibernate.annotations.CascadeType.ALL})
+    @Cascade(value = { org.hibernate.annotations.CascadeType.ALL })
     private Map<String, String> metadata;
     
     public ConsumerInfo() {
