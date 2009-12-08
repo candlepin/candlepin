@@ -29,10 +29,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.jdom.JDOMException;
 
@@ -51,6 +53,8 @@ public class CertificateResource extends BaseResource {
     public static String encodedCert = ""; // bad bad bad
 
     private OwnerCurator ownerCurator;
+    private ProductCurator productCurator;
+    private EntitlementPoolCurator entitlementPoolCurator;
 
     /**
      * default ctor
@@ -63,6 +67,15 @@ public class CertificateResource extends BaseResource {
         ownerCurator = ownerCuratorIn;
     }
 
+    public void setProductCurator(ProductCurator productCuratorIn) {
+        productCurator = productCuratorIn;
+    }
+
+    public void setEntitlementPoolCurator(EntitlementPoolCurator 
+            entitlementPoolCuratorIn) {
+        entitlementPoolCurator = entitlementPoolCuratorIn;
+    }
+    
     /**
      * Uploads the certificate containing list of entitlements.
      * @param base64cert base64 encoded certificate.
@@ -80,21 +93,17 @@ public class CertificateResource extends BaseResource {
             
             encodedCert = base64cert;
             String decoded = Base64.base64Decode(base64cert);
-//            System.out.println(decoded);
             cert = CertificateFactory.read(decoded);
             
             addProducts(cert);
         }
         catch (JDOMException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         catch (ParseException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return "uuid";
@@ -117,10 +126,12 @@ public class CertificateResource extends BaseResource {
     
     private void addProduct(Owner owner, String pname, long maxmem,
             Date start, Date end) {
-       Product p = new Product(pname, pname);
 
-       // TODO: does product already exist?
-       // TODO: store product
+        Product p = productCurator.lookupByName(pname);
+        if (p == null) {
+            p = new Product(pname, pname);
+            productCurator.create(p);
+        }
 
         EntitlementPool ep = new EntitlementPool();
         ep.setOwner(owner);
@@ -128,19 +139,20 @@ public class CertificateResource extends BaseResource {
         ep.setMaxMembers(maxmem);
         ep.setStartDate(start);
         ep.setEndDate(end);
-
-        // TODO: store entitlement pool
+        ep.setCurrentMembers(0);
+        entitlementPoolCurator.create(ep);
+        
     }
 
     private void addProducts(Certificate cert) throws ParseException {
-        // look up the owner by the same name, if none found, create a new one.
-//        Owner owner = (Owner) ObjectFactory.get().lookupByFieldName(
-//                Owner.class, "name", cert.getOwner());
-        
-        // TODO: horrible temporary hack until we sort out authentication
-        // Lookup all owners and use the first one. :(
-        List<Owner> owners = ownerCurator.listAll();
-        Owner owner = owners.get(0);
+        // Look up the owner by the same name, if none found, create a new one.
+        // TODO: Should this use the authentication of the user doing the cert upload
+        // instead?
+        Owner owner = ownerCurator.lookupByName(cert.getOwner());
+        if (owner == null) {
+            owner = new Owner(cert.getOwner());
+            ownerCurator.create(owner);
+        }
         
         // get the product the cert is for (and the channel families 
         // which have the other products you can have)

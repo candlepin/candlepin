@@ -18,6 +18,7 @@ import java.sql.Date;
 import java.util.Calendar;
 import java.util.Random;
 
+import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -26,8 +27,6 @@ import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
-
-import com.sun.jersey.core.util.Base64;
 
 /**
  * TestUtil for creating various testing objects.
@@ -112,7 +111,9 @@ public class TestUtil {
     
     public static String xmlToBase64String(String xml) {
         
-        byte[] bytes = Base64.encode(xml);
+//        byte[] bytes = Base64.encode(xml);
+        Base64 encoder = new Base64();
+        byte [] bytes = encoder.encode(xml.getBytes());
         
         StringBuffer buf = new StringBuffer();
         for (byte b : bytes) {

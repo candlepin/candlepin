@@ -13,6 +13,7 @@
         <dependency org="candlepin" name="commons-beanutils" rev="1.7.0" />
         <dependency org="candlepin" name="commons-collections" rev="3.1" />
         <dependency org="candlepin" name="commons-logging" rev="1.1.1" />
+        <dependency org="candlepin" name="commons-codec" rev="1.4" />
         <dependency org="candlepin" name="dom4j" rev="1.6.1" />
         <dependency org="candlepin" name="ejb3-persistence" rev="3.4.0" />
         <dependency org="candlepin" name="freemarker" rev="2.3.15" />
