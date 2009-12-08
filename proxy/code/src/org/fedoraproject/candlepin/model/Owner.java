@@ -62,13 +62,18 @@ public class Owner {
     @OneToMany(mappedBy="owner", targetEntity=User.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private Set<User> users;
     
+    @OneToMany(mappedBy="owner", targetEntity=Certificate.class)
+    private Set<Certificate> certificates;
+    
+    
     /**
-     * Default constructor.
+     * Default constructor
      */
     public Owner() {
         consumers = new HashSet<Consumer>();
         entitlementPools = new HashSet<EntitlementPool>();
         users = new HashSet<User>();
+        certificates = new HashSet<Certificate>();
     }
     
     /**
@@ -82,6 +87,7 @@ public class Owner {
         consumers = new HashSet<Consumer>();
         entitlementPools = new HashSet<EntitlementPool>();
         users = new HashSet<User>();
+        certificates = new HashSet<Certificate>();
     }
     
     /**
