@@ -11,7 +11,8 @@
  * Red Hat trademarks are not licensed under GPLv2. No permission is
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
- */package org.fedoraproject.candlepin.model;
+ */
+package org.fedoraproject.candlepin.model;
 
 import java.util.LinkedList;
 import java.util.List;
