@@ -59,7 +59,8 @@ public class Owner {
     @ForeignKey(name = "fk_user_owner_id")
     private Set<EntitlementPool> entitlementPools;
     
-    @OneToMany(mappedBy = "owner", targetEntity = User.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+    @OneToMany(mappedBy = "owner", targetEntity = User.class, cascade =
+        {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private Set<User> users;
     
     @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)

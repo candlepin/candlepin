@@ -78,7 +78,9 @@ public class UserResource extends BaseResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public User create(@FormParam("login") String login, @FormParam("password") String password) {
+    public User create(@FormParam("login") String login,
+                       @FormParam("password") String password) {
+
         System.out.println("login: " + login);
         System.out.println("password: " + password);
         User u = new User();

@@ -45,8 +45,8 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @Table(name = "cp_consumer_info")
 public class ConsumerInfo {
     
-    // TODO: Don't know if this is a good idea, technically the consumer + metadata data
-    // key should be the identifier. 
+    // TODO: Don't know if this is a good idea, technically the consumer +
+    // metadata data key should be the identifier.
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -54,9 +54,9 @@ public class ConsumerInfo {
     @OneToOne(mappedBy = "info")
     private Consumer consumer;
     
-    // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem possible
-    // to map strings without an unplesant hack: 
-    // http://stackoverflow.com/questions/287201/how-to-persist-a-property-of-type-liststringin-jpa
+    // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem
+    // possible to map strings without an unplesant hack:
+    // http://bit.ly/liststringjpa
     @MapKeyManyToMany(targetEntity = String.class)
     @CollectionOfElements(targetElement = String.class)
     @Cascade(value = {org.hibernate.annotations.CascadeType.ALL})
