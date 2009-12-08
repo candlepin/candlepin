@@ -17,9 +17,9 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerRepository;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerTypeRepository;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -40,8 +40,8 @@ import com.wideplay.warp.persist.UnitOfWork;
 public class OwnerTest extends DatabaseTestFixture {
     
     private OwnerCurator ownerCurator;
-    private ConsumerTypeRepository consumerTypeCurator;
-    private ConsumerRepository consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+    private ConsumerCurator consumerCurator;
     
     @Before
     public void setUp() {
@@ -55,8 +55,8 @@ public class OwnerTest extends DatabaseTestFixture {
         );
         
         ownerCurator = injector.getInstance(OwnerCurator.class);
-        consumerTypeCurator = injector.getInstance(ConsumerTypeRepository.class);
-        consumerCurator = injector.getInstance(ConsumerRepository.class);
+        consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
+        consumerCurator = injector.getInstance(ConsumerCurator.class);
     }
 
     @Test

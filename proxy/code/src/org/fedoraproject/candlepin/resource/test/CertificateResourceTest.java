@@ -42,7 +42,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     
     private CertificateResource certResource;
     private ConsumerCurator consumerRepository;
-    private EntitlementPoolCurator entitlementPoolRepository;
+    private EntitlementPoolCurator epCurator;
     private OwnerCurator ownerCurator;
     private String sampleCertXml;
     
@@ -57,9 +57,12 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         );
 
         consumerRepository = injector.getInstance(ConsumerCurator.class);
-        entitlementPoolRepository = injector.getInstance(EntitlementPoolCurator.class);
+        epCurator = injector.getInstance(EntitlementPoolCurator.class);
         ownerCurator = injector.getInstance(OwnerCurator.class);
+        
         certResource = new CertificateResource();
+        certResource.setOwnerCurator(ownerCurator);
+        
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");
@@ -82,9 +85,10 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void entitlementPoolCreation() {
         Owner o = TestUtil.createOwner();
         ownerCurator.create(o);
-        certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
-        List<EntitlementPool> entPools = entitlementPoolRepository.listByOwner(o);
-//        assertEquals(5, entPools.size());
+        String encoded = TestUtil.xmlToBase64String(sampleCertXml);
+        certResource.upload(encoded);
+        List<EntitlementPool> entPools = epCurator.listByOwner(o);
+        assertEquals(5, entPools.size());
     }
 
     @Test

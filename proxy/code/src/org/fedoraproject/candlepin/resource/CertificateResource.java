@@ -58,6 +58,10 @@ public class CertificateResource extends BaseResource {
     public CertificateResource() {
         super(User.class);
     }
+    
+    public void setOwnerCurator(OwnerCurator ownerCuratorIn) {
+        ownerCurator = ownerCuratorIn;
+    }
 
     /**
      * Uploads the certificate containing list of entitlements.
