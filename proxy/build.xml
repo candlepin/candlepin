@@ -525,9 +525,6 @@ Running @{banner} ...
     <mkdir dir="${build.lib.dir}" />
     <mkdir dir="${test.lib.dir}" />
     <mkdir dir="${run-external.lib.dir}" />
-    <!-- copy todir="${build.lib.dir}">
-      <fileset
-    </copy -->
     <jpackage-deps jars="${install.build.jar.dependencies}"
                    dir="${build.lib.dir}" />
     <jpackage-deps jars="${install.run.jar.dependencies}"
