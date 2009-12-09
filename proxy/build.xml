@@ -78,6 +78,7 @@
     <attribute name="dir" />
 
     <sequential>
+      <!-- exec executable="build-jar-repository" failonerror="true" -->
       <exec executable="build-jar-repository" failonerror="true" >
         <arg value="--preserve-naming" />
         <arg value="-s @{dir}" />
@@ -116,7 +117,8 @@
 
   <target name="boot-deps" unless="installbuild">
     <mkdir dir="${boot.lib.dir}" />
-    <jpackage-deps jars="${boot.jar.dependencies}" dir="${boot.lib.dir}" />
+    <copy file="${ivy.jar.file}" todir="${boot.lib.dir}" />
+    <!-- jpackage-deps jars="${boot.jar.dependencies}" dir="${boot.lib.dir}" / -->
   </target>
 
   <!-- only runs if we are missing a jpackage dir; speeds builds -->
@@ -523,6 +525,9 @@ Running @{banner} ...
     <mkdir dir="${build.lib.dir}" />
     <mkdir dir="${test.lib.dir}" />
     <mkdir dir="${run-external.lib.dir}" />
+    <!-- copy todir="${build.lib.dir}">
+      <fileset
+    </copy -->
     <jpackage-deps jars="${install.build.jar.dependencies}"
                    dir="${build.lib.dir}" />
     <jpackage-deps jars="${install.run.jar.dependencies}"
