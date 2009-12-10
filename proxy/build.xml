@@ -206,7 +206,9 @@ Running @{banner} ...
         <jvmarg value="-ea" />
         <jvmarg line="@{debug}" />
         <classpath refid="@{classpathid}" />
-        <formatter type="plain" />
+<!--        <formatter type="plain" />
+-->
+	<formatter type="xml" />
         <batchtest todir="@{reportdir}">
           <fileset dir="@{testbuilddir}">
             <include name="@{include}" />
