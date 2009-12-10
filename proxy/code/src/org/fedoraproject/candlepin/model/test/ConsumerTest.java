@@ -85,6 +85,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals(consumer.getId(), lookedUp.getId());
         assertEquals(consumer.getName(), lookedUp.getName());
         assertEquals(consumer.getType().getLabel(), lookedUp.getType().getLabel());
+        assertNotNull(consumer.getUuid());
     }
     
     @Test

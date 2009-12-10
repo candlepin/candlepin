@@ -35,7 +35,6 @@ import com.wideplay.warp.persist.UnitOfWork;
 
 /**
  * ConsumerResourceTest
- * @version $Rev$
  */
 public class ConsumerResourceTest extends DatabaseTestFixture {
     

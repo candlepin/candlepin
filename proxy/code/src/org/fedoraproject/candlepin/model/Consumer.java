@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.ForeignKey;
 
 /**
@@ -56,6 +57,9 @@ public class Consumer {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
+    @Column(nullable = false)
+    private String uuid;
+
     @Column(nullable = false)
     private String name;
     
@@ -106,6 +110,10 @@ public class Consumer {
         this.owner = owner;
         this.type = type;
         
+        // This constructor is for creating a new Consumer in the DB, so we'll
+        // generate a UUID at this point.
+        this.uuid = Util.generateUUID();
+
         this.info = new ConsumerInfo(this);
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
@@ -117,6 +125,14 @@ public class Consumer {
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     /**

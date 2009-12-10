@@ -75,6 +75,7 @@ public class ConsumerResource extends BaseResource {
 //        System.out.println("metadata: " + ci.getMetadata());
 //        System.out.println("ci: " + ci);
         //Owner owner = (Owner) ObjectFactory.get().lookupByUUID(Owner.class, owneruuid);
+        // TODO: Change to use proper constructor.
         Consumer c = new Consumer();
         c.setName(ci.getMetadataField("name"));
         c.setType(type);
