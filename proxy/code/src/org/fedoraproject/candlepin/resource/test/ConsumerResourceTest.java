@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -38,8 +39,10 @@ import com.wideplay.warp.persist.UnitOfWork;
  */
 public class ConsumerResourceTest extends DatabaseTestFixture {
     
-    private ConsumerCurator consumerRepository;
-    private ConsumerTypeCurator consumerTypeRepository;
+    private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+    private OwnerCurator ownerCurator;
+
     private ConsumerType standardSystemType;
 
     @Before
@@ -54,33 +57,31 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         );
         
         
-        consumerRepository = injector.getInstance(ConsumerCurator.class);
-        consumerTypeRepository = injector.getInstance(ConsumerTypeCurator.class);
+        consumerCurator = injector.getInstance(ConsumerCurator.class);
+        consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
+        ownerCurator = injector.getInstance(OwnerCurator.class);
         
         standardSystemType = new ConsumerType("standard-system");
-        consumerTypeRepository.create(standardSystemType);
+        consumerTypeCurator.create(standardSystemType);
     }
     
     @Test
     public void testCreateConsumer() throws Exception {
-        String newname = "test-consumer-" + System.currentTimeMillis();
+        ConsumerResource capi = new ConsumerResource(ownerCurator, consumerCurator);
         
-        ConsumerResource capi = new ConsumerResource();
         ConsumerInfo ci = new ConsumerInfo();
-        ci.setMetadataField("name", newname);
+        ci.setMetadataField("cpu_cores", "8");
         
         Owner owner = TestUtil.createOwner();
-        beginTransaction();
-        em.persist(owner);
-        commitTransaction();
+        ownerCurator.create(owner);
 
-        Consumer c = new Consumer(ci.getMetadataField("name"), owner, standardSystemType);
-        c.setInfo(ci);
+        Consumer returned = capi.create(ci, standardSystemType);
+        assertNotNull(returned.getUuid());
+        assertEquals("standard-system", returned.getType().getLabel());
+        assertEquals(owner.getId(), returned.getOwner().getId());
         
-        Consumer saved = consumerRepository.create(c);
-        
-        assertEquals(saved.getId(), consumerRepository.find(saved.getId()).getId());
-        //capi.create(ci, type);
+        Consumer lookedUp = consumerCurator.lookupByUuid(returned.getUuid());
+        assertNotNull(lookedUp);
     }
     
 //    @Test

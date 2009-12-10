@@ -24,8 +24,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     public Consumer lookupByName(String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
-        .add(Restrictions.like("name", name))
-        .uniqueResult();
+            .add(Restrictions.like("name", name))
+            .uniqueResult();
+    }
+
+    public Consumer lookupByUuid(String uuid) {
+        return (Consumer) currentSession().createCriteria(Consumer.class)
+            .add(Restrictions.like("uuid", uuid))
+            .uniqueResult();
     }
 
 }

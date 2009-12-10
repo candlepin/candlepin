@@ -27,9 +27,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 
 /**
@@ -39,12 +42,14 @@ import org.fedoraproject.candlepin.model.Product;
 public class ConsumerResource extends BaseResource {
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
-    
-    /**
-     * default ctor
-     */
-    public ConsumerResource() {
+    private OwnerCurator ownerCurator;
+    private ConsumerCurator consumerCurator;
+
+    public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator) {
         super(Consumer.class);
+
+        this.ownerCurator = ownerCurator;
+        this.consumerCurator = consumerCurator;
     }
    
     /**
@@ -72,17 +77,17 @@ public class ConsumerResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer create(ConsumerInfo ci, ConsumerType type) {
-//        System.out.println("metadata: " + ci.getMetadata());
-//        System.out.println("ci: " + ci);
-        //Owner owner = (Owner) ObjectFactory.get().lookupByUUID(Owner.class, owneruuid);
+
+        // TODO: Determine owner based on the authenticated user:
+        Owner owner = ownerCurator.listAll().get(0);
+
+
         // TODO: Change to use proper constructor.
-        Consumer c = new Consumer();
-        c.setName(ci.getMetadataField("name"));
-        c.setType(type);
-        // TODO: Need owner specified here:
-        //c.setOwner(owner);
+        Consumer c = new Consumer("consumer name?", owner, type);
         c.setInfo(ci);
-        ObjectFactory.get().store(c);
+
+//        ObjectFactory.get().store(c);
+        consumerCurator.create(c);
         return c;
     }
 
