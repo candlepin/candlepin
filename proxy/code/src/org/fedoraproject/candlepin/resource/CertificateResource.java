@@ -59,28 +59,17 @@ public class CertificateResource extends BaseResource {
     private CertificateCurator certificateCurator;
 
     
-    public CertificateResource() {
+    @Inject
+    public CertificateResource(OwnerCurator ownerCurator, 
+                               ProductCurator productCurator, 
+                               EntitlementPoolCurator entitlementPoolCurator,
+                               CertificateCurator certificateCurator) {
         super(User.class);
-    }
-    
-    @Inject
-    public void setOwnerCurator(OwnerCurator ownerCuratorIn) {
-        ownerCurator = ownerCuratorIn;
-    }
-
-    @Inject
-    public void setProductCurator(ProductCurator productCuratorIn) {
-        productCurator = productCuratorIn;
-    }
-
-    @Inject
-    public void setEntitlementPoolCurator(EntitlementPoolCurator 
-            entitlementPoolCuratorIn) {
-        entitlementPoolCurator = entitlementPoolCuratorIn;
-    }
-    
-    public void setCertificateCurator(CertificateCurator certificateCuratorIn) {
-        certificateCurator = certificateCuratorIn;
+        
+        this.ownerCurator = ownerCurator;
+        this.productCurator = productCurator;
+        this.entitlementPoolCurator = entitlementPoolCurator;
+        this.certificateCurator = certificateCurator;
     }
     
     /**

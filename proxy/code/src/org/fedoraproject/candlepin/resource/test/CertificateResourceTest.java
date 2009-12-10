@@ -15,6 +15,8 @@
 
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.*;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -38,8 +40,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
-
-import static org.junit.Assert.*;
 
 public class CertificateResourceTest extends DatabaseTestFixture {
     
@@ -67,12 +67,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         ownerCurator = injector.getInstance(OwnerCurator.class);
         certificateCurator = injector.getInstance(CertificateCurator.class);
         
-        certResource = new CertificateResource();
-        // Inject our curators.
-        certResource.setCertificateCurator(certificateCurator);
-        certResource.setOwnerCurator(ownerCurator);
-        certResource.setProductCurator(productCurator);
-        certResource.setEntitlementPoolCurator(epCurator);
+        certResource = new CertificateResource(ownerCurator, productCurator, epCurator, certificateCurator);
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");

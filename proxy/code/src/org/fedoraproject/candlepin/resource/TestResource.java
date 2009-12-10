@@ -23,6 +23,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+
+import com.google.inject.Inject;
 
 
 /**
@@ -34,14 +37,15 @@ import org.fedoraproject.candlepin.model.JsonTestObject;
 public class TestResource {
 
     private static JsonTestObject jto = null;
-   
+    
     /**
      * default ctor
      */
+    
     public TestResource() {
         System.out.println("hello from TestResource ctor");
     }
-   
+    
     /**
      * Returns the test object
      * @return the test object
