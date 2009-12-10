@@ -17,10 +17,20 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.MapKeyManyToMany;
 
 /**
  * ConsumerInfo contains the metadata about a given Consumer (parent). It is 
@@ -31,43 +41,64 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
+@Entity
+@Table(name = "cp_consumer_info")
 public class ConsumerInfo {
     
-    private Consumer parent;
-    private ConsumerType type;
+    // TODO: Don't know if this is a good idea, technically the consumer +
+    // metadata data key should be the identifier.
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    
+    @OneToOne(mappedBy = "info")
+    private Consumer consumer;
+    
+    // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem
+    // possible to map strings without an unplesant hack:
+    // http://bit.ly/liststringjpa
+    @MapKeyManyToMany(targetEntity = String.class)
+    @CollectionOfElements(targetElement = String.class)
+    @Cascade(value = { org.hibernate.annotations.CascadeType.ALL })
     private Map<String, String> metadata;
     
+    public ConsumerInfo() {
+        metadata = new HashMap<String, String>();
+    }
     
-    
+    public ConsumerInfo(Consumer consumerIn) {
+        metadata = new HashMap<String, String>();
+        consumer = consumerIn;
+    }
+
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     /**
      * @return Returns the parent.
      */
     @XmlTransient
-    public Consumer getParent() {
-        return parent;
+    public Consumer getConsumer() {
+        return consumer;
     }
 
     /**
-     * @param parentIn The parent to set.
+     * @param consumerIn The parent to set.
      */
-    public void setParent(Consumer parentIn) {
-        parent = parentIn;
+    public void setConsumer(Consumer consumerIn) {
+        consumer = consumerIn;
     }
-    
-    /**
-     * @return Returns the type.
-     */
-    public ConsumerType getType() {
-        return type;
-    }
-    
-    /**
-     * @param typeIn The type to set.
-     */
-    public void setType(ConsumerType typeIn) {
-        type = typeIn;
-    }
-
     
     /**
      * @return Returns the metadata.
@@ -81,7 +112,6 @@ public class ConsumerInfo {
      * @param metadataIn The metadata to set.
      */
     public void setMetadata(Map<String, String> metadataIn) {
-        System.out.println("set metadata called");
         metadata = metadataIn;
     }
     
@@ -91,8 +121,7 @@ public class ConsumerInfo {
      * @param value to set
      */
     public void setMetadataField(String name, String value) {
-        System.out.println("set meta field called");
-        if (this.metadata == null) {
+        if (this.metadata ==  null) {
             metadata = new HashMap<String, String>();
         }
         metadata.put(name, value);
@@ -105,7 +134,7 @@ public class ConsumerInfo {
      * @return String field value.
      */
     public String getMetadataField(String name) {
-       if (this.metadata != null) {
+       if (this.metadata !=  null) {
            return metadata.get(name);
        }
        return null;

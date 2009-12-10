@@ -14,20 +14,20 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.resource.TestResource;
+import org.junit.Test;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 
 /**
@@ -39,7 +39,6 @@ public class TestResourceTest {
     private JsonTestObject createTestObject() {
         JsonTestObject jto = new JsonTestObject();
         jto.setName("testname");
-        jto.setUuid("AEF");
         List<String> l = new ArrayList<String>();
         l.add("hey there");
         l.add("how are you?");
@@ -62,7 +61,6 @@ public class TestResourceTest {
         System.out.println(jto.getName());
         jto = getresource.accept("application/json").get(JsonTestObject.class);
         assertEquals("testname", jto.getName());
-        assertEquals("AEF", jto.getUuid());
         assertNotNull(jto.getStringList());
         assertEquals(2, jto.getStringList().size());
         assertNull(jto.getParent());

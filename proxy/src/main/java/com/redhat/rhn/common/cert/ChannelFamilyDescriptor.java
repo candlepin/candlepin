@@ -14,7 +14,6 @@
  */
 package com.redhat.rhn.common.cert;
 
-import com.redhat.rhn.common.cert.XmlTag;
 
 /**
  * The entitlements for a channel family, consisting of the family name and a

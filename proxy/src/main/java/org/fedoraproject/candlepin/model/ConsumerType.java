@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.io.Serializable;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -26,19 +24,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Represents the type of consumer.
  * 
- * TODO: Examples?
+ * See ProductFactory for some examples.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_consumer_type")
-public class ConsumerType implements Serializable {
+@Table(name = "cp_consumer_type")
+public class ConsumerType {
 
+    @Id
     private String label;
 
-    /**
-     * default noarg ctor
-     */
     public ConsumerType() {
         label = null;
     }

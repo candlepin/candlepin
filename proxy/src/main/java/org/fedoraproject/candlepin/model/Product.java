@@ -14,19 +14,24 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a Product that can be consumed and entitled. Products define
@@ -37,39 +42,36 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name="cp_product")
+@Table(name = "cp_product")
 public class Product {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
-    // TODO: Drop one of these?
+    @Column(nullable = false, unique = true)
     private String label;
+    
+    @Column(nullable = false, unique = true)
     private String name;
-    
-    // TODO: Drop this?
-    private String uuid;
-    
-    // TODO:
-    private List<Product> childProducts;
 
-    /**
-     * Create product with UUID
-     * @param uuid unique id for the product
-     */
-    public Product(String uuid) {
-        setUuid(uuid);
-    }
-    
+    @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL)
+    @ForeignKey(name = "fk_product_product_id",
+                inverseName = "fk_product_child_product_id")
+    @JoinTable(name = "cp_product_hierarchy",
+            joinColumns = @JoinColumn(name = "PARENT_PRODUCT_ID"),
+            inverseJoinColumns = @JoinColumn(name = "CHILD_PRODUCT_ID"))
+    private Set<Product> childProducts;
+
     /**
      * Constructor
      * 
      * Use this variant when creating a new object to persist.
      * 
-     * @param label
-     * @param name
+     * @param label Product label
+     * @param name Human readable Product name
      */
     public Product(String label, String name) {
-        // TODO: Do we want to drop one of these?
         setLabel(label);
         setName(name);
     }
@@ -83,8 +85,6 @@ public class Product {
     /**
      * @return the id
      */
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
     public Long getId() {
         return id;
     }
@@ -99,15 +99,14 @@ public class Product {
     /**
      * @return the childProducts
      */
-    @Transient
-    public List<Product> getChildProducts() {
+    public Set<Product> getChildProducts() {
         return childProducts;
     }
 
     /**
      * @param childProducts the childProducts to set
      */
-    public void setChildProducts(List<Product> childProducts) {
+    public void setChildProducts(Set<Product> childProducts) {
         this.childProducts = childProducts;
     }
 
@@ -116,31 +115,19 @@ public class Product {
      * @param p to add
      */
     public void addChildProduct(Product p) {
-        if (this.childProducts == null) {
-            this.childProducts = new LinkedList<Product>();
+        if (this.childProducts ==  null) {
+            this.childProducts = new HashSet<Product>();
         }
         this.childProducts.add(p);
     }
     
-//    /** 
-//     * Get the list of compatible consumer types
-//     * @return list of compatible consumer types
-//     */
-//    public List<String> getCompatibleConsumerTypes() {
-//        
-//        return null;
-//    }
-
-    
     /**
      * @return Returns the label.
      */
-    @Column(nullable=false)
     public String getLabel() {
         return label;
     }
 
-    
     /**
      * @param labelIn The label to set.
      */
@@ -153,14 +140,13 @@ public class Product {
      */
     @Override
     public String toString() {
-        return "Product [label=" + label + "]";
+        return "Product [label = " + label + "]";
     }
     
     /**
      * Returns the name of the object.
      * @return the name of the object.
      */
-    @Column(nullable=false)
     public String getName() {
         return name;
     }
@@ -171,22 +157,6 @@ public class Product {
      */
     public void setName(String name) {
         this.name = name;
-    }
-
-    /**
-     * Returns the unique id of the model object.
-     * @return the unique id of the model object.
-     */
-    public String getUuid() {
-        return uuid;
-    }
-
-    /**
-     * Sets the unique id of the model object.
-     * @param uuid unique id of the model.
-     */
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
     }
 
 }

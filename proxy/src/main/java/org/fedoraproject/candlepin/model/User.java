@@ -16,35 +16,66 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.Formatter;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.hibernate.annotations.ForeignKey;
+
 /**
  * Represents the user.
- * TODO: how does this differ from an Owner.
+ *
+ * A user is more akin to an account within an owner. (i.e. organization)
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class User extends BaseModel {
+@Entity
+@Table(name = "cp_user")
+public class User {
     
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @ManyToOne
+    @ForeignKey(name = "fk_user_owner_id")
+    @JoinColumn(nullable = false)
     private Owner owner;
+
     private String login;
+
+    // TODO: Hash!
     private String password;
 
-    /**
-     * @param uuid unique id
-     */
-    public User(String uuid) {
-        super(uuid);
-    }
-    
-    /**
-     * Default ctor
-     */
     public User() {
-        this(null);
+    }
+
+    public User(Owner ownerIn, String loginIn, String passwordIn) {
+        owner = ownerIn;
+        login = loginIn;
+        password = passwordIn;
+    }
+
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**

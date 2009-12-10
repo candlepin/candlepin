@@ -14,58 +14,84 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import org.fedoraproject.candlepin.model.BaseModel;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.User;
-
-import java.util.List;
-
-import org.junit.Test;
 import static org.junit.Assert.*;
 
-/**
- * 
- *
- */
-public class OwnerTest {
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.UserCurator;
+import org.fedoraproject.candlepin.resource.test.CandlePingTestingModule;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.wideplay.warp.persist.PersistenceService;
+import com.wideplay.warp.persist.UnitOfWork;
+
+public class OwnerTest extends DatabaseTestFixture {
+    
+    private OwnerCurator ownerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+    private ConsumerCurator consumerCurator;
+    
+    @Before
+    public void setUp() {
+        super.setUp();
+        
+        Injector injector = Guice.createInjector(
+                new CandlePingTestingModule(), 
+                PersistenceService.usingJpa()
+                    .across(UnitOfWork.TRANSACTION)
+                    .buildModule()
+        );
+        
+        ownerCurator = injector.getInstance(OwnerCurator.class);
+        consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
+        consumerCurator = injector.getInstance(ConsumerCurator.class);
+    }
 
     @Test
-    public void testOwner() throws Exception {
-        Owner o = new Owner(BaseModel.generateUUID());
-        assertNotNull(o);
-    }
-    
-    @Test
-    public void testLookup() throws Exception {
+    public void testCreate() throws Exception {
+        String ownerName = "Example Corporation";
+        Owner o = new Owner(ownerName);
+        ownerCurator.create(o);
         
-        Owner o = TestUtil.createOwner();
-        String lookedUp = o.getUuid();
-        o = (Owner) ObjectFactory.get().
-            lookupByUUID(Owner.class, lookedUp);
-        assertNotNull(o);
+        Owner result = (Owner)em.createQuery(
+                "select o from Owner o where o.name = :name")
+                .setParameter("name", ownerName).getSingleResult();
+        
+        assertNotNull(result);
+        assertEquals(ownerName, result.getName());
+        assertTrue(result.getId() > 0);
+        assertEquals(o.getId(), result.getId());
     }
     
     @Test
     public void testList() throws Exception {
+        int beforeCount = em.createQuery("select o from Owner as o").getResultList().size();
+        
         for (int i = 0; i < 10; i++) {
-            TestUtil.createOwner();
+            ownerCurator.create(new Owner("Corp " + i));
         }
         
-        List orgs =  ObjectFactory.get().listObjectsByClass(Owner.class);
-        assertNotNull(orgs);
-        assertTrue(orgs.size() >= 10);
+        int afterCount = em.createQuery("select o from Owner as o").getResultList().size();
+        assertEquals(10, afterCount - beforeCount);
     }
     
     @Test
     public void testObjectRelationships() throws Exception {
-        Owner owner = new Owner(BaseModel.generateUUID());
-        owner.setName("test-owner");
+        Owner owner = new Owner("test-owner");
         // Product
-        Product rhel = new Product(BaseModel.generateUUID());
+        Product rhel = new Product();
         rhel.setName("Red Hat Enterprise Linux");
         
         // User
@@ -76,7 +102,7 @@ public class OwnerTest {
         assertEquals(1, owner.getUsers().size());
         
         // Consumer
-        Consumer c = new Consumer(BaseModel.generateUUID());
+        Consumer c = new Consumer();
         c.setOwner(owner);
         owner.addConsumer(c);
         c.addConsumedProduct(rhel);
@@ -84,10 +110,50 @@ public class OwnerTest {
         assertEquals(1, c.getConsumedProducts().size());
         
         // EntitlementPool
-        EntitlementPool pool = new EntitlementPool(BaseModel.generateUUID());
+        EntitlementPool pool = new EntitlementPool();
         owner.addEntitlementPool(pool);
         pool.setProduct(rhel);
-        assertEquals(1, owner.getEntitlementPools().size());
-        
+        assertEquals(1, owner.getEntitlementPools().size());  
     }
+    
+    @Test
+    public void bidirectionalConsumers() throws Exception {
+        beginTransaction();
+        Owner o = TestUtil.createOwner();
+        ConsumerType consumerType = TestUtil.createConsumerType();
+        Consumer c1 = TestUtil.createConsumer(consumerType, o);
+        Consumer c2 = TestUtil.createConsumer(consumerType, o);
+        o.addConsumer(c1);
+        o.addConsumer(c2);
+        
+        ownerCurator.create(o);
+        consumerTypeCurator.create(consumerType);
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+
+        assertEquals(2, o.getConsumers().size());
+        
+        Owner lookedUp = ownerCurator.find(o.getId()); 
+        assertEquals(2, lookedUp.getConsumers().size());
+    }
+    
+    @Test
+    public void bidirectionalUsers() throws Exception {
+        Owner o = TestUtil.createOwner();
+        
+        User u1 = TestUtil.createUser(o);
+        User u2 = TestUtil.createUser(o);
+        
+        o.addUser(u1);
+        o.addUser(u2);
+        
+        ownerCurator.create(o);
+        
+        assertEquals(2, o.getUsers().size());
+        
+        em.clear();
+        Owner lookedUp = ownerCurator.find(o.getId());
+        assertEquals(2, lookedUp.getUsers().size());
+    }
+
 }

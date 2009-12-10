@@ -14,22 +14,12 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.BaseModel;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.cert.CertGenerator;
-
-import com.sun.jersey.api.representation.Form;
-
-import org.apache.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,6 +27,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.resource.cert.CertGenerator;
+import org.fedoraproject.candlepin.util.EntityManagerUtil;
+
+import com.sun.jersey.api.representation.Form;
 
 
 /**
@@ -55,7 +56,6 @@ public class EntitlementResource extends BaseResource {
 
     private Object validateObjectInput(Form form, String fieldName, Class clazz) {
         String uuid = form.getFirst(fieldName);
-        log.debug("UUID: " + uuid);
         Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
         if (o == null) {
             throw new RuntimeException(clazz.getName() + " with UUID: [" + 
@@ -65,13 +65,23 @@ public class EntitlementResource extends BaseResource {
     }
     
     private Object validateObjectInput(String uuid, Class clazz) {
-        log.debug("UUID: " + uuid);
         Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
         if (o == null) {
             throw new RuntimeException(clazz.getName() + " with UUID: [" + 
                     uuid + "] not found");
         }
         return o;
+    }
+
+    private Object newValidateObjectInput(EntityManager em, Long id, Class clazz) {
+        Query q = em.createQuery("from " + clazz.getName() + " o where o.id = :id");
+        q.setParameter("id", id);
+//        if (o == null) {
+//            throw new RuntimeException(clazz.getName() + " with UUID: [" + 
+//                    uuid + "] not found");
+//        }
+        Object result = q.getSingleResult();
+        return result;
     }
 
     /**
@@ -84,7 +94,6 @@ public class EntitlementResource extends BaseResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/foo")
     public Object foo(Consumer c) {
-        System.out.println("Consumer uuid: " + c.getUuid());
         return "return value";
     }
 
@@ -118,7 +127,7 @@ public class EntitlementResource extends BaseResource {
                         ep.getEndDate());
                 }
                 
-                Entitlement e = new Entitlement(BaseModel.generateUUID());
+                Entitlement e = new Entitlement();
                 e.setPool(ep);
                 e.setStartDate(new Date());
                 ep.bumpCurrentMembers();
@@ -139,16 +148,16 @@ public class EntitlementResource extends BaseResource {
     /**
      * Check to see if a given Consumer is entitled to given Product
      * @param consumerUuid consumerUuid to check if entitled or not
-     * @param productUuid productUuid to check if entitled or not
+     * @param productId productUuid to check if entitled or not
      * @return boolean if entitled or not
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/has")
     public boolean hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
-            @PathParam("product_uuid") String productUuid) {
+            @PathParam("product_id") String productId) {
         Consumer c = (Consumer) validateObjectInput(consumerUuid, Consumer.class);
-        Product p = (Product) validateObjectInput(productUuid, Product.class);
+        Product p = (Product) validateObjectInput(productId, Product.class);
         for (Entitlement e : c.getEntitlements()) {
             if (e.getProduct().equals(p)) {
                 return true;
@@ -160,21 +169,24 @@ public class EntitlementResource extends BaseResource {
     /**
      * Match/List the available entitlements for a given Consumer.  Right now
      * this returns ALL entitlements because we haven't built any filtering logic.
-     * @param uuid consumerUuid
+     * @param consumerId Unique id of Consumer
      * @return List<Entitlement> of applicable 
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/listavailable")
     public List<EntitlementPool> listAvailableEntitlements(
-        @PathParam("uuid") String uuid) {
+        @PathParam("consumerId") Long consumerId) {
+        EntityManager em = EntityManagerUtil.createEntityManager();
 
-        Consumer c = (Consumer) validateObjectInput(uuid, Consumer.class);
+        Consumer c = (Consumer) newValidateObjectInput(em, consumerId, Consumer.class);
         List<EntitlementPool> entitlementPools = new EntitlementPoolResource().list();
         List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
         EntitlementMatcher matcher = new EntitlementMatcher();
         for (EntitlementPool ep : entitlementPools) {
             boolean add = false;
+            System.out.println("max = " + ep.getMaxMembers());
+            System.out.println("cur = " + ep.getCurrentMembers());
             if (ep.getMaxMembers() > ep.getCurrentMembers()) {
                 add = true;
             }

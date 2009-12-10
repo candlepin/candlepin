@@ -15,84 +15,169 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.hibernate.annotations.ForeignKey;
+
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
  * system, or anything else we want to track as using the Entitlement.
  * 
- * Every Consumer has an Owner which may or may not own the Entitlment. The
+ * Every Consumer has an Owner which may or may not own the Entitlement. The
  * Consumer's attributes or metadata is stored in a ConsumerInfo object which
  * boils down to a series of name/value pairs.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Consumer extends BaseModel {
+@Entity
+@Table(name = "cp_consumer")
+public class Consumer {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
     
+    @Column(nullable = false)
+    private String name;
+    
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    @ForeignKey(name = "fk_consumer_consumer_type")
+    private ConsumerType type;
+    
+    @ManyToOne
+    @ForeignKey(name = "fk_consumer_owner")
+    @JoinColumn(nullable = false)
     private Owner owner;
+    
+    // Consumers *can* be organized into a hierarchy, could be useful in cases
+    // such as host/guests. 
+    @ManyToOne(targetEntity = Consumer.class)
+    @JoinColumn(name = "parent_consumer_id")
     private Consumer parent;
-    private List<Product> consumedProducts;
-    private List<Entitlement> entitlements;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private Set<Consumer> childConsumers;
+
+
+    // Separate mapping because in theory, a consumer could be consuming products they're
+    // not entitled to.
+    @ManyToMany
+    @ForeignKey(name = "fk_consumer_product_consumer_id",
+                inverseName = "fk_consumer_product_product_id")
+    @JoinTable(name = "cp_consumer_products",
+            joinColumns = @JoinColumn(name = "consumer_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id"))
+    private Set<Product> consumedProducts;
+    
+    @OneToMany
+    @ForeignKey(name = "fk_consumer_product_consumer_id",
+                inverseName = "fk_consumer_produce_product_id")
+    @JoinTable(name = "cp_consumer_entitlements",
+            joinColumns = @JoinColumn(name = "consumer_id"),
+            inverseJoinColumns = @JoinColumn(name = "entitlement_id"))
+    private Set<Entitlement> entitlements;
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "consumer_info_id")
     private ConsumerInfo info;
     
-    /**
-     * default ctor
-     */
+    public Consumer(String name, Owner owner, ConsumerType type) {
+        this.name = name;
+        this.owner = owner;
+        this.type = type;
+        
+        this.info = new ConsumerInfo(this);
+        this.childConsumers = new HashSet<Consumer>();
+        this.consumedProducts = new HashSet<Product>();
+        this.entitlements = new HashSet<Entitlement>();
+    }
+
     public Consumer() {
-        this(null);
-        this.info = new ConsumerInfo();
-        this.info.setParent(this);
+        this.info = new ConsumerInfo(this);
+        this.childConsumers = new HashSet<Consumer>();
+        this.consumedProducts = new HashSet<Product>();
+        this.entitlements = new HashSet<Entitlement>();
     }
 
     /**
-     * @param uuid unique id of consumer
+     * @return the id
      */
-    public Consumer(String uuid) {
-        super(uuid);
-        this.info = new ConsumerInfo();
-        this.info.setParent(this);
+    public Long getId() {
+        return id;
     }
 
     /**
-     * @return the type
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return Returns the type.
      */
     public ConsumerType getType() {
-        if (this.info == null) {
-            return null;
-        }
-        else {
-            return info.getType();
-        }
-    }
-
-    /**
-     * Set the type of this Consumer.  
-     * @param typeIn to set
-     */
-    public void setType(ConsumerType typeIn) {
-        if (this.info == null) {
-            this.info = new ConsumerInfo();
-        }
-        this.info.setType(typeIn);
+        return type;
     }
     
     /**
-     * @return the parent
+     * @param typeIn The type to set.
      */
+    public void setType(ConsumerType typeIn) {
+        type = typeIn;
+    }
+
+    public Set<Consumer> getChildConsumers() {
+        return childConsumers;
+    }
+
+    public void setChildConsumers(Set<Consumer> childConsumers) {
+        this.childConsumers = childConsumers;
+    }
+    
+    public void addChildConsumer(Consumer child) {
+        child.setParent(this);
+        this.childConsumers.add(child);
+    }
+
     public Consumer getParent() {
         return parent;
     }
 
-    /**
-     * @param parent the parent to set
-     */
     public void setParent(Consumer parent) {
         this.parent = parent;
     }
@@ -100,15 +185,23 @@ public class Consumer extends BaseModel {
     /**
      * @return the consumedProducts
      */
-    public List<Product> getConsumedProducts() {
+    public Set<Product> getConsumedProducts() {
         return consumedProducts;
     }
 
     /**
      * @param consumedProducts the consumedProducts to set
      */
-    public void setConsumedProducts(List<Product> consumedProducts) {
+    public void setConsumedProducts(Set<Product> consumedProducts) {
         this.consumedProducts = consumedProducts;
+    }
+
+    /**
+     * Add a Product to this Consumer.
+     * @param p Product to be consumed.
+     */
+    public void addConsumedProduct(Product p) {
+        this.consumedProducts.add(p);
     }
 
     /**
@@ -127,24 +220,12 @@ public class Consumer extends BaseModel {
     }
 
     /**
-     * Add a Product to this Consumer.
-     * @param p Product to be consumed.
-     */
-    public void addConsumedProduct(Product p) {
-        if (this.consumedProducts == null) {
-            this.consumedProducts = new LinkedList<Product>();
-        }
-        this.consumedProducts.add(p);
-
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public String toString() {
-        return "Consumer [type=" + this.getType() + ", getName()=" +
-            getName() + ", getUuid()=" + getUuid() + "]";
+        return "Consumer [type = " + this.getType() + ", getName() = " +
+            getName() + "]";
     }
 
     
@@ -169,7 +250,7 @@ public class Consumer extends BaseModel {
      * @param value to set
      */
     public void setMetadataField(String name, String value) {
-        if (this.getInfo().getMetadata() == null) {
+        if (this.getInfo().getMetadata() ==  null) {
             this.getInfo().setMetadata(new HashMap<String, String>());
         }
         this.getInfo().getMetadata().put(name, value);
@@ -181,7 +262,7 @@ public class Consumer extends BaseModel {
      * @return String field value.
      */
     public String getMetadataField(String name) {
-       if (this.getInfo().getMetadata() != null) {
+       if (this.getInfo().getMetadata() !=  null) {
            return getInfo().getMetadata().get(name);
        }
        return null;
@@ -190,7 +271,7 @@ public class Consumer extends BaseModel {
     /**
      * @return Returns the entitlements.
      */
-    public List<Entitlement> getEntitlements() {
+    public Set<Entitlement> getEntitlements() {
         return entitlements;
     }
 
@@ -198,7 +279,7 @@ public class Consumer extends BaseModel {
     /**
      * @param entitlementsIn The entitlements to set.
      */
-    public void setEntitlements(List<Entitlement> entitlementsIn) {
+    public void setEntitlements(Set<Entitlement> entitlementsIn) {
         entitlements = entitlementsIn;
     }
 
@@ -208,9 +289,6 @@ public class Consumer extends BaseModel {
      * 
      */
     public void addEntitlement(Entitlement entitlementIn) {
-        if (this.entitlements == null) {
-            this.entitlements = new LinkedList<Entitlement>();
-        }
         this.entitlements.add(entitlementIn);
         
     }

@@ -14,26 +14,23 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.BaseModel;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerInfo;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Product;
-
-import org.apache.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerInfo;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Product;
 
 /**
  * API Gateway for Consumers
@@ -68,17 +65,20 @@ public class ConsumerResource extends BaseResource {
     /**
      * Create a Consumer
      * @param ci Consumer metadata encapsulated in a ConsumerInfo.
+     * @param type Consumer type
      * @return newly created Consumer
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(ConsumerInfo ci) {
-        System.out.println("metadata: " + ci.getMetadata());
-        System.out.println("ci: " + ci);
+    public Consumer create(ConsumerInfo ci, ConsumerType type) {
+//        System.out.println("metadata: " + ci.getMetadata());
+//        System.out.println("ci: " + ci);
         //Owner owner = (Owner) ObjectFactory.get().lookupByUUID(Owner.class, owneruuid);
-        Consumer c = new Consumer(BaseModel.generateUUID());
+        Consumer c = new Consumer();
         c.setName(ci.getMetadataField("name"));
+        c.setType(type);
+        // TODO: Need owner specified here:
         //c.setOwner(owner);
         c.setInfo(ci);
         ObjectFactory.get().store(c);
@@ -91,17 +91,17 @@ public class ConsumerResource extends BaseResource {
      */
     @GET @Path("/info")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    // TODO: What consumer?
     public ConsumerInfo getInfo() {
         ConsumerInfo ci = new ConsumerInfo();
-        ci.setType(new ConsumerType("system"));
-        ci.setParent(null);
+//        ci.setType(new ConsumerType("system"));
+        ci.setConsumer(null);
 //        Map<String,String> m = new HashMap<String,String>();
 //        m.put("cpu", "i386");
 //        m.put("hey", "biteme");
 //        ci.setMetadata(m);
         ci.setMetadataField("cpu", "i386");
         ci.setMetadataField("hey", "foobar");
-        System.out.println(ci.getMetadata());
         return ci;
     }
     
@@ -110,16 +110,22 @@ public class ConsumerResource extends BaseResource {
      * @param cid Consumer ID to affect
      * @param pid Product ID to remove from Consumer.
      */
-    @DELETE @Path("{cid}/products/{pid}")
-    public void delete(@PathParam("cid") String cid,
-                       @PathParam("pid") String pid) {
-        System.out.println("cid " + cid + " pid = " + pid);
-        Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class, cid);
-        if (!c.getConsumedProducts().remove(pid)) {
-            log.error("no product " + pid + " found.");
-        }
-    }
-    
+//    @DELETE @Path("{cid}/products/{pid}")
+//    public void delete(@PathParam("cid") String cid,
+//                       @PathParam("pid") String pid) {
+//        System.out.println("cid " + cid + " pid = " + pid);
+//        Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class, cid);
+//        if (!c.getConsumedProducts().remove(pid)) {
+//            log.error("no product " + pid + " found.");
+//        }
+//    }
+
+    /**
+     * Returns the product whose id matches pid, from the consumer, cid.
+     * @param cid Consumer ID to affect
+     * @param pid Product ID to remove from Consumer.
+     * @return the product whose id matches pid, from the consumer, cid.
+     */
     @GET @Path("{cid}/products/{pid}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Product getProduct(@PathParam("cid") String cid,

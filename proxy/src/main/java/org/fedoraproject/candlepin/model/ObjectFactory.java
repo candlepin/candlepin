@@ -14,14 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.util.MethodUtil;
-
-import org.apache.log4j.Logger;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.util.MethodUtil;
 
 /**
  * ObjectFactory is used to create and persist the data model.
@@ -50,7 +49,7 @@ public class ObjectFactory {
      * @deprecated demo method
      */
     private void initMockObjects() {
-        Owner org = new Owner(BaseModel.generateUUID());
+        Owner org = new Owner();
         org.setName("test-org");
         
         // User
@@ -60,7 +59,7 @@ public class ObjectFactory {
         org.addUser(u);
         
         // Consumer
-        Consumer c = new Consumer(BaseModel.generateUUID());
+        Consumer c = new Consumer();
         c.setName("fake-consumer-i386");
         c.setOwner(org);
         org.addConsumer(c);
@@ -98,8 +97,8 @@ public class ObjectFactory {
      * @param uuid to lookup
      * @return BaseModel if found, null otherwise.
      */
-    public BaseModel lookupByUUID(Class<?> clazz, String uuid) {
-        return (BaseModel) lookupByFieldName(clazz, "uuid", uuid);
+    public Object lookupByUUID(Class<?> clazz, String uuid) {
+        return (Object) lookupByFieldName(clazz, "uuid", uuid);
     }
 
     /**
@@ -129,7 +128,7 @@ public class ObjectFactory {
         }
         return null;
     }
-
+    
     /**
      * Store an object
      * @param u object to store
@@ -152,7 +151,7 @@ public class ObjectFactory {
      * @param clazz to lookup  
      * @param removeMe model to remove
      */
-    public void delete(Class clazz, BaseModel removeMe) {
+    public void delete(Class clazz, Object removeMe) {
         String key = clazz.getName();
         List typelist = (List) objects.get(key);
         typelist.remove(removeMe);

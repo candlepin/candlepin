@@ -13,6 +13,7 @@
         <dependency org="candlepin" name="commons-beanutils" rev="1.7.0" />
         <dependency org="candlepin" name="commons-collections" rev="3.1" />
         <dependency org="candlepin" name="commons-logging" rev="1.1.1" />
+        <dependency org="candlepin" name="commons-codec" rev="1.4" />
         <dependency org="candlepin" name="dom4j" rev="1.6.1" />
         <dependency org="candlepin" name="ejb3-persistence" rev="3.4.0" />
         <dependency org="candlepin" name="freemarker" rev="2.3.15" />
@@ -39,5 +40,24 @@
         <dependency org="candlepin" name="slf4j-api" rev="1.5.8" />
         <dependency org="candlepin" name="slf4j-simple" rev="1.5.8" />
         <dependency org="candlepin" name="xalan-j2" rev="2.6.0" />
+        
+        <!--  guice and warp-persist dependencies -->
+        <dependency org="candlepin" name="aopalliance" rev="5_19_09" />
+        <dependency org="candlepin" name="guice" rev="2.0" />
+        <dependency org="candlepin" name="guice-assistedinject" rev="2.0" />
+        <dependency org="candlepin" name="guice-multibindings" rev="2.0" />
+        <dependency org="candlepin" name="guice-throwingproviders" rev="2.0" />
+        <dependency org="candlepin" name="warp-persist-src" rev="2.0-20090214" />
+        <dependency org="candlepin" name="warp-persist" rev="2.0-20090214" />
+        
+        <!-- jersey and guice -->
+        <dependency org="candlepin" name="servlet-api" rev="2.5" />
+        <dependency org="candlepin" name="guice-servlet" rev="2.0" />
+        <dependency org="candlepin" name="jersey-guice" rev="1.1.4.1" />
+        <dependency org="candlepin" name="guiceyfruit" rev="2.0" />
+        <dependency org="candlepin" name="guiceyfruit-core" rev="2.0" />
+        <dependency org="candlepin" name="guiceyfruit-jpa" rev="2.0" />
+        <dependency org="candlepin" name="guiceyfruit-junit4" rev="2.0" />
+        
     </dependencies>
 </ivy-module>

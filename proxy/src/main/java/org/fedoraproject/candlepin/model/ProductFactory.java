@@ -14,12 +14,12 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.apache.log4j.Logger;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
 
 
 /**
@@ -44,29 +44,29 @@ public class ProductFactory extends ObjectFactory {
         
         // TODO: Move this all into the DB for definition
         // Create some Products
-        Product rhel = new Product(BaseModel.generateUUID());
+        Product rhel = new Product();
         rhel.setName("Red Hat Enterprise Linux");
         rhel.setLabel("rhel");
         this.store(rhel);
         
-        Product jboss = new Product(BaseModel.generateUUID());
+        Product jboss = new Product();
         jboss.setName("JBoss Application Server");
         jboss.setLabel("jboss-as");
         this.store(jboss);
         
-        Product virt = new Product(BaseModel.generateUUID());
+        Product virt = new Product();
         virt.setName("RHEL Virtualization");
         virt.setLabel("rhel-virt");
         rhel.addChildProduct(virt);
         this.store(virt);
         
-        Product cluster = new Product(BaseModel.generateUUID());
+        Product cluster = new Product();
         cluster.setName("RHEL Cluster-Storage");
         cluster.setLabel("rhel-cluster");
         rhel.addChildProduct(cluster);
         this.store(cluster);
         
-        Product jbossdev = new Product(BaseModel.generateUUID());
+        Product jbossdev = new Product();
         jbossdev.setName("JBoss Developer Studio (v1) for Linux");
         this.store(jbossdev);
         
@@ -113,7 +113,7 @@ public class ProductFactory extends ObjectFactory {
         
         // EntitlementPool
         Owner owner = (Owner) listObjectsByClass(Owner.class).get(0);
-        EntitlementPool pool = new EntitlementPool(BaseModel.generateUUID());
+        EntitlementPool pool = new EntitlementPool();
         owner.addEntitlementPool(pool);
         pool.setProduct(rhel);
         store(pool);
@@ -131,7 +131,7 @@ public class ProductFactory extends ObjectFactory {
     }
 
     /**
-     * Lookup a ConsumerTYpe by name
+     * Lookup a ConsumerType by name
      * @param labelIn to lookup by
      * @return ConsumerType found
      */

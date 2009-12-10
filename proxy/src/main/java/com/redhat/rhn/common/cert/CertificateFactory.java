@@ -27,8 +27,7 @@ import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
 /**
- * A class for parsing certificates from their XML form. The XML
- * format is identical to the one used by the perl code.
+ * A class for parsing certificates from their XML form. 
  *
  * Borrowed from project Spacewalk: http://spacewalk.redhat.com
  */
@@ -54,8 +53,8 @@ public class CertificateFactory {
             new SimpleExtractor("generation"),
             new ChannelFamilyExtractor("channel-families") };
 
-    private static final HashMap<String,FieldExtractor> FIELD_MAP =
-            new HashMap<String,FieldExtractor>();
+    private static final HashMap<String, FieldExtractor> FIELD_MAP =
+            new HashMap<String, FieldExtractor>();
 
     static {
         for (int i = 0; i < FIELD_EXTRACTORS.length; i++) {

@@ -14,71 +14,145 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.ForeignKey;
+
+
 /**
- * Represents the owner of entitlements
+ * Represents the owner of entitlements.
+ * 
+ * This is akin to an organization, whereas a User is an individual account within that
+ * organization.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Owner extends BaseModel {
+@Entity
+@Table(name = "cp_owner")
+public class Owner {
     
-    private List<Consumer> consumers;
-    private List<EntitlementPool> entitlementPools;
-    private List<User> users;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String name;
+
+    @OneToMany(mappedBy = "owner", targetEntity = Consumer.class)
+    private Set<Consumer> consumers;
+    
+    // EntitlementPool is the owning side of this relationship.
+    @OneToMany(mappedBy = "owner", targetEntity = EntitlementPool.class)
+    @ForeignKey(name = "fk_user_owner_id")
+    private Set<EntitlementPool> entitlementPools;
+    
+    @OneToMany(mappedBy = "owner", targetEntity = User.class, cascade =
+        { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE })
+    private Set<User> users;
+    
+    @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)
+    private Set<Certificate> certificates;
+    
     
     /**
-     * @param uuid unique id for the owner
-     */
-    public Owner(String uuid) {
-        super(uuid);
-    }
-    
-    /**
-     * Default
+     * Default constructor
      */
     public Owner() {
+        consumers = new HashSet<Consumer>();
+        entitlementPools = new HashSet<EntitlementPool>();
+        users = new HashSet<User>();
+        certificates = new HashSet<Certificate>();
     }
     
+    /**
+     * Constructor with required parameters.
+     * 
+     * @param nameIn Owner's name.
+     */
+    public Owner(String nameIn) {
+        this.name = nameIn;
+        
+        consumers = new HashSet<Consumer>();
+        entitlementPools = new HashSet<EntitlementPool>();
+        users = new HashSet<User>();
+        certificates = new HashSet<Certificate>();
+    }
+    
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
     /**
      * @return the consumers
      */
-    public List<Consumer> getConsumers() {
+    public Set<Consumer> getConsumers() {
         return consumers;
     }
     /**
      * @param consumers the consumers to set
      */
-    public void setConsumers(List<Consumer> consumers) {
+    public void setConsumers(Set<Consumer> consumers) {
         this.consumers = consumers;
     }
     /**
      * @return the entitlementPools
      */
-    public List<EntitlementPool> getEntitlementPools() {
+    public Set<EntitlementPool> getEntitlementPools() {
         return entitlementPools;
     }
     /**
      * @param entitlementPools the entitlementPools to set
      */
-    public void setEntitlementPools(List<EntitlementPool> entitlementPools) {
+    public void setEntitlementPools(Set<EntitlementPool> entitlementPools) {
         this.entitlementPools = entitlementPools;
     }
     /**
      * @return the users
      */
-    public List<User> getUsers() {
+    public Set<User> getUsers() {
         return users;
     }
     /**
      * @param users the users to set
      */
-    public void setUsers(List<User> users) {
+    public void setUsers(Set<User> users) {
         this.users = users;
     }
     
@@ -88,8 +162,8 @@ public class Owner extends BaseModel {
      */
     public void addUser(User u) {
         u.setOwner(this);
-        if (this.users == null) {
-            this.users = new LinkedList<User>();
+        if (this.users ==  null) {
+            this.users = new HashSet<User>();
         }
         this.users.add(u);
     }
@@ -100,9 +174,6 @@ public class Owner extends BaseModel {
      */
     public void addConsumer(Consumer c) {
         c.setOwner(this);
-        if (this.consumers == null) {
-            this.consumers = new LinkedList<Consumer>();
-        }
         this.consumers.add(c);
         
     }
@@ -113,8 +184,8 @@ public class Owner extends BaseModel {
      */
     public void addEntitlementPool(EntitlementPool pool) {
         pool.setOwner(this);
-        if (this.entitlementPools == null) {
-            this.entitlementPools = new LinkedList<EntitlementPool>();
+        if (this.entitlementPools ==  null) {
+            this.entitlementPools = new HashSet<EntitlementPool>();
         }
         this.entitlementPools.add(pool);
     }
@@ -124,7 +195,7 @@ public class Owner extends BaseModel {
      */
     @Override
     public String toString() {
-        return "Owner [getName()=" + getName() + ", getUuid()=" +
-            getUuid() + "]";
+        return "Owner [name = " + getName() + ", id = " +
+            getId() + "]";
     }
 }

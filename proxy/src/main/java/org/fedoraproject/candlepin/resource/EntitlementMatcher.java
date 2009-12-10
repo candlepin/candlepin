@@ -14,20 +14,18 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.List;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductFactory;
 
-import org.apache.log4j.Logger;
-
-import java.util.List;
-
 /** 
- * EntitlementMatcher - initial class for matching products compatability
+ * EntitlementMatcher - initial class for matching products compatibility
  * with an entitlement.
- * @version $Rev$
  */
 public class EntitlementMatcher {
 
@@ -38,13 +36,13 @@ public class EntitlementMatcher {
             .getLogger(EntitlementMatcher.class);
     
     /**
-     * Check if a given consumer is compat with given product.
+     * Check if a given consumer is compatible with given product.
      * @param c consumer to check 
      * @param p product to check
-     * @return boolean if compat or not
+     * @return boolean if compatible or not
      */
     public boolean isCompatible(Consumer c, Product p) {
-        log.debug("isCompatible() : Consuner: " + c  + " product: " + p);
+        log.debug("isCompatible() : Consumer: " + c  + " product: " + p);
         if (c.getType() == null) {
             throw new NullPointerException("Consumer has no type.");
         }

@@ -14,15 +14,13 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import org.fedoraproject.candlepin.model.BaseModel;
-import org.fedoraproject.candlepin.model.ObjectFactory;
-import org.fedoraproject.candlepin.model.Owner;
-
+import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Owner;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * ObjectFactoryTest
@@ -71,32 +69,32 @@ public class ObjectFactoryTest {
         assertEquals(l, l2);
     }
     
-    @Test
-    public void testLookupByUUID() {
-        String uuid = BaseModel.generateUUID();
-        assertNull(ObjectFactory.get().lookupByUUID(Owner.class, uuid));
-        
-        Owner owner = new Owner(uuid);
-        owner.setName("unit-test-owner");
-        ObjectFactory.get().store(owner);
-        Object o = ObjectFactory.get().lookupByUUID(Owner.class, uuid);
-        assertNotNull(o);
-        assertEquals(o.getClass(), Owner.class);
-        assertEquals(((Owner)o).getUuid(), owner.getUuid());
-    }
+//    @Test
+//    public void testLookupByUUID() {
+//        String uuid = BaseModel.generateUUID();
+//        assertNull(ObjectFactory.get().lookupByUUID(Owner.class, uuid));
+//        
+//        Owner owner = new Owner(uuid);
+//        owner.setName("unit-test-owner");
+//        ObjectFactory.get().store(owner);
+//        Object o = ObjectFactory.get().lookupByUUID(Owner.class, uuid);
+//        assertNotNull(o);
+//        assertEquals(o.getClass(), Owner.class);
+//        assertEquals(((Owner)o).getUuid(), owner.getUuid());
+//    }
     
-    @Test
-    public void testLookupByFieldName() {
-        String uuid = BaseModel.generateUUID();
-        assertNull(ObjectFactory.get().lookupByUUID(Owner.class, uuid));
-        
-        Owner owner = new Owner(uuid);
-        owner.setName("unit-test-org");
-        ObjectFactory.get().store(owner);
-        
-        Owner o2 = (Owner) ObjectFactory.get().lookupByFieldName(
-                Owner.class, "uuid", uuid);
-        assertNotNull(o2);
-        assertEquals(owner, o2);
-    }
+//    @Test
+//    public void testLookupByFieldName() {
+//        String uuid = BaseModel.generateUUID();
+//        assertNull(ObjectFactory.get().lookupByUUID(Owner.class, uuid));
+//        
+//        Owner owner = new Owner(uuid);
+//        owner.setName("unit-test-org");
+//        ObjectFactory.get().store(owner);
+//        
+//        Owner o2 = (Owner) ObjectFactory.get().lookupByFieldName(
+//                Owner.class, "uuid", uuid);
+//        assertNotNull(o2);
+//        assertEquals(owner, o2);
+//    }
 }

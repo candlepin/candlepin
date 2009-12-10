@@ -15,12 +15,22 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
-import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.ForeignKey;
+
+
 
 /**
  * Entitlements are documents either signed XML or other certificate which 
@@ -40,30 +50,51 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Entitlement extends BaseModel {
+@Entity
+@Table(name = "cp_entitlement")
+public class Entitlement {
     
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    
+    @ManyToOne
+    @ForeignKey(name = "fk_entitlement_owner")
+    @JoinColumn(nullable = false)
     private Owner owner;
-    private EntitlementPool pool;
-    private List<Entitlement> childEntitlements;
     
+    @ManyToOne
+    @ForeignKey(name = "fk_entitlement_entitlement_pool")
+    @JoinColumn(nullable = false)
+    private EntitlementPool pool;
+
     private Date startDate;
 
-    /**
-     * default ctor
-     */
     public Entitlement() {
-        super(null);
     }
     
     /**
-     * @param uuid unique id of the entitlement
+     * @return the id
      */
-    public Entitlement(String uuid) {
-        super(uuid);
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Entitlement(EntitlementPool poolIn, Owner ownerIn, Date startDateIn) {
+        pool = poolIn;
+        owner = ownerIn;
+        startDate = startDateIn;
     }
     
     /**
-     * @return the org
+     * @return the owner
      */
     @XmlTransient
     public Owner getOwner() {
@@ -78,28 +109,12 @@ public class Entitlement extends BaseModel {
     }
 
     /**
-     * @return the childEntitlements
-     */
-    public List<Entitlement> getChildEntitlements() {
-        return childEntitlements;
-    }
-
-    /**
-     * @param childEntitlements the childEntitlements to set
-     */
-    public void setChildEntitlements(List<Entitlement> childEntitlements) {
-        this.childEntitlements = childEntitlements;
-    }
-
-    
-    /**
      * @return Returns the product.
      */
     public Product getProduct() {
         return this.pool.getProduct();
     }
 
-    
     /**
      * @return Returns the pool.
      */
@@ -107,7 +122,6 @@ public class Entitlement extends BaseModel {
         return pool;
     }
 
-    
     /**
      * @param poolIn The pool to set.
      */
@@ -115,7 +129,6 @@ public class Entitlement extends BaseModel {
         pool = poolIn;
     }
 
-    
     /**
      * @return Returns the startDate.
      */
@@ -123,13 +136,11 @@ public class Entitlement extends BaseModel {
         return startDate;
     }
 
-    
     /**
      * @param startDateIn The startDate to set.
      */
     public void setStartDate(Date startDateIn) {
         startDate = startDateIn;
     }
-
     
 }

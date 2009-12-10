@@ -16,10 +16,20 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -27,28 +37,63 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntitlementPool extends BaseModel {
+@Entity
+@Table(name = "cp_entitlement_pool")
+public class EntitlementPool {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    
+    @ManyToOne
+    @ForeignKey(name = "fk_entitlement_pool_owner")
+    @JoinColumn(nullable = false)
     private Owner owner;
+    
+    @ManyToOne
+    @ForeignKey(name = "fk_entitlement_pool_product")
+    @JoinColumn(nullable = false)
     private Product product;
-    private long maxMembers;
-    private long currentMembers;
+    
+    @Column(nullable = false)
+    private Long maxMembers;
 
+    @Column(nullable = false)
+    private Long currentMembers;
+
+    @Column(nullable = false)
     private Date startDate;
+    
+    @Column(nullable = false)
     private Date endDate;
 
-    /**
-     * @param uuid unique id of the pool
-     */
-    public EntitlementPool(String uuid) {
-        super(uuid);
+    public EntitlementPool() {
+    }
+
+    public EntitlementPool(Owner ownerIn, Product productIn, Long maxMembersIn, 
+            Date startDateIn, Date endDateIn) {
+        this.owner = ownerIn;
+        this.product = productIn;
+        this.maxMembers = maxMembersIn;
+        this.startDate = startDateIn;
+        this.endDate = endDateIn;
+        
+        // Always assume no current members if creating a new pool.
+        this.currentMembers = new Long(0);
     }
 
     /**
-     * Default const
+     * @return the id
      */
-    public EntitlementPool() {
+    public Long getId() {
+        return id;
+    }
 
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**
@@ -96,21 +141,21 @@ public class EntitlementPool extends BaseModel {
     /**
      * @return the maxMembers
      */
-    public long getMaxMembers() {
+    public Long getMaxMembers() {
         return maxMembers;
     }
 
     /**
      * @param maxMembers the maxMembers to set
      */
-    public void setMaxMembers(long maxMembers) {
+    public void setMaxMembers(Long maxMembers) {
         this.maxMembers = maxMembers;
     }
 
     /**
      * @return the currentMembers
      */
-    public long getCurrentMembers() {
+    public Long getCurrentMembers() {
         return currentMembers;
     }
 

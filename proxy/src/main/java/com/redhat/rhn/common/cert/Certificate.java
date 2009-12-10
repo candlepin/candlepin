@@ -14,8 +14,6 @@
  */
 package com.redhat.rhn.common.cert;
 
-import com.redhat.rhn.common.cert.XmlTag;
-
 import java.security.SignatureException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

@@ -14,17 +14,15 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.BaseModel;
-import org.fedoraproject.candlepin.model.ObjectFactory;
-
-import org.apache.log4j.Logger;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.ObjectFactory;
 
 
 /**
@@ -90,7 +88,7 @@ public abstract class BaseResource {
     @DELETE @Path("/{uuid}")
     public void delete(String uuid) {
         System.out.println("Delete called: " + uuid);
-        BaseModel obj = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
+        Object obj = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
         ObjectFactory.get().delete(getApiClass(), obj);
     }
     

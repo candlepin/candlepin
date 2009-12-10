@@ -35,7 +35,8 @@ final class RhnSecurityProvider extends Provider {
      * The name under which this provider registers
      */
     public static final String NAME = "RHNSP";
-    private static final String INFO = "RHN Security Provider (provides RIPEMD160WithDSA signatures)";
+    private static final String INFO =
+            "RHN Security Provider (provides RIPEMD160WithDSA signatures)";
 
     /**
      * Create the provider
