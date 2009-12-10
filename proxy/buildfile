@@ -29,12 +29,17 @@ HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
 DB = 'org.postgresql:postgresql:jar:8.4-701'
 COMMONS = ['org.apache.commons:commons-collections:jar:3.1',
            'org.apache.commons:commons-logging:jar:1.1.1',
+           'org.apache.commons:commons-codec:jar:1.4',
            'org.apache.commons:commons-beanutils:jar:1.7.0']
 JDOM = 'org.jdom:jdom:jar:1.0'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 
 BOUNCYCASTLE = group('bcprov', 'bcpg', :under=>'org.bouncycastle', :version=>'1.43')
+GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-servlet', 'guice-throwingproviders', :under=>'com.google.guice', :version=>'2.0'),
+           'com.wideplay.warp:warp-persist:jar:2.0-20090214',
+           'com.sun.jersey:jersey-guice:jar:1.1.4.1',
+           'javax.servlet:servlet-api:jar:2.5']
 
 
 # causes GET /org/apache/axis2/axis2/1.2/axis2-1.2.jar
@@ -59,8 +64,8 @@ define "candlepin" do
   compile.options.target = '1.5'
   # Add classpath dependencies
   #
-  compile.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM
-  test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB
+  compile.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE
+  test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE
 
   javadoc projects
   package :war
