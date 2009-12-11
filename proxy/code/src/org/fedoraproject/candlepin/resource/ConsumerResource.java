@@ -81,16 +81,12 @@ public class ConsumerResource extends BaseResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer create(ConsumerInfo ci, ConsumerType type) {
 
-        // TODO: Determine owner based on the authenticated user:
-        Owner owner = ownerCurator.listAll().get(0);
+        Owner owner = getCurrentUsersOwner(ownerCurator);
 
-
-        // TODO: Change to use proper constructor.
         Consumer c = new Consumer("consumer name?", owner, type);
         c.setInfo(ci);
-
-//        ObjectFactory.get().store(c);
         consumerCurator.create(c);
+        
         return c;
     }
 

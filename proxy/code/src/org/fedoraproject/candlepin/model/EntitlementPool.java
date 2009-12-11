@@ -165,6 +165,13 @@ public class EntitlementPool {
     public void setCurrentMembers(long currentMembers) {
         this.currentMembers = currentMembers;
     }
+    
+    public boolean hasAvailableEntitlements() {
+        if (currentMembers >= maxMembers) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * @return the owner

@@ -32,11 +32,15 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.fedoraproject.candlepin.util.EntityManagerUtil;
 
+import com.google.inject.Inject;
 import com.sun.jersey.api.representation.Form;
 
 
@@ -45,25 +49,19 @@ import com.sun.jersey.api.representation.Form;
  */
 @Path("/entitlement")
 public class EntitlementResource extends BaseResource {
-
-    /** default ctor */
-    public EntitlementResource() {
-        super(Entitlement.class);
-    }
-
-    /** Logger for this class */
+    
+    private EntitlementPoolCurator epCurator;
+    private OwnerCurator ownerCurator;
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
-    private Object validateObjectInput(Form form, String fieldName, Class clazz) {
-        String uuid = form.getFirst(fieldName);
-        Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
-        if (o == null) {
-            throw new RuntimeException(clazz.getName() + " with UUID: [" + 
-                    uuid + "] not found");
-        }
-        return o;
+    @Inject
+    public EntitlementResource(EntitlementPoolCurator epCurator, 
+            OwnerCurator ownerCurator) {
+        super(Entitlement.class);
+        this.epCurator = epCurator;
+        this.ownerCurator = ownerCurator;
     }
-    
+
     private Object validateObjectInput(String uuid, Class clazz) {
         Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
         if (o == null) {
@@ -108,41 +106,31 @@ public class EntitlementResource extends BaseResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/entitle")
     public Object entitle(Consumer c, Product p) {
-
-        // Possibly refactor this down into some 'business layer'
-        // Check for a matching EntitlementPool
-        List pools = ObjectFactory.get().listObjectsByClass(EntitlementPool.class);
-        for (int i = 0; i < pools.size(); i++) {
-            EntitlementPool ep = (EntitlementPool) pools.get(i);
-            if (ep.getProduct().equals(p)) {
-                log.debug("We found a matching EP");
-                // Check membership availability
-                if (ep.getCurrentMembers() >= ep.getMaxMembers()) {
-                    throw new RuntimeException("Not enough entitlements");
-                }
-                // Check expiration
-                Date today = new Date();
-                if (ep.getEndDate().before(today)) {
-                    throw new RuntimeException("Entitlement expired on: " +
-                        ep.getEndDate());
-                }
-                
-                Entitlement e = new Entitlement();
-                e.setPool(ep);
-                e.setStartDate(new Date());
-                ep.bumpCurrentMembers();
-                c.addConsumedProduct(p);
-                c.addEntitlement(e);
-                e.setOwner(ep.getOwner());
-                
-                
-                ObjectFactory.get().store(e);
-                ObjectFactory.get().store(ep);
-                
-                return CertGenerator.getCertString(); 
-            }
+        
+        // Lookup the entitlement pool for this product.
+        Owner owner = getCurrentUsersOwner(ownerCurator);
+        
+        EntitlementPool ePool = epCurator.lookupByOwnerAndProduct(owner, p);
+        if (ePool == null) {
+            throw new RuntimeException("No entitlements for product: " + p.getName());
         }
-        return null;
+        
+        if (!ePool.hasAvailableEntitlements()) {
+            throw new RuntimeException("Not enough entitlements");
+        }
+        
+        
+        // Check expiration:
+        Date today = new Date();
+        if (ePool.getEndDate().before(today)) {
+            throw new RuntimeException("Entitlements for " + p.getName() + 
+                    " expired on: " + ePool.getEndDate());
+        }
+        
+        // Actually create an entitlement:
+        Entitlement e = epCurator.createEntitlement(ePool, c); 
+        
+        return CertGenerator.getCertString(); 
     }
 
     /**

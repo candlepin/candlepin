@@ -14,10 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
+
+import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
@@ -35,6 +38,30 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         else {
             return results;
         }
+    }
+    
+    public EntitlementPool lookupByOwnerAndProduct(Owner owner, Product product) {
+        return (EntitlementPool) currentSession().createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("product", product))
+            .uniqueResult();
+    }
+    
+    /**
+     * Create an entitlement.
+     * 
+     * @param entPool
+     * @param consumer
+     * @return
+     */
+    @Transactional
+    public Entitlement createEntitlement(EntitlementPool entPool, Consumer consumer) {
+        Entitlement e = new Entitlement(entPool, consumer.getOwner(), new Date());
+        entPool.bumpCurrentMembers();
+        consumer.addEntitlement(e);
+        consumer.addConsumedProduct(entPool.getProduct());
+        e.setOwner(consumer.getOwner());
+        return e;
     }
 
 }

@@ -23,6 +23,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 
 
 /**
@@ -55,6 +57,19 @@ public abstract class BaseResource {
     public Object get(@PathParam("uuid") String uuid) {
         Object o = ObjectFactory.get().lookupByUUID(getApiClass(), uuid);
         return o;
+    }
+    
+    /**
+     * List all owners and just take the first one. 
+     * 
+     * TODO This is a temporary hack until we have authentication in place.
+     * 
+     * @param ownerCurator
+     * @return
+     */
+    protected Owner getCurrentUsersOwner(OwnerCurator oCurator) {
+        Owner owner = oCurator.listAll().get(0);
+        return owner;
     }
 
 //    @POST
