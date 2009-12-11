@@ -35,6 +35,8 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 
+import com.google.inject.Inject;
+
 /**
  * API Gateway for Consumers
  */
@@ -45,6 +47,7 @@ public class ConsumerResource extends BaseResource {
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
 
+    @Inject
     public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator) {
         super(Consumer.class);
 
