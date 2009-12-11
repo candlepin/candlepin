@@ -63,5 +63,22 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         e.setOwner(consumer.getOwner());
         return e;
     }
+    
+    @Transactional
+    public EntitlementPool create(EntitlementPool entity) {
+        
+        // Make sure there isn't already a pool for this product. Ideally we'd catch
+        // this with a database constraint but I don't see how to do that just yet.
+        EntitlementPool existing = lookupByOwnerAndProduct(entity.getOwner(), 
+                entity.getProduct());
+        if (existing != null) {
+            throw new RuntimeException("Already an entitlement pool for owner " +
+                    entity.getOwner().getName() + " and product " + 
+                    entity.getProduct().getLabel());
+        }
+        
+        return super.create(entity);
+    }
+
 
 }

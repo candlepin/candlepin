@@ -96,9 +96,9 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        Date currentDate = new Date(System.currentTimeMillis());
+        Date pastDate = new Date(System.currentTimeMillis() - 10000000);
         Date futuredate = new Date(System.currentTimeMillis() + 1000000000);
-        ep = new EntitlementPool(owner, product, new Long(10), currentDate, futuredate);
+        ep = new EntitlementPool(owner, product, new Long(10), pastDate, futuredate);
         epCurator.create(ep);
         
         eapi = new EntitlementResource(epCurator, ownerCurator);
@@ -144,22 +144,21 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testEntitlementsHaveExpired() {
-        // TODO
-//        // Test expiration
-//        Date pastdate = new Date(System.currentTimeMillis() - 1000000000);
-//        ep.setEndDate(pastdate);
-//        failed = false;
-//        try {
-//            eapi.entitle(consumer, product);
-//        }
-//        catch (Exception e) {
-//            System.out.println("expired:  ? " + e);
-//            failed = true;
-//        }
-//        assertTrue("we didnt expire", failed);
+        Product myProduct = TestUtil.createProduct();
+        productCurator.create(myProduct);
+        Date pastDate = new Date(System.currentTimeMillis() - 10000000);
+        Date notSoPastDate = new Date(System.currentTimeMillis() - 100000);
+        EntitlementPool anotherPool = new EntitlementPool(owner, myProduct, new Long(10), 
+                pastDate, notSoPastDate);
+        epCurator.create(anotherPool);
         
-
-        
+        try {
+            eapi.entitle(consumer, myProduct);
+            fail();
+        }
+        catch (RuntimeException e) {
+            // expected
+        }
     }
     
     @Test
