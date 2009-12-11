@@ -278,5 +278,5 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer lookedUp = (Consumer)em.find(Consumer.class, consumer.getId());
         assertEquals(3, lookedUp.getEntitlements().size());
     }
-
+    
 }

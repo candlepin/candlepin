@@ -31,6 +31,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -90,7 +91,9 @@ public class Consumer {
                 inverseName = "fk_consumer_product_product_id")
     @JoinTable(name = "cp_consumer_products",
             joinColumns = @JoinColumn(name = "consumer_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id"))
+            inverseJoinColumns = @JoinColumn(name = "product_id"),
+            uniqueConstraints = 
+                @UniqueConstraint(columnNames = {"consumer_id", "product_id"}))
     private Set<Product> consumedProducts;
     
     @OneToMany
