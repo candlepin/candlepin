@@ -37,6 +37,8 @@ import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import sun.nio.ch.EPollSelectorProvider;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.sun.jersey.api.client.Client;
@@ -56,6 +58,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     private Consumer consumer;
     private Product product;
     private EntitlementPool ep;
+    private Owner owner;
     private OwnerCurator ownerCurator;
     private EntitlementPoolCurator epCurator;
     private ConsumerCurator consumerCurator;
@@ -75,20 +78,19 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
                     .buildModule()
         );
         
-        
         epCurator = injector.getInstance(EntitlementPoolCurator.class);
         ownerCurator = injector.getInstance(OwnerCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
         productCurator = injector.getInstance(ProductCurator.class);
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
 
-        Owner o = TestUtil.createOwner();
-        ownerCurator.create(o);
+        owner = TestUtil.createOwner();
+        ownerCurator.create(owner);
         
         ConsumerType type = new ConsumerType("some-consumer-type");
         consumerTypeCurator.create(type);
         
-        consumer = TestUtil.createConsumer(type, o);
+        consumer = TestUtil.createConsumer(type, owner);
         consumerCurator.create(consumer);
         
         product = TestUtil.createProduct();
@@ -96,7 +98,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         
         Date currentDate = new Date(System.currentTimeMillis());
         Date futuredate = new Date(System.currentTimeMillis() + 1000000000);
-        ep = new EntitlementPool(o, product, new Long(10), currentDate, futuredate);
+        ep = new EntitlementPool(owner, product, new Long(10), currentDate, futuredate);
         epCurator.create(ep);
         
         eapi = new EntitlementResource(epCurator, ownerCurator);
@@ -106,9 +108,9 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     @Test
     public void testEntitle() throws Exception {
         
-        Form f = new Form();
-        f.add("consumer_id", consumer.getId());
-        f.add("product_id", product.getId());
+//        Form f = new Form();
+//        f.add("consumer_id", consumer.getId());
+//        f.add("product_id", product.getId());
         String cert = (String) eapi.entitle(consumer, product);
         
         assertNotNull(cert);
@@ -117,25 +119,31 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
                 .next().getId());
         assertEquals(1, consumer.getEntitlements().size());
+    }
+    
+    @Test
+    public void testMaxMembership() {
         
-//        ConsumerType type = new ConsumerType("some-consumer-type");
-//     
-        // TODO
-//        // Test max membership
-//        boolean failed = false;
-//        for (int i = 0; i < ep.getMaxMembers() + 10; i++) {
-//            Consumer ci = TestUtil.createConsumer(type, consumer.getOwner());
-//            f.add("consumer_id", ci.getId());
-//            try {
-//                eapi.entitle(consumer, product);
-//            }
-//            catch (Exception e) {
-//                System.out.println("Failed: " + e);
-//                failed = true;
-//            }
-//        }
-//        assertTrue("we didnt hit max members", failed);
-//
+        // 10 entitlements available, lets try to entitle 11 consumers.
+        for (int i = 0; i < ep.getMaxMembers(); i++) {
+            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+            eapi.entitle(c, product);
+        }
+        
+        // Now for the 11th:
+        try {
+            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+            eapi.entitle(c, product);
+            fail();
+        }
+        catch (RuntimeException e) {
+            // expected
+        }
+        
+    }
+    
+    @Test
+    public void testEntitlementsHaveExpired() {
         // TODO
 //        // Test expiration
 //        Date pastdate = new Date(System.currentTimeMillis() - 1000000000);
