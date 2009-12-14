@@ -23,6 +23,7 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.resource.TestResource;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -34,6 +35,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
  * TestResourceTest
  * @version $Rev$
  */
+@Ignore
 public class TestResourceTest {
     
     private JsonTestObject createTestObject() {
@@ -46,7 +48,8 @@ public class TestResourceTest {
         return jto;
     }
     
-    @Test
+//    @Test
+    @Ignore
     public void testJson() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);
@@ -67,7 +70,8 @@ public class TestResourceTest {
         System.out.println(jto.getStringList());
     }
     
-    @Test
+ //   @Test
+    @Ignore
     public void testGet() {
         TestResource tr = new TestResource();
         assertNull(tr.get());
@@ -77,7 +81,7 @@ public class TestResourceTest {
         assertEquals(jto, tr.get());
     }
     
-    @Test
+  //  @Test
     public void testConsumerType() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);
