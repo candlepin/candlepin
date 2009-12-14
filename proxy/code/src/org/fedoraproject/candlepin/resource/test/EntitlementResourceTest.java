@@ -119,6 +119,9 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
                 .next().getId());
         assertEquals(1, consumer.getEntitlements().size());
+        
+        ep = epCurator.find(ep.getId());
+        assertEquals(new Long(1), ep.getCurrentMembers());
     }
     
     @Test
