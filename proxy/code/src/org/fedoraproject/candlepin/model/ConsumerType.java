@@ -44,7 +44,7 @@ public class ConsumerType {
      * @param labelIn to set
      */
     public ConsumerType(String labelIn) {
-        setLabel(labelIn);
+        this.label = labelIn;
     }
     
     /**

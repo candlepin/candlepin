@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -30,6 +31,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -46,13 +48,16 @@ public class ConsumerResource extends BaseResource {
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
 
     @Inject
-    public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator) {
+    public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
+            ConsumerTypeCurator consumerTypeCurator) {
         super(Consumer.class);
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
    
     /**
@@ -79,9 +84,14 @@ public class ConsumerResource extends BaseResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(ConsumerInfo ci, ConsumerType type) {
+    public Consumer create(@FormParam("info") ConsumerInfo ci, 
+            @FormParam("type_label") String consumerTypeLabel) {
 
         Owner owner = getCurrentUsersOwner(ownerCurator);
+        ConsumerType type = consumerTypeCurator.find(consumerTypeLabel);
+        if (type == null) {
+            throw new RuntimeException("No such consumer type: " + consumerTypeLabel);
+        }
 
         Consumer c = new Consumer("consumer name?", owner, type);
         c.setInfo(ci);
