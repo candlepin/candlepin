@@ -1,4 +1,5 @@
-ant pack-webapp
+#!/bin/sh 
+
 TC=tomcat6
 if [ -z $TC_HOME ]; then
    TC_HOME=/var/lib/$TC
@@ -17,6 +18,15 @@ if [ "$?" -ne 0 ]; then
        exit 1
     fi
 fi
+
+ant gen-schema
+sudo service tomcat6 stop
+dropdb candlepin && createdb candlepin
+psql candlepin < build/schemagen/candlepin-proxy.sql
+psql candlepin < code/schema/postgresql/populate-defaults.sql
+
+ant pack-webapp
+
 sudo rm -rf $TC_HOME/webapps/candlepin/
 sudo cp build/webapp/candlepin.war $TC_HOME/webapps/
 $TC_CMD stop
