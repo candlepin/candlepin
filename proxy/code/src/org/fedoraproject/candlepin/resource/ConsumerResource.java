@@ -15,7 +15,10 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -43,6 +46,7 @@ import com.google.inject.Inject;
  * API Gateway for Consumers
  */
 @Path("/consumer")
+
 public class ConsumerResource extends BaseResource {
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
@@ -82,19 +86,25 @@ public class ConsumerResource extends BaseResource {
      * @return newly created Consumer
      */
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(@FormParam("info") ConsumerInfo ci, 
+    public Consumer create(/*@FormParam("info") Map info,*/ 
             @FormParam("type_label") String consumerTypeLabel) {
 
         Owner owner = getCurrentUsersOwner(ownerCurator);
-        ConsumerType type = consumerTypeCurator.find(consumerTypeLabel);
+        log.warn("Got consumerTypeLabel of: " + consumerTypeLabel);
+        ConsumerType type = consumerTypeCurator.lookupByLabel(consumerTypeLabel);
+        
         if (type == null) {
             throw new RuntimeException("No such consumer type: " + consumerTypeLabel);
         }
 
         Consumer c = new Consumer("consumer name?", owner, type);
-        c.setInfo(ci);
+//        for (Iterator it = info.keySet().iterator(); it.hasNext();) {
+//            String key = (String)it.next();
+//            String val = (String)info.get(key);
+//            c.setMetadataField(key, val);
+//        }
         consumerCurator.create(c);
         
         return c;
