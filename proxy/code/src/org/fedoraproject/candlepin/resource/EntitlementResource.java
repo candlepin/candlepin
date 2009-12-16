@@ -21,6 +21,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -30,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
@@ -37,6 +39,7 @@ import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.fedoraproject.candlepin.util.EntityManagerUtil;
 
@@ -52,14 +55,19 @@ public class EntitlementResource extends BaseResource {
     
     private EntitlementPoolCurator epCurator;
     private OwnerCurator ownerCurator;
+    private ConsumerCurator consumerCurator;
+    private ProductCurator productCurator;
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
-            OwnerCurator ownerCurator) {
+            OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
+            ProductCurator productCurator) {
         super(Entitlement.class);
         this.epCurator = epCurator;
         this.ownerCurator = ownerCurator;
+        this.consumerCurator = consumerCurator;
+        this.productCurator = productCurator;
     }
 
     private Object validateObjectInput(String uuid, Class clazz) {
@@ -105,10 +113,20 @@ public class EntitlementResource extends BaseResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/entitle")
-    public Object entitle(Consumer c, Product p) {
+    public Object entitle(@FormParam("consumer_uuid") String consumerUuid, 
+            @FormParam("product_id") String productLabel) {
         
         // Lookup the entitlement pool for this product.
         Owner owner = getCurrentUsersOwner(ownerCurator);
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new RuntimeException("No such consumer: " + consumerUuid);
+        }
+        
+        Product p = productCurator.lookupByLabel(productLabel);
+        if (p == null) {
+            throw new RuntimeException("No such product: " + productLabel);
+        }
         
         EntitlementPool ePool = epCurator.lookupByOwnerAndProduct(owner, p);
         if (ePool == null) {
@@ -128,7 +146,7 @@ public class EntitlementResource extends BaseResource {
         }
         
         // Actually create an entitlement:
-        Entitlement e = epCurator.createEntitlement(ePool, c); 
+        Entitlement e = epCurator.createEntitlement(ePool, consumer); 
         
         return CertGenerator.getCertString(); 
     }

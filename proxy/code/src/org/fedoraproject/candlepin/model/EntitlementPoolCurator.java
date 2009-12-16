@@ -61,6 +61,10 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         consumer.addEntitlement(e);
         consumer.addConsumedProduct(entPool.getProduct());
         e.setOwner(consumer.getOwner());
+        
+        save(e);
+        flush();
+        
         return e;
     }
     

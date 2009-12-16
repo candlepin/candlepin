@@ -98,7 +98,8 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         ep = new EntitlementPool(owner, product, new Long(10), pastDate, futuredate);
         epCurator.create(ep);
         
-        eapi = new EntitlementResource(epCurator, ownerCurator);
+        eapi = new EntitlementResource(epCurator, ownerCurator, consumerCurator, 
+                productCurator);
 
     }
     
@@ -108,10 +109,11 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
 //        Form f = new Form();
 //        f.add("consumer_id", consumer.getId());
 //        f.add("product_id", product.getId());
-        String cert = (String) eapi.entitle(consumer, product);
+        String cert = (String) eapi.entitle(consumer.getUuid(), product.getLabel());
         
         assertNotNull(cert);
         
+        consumer = consumerCurator.lookupByUuid(consumer.getUuid());
         assertEquals(1, consumer.getConsumedProducts().size());
         assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
                 .next().getId());
@@ -127,13 +129,14 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         // 10 entitlements available, lets try to entitle 11 consumers.
         for (int i = 0; i < ep.getMaxMembers(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
-            eapi.entitle(c, product);
+            consumerCurator.create(c);
+            eapi.entitle(c.getUuid(), product.getLabel());
         }
         
         // Now for the 11th:
         try {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
-            eapi.entitle(c, product);
+            eapi.entitle(c.getUuid(), product.getLabel());
             fail();
         }
         catch (RuntimeException e) {
@@ -153,7 +156,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         epCurator.create(anotherPool);
         
         try {
-            eapi.entitle(consumer, myProduct);
+            eapi.entitle(consumer.getUuid(), myProduct.getLabel());
             fail();
         }
         catch (RuntimeException e) {
@@ -179,7 +182,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     @Test
     public void testHasEntitlement() {
         
-        eapi.entitle(consumer, product);
+        eapi.entitle(consumer.getUuid(), product.getLabel());
 
         // TODO: Disabling this test, boils into ObjectFactory things that need
         // to be fixed before we can do this check! Sorry! :) - dgoodwin
