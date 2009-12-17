@@ -17,48 +17,17 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.UserCurator;
-import org.fedoraproject.candlepin.resource.test.CandlepinTestingModule;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.junit.Before;
 import org.junit.Test;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.wideplay.warp.persist.PersistenceService;
-import com.wideplay.warp.persist.UnitOfWork;
 
 public class OwnerTest extends DatabaseTestFixture {
     
-    private OwnerCurator ownerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private ConsumerCurator consumerCurator;
-    
-    @Before
-    public void setUp() {
-        super.setUp();
-        
-        Injector injector = Guice.createInjector(
-                new CandlepinTestingModule(), 
-                PersistenceService.usingJpa()
-                    .across(UnitOfWork.TRANSACTION)
-                    .buildModule()
-        );
-        
-        ownerCurator = injector.getInstance(OwnerCurator.class);
-        consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
-        consumerCurator = injector.getInstance(ConsumerCurator.class);
-    }
-
     @Test
     public void testCreate() throws Exception {
         String ownerName = "Example Corporation";

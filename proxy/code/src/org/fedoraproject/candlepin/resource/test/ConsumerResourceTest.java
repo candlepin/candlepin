@@ -16,6 +16,9 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInfo;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -67,15 +70,16 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testCreateConsumer() throws Exception {
-        ConsumerResource capi = new ConsumerResource(ownerCurator, consumerCurator);
+        ConsumerResource capi = new ConsumerResource(ownerCurator, consumerCurator, 
+                consumerTypeCurator);
         
-        ConsumerInfo ci = new ConsumerInfo();
-        ci.setMetadataField("cpu_cores", "8");
+        Map<String, String> ci = new HashMap<String, String>();
+        ci.put("cpu_cores", "8");
         
         Owner owner = TestUtil.createOwner();
         ownerCurator.create(owner);
 
-        Consumer returned = capi.create(ci, standardSystemType);
+        Consumer returned = capi.create(/*ci, */standardSystemType.getLabel());
         assertNotNull(returned.getUuid());
         assertEquals("standard-system", returned.getType().getLabel());
         assertEquals(owner.getId(), returned.getOwner().getId());
@@ -83,6 +87,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer lookedUp = consumerCurator.lookupByUuid(returned.getUuid());
         assertNotNull(lookedUp);
     }
+    
+    // TODO: Test no such consumer type.
     
 //    @Test
 //    public void testDelete() {

@@ -4,10 +4,6 @@ import httplib, urllib
 import sys
 import simplejson
 
-if len(sys.argv) < 1:
-    print("please supply a message")
-    sys.exit(1)
-
 params = urllib.urlencode({'name':'entitlement'})
 headers = {"Content-type":"application/json",
            "Accept": "application/json"}

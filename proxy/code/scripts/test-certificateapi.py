@@ -19,7 +19,7 @@ print("get: %s" % rsp)
 print("upload certificate")
 
 params = {"base64cert":encoded_cert}
-headers = {"Content-type":"application/json",
+headers = {"Content-type": "application/json",
            "Accept": "application/json"}
 
 conn = httplib.HTTPConnection("localhost", 8080)

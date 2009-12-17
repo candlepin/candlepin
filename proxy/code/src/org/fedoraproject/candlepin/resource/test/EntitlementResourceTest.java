@@ -21,23 +21,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.representation.Form;
 
 
 /**
@@ -48,88 +51,113 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     private Consumer consumer;
     private Product product;
     private EntitlementPool ep;
+    private Owner owner;    
+    private EntitlementResource eapi;
     
     @Before
     public void createTestObjects() {
+        owner = TestUtil.createOwner();
+        ownerCurator.create(owner);
         
-        beginTransaction();
-        
-        Owner o = TestUtil.createOwner();
         ConsumerType type = new ConsumerType("some-consumer-type");
+        consumerTypeCurator.create(type);
         
-        consumer = TestUtil.createConsumer(type, o);
+        consumer = TestUtil.createConsumer(type, owner);
+        consumerCurator.create(consumer);
+        
         product = TestUtil.createProduct();
+        productCurator.create(product);
         
-        entityManager().persist(o);
-        entityManager().persist(type);
-        entityManager().persist(consumer);
-        entityManager().persist(product);
-        commitTransaction();
-        
-        ep = new EntitlementPool();
-        ep.setProduct(product);
-        ep.setOwner(consumer.getOwner());
-        ep.setMaxMembers(new Long(10));
-        ep.setCurrentMembers(new Long(0));
-        
+        Date pastDate = new Date(System.currentTimeMillis() - 10000000);
         Date futuredate = new Date(System.currentTimeMillis() + 1000000000);
-        ep.setEndDate(futuredate);
-        ObjectFactory.get().store(ep);
+        ep = new EntitlementPool(owner, product, new Long(10), pastDate, futuredate);
+        entitlementPoolCurator.create(ep);
+        
+        eapi = new EntitlementResource(entitlementPoolCurator, ownerCurator, consumerCurator, 
+                productCurator);
 
     }
     
     @Ignore
     public void testEntitle() throws Exception {
         
-        
-        EntitlementResource eapi = new EntitlementResource();
-        Form f = new Form();
-        f.add("consumer_id", consumer.getId());
-        f.add("product_id", product.getId());
-        String cert = (String) eapi.entitle(consumer, product);
+//        Form f = new Form();
+//        f.add("consumer_id", consumer.getId());
+//        f.add("product_id", product.getId());
+        String cert = (String) eapi.entitle(consumer.getUuid(), product.getLabel());
         
         assertNotNull(cert);
-        assertNotNull(consumer.getConsumedProducts());
-        assertNotNull(consumer.getEntitlements());
         
-        ConsumerType type = new ConsumerType("some-consumer-type");
-     
-        // Test max membership
-        boolean failed = false;
-        for (int i = 0; i < ep.getMaxMembers() + 10; i++) {
-            Consumer ci = TestUtil.createConsumer(type, consumer.getOwner());
-            f.add("consumer_id", ci.getId());
-            try {
-                eapi.entitle(consumer, product);
-            }
-            catch (Exception e) {
-                System.out.println("Failed: " + e);
-                failed = true;
-            }
+        consumer = consumerCurator.lookupByUuid(consumer.getUuid());
+        assertEquals(1, consumer.getConsumedProducts().size());
+        assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
+                .next().getId());
+        assertEquals(1, consumer.getEntitlements().size());
+        
+        ep = entitlementPoolCurator.find(ep.getId());
+        assertEquals(new Long(1), ep.getCurrentMembers());
+    }
+    
+    @Test
+    public void testMaxMembership() {
+        
+        // 10 entitlements available, lets try to entitle 11 consumers.
+        for (int i = 0; i < ep.getMaxMembers(); i++) {
+            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+            consumerCurator.create(c);
+            eapi.entitle(c.getUuid(), product.getLabel());
         }
-        assertTrue("we didnt hit max members", failed);
-
-        // Test expiration
-        Date pastdate = new Date(System.currentTimeMillis() - 1000000000);
-        ep.setEndDate(pastdate);
-        failed = false;
+        
+        // Now for the 11th:
         try {
-            eapi.entitle(consumer, product);
+            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+            eapi.entitle(c.getUuid(), product.getLabel());
+            fail();
         }
-        catch (Exception e) {
-            System.out.println("expired:  ? " + e);
-            failed = true;
+        catch (RuntimeException e) {
+            // expected
         }
-        assertTrue("we didnt expire", failed);
         
-
+    }
+    
+    @Test
+    public void testEntitlementsHaveExpired() {
+        Product myProduct = TestUtil.createProduct();
+        productCurator.create(myProduct);
+        Date pastDate = new Date(System.currentTimeMillis() - 10000000);
+        Date notSoPastDate = new Date(System.currentTimeMillis() - 100000);
+        EntitlementPool anotherPool = new EntitlementPool(owner, myProduct, new Long(10), 
+                pastDate, notSoPastDate);
+        entitlementPoolCurator.create(anotherPool);
         
+        try {
+            eapi.entitle(consumer.getUuid(), myProduct.getLabel());
+            fail();
+        }
+        catch (RuntimeException e) {
+            // expected
+        }
+    }
+    
+    @Test
+    public void testEntitleOwnerHasNoEntitlements() {
+        // TODO
+    }
+    
+    @Test
+    public void testEntitleOwnerHasNoAviailableEntitlements() {
+        // TODO
+    }
+    
+    @Test
+    public void testEntitleConsumerAlreadyEntitledForProduct() {
+        // TODO
     }
     
     @Ignore
     public void testHasEntitlement() {
-        EntitlementResource eapi = new EntitlementResource();
-        eapi.entitle(consumer, product);
+        
+        eapi.entitle(consumer.getUuid(), product.getLabel());
 
         // TODO: Disabling this test, boils into ObjectFactory things that need
         // to be fixed before we can do this check! Sorry! :) - dgoodwin

@@ -31,6 +31,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         .uniqueResult();
     }
 
+    @SuppressWarnings("unchecked")
     public List<Owner> listAll() {
         List<Owner> results = (List<Owner>) currentSession()
             .createCriteria(Owner.class).list();

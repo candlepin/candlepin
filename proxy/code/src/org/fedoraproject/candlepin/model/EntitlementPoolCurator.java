@@ -14,10 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
+
+import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
@@ -37,5 +40,50 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             return results;
         }
     }
+    
+    public EntitlementPool lookupByOwnerAndProduct(Owner owner, Product product) {
+        return (EntitlementPool) currentSession().createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("product", product))
+            .uniqueResult();
+    }
+    
+    /**
+     * Create an entitlement.
+     * 
+     * @param entPool
+     * @param consumer
+     * @return
+     */
+    @Transactional
+    public Entitlement createEntitlement(EntitlementPool entPool, Consumer consumer) {
+        Entitlement e = new Entitlement(entPool, consumer.getOwner(), new Date());
+        entPool.bumpCurrentMembers();
+        consumer.addEntitlement(e);
+        consumer.addConsumedProduct(entPool.getProduct());
+        e.setOwner(consumer.getOwner());
+        
+        save(e);
+        flush();
+        
+        return e;
+    }
+    
+    @Transactional
+    public EntitlementPool create(EntitlementPool entity) {
+        
+        // Make sure there isn't already a pool for this product. Ideally we'd catch
+        // this with a database constraint but I don't see how to do that just yet.
+        EntitlementPool existing = lookupByOwnerAndProduct(entity.getOwner(), 
+                entity.getProduct());
+        if (existing != null) {
+            throw new RuntimeException("Already an entitlement pool for owner " +
+                    entity.getOwner().getName() + " and product " + 
+                    entity.getProduct().getLabel());
+        }
+        
+        return super.create(entity);
+    }
+
 
 }

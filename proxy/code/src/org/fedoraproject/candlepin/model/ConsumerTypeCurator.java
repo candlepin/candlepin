@@ -14,10 +14,17 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.criterion.Restrictions;
+
 public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> {
 
     protected ConsumerTypeCurator() {
         super(ConsumerType.class);
     }
-
+    
+    public ConsumerType lookupByLabel(String label) {
+        return (ConsumerType) currentSession().createCriteria(ConsumerType.class)
+            .add(Restrictions.eq("label", label))
+            .uniqueResult();
+    }
 }

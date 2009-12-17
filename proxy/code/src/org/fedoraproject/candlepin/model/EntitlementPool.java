@@ -24,6 +24,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -164,6 +165,13 @@ public class EntitlementPool implements Persisted {
      */
     public void setCurrentMembers(long currentMembers) {
         this.currentMembers = currentMembers;
+    }
+    
+    public boolean hasAvailableEntitlements() {
+        if (currentMembers >= maxMembers) {
+            return false;
+        }
+        return true;
     }
 
     /**
