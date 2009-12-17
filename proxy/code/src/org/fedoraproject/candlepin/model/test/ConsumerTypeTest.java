@@ -17,11 +17,11 @@ public class ConsumerTypeTest extends DatabaseTestFixture {
         beginTransaction();
         
         ConsumerType ct = new ConsumerType("standard-system");
-        em.persist(ct);
+        entityManager().persist(ct);
         
         commitTransaction();
         
-        List<EntityManager> results = em.createQuery("select ct from ConsumerType as ct")
+        List<EntityManager> results = entityManager().createQuery("select ct from ConsumerType as ct")
             .getResultList();
         assertEquals(1, results.size());
     }

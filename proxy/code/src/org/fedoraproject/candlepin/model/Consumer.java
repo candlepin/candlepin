@@ -52,7 +52,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer")
-public class Consumer {
+public class Consumer implements Persisted {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -96,7 +96,7 @@ public class Consumer {
                 @UniqueConstraint(columnNames = {"consumer_id", "product_id"}))
     private Set<Product> consumedProducts;
     
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     @ForeignKey(name = "fk_consumer_product_consumer_id",
                 inverseName = "fk_consumer_produce_product_id")
     @JoinTable(name = "cp_consumer_entitlements",

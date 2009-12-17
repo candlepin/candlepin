@@ -55,7 +55,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void createObjects() throws Exception {
 
         Injector injector = Guice.createInjector(
-                new CandlePingTestingModule(),
+                new CandlepinTestingModule(),
                 PersistenceService.usingJpa()
                     .across(UnitOfWork.TRANSACTION)
                     .buildModule()

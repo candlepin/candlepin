@@ -14,9 +14,19 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.hibernate.criterion.Restrictions;
 
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
+    
+    @Inject private ConsumerInfoCurator consumerInfoCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private EntitlementCurator entitlementCurator;
 
     protected ConsumerCurator() {
         super(Consumer.class);
@@ -33,5 +43,35 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .add(Restrictions.like("uuid", uuid))
             .uniqueResult();
     }
-
+    
+    @Transactional
+    public Consumer update(Consumer updatedConsumer) {
+        Consumer existingConsumer = find(updatedConsumer.getId());
+        if (existingConsumer == null) {
+            return create(updatedConsumer);
+        }
+        
+        // TODO: Are any of these read-only?
+        existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
+        existingConsumer.setConsumedProducts(productCurator.bulkUpdate(updatedConsumer.getConsumedProducts()));
+        existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
+        existingConsumer.setInfo(consumerInfoCurator.update(updatedConsumer.getInfo()));
+        existingConsumer.setName(updatedConsumer.getName());
+        existingConsumer.setOwner(updatedConsumer.getOwner());
+        existingConsumer.setParent(updatedConsumer.getParent());
+        existingConsumer.setType(updatedConsumer.getType());
+        existingConsumer.setUuid(updatedConsumer.getUuid());        
+        save(existingConsumer);
+        
+        return existingConsumer;
+    }
+    
+    @Transactional
+    public Set<Consumer> bulkUpdate(Set<Consumer> consumers) {
+        Set<Consumer> toReturn = new HashSet<Consumer>();        
+        for(Consumer toUpdate: consumers) { 
+            toReturn.add(update(toUpdate));
+        }
+        return toReturn;
+    }
 }

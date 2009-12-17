@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+
 /**
  * Handles the Certificate operations.
  */
@@ -21,5 +22,5 @@ public class CertificateCurator extends AbstractHibernateCurator<Certificate> {
 
     protected CertificateCurator() {
         super(Certificate.class);
-    }
+    }    
 }

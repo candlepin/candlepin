@@ -25,6 +25,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         super(EntitlementPool.class);
     }
 
+    @SuppressWarnings("unchecked")
     public List<EntitlementPool> listByOwner(Owner o) {
         List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
             .createCriteria(EntitlementPool.class)

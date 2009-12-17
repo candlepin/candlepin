@@ -38,16 +38,16 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         pool = TestUtil.createEntitlementPool();
         owner = pool.getOwner();
         prod = pool.getProduct();
-        em.persist(owner);
-        em.persist(prod);
-        em.persist(pool);
+        entityManager().persist(owner);
+        entityManager().persist(prod);
+        entityManager().persist(pool);
         
         commitTransaction();
     }
 
     @Test
     public void testCreate() {
-        EntitlementPool lookedUp = (EntitlementPool)em.find(EntitlementPool.class, 
+        EntitlementPool lookedUp = (EntitlementPool)entityManager().find(EntitlementPool.class, 
                 pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());

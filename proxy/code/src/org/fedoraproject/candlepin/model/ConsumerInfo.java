@@ -43,7 +43,7 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_info")
-public class ConsumerInfo {
+public class ConsumerInfo implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
     // metadata data key should be the identifier.

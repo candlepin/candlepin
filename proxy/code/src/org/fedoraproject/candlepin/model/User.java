@@ -39,7 +39,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_user")
-public class User {
+public class User implements Persisted {
     
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

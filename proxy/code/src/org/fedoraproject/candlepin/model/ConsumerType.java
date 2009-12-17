@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_type")
-public class ConsumerType {
+public class ConsumerType implements Persisted {
 
     @Id
     private String label;
@@ -45,6 +45,14 @@ public class ConsumerType {
      */
     public ConsumerType(String labelIn) {
         setLabel(labelIn);
+    }
+    
+    public String getId() {
+        return label;
+    }
+    
+    public void setId(String id) {
+        label = id;
     }
     
     /**

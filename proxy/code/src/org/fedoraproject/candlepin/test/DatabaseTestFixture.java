@@ -3,33 +3,72 @@ package org.fedoraproject.candlepin.test;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.fedoraproject.candlepin.model.Certificate;
+import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.util.EntityManagerUtil;
+import org.fedoraproject.candlepin.resource.test.CandlepinTestingModule;
 import org.junit.After;
 import org.junit.Before;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.wideplay.warp.persist.PersistenceService;
+import com.wideplay.warp.persist.UnitOfWork;
 
 /**
  * Test fixture for test classes requiring access to the database.
  */
 public class DatabaseTestFixture {
     
-    protected EntityManager em;
+    protected EntityManagerFactory emf;
+    protected Injector injector;
+    
+    protected OwnerCurator ownerCurator;
+    protected ProductCurator productCurator;
+    protected ConsumerCurator consumerCurator;
+    protected ConsumerTypeCurator consumerTypeCurator;
+    protected CertificateCurator certificateCurator;
+    protected EntitlementPoolCurator entitlementPoolCurator;
+
     
     @Before
     public void setUp() {
-        em = EntityManagerUtil.createEntityManager();
+        injector = Guice.createInjector(
+                new CandlepinTestingModule(), 
+                PersistenceService.usingJpa()
+                    .across(UnitOfWork.TRANSACTION)
+                    .buildModule()
+        );
+
+        injector.getInstance(EntityManagerFactory.class); 
+        emf = injector.getProvider(EntityManagerFactory.class).get();
+        
+        ownerCurator = injector.getInstance(OwnerCurator.class);
+        productCurator = injector.getInstance(ProductCurator.class);
+        consumerCurator = injector.getInstance(ConsumerCurator.class);
+        consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
+        certificateCurator = injector.getInstance(CertificateCurator.class);
+        entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
     }
     
     /*
+     * As long as we are using in-memory db we don't need to clean it out; 
+     * a new instance will be created for each test. cleanDb() is *not* being currently invoked.
+     * 
      * Cleans out everything in the database. Currently we test against an 
      * in-memory hsqldb, so this should be ok.
      * 
@@ -40,16 +79,14 @@ public class DatabaseTestFixture {
      *  pre-populated content, we may not want to wipe those tables here.
      *  This situation hasn't arisen yet.
      */
-    @After
+    @SuppressWarnings("unchecked")
     public void cleanDb() {
-        em.close();
-        em = EntityManagerUtil.createEntityManager();
+        EntityManager em = entityManager();
         if (!em.getTransaction().isActive()) {
             beginTransaction();
         }
         
-        List<User> users = em.createQuery("from User u").
-            getResultList();
+        List<User> users = em.createQuery("from User u").getResultList();
         for (User u : users) {
             em.remove(u);
         }
@@ -60,8 +97,7 @@ public class DatabaseTestFixture {
             em.remove(e);
         }
 
-        List<EntitlementPool> pools = em.createQuery("from EntitlementPool p").
-            getResultList();
+        List<EntitlementPool> pools = em.createQuery("from EntitlementPool p").getResultList();
         for (EntitlementPool p : pools) {
             em.remove(p);
         }
@@ -108,6 +144,10 @@ public class DatabaseTestFixture {
         em.close();
     }
     
+    protected EntityManager entityManager() {
+        return injector.getProvider(EntityManager.class).get();
+    }
+    
     /**
      * Begin a transaction, persist the given entity, and commit.
      * 
@@ -117,9 +157,9 @@ public class DatabaseTestFixture {
         EntityTransaction tx = null;
         
         try {
-            tx = em.getTransaction();
+            tx = entityManager().getTransaction();
             tx.begin();
-            em.persist(storeMe);
+            entityManager().persist(storeMe);
             tx.commit();
         }
         catch (RuntimeException e) {
@@ -135,7 +175,7 @@ public class DatabaseTestFixture {
      * require additional logic and error handling down the road.
      */
     protected void beginTransaction() {
-        em.getTransaction().begin();
+        entityManager().getTransaction().begin();
     }
 
     /**
@@ -143,6 +183,6 @@ public class DatabaseTestFixture {
      * require additional logic and error handling down the road.
      */
     protected void commitTransaction() {
-        em.getTransaction().commit();
+        entityManager().getTransaction().commit();
     }
 }

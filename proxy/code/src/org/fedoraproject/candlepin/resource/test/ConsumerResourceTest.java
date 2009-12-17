@@ -50,7 +50,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         super.setUp();
         
         Injector injector = Guice.createInjector(
-                new CandlePingTestingModule(), 
+                new CandlepinTestingModule(), 
                 PersistenceService.usingJpa()
                     .across(UnitOfWork.TRANSACTION)
                     .buildModule()

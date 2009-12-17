@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 
@@ -24,7 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.wideplay.warp.persist.Transactional;
 
-public class AbstractHibernateCurator<E> {
+public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     private final Class<E> entityType;
 
@@ -35,7 +36,7 @@ public class AbstractHibernateCurator<E> {
     }
 
     public E find(Serializable id) {
-        return get(entityType, id);
+        return id == null ? null : get(entityType, id);
     }
 
     @Transactional
@@ -44,28 +45,36 @@ public class AbstractHibernateCurator<E> {
         flush();
         return entity;
     }
+    
+    @SuppressWarnings("unchecked")
+    @Transactional()
+    public List<E> findAll() {
+        return (List<E>) currentSession().createCriteria(entityType).list();
+    }
+    
+    @Transactional
+    public void delete(E entity) {
+        E toDelete = find(entity.getId());
+        currentSession().delete(toDelete);
+    }
 
     protected final <T> T get(Class<T> clazz, Serializable id) {
         return clazz.cast(currentSession().get(clazz, id));
     }
 
     protected final void save(Object anObject) {
-        currentSession().save(anObject);
+        getEntityManager().persist(anObject);
     }
 
     protected final void flush() {
-        entityManager.get().flush();
+        getEntityManager().flush();
     }
 
     protected Session currentSession() {
         return (Session) entityManager.get().getDelegate();
     }
 
-    protected Provider<EntityManager> getEntityManager() {
-        return entityManager;
-    }
-
-    protected void setEntityManager(Provider<EntityManager> entityManager) {
-        this.entityManager = entityManager;
+    protected EntityManager getEntityManager() {
+        return entityManager.get();
     }
 }

@@ -26,7 +26,7 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
-import org.fedoraproject.candlepin.resource.test.CandlePingTestingModule;
+import org.fedoraproject.candlepin.resource.test.CandlepinTestingModule;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -48,7 +48,7 @@ public class OwnerTest extends DatabaseTestFixture {
         super.setUp();
         
         Injector injector = Guice.createInjector(
-                new CandlePingTestingModule(), 
+                new CandlepinTestingModule(), 
                 PersistenceService.usingJpa()
                     .across(UnitOfWork.TRANSACTION)
                     .buildModule()
@@ -65,7 +65,7 @@ public class OwnerTest extends DatabaseTestFixture {
         Owner o = new Owner(ownerName);
         ownerCurator.create(o);
         
-        Owner result = (Owner)em.createQuery(
+        Owner result = (Owner)entityManager().createQuery(
                 "select o from Owner o where o.name = :name")
                 .setParameter("name", ownerName).getSingleResult();
         
@@ -77,13 +77,13 @@ public class OwnerTest extends DatabaseTestFixture {
     
     @Test
     public void testList() throws Exception {
-        int beforeCount = em.createQuery("select o from Owner as o").getResultList().size();
+        int beforeCount = entityManager().createQuery("select o from Owner as o").getResultList().size();
         
         for (int i = 0; i < 10; i++) {
             ownerCurator.create(new Owner("Corp " + i));
         }
         
-        int afterCount = em.createQuery("select o from Owner as o").getResultList().size();
+        int afterCount = entityManager().createQuery("select o from Owner as o").getResultList().size();
         assertEquals(10, afterCount - beforeCount);
     }
     
@@ -151,7 +151,7 @@ public class OwnerTest extends DatabaseTestFixture {
         
         assertEquals(2, o.getUsers().size());
         
-        em.clear();
+        entityManager().clear();
         Owner lookedUp = ownerCurator.find(o.getId());
         assertEquals(2, lookedUp.getUsers().size());
     }

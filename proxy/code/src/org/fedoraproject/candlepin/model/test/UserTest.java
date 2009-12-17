@@ -33,11 +33,11 @@ public class UserTest extends DatabaseTestFixture {
         User user = new User(o, username, password);
 
         beginTransaction();
-        em.persist(o);
-        em.persist(user);
+        entityManager().persist(o);
+        entityManager().persist(user);
         commitTransaction();
 
-        User lookedUp = (User)em.find(User.class, user.getId());
+        User lookedUp = (User)entityManager().find(User.class, user.getId());
         assertEquals(username, lookedUp.getLogin());
         assertEquals(password, lookedUp.getPassword());
     }

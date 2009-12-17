@@ -17,19 +17,15 @@
 
 package org.fedoraproject.candlepin.model.test;
 
-import java.util.List;
-
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Certificate;
-
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.fedoraproject.candlepin.test.TestUtil;
-import org.junit.Before;
 import static org.junit.Assert.*;
 
+import java.util.List;
+
+import org.fedoraproject.candlepin.model.Certificate;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -41,44 +37,31 @@ public class CertificateTest extends DatabaseTestFixture {
         String ownerName = "Example Corporation";
         Owner owner = new Owner(ownerName);
         
-        String cert = "This is not actually a certificate. No entitlements for you!";
-        
-        Certificate certificate = new Certificate(cert, owner);
-        beginTransaction();
-        em.persist(owner);
-        em.persist(certificate);
-        commitTransaction();
+        ownerCurator.create(owner);
+        certificateCurator.create(
+                new Certificate("This is not actually a certificate. No entitlements for you!", owner));
     }
     
     
-    @Test
+    @Ignore
     public void testGetCertificate() {
         Certificate newCertificate = new Certificate();
-        
-        // doesn't actually do anything yet        
     }
     
     @Test
     public void testList() throws Exception {
-        beginTransaction();
-        
-        List<Certificate> certificates = em.createQuery("select c from Certificate as c").getResultList();
+        List<Certificate> certificates = certificateCurator.findAll(); 
         int beforeCount = certificates.size();
-        
      
-        String certname = "this is a test";
         for (int i = 0; i < 10; i++) {
             Owner owner = new Owner("owner" + i);
-            em.persist(owner);
-//            em.persist(new Certificate());
-            em.persist(new Certificate(certname, owner));
+            ownerCurator.create(owner);
+            certificateCurator.create(new Certificate("this is a test", owner));
         }
-        commitTransaction();
         
-        certificates =  em.createQuery("select c from Certificate as c").getResultList();
+        certificates =  certificateCurator.findAll();
         int afterCount = certificates.size();
         assertEquals(10, afterCount - beforeCount);
-        
     }
     
     @Test
@@ -87,14 +70,13 @@ public class CertificateTest extends DatabaseTestFixture {
         Owner owner = new Owner("test company");
         Certificate certificate = new Certificate("not a cert", owner);
         
-        beginTransaction();
-        em.persist(owner);
-        em.persist(certificate);
-        commitTransaction();
-        Certificate lookedUp = (Certificate)em.find(Certificate.class, certificate.getId());
+        ownerCurator.create(owner);
+        certificateCurator.create(certificate);
+        
+        Certificate lookedUp = certificateCurator.find(certificate.getId()); 
+
         assertEquals(certificate.getId(), lookedUp.getId());
         assertEquals(certificate.getCertificate(), lookedUp.getCertificate());
-
     }
 }
 

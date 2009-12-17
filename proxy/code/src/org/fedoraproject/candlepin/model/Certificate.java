@@ -37,7 +37,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_certificate")
-public class Certificate {
+public class Certificate implements Persisted {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

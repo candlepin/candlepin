@@ -21,7 +21,7 @@ public class ProductTest extends DatabaseTestFixture {
         Product prod = new Product("cptest-label", "My Product");
         persistAndCommit(prod);
         
-        List<Product> results = em.createQuery("select p from Product as p")
+        List<Product> results = entityManager().createQuery("select p from Product as p")
             .getResultList();
         assertEquals(1, results.size());
     }
@@ -72,11 +72,11 @@ public class ProductTest extends DatabaseTestFixture {
         
         parent.addChildProduct(child1);
         parent.addChildProduct(child2);
-        em.persist(parent);
+        entityManager().persist(parent);
         commitTransaction();
         
-        EntityManager em2 = EntityManagerUtil.createEntityManager();
-        Product result = (Product)em2.createQuery(
+        //EntityManager em2 = EntityManagerUtil.createEntityManager(); XXX not sure why we need to ask for a new EntityManager here
+        Product result = (Product)entityManager().createQuery(
                 "select p from Product as p where name = :name")
                 .setParameter("name", parent.getName())
                 .getSingleResult();
@@ -94,9 +94,9 @@ public class ProductTest extends DatabaseTestFixture {
         parent1.addChildProduct(child1);
         parent2.addChildProduct(child1); // should cause the failure
         
-        em.persist(child1);
-        em.persist(parent1);
-        em.persist(parent2);
+        entityManager().persist(child1);
+        entityManager().persist(parent1);
+        entityManager().persist(parent2);
         commitTransaction();
     }
     
@@ -107,22 +107,22 @@ public class ProductTest extends DatabaseTestFixture {
         Product parent1 = new Product("parent-product1", "Parent Product 1");
         Product child1 = new Product("child-product1", "Child Product 1");
         parent1.addChildProduct(child1);
-        em.persist(parent1);
+        entityManager().persist(parent1);
         commitTransaction();
         
-        EntityManager em2 = EntityManagerUtil.createEntityManager();
-        Product result = (Product)em2.createQuery(
+        //EntityManager em2 = EntityManagerUtil.createEntityManager();
+        Product result = (Product)entityManager().createQuery(
                 "select p from Product as p where name = :name")
                 .setParameter("name", child1.getName())
                 .getSingleResult();
         assertNotNull(result);
         
         beginTransaction();
-        em.remove(parent1);
+        entityManager().remove(parent1);
         commitTransaction();
 
-        em2 = EntityManagerUtil.createEntityManager();
-        List<Product> results = em2.createQuery(
+        //em2 = EntityManagerUtil.createEntityManager();
+        List<Product> results = entityManager().createQuery(
                 "select p from Product as p where name = :name")
                 .setParameter("name", child1.getName())
                 .getResultList();
