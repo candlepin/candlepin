@@ -22,6 +22,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -43,12 +44,13 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_info")
+@SequenceGenerator(name="seq_consumer_info", sequenceName="seq_consumer_info")
 public class ConsumerInfo implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
     // metadata data key should be the identifier.
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_consumer_info")
     private Long id;
     
     @OneToOne(mappedBy = "info")
