@@ -41,7 +41,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement_pool")
-@SequenceGenerator(name="seq_entitlement_pool", sequenceName="seq_entitlement_pool")
+@SequenceGenerator(name="seq_entitlement_pool", sequenceName="seq_entitlement_pool", allocationSize=1)
 public class EntitlementPool implements Persisted {
 
     @Id

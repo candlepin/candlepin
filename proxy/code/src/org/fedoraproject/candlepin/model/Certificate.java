@@ -38,7 +38,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_certificate")
-@SequenceGenerator(name="seq_certificate", sequenceName="seq_certificate")
+@SequenceGenerator(name="seq_certificate", sequenceName="seq_certificate", allocationSize=1)
 public class Certificate implements Persisted {
 
     @Id

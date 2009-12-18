@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_type")
-@SequenceGenerator(name="seq_consumer_type", sequenceName="seq_consumer_type")
+@SequenceGenerator(name="seq_consumer_type", sequenceName="seq_consumer_type", allocationSize=1)
 public class ConsumerType implements Persisted {
 
     @Id

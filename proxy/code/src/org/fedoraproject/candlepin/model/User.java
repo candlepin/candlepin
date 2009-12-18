@@ -40,7 +40,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_user")
-@SequenceGenerator(name="seq_user", sequenceName="seq_user")
+@SequenceGenerator(name="seq_user", sequenceName="seq_user", allocationSize=1)
 public class User implements Persisted {
     
     @Id

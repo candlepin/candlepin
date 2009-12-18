@@ -44,7 +44,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_product")
-@SequenceGenerator(name="seq_product", sequenceName="seq_product")
+@SequenceGenerator(name="seq_product", sequenceName="seq_product", allocationSize=1)
 public class Product implements Persisted {
 
     @Id

@@ -53,7 +53,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement")
-@SequenceGenerator(name="seq_entitlement", sequenceName="seq_entitlement")
+@SequenceGenerator(name="seq_entitlement", sequenceName="seq_entitlement", allocationSize=1)
 public class Entitlement implements Persisted {
     
     @Id

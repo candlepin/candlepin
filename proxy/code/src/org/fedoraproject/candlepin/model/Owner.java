@@ -43,7 +43,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_owner")
-@SequenceGenerator(name="seq_owner", sequenceName="seq_owner")
+@SequenceGenerator(name="seq_owner", sequenceName="seq_owner", allocationSize=1)
 public class Owner implements Persisted {
     
     @Id

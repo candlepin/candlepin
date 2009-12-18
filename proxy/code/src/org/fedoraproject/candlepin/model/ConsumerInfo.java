@@ -44,7 +44,7 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_info")
-@SequenceGenerator(name="seq_consumer_info", sequenceName="seq_consumer_info")
+@SequenceGenerator(name="seq_consumer_info", sequenceName="seq_consumer_info", allocationSize=1)
 public class ConsumerInfo implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
