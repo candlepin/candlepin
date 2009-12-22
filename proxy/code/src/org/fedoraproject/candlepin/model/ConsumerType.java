@@ -14,8 +14,12 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,13 +34,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_type")
+@SequenceGenerator(name="seq_consumer_type", sequenceName="seq_consumer_type", allocationSize=1)
 public class ConsumerType implements Persisted {
 
     @Id
-    private String label;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_consumer_type")
+    private Long id;
 
+    @Column(nullable = false, unique = true)
+    private String label;
+    
     public ConsumerType() {
-        label = null;
     }
 
     /**
@@ -47,18 +55,17 @@ public class ConsumerType implements Persisted {
         this.label = labelIn;
     }
     
-    public String getId() {
-        return label;
+    public Long getId() {
+        return id;
     }
     
-    public void setId(String id) {
-        label = id;
+    public void setId(Long id) {
+        this.id = id;
     }
     
     /**
      * @return Returns the label.
      */
-    @Id
     public String getLabel() {
         return label;
     }
