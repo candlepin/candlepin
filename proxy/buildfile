@@ -39,6 +39,7 @@ BOUNCYCASTLE = group('bcprov', 'bcpg', :under=>'org.bouncycastle', :version=>'1.
 GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-servlet', 'guice-throwingproviders', :under=>'com.google.guice', :version=>'2.0'),
            'com.wideplay.warp:warp-persist:jar:2.0-20090214',
            'com.sun.jersey:jersey-guice:jar:1.1.4.1',
+           'aopalliance:aopalliance:jar:1.0',
            'javax.servlet:servlet-api:jar:2.5']
 
 
@@ -62,18 +63,15 @@ define "candlepin" do
   project.group = GROUP
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.5'
-  # Add classpath dependencies
-  #
-  compile.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE
+
+  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE  
+  test.setup do |task|
+    filter('src/test/java').exclude('*.java').into('target/test/classes').run 
+  	filter('src/main/webapp/META-INF').into('target/classes/META-INF').run
+  end
+  test.teardown { rm_rf 'target/classes/META-INF' }
   test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE
 
-  javadoc projects
-  package :war
-
-  #define "fbuild" do
-  #end
-
-  #define "code" do
-  #end
-
+  #javadoc projects
+  package(:war)
 end
