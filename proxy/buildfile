@@ -25,7 +25,8 @@ HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
              'javassist:javassist:jar:3.9.0.GA',
              'javax.transaction:jta:jar:1.1',
              'org.slf4j:slf4j-api:jar:1.5.8',
-             'org.slf4j:slf4j-simple:jar:1.5.8' ]
+             'org.slf4j:slf4j-simple:jar:1.5.8',
+             'org.freemarker:freemarker:jar:2.3.15' ]
 DB = 'org.postgresql:postgresql:jar:8.4-701'
 COMMONS = ['org.apache.commons:commons-collections:jar:3.1',
            'org.apache.commons:commons-logging:jar:1.1.1',
@@ -64,7 +65,8 @@ define "candlepin" do
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.5'
 
-  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE  
+  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE
+    
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 
   	filter('src/main/webapp/META-INF').into('target/classes/META-INF').run
@@ -74,4 +76,31 @@ define "candlepin" do
 
   #javadoc projects
   package(:war)
+  
+  #to use: buildr candlepin:schema_gen
+  task :schema_gen do  
+    begin
+      ant('gen-schema') do |ant|
+        rm_rf 'target/schemagen'
+        mkdir_p 'target/schemagen'
+      	filter('src/main/webapp/META-INF').into('target/classes/META-INF').run
+  
+        ant.taskdef :name=>'schema',
+          :classname=>'org.hibernate.tool.ant.HibernateToolTask',
+          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, JERSEY]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+      
+        ant.schema :destdir=>'target/schemagen' do
+          ant.classpath :path=>_('target/classes')
+          ant.jpaconfiguration :persistenceunit=>'production'
+          ant.hbm2ddl :export=>'false', :update=>'false', :drop=>'false', :create=>'true', 
+            :outputfilename=>'candlepin-proxy.sql', :delimiter=>';', :format=>'false', :haltonerror=>'true'
+        end
+      end
+    ensure
+      rm_rf 'target/classes/META-INF'
+    end
+  end
+  
 end
+
+
