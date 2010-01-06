@@ -170,7 +170,15 @@
     <tstamp />
   </target>
 
-  <target name="all" depends="init,compile,pack"
+  <target name="usebuildr">
+    <echo message="Silly Wabbit, ant has been deprecated, please use buildr."/>
+    <echo message="" />
+    <echo message="And if you must ask 'why not maven?' That's because I despise maven." />
+  </target>
+
+  <target name="all" depends="usebuildr" />
+
+  <target name="oldall" depends="init,compile,pack"
           description="Compile and pack - no code generation in this step" />
 
 
