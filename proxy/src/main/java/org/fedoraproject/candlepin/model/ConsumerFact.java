@@ -45,7 +45,7 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @Entity
 @Table(name = "cp_consumer_info")
 @SequenceGenerator(name="seq_consumer_info", sequenceName="seq_consumer_info", allocationSize=1)
-public class ConsumerInfo implements Persisted {
+public class ConsumerFact implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
     // metadata data key should be the identifier.
@@ -64,11 +64,11 @@ public class ConsumerInfo implements Persisted {
     @Cascade(value = { org.hibernate.annotations.CascadeType.ALL })
     private Map<String, String> metadata;
     
-    public ConsumerInfo() {
+    public ConsumerFact() {
         metadata = new HashMap<String, String>();
     }
     
-    public ConsumerInfo(Consumer consumerIn) {
+    public ConsumerFact(Consumer consumerIn) {
         metadata = new HashMap<String, String>();
         consumer = consumerIn;
     }

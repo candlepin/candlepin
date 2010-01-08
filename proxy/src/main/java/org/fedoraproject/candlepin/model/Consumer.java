@@ -108,7 +108,7 @@ public class Consumer implements Persisted {
     
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "consumer_info_id")
-    private ConsumerInfo info;
+    private ConsumerFact info;
     
     public Consumer(String name, Owner owner, ConsumerType type) {
         this.name = name;
@@ -119,14 +119,14 @@ public class Consumer implements Persisted {
         // generate a UUID at this point.
         this.uuid = Util.generateUUID();
 
-        this.info = new ConsumerInfo(this);
+        this.info = new ConsumerFact(this);
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }
 
     public Consumer() {
-        this.info = new ConsumerInfo(this);
+        this.info = new ConsumerFact(this);
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
@@ -253,7 +253,7 @@ public class Consumer implements Persisted {
     /**
      * @return Returns the info.
      */
-    public ConsumerInfo getInfo() {
+    public ConsumerFact getInfo() {
         return info;
     }
 
@@ -261,7 +261,7 @@ public class Consumer implements Persisted {
     /**
      * @param infoIn The info to set.
      */
-    public void setInfo(ConsumerInfo infoIn) {
+    public void setInfo(ConsumerFact infoIn) {
         info = infoIn;
     }
     

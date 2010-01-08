@@ -24,7 +24,7 @@ import com.wideplay.warp.persist.Transactional;
 
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
-    @Inject private ConsumerInfoCurator consumerInfoCurator;
+    @Inject private ConsumerFactCurator consumerInfoCurator;
     @Inject private ProductCurator productCurator;
     @Inject private EntitlementCurator entitlementCurator;
 

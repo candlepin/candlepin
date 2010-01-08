@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.persistence.PersistenceException;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerInfo;
+import org.fedoraproject.candlepin.model.ConsumerFact;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
@@ -130,11 +130,11 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer attachedConsumer = consumerCurator.find(consumer.getId());
         Long consumerInfoId = attachedConsumer.getInfo().getId();
 
-        assertNotNull((ConsumerInfo)entityManager().find(ConsumerInfo.class, consumerInfoId));
+        assertNotNull((ConsumerFact)entityManager().find(ConsumerFact.class, consumerInfoId));
         
         consumerCurator.delete(attachedConsumer);
         
-        assertNull((ConsumerInfo)entityManager().find(ConsumerInfo.class, consumerInfoId));
+        assertNull((ConsumerFact)entityManager().find(ConsumerFact.class, consumerInfoId));
     }
 
     @Test

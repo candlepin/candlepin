@@ -15,10 +15,7 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -32,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.ConsumerInfo;
+import org.fedoraproject.candlepin.model.ConsumerFact;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.ObjectFactory;
@@ -117,8 +114,8 @@ public class ConsumerResource extends BaseResource {
     @GET @Path("/info")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     // TODO: What consumer?
-    public ConsumerInfo getInfo() {
-        ConsumerInfo ci = new ConsumerInfo();
+    public ConsumerFact getInfo() {
+        ConsumerFact ci = new ConsumerFact();
 //        ci.setType(new ConsumerType("system"));
         ci.setConsumer(null);
 //        Map<String,String> m = new HashMap<String,String>();
