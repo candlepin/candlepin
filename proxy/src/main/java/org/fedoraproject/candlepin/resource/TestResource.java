@@ -23,9 +23,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-
-import com.google.inject.Inject;
 
 
 /**

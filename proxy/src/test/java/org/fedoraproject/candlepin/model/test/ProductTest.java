@@ -2,20 +2,12 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.util.EntityManagerUtil;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.List;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.fedoraproject.candlepin.util.EntityManagerUtil;
 import org.junit.Test;
 
 public class ProductTest extends DatabaseTestFixture {

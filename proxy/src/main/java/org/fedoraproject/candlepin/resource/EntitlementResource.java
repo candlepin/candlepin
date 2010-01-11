@@ -44,7 +44,6 @@ import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.fedoraproject.candlepin.util.EntityManagerUtil;
 
 import com.google.inject.Inject;
-import com.sun.jersey.api.representation.Form;
 
 
 /**

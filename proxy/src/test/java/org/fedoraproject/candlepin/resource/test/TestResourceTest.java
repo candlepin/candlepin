@@ -22,7 +22,6 @@ import java.util.List;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.resource.TestResource;
-import org.junit.Test;
 import org.junit.Ignore;
 
 import com.sun.jersey.api.client.Client;

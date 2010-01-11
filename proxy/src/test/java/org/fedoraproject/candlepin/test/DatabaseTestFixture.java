@@ -21,7 +21,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.test.CandlepinTestingModule;
-import org.junit.After;
 import org.junit.Before;
 
 import com.google.inject.Guice;

@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-
 import static org.junit.Assert.*;
 
 import java.util.Map;

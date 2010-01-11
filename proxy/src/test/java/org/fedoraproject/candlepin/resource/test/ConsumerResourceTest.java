@@ -20,27 +20,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerFact;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerFact;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.test.framework.JerseyTest;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 
 /**
  * ConsumerResourceTest
  */
-public class ConsumerResourceTest extends DatabaseTestFixture {
+public class ConsumerResourceTest extends JerseyTest {
     
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
@@ -100,26 +103,25 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 //        assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
 //    }
 
-//    @Test
-//    public void testJSON() { 
-//        ClientConfig cc = new DefaultClientConfig();
-//        Client c = Client.create(cc);
-//
-//        ConsumerInfo ci = new ConsumerInfo();
-//        ci.setMetadataField("name", "jsontestname");
-//        ci.setType(new ConsumerType("standard-system"));
-//        
-//        WebResource res =
-//            c.resource("http://localhost:8080/candlepin/consumer/");
-//        Consumer rc = res.type("application/json").post(Consumer.class, ci);
-//        assertNotNull(rc);
-//        assertNotNull(rc.getUuid());
-//        System.out.println(rc.getUuid());
+    @Test
+    public void testJSON() { 
+        Client c = Client.create(new DefaultClientConfig());
+
+        ConsumerFact ci = new ConsumerFact();
+        ci.setMetadataField("name", "jsontestname");
+        //ci.setType(new ConsumerType("standard-system"));
         
-//        WebResource delres =
-//          c.resource("http://localhost:8080/candlepin/consumer/");
-//        delres.accept("application/json").delete(rc.getUuid());
-//        
-//        assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), rc.getUuid()));
-//    }
+        WebResource res =
+            c.resource("http://localhost:8080/candlepin/consumer/");
+        Consumer rc = res.type("application/json").post(Consumer.class, ci);
+        assertNotNull(rc);
+        assertNotNull(rc.getUuid());
+        System.out.println(rc.getUuid());
+        
+        WebResource delres =
+          c.resource("http://localhost:8080/candlepin/consumer/");
+        delres.accept("application/json").delete(rc.getUuid());
+        
+        //assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), rc.getUuid()));
+    }
 }
