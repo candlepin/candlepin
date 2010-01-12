@@ -68,7 +68,7 @@ public abstract class BaseResource {
      * @return
      */
     protected Owner getCurrentUsersOwner(OwnerCurator oCurator) {
-        Owner owner = oCurator.listAll().get(0);
+        Owner owner = oCurator.findAll().get(0);
         return owner;
     }
 

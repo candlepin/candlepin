@@ -20,75 +20,36 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFact;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.test.framework.JerseyTest;
-import com.wideplay.warp.persist.PersistenceService;
-import com.wideplay.warp.persist.UnitOfWork;
 
 /**
  * ConsumerResourceTest
  */
-public class ConsumerResourceTest extends JerseyTest {
+public class ConsumerResourceTest extends DatabaseTestFixture {
     
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private OwnerCurator ownerCurator;
-
+    private static final String METADATA_VALUE = "jsontestname";
+    private static final String METADATA_NAME = "name";
+    private static final String CONSUMER_NAME = "consumer name";
+    
     private ConsumerType standardSystemType;
+    private ConsumerResource consumerResource;
+    private Owner owner;
 
     @Before
     public void setUp() {
         super.setUp();
-        
-        Injector injector = Guice.createInjector(
-                new CandlepinTestingModule(), 
-                PersistenceService.usingJpa()
-                    .across(UnitOfWork.TRANSACTION)
-                    .buildModule()
-        );
-        
-        
-        consumerCurator = injector.getInstance(ConsumerCurator.class);
-        consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
-        ownerCurator = injector.getInstance(OwnerCurator.class);
-        
-        standardSystemType = new ConsumerType("standard-system");
-        consumerTypeCurator.create(standardSystemType);
-    }
-    
-    @Test
-    public void testCreateConsumer() throws Exception {
-        ConsumerResource capi = new ConsumerResource(ownerCurator, consumerCurator, 
-                consumerTypeCurator);
-        
-        Map<String, String> ci = new HashMap<String, String>();
-        ci.put("cpu_cores", "8");
-        
-        Owner owner = TestUtil.createOwner();
-        ownerCurator.create(owner);
 
-        Consumer returned = capi.create(/*ci, */standardSystemType.getLabel());
-        assertNotNull(returned.getUuid());
-        assertEquals("standard-system", returned.getType().getLabel());
-        assertEquals(owner.getId(), returned.getOwner().getId());
-        
-        Consumer lookedUp = consumerCurator.lookupByUuid(returned.getUuid());
-        assertNotNull(lookedUp);
+        consumerResource = new ConsumerResource(ownerCurator, consumerCurator, consumerTypeCurator);
+        standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
+        owner = ownerCurator.create(new Owner("test-owner"));
     }
     
     // TODO: Test no such consumer type.
@@ -104,24 +65,24 @@ public class ConsumerResourceTest extends JerseyTest {
 //    }
 
     @Test
-    public void testJSON() { 
-        Client c = Client.create(new DefaultClientConfig());
+    public void testCreateConsumer() {
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        toSubmit.setInfo(new ConsumerFact() {{ setMetadataField(METADATA_NAME, METADATA_VALUE); }});
 
-        ConsumerFact ci = new ConsumerFact();
-        ci.setMetadataField("name", "jsontestname");
-        //ci.setType(new ConsumerType("standard-system"));
+        Consumer created = consumerResource.create(toSubmit);
         
-        WebResource res =
-            c.resource("http://localhost:8080/candlepin/consumer/");
-        Consumer rc = res.type("application/json").post(Consumer.class, ci);
-        assertNotNull(rc);
-        assertNotNull(rc.getUuid());
-        System.out.println(rc.getUuid());
+        assertNotNull(created);
+        assertNotNull(created.getUuid());
+        assertNotNull(consumerCurator.find(created.getId()));
+        assertEquals(standardSystemType.getLabel(), created.getType().getLabel());
+        assertEquals(METADATA_VALUE, created.getMetadataField(METADATA_NAME));
+    }
+    
+    @Ignore // TODO: implement 'delete' functionality
+    public void testDeleteResource() {
+        Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME, owner, standardSystemType));
+        consumerResource.delete(created.getUuid());
         
-        WebResource delres =
-          c.resource("http://localhost:8080/candlepin/consumer/");
-        delres.accept("application/json").delete(rc.getUuid());
-        
-        //assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), rc.getUuid()));
+        assertNull(consumerCurator.find(created.getId()));
     }
 }

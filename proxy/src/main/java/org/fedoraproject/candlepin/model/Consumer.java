@@ -124,6 +124,17 @@ public class Consumer implements Persisted {
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
     }
+    
+    public static Consumer createFromConsumer(Consumer copyFrom, Owner owner, ConsumerType type) {
+        Consumer toReturn = new Consumer(copyFrom.name, owner, type);
+        
+        toReturn.info = copyFrom.info;
+        toReturn.childConsumers = copyFrom.childConsumers;
+        toReturn.consumedProducts = copyFrom.consumedProducts;
+        toReturn.entitlements = copyFrom.entitlements;
+        
+        return toReturn;
+    }
 
     public Consumer() {
         this.info = new ConsumerFact(this);

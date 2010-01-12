@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -83,28 +82,18 @@ public class ConsumerResource extends BaseResource {
      * @return newly created Consumer
      */
     @POST
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
+    @Consumes({MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(/*@FormParam("info") Map info,*/ 
-            @FormParam("type_label") String consumerTypeLabel) {
-
+    public Consumer create(Consumer in) {
         Owner owner = getCurrentUsersOwner(ownerCurator);
-        log.warn("Got consumerTypeLabel of: " + consumerTypeLabel);
-        ConsumerType type = consumerTypeCurator.lookupByLabel(consumerTypeLabel);
+        log.warn("Got consumerTypeLabel of: " + in.getType().getLabel());
+        ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());
         
         if (type == null) {
-            throw new RuntimeException("No such consumer type: " + consumerTypeLabel);
+            throw new RuntimeException("No such consumer type: " + in.getType().getLabel());
         }
 
-        Consumer c = new Consumer("consumer name?", owner, type);
-//        for (Iterator it = info.keySet().iterator(); it.hasNext();) {
-//            String key = (String)it.next();
-//            String val = (String)info.get(key);
-//            c.setMetadataField(key, val);
-//        }
-        consumerCurator.create(c);
-        
-        return c;
+        return consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
     }
 
     /**
