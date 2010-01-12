@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,6 +26,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -68,6 +71,9 @@ public class EntitlementPool implements Persisted {
     
     @Column(nullable = false)
     private Date endDate;
+
+    @Transient
+    private Set<Attribute> attributes;
 
     public EntitlementPool() {
     }
@@ -196,5 +202,13 @@ public class EntitlementPool implements Persisted {
     public void bumpCurrentMembers() {
         this.currentMembers = this.currentMembers + 1;
     }
+
+	public Set<Attribute> getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(Set<Attribute> attributes) {
+		this.attributes = attributes;
+	}
 
 }

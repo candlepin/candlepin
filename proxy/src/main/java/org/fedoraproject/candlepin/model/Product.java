@@ -28,6 +28,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -65,6 +66,9 @@ public class Product implements Persisted {
             inverseJoinColumns = @JoinColumn(name = "CHILD_PRODUCT_ID"))
     private Set<Product> childProducts;
 
+    @Transient
+    private Set<Attribute> attributes;
+
     /**
      * Constructor
      * 
@@ -78,44 +82,25 @@ public class Product implements Persisted {
         setName(name);
     }
 
-    /**
-     * Default constructor
-     */
     public Product() {
     }
 
-    /**
-     * @return the id
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * @param id the id to set
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * @return the childProducts
-     */
     public Set<Product> getChildProducts() {
         return childProducts;
     }
 
-    /**
-     * @param childProducts the childProducts to set
-     */
     public void setChildProducts(Set<Product> childProducts) {
         this.childProducts = childProducts;
     }
 
-    /**
-     * Add a child of this Product.
-     * @param p to add
-     */
     public void addChildProduct(Product p) {
         if (this.childProducts ==  null) {
             this.childProducts = new HashSet<Product>();
@@ -123,42 +108,33 @@ public class Product implements Persisted {
         this.childProducts.add(p);
     }
     
-    /**
-     * @return Returns the label.
-     */
     public String getLabel() {
         return label;
     }
 
-    /**
-     * @param labelIn The label to set.
-     */
     public void setLabel(String labelIn) {
         label = labelIn;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return "Product [label = " + label + "]";
     }
     
-    /**
-     * Returns the name of the object.
-     * @return the name of the object.
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * Set the name of the model object.
-     * @param name name of the object
-     */
     public void setName(String name) {
         this.name = name;
     }
+
+	public Set<Attribute> getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(Set<Attribute> attributes) {
+		this.attributes = attributes;
+	}
 
 }
