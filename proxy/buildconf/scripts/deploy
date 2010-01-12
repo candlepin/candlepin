@@ -19,15 +19,15 @@ if [ "$?" -ne 0 ]; then
     fi
 fi
 
-ant gen-schema
+buildr candlepin:schema_gen
 sudo service tomcat6 stop
 dropdb candlepin && createdb candlepin
-psql candlepin < build/schemagen/candlepin-proxy.sql
+psql candlepin < target/schemagen/candlepin-proxy.sql
 psql candlepin < code/schema/postgresql/populate-defaults.sql
 
-ant pack-webapp
+buildr package test=no
 
 sudo rm -rf $TC_HOME/webapps/candlepin/
-sudo cp build/webapp/candlepin.war $TC_HOME/webapps/
+sudo cp target/candlepin-1.0.0.war $TC_HOME/webapps/
 $TC_CMD stop
 $TC_CMD start
