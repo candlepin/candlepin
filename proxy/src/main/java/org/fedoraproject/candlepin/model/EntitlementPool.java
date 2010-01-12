@@ -24,6 +24,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -72,7 +74,9 @@ public class EntitlementPool implements Persisted {
     @Column(nullable = false)
     private Date endDate;
 
-    @Transient
+    @OneToMany
+//    @ForeignKey(name = "fk_entitlement_pool_attribute")
+    @JoinColumn(name = "attribute_id")
     private Set<Attribute> attributes;
 
     public EntitlementPool() {

@@ -15,10 +15,46 @@
 
 package org.fedoraproject.candlepin.model;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Id;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.SequenceGenerator;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+/**
+ * 
+ * 
+ *      Attributes can be thought of as a hint on some restriction on the usage of an entitlement.
+ *       They will not actually contain the logic on how to enforce the Attribute, but basically just act as a constant the policy rules can look for, and a little metadata that may be required to enforce.
+ * Attributes can be affiliated with a given product in the product database, or they can be affiliated with entitlements granted within a particular customer's order/certificate.
+ * All Attributes must pass for the entitlement to be granted to a consumer. Not sure if this statement will stand the test of time, may be some issues here with "enabling" attributes vs "restricting" attributes and knowing when to grant/not grant based on the outcome of multiple checks. Will see how it goes.
+ * Attributes can be associated with a product, or more commonly with an order of that product contained in the cert. For us, this probably means they'll be associated with entitlement pools in the database.
+ *         o If the same Attribute is found on both the product and the entitlement pool, the entitlement pool's version can be assumed as the authoritative one to check. 
+ */
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
+@Entity
+@Table(name = "cp_attribute")
+@SequenceGenerator(name="seq_attribute", sequenceName="seq_attribute", allocationSize=1)
 public class Attribute {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_attribute")
+    private Long id;
+    
+    
+    @Column(nullable = false)
 	private String name;
-	private String quantity;
+    
+    @Column(nullable = false)
+	private Long quantity;
 
 	public String getName() {
 		return name;
@@ -28,11 +64,11 @@ public class Attribute {
 		this.name = name;
 	}
 
-	public String getQuantity() {
+	public Long getQuantity() {
 		return quantity;
 	}
 
-	public void setQuantity(String quantity) {
+	public void setQuantity(Long quantity) {
 		this.quantity = quantity;
 	}
 

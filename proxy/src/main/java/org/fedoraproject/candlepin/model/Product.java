@@ -28,7 +28,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -66,7 +65,9 @@ public class Product implements Persisted {
             inverseJoinColumns = @JoinColumn(name = "CHILD_PRODUCT_ID"))
     private Set<Product> childProducts;
 
-    @Transient
+
+    @OneToMany
+    @JoinColumn(name = "attribute_id")
     private Set<Attribute> attributes;
 
     /**
