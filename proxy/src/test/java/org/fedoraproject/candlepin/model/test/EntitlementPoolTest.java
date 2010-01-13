@@ -24,7 +24,6 @@ import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class EntitlementPoolTest extends DatabaseTestFixture {
 
     private EntitlementPool pool;
@@ -34,24 +33,35 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     @Before
     public void createObjects() {
         beginTransaction();
-        
+
         pool = TestUtil.createEntitlementPool();
         owner = pool.getOwner();
         prod = pool.getProduct();
         entityManager().persist(owner);
         entityManager().persist(prod);
         entityManager().persist(pool);
-        
+
         commitTransaction();
     }
 
     @Test
     public void testCreate() {
-        EntitlementPool lookedUp = (EntitlementPool)entityManager().find(EntitlementPool.class, 
-                pool.getId());
+        EntitlementPool lookedUp = (EntitlementPool) entityManager().find(
+                EntitlementPool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod.getId(), lookedUp.getProduct().getId());
+    }
+
+    @Test
+    public void testUnlimitedPool() {
+        Product newProduct = TestUtil.createProduct();
+        productCurator.create(newProduct);
+        EntitlementPool unlimitedPool = new EntitlementPool(owner, newProduct,
+                new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
+                        .createDate(2050, 11, 30));
+        entitlementPoolCurator.create(unlimitedPool);
+        assertTrue(entitlementPoolCurator.entitlementsAvailable(unlimitedPool));
     }
 
 }

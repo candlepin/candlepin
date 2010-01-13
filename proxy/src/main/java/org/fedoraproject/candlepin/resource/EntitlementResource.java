@@ -138,7 +138,6 @@ public class EntitlementResource extends BaseResource {
             throw new RuntimeException("No entitlements for product: " + p.getName());
         }
         
-        Enforcer enforcer = new EnforcerImpl(dateSource);
         if (!enforcer.validate(consumer, ePool)) {
             throw new RuntimeException(enforcer.errors().toString());
         }

@@ -48,6 +48,17 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             .uniqueResult();
     }
     
+    public boolean entitlementsAvailable(EntitlementPool pool) {
+        if (pool.isUnlimited()) {
+            return true;
+        }
+
+        if (pool.getCurrentMembers() < pool.getMaxMembers()) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Create an entitlement.
      * 

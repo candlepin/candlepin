@@ -90,107 +90,58 @@ public class EntitlementPool implements Persisted {
         this.currentMembers = new Long(0);
     }
 
-    /**
-     * @return the id
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * @param id the id to set
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * @return the product
-     */
     public Product getProduct() {
         return product;
     }
 
-    /**
-     * @param product the product to set
-     */
     public void setProduct(Product product) {
         this.product = product;
     }
 
-    /**
-     * @return the startDate
-     */
     public Date getStartDate() {
         return startDate;
     }
 
-    /**
-     * @param startDate the startDate to set
-     */
     public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
 
-    /**
-     * @return the endDate
-     */
     public Date getEndDate() {
         return endDate;
     }
 
-    /**
-     * @param endDate the endDate to set
-     */
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
 
-    /**
-     * @return the maxMembers
-     */
     public Long getMaxMembers() {
         return maxMembers;
     }
 
-    /**
-     * @param maxMembers the maxMembers to set
-     */
     public void setMaxMembers(Long maxMembers) {
         this.maxMembers = maxMembers;
     }
 
-    /**
-     * @return the currentMembers
-     */
     public Long getCurrentMembers() {
         return currentMembers;
     }
 
-    /**
-     * @param currentMembers the currentMembers to set
-     */
     public void setCurrentMembers(long currentMembers) {
         this.currentMembers = currentMembers;
     }
     
-    public boolean hasAvailableEntitlements() {
-        if (currentMembers >= maxMembers) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * @return the owner
-     */
     public Owner getOwner() {
         return owner;
     }
 
-    /**
-     * @param owner the owner to set
-     */
     @XmlTransient
     public void setOwner(Owner owner) {
         this.owner = owner;
@@ -213,6 +164,16 @@ public class EntitlementPool implements Persisted {
 	
 	public boolean isExpired(DateSource dateSource) {
 	    return getEndDate().before(dateSource.currentDate());
+	}
+
+	/**
+	 * @return True if entitlement pool is unlimited.
+	 */
+	public boolean isUnlimited() {
+		if (this.getMaxMembers() < 0) {
+			return true;
+		}
+		return false;
 	}
 
 }
