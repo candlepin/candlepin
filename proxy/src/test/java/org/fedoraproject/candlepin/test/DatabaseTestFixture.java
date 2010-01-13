@@ -6,6 +6,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
+import org.fedoraproject.candlepin.CandlepinTestingModule;
+import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Certificate;
 import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -20,7 +22,6 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.resource.test.CandlepinTestingModule;
 import org.junit.Before;
 
 import com.google.inject.Guice;
@@ -42,6 +43,7 @@ public class DatabaseTestFixture {
     protected ConsumerTypeCurator consumerTypeCurator;
     protected CertificateCurator certificateCurator;
     protected EntitlementPoolCurator entitlementPoolCurator;
+    protected DateSourceForTesting dateSource;
 
     
     @Before
@@ -62,6 +64,7 @@ public class DatabaseTestFixture {
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         certificateCurator = injector.getInstance(CertificateCurator.class);
         entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
+        dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
     }
     
     /*

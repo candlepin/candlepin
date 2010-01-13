@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import org.fedoraproject.candlepin.CandlepinTestingModule;
 import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;

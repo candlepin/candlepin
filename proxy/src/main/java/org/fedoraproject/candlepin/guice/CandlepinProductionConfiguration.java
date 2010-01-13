@@ -1,5 +1,8 @@
 package org.fedoraproject.candlepin.guice;
 
+import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.enforcer.Enforcer;
+import org.fedoraproject.candlepin.enforcer.EnforcerImpl;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementPoolResource;
@@ -8,6 +11,7 @@ import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.resource.UserResource;
+import org.fedoraproject.candlepin.util.DateSourceImpl;
 
 import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
@@ -27,5 +31,7 @@ public class CandlepinProductionConfiguration extends AbstractModule {
         bind(ProductResource.class);
         bind(UserResource.class);
         bind(TestResource.class);
+        bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
+        bind(Enforcer.class).to(EnforcerImpl.class);
     }
 }

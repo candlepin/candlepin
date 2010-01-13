@@ -30,6 +30,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.enforcer.Enforcer;
+import org.fedoraproject.candlepin.enforcer.EnforcerImpl;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -56,17 +59,20 @@ public class EntitlementResource extends BaseResource {
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ProductCurator productCurator;
+    
+    private DateSource dateSource;
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
             OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ProductCurator productCurator) {
+            ProductCurator productCurator, DateSource dateSource) {
         super(Entitlement.class);
         this.epCurator = epCurator;
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
+        this.dateSource = dateSource;
     }
 
     private Object validateObjectInput(String uuid, Class clazz) {
@@ -132,16 +138,9 @@ public class EntitlementResource extends BaseResource {
             throw new RuntimeException("No entitlements for product: " + p.getName());
         }
         
-        if (!ePool.hasAvailableEntitlements()) {
-            throw new RuntimeException("Not enough entitlements");
-        }
-        
-        
-        // Check expiration:
-        Date today = new Date();
-        if (ePool.getEndDate().before(today)) {
-            throw new RuntimeException("Entitlements for " + p.getName() + 
-                    " expired on: " + ePool.getEndDate());
+        Enforcer enforcer = new EnforcerImpl(dateSource);
+        if (!enforcer.validate(consumer, ePool)) {
+            throw new RuntimeException(enforcer.errors().toString());
         }
         
         // Actually create an entitlement:

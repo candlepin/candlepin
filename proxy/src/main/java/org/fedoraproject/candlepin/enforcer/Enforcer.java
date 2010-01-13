@@ -14,8 +14,10 @@
  */
 package org.fedoraproject.candlepin.enforcer;
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.EntitlementPool;
 
 public interface Enforcer {
 	
@@ -28,7 +30,11 @@ public interface Enforcer {
 	 * 
 	 * @param consumer Consumer who wishes to consume an entitlement.
 	 * @param product Product consumer wishes to have access too.
+	 * @return TODO
 	 */
-	public void validate(Consumer consumer, Product product);
-	
+	public boolean validate(Consumer consumer, EntitlementPool enitlementPool);
+	public List<ValidationError> errors();
+	public boolean hasErrors();
+	public List<ValidationWarning> warnings();
+	public boolean hasWarnings();
 }
