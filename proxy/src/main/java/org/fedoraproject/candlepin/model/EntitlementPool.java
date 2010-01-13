@@ -60,6 +60,11 @@ public class EntitlementPool implements Persisted {
     @JoinColumn(nullable = false)
     private Product product;
     
+    @ManyToOne
+    @ForeignKey(name = "fk_entitlement_pool_consumer")
+    @JoinColumn(nullable = true)
+    private Consumer consumer;
+
     @Column(nullable = false)
     private Long maxMembers;
 
@@ -100,6 +105,14 @@ public class EntitlementPool implements Persisted {
 
     public Product getProduct() {
         return product;
+    }
+
+    public Consumer getConsumer() {
+        return consumer;
+    }
+
+    public void setConsumer(Consumer consumerIn) {
+        this.consumer = consumerIn;
     }
 
     public void setProduct(Product product) {

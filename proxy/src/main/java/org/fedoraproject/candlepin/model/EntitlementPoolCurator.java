@@ -41,13 +41,46 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
     }
     
-    public EntitlementPool lookupByOwnerAndProduct(Owner owner, Product product) {
+    /**
+     * Look for an entitlement pool for the given owner, consumer, product.
+     *
+     * Note that consumer can (and often will be null). This method first
+     * checks for a consumer specific method
+     * @param owner
+     * @param consumer
+     * @param product
+     * @return
+     */
+    public EntitlementPool lookupByOwnerAndProduct(Owner owner,
+            Consumer consumer, Product product) {
+
+        // If we were given a specific consumer, and a pool exists for that
+        // specific consumer, return this pool instead.
+        if (consumer != null) {
+            EntitlementPool result = (EntitlementPool)
+                currentSession().createCriteria(EntitlementPool.class)
+                .add(Restrictions.eq("owner", owner))
+                .add(Restrictions.eq("product", product))
+                .add(Restrictions.eq("consumer", consumer))
+                .uniqueResult();
+            if (result != null) {
+                return result;
+            }
+        }
+
         return (EntitlementPool) currentSession().createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("product", product))
             .uniqueResult();
     }
     
+    /**
+     * Return true if this pool has entitlements available. Performs a
+     * quantity check, but is also aware of pools with unlimited entitlements.
+     *
+     * @param pool Entitlement pool to check
+     * @return True if the entitlement pool has entitlements available.
+     */
     public boolean entitlementsAvailable(EntitlementPool pool) {
         if (pool.isUnlimited()) {
             return true;
@@ -86,11 +119,20 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         // Make sure there isn't already a pool for this product. Ideally we'd catch
         // this with a database constraint but I don't see how to do that just yet.
         EntitlementPool existing = lookupByOwnerAndProduct(entity.getOwner(), 
-                entity.getProduct());
+                entity.getConsumer(), entity.getProduct());
+
         if (existing != null) {
-            throw new RuntimeException("Already an entitlement pool for owner " +
-                    entity.getOwner().getName() + " and product " + 
-                    entity.getProduct().getLabel());
+            if (entity.getConsumer() == null) {
+                throw new RuntimeException("Already an entitlement pool for owner " +
+                        entity.getOwner().getName() + " and product " +
+                        entity.getProduct().getLabel());
+
+            }
+            else if (existing.getConsumer() != null) {
+                throw new RuntimeException("Already an entitlement pool for owner " +
+                        entity.getOwner().getName() + " and product " +
+                        entity.getProduct().getLabel());
+            }
         }
         
         return super.create(entity);

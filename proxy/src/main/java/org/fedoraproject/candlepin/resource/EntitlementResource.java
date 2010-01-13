@@ -133,7 +133,8 @@ public class EntitlementResource extends BaseResource {
             throw new RuntimeException("No such product: " + productLabel);
         }
         
-        EntitlementPool ePool = epCurator.lookupByOwnerAndProduct(owner, p);
+        EntitlementPool ePool = epCurator.lookupByOwnerAndProduct(owner,
+                consumer, p);
         if (ePool == null) {
             throw new RuntimeException("No entitlements for product: " + p.getName());
         }
