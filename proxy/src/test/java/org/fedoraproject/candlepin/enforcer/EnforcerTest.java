@@ -9,18 +9,20 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-public class EnforcerTest {
+public class EnforcerTest extends DatabaseTestFixture {
 
     private Enforcer enforcer;
 
     @Before
-    public void setUp() {
-        enforcer = new EnforcerImpl(new DateSourceForTesting(2010, 1, 1));
+    public void createEnforcer() {
+        enforcer = new EnforcerImpl(new DateSourceForTesting(2010, 1, 1), 
+                entitlementPoolCurator);
     }
     
     // grrr. have to test two conditions atm: sufficient number of entitlements *when* pool has not expired

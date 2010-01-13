@@ -6,15 +6,19 @@ import java.util.List;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 
 public class EnforcerImpl implements Enforcer {
     private List<ValidationError> errors = new LinkedList<ValidationError>();
     private List<ValidationWarning> warnings = new LinkedList<ValidationWarning>();
 
     private DateSource dateSource;
+    private EntitlementPoolCurator epCurator;
     
-    public EnforcerImpl(DateSource dateSource) {
+    public EnforcerImpl(DateSource dateSource, 
+            EntitlementPoolCurator epCurator) {
         this.dateSource = dateSource;
+        this.epCurator = epCurator;
     }
     
     @Override
@@ -39,7 +43,7 @@ public class EnforcerImpl implements Enforcer {
 
     @Override
     public boolean validate(Consumer consumer, EntitlementPool enitlementPool) {
-        if (!enitlementPool.hasAvailableEntitlements()) {
+        if (!epCurator.entitlementsAvailable(enitlementPool)) {
             errors.add(new ValidationError("Not enough entitlements"));
             return false;
         }
