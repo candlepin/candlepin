@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
@@ -21,7 +22,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Before
     public void createEnforcer() {
-        enforcer = new EnforcerImpl(new DateSourceForTesting(2010, 1, 1), 
+        enforcer = new JavaEnforcer(new DateSourceForTesting(2010, 1, 1), 
                 entitlementPoolCurator);
     }
     

@@ -32,7 +32,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.enforcer.Enforcer;
-import org.fedoraproject.candlepin.enforcer.EnforcerImpl;
+import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -139,7 +139,7 @@ public class EntitlementResource extends BaseResource {
             throw new RuntimeException("No entitlements for product: " + p.getName());
         }
         
-        Enforcer enforcer = new EnforcerImpl(dateSource, epCurator);
+        Enforcer enforcer = new JavaEnforcer(dateSource, epCurator);
         if (!enforcer.validate(consumer, ePool)) {
             throw new RuntimeException(enforcer.errors().toString());
         }

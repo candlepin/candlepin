@@ -1,21 +1,24 @@
-package org.fedoraproject.candlepin.enforcer;
+package org.fedoraproject.candlepin.enforcer.java;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.enforcer.Enforcer;
+import org.fedoraproject.candlepin.enforcer.ValidationError;
+import org.fedoraproject.candlepin.enforcer.ValidationWarning;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 
-public class EnforcerImpl implements Enforcer {
+public class JavaEnforcer implements Enforcer {
     private List<ValidationError> errors = new LinkedList<ValidationError>();
     private List<ValidationWarning> warnings = new LinkedList<ValidationWarning>();
 
     private DateSource dateSource;
     private EntitlementPoolCurator epCurator;
     
-    public EnforcerImpl(DateSource dateSource, 
+    public JavaEnforcer(DateSource dateSource, 
             EntitlementPoolCurator epCurator) {
         this.dateSource = dateSource;
         this.epCurator = epCurator;
