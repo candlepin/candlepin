@@ -82,7 +82,7 @@ public class Product implements Persisted {
         setName(name);
     }
 
-    public Product() {
+    protected Product() {
     }
 
     public Long getId() {

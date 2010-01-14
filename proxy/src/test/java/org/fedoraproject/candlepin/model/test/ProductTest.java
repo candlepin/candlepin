@@ -28,8 +28,7 @@ public class ProductTest extends DatabaseTestFixture {
     @Test(expected = PersistenceException.class)
     public void nameRequired() { 
     
-        Product prod = new Product();
-        prod.setLabel("someproductlabel");
+        Product prod = new Product("someproductlabel", null);
         persistAndCommit(prod);
         
     }
@@ -37,8 +36,7 @@ public class ProductTest extends DatabaseTestFixture {
     @Test(expected = PersistenceException.class)
     public void labelRequired() { 
     
-        Product prod = new Product();
-        prod.setName("My Product Name");
+        Product prod = new Product(null, "My Product Name");
         persistAndCommit(prod);
     }
     
