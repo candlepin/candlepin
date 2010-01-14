@@ -34,7 +34,7 @@ import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.MapKeyManyToMany;
 
 /**
- * ConsumerInfo contains the metadata about a given Consumer (parent). It is 
+ * ConsumerFacts contains the metadata about a given Consumer (parent). It is 
  * a series of (name,value) pairs which allows for a more flexible model of
  * defining attributes about a Consumer.
  * 
@@ -43,17 +43,17 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_info")
-@SequenceGenerator(name="seq_consumer_info", sequenceName="seq_consumer_info", allocationSize=1)
-public class ConsumerFact implements Persisted {
+@Table(name = "cp_consumer_facts")
+@SequenceGenerator(name="seq_consumer_facts", sequenceName="seq_consumer_facts", allocationSize=1)
+public class ConsumerFacts implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
     // metadata data key should be the identifier.
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_consumer_info")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_consumer_facts")
     private Long id;
     
-    @OneToOne(mappedBy = "info")
+    @OneToOne(mappedBy = "facts")
     private Consumer consumer;
     
     // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem
@@ -64,65 +64,42 @@ public class ConsumerFact implements Persisted {
     @Cascade(value = { org.hibernate.annotations.CascadeType.ALL })
     private Map<String, String> metadata;
     
-    public ConsumerFact() {
+    public ConsumerFacts() {
         metadata = new HashMap<String, String>();
     }
     
-    public ConsumerFact(Consumer consumerIn) {
+    public ConsumerFacts(Consumer consumerIn) {
         metadata = new HashMap<String, String>();
         consumer = consumerIn;
     }
 
-    /**
-     * @return the id
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * @param id the id to set
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * @return Returns the parent.
-     */
     @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
 
-    /**
-     * @param consumerIn The parent to set.
-     */
     public void setConsumer(Consumer consumerIn) {
         consumer = consumerIn;
     }
     
-    /**
-     * @return Returns the metadata.
-     */
     public Map<String, String> getMetadata() {
         return metadata;
     }
 
     
-    /**
-     * @param metadataIn The metadata to set.
-     */
     public void setMetadata(Map<String, String> metadataIn) {
         metadata = metadataIn;
     }
     
-    /**
-     * Set a metadata field
-     * @param name to set
-     * @param value to set
-     */
-    public void setMetadataField(String name, String value) {
+    public void setFact(String name, String value) {
         if (this.metadata ==  null) {
             metadata = new HashMap<String, String>();
         }
@@ -130,12 +107,7 @@ public class ConsumerFact implements Persisted {
         
     }
     
-    /**
-     * Get a metadata field value
-     * @param name of field to fetch
-     * @return String field value.
-     */
-    public String getMetadataField(String name) {
+    public String getFact(String name) {
        if (this.metadata !=  null) {
            return metadata.get(name);
        }

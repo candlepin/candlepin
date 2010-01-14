@@ -22,6 +22,7 @@ import javax.persistence.OptimisticLockException;
 
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.enforcer.Enforcer;
+import org.fedoraproject.candlepin.enforcer.PolicyFactory;
 import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
 import org.hibernate.criterion.Restrictions;
 
@@ -105,7 +106,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     public Entitlement createEntitlement(Owner owner, Consumer consumer, Product product) {
         EntitlementPool ePool = lookupByOwnerAndProduct(owner, consumer, product);
         
-        Enforcer enforcer = new JavaEnforcer(dateSource, this);
+        Enforcer enforcer = new PolicyFactory().createEnforcer(dateSource, this);
         if (!enforcer.validate(consumer, ePool)) {
             throw new RuntimeException(enforcer.errors().toString());
         }
