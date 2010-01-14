@@ -41,27 +41,22 @@ public class JavaEnforcer implements Enforcer {
         this.epCurator = epCurator;
     }
     
-    @Override
     public List<ValidationError> errors() {
         return errors;
     }
 
-    @Override
     public boolean hasErrors() {
         return !errors.isEmpty();
     }
 
-    @Override
     public List<ValidationWarning> warnings() {
         return warnings;
     }        
 
-    @Override
     public boolean hasWarnings() {
         return !warnings.isEmpty();
     }
 
-    @Override
     public boolean validate(Consumer consumer, 
             EntitlementPool entitlementPool) {
 
@@ -91,7 +86,18 @@ public class JavaEnforcer implements Enforcer {
     
     private boolean validateVirtualizationHost(Consumer consumer, 
             EntitlementPool entitlementPool) {
-//        if ((consumer.get))
-        return true;
+        
+        // Imagine this were coming from a YAML file:
+        if (
+                // only physical system can get this product:
+                (consumer.getType().getLabel().equals("system")) &&
+                
+                // host should have no guests currently:
+                (Integer.parseInt(consumer.getFact("total_guests")) == 0))
+        {
+            return true;
+        }
+        
+        return false;
     }
 }

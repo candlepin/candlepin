@@ -111,8 +111,8 @@ public class ConsumerResource extends BaseResource {
 //        m.put("cpu", "i386");
 //        m.put("hey", "biteme");
 //        ci.setMetadata(m);
-        ci.setMetadataField("cpu", "i386");
-        ci.setMetadataField("hey", "foobar");
+        ci.setFact("cpu", "i386");
+        ci.setFact("hey", "foobar");
         return ci;
     }
     
