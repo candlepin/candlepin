@@ -12,21 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer;
+package org.fedoraproject.candlepin.enforcer.actions;
 
-import org.fedoraproject.candlepin.DateSource;
-import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
-import org.fedoraproject.candlepin.enforcer.java.JavaPostEntitlementProcessor;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 
-public class PolicyFactory {
+/**
+ * An interface for actions to be performed following the granting of an 
+ * entitlement.
+ */
+public interface Action {
     
-    public Enforcer createEnforcer(DateSource dateSource, EntitlementPoolCurator epCurator) {
-        return new JavaEnforcer(dateSource, epCurator);
-    }
-    
-    public PostEntitlementProcessor createPostEntitlementProcessor() {
-        return new JavaPostEntitlementProcessor();
-    }
-
+    /**
+     * Run action to be performed following the granting of an entitlement.
+     * @param ent
+     */
+    public void run(Entitlement ent);
 }
