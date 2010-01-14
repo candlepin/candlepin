@@ -227,6 +227,10 @@ public class Consumer implements Persisted {
     public ConsumerFacts getFacts() {
         return facts;
     }
+    
+    public String getFact(String factKey) {
+        return facts.getFact(factKey);
+    }
 
     
     public void setFacts(ConsumerFacts factsIn) {

@@ -88,9 +88,9 @@ public class ConsumerTest extends DatabaseTestFixture {
         Map<String, String> metadata = lookedUp.getFacts().getMetadata();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
-        assertEquals("bar", lookedUp.getFacts().getMetadataField("foo"));
+        assertEquals("bar", lookedUp.getFacts().getFact("foo"));
         assertEquals("bar1", metadata.get("foo1"));
-        assertEquals("bar1", lookedUp.getFacts().getMetadataField("foo1"));
+        assertEquals("bar1", lookedUp.getFacts().getFact("foo1"));
     }
     
     @Test
@@ -103,9 +103,9 @@ public class ConsumerTest extends DatabaseTestFixture {
         Map<String, String> metadata = lookedUp.getFacts().getMetadata();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
-        assertEquals("bar", lookedUp.getFacts().getMetadataField("foo"));
+        assertEquals("bar", lookedUp.getFacts().getFact("foo"));
         assertEquals("bar1", metadata.get("foo1"));
-        assertEquals("bar1", lookedUp.getFacts().getMetadataField("foo1"));
+        assertEquals("bar1", lookedUp.getFacts().getFact("foo1"));
         assertEquals(consumer.getId(), lookedUp.getFacts().getConsumer().getId());
         
         Consumer lookedUp2 = consumerCurator.find(consumer2.getId());

@@ -99,7 +99,7 @@ public class ConsumerFacts implements Persisted {
         metadata = metadataIn;
     }
     
-    public void setMetadataField(String name, String value) {
+    public void setFact(String name, String value) {
         if (this.metadata ==  null) {
             metadata = new HashMap<String, String>();
         }
@@ -107,7 +107,7 @@ public class ConsumerFacts implements Persisted {
         
     }
     
-    public String getMetadataField(String name) {
+    public String getFact(String name) {
        if (this.metadata !=  null) {
            return metadata.get(name);
        }
