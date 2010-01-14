@@ -23,12 +23,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import org.hibernate.annotations.CollectionOfElements;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -79,9 +81,8 @@ public class EntitlementPool implements Persisted {
     @Column(nullable = false)
     private Date endDate;
 
-    @OneToMany
-//    @ForeignKey(name = "fk_entitlement_pool_attribute")
-    @JoinColumn(name = "attribute_id")
+    @CollectionOfElements
+    @JoinTable(name="ENTITLEMENT_POOL_ATTRIBUTE")
     private Set<Attribute> attributes;
 
     public EntitlementPool() {

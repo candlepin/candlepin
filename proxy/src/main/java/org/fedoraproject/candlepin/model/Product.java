@@ -19,6 +19,7 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import org.hibernate.annotations.CollectionOfElements;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -26,6 +27,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -65,9 +67,9 @@ public class Product implements Persisted {
             inverseJoinColumns = @JoinColumn(name = "CHILD_PRODUCT_ID"))
     private Set<Product> childProducts;
 
-
-    @OneToMany
-    @JoinColumn(name = "attribute_id")
+    @CollectionOfElements
+    @JoinTable(name="PRODUCT_ATTRIBUTE")
+    //   @JoinColumn(name="ATTRIBUTE_ID")
     private Set<Attribute> attributes;
 
     /**

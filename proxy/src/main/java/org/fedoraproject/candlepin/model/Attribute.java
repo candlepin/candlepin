@@ -16,12 +16,15 @@
 package org.fedoraproject.candlepin.model;
 
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.ManyToOne;
+import javax.persistence.JoinColumn;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -41,6 +44,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_attribute")
 @SequenceGenerator(name="seq_attribute", sequenceName="seq_attribute", allocationSize=1)
+@Embeddable
 public class Attribute {
 
     @Id
@@ -51,7 +55,8 @@ public class Attribute {
     @Column(nullable = false)
 	private String name;
     
-    @Column(nullable = false)
+//    @Column(nullable = false)
+    @Column
 	private Long quantity;
 
 	public String getName() {
