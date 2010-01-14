@@ -14,6 +14,7 @@ public class ProductTest extends DatabaseTestFixture {
     
     
     @Test
+    @SuppressWarnings("unchecked")
     public void normalCreate() { 
     
         Product prod = new Product("cptest-label", "My Product");
@@ -99,6 +100,7 @@ public class ProductTest extends DatabaseTestFixture {
     }
     
     @Test
+    @SuppressWarnings("unchecked")
     public void testCascading() {
         beginTransaction();
         
@@ -126,5 +128,12 @@ public class ProductTest extends DatabaseTestFixture {
                 .getResultList();
         assertEquals(0, results.size());
     }
-
+    
+    @Test
+    public void testEquality() {
+        assertEquals(new Product("label", "name"), new Product("label", "name"));
+        assertFalse(new Product("label", "name").equals(null));
+        assertFalse(new Product("label", "name").equals(new Product("label", "another_name")));
+        assertFalse(new Product("label", "name").equals(new Product("another_label", "name")));
+    }
 }

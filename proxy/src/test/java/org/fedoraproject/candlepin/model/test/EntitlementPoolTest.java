@@ -25,7 +25,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class EntitlementPoolTest extends DatabaseTestFixture {
@@ -147,7 +146,6 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         assertFalse(entitlementPoolCurator.find(consumerPool.getId()).entitlementsAvailable());
     }
     
-    @Ignore
     @Test
     public void createEntitlementShouldUpdateConsumer() {
         Long NUMBER_OF_ENTITLEMENTS_AVAILABLE = new Long(1);
@@ -163,10 +161,11 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
-        Entitlement entitlement = entitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
+        assertEquals(0, consumer.getEntitlements().size());
+        entitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
         
         assertTrue(consumerCurator.find(consumer.getId()).getConsumedProducts().contains(newProduct));
-        assertTrue(consumerCurator.find(consumer.getId()).getEntitlements().contains(entitlement));
+        assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
     }
     
     @Test
