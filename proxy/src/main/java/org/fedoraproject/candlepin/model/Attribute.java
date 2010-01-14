@@ -38,8 +38,6 @@ import javax.xml.bind.annotation.XmlTransient;
  *         o If the same Attribute is found on both the product and the entitlement pool, the entitlement pool's version can be assumed as the authoritative one to check. 
  */
 
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_attribute")
 @SequenceGenerator(name="seq_attribute", sequenceName="seq_attribute", allocationSize=1)
