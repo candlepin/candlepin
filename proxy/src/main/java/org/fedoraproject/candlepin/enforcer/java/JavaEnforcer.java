@@ -26,6 +26,10 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 
+/**
+ * A pure java implementation of an Enforcer, with logic for handling the
+ * products contained within a Satellite certificate.
+ */
 public class JavaEnforcer implements Enforcer {
     private List<ValidationError> errors = new LinkedList<ValidationError>();
     private List<ValidationWarning> warnings = new LinkedList<ValidationWarning>();
@@ -57,8 +61,7 @@ public class JavaEnforcer implements Enforcer {
         return !warnings.isEmpty();
     }
 
-    public boolean validate(Consumer consumer, 
-            EntitlementPool entitlementPool) {
+    public boolean validate(Consumer consumer, EntitlementPool entitlementPool) {
 
         // TODO: These first checks should probably be pushed to an Enforcer
         // base class, they are implicit and should be done for all
@@ -76,9 +79,9 @@ public class JavaEnforcer implements Enforcer {
         }
         
         Product product = entitlementPool.getProduct();
+        
         if (product.getName().equals(VIRTUALIZATION_HOST_PRODUCT)) {
             return validateVirtualizationHost(consumer, entitlementPool);
-            
         }
         
         return true;

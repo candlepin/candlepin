@@ -2,7 +2,6 @@ package org.fedoraproject.candlepin.enforcer;
 
 import static org.junit.Assert.*;
 
-import java.util.Calendar;
 import java.util.Date;
 
 import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
