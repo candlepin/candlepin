@@ -26,6 +26,7 @@ public class AttributeTest extends DatabaseTestFixture {
     public void testAttributeSetName() {
         Attribute newAttr = new Attribute();
         newAttr.setName("OwesUsMoney");
+        persistAndCommit(newAttr);
     }
     
     
@@ -35,6 +36,7 @@ public class AttributeTest extends DatabaseTestFixture {
         String some_name = "OwesUsMoney";
         
         newAttr.setName(some_name);
+        persistAndCommit(newAttr);
         assertEquals(some_name, newAttr.getName());
     }
     
@@ -43,6 +45,7 @@ public class AttributeTest extends DatabaseTestFixture {
         Attribute newAttr = new Attribute();
         Long some_number = new Long(100);
         newAttr.setQuantity(some_number);
+        persistAndCommit(newAttr);
     }
     
     
@@ -52,6 +55,7 @@ public class AttributeTest extends DatabaseTestFixture {
         Long some_number = new Long(200);
         
         newAttr.setQuantity(some_number);
+        persistAndCommit(newAttr);
         assertEquals(some_number, newAttr.getQuantity());
     }
     
