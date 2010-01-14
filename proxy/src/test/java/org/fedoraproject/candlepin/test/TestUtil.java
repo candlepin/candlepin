@@ -60,6 +60,22 @@ public class TestUtil {
         return createConsumer(createConsumerType(), createOwner());
     }
     
+    /**
+     * Create a consumer with a new owner
+     * @return Consumer
+     */
+    public static Consumer createConsumer(Owner owner) {
+        ConsumerType consumerType = new ConsumerType("test-consumer-type-"
+                + randomInt());
+
+        Consumer consumer = new Consumer("testconsumer" + randomInt(),
+                owner, consumerType);
+        consumer.setMetadataField("foo", "bar");
+        consumer.setMetadataField("foo1", "bar1");
+
+        return consumer;
+    }
+
     public static ConsumerType createConsumerType() {
         return new ConsumerType("test-consumer-type-" + randomInt());
     }

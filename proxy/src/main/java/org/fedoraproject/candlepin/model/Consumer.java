@@ -107,8 +107,8 @@ public class Consumer implements Persisted {
     private Set<Entitlement> entitlements;
     
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "consumer_info_id")
-    private ConsumerFact info;
+    @JoinColumn(name = "consumer_fact_id")
+    private ConsumerFacts facts;
     
     public Consumer(String name, Owner owner, ConsumerType type) {
         this.name = name;
@@ -119,7 +119,7 @@ public class Consumer implements Persisted {
         // generate a UUID at this point.
         this.uuid = Util.generateUUID();
 
-        this.info = new ConsumerFact(this);
+        this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
@@ -128,7 +128,7 @@ public class Consumer implements Persisted {
     public static Consumer createFromConsumer(Consumer copyFrom, Owner owner, ConsumerType type) {
         Consumer toReturn = new Consumer(copyFrom.name, owner, type);
         
-        toReturn.info = copyFrom.info;
+        toReturn.facts = copyFrom.facts;
         toReturn.childConsumers = copyFrom.childConsumers;
         toReturn.consumedProducts = copyFrom.consumedProducts;
         toReturn.entitlements = copyFrom.entitlements;
@@ -137,7 +137,7 @@ public class Consumer implements Persisted {
     }
 
     public Consumer() {
-        this.info = new ConsumerFact(this);
+        this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
         this.entitlements = new HashSet<Entitlement>();
@@ -151,44 +151,26 @@ public class Consumer implements Persisted {
         this.uuid = uuid;
     }
 
-    /**
-     * @return the id
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * @param id the id to set
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * @return the name
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * @param name the name to set
-     */
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * @return Returns the type.
-     */
     public ConsumerType getType() {
         return type;
     }
     
-    /**
-     * @param typeIn The type to set.
-     */
     public void setType(ConsumerType typeIn) {
         type = typeIn;
     }
@@ -214,46 +196,27 @@ public class Consumer implements Persisted {
         this.parent = parent;
     }
 
-    /**
-     * @return the consumedProducts
-     */
     public Set<Product> getConsumedProducts() {
         return consumedProducts;
     }
 
-    /**
-     * @param consumedProducts the consumedProducts to set
-     */
     public void setConsumedProducts(Set<Product> consumedProducts) {
         this.consumedProducts = consumedProducts;
     }
 
-    /**
-     * Add a Product to this Consumer.
-     * @param p Product to be consumed.
-     */
     public void addConsumedProduct(Product p) {
         this.consumedProducts.add(p);
     }
 
-    /**
-     * @return the owner
-     */
     @XmlTransient
     public Owner getOwner() {
         return owner;
     }
 
-    /**
-     * @param owner the owner to set
-     */
     public void setOwner(Owner owner) {
         this.owner = owner;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return "Consumer [type = " + this.getType() + ", getName() = " +
@@ -261,19 +224,13 @@ public class Consumer implements Persisted {
     }
 
     
-    /**
-     * @return Returns the info.
-     */
-    public ConsumerFact getInfo() {
-        return info;
+    public ConsumerFacts getFacts() {
+        return facts;
     }
 
     
-    /**
-     * @param infoIn The info to set.
-     */
-    public void setInfo(ConsumerFact infoIn) {
-        info = infoIn;
+    public void setFacts(ConsumerFacts factsIn) {
+        facts = factsIn;
     }
     
     /**
@@ -282,10 +239,10 @@ public class Consumer implements Persisted {
      * @param value to set
      */
     public void setMetadataField(String name, String value) {
-        if (this.getInfo().getMetadata() ==  null) {
-            this.getInfo().setMetadata(new HashMap<String, String>());
+        if (this.getFacts().getMetadata() ==  null) {
+            this.getFacts().setMetadata(new HashMap<String, String>());
         }
-        this.getInfo().getMetadata().put(name, value);
+        this.getFacts().getMetadata().put(name, value);
     }
     
     /**
@@ -294,8 +251,8 @@ public class Consumer implements Persisted {
      * @return String field value.
      */
     public String getMetadataField(String name) {
-       if (this.getInfo().getMetadata() !=  null) {
-           return getInfo().getMetadata().get(name);
+       if (this.getFacts().getMetadata() !=  null) {
+           return getFacts().getMetadata().get(name);
        }
        return null;
     }

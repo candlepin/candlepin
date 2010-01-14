@@ -15,5 +15,17 @@
 package org.fedoraproject.candlepin.enforcer;
 
 public class ValidationError {
+    private String description;
 
+    public ValidationError(String description) {
+        this.description = description;
+    }
+    
+    public String description() {
+        return description;
+    }
+    
+    public String toString() {
+        return description;
+    }
 }

@@ -16,8 +16,8 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.*;
 
-import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,22 +64,18 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        Date pastDate = new Date(System.currentTimeMillis() - 10000000);
-        Date futuredate = new Date(System.currentTimeMillis() + 1000000000);
-        ep = new EntitlementPool(owner, product, new Long(10), pastDate, futuredate);
+        ep = new EntitlementPool(owner, product, new Long(10), 
+                TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(ep);
         
         eapi = new EntitlementResource(entitlementPoolCurator, ownerCurator, consumerCurator, 
-                productCurator);
-
+                productCurator, dateSource);
+        
+        dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }
     
     @Ignore
     public void testEntitle() throws Exception {
-        
-//        Form f = new Form();
-//        f.add("consumer_id", consumer.getId());
-//        f.add("product_id", product.getId());
         String cert = (String) eapi.entitle(consumer.getUuid(), product.getLabel());
         
         assertNotNull(cert);
@@ -93,9 +90,8 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         assertEquals(new Long(1), ep.getCurrentMembers());
     }
     
-    @Test
+    @Test(expected=RuntimeException.class)
     public void testMaxMembership() {
-        
         // 10 entitlements available, lets try to entitle 11 consumers.
         for (int i = 0; i < ep.getMaxMembers(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
@@ -104,34 +100,15 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         }
         
         // Now for the 11th:
-        try {
-            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
-            eapi.entitle(c.getUuid(), product.getLabel());
-            fail();
-        }
-        catch (RuntimeException e) {
-            // expected
-        }
-        
+        Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+        consumerCurator.create(c);
+        eapi.entitle(c.getUuid(), product.getLabel());
     }
     
-    @Test
+    @Test(expected=RuntimeException.class)
     public void testEntitlementsHaveExpired() {
-        Product myProduct = TestUtil.createProduct();
-        productCurator.create(myProduct);
-        Date pastDate = new Date(System.currentTimeMillis() - 10000000);
-        Date notSoPastDate = new Date(System.currentTimeMillis() - 100000);
-        EntitlementPool anotherPool = new EntitlementPool(owner, myProduct, new Long(10), 
-                pastDate, notSoPastDate);
-        entitlementPoolCurator.create(anotherPool);
-        
-        try {
-            eapi.entitle(consumer.getUuid(), myProduct.getLabel());
-            fail();
-        }
-        catch (RuntimeException e) {
-            // expected
-        }
+        dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
+        eapi.entitle(consumer.getUuid(), product.getLabel());
     }
     
     @Test

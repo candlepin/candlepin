@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerFact;
+import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
@@ -67,7 +67,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateConsumer() {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
-        toSubmit.setInfo(new ConsumerFact() {{ setMetadataField(METADATA_NAME, METADATA_VALUE); }});
+        toSubmit.setFacts(new ConsumerFacts() {{ setMetadataField(METADATA_NAME, METADATA_VALUE); }});
 
         Consumer created = consumerResource.create(toSubmit);
         
