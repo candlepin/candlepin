@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -76,7 +77,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
         entitlementPoolCurator.create(unlimitedPool);
-        assertTrue(entitlementPoolCurator.entitlementsAvailable(unlimitedPool));
+        assertTrue(unlimitedPool.entitlementsAvailable());
     }
 
     @Test
@@ -123,5 +124,40 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         EntitlementPool lookedUp = entitlementPoolCurator.
             lookupByOwnerAndProduct(owner, consumer, newProduct);
         assertEquals(consumer.getId(), lookedUp.getConsumer().getId());
+    }
+    
+    @Test
+    public void createEntitlementShouldIncreaseNumberOfMembers() {
+        Long NUMBER_OF_ENTITLEMENTS_AVAILABLE = new Long(1);
+        Product newProduct = TestUtil.createProduct();
+        
+        productCurator.create(newProduct);
+        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct,
+                NUMBER_OF_ENTITLEMENTS_AVAILABLE, TestUtil.createDate(2009, 11, 30), 
+                TestUtil.createDate(2050, 11, 30));
+        consumerPool.setConsumer(consumer);
+        consumerPool = entitlementPoolCurator.create(consumerPool);
+        
+        entitlementPoolCurator.createEntitlement(consumerPool, consumer);
+        
+        assertFalse(entitlementPoolCurator.find(consumerPool.getId()).entitlementsAvailable());
+    }
+    
+    @Test
+    public void createEntitlementShouldUpdateConsumer() {
+        Long NUMBER_OF_ENTITLEMENTS_AVAILABLE = new Long(1);
+        Product newProduct = TestUtil.createProduct();
+        
+        productCurator.create(newProduct);
+        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct,
+                NUMBER_OF_ENTITLEMENTS_AVAILABLE, TestUtil.createDate(2009, 11, 30), 
+                TestUtil.createDate(2050, 11, 30));
+        consumerPool.setConsumer(consumer);
+        consumerPool = entitlementPoolCurator.create(consumerPool);
+        
+        Entitlement entitlement = entitlementPoolCurator.createEntitlement(consumerPool, consumer);
+        
+        assertTrue(consumer.getConsumedProducts().contains(newProduct));
+        assertTrue(consumer.getEntitlements().contains(entitlement));
     }
 }

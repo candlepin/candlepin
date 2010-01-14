@@ -20,12 +20,19 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
+import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
-    protected EntitlementPoolCurator() {
+    private EntitlementCurator entitlementCurator;
+    private ConsumerCurator consumerCurator;
+
+    @Inject
+    protected EntitlementPoolCurator(EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator) {
         super(EntitlementPool.class);
+        this.entitlementCurator = entitlementCurator;
+        this.consumerCurator = consumerCurator;
     }
 
     @SuppressWarnings("unchecked")
@@ -75,40 +82,29 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     }
     
     /**
-     * Return true if this pool has entitlements available. Performs a
-     * quantity check, but is also aware of pools with unlimited entitlements.
-     *
-     * @param pool Entitlement pool to check
-     * @return True if the entitlement pool has entitlements available.
-     */
-    public boolean entitlementsAvailable(EntitlementPool pool) {
-        if (pool.isUnlimited()) {
-            return true;
-        }
-
-        if (pool.getCurrentMembers() < pool.getMaxMembers()) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Create an entitlement.
      * 
      * @param entPool
      * @param consumer
      * @return
      */
+    //
+    // NOTE: after calling this method both entitlement pool and consumer parameters
+    //       will most certainly be stale. beware!
+    //
     @Transactional
     public Entitlement createEntitlement(EntitlementPool entPool, Consumer consumer) {
+        
         Entitlement e = new Entitlement(entPool, consumer.getOwner(), new Date());
-        entPool.bumpCurrentMembers();
+
         consumer.addEntitlement(e);
         consumer.addConsumedProduct(entPool.getProduct());
-        e.setOwner(consumer.getOwner());
         
-        save(e);
-        flush();
+        entPool.bumpCurrentMembers();
+        
+        entitlementCurator.save(e);
+        consumerCurator.update(consumer);
+        merge(entPool);
         
         return e;
     }

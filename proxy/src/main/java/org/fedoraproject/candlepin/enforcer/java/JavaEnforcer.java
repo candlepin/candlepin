@@ -46,7 +46,7 @@ public class JavaEnforcer implements Enforcer {
 
     @Override
     public boolean validate(Consumer consumer, EntitlementPool enitlementPool) {
-        if (!epCurator.entitlementsAvailable(enitlementPool)) {
+        if (!enitlementPool.entitlementsAvailable()) {
             errors.add(new ValidationError("Not enough entitlements"));
             return false;
         }

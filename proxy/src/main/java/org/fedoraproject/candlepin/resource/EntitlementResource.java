@@ -144,6 +144,7 @@ public class EntitlementResource extends BaseResource {
             throw new RuntimeException(enforcer.errors().toString());
         }
         
+        
         // Actually create an entitlement:
         Entitlement e = epCurator.createEntitlement(ePool, consumer); 
         

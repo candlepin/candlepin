@@ -57,12 +57,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         E toDelete = find(entity.getId());
         currentSession().delete(toDelete);
     }
+    
+    @Transactional
+    public E merge(E entity) {
+        return getEntityManager().merge(entity);
+    }
 
     protected final <T> T get(Class<T> clazz, Serializable id) {
         return clazz.cast(currentSession().get(clazz, id));
     }
 
-    protected final void save(Object anObject) {
+    protected final void save(E anObject) {
         getEntityManager().persist(anObject);
     }
 
