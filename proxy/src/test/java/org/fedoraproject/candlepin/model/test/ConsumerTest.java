@@ -21,7 +21,7 @@ import java.util.Map;
 import javax.persistence.PersistenceException;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerFact;
+import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
@@ -85,12 +85,12 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testInfo() {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
-        Map<String, String> metadata = lookedUp.getInfo().getMetadata();
+        Map<String, String> metadata = lookedUp.getFacts().getMetadata();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
-        assertEquals("bar", lookedUp.getInfo().getMetadataField("foo"));
+        assertEquals("bar", lookedUp.getFacts().getMetadataField("foo"));
         assertEquals("bar1", metadata.get("foo1"));
-        assertEquals("bar1", lookedUp.getInfo().getMetadataField("foo1"));
+        assertEquals("bar1", lookedUp.getFacts().getMetadataField("foo1"));
     }
     
     @Test
@@ -100,16 +100,16 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer2);
         
         Consumer lookedUp = consumerCurator.find(consumer.getId());
-        Map<String, String> metadata = lookedUp.getInfo().getMetadata();
+        Map<String, String> metadata = lookedUp.getFacts().getMetadata();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
-        assertEquals("bar", lookedUp.getInfo().getMetadataField("foo"));
+        assertEquals("bar", lookedUp.getFacts().getMetadataField("foo"));
         assertEquals("bar1", metadata.get("foo1"));
-        assertEquals("bar1", lookedUp.getInfo().getMetadataField("foo1"));
-        assertEquals(consumer.getId(), lookedUp.getInfo().getConsumer().getId());
+        assertEquals("bar1", lookedUp.getFacts().getMetadataField("foo1"));
+        assertEquals(consumer.getId(), lookedUp.getFacts().getConsumer().getId());
         
         Consumer lookedUp2 = consumerCurator.find(consumer2.getId());
-        metadata = lookedUp2.getInfo().getMetadata();
+        metadata = lookedUp2.getFacts().getMetadata();
         assertEquals(1, metadata.keySet().size());
         assertEquals("bar2", metadata.get("foo"));
     }
@@ -126,13 +126,13 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testMetadataDeleteCascading() {
         Consumer attachedConsumer = consumerCurator.find(consumer.getId());
-        Long consumerInfoId = attachedConsumer.getInfo().getId();
+        Long consumerInfoId = attachedConsumer.getFacts().getId();
 
-        assertNotNull((ConsumerFact)entityManager().find(ConsumerFact.class, consumerInfoId));
+        assertNotNull((ConsumerFacts)entityManager().find(ConsumerFacts.class, consumerInfoId));
         
         consumerCurator.delete(attachedConsumer);
         
-        assertNull((ConsumerFact)entityManager().find(ConsumerFact.class, consumerInfoId));
+        assertNull((ConsumerFacts)entityManager().find(ConsumerFacts.class, consumerInfoId));
     }
 
     @Test

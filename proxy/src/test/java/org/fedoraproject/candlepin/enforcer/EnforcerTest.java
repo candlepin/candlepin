@@ -57,7 +57,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     private EntitlementPool entitlementPoolWithMembersAndExpiration(
             final int currentMembers, final int maxMembers, Date expiry) {
-        return new EntitlementPool(new Owner(), new Product(), new Long(maxMembers), new Date(), expiry) {{
+        return new EntitlementPool(new Owner(), new Product("blah", "blah"), 
+                new Long(maxMembers), new Date(), expiry) {{
             setCurrentMembers(currentMembers);
         }};
     }    

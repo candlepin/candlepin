@@ -55,7 +55,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
         existingConsumer.setConsumedProducts(productCurator.bulkUpdate(updatedConsumer.getConsumedProducts()));
         existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
-        existingConsumer.setInfo(consumerInfoCurator.update(updatedConsumer.getInfo()));
+        existingConsumer.setFacts(consumerInfoCurator.update(updatedConsumer.getFacts()));
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
         existingConsumer.setParent(updatedConsumer.getParent());
