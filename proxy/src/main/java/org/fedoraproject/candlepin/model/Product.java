@@ -135,6 +135,5 @@ public class Product implements Persisted {
 
 	public void setAttributes(Set<Attribute> attributes) {
 		this.attributes = attributes;
-	}
-
+	}	
 }

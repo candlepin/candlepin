@@ -18,6 +18,11 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.OptimisticLockException;
+
+import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.enforcer.Enforcer;
+import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -27,12 +32,16 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
 
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
+    private DateSource dateSource;
 
     @Inject
-    protected EntitlementPoolCurator(EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator) {
+    protected EntitlementPoolCurator(
+            EntitlementCurator entitlementCurator, 
+            ConsumerCurator consumerCurator, DateSource dateSource) {
         super(EntitlementPool.class);
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
+        this.dateSource = dateSource;
     }
 
     @SuppressWarnings("unchecked")
@@ -93,18 +102,24 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     //       will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement createEntitlement(EntitlementPool entPool, Consumer consumer) {
+    public Entitlement createEntitlement(Owner owner, Consumer consumer, Product product) {
+        EntitlementPool ePool = lookupByOwnerAndProduct(owner, consumer, product);
         
-        Entitlement e = new Entitlement(entPool, consumer.getOwner(), new Date());
-
+        Enforcer enforcer = new JavaEnforcer(dateSource, this);
+        if (!enforcer.validate(consumer, ePool)) {
+            throw new RuntimeException(enforcer.errors().toString());
+        }
+        
+        Entitlement e = new Entitlement(ePool, consumer.getOwner(), new Date());
+        
         consumer.addEntitlement(e);
-        consumer.addConsumedProduct(entPool.getProduct());
+        consumer.addConsumedProduct(product);
         
-        entPool.bumpCurrentMembers();
+        ePool.bumpCurrentMembers();
         
         entitlementCurator.save(e);
         consumerCurator.update(consumer);
-        merge(entPool);
+        merge(ePool);
         
         return e;
     }
@@ -133,6 +148,4 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         
         return super.create(entity);
     }
-
-
 }

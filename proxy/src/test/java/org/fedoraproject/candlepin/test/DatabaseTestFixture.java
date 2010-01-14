@@ -65,6 +65,7 @@ public class DatabaseTestFixture {
         certificateCurator = injector.getInstance(CertificateCurator.class);
         entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
+        dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
     }
     
     /*
