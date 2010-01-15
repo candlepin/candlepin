@@ -24,6 +24,8 @@ import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 public class JavaEnforcerTest extends DatabaseTestFixture {
     
     private final static String PRODUCT_VIRT_HOST = "virtualization_host";
@@ -58,5 +60,9 @@ public class JavaEnforcerTest extends DatabaseTestFixture {
     @Test
     public void testVirtualizationHostConsumption() {
         entitlementPoolCurator.createEntitlement(owner, consumer, virtHost);
+        EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(owner, 
+                consumer, virtHost);
+//        assertNotNull(consumerPool.getConsumer());
+//        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
     }
 }

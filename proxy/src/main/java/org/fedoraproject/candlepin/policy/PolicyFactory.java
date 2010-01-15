@@ -25,8 +25,8 @@ public class PolicyFactory {
         return new JavaEnforcer(dateSource, epCurator);
     }
     
-    public PostEntitlementProcessor createPostEntitlementProcessor() {
-        return new JavaPostEntitlementProcessor();
-    }
+//    public PostEntitlementProcessor createPostEntitlementProcessor() {
+//        return new JavaPostEntitlementProcessor();
+//    }
 
 }

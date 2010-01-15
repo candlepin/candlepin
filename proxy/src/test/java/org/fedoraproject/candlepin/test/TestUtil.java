@@ -99,8 +99,8 @@ public class TestUtil {
         return pool;
     }
     
-    public static Entitlement createEntitlement(EntitlementPool pool) {
-        Entitlement e = new Entitlement(pool, pool.getOwner(), pool.getStartDate());
+    public static Entitlement createEntitlement(EntitlementPool pool, Consumer c) {
+        Entitlement e = new Entitlement(pool, c, pool.getStartDate());
         return e;
     }
     
