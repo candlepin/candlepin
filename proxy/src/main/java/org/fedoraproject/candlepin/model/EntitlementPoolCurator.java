@@ -104,7 +104,11 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     //
     @Transactional
     public Entitlement createEntitlement(Owner owner, Consumer consumer, Product product) {
+        
         EntitlementPool ePool = lookupByOwnerAndProduct(owner, consumer, product);
+        if (ePool == null) {
+            throw new RuntimeException("No entitlements for product: " + product.getName());
+        }
         
         Enforcer enforcer = new PolicyFactory().createEnforcer(dateSource, this);
         if (!enforcer.validate(consumer, ePool)) {

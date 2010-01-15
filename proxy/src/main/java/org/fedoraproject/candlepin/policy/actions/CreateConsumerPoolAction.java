@@ -15,8 +15,18 @@
 package org.fedoraproject.candlepin.policy.actions;
 
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+
+import com.google.inject.Inject;
 
 public class CreateConsumerPoolAction implements Action {
+
+    EntitlementPoolCurator epCurator;
+    
+    @Inject
+    protected CreateConsumerPoolAction(EntitlementPoolCurator epCuratorIn) {
+        this.epCurator = epCuratorIn;
+    }
     
     public void run(Entitlement ent) {
         

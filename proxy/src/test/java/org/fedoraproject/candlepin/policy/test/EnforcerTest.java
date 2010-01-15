@@ -1,4 +1,4 @@
-package org.fedoraproject.candlepin.enforcer;
+package org.fedoraproject.candlepin.policy.test;
 
 import static org.junit.Assert.*;
 
