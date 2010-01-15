@@ -19,14 +19,24 @@ import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
 import org.fedoraproject.candlepin.policy.java.JavaPostEntitlementProcessor;
 
+import com.google.inject.Inject;
+
 public class PolicyFactory {
     
+    private JavaPostEntitlementProcessor postEntProcessor;
+    
+    @Inject
+    public PolicyFactory(JavaPostEntitlementProcessor postEntProcessor) {
+        this.postEntProcessor = postEntProcessor;
+    }
+
+    // TODO: Inject this as well?
     public Enforcer createEnforcer(DateSource dateSource, EntitlementPoolCurator epCurator) {
-        return new JavaEnforcer(dateSource, epCurator);
+        return new JavaEnforcer(dateSource);
     }
     
-//    public PostEntitlementProcessor createPostEntitlementProcessor() {
-//        return new JavaPostEntitlementProcessor();
-//    }
+    public PostEntitlementProcessor createPostEntitlementProcessor() {
+        return postEntProcessor;
+    }
 
 }

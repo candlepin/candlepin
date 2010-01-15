@@ -62,7 +62,7 @@ public class JavaEnforcerTest extends DatabaseTestFixture {
         entitlementPoolCurator.createEntitlement(owner, consumer, virtHost);
         EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(owner, 
                 consumer, virtHost);
-//        assertNotNull(consumerPool.getConsumer());
-//        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
+        assertNotNull(consumerPool.getConsumer());
+        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
     }
 }

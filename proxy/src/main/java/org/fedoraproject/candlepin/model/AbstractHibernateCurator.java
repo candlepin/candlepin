@@ -67,6 +67,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return clazz.cast(currentSession().get(clazz, id));
     }
 
+    @Transactional
     protected final void save(E anObject) {
         getEntityManager().persist(anObject);
     }

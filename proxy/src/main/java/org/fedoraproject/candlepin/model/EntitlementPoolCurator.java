@@ -18,12 +18,9 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.persistence.OptimisticLockException;
-
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.PolicyFactory;
-import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
+import org.fedoraproject.candlepin.policy.PostEntitlementProcessor;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -34,15 +31,20 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
     private DateSource dateSource;
+    private Enforcer enforcer;
+    private PostEntitlementProcessor postEntProcessor;
 
     @Inject
     protected EntitlementPoolCurator(
             EntitlementCurator entitlementCurator, 
-            ConsumerCurator consumerCurator, DateSource dateSource) {
+            ConsumerCurator consumerCurator, DateSource dateSource, Enforcer enforcer,
+            PostEntitlementProcessor postEntProcessor) {
         super(EntitlementPool.class);
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.dateSource = dateSource;
+        this.enforcer = enforcer;
+        this.postEntProcessor = postEntProcessor;
     }
 
     @SuppressWarnings("unchecked")
@@ -110,7 +112,6 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             throw new RuntimeException("No entitlements for product: " + product.getName());
         }
         
-        Enforcer enforcer = new PolicyFactory().createEnforcer(dateSource, this);
         if (!enforcer.validate(consumer, ePool)) {
             throw new RuntimeException(enforcer.errors().toString());
         }
@@ -125,6 +126,8 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         entitlementCurator.save(e);
         consumerCurator.update(consumer);
         merge(ePool);
+
+        postEntProcessor.run(e);
         
         return e;
     }
