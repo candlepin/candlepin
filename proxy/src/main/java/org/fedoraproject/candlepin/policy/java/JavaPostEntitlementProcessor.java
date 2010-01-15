@@ -12,10 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer.java;
+package org.fedoraproject.candlepin.policy.java;
 
-import org.fedoraproject.candlepin.enforcer.PostEntitlementProcessor;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.policy.PostEntitlementProcessor;
 
 public class JavaPostEntitlementProcessor implements PostEntitlementProcessor {
 

@@ -1,8 +1,8 @@
 package org.fedoraproject.candlepin.guice;
 
 import org.fedoraproject.candlepin.DateSource;
-import org.fedoraproject.candlepin.enforcer.Enforcer;
-import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementPoolResource;

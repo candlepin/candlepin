@@ -21,9 +21,9 @@ import java.util.List;
 import javax.persistence.OptimisticLockException;
 
 import org.fedoraproject.candlepin.DateSource;
-import org.fedoraproject.candlepin.enforcer.Enforcer;
-import org.fedoraproject.candlepin.enforcer.PolicyFactory;
-import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.PolicyFactory;
+import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;

@@ -12,19 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer.java;
+package org.fedoraproject.candlepin.policy.java;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.DateSource;
-import org.fedoraproject.candlepin.enforcer.Enforcer;
-import org.fedoraproject.candlepin.enforcer.ValidationError;
-import org.fedoraproject.candlepin.enforcer.ValidationWarning;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.ValidationError;
+import org.fedoraproject.candlepin.policy.ValidationWarning;
 
 /**
  * A pure java implementation of an Enforcer, with logic for handling the

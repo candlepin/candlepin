@@ -12,17 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer;
+package org.fedoraproject.candlepin.policy;
 
-import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
+import org.fedoraproject.candlepin.policy.java.JavaPostEntitlementProcessor;
 
-/**
- * Post Entitlement Processors perform actions after an entitlement has been 
- * granted, as per the policy.
- * 
- * @author dgoodwin
- *
- */
-public interface PostEntitlementProcessor {
-    public void run(Entitlement ent);
+public class PolicyFactory {
+    
+    public Enforcer createEnforcer(DateSource dateSource, EntitlementPoolCurator epCurator) {
+        return new JavaEnforcer(dateSource, epCurator);
+    }
+    
+    public PostEntitlementProcessor createPostEntitlementProcessor() {
+        return new JavaPostEntitlementProcessor();
+    }
+
 }

@@ -12,20 +12,14 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer;
+package org.fedoraproject.candlepin.policy.actions;
 
-public class ValidationError {
-    private String description;
+import org.fedoraproject.candlepin.model.Entitlement;
 
-    public ValidationError(String description) {
-        this.description = description;
+public class CreateConsumerPoolAction implements Action {
+    
+    public void run(Entitlement ent) {
+        
     }
     
-    public String description() {
-        return description;
-    }
-    
-    public String toString() {
-        return description;
-    }
 }
