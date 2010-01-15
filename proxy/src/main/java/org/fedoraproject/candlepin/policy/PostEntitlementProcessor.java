@@ -12,14 +12,17 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer.actions;
+package org.fedoraproject.candlepin.policy;
 
 import org.fedoraproject.candlepin.model.Entitlement;
 
-public class CreateConsumerPoolAction implements Action {
-    
-    public void run(Entitlement ent) {
-        
-    }
-    
+/**
+ * Post Entitlement Processors perform actions after an entitlement has been 
+ * granted, as per the policy.
+ * 
+ * @author dgoodwin
+ *
+ */
+public interface PostEntitlementProcessor {
+    public void run(Entitlement ent);
 }

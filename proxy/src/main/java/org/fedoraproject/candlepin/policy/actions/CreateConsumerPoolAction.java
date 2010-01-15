@@ -12,15 +12,24 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer.java;
+package org.fedoraproject.candlepin.policy.actions;
 
-import org.fedoraproject.candlepin.enforcer.PostEntitlementProcessor;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 
-public class JavaPostEntitlementProcessor implements PostEntitlementProcessor {
+import com.google.inject.Inject;
 
+public class CreateConsumerPoolAction implements Action {
+
+    EntitlementPoolCurator epCurator;
+    
+    @Inject
+    protected CreateConsumerPoolAction(EntitlementPoolCurator epCuratorIn) {
+        this.epCurator = epCuratorIn;
+    }
+    
     public void run(Entitlement ent) {
         
     }
-
+    
 }

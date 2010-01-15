@@ -19,8 +19,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.DateSource;
-import org.fedoraproject.candlepin.enforcer.Enforcer;
-import org.fedoraproject.candlepin.enforcer.PolicyFactory;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.PolicyFactory;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -101,7 +101,11 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     //
     @Transactional
     public Entitlement createEntitlement(Owner owner, Consumer consumer, Product product) {
+        
         EntitlementPool ePool = lookupByOwnerAndProduct(owner, consumer, product);
+        if (ePool == null) {
+            throw new RuntimeException("No entitlements for product: " + product.getName());
+        }
         
         Enforcer enforcer = new PolicyFactory().createEnforcer(dateSource, this);
         if (!enforcer.validate(consumer, ePool)) {

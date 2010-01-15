@@ -12,21 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer;
+package org.fedoraproject.candlepin.policy;
 
-import org.fedoraproject.candlepin.DateSource;
-import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
-import org.fedoraproject.candlepin.enforcer.java.JavaPostEntitlementProcessor;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+public class ValidationError {
+    private String description;
 
-public class PolicyFactory {
-    
-    public Enforcer createEnforcer(DateSource dateSource, EntitlementPoolCurator epCurator) {
-        return new JavaEnforcer(dateSource, epCurator);
+    public ValidationError(String description) {
+        this.description = description;
     }
     
-    public PostEntitlementProcessor createPostEntitlementProcessor() {
-        return new JavaPostEntitlementProcessor();
+    public String description() {
+        return description;
     }
-
+    
+    public String toString() {
+        return description;
+    }
 }
