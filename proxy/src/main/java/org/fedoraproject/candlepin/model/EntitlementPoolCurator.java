@@ -18,12 +18,9 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.persistence.OptimisticLockException;
-
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.enforcer.Enforcer;
 import org.fedoraproject.candlepin.enforcer.PolicyFactory;
-import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -99,7 +96,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @return
      */
     //
-    // NOTE: after calling this method both entitlement pool and consumer parameters
+    // NOTE: after calling this method consumer parameter
     //       will most certainly be stale. beware!
     //
     @Transactional
