@@ -85,7 +85,7 @@ public class Product implements Persisted {
         setName(name);
     }
 
-    public Product() {
+    protected Product() {
     }
 
     public Long getId() {
@@ -139,5 +139,21 @@ public class Product implements Persisted {
 	public void setAttributes(Set<Attribute> attributes) {
 		this.attributes = attributes;
 	}
-
+	
+	@Override
+	public boolean equals(Object anObject) {
+	    if (this == anObject) return true;
+	    if (!(anObject instanceof Product)) return false;
+	    
+	    Product another = (Product) anObject;
+	    
+	    return 
+	        label.equals(another.getLabel()) &&
+	        name.equals(another.getName());
+	}
+	
+	@Override
+	public int hashCode() {
+	    return label.hashCode()*31 + name.hashCode();
+	}
 }

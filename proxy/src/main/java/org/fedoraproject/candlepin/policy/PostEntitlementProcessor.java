@@ -12,20 +12,17 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.enforcer;
+package org.fedoraproject.candlepin.policy;
 
-public class ValidationError {
-    private String description;
+import org.fedoraproject.candlepin.model.Entitlement;
 
-    public ValidationError(String description) {
-        this.description = description;
-    }
-    
-    public String description() {
-        return description;
-    }
-    
-    public String toString() {
-        return description;
-    }
+/**
+ * Post Entitlement Processors perform actions after an entitlement has been 
+ * granted, as per the policy.
+ * 
+ * @author dgoodwin
+ *
+ */
+public interface PostEntitlementProcessor {
+    public void run(Entitlement ent);
 }

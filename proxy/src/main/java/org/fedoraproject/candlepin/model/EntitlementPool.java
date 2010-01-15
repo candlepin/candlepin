@@ -31,6 +31,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import org.hibernate.annotations.CollectionOfElements;
+import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -49,6 +50,10 @@ import org.hibernate.annotations.ForeignKey;
 @Table(name = "cp_entitlement_pool")
 @SequenceGenerator(name="seq_entitlement_pool", sequenceName="seq_entitlement_pool", allocationSize=1)
 public class EntitlementPool implements Persisted {
+    
+    @Version
+    @Column(name = "obj_version")
+    private long version;
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_entitlement_pool")
@@ -183,7 +188,17 @@ public class EntitlementPool implements Persisted {
 	public boolean isExpired(DateSource dateSource) {
 	    return getEndDate().before(dateSource.currentDate());
 	}
+	
+    public boolean entitlementsAvailable() {
+        if (isUnlimited()) {
+            return true;
+        }
 
+        if (getCurrentMembers() < getMaxMembers()) {
+            return true;
+        }
+        return false;
+    }
 	/**
 	 * @return True if entitlement pool is unlimited.
 	 */

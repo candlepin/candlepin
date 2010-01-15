@@ -60,8 +60,7 @@ public class OwnerTest extends DatabaseTestFixture {
     public void testObjectRelationships() throws Exception {
         Owner owner = new Owner("test-owner");
         // Product
-        Product rhel = new Product();
-        rhel.setName("Red Hat Enterprise Linux");
+        Product rhel = new Product("Red Hat Enterprise Linux", "Red Hat Enterprise Linux");
         
         // User
         User u = new User();

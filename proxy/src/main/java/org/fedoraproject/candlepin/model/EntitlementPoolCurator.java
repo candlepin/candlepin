@@ -18,14 +18,31 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.OptimisticLockException;
+
+import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.PolicyFactory;
+import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
 import org.hibernate.criterion.Restrictions;
 
+import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
-    protected EntitlementPoolCurator() {
+    private EntitlementCurator entitlementCurator;
+    private ConsumerCurator consumerCurator;
+    private DateSource dateSource;
+
+    @Inject
+    protected EntitlementPoolCurator(
+            EntitlementCurator entitlementCurator, 
+            ConsumerCurator consumerCurator, DateSource dateSource) {
         super(EntitlementPool.class);
+        this.entitlementCurator = entitlementCurator;
+        this.consumerCurator = consumerCurator;
+        this.dateSource = dateSource;
     }
 
     @SuppressWarnings("unchecked")
@@ -75,40 +92,39 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     }
     
     /**
-     * Return true if this pool has entitlements available. Performs a
-     * quantity check, but is also aware of pools with unlimited entitlements.
-     *
-     * @param pool Entitlement pool to check
-     * @return True if the entitlement pool has entitlements available.
-     */
-    public boolean entitlementsAvailable(EntitlementPool pool) {
-        if (pool.isUnlimited()) {
-            return true;
-        }
-
-        if (pool.getCurrentMembers() < pool.getMaxMembers()) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Create an entitlement.
      * 
      * @param entPool
      * @param consumer
      * @return
      */
+    //
+    // NOTE: after calling this method both entitlement pool and consumer parameters
+    //       will most certainly be stale. beware!
+    //
     @Transactional
-    public Entitlement createEntitlement(EntitlementPool entPool, Consumer consumer) {
-        Entitlement e = new Entitlement(entPool, consumer.getOwner(), new Date());
-        entPool.bumpCurrentMembers();
-        consumer.addEntitlement(e);
-        consumer.addConsumedProduct(entPool.getProduct());
-        e.setOwner(consumer.getOwner());
+    public Entitlement createEntitlement(Owner owner, Consumer consumer, Product product) {
         
-        save(e);
-        flush();
+        EntitlementPool ePool = lookupByOwnerAndProduct(owner, consumer, product);
+        if (ePool == null) {
+            throw new RuntimeException("No entitlements for product: " + product.getName());
+        }
+        
+        Enforcer enforcer = new PolicyFactory().createEnforcer(dateSource, this);
+        if (!enforcer.validate(consumer, ePool)) {
+            throw new RuntimeException(enforcer.errors().toString());
+        }
+        
+        Entitlement e = new Entitlement(ePool, consumer, new Date());
+        
+        consumer.addEntitlement(e);
+        consumer.addConsumedProduct(product);
+        
+        ePool.bumpCurrentMembers();
+        
+        entitlementCurator.save(e);
+        consumerCurator.update(consumer);
+        merge(ePool);
         
         return e;
     }
@@ -137,6 +153,4 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         
         return super.create(entity);
     }
-
-
 }

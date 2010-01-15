@@ -98,12 +98,7 @@ public class Consumer implements Persisted {
                 @UniqueConstraint(columnNames = {"consumer_id", "product_id"}))
     private Set<Product> consumedProducts;
     
-    @OneToMany(cascade = CascadeType.ALL)
-    @ForeignKey(name = "fk_consumer_product_consumer_id",
-                inverseName = "fk_consumer_produce_product_id")
-    @JoinTable(name = "cp_consumer_entitlements",
-            joinColumns = @JoinColumn(name = "consumer_id"),
-            inverseJoinColumns = @JoinColumn(name = "entitlement_id"))
+    @OneToMany(cascade = CascadeType.ALL, mappedBy="consumer")
     private Set<Entitlement> entitlements;
     
     @OneToOne(cascade = CascadeType.ALL)

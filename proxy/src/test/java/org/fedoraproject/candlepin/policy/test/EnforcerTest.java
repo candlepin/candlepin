@@ -1,15 +1,15 @@
-package org.fedoraproject.candlepin.enforcer;
+package org.fedoraproject.candlepin.policy.test;
 
 import static org.junit.Assert.*;
 
-import java.util.Calendar;
 import java.util.Date;
 
-import org.fedoraproject.candlepin.enforcer.java.JavaEnforcer;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -57,7 +57,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     private EntitlementPool entitlementPoolWithMembersAndExpiration(
             final int currentMembers, final int maxMembers, Date expiry) {
-        return new EntitlementPool(new Owner(), new Product("blah", "blah"), 
+        return new EntitlementPool(new Owner(), new Product("label", "name"), 
                 new Long(maxMembers), new Date(), expiry) {{
             setCurrentMembers(currentMembers);
         }};

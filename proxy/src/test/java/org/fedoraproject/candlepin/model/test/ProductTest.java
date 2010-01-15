@@ -14,6 +14,7 @@ public class ProductTest extends DatabaseTestFixture {
     
     
     @Test
+    @SuppressWarnings("unchecked")
     public void normalCreate() { 
     
         Product prod = new Product("cptest-label", "My Product");
@@ -27,8 +28,7 @@ public class ProductTest extends DatabaseTestFixture {
     @Test(expected = PersistenceException.class)
     public void nameRequired() { 
     
-        Product prod = new Product();
-        prod.setLabel("someproductlabel");
+        Product prod = new Product("someproductlabel", null);
         persistAndCommit(prod);
         
     }
@@ -36,8 +36,7 @@ public class ProductTest extends DatabaseTestFixture {
     @Test(expected = PersistenceException.class)
     public void labelRequired() { 
     
-        Product prod = new Product();
-        prod.setName("My Product Name");
+        Product prod = new Product(null, "My Product Name");
         persistAndCommit(prod);
     }
     
@@ -99,6 +98,7 @@ public class ProductTest extends DatabaseTestFixture {
     }
     
     @Test
+    @SuppressWarnings("unchecked")
     public void testCascading() {
         beginTransaction();
         
@@ -126,5 +126,12 @@ public class ProductTest extends DatabaseTestFixture {
                 .getResultList();
         assertEquals(0, results.size());
     }
-
+    
+    @Test
+    public void testEquality() {
+        assertEquals(new Product("label", "name"), new Product("label", "name"));
+        assertFalse(new Product("label", "name").equals(null));
+        assertFalse(new Product("label", "name").equals(new Product("label", "another_name")));
+        assertFalse(new Product("label", "name").equals(new Product("another_label", "name")));
+    }
 }
