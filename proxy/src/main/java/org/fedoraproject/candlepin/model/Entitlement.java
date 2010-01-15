@@ -16,12 +16,15 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -66,6 +69,14 @@ public class Entitlement implements Persisted {
     private Owner owner;
     
     @ManyToOne
+    @ForeignKey(name = "fk_consumer_id",
+                inverseName = "fk_entitlement_id")
+    @JoinTable(name = "cp_consumer_entitlements",
+            joinColumns = @JoinColumn(name = "entitlement_id"),
+            inverseJoinColumns = @JoinColumn(name = "consumer_id"))
+    private Consumer consumer;
+    
+    @ManyToOne
     @ForeignKey(name = "fk_entitlement_entitlement_pool")
     @JoinColumn(nullable = false)
     private EntitlementPool pool;
@@ -89,9 +100,10 @@ public class Entitlement implements Persisted {
         this.id = id;
     }
 
-    public Entitlement(EntitlementPool poolIn, Owner ownerIn, Date startDateIn) {
+    public Entitlement(EntitlementPool poolIn, Consumer consumerIn, Date startDateIn) {
         pool = poolIn;
-        owner = ownerIn;
+        owner = consumerIn.getOwner();
+        consumer = consumerIn;
         startDate = startDateIn;
     }
     
@@ -143,6 +155,14 @@ public class Entitlement implements Persisted {
      */
     public void setStartDate(Date startDateIn) {
         startDate = startDateIn;
+    }
+
+    public Consumer getConsumer() {
+        return consumer;
+    }
+
+    public void setConsumer(Consumer consumer) {
+        this.consumer = consumer;
     }
     
 }

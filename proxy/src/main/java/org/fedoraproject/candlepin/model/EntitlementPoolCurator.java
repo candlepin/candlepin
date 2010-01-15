@@ -112,7 +112,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             throw new RuntimeException(enforcer.errors().toString());
         }
         
-        Entitlement e = new Entitlement(ePool, consumer.getOwner(), new Date());
+        Entitlement e = new Entitlement(ePool, consumer, new Date());
         
         consumer.addEntitlement(e);
         consumer.addConsumedProduct(product);

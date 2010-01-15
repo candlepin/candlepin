@@ -215,9 +215,9 @@ public class ConsumerTest extends DatabaseTestFixture {
         entityManager().persist(pool.getOwner());
         entityManager().persist(pool);
         
-        Entitlement e1 = TestUtil.createEntitlement(pool);
-        Entitlement e2 = TestUtil.createEntitlement(pool);
-        Entitlement e3 = TestUtil.createEntitlement(pool);
+        Entitlement e1 = TestUtil.createEntitlement(pool, consumer);
+        Entitlement e2 = TestUtil.createEntitlement(pool, consumer);
+        Entitlement e3 = TestUtil.createEntitlement(pool, consumer);
         entityManager().persist(e1);
         entityManager().persist(e2);
         entityManager().persist(e3);
