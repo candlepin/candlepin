@@ -18,6 +18,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.policy.PostEntitlementProcessor;
 import org.fedoraproject.candlepin.policy.actions.CreateConsumerPoolAction;
 
@@ -38,8 +39,8 @@ public class JavaPostEntitlementProcessor implements PostEntitlementProcessor {
     public void run(Entitlement ent) {
         Product prod = ent.getProduct();
         
-        // TODO: Lose the hardcoded label here:
-        Product virtGuestProduct = prodCurator.lookupByLabel("virt_guest");
+        Product virtGuestProduct = prodCurator.lookupByLabel(
+                SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
         if (prod.getLabel().equals(JavaEnforcer.VIRTUALIZATION_HOST_PRODUCT)) {
             new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
                     new Long(5)).run();
