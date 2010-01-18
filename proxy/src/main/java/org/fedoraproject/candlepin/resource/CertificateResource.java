@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.resource;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Date;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -28,19 +27,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.fedoraproject.candlepin.model.CertificateCurator;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.jdom.JDOMException;
 
 import com.google.inject.Inject;
 import com.redhat.rhn.common.cert.Certificate;
 import com.redhat.rhn.common.cert.CertificateFactory;
-import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
 import com.sun.jersey.core.util.Base64;
 
 
@@ -53,21 +48,18 @@ public class CertificateResource extends BaseResource {
 
     
     private OwnerCurator ownerCurator;
-    private ProductCurator productCurator;
-    private EntitlementPoolCurator entitlementPoolCurator;
     private CertificateCurator certificateCurator;
+    private SpacewalkCertificateCurator spacewalkCertificateCurator;
 
     
     @Inject
-    public CertificateResource(OwnerCurator ownerCurator, 
-                               ProductCurator productCurator, 
-                               EntitlementPoolCurator entitlementPoolCurator,
+    public CertificateResource(OwnerCurator ownerCurator,
+                               SpacewalkCertificateCurator spacewalkCertificateCurator,
                                CertificateCurator certificateCurator) {
         super(User.class);
         
         this.ownerCurator = ownerCurator;
-        this.productCurator = productCurator;
-        this.entitlementPoolCurator = entitlementPoolCurator;
+        this.spacewalkCertificateCurator = spacewalkCertificateCurator;
         this.certificateCurator = certificateCurator;
     }
     
@@ -95,7 +87,7 @@ public class CertificateResource extends BaseResource {
                 new org.fedoraproject.candlepin.model.Certificate(decoded, owner);
             certificateCurator.create(certBlob);
            
-            addProducts(cert, owner);
+            spacewalkCertificateCurator.parseCertificate(cert, owner);
         }
         catch (JDOMException e) {
             e.printStackTrace();
@@ -124,26 +116,6 @@ public class CertificateResource extends BaseResource {
         return encodedCert;
     }
     
-    private void addProduct(Owner owner, String pname, long maxmem,
-            Date start, Date end) {
-
-        Product p = productCurator.lookupByName(pname);
-        if (p == null) {
-            p = new Product(pname, pname);
-            productCurator.create(p);
-        }
-
-        EntitlementPool ep = new EntitlementPool();
-        ep.setOwner(owner);
-        ep.setProduct(p);
-        ep.setMaxMembers(maxmem);
-        ep.setStartDate(start);
-        ep.setEndDate(end);
-        ep.setCurrentMembers(0);
-        entitlementPoolCurator.create(ep);
-        
-    }
-
     private Owner addOwner(Certificate cert) throws ParseException {
         Owner owner = ownerCurator.lookupByName(cert.getOwner());
         if (owner == null) {
@@ -153,57 +125,4 @@ public class CertificateResource extends BaseResource {
         return owner;
     }
     
-    private void addProducts(Certificate cert, Owner owner) throws ParseException {
-
-        // get the product the cert is for (and the channel families 
-        // which have the other products you can have)
-        Date issued = cert.getIssuedDate();
-        Date expires = cert.getExpiresDate();
-        
-        addProduct(owner, cert.getProduct(),
-                new Long(cert.getSlots()).longValue(),
-                issued, expires);
-        
-        // create products for the channel families
-        for (ChannelFamilyDescriptor cfd : cert.getChannelFamilies()) {
-            addProduct(owner, cfd.getFamily(),
-                    new Long(cfd.getQuantity()).longValue(),
-                    issued, expires);
-        }
-        
-        // create products for each of the add-on entitlements.
-        if (!isEmpty(cert.getMonitoringSlots())) {
-            addProduct(owner, "monitoring",
-                    new Long(cert.getMonitoringSlots()).longValue(),
-                    issued, expires);
-        }
-        
-        if (!isEmpty(cert.getNonlinuxSlots())) {
-            addProduct(owner, "nonlinux",
-                    new Long(cert.getNonlinuxSlots()).longValue(),
-                    issued, expires);
-        }
-        
-        if (!isEmpty(cert.getProvisioningSlots())) {
-            addProduct(owner, "provisioning",
-                    new Long(cert.getProvisioningSlots()).longValue(),
-                    issued, expires);
-        }
-        
-        if (!isEmpty(cert.getVirtualizationSlots())) {
-            addProduct(owner, "virtualization_host",
-                    new Long(cert.getVirtualizationSlots()).longValue(),
-                    issued, expires);           
-        }
-        
-        if (!isEmpty(cert.getVirtualizationPlatformSlots())) {
-            addProduct(owner, "virtualization_host_platform",
-                    new Long(cert.getVirtualizationPlatformSlots()).longValue(),
-                    issued, expires);
-        }
-    }
-    
-    private boolean isEmpty(String str) {
-        return str == null || "".equals(str);
-    }
 }

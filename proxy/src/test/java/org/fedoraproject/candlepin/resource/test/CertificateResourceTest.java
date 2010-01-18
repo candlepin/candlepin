@@ -22,53 +22,24 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import org.fedoraproject.candlepin.CandlepinTestingModule;
-import org.fedoraproject.candlepin.model.CertificateCurator;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.wideplay.warp.persist.PersistenceService;
-import com.wideplay.warp.persist.UnitOfWork;
-
 public class CertificateResourceTest extends DatabaseTestFixture {
     
     private CertificateResource certResource;
-    private CertificateCurator certificateCurator;
-    private ConsumerCurator consumerRepository;
-    private EntitlementPoolCurator epCurator;
-    private ProductCurator productCurator;
-    private OwnerCurator ownerCurator;
     private String sampleCertXml;
     
     @Before
     public void createObjects() throws Exception {
-
-        Injector injector = Guice.createInjector(
-                new CandlepinTestingModule(),
-                PersistenceService.usingJpa()
-                    .across(UnitOfWork.TRANSACTION)
-                    .buildModule()
-        );
-
-        consumerRepository = injector.getInstance(ConsumerCurator.class);
-        epCurator = injector.getInstance(EntitlementPoolCurator.class);
-        productCurator = injector.getInstance(ProductCurator.class);
-        ownerCurator = injector.getInstance(OwnerCurator.class);
-        certificateCurator = injector.getInstance(CertificateCurator.class);
         
-        certResource = new CertificateResource(ownerCurator, productCurator, epCurator, certificateCurator);
+        certResource = new CertificateResource(ownerCurator, spacewalkCertificateCurator, certificateCurator);
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");
@@ -93,7 +64,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void simpleUploadCertProductsCreated() {
         certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
         List<Product> products = productCurator.listAll();
-        assertEquals(5, products.size());
+        assertEquals(6, products.size());
     }
 
     @Test
@@ -101,7 +72,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         String encoded = TestUtil.xmlToBase64String(sampleCertXml);
         certResource.upload(encoded);
         Owner owner = ownerCurator.lookupByName("Spacewalk Public Cert");
-        List<EntitlementPool> entPools = epCurator.listByOwner(owner);
+        List<EntitlementPool> entPools = entitlementPoolCurator.listByOwner(owner);
         assertEquals(5, entPools.size());
     }
 
