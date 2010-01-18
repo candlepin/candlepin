@@ -69,7 +69,8 @@ public class SpacewalkCertificateCurator {
                     issued, expires);
         }
         
-        if (!isEmpty(cert.getVirtualizationSlots()) && !isEmpty(cert.getVirtualizationPlatformSlots())) {
+        if (!isEmpty(cert.getVirtualizationSlots()) || 
+                !isEmpty(cert.getVirtualizationPlatformSlots())) {
             createProductIfDoesNotExist("guest");
         }
     }
