@@ -16,8 +16,6 @@ package org.fedoraproject.candlepin;
 
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
-import org.fedoraproject.candlepin.model.EntitlementPoolCuratorImpl;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.PostEntitlementProcessor;
 import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
@@ -37,7 +35,6 @@ public class CandlepinTestingModule extends AbstractModule {
         
         bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
         bind(Enforcer.class).to(JavaEnforcer.class);
-        bind(EntitlementPoolCurator.class).to(EntitlementPoolCuratorImpl.class);
         bind(PostEntitlementProcessor.class).to(JavaPostEntitlementProcessor.class);
     }
 }
