@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.policy.test;
+package org.fedoraproject.candlepin.controller.test;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class JavaEnforcerTest extends DatabaseTestFixture {
+public class EntitlerTest extends DatabaseTestFixture {
     
     private final static String PRODUCT_VIRT_HOST = "virtualization_host";
     private final static String PRODUCT_VIRT_GUEST = "virt_guest";
