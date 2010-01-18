@@ -17,9 +17,9 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.EntitlementPool;
@@ -49,6 +49,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     private EntitlementPool ep;
     private Owner owner;    
     private EntitlementResource eapi;
+    private Entitler entitler;
     
     @Before
     public void createTestObjects() {
@@ -67,9 +68,11 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         ep = new EntitlementPool(owner, product, new Long(10), 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(ep);
-        
+
+        entitler = injector.getInstance(Entitler.class);
+
         eapi = new EntitlementResource(entitlementPoolCurator, ownerCurator, consumerCurator, 
-                productCurator, dateSource);
+                productCurator, dateSource, entitler);
         
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }
