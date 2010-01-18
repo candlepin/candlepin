@@ -89,16 +89,16 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertEquals(new Long(5), consumerPool.getMaxMembers());
     }
     
-//    @Test
-//    public void testCreateVirtualizationHostPlatformConsumption() {
-//        entitler.createEntitlement(owner, consumer, virtHostPlatform);
-//        
-//        // Consuming a virt host entitlement should result in a pool just for us to consume
-//        // virt guests.
-//        EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(owner, 
-//                consumer, virtGuest);
-//        assertNotNull(consumerPool.getConsumer());
-//        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
-//        assertTrue(consumerPool.getMaxMembers() < 0);
-//    }
+    @Test
+    public void testCreateVirtualizationHostPlatformConsumption() {
+        entitler.createEntitlement(owner, consumer, virtHostPlatform);
+        
+        // Consuming a virt host entitlement should result in a pool just for us to consume
+        // virt guests.
+        EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(owner, 
+                consumer, virtGuest);
+        assertNotNull(consumerPool.getConsumer());
+        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
+        assertTrue(consumerPool.getMaxMembers() < 0);
+    }
 }

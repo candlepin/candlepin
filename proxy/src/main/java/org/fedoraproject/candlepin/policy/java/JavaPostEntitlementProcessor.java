@@ -41,9 +41,18 @@ public class JavaPostEntitlementProcessor implements PostEntitlementProcessor {
         
         Product virtGuestProduct = prodCurator.lookupByLabel(
                 SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
-        if (prod.getLabel().equals(JavaEnforcer.VIRTUALIZATION_HOST_PRODUCT)) {
+        
+        // Virtualization Host
+        if (prod.getLabel().equals(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST)) {
             new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
                     new Long(5)).run();
+        }
+        
+        // Virtualization Host Platform
+        else if (prod.getLabel().equals(
+                SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM)) {
+            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
+                    new Long(-1)).run();
         }
     }
 
