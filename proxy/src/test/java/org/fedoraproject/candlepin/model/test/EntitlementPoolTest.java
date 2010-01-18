@@ -17,9 +17,9 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.EntitlementPoolCuratorImpl;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -184,7 +184,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
         EntitlementPoolCurator anotherEntitlementPoolCurator = 
-            injector.getInstance(EntitlementPoolCurator.class);
+            injector.getInstance(EntitlementPoolCuratorImpl.class);
         
         entitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
         anotherEntitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
@@ -208,7 +208,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
         EntitlementPoolCurator anotherEntitlementPoolCurator = 
-            injector.getInstance(EntitlementPoolCurator.class);
+            injector.getInstance(EntitlementPoolCuratorImpl.class);
         
         entitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
         anotherEntitlementPoolCurator.createEntitlement(owner, consumer, newProduct);

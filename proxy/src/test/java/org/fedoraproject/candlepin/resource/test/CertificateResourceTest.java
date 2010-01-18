@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.EntitlementPoolCuratorImpl;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -63,7 +64,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         );
 
         consumerRepository = injector.getInstance(ConsumerCurator.class);
-        epCurator = injector.getInstance(EntitlementPoolCurator.class);
+        epCurator = injector.getInstance(EntitlementPoolCuratorImpl.class);
         productCurator = injector.getInstance(ProductCurator.class);
         ownerCurator = injector.getInstance(OwnerCurator.class);
         certificateCurator = injector.getInstance(CertificateCurator.class);
