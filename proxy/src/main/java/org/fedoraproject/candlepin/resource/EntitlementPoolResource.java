@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -22,20 +21,28 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+
+import com.google.inject.Inject;
 
 /**
  * API gateway for the EntitlementPool
  */
 @Path("/entitlementpool")
-public class EntitlementPoolResource extends BaseResource {
+public class EntitlementPoolResource {
+
+    private static Logger log = Logger.getLogger(EntitlementPoolResource.class);
+
+    private EntitlementPoolCurator entitlementPoolCurator;
 
     /**
      * default ctor
      */
-    public EntitlementPoolResource() {
-        super(EntitlementPool.class);
+    @Inject
+    public EntitlementPoolResource(EntitlementPoolCurator entitlementPoolCurator) {
+        this.entitlementPoolCurator = entitlementPoolCurator;
     }
    
     /**
@@ -45,12 +52,7 @@ public class EntitlementPoolResource extends BaseResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<EntitlementPool> list() {
-        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
-        List<EntitlementPool> pools = new ArrayList<EntitlementPool>();
-        for (Object o : u) {
-            pools.add((EntitlementPool) o);
-        }
-        return pools;
+        return entitlementPoolCurator.findAll();
     }
 
 }

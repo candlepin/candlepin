@@ -60,11 +60,7 @@ public class Owner implements Persisted {
     @OneToMany(mappedBy = "owner", targetEntity = EntitlementPool.class)
     @ForeignKey(name = "fk_user_owner_id")
     private Set<EntitlementPool> entitlementPools;
-    
-    @OneToMany(mappedBy = "owner", targetEntity = User.class, cascade =
-        { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE })
-    private Set<User> users;
-    
+        
     @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)
     private Set<Certificate> certificates;
     
@@ -75,7 +71,6 @@ public class Owner implements Persisted {
     public Owner() {
         consumers = new HashSet<Consumer>();
         entitlementPools = new HashSet<EntitlementPool>();
-        users = new HashSet<User>();
         certificates = new HashSet<Certificate>();
     }
     
@@ -89,7 +84,6 @@ public class Owner implements Persisted {
         
         consumers = new HashSet<Consumer>();
         entitlementPools = new HashSet<EntitlementPool>();
-        users = new HashSet<User>();
         certificates = new HashSet<Certificate>();
     }
     
@@ -145,31 +139,7 @@ public class Owner implements Persisted {
     public void setEntitlementPools(Set<EntitlementPool> entitlementPools) {
         this.entitlementPools = entitlementPools;
     }
-    /**
-     * @return the users
-     */
-    public Set<User> getUsers() {
-        return users;
-    }
-    /**
-     * @param users the users to set
-     */
-    public void setUsers(Set<User> users) {
-        this.users = users;
-    }
     
-    /**
-     * Add a user.
-     * @param u to add to this org.
-     */
-    public void addUser(User u) {
-        u.setOwner(this);
-        if (this.users ==  null) {
-            this.users = new HashSet<User>();
-        }
-        this.users.add(u);
-    }
-
     /**
      * Add a consumer to this owner
      * @param c consumer for this owner.

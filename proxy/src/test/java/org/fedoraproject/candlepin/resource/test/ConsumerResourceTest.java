@@ -76,7 +76,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Ignore // TODO: implement 'delete' functionality
     public void testDeleteResource() {
         Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME, owner, standardSystemType));
-        consumerResource.delete(created.getUuid());
+        //consumerResource.delete(created.getUuid());
         
         assertNull(consumerCurator.find(created.getId()));
     }

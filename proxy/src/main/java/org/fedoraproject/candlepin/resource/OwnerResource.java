@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -22,20 +21,27 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+
+import com.google.inject.Inject;
 
 /**
  * Owner Resource
  */
 @Path("/owner")
-public class OwnerResource extends BaseResource {
+public class OwnerResource {
     
+    private static Logger log = Logger.getLogger(OwnerResource.class);
+    private OwnerCurator ownerCurator;
+
     /**
      * @param modelClassIn
      */
-    public OwnerResource() {
-        super(Owner.class);
+    @Inject
+    public OwnerResource(OwnerCurator ownerCurator) {
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -45,12 +51,7 @@ public class OwnerResource extends BaseResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Owner> list() {
-        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
-        List<Owner> owners = new ArrayList<Owner>();
-        for (Object o : u) {
-            owners.add((Owner) o);
-        }
-        return owners;
+        return ownerCurator.findAll();  
     }
 
 }

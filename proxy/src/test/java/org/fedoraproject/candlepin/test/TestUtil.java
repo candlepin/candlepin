@@ -23,10 +23,8 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.User;
 
 /**
  * TestUtil for creating various testing objects.
@@ -41,14 +39,11 @@ public class TestUtil {
 
     public static Owner createOwner() {
         Owner o = new Owner("Test Owner " + randomInt());
-//        o.setUuid(lookedUp);
-        ObjectFactory.get().store(o);
         return o;
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
         Consumer c = new Consumer("Test Consumer " + randomInt(), owner, type);
-        ObjectFactory.get().store(c);
         return c;
     }
 
@@ -88,7 +83,6 @@ public class TestUtil {
         int random =  randomInt();
         Product rhel = new Product("test-product-" + random, 
                 "Test Product " + random);
-        ObjectFactory.get().store(rhel);
         return rhel;
     }
     
@@ -102,11 +96,6 @@ public class TestUtil {
     public static Entitlement createEntitlement(EntitlementPool pool, Consumer c) {
         Entitlement e = new Entitlement(pool, c, pool.getStartDate());
         return e;
-    }
-    
-    public static User createUser(Owner owner) {
-        User u = new User(owner, "testuser" + randomInt(), "sekret");
-        return u;
     }
     
     public static Date createDate(int year, int month, int day) {

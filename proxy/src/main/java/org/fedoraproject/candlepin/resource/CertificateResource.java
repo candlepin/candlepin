@@ -26,11 +26,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
-import org.fedoraproject.candlepin.model.User;
 import org.jdom.JDOMException;
 
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ import com.sun.jersey.core.util.Base64;
  * CertificateResource
  */
 @Path("/certificate")
-public class CertificateResource extends BaseResource {
+public class CertificateResource  {
     private static String encodedCert = ""; // bad bad bad
 
     
@@ -51,13 +51,13 @@ public class CertificateResource extends BaseResource {
     private CertificateCurator certificateCurator;
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
 
+    private static Logger log = Logger.getLogger(CertificateResource.class);
     
     @Inject
     public CertificateResource(OwnerCurator ownerCurator,
                                SpacewalkCertificateCurator spacewalkCertificateCurator,
                                CertificateCurator certificateCurator) {
-        super(User.class);
-        
+
         this.ownerCurator = ownerCurator;
         this.spacewalkCertificateCurator = spacewalkCertificateCurator;
         this.certificateCurator = certificateCurator;
