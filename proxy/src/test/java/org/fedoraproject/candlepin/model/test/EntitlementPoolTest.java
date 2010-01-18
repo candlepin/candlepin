@@ -16,10 +16,9 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -33,6 +32,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     private Product prod;
     private Owner owner;
     private Consumer consumer;
+    private Entitler entitler;
 
     @Before
     public void createObjects() {
@@ -42,6 +42,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         owner = pool.getOwner();
         prod = pool.getProduct();
         consumer = TestUtil.createConsumer(owner);
+        entitler = injector.getInstance(Entitler.class);
 
         ownerCurator.create(owner);
         productCurator.create(prod);
@@ -141,7 +142,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
-        entitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
+        entitler.createEntitlement(owner, consumer, newProduct);
         
         assertFalse(entitlementPoolCurator.find(consumerPool.getId()).entitlementsAvailable());
     }
@@ -162,7 +163,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
         assertEquals(0, consumer.getEntitlements().size());
-        entitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
+        entitler.createEntitlement(owner, consumer, newProduct);
         
         assertTrue(consumerCurator.find(consumer.getId()).getConsumedProducts().contains(newProduct));
         assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
@@ -183,11 +184,11 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
-        EntitlementPoolCurator anotherEntitlementPoolCurator = 
-            injector.getInstance(EntitlementPoolCurator.class);
+        Entitler anotherEntitler = 
+            injector.getInstance(Entitler.class);
         
-        entitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
-        anotherEntitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
+        entitler.createEntitlement(owner, consumer, newProduct);
+        anotherEntitler.createEntitlement(owner, consumer, newProduct);
         
         assertFalse(entitlementPoolCurator.find(consumerPool.getId()).entitlementsAvailable());
     }
@@ -207,10 +208,11 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
-        EntitlementPoolCurator anotherEntitlementPoolCurator = 
-            injector.getInstance(EntitlementPoolCurator.class);
+        Entitler anotherEntitler = 
+            injector.getInstance(Entitler.class);
         
-        entitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
-        anotherEntitlementPoolCurator.createEntitlement(owner, consumer, newProduct);
+        
+        entitler.createEntitlement(owner, consumer, newProduct);
+        anotherEntitler.createEntitlement(owner, consumer, newProduct);
     }
 }

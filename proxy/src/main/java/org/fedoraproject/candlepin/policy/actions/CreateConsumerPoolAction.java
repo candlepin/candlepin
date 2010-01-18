@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.policy.actions;
 
-import java.util.Date;
+import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -25,28 +25,27 @@ import org.fedoraproject.candlepin.model.Product;
 /**
  * Action to create an entitlement pool for a specific consumer and product.
  */
-public class CreateConsumerPoolAction implements Action {
+public class CreateConsumerPoolAction {
 
     EntitlementPoolCurator epCurator;
-    Consumer consumer;
-    Product product;
+    Entitlement ent;
     Long quantity;
-    Date startDate;
-    Date endDate;
+    Product product;
     
-    public CreateConsumerPoolAction(EntitlementPoolCurator epCuratorIn, 
-            Consumer consumer, Product product, Long quantity, Date startDate, Date endDate) {
-        this.epCurator = epCuratorIn;
-        this.consumer = consumer;
+    public CreateConsumerPoolAction(EntitlementPoolCurator epCurator, 
+            Entitlement ent, Product product, Long quantity) {
+        this.epCurator = epCurator;
+        this.ent = ent;
         this.product = product;
         this.quantity = quantity;
-        this.startDate = startDate;
-        this.endDate = endDate;
+        
     }
     
-    public void run(Entitlement ent) {
-        EntitlementPool consumerSpecificPool = new EntitlementPool(consumer.getOwner(), 
-                product, quantity, startDate, endDate);
+    public void run() {
+        Consumer c = ent.getConsumer();
+        EntitlementPool consumerSpecificPool = new EntitlementPool(c.getOwner(), 
+                product, quantity, ent.getPool().getStartDate(), ent.getPool().getEndDate());
+        consumerSpecificPool.setConsumer(c);
         epCurator.create(consumerSpecificPool);
     }
     

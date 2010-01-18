@@ -14,13 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.fedoraproject.candlepin.DateSource;
-import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.PolicyFactory;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -28,18 +24,9 @@ import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
-    private EntitlementCurator entitlementCurator;
-    private ConsumerCurator consumerCurator;
-    private DateSource dateSource;
-
     @Inject
-    protected EntitlementPoolCurator(
-            EntitlementCurator entitlementCurator, 
-            ConsumerCurator consumerCurator, DateSource dateSource) {
+    protected EntitlementPoolCurator() {
         super(EntitlementPool.class);
-        this.entitlementCurator = entitlementCurator;
-        this.consumerCurator = consumerCurator;
-        this.dateSource = dateSource;
     }
 
     @SuppressWarnings("unchecked")
@@ -86,44 +73,6 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("product", product))
             .uniqueResult();
-    }
-    
-    /**
-     * Create an entitlement.
-     * 
-     * @param entPool
-     * @param consumer
-     * @return
-     */
-    //
-    // NOTE: after calling this method consumer parameter
-    //       will most certainly be stale. beware!
-    //
-    @Transactional
-    public Entitlement createEntitlement(Owner owner, Consumer consumer, Product product) {
-        
-        EntitlementPool ePool = lookupByOwnerAndProduct(owner, consumer, product);
-        if (ePool == null) {
-            throw new RuntimeException("No entitlements for product: " + product.getName());
-        }
-        
-        Enforcer enforcer = new PolicyFactory().createEnforcer(dateSource, this);
-        if (!enforcer.validate(consumer, ePool)) {
-            throw new RuntimeException(enforcer.errors().toString());
-        }
-        
-        Entitlement e = new Entitlement(ePool, consumer, new Date());
-        
-        consumer.addEntitlement(e);
-        consumer.addConsumedProduct(product);
-        
-        ePool.bumpCurrentMembers();
-        
-        entitlementCurator.save(e);
-        consumerCurator.update(consumer);
-        merge(ePool);
-        
-        return e;
     }
     
     @Transactional

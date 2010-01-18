@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -56,6 +57,7 @@ public class EntitlementResource extends BaseResource {
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ProductCurator productCurator;
+    private Entitler entitler;
     
     private DateSource dateSource;
     private static Logger log = Logger.getLogger(EntitlementResource.class);
@@ -63,13 +65,14 @@ public class EntitlementResource extends BaseResource {
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
             OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ProductCurator productCurator, DateSource dateSource) {
+            ProductCurator productCurator, DateSource dateSource, Entitler entitler) {
         super(Entitlement.class);
         this.epCurator = epCurator;
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
         this.dateSource = dateSource;
+        this.entitler = entitler;
     }
 
     private Object validateObjectInput(String uuid, Class clazz) {
@@ -131,7 +134,7 @@ public class EntitlementResource extends BaseResource {
         }
         
         // Attempt to create an entitlement:
-        Entitlement e = epCurator.createEntitlement(owner, consumer, p); 
+        Entitlement e = entitler.createEntitlement(owner, consumer, p); 
         
         return CertGenerator.getCertString(); 
     }

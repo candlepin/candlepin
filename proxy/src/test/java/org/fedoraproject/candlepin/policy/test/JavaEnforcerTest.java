@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
+import java.util.List;
+
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.EntitlementPool;
@@ -29,9 +32,13 @@ import static org.junit.Assert.*;
 public class JavaEnforcerTest extends DatabaseTestFixture {
     
     private final static String PRODUCT_VIRT_HOST = "virtualization_host";
+    private final static String PRODUCT_VIRT_GUEST = "virt_guest";
     private Product virtHost;
+    private Product virtGuest;
+    
     private Owner owner;
     private Consumer consumer;
+    private Entitler entitler;
 
     @Before
     public void setup() {
@@ -40,9 +47,13 @@ public class JavaEnforcerTest extends DatabaseTestFixture {
         virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
         productCurator.create(virtHost);
         
+        virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST);
+        productCurator.create(virtGuest);
+        
         owner = TestUtil.createOwner();
         ownerCurator.create(owner);
         
+        entitler = injector.getInstance(Entitler.class);
 
         EntitlementPool pool = new EntitlementPool(owner, virtHost, new Long(10), 
                 TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2040, 11, 30));
@@ -59,10 +70,12 @@ public class JavaEnforcerTest extends DatabaseTestFixture {
     
     @Test
     public void testVirtualizationHostConsumption() {
-        entitlementPoolCurator.createEntitlement(owner, consumer, virtHost);
+        entitler.createEntitlement(owner, consumer, virtHost);
         EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(owner, 
-                consumer, virtHost);
-//        assertNotNull(consumerPool.getConsumer());
-//        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
+                consumer, virtGuest);
+        List<EntitlementPool> pools = entitlementPoolCurator.listByOwner(owner);
+        assertEquals(2, pools.size());
+        assertNotNull(consumerPool.getConsumer());
+        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
     }
 }
