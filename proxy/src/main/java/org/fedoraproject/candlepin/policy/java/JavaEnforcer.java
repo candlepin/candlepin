@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationWarning;
@@ -36,8 +37,6 @@ public class JavaEnforcer implements Enforcer {
     private List<ValidationWarning> warnings = new LinkedList<ValidationWarning>();
 
     private DateSource dateSource;
-    
-    public static final String VIRTUALIZATION_HOST_PRODUCT = "virtualization_host";
     
     @Inject
     public JavaEnforcer(DateSource dateSource) {
@@ -79,7 +78,7 @@ public class JavaEnforcer implements Enforcer {
         
         Product product = entitlementPool.getProduct();
         
-        if (product.getName().equals(VIRTUALIZATION_HOST_PRODUCT)) {
+        if (product.getName().equals(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST)) {
             return validateVirtualizationHost(consumer, entitlementPool);
         }
         
