@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -122,8 +123,8 @@ public class Consumer implements Persisted {
     
     public static Consumer createFromConsumer(Consumer copyFrom, Owner owner, ConsumerType type) {
         Consumer toReturn = new Consumer(copyFrom.name, owner, type);
+        toReturn.getFacts().setMetadata(copyFrom.getFacts().getMetadata());
         
-        toReturn.facts = copyFrom.facts;
         toReturn.childConsumers = copyFrom.childConsumers;
         toReturn.consumedProducts = copyFrom.consumedProducts;
         toReturn.entitlements = copyFrom.entitlements;

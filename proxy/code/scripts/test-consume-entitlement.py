@@ -9,10 +9,12 @@ conn = httplib.HTTPConnection("localhost", 8080)
 
 # POST new user
 print("Creating a new consumer:")
-params = {"type_label": 'system'}
+
+consumer_type = {"label": "system"}
+params = {"type": consumer_type, "name": "helloworld"}
 headers = {"Content-type": "application/json",
            "Accept": "application/json"}
-conn.request("POST", '/candlepin/consumer/', urllib.urlencode(params), headers)
+conn.request("POST", '/candlepin/consumer/', json.dumps(params), headers)
 response = conn.getresponse()
 print("Status: %d Response: %s" % (response.status, response.reason))
 rsp = response.read()
@@ -22,19 +24,19 @@ consumer_uuid = json.loads(rsp)['uuid']
 print("Consumer UUID: %s" % consumer_uuid)
 
 
-# Entitle consumer for rhel-server:
-print("Entitling consumer for monitoring")
-conn = httplib.HTTPConnection("localhost", 8080)
-params = urllib.urlencode({
-    "consumer_uuid": consumer_uuid,
-    "product_id": "monitoring"
-})
-headers = {"Content-type":"application/json",
-           "Accept": "application/json"}
-conn.request("POST", '/candlepin/entitlement/entitle', params, headers)
-response = conn.getresponse()
-print("Status: %d Response: %s" % (response.status, response.reason))
-rsp = response.read()
-conn.close()
-print("Entitlement claimed: %s" % rsp)
+## Entitle consumer for rhel-server:
+#print("Entitling consumer for monitoring")
+#conn = httplib.HTTPConnection("localhost", 8080)
+#params = urllib.urlencode({
+#    "consumer_uuid": consumer_uuid,
+#    "product_id": "monitoring"
+#})
+#headers = {"Content-type":"application/json",
+#           "Accept": "application/json"}
+#conn.request("POST", '/candlepin/entitlement/entitle', params, headers)
+#response = conn.getresponse()
+#print("Status: %d Response: %s" % (response.status, response.reason))
+#rsp = response.read()
+#conn.close()
+#print("Entitlement claimed: %s" % rsp)
 
