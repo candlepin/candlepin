@@ -20,11 +20,13 @@ import java.util.List;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationWarning;
+
+import com.google.inject.Inject;
 
 /**
  * A pure java implementation of an Enforcer, with logic for handling the
@@ -35,14 +37,10 @@ public class JavaEnforcer implements Enforcer {
     private List<ValidationWarning> warnings = new LinkedList<ValidationWarning>();
 
     private DateSource dateSource;
-    private EntitlementPoolCurator epCurator;
     
-    public static final String VIRTUALIZATION_HOST_PRODUCT = "virtualization_host";
-    
-    public JavaEnforcer(DateSource dateSource, 
-            EntitlementPoolCurator epCurator) {
+    @Inject
+    public JavaEnforcer(DateSource dateSource) {
         this.dateSource = dateSource;
-        this.epCurator = epCurator;
     }
     
     public List<ValidationError> errors() {
@@ -80,7 +78,7 @@ public class JavaEnforcer implements Enforcer {
         
         Product product = entitlementPool.getProduct();
         
-        if (product.getName().equals(VIRTUALIZATION_HOST_PRODUCT)) {
+        if (product.getName().equals(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST)) {
             return validateVirtualizationHost(consumer, entitlementPool);
         }
         

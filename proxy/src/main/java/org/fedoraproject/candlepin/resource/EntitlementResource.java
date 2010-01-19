@@ -14,11 +14,8 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -30,18 +27,18 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
-import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
-import org.fedoraproject.candlepin.util.EntityManagerUtil;
 
 import com.google.inject.Inject;
 
@@ -50,46 +47,38 @@ import com.google.inject.Inject;
  * REST api gateway for the User object.
  */
 @Path("/entitlement")
-public class EntitlementResource extends BaseResource {
+public class EntitlementResource {
     
     private EntitlementPoolCurator epCurator;
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ProductCurator productCurator;
+    private Entitler entitler;
+    private EntitlementCurator entitlementCurator;
     
     private DateSource dateSource;
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
+            EntitlementCurator entitlementCurator,
             OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ProductCurator productCurator, DateSource dateSource) {
-        super(Entitlement.class);
+            ProductCurator productCurator, DateSource dateSource, Entitler entitler) {
+        
         this.epCurator = epCurator;
+        this.entitlementCurator = entitlementCurator;
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
         this.dateSource = dateSource;
+        this.entitler = entitler;
     }
 
-    private Object validateObjectInput(String uuid, Class clazz) {
-        Object o = ObjectFactory.get().lookupByUUID(clazz, uuid);
+    private void verifyExistence(Object o, String id) {
         if (o == null) {
-            throw new RuntimeException(clazz.getName() + " with UUID: [" + 
-                    uuid + "] not found");
+            throw new RuntimeException(o.getClass().getName() + " with ID: [" + 
+                    id + "] not found");
         }
-        return o;
-    }
-
-    private Object newValidateObjectInput(EntityManager em, Long id, Class clazz) {
-        Query q = em.createQuery("from " + clazz.getName() + " o where o.id = :id");
-        q.setParameter("id", id);
-//        if (o == null) {
-//            throw new RuntimeException(clazz.getName() + " with UUID: [" + 
-//                    uuid + "] not found");
-//        }
-        Object result = q.getSingleResult();
-        return result;
     }
 
     /**
@@ -118,8 +107,8 @@ public class EntitlementResource extends BaseResource {
     public Object entitle(@FormParam("consumer_uuid") String consumerUuid, 
             @FormParam("product_id") String productLabel) {
         
-        // Lookup the entitlement pool for this product.
-        Owner owner = getCurrentUsersOwner(ownerCurator);
+        Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current user's owner
+        
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
             throw new RuntimeException("No such consumer: " + consumerUuid);
@@ -131,7 +120,7 @@ public class EntitlementResource extends BaseResource {
         }
         
         // Attempt to create an entitlement:
-        Entitlement e = epCurator.createEntitlement(owner, consumer, p); 
+        Entitlement e = entitler.createEntitlement(owner, consumer, p); 
         
         return CertGenerator.getCertString(); 
     }
@@ -147,10 +136,15 @@ public class EntitlementResource extends BaseResource {
     @Path("/has")
     public boolean hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_id") String productId) {
-        Consumer c = (Consumer) validateObjectInput(consumerUuid, Consumer.class);
-        Product p = (Product) validateObjectInput(productId, Product.class);
-        for (Entitlement e : c.getEntitlements()) {
-            if (e.getProduct().equals(p)) {
+        
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        verifyExistence(consumer, consumerUuid);
+        
+        Product product = productCurator.find(productId);
+        verifyExistence(product, productId);
+            
+        for (Entitlement e : consumer.getEntitlements()) {
+            if (e.getProduct().equals(product)) {
                 return true;
             }
         }
@@ -163,32 +157,34 @@ public class EntitlementResource extends BaseResource {
      * @param consumerId Unique id of Consumer
      * @return List<Entitlement> of applicable 
      */
+    // TODO: right now returns *all* available entitlement pools
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/listavailable")
     public List<EntitlementPool> listAvailableEntitlements(
         @PathParam("consumerId") Long consumerId) {
-        EntityManager em = EntityManagerUtil.createEntityManager();
 
-        Consumer c = (Consumer) newValidateObjectInput(em, consumerId, Consumer.class);
-        List<EntitlementPool> entitlementPools = new EntitlementPoolResource().list();
-        List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
-        EntitlementMatcher matcher = new EntitlementMatcher();
-        for (EntitlementPool ep : entitlementPools) {
-            boolean add = false;
-            System.out.println("max = " + ep.getMaxMembers());
-            System.out.println("cur = " + ep.getCurrentMembers());
-            if (ep.getMaxMembers() > ep.getCurrentMembers()) {
-                add = true;
-            }
-            if (matcher.isCompatible(c, ep.getProduct())) {
-                add = true;
-            }
-            if (add) {
-                retval.add(ep);
-            }
-        }
-        return retval;
+        return epCurator.findAll();
+        
+//        Consumer c = consumerCurator.find(consumerId);
+//        List<EntitlementPool> entitlementPools = epCurator.findAll();
+//        List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
+//        EntitlementMatcher matcher = new EntitlementMatcher();
+//        for (EntitlementPool ep : entitlementPools) {
+//            boolean add = false;
+//            System.out.println("max = " + ep.getMaxMembers());
+//            System.out.println("cur = " + ep.getCurrentMembers());
+//            if (ep.getMaxMembers() > ep.getCurrentMembers()) {
+//                add = true;
+//            }
+//            if (matcher.isCompatible(c, ep.getProduct())) {
+//                add = true;
+//            }
+//            if (add) {
+//                retval.add(ep);
+//            }
+//        }
+//        return retval;
     }
 
     
@@ -203,12 +199,7 @@ public class EntitlementResource extends BaseResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Entitlement> list() {
-        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
-        List<Entitlement> entitlements = new ArrayList<Entitlement>();
-        for (Object o : u) {
-            entitlements.add((Entitlement) o);
-        }
-        return entitlements;
+        return entitlementCurator.findAll();
     }
 
 }

@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -31,7 +30,6 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.ObjectFactory;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -43,7 +41,7 @@ import com.google.inject.Inject;
  */
 @Path("/consumer")
 
-public class ConsumerResource extends BaseResource {
+public class ConsumerResource {
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private OwnerCurator ownerCurator;
@@ -53,7 +51,6 @@ public class ConsumerResource extends BaseResource {
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
             ConsumerTypeCurator consumerTypeCurator) {
-        super(Consumer.class);
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
@@ -67,12 +64,7 @@ public class ConsumerResource extends BaseResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Consumer> list() {
-        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
-        List<Consumer> consumers = new ArrayList<Consumer>();
-        for (Object o : u) {
-            consumers.add((Consumer) o);
-        }
-        return consumers;
+        return consumerCurator.findAll();
     }
    
     /**
@@ -85,7 +77,8 @@ public class ConsumerResource extends BaseResource {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer create(Consumer in) {
-        Owner owner = getCurrentUsersOwner(ownerCurator);
+        Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
+        
         log.warn("Got consumerTypeLabel of: " + in.getType().getLabel());
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());
         

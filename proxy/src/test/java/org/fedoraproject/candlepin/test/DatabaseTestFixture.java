@@ -15,6 +15,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -22,7 +23,6 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
-import org.fedoraproject.candlepin.model.User;
 import org.junit.Before;
 
 import com.google.inject.Guice;
@@ -46,6 +46,7 @@ public class DatabaseTestFixture {
     protected EntitlementPoolCurator entitlementPoolCurator;
     protected DateSourceForTesting dateSource;
     protected SpacewalkCertificateCurator spacewalkCertificateCurator;
+    protected EntitlementCurator entitlementCurator;
 
     
     @Before
@@ -67,6 +68,7 @@ public class DatabaseTestFixture {
         certificateCurator = injector.getInstance(CertificateCurator.class);
         entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
         spacewalkCertificateCurator = injector.getInstance(SpacewalkCertificateCurator.class);
+        entitlementCurator = injector.getInstance(EntitlementCurator.class);
         
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
@@ -93,11 +95,6 @@ public class DatabaseTestFixture {
             beginTransaction();
         }
         
-        List<User> users = em.createQuery("from User u").getResultList();
-        for (User u : users) {
-            em.remove(u);
-        }
-
         List<Entitlement> ents = em.createQuery("from Entitlement e").
             getResultList();
         for (Entitlement e : ents) {

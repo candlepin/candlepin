@@ -11,6 +11,11 @@ public class SpacewalkCertificateCurator {
     
     private EntitlementPoolCurator entitlementPoolCurator;
     private ProductCurator productCurator;
+    
+    public static final String PRODUCT_VIRT_HOST = "virtualization_host";
+    public static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
+    public static final String PRODUCT_VIRT_GUEST = "virt_guest";
+    
 
     @Inject
     public SpacewalkCertificateCurator(EntitlementPoolCurator entitlementPoolCurator, 
@@ -58,19 +63,20 @@ public class SpacewalkCertificateCurator {
         }
         
         if (!isEmpty(cert.getVirtualizationSlots())) {
-            addProduct(owner, "virtualization_host",
+            addProduct(owner, PRODUCT_VIRT_HOST,
                     new Long(cert.getVirtualizationSlots()).longValue(),
                     issued, expires);           
         }
         
         if (!isEmpty(cert.getVirtualizationPlatformSlots())) {
-            addProduct(owner, "virtualization_host_platform",
+            addProduct(owner, PRODUCT_VIRT_HOST_PLATFORM,
                     new Long(cert.getVirtualizationPlatformSlots()).longValue(),
                     issued, expires);
         }
         
-        if (!isEmpty(cert.getVirtualizationSlots()) && !isEmpty(cert.getVirtualizationPlatformSlots())) {
-            createProductIfDoesNotExist("guest");
+        if (!isEmpty(cert.getVirtualizationSlots()) || 
+                !isEmpty(cert.getVirtualizationPlatformSlots())) {
+            createProductIfDoesNotExist(PRODUCT_VIRT_GUEST);
         }
     }
     

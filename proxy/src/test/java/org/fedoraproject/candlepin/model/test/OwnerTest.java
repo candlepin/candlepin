@@ -21,7 +21,6 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Test;
@@ -62,13 +61,6 @@ public class OwnerTest extends DatabaseTestFixture {
         // Product
         Product rhel = new Product("Red Hat Enterprise Linux", "Red Hat Enterprise Linux");
         
-        // User
-        User u = new User();
-        u.setLogin("test-login");
-        u.setPassword("redhat");
-        owner.addUser(u);
-        assertEquals(1, owner.getUsers().size());
-        
         // Consumer
         Consumer c = new Consumer();
         c.setOwner(owner);
@@ -105,23 +97,4 @@ public class OwnerTest extends DatabaseTestFixture {
         assertEquals(2, lookedUp.getConsumers().size());
     }
     
-    @Test
-    public void bidirectionalUsers() throws Exception {
-        Owner o = TestUtil.createOwner();
-        
-        User u1 = TestUtil.createUser(o);
-        User u2 = TestUtil.createUser(o);
-        
-        o.addUser(u1);
-        o.addUser(u2);
-        
-        ownerCurator.create(o);
-        
-        assertEquals(2, o.getUsers().size());
-        
-        entityManager().clear();
-        Owner lookedUp = ownerCurator.find(o.getId());
-        assertEquals(2, lookedUp.getUsers().size());
-    }
-
 }

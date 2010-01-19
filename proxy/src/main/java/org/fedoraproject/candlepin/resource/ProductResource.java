@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -22,8 +21,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.model.ObjectFactory;
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
+
+import com.google.inject.Inject;
 
 
 /**
@@ -31,13 +33,18 @@ import org.fedoraproject.candlepin.model.Product;
  * @version $Rev$
  */
 @Path("/product")
-public class ProductResource extends BaseResource {
+public class ProductResource {
+
+    private static Logger log = Logger.getLogger(ProductResource.class);
+    private ProductCurator productCurator;
+
 
     /**
      * default ctor
      */
-    public ProductResource() {
-        super(Product.class);
+    @Inject
+    public ProductResource(ProductCurator productCurator) {
+        this.productCurator = productCurator;
     }
     
     
@@ -48,11 +55,6 @@ public class ProductResource extends BaseResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Product> list() {
-        List<Object> u = ObjectFactory.get().listObjectsByClass(getApiClass());
-        List<Product> products = new ArrayList<Product>();
-        for (Object o : u) {
-            products.add((Product) o);
-        }
-        return products;
+        return productCurator.findAll();
     }
 }

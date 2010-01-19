@@ -17,26 +17,42 @@ package org.fedoraproject.candlepin.policy.java;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.policy.PostEntitlementProcessor;
-import org.fedoraproject.candlepin.policy.actions.Action;
 import org.fedoraproject.candlepin.policy.actions.CreateConsumerPoolAction;
 
 import com.google.inject.Inject;
 
 public class JavaPostEntitlementProcessor implements PostEntitlementProcessor {
-
-    EntitlementPoolCurator epCurator;
+    
+    private EntitlementPoolCurator epCurator;
+    private ProductCurator prodCurator;
     
     @Inject
-    public JavaPostEntitlementProcessor(EntitlementPoolCurator epCuratorIn) {
-        this.epCurator = epCuratorIn;
+    public JavaPostEntitlementProcessor(EntitlementPoolCurator epCurator, 
+            ProductCurator prodCurator) {
+        this.epCurator = epCurator;
+        this.prodCurator = prodCurator;
     }
-    
 
     public void run(Entitlement ent) {
         Product prod = ent.getProduct();
-        if (prod.getLabel().equals(JavaEnforcer.VIRTUALIZATION_HOST_PRODUCT)) {
-//            new CreateConsumerPoolAction(epCurator, consumer, product, quantity, startDate, endDate)
+        
+        Product virtGuestProduct = prodCurator.lookupByLabel(
+                SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
+        
+        // Virtualization Host
+        if (prod.getLabel().equals(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST)) {
+            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
+                    new Long(5)).run();
+        }
+        
+        // Virtualization Host Platform
+        else if (prod.getLabel().equals(
+                SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM)) {
+            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
+                    new Long(-1)).run();
         }
     }
 

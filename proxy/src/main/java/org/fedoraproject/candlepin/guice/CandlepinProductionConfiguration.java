@@ -1,8 +1,24 @@
+/**
+ * Copyright (c) 2009 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
 package org.fedoraproject.candlepin.guice;
 
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.PostEntitlementProcessor;
 import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
+import org.fedoraproject.candlepin.policy.java.JavaPostEntitlementProcessor;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementPoolResource;
@@ -10,7 +26,6 @@ import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.TestResource;
-import org.fedoraproject.candlepin.resource.UserResource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 
 import com.google.inject.AbstractModule;
@@ -29,9 +44,9 @@ public class CandlepinProductionConfiguration extends AbstractModule {
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
         bind(ProductResource.class);
-        bind(UserResource.class);
         bind(TestResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(JavaEnforcer.class);
+        bind(PostEntitlementProcessor.class).to(JavaPostEntitlementProcessor.class);
     }
 }
