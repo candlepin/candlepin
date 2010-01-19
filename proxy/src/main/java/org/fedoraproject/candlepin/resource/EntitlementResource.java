@@ -105,7 +105,7 @@ public class EntitlementResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/entitle")
     public Object entitle(@FormParam("consumer_uuid") String consumerUuid, 
-            @FormParam("product_id") String productLabel) {
+            @FormParam("product_label") String productLabel) {
         
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current user's owner
         

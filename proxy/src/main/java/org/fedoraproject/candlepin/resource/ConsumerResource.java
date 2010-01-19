@@ -79,8 +79,12 @@ public class ConsumerResource {
     public Consumer create(Consumer in) {
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
         
-        log.warn("Got consumerTypeLabel of: " + in.getType().getLabel());
+        log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());
+        log.debug("got metadata: ");
+        for (String key : in.getFacts().getMetadata().keySet()) {
+            log.debug("   " + key + " = " + in.getFact(key));
+        }
         
         if (type == null) {
             throw new RuntimeException("No such consumer type: " + in.getType().getLabel());

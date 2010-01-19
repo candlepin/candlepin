@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.policy.java;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
@@ -37,6 +38,7 @@ public class JavaEnforcer implements Enforcer {
     private List<ValidationWarning> warnings = new LinkedList<ValidationWarning>();
 
     private DateSource dateSource;
+    private static Logger log = Logger.getLogger(JavaEnforcer.class);
     
     @Inject
     public JavaEnforcer(DateSource dateSource) {

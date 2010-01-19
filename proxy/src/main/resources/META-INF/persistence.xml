@@ -27,7 +27,7 @@
 
             <property name="hibernate.connection.username" value="candlepin"/>
             <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.show_sql" value="true" />
+            <property name="hibernate.show_sql" value="false" />
         </properties>
 
     </persistence-unit>
