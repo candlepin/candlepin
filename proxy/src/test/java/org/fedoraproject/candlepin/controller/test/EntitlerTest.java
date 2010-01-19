@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.controller.test;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -78,7 +79,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     
     @Test
     public void testCreateVirtualizationHostConsumption() {
-        entitler.createEntitlement(owner, consumer, virtHost);
+        Entitlement e = entitler.createEntitlement(owner, consumer, virtHost);
         
         // Consuming a virt host entitlement should result in a pool just for us to consume
         // virt guests.
@@ -87,11 +88,12 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertNotNull(consumerPool.getConsumer());
         assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
         assertEquals(new Long(5), consumerPool.getMaxMembers());
+        assertEquals(e.getId(), consumerPool.getSourceEntitlement().getId());
     }
     
     @Test
     public void testCreateVirtualizationHostPlatformConsumption() {
-        entitler.createEntitlement(owner, consumer, virtHostPlatform);
+        Entitlement e = entitler.createEntitlement(owner, consumer, virtHostPlatform);
         
         // Consuming a virt host entitlement should result in a pool just for us to consume
         // virt guests.
@@ -100,5 +102,6 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertNotNull(consumerPool.getConsumer());
         assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
         assertTrue(consumerPool.getMaxMembers() < 0);
+        assertEquals(e.getId(), consumerPool.getSourceEntitlement().getId());
     }
 }

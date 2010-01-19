@@ -25,13 +25,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import org.hibernate.annotations.CollectionOfElements;
-import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -69,6 +65,14 @@ public class EntitlementPool implements Persisted {
     @ForeignKey(name = "fk_entitlement_pool_consumer")
     @JoinColumn(nullable = true)
     private Consumer consumer;
+
+    /* Indicates this pool was created as a result of granting an entitlement.
+     * Allows us to know that we need to clean this pool up if that entitlment
+     * if ever revoked. */
+    @ManyToOne
+    @ForeignKey(name = "fk_entitlement_pool_source_entitlement")
+    @JoinColumn(nullable = true)
+    private Entitlement sourceEntitlement;
 
     @Column(nullable = false)
     private Long maxMembers;
@@ -204,5 +208,13 @@ public class EntitlementPool implements Persisted {
 		}
 		return false;
 	}
+
+    public Entitlement getSourceEntitlement() {
+        return sourceEntitlement;
+    }
+
+    public void setSourceEntitlement(Entitlement sourceEntitlement) {
+        this.sourceEntitlement = sourceEntitlement;
+    }
 
 }

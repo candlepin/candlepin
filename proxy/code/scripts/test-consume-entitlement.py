@@ -31,7 +31,7 @@ print("Consumer UUID: %s" % consumer_uuid)
 
 
 # Entitle consumer for rhel-server:
-print("Entitling consumer for monitoring")
+print("Consuming virtualization host entitlement:")
 conn = httplib.HTTPConnection("localhost", 8080)
 params = urllib.urlencode({
     "consumer_uuid": consumer_uuid,
