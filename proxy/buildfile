@@ -65,11 +65,11 @@ define "candlepin" do
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.5'
 
-  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE
+  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J
     
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 
-  	filter('src/main/webapp/META-INF').into('target/classes/META-INF').run
+	filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
   test.teardown { rm_rf 'target/classes/META-INF' }
   test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE
@@ -83,7 +83,7 @@ define "candlepin" do
       ant('gen-schema') do |ant|
         rm_rf 'target/schemagen'
         mkdir_p 'target/schemagen'
-      	filter('src/main/webapp/META-INF').into('target/classes/META-INF').run
+	filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
