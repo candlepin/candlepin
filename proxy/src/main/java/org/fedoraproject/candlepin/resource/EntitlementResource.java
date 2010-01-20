@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.resource;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -82,19 +81,6 @@ public class EntitlementResource {
     }
 
     /**
-     * Test method
-     * @param c consumer test
-     * @return test object
-     */
-    @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/foo")
-    public Object foo(Consumer c) {
-        return "return value";
-    }
-
-    /**
      * Entitles the given Consumer with the given Product.
      * @param c Consumer to be entitled
      * @param p The Product
@@ -103,9 +89,9 @@ public class EntitlementResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/entitle")
-    public Object entitle(@FormParam("consumer_uuid") String consumerUuid, 
-            @FormParam("product_label") String productLabel) {
+    @Path("/consumer/{consumer_uuid}/product/{product_label}")
+    public Object entitle(@PathParam("consumer_uuid") String consumerUuid, 
+            @PathParam("product_label") String productLabel) {
         
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current user's owner
         
@@ -133,7 +119,7 @@ public class EntitlementResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/has")
+    @Path("/consumer/{consumer_uuid}/product/{product_id}")
     public boolean hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_id") String productId) {
         
@@ -160,7 +146,7 @@ public class EntitlementResource {
     // TODO: right now returns *all* available entitlement pools
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/listavailable")
+    @Path("/consumer/{consumerId}")
     public List<EntitlementPool> listAvailableEntitlements(
         @PathParam("consumerId") Long consumerId) {
 
