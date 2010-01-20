@@ -119,15 +119,15 @@ public class EntitlementResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/consumer/{consumer_uuid}/product/{product_id}")
+    @Path("/consumer/{consumer_uuid}/product/{product_label}")
     public boolean hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
-            @PathParam("product_id") String productId) {
+            @PathParam("product_label") String productLabel) {
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
         
-        Product product = productCurator.find(productId);
-        verifyExistence(product, productId);
+        Product product = productCurator.lookupByLabel(productLabel);
+        verifyExistence(product, productLabel);
             
         for (Entitlement e : consumer.getEntitlements()) {
             if (e.getProduct().equals(product)) {
@@ -146,9 +146,9 @@ public class EntitlementResource {
     // TODO: right now returns *all* available entitlement pools
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/consumer/{consumerId}")
+    @Path("/consumer/{consumer_uuid}")
     public List<EntitlementPool> listAvailableEntitlements(
-        @PathParam("consumerId") Long consumerId) {
+        @PathParam("consumer_uuid") Long consumerUuid) {
 
         return epCurator.findAll();
         
