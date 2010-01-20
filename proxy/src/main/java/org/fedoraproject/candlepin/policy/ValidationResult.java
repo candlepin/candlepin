@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.policy;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -28,19 +29,36 @@ public class ValidationResult {
 	private List<ValidationError> errors;
 	private List<ValidationWarning> warnings;
 	
+	public ValidationResult() {
+	    errors = new LinkedList<ValidationError>();
+	    warnings = new LinkedList<ValidationWarning>();
+	}
+
 	public List<ValidationError> getErrors() {
 		return errors;
 	}
 	
-	public void setErrors(List<ValidationError> errors) {
-		this.errors = errors;
+	public void addError(ValidationError error) {
+		errors.add(error);
 	}
 	
 	public List<ValidationWarning> getWarnings() {
 		return warnings;
 	}
 	
-	public void setWarnings(List<ValidationWarning> warnings) {
-		this.warnings = warnings;
+	public void addWarning(ValidationWarning warning) {
+		warnings.add(warning);
 	}
+
+    public boolean hasErrors() {
+        return !errors.isEmpty();
+    }
+
+    public boolean hasWarnings() {
+        return !warnings.isEmpty();
+    }
+
+    public boolean isSuccessful() {
+        return !hasErrors();
+    }
 }

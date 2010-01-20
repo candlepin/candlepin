@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.policy.java;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -25,7 +22,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
-import org.fedoraproject.candlepin.policy.ValidationWarning;
+import org.fedoraproject.candlepin.policy.ValidationResult;
 
 import com.google.inject.Inject;
 
@@ -34,8 +31,6 @@ import com.google.inject.Inject;
  * products contained within a Satellite certificate.
  */
 public class JavaEnforcer implements Enforcer {
-    private List<ValidationError> errors = new LinkedList<ValidationError>();
-    private List<ValidationWarning> warnings = new LinkedList<ValidationWarning>();
 
     private DateSource dateSource;
     private static Logger log = Logger.getLogger(JavaEnforcer.class);
@@ -45,46 +40,37 @@ public class JavaEnforcer implements Enforcer {
         this.dateSource = dateSource;
     }
     
-    public List<ValidationError> errors() {
-        return errors;
-    }
-
-    public boolean hasErrors() {
-        return !errors.isEmpty();
-    }
-
-    public List<ValidationWarning> warnings() {
-        return warnings;
-    }        
-
-    public boolean hasWarnings() {
-        return !warnings.isEmpty();
-    }
-
     @Override
-    public boolean validate(Consumer consumer, EntitlementPool entitlementPool) {
+    public ValidationResult validate(Consumer consumer, EntitlementPool entitlementPool) {
+
+        ValidationResult result = new ValidationResult();
+
         if (!entitlementPool.entitlementsAvailable()) {
         // TODO: These first checks should probably be pushed to an Enforcer
         // base class, they are implicit and should be done for all
         // implementations.
-            errors.add(new ValidationError("Not enough entitlements"));
-            return false;
+            result.addError(new ValidationError("Not enough entitlements"));
+            return result;
         }
                     
         if (entitlementPool.isExpired(dateSource)) {
-            errors.add(new ValidationError("Entitlements for " + 
+            result.addError(new ValidationError("Entitlements for " +
                     entitlementPool.getProduct().getName() + 
                     " expired on: " + entitlementPool.getEndDate()));
-            return false;
+            return result;
         }
         
         Product product = entitlementPool.getProduct();
         
         if (product.getName().equals(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST)) {
-            return validateVirtualizationHost(consumer, entitlementPool);
+            boolean success = validateVirtualizationHost(consumer, entitlementPool);
+            // TODO: need more info here but this code is throwaway anyhow.
+            if (!success) {
+                result.addError(new ValidationError("Entitlement rules failed."));
+            }
         }
         
-        return true;
+        return result;
     }
     
     private boolean validateVirtualizationHost(Consumer consumer, 
