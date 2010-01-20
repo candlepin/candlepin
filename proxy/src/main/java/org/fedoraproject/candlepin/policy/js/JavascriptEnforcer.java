@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.policy.js;
 
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -26,6 +27,12 @@ public class JavascriptEnforcer implements Enforcer {
     public ValidationResult validate(Consumer consumer, EntitlementPool enitlementPool) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public void runPostEntitlementActions(Entitlement ent) {
+        // TODO Auto-generated method stub
+
     }
 
 }

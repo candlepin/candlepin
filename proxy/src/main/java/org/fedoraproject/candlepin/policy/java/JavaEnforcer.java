@@ -17,12 +17,16 @@ package org.fedoraproject.candlepin.policy.java;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.actions.CreateConsumerPoolAction;
 
 import com.google.inject.Inject;
 
@@ -34,10 +38,16 @@ public class JavaEnforcer implements Enforcer {
 
     private DateSource dateSource;
     private static Logger log = Logger.getLogger(JavaEnforcer.class);
+    private EntitlementPoolCurator epCurator;
+    private ProductCurator prodCurator;
+
     
     @Inject
-    public JavaEnforcer(DateSource dateSource) {
+    public JavaEnforcer(DateSource dateSource, EntitlementPoolCurator epCurator,
+            ProductCurator prodCurator) {
         this.dateSource = dateSource;
+        this.epCurator = epCurator;
+        this.prodCurator = prodCurator;
     }
     
     @Override
@@ -88,5 +98,25 @@ public class JavaEnforcer implements Enforcer {
         }
         
         return false;
+    }
+
+    public void runPostEntitlementActions(Entitlement ent) {
+        Product prod = ent.getProduct();
+
+        Product virtGuestProduct = prodCurator.lookupByLabel(
+                SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
+
+        // Virtualization Host
+        if (prod.getLabel().equals(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST)) {
+            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
+                    new Long(5)).run();
+        }
+
+        // Virtualization Host Platform
+        else if (prod.getLabel().equals(
+                SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM)) {
+            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
+                    new Long(-1)).run();
+        }
     }
 }

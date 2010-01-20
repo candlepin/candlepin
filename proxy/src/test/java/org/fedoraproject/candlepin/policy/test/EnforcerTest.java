@@ -37,7 +37,8 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Before
     public void createEnforcer() {
-        enforcer = new JavaEnforcer(new DateSourceForTesting(2010, 1, 1));
+        enforcer = new JavaEnforcer(new DateSourceForTesting(2010, 1, 1),
+                entitlementPoolCurator, productCurator);
     }
     
     // grrr. have to test two conditions atm: sufficient number of entitlements *when* pool has not expired

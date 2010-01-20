@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.policy;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 
 public interface Enforcer {
@@ -26,9 +27,20 @@ public interface Enforcer {
 	 * on the product and relevant entitlement pool pass using the current 
 	 * policy.
 	 * 
+	 * This is run prior to granting an entitlement.
+	 *
 	 * @param consumer Consumer who wishes to consume an entitlement.
 	 * @param product Product consumer wishes to have access too.
 	 * @return TODO
 	 */
 	public ValidationResult validate(Consumer consumer, EntitlementPool enitlementPool);
+
+	/**
+	 * Execute post entitlement actions, which are also contained within the rules document.
+	 *
+	 * This is run following the granting of an entitlement.
+	 *
+	 * @param ent The entitlement that was just granted.
+	 */
+	public void runPostEntitlementActions(Entitlement ent);
 }

@@ -25,7 +25,6 @@ import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.PostEntitlementProcessor;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 
 import com.google.inject.Inject;
@@ -38,19 +37,17 @@ public class Entitler {
     private ConsumerCurator consumerCurator;
 
     private Enforcer enforcer;
-    private PostEntitlementProcessor postEntProcessor;
     
     @Inject
     protected Entitler(EntitlementPoolCurator epCurator,
             EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
-            Enforcer enforcer, PostEntitlementProcessor postEntProcessor) {
+            Enforcer enforcer) {
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.enforcer = enforcer;
-        this.postEntProcessor = postEntProcessor;
-        
     }
+
     /**
      * Create an entitlement.
      * 
@@ -86,7 +83,7 @@ public class Entitler {
         consumerCurator.update(consumer);
         epCurator.merge(ePool);
 
-        postEntProcessor.run(e);
+        enforcer.runPostEntitlementActions(e);
         
         return e;
     }
