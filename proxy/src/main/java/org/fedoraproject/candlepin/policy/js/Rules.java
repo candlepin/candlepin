@@ -26,11 +26,11 @@ import javax.script.ScriptException;
 /**
  * Interface to the compiled Javascript rules.
  */
-public class RuleManager {
+public class Rules {
 
     private ScriptEngine jsEngine;
 
-    public RuleManager(String rulesPath) {
+    public Rules(String rulesPath) {
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
         jsEngine.put("testvar", "meow");

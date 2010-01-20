@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.policy.js;
 
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
@@ -22,6 +23,12 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 
 public class JavascriptEnforcer implements Enforcer {
+    
+    private static Logger log = Logger.getLogger(JavascriptEnforcer.class);
+    private Rules rules;
+    
+    public JavascriptEnforcer() {
+    }
 
     @Override
     public ValidationResult validate(Consumer consumer, EntitlementPool enitlementPool) {

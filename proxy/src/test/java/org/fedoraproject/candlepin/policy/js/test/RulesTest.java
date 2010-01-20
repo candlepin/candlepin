@@ -16,20 +16,20 @@ package org.fedoraproject.candlepin.policy.js.test;
 
 import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.policy.js.RuleManager;
+import org.fedoraproject.candlepin.policy.js.Rules;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RuleManagerTest {
+public class RulesTest {
 
     @Test
     public void testCreateRules() {
-        RuleManager rules = new RuleManager("/rules/sample-rules.js");
+        Rules rules = new Rules("/rules/sample-rules.js");
     }
 
     @Test
     public void testValidateProduct() {
-        RuleManager rules = new RuleManager("/rules/sample-rules.js");
+        Rules rules = new Rules("/rules/sample-rules.js");
         rules.validateProduct("rhel");
     }
 }
