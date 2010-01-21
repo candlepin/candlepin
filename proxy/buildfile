@@ -63,7 +63,7 @@ define "candlepin" do
   project.version = VERSION_NUMBER
   project.group = GROUP
   manifest["Implementation-Vendor"] = COPYRIGHT
-  compile.options.target = '1.5'
+  compile.options.target = '1.6'
 
   compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J
     
