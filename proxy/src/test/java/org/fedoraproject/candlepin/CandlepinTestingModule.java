@@ -14,10 +14,16 @@
  */
 package org.fedoraproject.candlepin;
 
-import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
+import org.fedoraproject.candlepin.resource.CertificateResource;
+import org.fedoraproject.candlepin.resource.ConsumerResource;
+import org.fedoraproject.candlepin.resource.EntitlementPoolResource;
+import org.fedoraproject.candlepin.resource.EntitlementResource;
+import org.fedoraproject.candlepin.resource.OwnerResource;
+import org.fedoraproject.candlepin.resource.ProductResource;
+import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 
 import com.google.inject.AbstractModule;
@@ -31,6 +37,13 @@ public class CandlepinTestingModule extends AbstractModule {
         bind(JPAInitializer.class).asEagerSingleton();
         bindConstant().annotatedWith(JpaUnit.class).to("test");
         
+        bind(CertificateResource.class);
+        bind(ConsumerResource.class);
+        bind(EntitlementPoolResource.class);
+        bind(EntitlementResource.class);
+        bind(OwnerResource.class);
+        bind(ProductResource.class);
+        bind(TestResource.class);
         bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
         bind(Enforcer.class).to(JavaEnforcer.class);
     }

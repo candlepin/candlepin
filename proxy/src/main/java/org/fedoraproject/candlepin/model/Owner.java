@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -50,7 +49,7 @@ public class Owner implements Persisted {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_owner")
     private Long id;
     
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @OneToMany(mappedBy = "owner", targetEntity = Consumer.class)
@@ -169,5 +168,20 @@ public class Owner implements Persisted {
     public String toString() {
         return "Owner [name = " + getName() + ", id = " +
             getId() + "]";
+    }
+    
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) return true;
+        if (!(anObject instanceof Owner)) return false;
+        
+        Owner another = (Owner) anObject;
+        
+        return name.equals(another.getName());
+    }
+    
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

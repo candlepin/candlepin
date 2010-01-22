@@ -61,7 +61,7 @@ public class Consumer implements Persisted {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_consumer")
     private Long id;
     
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String uuid;
 
     @Column(nullable = false)
@@ -282,5 +282,19 @@ public class Consumer implements Persisted {
         
     }
 
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) return true;
+        if (!(anObject instanceof Consumer)) return false;
+        
+        Consumer another = (Consumer) anObject;
+        
+        return uuid.equals(another.getUuid());
+    }
+    
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
+    }
 
 }

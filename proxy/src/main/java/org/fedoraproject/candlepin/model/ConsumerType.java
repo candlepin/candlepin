@@ -85,5 +85,19 @@ public class ConsumerType implements Persisted {
         return "ConsumerType [label=" + label + "]";
     }
 
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) return true;
+        if (!(anObject instanceof ConsumerType)) return false;
+        
+        ConsumerType another = (ConsumerType) anObject;
+        
+        return 
+            label.equals(another.getLabel());
+    }
     
+    @Override
+    public int hashCode() {
+        return label.hashCode();
+    }
 }

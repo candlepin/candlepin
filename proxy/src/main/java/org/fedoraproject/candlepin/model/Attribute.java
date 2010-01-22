@@ -74,5 +74,21 @@ public class Attribute {
 	public void setQuantity(Long quantity) {
 		this.quantity = quantity;
 	}
-
+	
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) return true;
+        if (!(anObject instanceof Attribute)) return false;
+        
+        Attribute another = (Attribute) anObject;
+        
+        return 
+            name.equals(another.getName()) &&
+            quantity.equals(another.getQuantity());
+    }
+    
+    @Override
+    public int hashCode() {
+        return name.hashCode()*31 + quantity.hashCode();
+    }
 }
