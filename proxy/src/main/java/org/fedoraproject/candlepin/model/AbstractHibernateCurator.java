@@ -70,6 +70,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     protected final void save(E anObject) {
         getEntityManager().persist(anObject);
+        flush();
     }
 
     protected final void flush() {

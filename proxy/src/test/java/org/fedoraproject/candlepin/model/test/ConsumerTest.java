@@ -46,6 +46,8 @@ public class ConsumerTest extends DatabaseTestFixture {
     
     @Before
     public void setUpTestObjects() {
+        unitOfWork.beginWork();
+        
         owner = new Owner("Example Corporation");
         rhel = new Product("rhel", "Red Hat Enterprise Linux");
         jboss = new Product("jboss", "JBoss");
@@ -62,6 +64,8 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.addConsumedProduct(rhel);
         consumer.addConsumedProduct(jboss);
         consumerCurator.create(consumer);
+        
+        unitOfWork.endWork();
     }
     
     @Test(expected = PersistenceException.class)
@@ -168,10 +172,15 @@ public class ConsumerTest extends DatabaseTestFixture {
     
     @Test
     public void testChildDeleteNoCascade() {
+        unitOfWork.beginWork();
+        
         Consumer child1 = new Consumer("child1", owner, consumerType);
         child1.setMetadataField("foo", "bar");
         consumer.addChildConsumer(child1);
         consumerCurator.update(consumer);
+        
+        unitOfWork.endWork();
+        unitOfWork.beginWork();
 
         child1 = consumerCurator.find(child1.getId());
         consumerCurator.delete(child1);
@@ -180,6 +189,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(0, lookedUp.getChildConsumers().size());
+        unitOfWork.endWork();
     }
     
     @Test

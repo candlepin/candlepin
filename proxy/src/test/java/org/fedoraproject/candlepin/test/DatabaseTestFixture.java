@@ -29,6 +29,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
+import com.wideplay.warp.persist.WorkManager;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -47,6 +48,7 @@ public class DatabaseTestFixture {
     protected DateSourceForTesting dateSource;
     protected SpacewalkCertificateCurator spacewalkCertificateCurator;
     protected EntitlementCurator entitlementCurator;
+    protected WorkManager unitOfWork;
 
     
     @Before
@@ -69,6 +71,7 @@ public class DatabaseTestFixture {
         entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
         spacewalkCertificateCurator = injector.getInstance(SpacewalkCertificateCurator.class);
         entitlementCurator = injector.getInstance(EntitlementCurator.class);
+        unitOfWork = injector.getInstance(WorkManager.class);
         
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
