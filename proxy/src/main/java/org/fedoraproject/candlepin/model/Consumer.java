@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;

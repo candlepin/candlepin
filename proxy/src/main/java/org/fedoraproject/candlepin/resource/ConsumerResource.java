@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -62,6 +63,7 @@ public class ConsumerResource {
      * @return list of available consumers.
      */
     @GET
+    @Transactional
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Consumer> list() {
         return consumerCurator.findAll();

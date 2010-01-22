@@ -54,7 +54,7 @@ public class DatabaseTestFixture {
         injector = Guice.createInjector(
                 new CandlepinTestingModule(), 
                 PersistenceService.usingJpa()
-                    .across(UnitOfWork.TRANSACTION)
+                    .across(UnitOfWork.REQUEST)
                     .buildModule()
         );
 
