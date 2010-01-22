@@ -133,6 +133,7 @@ public class Consumer implements Persisted {
     }
 
     public Consumer() {
+        this.uuid = Util.generateUUID();
         this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
         this.consumedProducts = new HashSet<Product>();
