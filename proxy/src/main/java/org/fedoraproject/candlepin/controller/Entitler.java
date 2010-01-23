@@ -35,7 +35,6 @@ public class Entitler {
     private EntitlementPoolCurator epCurator;
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
-
     private Enforcer enforcer;
     
     @Inject

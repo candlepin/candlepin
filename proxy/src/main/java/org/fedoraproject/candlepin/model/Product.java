@@ -21,6 +21,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import org.hibernate.annotations.CollectionOfElements;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -59,7 +60,8 @@ public class Product implements Persisted {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL)
+    @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
+            fetch = FetchType.EAGER)
     @ForeignKey(name = "fk_product_product_id",
                 inverseName = "fk_product_child_product_id")
     @JoinTable(name = "cp_product_hierarchy",
