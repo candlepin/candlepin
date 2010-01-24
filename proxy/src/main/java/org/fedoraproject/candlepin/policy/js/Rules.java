@@ -62,7 +62,7 @@ public class Rules {
         jsEngine.put("result", result);
 
         try {
-            inv.invokeFunction(p.getLabel());
+            inv.invokeFunction("pre_" + p.getLabel());
         }
         catch (NoSuchMethodException e) {
             // No method for this product, assume this is not unexpected, many products

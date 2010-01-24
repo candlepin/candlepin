@@ -40,6 +40,8 @@ public class EntitlerTest extends DatabaseTestFixture {
     private Product virtHostPlatform;
     private Product virtGuest;
     
+    private ConsumerType guestType;
+    
     private Owner o;
     private Consumer consumer;
     private Entitler entitler;
@@ -67,8 +69,11 @@ public class EntitlerTest extends DatabaseTestFixture {
         
         entitler = injector.getInstance(Entitler.class);
 
-        ConsumerType system = new ConsumerType("system");
+        ConsumerType system = new ConsumerType(ConsumerType.SYSTEM);
         consumerTypeCurator.create(system);
+        
+        guestType = new ConsumerType(ConsumerType.VIRT_SYSTEM);
+        consumerTypeCurator.create(guestType);
         
         consumer = new Consumer("system", o, system);
         consumer.getFacts().setFact("total_guests", "0");
@@ -98,6 +103,20 @@ public class EntitlerTest extends DatabaseTestFixture {
         consumer.getFacts().setFact("total_guests", "10");
         consumerCurator.update(consumer);
         Entitlement e = entitler.createEntitlement(o, consumer, virtHost);
+        assertNull(e);
+        
+        e = entitler.createEntitlement(o, consumer, virtHostPlatform);
+        assertNull(e);
+    }
+    
+    @Test
+    public void testVirtEntitleFailsForVirtSystem() {
+        consumer.setType(guestType);
+        consumerCurator.update(consumer);
+        Entitlement e = entitler.createEntitlement(o, consumer, virtHost);
+        assertNull(e);
+        
+        e = entitler.createEntitlement(o, consumer, virtHostPlatform);
         assertNull(e);
     }
     
