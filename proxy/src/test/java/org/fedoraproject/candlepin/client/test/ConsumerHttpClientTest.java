@@ -26,6 +26,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     private ConsumerType standardSystemType;
     private Owner owner;
+    private Consumer consumer;
 
     @Before
     public void setUp() {
@@ -35,11 +36,12 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
                 
         standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
+        consumer = consumerCurator.create(new Consumer(CONSUMER_NAME, owner, standardSystemType));
     }
     
     @Test
     public void listConsumers() {
-        assertTrue(0 == consumerCurator.findAll().size());
+        assertTrue(1 == consumerCurator.findAll().size());
         
         for(String consumerName:new String[] {"first", "second", "third", "fourth"}) {
             consumerCurator.create(new Consumer(consumerName, owner, standardSystemType));
@@ -50,8 +52,18 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
              .type("application/json")
              .get(new GenericType<List<Consumer>>() {});
         
-        assertTrue(4 == returned.size());
-        assertTrue(4 == consumerCurator.findAll().size());
+        assertTrue(5 == returned.size());
+        assertTrue(5 == consumerCurator.findAll().size());
+    }
+    
+    @Test
+    public void getSingleConsumer() {
+        WebResource r = resource().path("/consumer/" + consumer.getUuid());
+        Consumer returned = r.accept("application/json")
+             .type("application/json")
+             .get(Consumer.class);
+        
+        assertSameConsumer(consumer, returned);
     }
     
     @Test

@@ -63,12 +63,18 @@ public class ConsumerResource {
      * @return list of available consumers.
      */
     @GET
-    @Transactional
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Consumer> list() {
         return consumerCurator.findAll();
     }
-   
+    
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{consumer_uuid}")
+    public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
+        return consumerCurator.lookupByUuid(uuid);
+    }
+    
     /**
      * Create a Consumer
      * @param ci Consumer metadata encapsulated in a ConsumerInfo.
