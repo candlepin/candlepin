@@ -80,6 +80,24 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertConsumerCorrectly(submitted, returned);
         assertSameConsumer(returned, consumerCurator.lookupByUuid(returned.getUuid()));
     }
+    
+    @Test
+    public void deleteConsumer() {
+        unitOfWork.beginWork();
+        
+        WebResource r = resource().path("/consumer/" + consumer.getUuid());
+        r.accept("application/json")
+             .type("application/json")
+             .delete();
+        
+        unitOfWork.endWork();
+        unitOfWork.beginWork();
+        
+        Consumer c = consumerCurator.find(consumer.getId());
+        assertNull(c);
+        
+        unitOfWork.endWork();
+    }
 
     
     private void assertConsumerCorrectly(Consumer toSubmit, Consumer returned) {

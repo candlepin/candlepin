@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resource;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -35,7 +36,6 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -100,7 +100,14 @@ public class ConsumerResource {
 
         return consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
     }
-
+    
+    @DELETE
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{consumer_uuid}")
+    public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
+        consumerCurator.delete(consumerCurator.lookupByUuid(uuid));
+    }
+    
     /**
      * Returns the ConsumerInfo for the given Consumer.
      * @return the ConsumerInfo for the given Consumer.
