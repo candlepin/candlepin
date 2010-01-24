@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.Rules;
-import org.fedoraproject.candlepin.policy.js.RulesException;
+import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class RulesTest {
         c = TestUtil.createConsumer(o);
     }
 
-    @Test(expected = RulesException.class)
+    @Test(expected = RuleExecutionException.class)
     public void testRuleWithBadVariable() {
         Rules rules = new Rules("/rules/sample-rules.js");
         EntitlementPool pool = gimmeAPool("badVariableProduct");

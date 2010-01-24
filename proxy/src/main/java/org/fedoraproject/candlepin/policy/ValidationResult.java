@@ -42,6 +42,10 @@ public class ValidationResult {
 		errors.add(error);
 	}
 	
+	public void addError(String resourceKey) {
+	    errors.add(new ValidationError(resourceKey));
+	}
+
 	public List<ValidationWarning> getWarnings() {
 		return warnings;
 	}

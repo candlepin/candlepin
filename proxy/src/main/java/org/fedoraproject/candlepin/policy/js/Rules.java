@@ -47,7 +47,7 @@ public class Rules {
             jsEngine.eval(reader);
         }
         catch (ScriptException ex) {
-            ex.printStackTrace();
+            throw new RuleParseException(ex);
         }
     }
 
@@ -55,18 +55,21 @@ public class Rules {
         Invocable inv = (Invocable)jsEngine;
         Product p = pool.getProduct();
         ValidationResult result = new ValidationResult();
+
+        // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
+        jsEngine.put("result", result);
+
         try {
             inv.invokeFunction(p.getLabel());
         }
         catch (NoSuchMethodException e) {
             // No method for this product, assume this is not unexpected, many products
-            // may want to just be a simple quantity check, which is implied and done
-            // before we begin checking rules.
+            // may want to just be a simple quantity check, which is implied.
         }
         catch (ScriptException e) {
-            throw new RulesException(e);
+            throw new RuleExecutionException(e);
         }
 
         return result;

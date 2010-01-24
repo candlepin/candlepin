@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -193,7 +194,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         assertFalse(entitlementPoolCurator.find(consumerPool.getId()).entitlementsAvailable());
     }
     
-    @Test(expected = RuntimeException.class)
+    @Test
     public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit() {
         Long NUMBER_OF_ENTITLEMENTS_AVAILABLE = new Long(1);
         
@@ -212,7 +213,9 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
             injector.getInstance(Entitler.class);
         
         
-        entitler.createEntitlement(owner, consumer, newProduct);
-        anotherEntitler.createEntitlement(owner, consumer, newProduct);
+        Entitlement e1 = entitler.createEntitlement(owner, consumer, newProduct);
+        Entitlement e2 = anotherEntitler.createEntitlement(owner, consumer, newProduct);
+        assertNotNull(e1);
+        assertNull(e2);
     }
 }

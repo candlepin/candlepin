@@ -12,20 +12,15 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.policy;
+package org.fedoraproject.candlepin.policy.js;
 
-public class ValidationError {
-    private String resourceKey;
+/**
+ * Exception thrown when we encounter an actual error executing a rule.
+ */
+public class RuleExecutionException extends RuntimeException {
 
-    public ValidationError(String resourceKey) {
-        this.resourceKey = resourceKey;
+    public RuleExecutionException(Throwable t) {
+        super(t);
     }
-    
-    public String getResourceKey() {
-        return resourceKey;
-    }
-    
-    public String toString() {
-        return resourceKey;
-    }
+
 }

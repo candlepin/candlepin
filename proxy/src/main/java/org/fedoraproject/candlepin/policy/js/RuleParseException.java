@@ -14,9 +14,9 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-public class RulesException extends RuntimeException {
+public class RuleParseException extends RuntimeException {
 
-    public RulesException(Throwable t) {
+    public RuleParseException(Throwable t) {
         super(t);
     }
 

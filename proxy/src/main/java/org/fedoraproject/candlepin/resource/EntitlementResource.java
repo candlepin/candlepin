@@ -106,7 +106,11 @@ public class EntitlementResource {
         }
         
         // Attempt to create an entitlement:
-        Entitlement e = entitler.createEntitlement(owner, consumer, p); 
+        Entitlement e = entitler.createEntitlement(owner, consumer, p);
+        // TODO: Probably need to get the validation result out somehow.
+        if (e == null) {
+            throw new RuntimeException("Entitlement refused.");
+        }
         
         return CertGenerator.getCertString(); 
     }

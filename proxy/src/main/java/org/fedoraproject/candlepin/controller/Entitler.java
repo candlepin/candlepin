@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.controller;
 
 import java.util.Date;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -36,6 +37,7 @@ public class Entitler {
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
     private Enforcer enforcer;
+    private static Logger log = Logger.getLogger(Entitler.class);
     
     @Inject
     protected Entitler(EntitlementPoolCurator epCurator,
@@ -67,24 +69,27 @@ public class Entitler {
         }
         
         ValidationResult result = enforcer.validate(consumer, ePool);
-        if (!result.isSuccessful()) {
-            throw new RuntimeException(result.getErrors().toString());
-        }
+        if (result.isSuccessful()) {
         
-        Entitlement e = new Entitlement(ePool, consumer, new Date());
-        
-        consumer.addEntitlement(e);
-        consumer.addConsumedProduct(product);
-        
-        ePool.bumpCurrentMembers();
-        
-        entitlementCurator.create(e);
-        consumerCurator.update(consumer);
-        epCurator.merge(ePool);
+            Entitlement e = new Entitlement(ePool, consumer, new Date());
 
-        enforcer.runPostEntitlementActions(e);
-        
-        return e;
+            consumer.addEntitlement(e);
+            consumer.addConsumedProduct(product);
+
+            ePool.bumpCurrentMembers();
+
+            entitlementCurator.create(e);
+            consumerCurator.update(consumer);
+            epCurator.merge(ePool);
+
+            enforcer.runPostEntitlementActions(e);
+
+            return e;
+        }
+        else {
+            log.warn("Entitlement not granted: " + result.getErrors().toString());
+            return null;
+        }
     }
     
 }
