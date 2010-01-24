@@ -17,15 +17,15 @@ public class ReadOnlyProduct {
         this.product = product;
     }
     
-    public String label() {
+    public String getLabel() {
         return product.getLabel();
     }
     
-    public String name() {
+    public String getName() {
         return product.getName();
     }
     
-    public Set<ReadOnlyProduct> childProducts() {
+    public Set<ReadOnlyProduct> getChildProducts() {
         Set<ReadOnlyProduct> toReturn = new HashSet<ReadOnlyProduct>();
         for(Product toProxy: product.getChildProducts()) {
             toReturn.add(new ReadOnlyProduct(toProxy));
@@ -33,7 +33,7 @@ public class ReadOnlyProduct {
         return toReturn;
     }
     
-    public Long attribute(String name) {
+    public Long getAttribute(String name) {
         if (attributes == null) {
             initializeReadOnlyAttributes();
         }

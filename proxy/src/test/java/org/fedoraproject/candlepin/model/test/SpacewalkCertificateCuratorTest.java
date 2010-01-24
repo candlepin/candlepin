@@ -25,7 +25,8 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
     @Before
     public void setUp() throws Exception {
         certificateWithChannelFamilies = 
-            readCertificate("/org/fedoraproject/candlepin/model/test/spacewalk-with-channel-families.cert");
+            SpacewalkCertificateCuratorTest.readCertificate(
+                    "/certs/spacewalk-with-channel-families.cert");
         
         owner = new Owner("owner");
         ownerCurator.create(owner);
@@ -86,8 +87,8 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
         assertEquals(new Long(0), entitlementPool.getCurrentMembers());
     }
 
-    private String readCertificate(String path) throws Exception {
-        InputStream is = this.getClass().getResourceAsStream(path);
+    public static String readCertificate(String path) throws Exception {
+        InputStream is = path.getClass().getResourceAsStream(path);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder builder = new StringBuilder();
         String line = null;

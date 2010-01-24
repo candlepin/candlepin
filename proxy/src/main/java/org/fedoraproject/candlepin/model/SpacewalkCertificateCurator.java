@@ -11,7 +11,10 @@ public class SpacewalkCertificateCurator {
     
     private EntitlementPoolCurator entitlementPoolCurator;
     private ProductCurator productCurator;
+
     
+    public static final String PRODUCT_MONITORING = "monitoring";
+    public static final String PRODUCT_PROVISIONING = "provisioning";
     public static final String PRODUCT_VIRT_HOST = "virtualization_host";
     public static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
     public static final String PRODUCT_VIRT_GUEST = "virt_guest";
@@ -97,7 +100,6 @@ public class SpacewalkCertificateCurator {
         ep.setEndDate(end);
         ep.setCurrentMembers(0);
         entitlementPoolCurator.create(ep);
-        
     }
     
     private Product createProductIfDoesNotExist(String name) {

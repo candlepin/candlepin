@@ -16,20 +16,46 @@ package org.fedoraproject.candlepin.policy.js.test;
 
 import static org.junit.Assert.*;
 
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.Rules;
+import org.fedoraproject.candlepin.policy.js.RulesException;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
 public class RulesTest {
 
-    @Test
-    public void testCreateRules() {
+    Consumer c;
+    Owner o;
+
+    @Before
+    public void setUp() {
+        o = TestUtil.createOwner();
+        c = TestUtil.createConsumer(o);
+    }
+
+    @Test(expected = RulesException.class)
+    public void testRuleWithBadVariable() {
         Rules rules = new Rules("/rules/sample-rules.js");
+        EntitlementPool pool = gimmeAPool("badVariableProduct");
+        rules.validateProduct(c, pool);
     }
 
     @Test
     public void testValidateProduct() {
         Rules rules = new Rules("/rules/sample-rules.js");
-        rules.validateProduct("rhel");
+        EntitlementPool pool = gimmeAPool("testProduct");
+        ValidationResult result = rules.validateProduct(c, pool);
+        assertTrue(result.isSuccessful());
+    }
+
+    private EntitlementPool gimmeAPool(String productLabel) {
+        Product p = new Product(productLabel, productLabel);
+        return new EntitlementPool(o, p, new Long(1000), TestUtil.createDate(2009, 11, 30),
+                TestUtil.createDate(2015, 11, 30));
     }
 }

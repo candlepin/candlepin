@@ -13,23 +13,23 @@ public class ReadOnlyConsumer {
         this.consumer = consumer;
     }
     
-    public String type() {
+    public String getType() {
         return consumer.getType().getLabel();
     }
     
-    public String name() {
+    public String getName() {
         return consumer.getName();
     }
     
-    public String uuid() {
+    public String getUuid() {
         return consumer.getUuid();
     }
     
-    public ReadOnlyConsumer parent() {
+    public ReadOnlyConsumer getParent() {
         return new ReadOnlyConsumer(consumer.getParent());
     }
     
-    public Set<ReadOnlyConsumer> childConsumers() {
+    public Set<ReadOnlyConsumer> getChildConsumers() {
         Set<ReadOnlyConsumer> toReturn = new HashSet<ReadOnlyConsumer>();
         for (Consumer toProxy: consumer.getChildConsumers()) {
             toReturn.add(new ReadOnlyConsumer(toProxy));
@@ -37,11 +37,11 @@ public class ReadOnlyConsumer {
         return toReturn;
     }
     
-    public Set<ReadOnlyProduct> consumedProducts() {
+    public Set<ReadOnlyProduct> getConsumedProducts() {
         return ReadOnlyProduct.fromProducts(consumer.getConsumedProducts());
     }
     
-    public String consumerFact(String factKey) {
+    public String getFact(String factKey) {
         return consumer.getFact(factKey);
     }
 }

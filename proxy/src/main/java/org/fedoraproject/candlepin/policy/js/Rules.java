@@ -23,6 +23,13 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.java.ReadOnlyConsumer;
+import org.fedoraproject.candlepin.policy.java.ReadOnlyProduct;
+
 /**
  * Interface to the compiled Javascript rules.
  */
@@ -44,10 +51,14 @@ public class Rules {
         }
     }
 
-    public boolean validateProduct(String productLabel) {
+    public ValidationResult validateProduct(Consumer consumer, EntitlementPool pool) {
         Invocable inv = (Invocable)jsEngine;
+        Product p = pool.getProduct();
+        ValidationResult result = new ValidationResult();
+        jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
+        jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
         try {
-            inv.invokeFunction(productLabel);
+            inv.invokeFunction(p.getLabel());
         }
         catch (NoSuchMethodException e) {
             // No method for this product, assume this is not unexpected, many products
@@ -55,9 +66,9 @@ public class Rules {
             // before we begin checking rules.
         }
         catch (ScriptException e) {
-            e.printStackTrace();
+            throw new RulesException(e);
         }
-        return true;
 
+        return result;
     }
 }
