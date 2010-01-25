@@ -80,6 +80,10 @@ public class Entitler {
                 log.debug("Granting free entitlement.");
                 ePool.bumpCurrentMembers();
             }
+            else {
+                // Signal that this entitlement was granted for free:
+                e.setIsFree(Boolean.TRUE);
+            }
 
             entitlementCurator.create(e);
             consumerCurator.update(consumer);

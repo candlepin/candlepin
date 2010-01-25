@@ -181,6 +181,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         // Now guest requests monitoring, and should get it for "free":
         e = entitler.createEntitlement(o, childVirtSystem, provisioning);
         assertNotNull(e);
+        assertTrue(e.isFree());
         assertEquals(new Long(1), provisioningPool.getCurrentMembers());
     }
 }
