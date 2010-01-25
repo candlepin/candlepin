@@ -23,12 +23,8 @@ import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
-import javax.persistence.ManyToOne;
-import javax.persistence.JoinColumn;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * 
@@ -45,7 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_attribute")
 @SequenceGenerator(name="seq_attribute", sequenceName="seq_attribute", allocationSize=1)
 @Embeddable
-public class Attribute {
+public class Attribute  implements Persisted {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_attribute")
@@ -62,7 +58,15 @@ public class Attribute {
 	public String getName() {
 		return name;
 	}
-
+	
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return this.id;
+    }
+    
+    
 	public void setName(String name) {
 		this.name = name;
 	}

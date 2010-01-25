@@ -1,8 +1,12 @@
 package org.fedoraproject.candlepin.model.test;
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 
 import org.fedoraproject.candlepin.model.Attribute;
+import org.fedoraproject.candlepin.model.Certificate;
+import org.fedoraproject.candlepin.model.Owner;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -33,20 +37,20 @@ public class AttributeTest extends DatabaseTestFixture {
     @Test
     public void testAttributeGetName() {
         Attribute newAttr = new Attribute();
-        String some_name = "OwesUsMoney";
+        String someName = "OwesUsMoney";
         
-        newAttr.setName(some_name);
+        newAttr.setName(someName);
         persistAndCommit(newAttr);
-        assertEquals(some_name, newAttr.getName());
+        assertEquals(someName, newAttr.getName());
     }
     
     @Test
     public void testAttributeSetQuantity() {
         Attribute newAttr = new Attribute();
-        Long some_number = new Long(100);
-        String some_name = "OwesUsMoney_100";
-        newAttr.setName(some_name);
-        newAttr.setQuantity(some_number);
+        Long someNumber = new Long(100);
+        String someName = "OwesUsMoney_100";
+        newAttr.setName(someName);
+        newAttr.setQuantity(someNumber);
         persistAndCommit(newAttr);
     }
     
@@ -54,12 +58,37 @@ public class AttributeTest extends DatabaseTestFixture {
     @Test
     public void testAttributeGetQuantity() {
         Attribute newAttr = new Attribute();
-        Long some_number = new Long(200);
-        String some_name = "OwesUsMoney_100";
-        newAttr.setName(some_name);
-        newAttr.setQuantity(some_number);
+        Long someNumber = new Long(200);
+        String someName = "OwesUsMoney_100";
+        newAttr.setName(someName);
+        newAttr.setQuantity(someNumber);
         persistAndCommit(newAttr);
-        assertEquals(some_number, newAttr.getQuantity());
+        assertEquals(someNumber, newAttr.getQuantity());
     }
+    
+    @Test
+    public void testLookup() {
+        Attribute newAttr = new Attribute();
+        Long someNumber = new Long(100);
+        String someName = "OwesUsMoney_100";
+        newAttr.setName(someName);
+        newAttr.setQuantity(someNumber);
+        persistAndCommit(newAttr);
+        
+        Attribute foundAttr = attributeCurator.find(newAttr.getId());
+        assertEquals(newAttr.getName(), foundAttr.getName());
+    }
+    
+    @Test
+    public void testList() throws Exception {
+        List<Attribute> attributes = attributeCurator.findAll(); 
+        int beforeCount = attributes.size();
+     
+        
+        attributes =  attributeCurator.findAll();
+        int afterCount = attributes.size();
+//        assertEquals(10, afterCount - beforeCount);
+    }
+    
     
 }

@@ -8,6 +8,8 @@ import javax.persistence.EntityTransaction;
 
 import org.fedoraproject.candlepin.CandlepinTestingModule;
 import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.model.Attribute;
+import org.fedoraproject.candlepin.model.AttributeCurator;
 import org.fedoraproject.candlepin.model.Certificate;
 import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -48,8 +50,8 @@ public class DatabaseTestFixture {
     protected DateSourceForTesting dateSource;
     protected SpacewalkCertificateCurator spacewalkCertificateCurator;
     protected EntitlementCurator entitlementCurator;
+    protected AttributeCurator attributeCurator;
     protected WorkManager unitOfWork;
-
     
     @Before
     public void init() {
@@ -71,8 +73,9 @@ public class DatabaseTestFixture {
         entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
         spacewalkCertificateCurator = injector.getInstance(SpacewalkCertificateCurator.class);
         entitlementCurator = injector.getInstance(EntitlementCurator.class);
+        attributeCurator = injector.getInstance(AttributeCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
-        
+       
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
     }
@@ -126,6 +129,12 @@ public class DatabaseTestFixture {
         for (Certificate c : certificates){
             em.remove(c);
         }
+        
+        List<Attribute> attributes = em.createQuery("from Attribute c").getResultList();
+        for (Attribute a : attributes){
+            em.remove(a);
+        }
+        
         
         List<Owner> owners = em.createQuery("from Owner o").getResultList();
         for (Owner o : owners) {
