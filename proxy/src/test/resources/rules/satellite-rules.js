@@ -16,6 +16,14 @@ function pre_virtualization_host() {
 	virtualization_common();
 }
 
+function post_virtualization_host() {
+	postHelper.createConsumerPool("virt_guest", 5);
+}
 function pre_virtualization_host_platform() {
 	virtualization_common();
 }
+
+function post_virtualization_host_platform() {
+	postHelper.createConsumerPool("virt_guest", -1);
+}
+

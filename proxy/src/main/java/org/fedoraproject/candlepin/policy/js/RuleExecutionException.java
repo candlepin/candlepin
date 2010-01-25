@@ -22,5 +22,9 @@ public class RuleExecutionException extends RuntimeException {
     public RuleExecutionException(Throwable t) {
         super(t);
     }
+    
+    public RuleExecutionException(String msg) {
+        super(msg);
+    }
 
 }

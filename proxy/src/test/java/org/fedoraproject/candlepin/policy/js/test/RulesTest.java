@@ -42,14 +42,14 @@ public class RulesTest {
     public void testRuleWithBadVariable() {
         Rules rules = new Rules("/rules/sample-rules.js");
         EntitlementPool pool = gimmeAPool("badVariableProduct");
-        rules.validateProduct(c, pool);
+        rules.runPre(c, pool);
     }
 
     @Test
     public void testValidateProduct() {
         Rules rules = new Rules("/rules/sample-rules.js");
         EntitlementPool pool = gimmeAPool("testProduct");
-        ValidationResult result = rules.validateProduct(c, pool);
+        ValidationResult result = rules.runPre(c, pool);
         assertTrue(result.isSuccessful());
     }
 
