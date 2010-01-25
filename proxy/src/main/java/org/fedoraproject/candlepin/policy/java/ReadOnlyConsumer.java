@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 
 public class ReadOnlyConsumer {
 
@@ -43,5 +44,14 @@ public class ReadOnlyConsumer {
     
     public String getFact(String factKey) {
         return consumer.getFact(factKey);
+    }
+    
+    public boolean hasEntitlement(String productLabel) {
+        for (Entitlement e : consumer.getEntitlements()) {
+            if (e.getProduct().getLabel().equals(productLabel)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -74,4 +74,5 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         return toReturn;
     }
+    
 }

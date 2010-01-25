@@ -76,7 +76,10 @@ public class Entitler {
             consumer.addEntitlement(e);
             consumer.addConsumedProduct(product);
 
-            ePool.bumpCurrentMembers();
+            if (!result.getFreeEntitlement()) {
+                log.debug("Granting free entitlement.");
+                ePool.bumpCurrentMembers();
+            }
 
             entitlementCurator.create(e);
             consumerCurator.update(consumer);

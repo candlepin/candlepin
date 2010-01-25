@@ -296,5 +296,5 @@ public class Consumer implements Persisted {
     public int hashCode() {
         return uuid.hashCode();
     }
-
+    
 }

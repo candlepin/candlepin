@@ -39,11 +39,14 @@ public class EntitlerTest extends DatabaseTestFixture {
     private Product virtHost;
     private Product virtHostPlatform;
     private Product virtGuest;
+    private Product monitoring;
+    private Product provisioning;
     
     private ConsumerType guestType;
     
     private Owner o;
-    private Consumer consumer;
+    private Consumer parentSystem;
+    private Consumer childVirtSystem;
     private Entitler entitler;
 
     @Before
@@ -67,6 +70,12 @@ public class EntitlerTest extends DatabaseTestFixture {
         virtGuest = productCurator.lookupByLabel(
                 SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
         
+        monitoring = productCurator.lookupByLabel(
+                SpacewalkCertificateCurator.PRODUCT_MONITORING);
+        
+        provisioning = productCurator.lookupByLabel(
+                SpacewalkCertificateCurator.PRODUCT_PROVISIONING);
+        
         entitler = injector.getInstance(Entitler.class);
 
         ConsumerType system = new ConsumerType(ConsumerType.SYSTEM);
@@ -75,10 +84,14 @@ public class EntitlerTest extends DatabaseTestFixture {
         guestType = new ConsumerType(ConsumerType.VIRT_SYSTEM);
         consumerTypeCurator.create(guestType);
         
-        consumer = new Consumer("system", o, system);
-        consumer.getFacts().setFact("total_guests", "0");
-        consumerCurator.create(consumer);
+        parentSystem = new Consumer("system", o, system);
+        parentSystem.getFacts().setFact("total_guests", "0");
+        consumerCurator.create(parentSystem);
         
+        childVirtSystem = new Consumer("virt system", o, guestType);
+        parentSystem.addChildConsumer(childVirtSystem);
+        
+        consumerCurator.create(childVirtSystem);
     }
     
     @Test
@@ -100,52 +113,74 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Test
     public void testVirtEntitleFailsIfAlreadyHasGuests() {
-        consumer.getFacts().setFact("total_guests", "10");
-        consumerCurator.update(consumer);
-        Entitlement e = entitler.createEntitlement(o, consumer, virtHost);
+        parentSystem.getFacts().setFact("total_guests", "10");
+        consumerCurator.update(parentSystem);
+        Entitlement e = entitler.createEntitlement(o, parentSystem, virtHost);
         assertNull(e);
         
-        e = entitler.createEntitlement(o, consumer, virtHostPlatform);
+        e = entitler.createEntitlement(o, parentSystem, virtHostPlatform);
         assertNull(e);
     }
     
     @Test
     public void testVirtEntitleFailsForVirtSystem() {
-        consumer.setType(guestType);
-        consumerCurator.update(consumer);
-        Entitlement e = entitler.createEntitlement(o, consumer, virtHost);
+        parentSystem.setType(guestType);
+        consumerCurator.update(parentSystem);
+        Entitlement e = entitler.createEntitlement(o, parentSystem, virtHost);
         assertNull(e);
         
-        e = entitler.createEntitlement(o, consumer, virtHostPlatform);
+        e = entitler.createEntitlement(o, parentSystem, virtHostPlatform);
         assertNull(e);
     }
     
     @Test
     public void testVirtualizationHostConsumption() {
-        Entitlement e = entitler.createEntitlement(o, consumer, virtHost);
+        Entitlement e = entitler.createEntitlement(o, parentSystem, virtHost);
 
         // Consuming a virt host entitlement should result in a pool just for us to consume
         // virt guests.
         EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                consumer, virtGuest);
+                parentSystem, virtGuest);
         assertNotNull(consumerPool);
         assertNotNull(consumerPool.getConsumer());
-        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
+        assertEquals(parentSystem.getId(), consumerPool.getConsumer().getId());
         assertEquals(new Long(5), consumerPool.getMaxMembers());
         assertEquals(e.getId(), consumerPool.getSourceEntitlement().getId());
     }
 
     @Test
     public void testVirtualizationHostPlatformConsumption() {
-        Entitlement e = entitler.createEntitlement(o, consumer, virtHostPlatform);
+        Entitlement e = entitler.createEntitlement(o, parentSystem, virtHostPlatform);
 
         // Consuming a virt host entitlement should result in a pool just for us to consume
         // virt guests.
         EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                consumer, virtGuest);
+                parentSystem, virtGuest);
         assertNotNull(consumerPool.getConsumer());
-        assertEquals(consumer.getId(), consumerPool.getConsumer().getId());
+        assertEquals(parentSystem.getId(), consumerPool.getConsumer().getId());
         assertTrue(consumerPool.getMaxMembers() < 0);
         assertEquals(e.getId(), consumerPool.getSourceEntitlement().getId());
+    }
+    
+    @Test
+    public void testVirtSystemGetsWhatParentHasForFree() {
+        // Give parent virt host ent:
+        Entitlement e = entitler.createEntitlement(o, parentSystem, virtHost);
+        assertNotNull(e);
+        
+        // Give parent provisioning:
+        e = entitler.createEntitlement(o, parentSystem, provisioning);
+        assertNotNull(e);
+        
+        EntitlementPool provisioningPool = entitlementPoolCurator.lookupByOwnerAndProduct(o, 
+                null, provisioning);
+        
+        Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
+        assertEquals(new Long(1), provisioningCount);
+        
+        // Now guest requests monitoring, and should get it for "free":
+        e = entitler.createEntitlement(o, childVirtSystem, provisioning);
+        assertNotNull(e);
+        assertEquals(new Long(1), provisioningPool.getCurrentMembers());
     }
 }
