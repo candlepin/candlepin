@@ -28,14 +28,14 @@ public class RulesResource {
     private static Logger log = Logger.getLogger(CertificateResource.class);
     private RulesCurator rulesCurator;
     
-    //@Inject
-    public RulesResource() {
-        rulesCurator = this.rulesCurator;
+    @Inject
+    public RulesResource(RulesCurator rulesCurator) {
+        this.rulesCurator = rulesCurator;
     }
     
     @POST
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public String upload(String rulesBuffer) {
         
         if (rulesBuffer == null || "".equals(rulesBuffer)) {
@@ -43,21 +43,17 @@ public class RulesResource {
         }
   
         Rules rules = new Rules(rulesBuffer);
-        rulesCurator.create(rules);        
+//        rulesCurator.merge(rules);
+        rulesCurator.update(rules);        
         return rulesBuffer;
     }
     
+    
     @GET
-    @Produces(MediaType.TEXT_HTML)
-    public String get() {
-        return "<h1>BLARGH</h1>";
-    }
-    
-    
-//    @GET
-//    @Produces({ MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_PLAIN})
 //    public List get() {
-//         List<Rules> rules = rulesCurator.findAll();
-//         return rules;
-//    }
+    public String get() {
+         List<Rules> rules = rulesCurator.findAll();
+         return rules.get(0).getRules();
+    }
 }   
