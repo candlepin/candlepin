@@ -15,6 +15,7 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
@@ -67,6 +68,19 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
     }
     
     @Test
+    public void getSingleConsumerWithInvalidUuidShouldFail() {
+        try {
+            WebResource r = resource().path("/consumer/1234-5678");
+            r.accept("application/json")
+                 .type("application/json")
+                 .get(Consumer.class);
+            fail();
+        } catch (UniformInterfaceException e) {
+            assertEquals(404, e.getResponse().getStatus());
+        }
+    }
+    
+    @Test
     public void createConsumer() {
         Consumer submitted = new Consumer(CONSUMER_NAME, null, standardSystemType);
         submitted.setFacts(new ConsumerFacts() {{ setFact(METADATA_NAME, METADATA_VALUE); }});
@@ -77,8 +91,36 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
              .type("application/json")
              .post(Consumer.class, submitted);
         
-        assertConsumerCorrectly(submitted, returned);
+        assertConsumerCreatedCorrectly(submitted, returned);
         assertSameConsumer(returned, consumerCurator.lookupByUuid(returned.getUuid()));
+    }
+    
+    @Test
+    public void createConsumerWithNonExistentConsumerTypeShouldFail() {
+        Consumer submitted = new Consumer(CONSUMER_NAME, null, new ConsumerType("non-existent"));
+
+        try {
+            WebResource r = resource().path("/consumer");
+            r.accept("application/json")
+                 .type("application/json")
+                 .post(Consumer.class, submitted);
+        } catch (UniformInterfaceException e) {
+            assertEquals(400, e.getResponse().getStatus());
+        }
+    }
+    
+    @Test
+    public void createConsumerWithMissingRequiredFieldsShouldFail() {
+        Consumer submitted = new Consumer(null, null, standardSystemType);
+        
+        try {
+            WebResource r = resource().path("/consumer");
+            r.accept("application/json")
+            .type("application/json")
+            .post(Consumer.class, submitted);
+        } catch (UniformInterfaceException e) {
+            assertEquals(400, e.getResponse().getStatus());
+        }
     }
     
     @Test
@@ -98,9 +140,21 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
         
         unitOfWork.endWork();
     }
+    
+    @Test
+    public void deleteConsumerWithInvalidUuidShouldFail() {
+        try {
+            WebResource r = resource().path("/consumer/1234-5678");
+            r.accept("application/json")
+                 .type("application/json")
+                 .delete();
+        } catch (UniformInterfaceException e) {
+            assertEquals(404, e.getResponse().getStatus());
+        }
+    }
 
     
-    private void assertConsumerCorrectly(Consumer toSubmit, Consumer returned) {
+    private void assertConsumerCreatedCorrectly(Consumer toSubmit, Consumer returned) {
         assertEquals(toSubmit.getName(), returned.getName());
         assertEquals(toSubmit.getType(), returned.getType());
         assertEquals(toSubmit.getFact(METADATA_NAME), returned.getFact(METADATA_NAME));
