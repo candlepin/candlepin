@@ -27,6 +27,7 @@ public class Rules implements Persisted {
     private String rules;
     
     public Rules(String rulesBlob) {
+        this.rules = rulesBlob;
     }
     
     public Rules() {
