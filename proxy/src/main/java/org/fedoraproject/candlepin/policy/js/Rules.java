@@ -24,6 +24,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -51,7 +52,7 @@ public class Rules {
         }
     }
 
-    public ValidationResult validateProduct(Consumer consumer, EntitlementPool pool) {
+    public ValidationResult runPre(Consumer consumer, EntitlementPool pool) {
         Invocable inv = (Invocable)jsEngine;
         Product p = pool.getProduct();
         ValidationResult result = new ValidationResult();
@@ -62,11 +63,10 @@ public class Rules {
         jsEngine.put("result", result);
 
         try {
-            inv.invokeFunction(p.getLabel());
+            inv.invokeFunction("pre_" + p.getLabel());
         }
         catch (NoSuchMethodException e) {
-            // No method for this product, assume this is not unexpected, many products
-            // may want to just be a simple quantity check, which is implied.
+            // No method for this product, assume this is not out of the ordinary
         }
         catch (ScriptException e) {
             throw new RuleExecutionException(e);
@@ -74,4 +74,28 @@ public class Rules {
 
         return result;
     }
+    
+    public void runPost(Entitlement ent, PostEntHelper postHelper) {
+        Invocable inv = (Invocable)jsEngine;
+        EntitlementPool pool = ent.getPool();
+        Consumer c = ent.getConsumer();
+        Product p = pool.getProduct();
+
+        // Provide objects for the script:
+        // TODO: Is a ReadOnlyEntitlement needed here?
+        jsEngine.put("consumer", new ReadOnlyConsumer(c));
+        jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
+        jsEngine.put("postHelper", postHelper);
+
+        try {
+            inv.invokeFunction("post_" + p.getLabel());
+        }
+        catch (NoSuchMethodException e) {
+            // No method for this product, assume this is not out of the ordinary
+        }
+        catch (ScriptException e) {
+            throw new RuleExecutionException(e);
+        }
+    }
+
 }

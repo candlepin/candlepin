@@ -44,6 +44,10 @@ public class ConsumerType implements Persisted {
     @Column(nullable = false, unique = true)
     private String label;
     
+    // Constants
+    public static final String SYSTEM = "system"; // physical system
+    public static final String VIRT_SYSTEM = "virt_system"; 
+    
     public ConsumerType() {
     }
 

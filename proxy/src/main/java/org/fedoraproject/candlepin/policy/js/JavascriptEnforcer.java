@@ -51,7 +51,7 @@ public class JavascriptEnforcer implements Enforcer {
     @Override
     public ValidationResult validate(Consumer consumer, EntitlementPool entitlementPool) {
 
-        ValidationResult result = rules.validateProduct(consumer, entitlementPool);
+        ValidationResult result = rules.runPre(consumer, entitlementPool);
         if (!result.isSuccessful()) {
 //            throw new
         }
@@ -76,8 +76,8 @@ public class JavascriptEnforcer implements Enforcer {
 
     @Override
     public void runPostEntitlementActions(Entitlement ent) {
-        // TODO Auto-generated method stub
-
+        PostEntHelper postHelper = new PostEntHelper(epCurator, prodCurator, ent);
+        rules.runPost(ent, postHelper);
     }
 
 }

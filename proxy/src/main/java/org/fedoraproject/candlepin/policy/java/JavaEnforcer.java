@@ -26,7 +26,6 @@ import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationResult;
-import org.fedoraproject.candlepin.policy.actions.CreateConsumerPoolAction;
 
 import com.google.inject.Inject;
 
@@ -106,17 +105,17 @@ public class JavaEnforcer implements Enforcer {
         Product virtGuestProduct = prodCurator.lookupByLabel(
                 SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
 
-        // Virtualization Host
-        if (prod.getLabel().equals(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST)) {
-            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
-                    new Long(5)).run();
-        }
-
-        // Virtualization Host Platform
-        else if (prod.getLabel().equals(
-                SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM)) {
-            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
-                    new Long(-1)).run();
-        }
+//        // Virtualization Host
+//        if (prod.getLabel().equals(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST)) {
+//            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
+//                    new Long(5)).run();
+//        }
+//
+//        // Virtualization Host Platform
+//        else if (prod.getLabel().equals(
+//                SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM)) {
+//            new CreateConsumerPoolAction(epCurator, ent, virtGuestProduct,
+//                    new Long(-1)).run();
+//        }
     }
 }

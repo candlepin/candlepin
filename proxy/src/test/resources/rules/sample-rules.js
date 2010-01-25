@@ -1,5 +1,5 @@
 // Used in RulesTest.java
-function testProduct() {
+function pre_testProduct() {
 	print("You called testProduct() with testvar " + testvar + "\n");
 	print("type = " + consumer.getType() + "\n");
 	print("name = " + consumer.getName() + "\n");
@@ -7,7 +7,7 @@ function testProduct() {
 }
 
 // This product's rule is expecting variables that we won't provide them.
-function badVariableProduct() {
+function pre_badVariableProduct() {
 	print(noSuchVariable.toString());
 }
 
