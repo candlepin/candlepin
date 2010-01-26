@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 
 public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
@@ -80,6 +81,19 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertEntitlementsAreSame(entitlement, returned);
         assertNotNull(entitlementCurator.find(entitlement.getId()));
     }
+    
+    @Test
+    public void getSingleEntitlementWithInvalidIdShouldFail() {
+        try {
+            WebResource r = resource().path("/entitlement/1234");
+            Entitlement returned = r.accept("application/json")
+                 .type("application/json")
+                 .get(Entitlement.class);
+        } catch (UniformInterfaceException e) {
+            assertEquals(404, e.getResponse().getStatus());
+        }
+    }
+    
 
     private void assertEntitlementsAreSame(Entitlement entitlement, Entitlement returned) {
         assertEquals(entitlement.getId(), returned.getId());
