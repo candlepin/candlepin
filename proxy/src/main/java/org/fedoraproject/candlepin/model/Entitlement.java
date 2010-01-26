@@ -82,6 +82,8 @@ public class Entitlement implements Persisted {
     private Date startDate;
     
     // Was this entitlement created for free, or did it consume a slot in it's pool:
+    // TODO: Find a better way to represent this, we can't really clean it up properly 
+    // like this.
     private Boolean isFree = Boolean.FALSE;
 
     public Entitlement() {
