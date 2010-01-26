@@ -177,5 +177,5 @@ public class Entitlement implements Persisted {
 
     public void setIsFree(Boolean isFree) {
         this.isFree = isFree;
-    }    
+    } 
 }

@@ -66,4 +66,25 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertTrue(10 == entitlementCurator.findAll().size());
     }
     
+    @Test
+    public void getSingleEntitlement() {
+        Consumer c = TestUtil.createConsumer(consumerType, owner);
+        consumerCurator.create(c);
+        Entitlement entitlement = entitler.createEntitlement(owner, c, product);
+        
+        WebResource r = resource().path("/entitlement/" + entitlement.getId());
+        Entitlement returned = r.accept("application/json")
+             .type("application/json")
+             .get(Entitlement.class);
+        
+        assertEntitlementsAreSame(entitlement, returned);
+        assertNotNull(entitlementCurator.find(entitlement.getId()));
+    }
+
+    private void assertEntitlementsAreSame(Entitlement entitlement, Entitlement returned) {
+        assertEquals(entitlement.getId(), returned.getId());
+        assertEquals(entitlement.getProduct(), returned.getProduct());
+        assertEquals(entitlement.getStartDate(), returned.getStartDate());
+        assertEquals(entitlement.getIsFree(), returned.getIsFree());
+    }
 }
