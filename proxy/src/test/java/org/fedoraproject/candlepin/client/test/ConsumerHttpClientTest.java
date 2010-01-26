@@ -32,7 +32,6 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Before
     public void setUp() {
         TestServletConfig.servletInjector = injector;
-        
         startServer(TestServletConfig.class);
                 
         standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));

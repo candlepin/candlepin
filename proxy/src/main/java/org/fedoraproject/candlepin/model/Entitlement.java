@@ -155,6 +155,7 @@ public class Entitlement implements Persisted {
         startDate = startDateIn;
     }
 
+    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
