@@ -42,7 +42,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     public E create(E entity) {
         save(entity);
-        flush();
         return entity;
     }
     

@@ -87,29 +87,30 @@ public class EntitlementResource {
      * @return Entitled object
      */
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
+    @Consumes({MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/consumer/{consumer_uuid}/product/{product_label}")
-    public Object entitle(@PathParam("consumer_uuid") String consumerUuid, 
+    @Path("consumer/{consumer_uuid}/product/{product_label}")
+    public String entitle(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_label") String productLabel) {
         
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current user's owner
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
-            throw new RuntimeException("No such consumer: " + consumerUuid);
+            throw new BadRequestException("No such consumer: " + consumerUuid);
         }
         
         Product p = productCurator.lookupByLabel(productLabel);
         if (p == null) {
-            throw new RuntimeException("No such product: " + productLabel);
+            throw new BadRequestException("No such product: " + productLabel);
         }
         
         // Attempt to create an entitlement:
         Entitlement e = entitler.createEntitlement(owner, consumer, p);
         // TODO: Probably need to get the validation result out somehow.
+        // TODO: return 409?
         if (e == null) {
-            throw new RuntimeException("Entitlement refused.");
+            throw new BadRequestException("Entitlement refused.");
         }
         
         return CertGenerator.getCertString(); 

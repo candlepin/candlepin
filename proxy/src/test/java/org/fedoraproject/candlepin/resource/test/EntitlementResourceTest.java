@@ -77,9 +77,9 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }
     
-    @Ignore
+    @Test
     public void testEntitle() throws Exception {
-        String cert = (String) eapi.entitle(consumer.getUuid(), product.getLabel());
+        String cert = eapi.entitle(consumer.getUuid(), product.getLabel());
         
         assertNotNull(cert);
         
