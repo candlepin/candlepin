@@ -15,19 +15,27 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 
 public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
+    private static final long MAX_MEMBERS_IN = new Long(10);
+    private String CONSUMER_NAME = "consumer name";
+    
     private Owner owner;
+    private Consumer consumer;
+    private ConsumerType consumerType;
     private Product product;
     private EntitlementPool entitlementPool;
-    private ConsumerType consumerType;
     private Entitler entitler;
+    private EntitlementPool exhaustedPool;
+    private Product exhaustedPoolProduct;
 
     @Before
     public void setUp() {
@@ -36,16 +44,26 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         
         consumerType = new ConsumerType("some-consumer-type");
         consumerTypeCurator.create(consumerType);
-        
+                
         owner = TestUtil.createOwner();
         ownerCurator.create(owner);
         
+        consumer = new Consumer(CONSUMER_NAME, owner, consumerType);
+        consumerCurator.create(consumer);
+
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        entitlementPool = new EntitlementPool(owner, product, new Long(10), 
+        entitlementPool = new EntitlementPool(owner, product, MAX_MEMBERS_IN, 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(entitlementPool);
+        
+        exhaustedPoolProduct = TestUtil.createProduct();
+        productCurator.create(exhaustedPoolProduct);
+
+        exhaustedPool = new EntitlementPool(owner, exhaustedPoolProduct, new Long(0), 
+                TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+        entitlementPoolCurator.create(exhaustedPool);
         
         entitler = injector.getInstance(Entitler.class);
     }
@@ -92,6 +110,79 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         } catch (UniformInterfaceException e) {
             assertEquals(404, e.getResponse().getStatus());
         }
+    }
+    
+    @Ignore
+    @Test
+    public void entitlementWithValidConsumerAndProduct() {
+        assertTrue(entitlementCurator.findAll().size() == 0);
+        assertEquals(new Long(0), 
+                entitlementPoolCurator.lookupByOwnerAndProduct(owner, consumer, product).getCurrentMembers());
+       
+        WebResource r = resource()
+            .path("/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getLabel());
+        String s = r.accept("application/json")
+             .type("application/json")
+             .post(String.class);
+       
+       assertEntitlementSucceeded();
+    }
+    
+    @Test
+    public void entitlementWithInvalidConsumerShouldFail() {
+        try {
+            WebResource r = resource()
+                .path("/entitlement/consumer/1234-5678/product/" + product.getLabel());
+            String s = r.accept("application/json")
+                 .type("application/json")
+                 .post(String.class);
+            fail();
+        } catch (UniformInterfaceException e) {
+            assertHttpResponse(400, e.getResponse());
+        }
+    }
+    
+    @Test
+    public void entitlementWithInvalidProductShouldFail() {
+        try {
+            WebResource r = resource()
+                .path("/entitlement/consumer/" + consumer.getUuid() 
+                    + "/product/" + exhaustedPoolProduct.getLabel());
+            String s = r.accept("application/json")
+                 .type("application/json")
+                 .post(String.class);
+            fail();
+        } catch (UniformInterfaceException e) {
+            assertHttpResponse(400, e.getResponse());
+        }
+    }
+    
+    @Test
+    public void entitlementForExhaustedPoolShouldFail() {
+        try {
+            WebResource r = resource()
+                .path("/entitlement/consumer/" + consumer.getUuid() + "/product/nonexistent-product");
+            String s = r.accept("application/json")
+                 .type("application/json")
+                 .post(String.class);
+            fail();
+        } catch (UniformInterfaceException e) {
+            assertHttpResponse(400, e.getResponse());
+        }
+    }
+    
+    protected void assertHttpResponse(int code, ClientResponse response) {
+        assertEquals(code, response.getStatus());
+    }
+    
+    protected void assertEntitlementSucceeded() {
+        assertEquals(new Long(1), new Long(entitlementCurator.findAll().size()));
+        assertEquals(new Long(1),  
+            entitlementPoolCurator.lookupByOwnerAndProduct(owner, consumer, product).getCurrentMembers());
+        assertEquals(1, consumer.getConsumedProducts().size());
+        assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
+                .next().getId());
+        assertEquals(1, consumer.getEntitlements().size());
     }
     
 

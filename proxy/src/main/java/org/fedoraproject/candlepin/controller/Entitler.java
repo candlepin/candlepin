@@ -69,34 +69,33 @@ public class Entitler {
         }
         
         ValidationResult result = enforcer.validate(consumer, ePool);
-        if (result.isSuccessful()) {
         
-            Entitlement e = new Entitlement(ePool, consumer, new Date());
-
-            consumer.addEntitlement(e);
-            consumer.addConsumedProduct(product);
-
-            if (!result.getFreeEntitlement()) {
-                log.debug("Granting free entitlement.");
-                ePool.bumpCurrentMembers();
-            }
-            else {
-                // Signal that this entitlement was granted for free:
-                e.setIsFree(Boolean.TRUE);
-            }
-
-            entitlementCurator.create(e);
-            consumerCurator.update(consumer);
-            epCurator.merge(ePool);
-
-            enforcer.runPostEntitlementActions(e);
-
-            return e;
-        }
-        else {
+        if (!result.isSuccessful()) {
             log.warn("Entitlement not granted: " + result.getErrors().toString());
             return null;
         }
+
+        Entitlement e = new Entitlement(ePool, consumer, new Date());
+
+        consumer.addEntitlement(e);
+        consumer.addConsumedProduct(product);
+
+        if (!result.getFreeEntitlement()) {
+            ePool.bumpCurrentMembers();
+        }
+        else {
+            // Signal that this entitlement was granted for free:
+            log.debug("Granting free entitlement.");
+            e.setIsFree(Boolean.TRUE);
+        }
+
+        entitlementCurator.create(e);
+        consumerCurator.update(consumer);
+        EntitlementPool merged = epCurator.merge(ePool);
+
+        enforcer.runPostEntitlementActions(e);
+
+        return e;
     }
     
 }
