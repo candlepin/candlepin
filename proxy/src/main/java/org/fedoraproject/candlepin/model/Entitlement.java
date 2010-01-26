@@ -80,6 +80,9 @@ public class Entitlement implements Persisted {
     private EntitlementPool pool;
 
     private Date startDate;
+    
+    // Was this entitlement created for free, or did it consume a slot in it's pool:
+    private Boolean isFree = Boolean.FALSE;
 
     public Entitlement() {
     }
@@ -162,5 +165,17 @@ public class Entitlement implements Persisted {
 
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
+    }
+
+    public Boolean isFree() {
+        return getIsFree();
+    }
+    
+    public Boolean getIsFree() {
+        return isFree;
+    }
+
+    public void setIsFree(Boolean isFree) {
+        this.isFree = isFree;
     }    
 }

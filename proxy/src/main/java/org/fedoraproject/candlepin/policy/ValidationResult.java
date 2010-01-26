@@ -29,6 +29,9 @@ public class ValidationResult {
 	private List<ValidationError> errors;
 	private List<ValidationWarning> warnings;
 	
+	// TODO: Not happy with this, but using this as a flag for "free" entitlements for now.
+	private boolean freeEntitlement = false;
+	
 	public ValidationResult() {
 	    errors = new LinkedList<ValidationError>();
 	    warnings = new LinkedList<ValidationWarning>();
@@ -64,5 +67,13 @@ public class ValidationResult {
 
     public boolean isSuccessful() {
         return !hasErrors();
+    }
+    
+    public void setFreeEntitlement(boolean freeEntitlement) {
+        this.freeEntitlement = freeEntitlement;
+    }
+    
+    public boolean getFreeEntitlement() {
+        return freeEntitlement;
     }
 }
