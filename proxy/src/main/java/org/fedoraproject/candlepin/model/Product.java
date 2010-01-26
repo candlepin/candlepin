@@ -142,6 +142,13 @@ public class Product implements Persisted {
 		this.attributes = attributes;
 	}
 	
+	public void addAttribute(Attribute attrib) {
+	    if (this.attributes == null) {
+	        this.attributes = new HashSet<Attribute>();
+	    }
+	    this.attributes.add(attrib);
+	}
+
 	@Override
 	public boolean equals(Object anObject) {
 	    if (this == anObject) return true;
