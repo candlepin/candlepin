@@ -184,4 +184,22 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertTrue(e.isFree());
         assertEquals(new Long(1), provisioningPool.getCurrentMembers());
     }
+    
+    @Test
+    public void testVirtSystemPhysicalEntitlement() {
+        // Give parent virt host ent:
+        Entitlement e = entitler.createEntitlement(o, parentSystem, virtHost);
+        assertNotNull(e);
+        
+        EntitlementPool provisioningPool = entitlementPoolCurator.lookupByOwnerAndProduct(o, 
+                null, provisioning);
+        
+        Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
+        assertEquals(new Long(0), provisioningCount);
+        
+        e = entitler.createEntitlement(o, childVirtSystem, provisioning);
+        assertNotNull(e);
+        assertFalse(e.isFree());
+        assertEquals(new Long(1), provisioningPool.getCurrentMembers());
+    }
 }
