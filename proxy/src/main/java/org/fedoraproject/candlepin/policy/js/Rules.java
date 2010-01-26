@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.policy.js;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -44,12 +45,12 @@ public class Rules {
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
     
 
-    public Rules(String rulesPath) {
+    public Rules(String rulesBlob) {
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
-        InputStream is = this.getClass().getResourceAsStream(rulesPath);
+        
         try {
-            Reader reader = new InputStreamReader(is);
+            Reader reader = new StringReader(rulesBlob);
             jsEngine.eval(reader);
         }
         catch (ScriptException ex) {

@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -35,16 +36,18 @@ public class JavascriptEnforcer implements Enforcer {
     private DateSource dateSource;
     private EntitlementPoolCurator epCurator;
     private ProductCurator prodCurator;
+    private RulesCurator rulesCurator;
 
     
     @Inject
     public JavascriptEnforcer(DateSource dateSource, EntitlementPoolCurator epCurator,
-            ProductCurator prodCurator) {
+            ProductCurator prodCurator, RulesCurator rulesCurator) {
         this.dateSource = dateSource;
         this.epCurator = epCurator;
         this.prodCurator = prodCurator;
+        this.rulesCurator = rulesCurator;
 
-        this.rules = new Rules("/rules/satellite-rules.js");
+        this.rules = new Rules(this.rulesCurator.findAll().get(0).getRules());
     }
 
 
