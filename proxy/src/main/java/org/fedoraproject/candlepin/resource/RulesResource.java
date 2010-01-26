@@ -43,7 +43,6 @@ public class RulesResource {
         }
   
         Rules rules = new Rules(rulesBuffer);
-//        rulesCurator.merge(rules);
         rulesCurator.update(rules);        
         return rulesBuffer;
     }
@@ -51,7 +50,6 @@ public class RulesResource {
     
     @GET
     @Produces({MediaType.TEXT_PLAIN})
-//    public List get() {
     public String get() {
          List<Rules> rules = rulesCurator.findAll();
          return rules.get(0).getRules();

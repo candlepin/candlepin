@@ -47,7 +47,7 @@ public class JavascriptEnforcer implements Enforcer {
         this.prodCurator = prodCurator;
         this.rulesCurator = rulesCurator;
 
-        this.rules = new Rules(this.rulesCurator.findAll().get(0).getRules());
+        this.rules = new Rules(this.rulesCurator.getRules().getRules());
     }
 
 
