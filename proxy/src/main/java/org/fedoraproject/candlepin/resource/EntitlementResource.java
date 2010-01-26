@@ -191,5 +191,17 @@ public class EntitlementResource {
     public List<Entitlement> list() {
         return entitlementCurator.findAll();
     }
+    
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{dbid}")
+    public Entitlement getEntitlement(@PathParam("dbid") Long dbid) {
+        Entitlement toReturn = entitlementCurator.find(dbid);
+        if (toReturn != null) {
+            return toReturn;
+        }
+        
+        throw new NotFoundException("Entitlement with ID '" + dbid + "' could not be found");
+    }
 
 }

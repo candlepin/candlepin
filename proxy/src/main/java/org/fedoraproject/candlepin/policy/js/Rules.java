@@ -37,11 +37,16 @@ import org.fedoraproject.candlepin.policy.java.ReadOnlyProduct;
 public class Rules {
 
     private ScriptEngine jsEngine;
+    
+    private static final String PRE_PREFIX = "pre_";
+    private static final String POST_PREFIX = "post_";
+    private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
+    private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
+    
 
     public Rules(String rulesPath) {
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
-        jsEngine.put("testvar", "meow");
         InputStream is = this.getClass().getResourceAsStream(rulesPath);
         try {
             Reader reader = new InputStreamReader(is);
@@ -63,10 +68,20 @@ public class Rules {
         jsEngine.put("result", result);
 
         try {
-            inv.invokeFunction("pre_" + p.getLabel());
+            inv.invokeFunction(PRE_PREFIX + p.getLabel());
         }
         catch (NoSuchMethodException e) {
-            // No method for this product, assume this is not out of the ordinary
+            // No method for this product, try to find a global function, if neither exists
+            // this is ok and we'll just carry on.
+            try {
+                inv.invokeFunction(GLOBAL_PRE_FUNCTION);
+            }
+            catch (NoSuchMethodException ex) {
+                // This is fine.
+            }
+            catch (ScriptException ex) {
+                throw new RuleExecutionException(ex);
+            }
         }
         catch (ScriptException e) {
             throw new RuleExecutionException(e);
@@ -88,10 +103,21 @@ public class Rules {
         jsEngine.put("postHelper", postHelper);
 
         try {
-            inv.invokeFunction("post_" + p.getLabel());
+            inv.invokeFunction(POST_PREFIX + p.getLabel());
         }
         catch (NoSuchMethodException e) {
-            // No method for this product, assume this is not out of the ordinary
+            // No method for this product, try to find a global function, if neither exists
+            // this is ok and we'll just carry on.
+            try {
+                inv.invokeFunction(GLOBAL_POST_FUNCTION);
+            }
+            catch (NoSuchMethodException ex) {
+                // This is fine.
+            }
+            catch (ScriptException ex) {
+                throw new RuleExecutionException(ex);
+            }
+
         }
         catch (ScriptException e) {
             throw new RuleExecutionException(e);

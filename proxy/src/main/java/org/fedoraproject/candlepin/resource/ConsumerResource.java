@@ -23,7 +23,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -36,6 +40,7 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
+import com.sun.jersey.api.client.ClientResponse.Status;
 
 /**
  * API Gateway for Consumers
@@ -43,6 +48,9 @@ import com.google.inject.Inject;
 @Path("/consumer")
 
 public class ConsumerResource {
+    
+    @Context 
+    private UriInfo uriInfo;
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private OwnerCurator ownerCurator;
@@ -72,7 +80,13 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
-        return consumerCurator.lookupByUuid(uuid);
+        Consumer toReturn = consumerCurator.lookupByUuid(uuid);
+        
+        if (toReturn != null) {
+            return toReturn;
+        }
+
+        throw new NotFoundException("Consumer with UUID '" + uuid + "' could not be found"); 
     }
     
     /**
@@ -95,17 +109,25 @@ public class ConsumerResource {
         }
         
         if (type == null) {
-            throw new RuntimeException("No such consumer type: " + in.getType().getLabel());
+            throw new BadRequestException("No such consumer type: " + in.getType().getLabel());
         }
 
-        return consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
+        try {
+            return consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
+        } catch (RuntimeException e) {
+            throw new BadRequestException(e.getMessage());
+        }
     }
     
     @DELETE
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
-        consumerCurator.delete(consumerCurator.lookupByUuid(uuid));
+        try {
+            consumerCurator.delete(consumerCurator.lookupByUuid(uuid));
+        } catch (RuntimeException e) {
+            throw new NotFoundException(e.getMessage());
+        }
     }
     
     /**
