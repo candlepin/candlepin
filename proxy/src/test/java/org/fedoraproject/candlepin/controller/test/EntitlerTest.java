@@ -200,6 +200,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         e = entitler.createEntitlement(o, childVirtSystem, provisioning);
         assertNotNull(e);
         assertFalse(e.isFree());
+        // Should have resorted to consuming a physical entitlement, because the guest's
+        // parent does not have this.
         assertEquals(new Long(1), provisioningPool.getCurrentMembers());
     }
 }

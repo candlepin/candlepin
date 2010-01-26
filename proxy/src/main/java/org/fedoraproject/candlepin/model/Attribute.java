@@ -55,6 +55,15 @@ public class Attribute  implements Persisted {
     @Column
 	private Long quantity;
 
+    public Attribute() {
+
+    }
+
+    public Attribute(String name, Long quantity) {
+        this.name = name;
+        this.quantity = quantity;
+    }
+
 	public String getName() {
 		return name;
 	}

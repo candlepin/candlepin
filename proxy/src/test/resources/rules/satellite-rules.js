@@ -17,7 +17,7 @@ function pre_virtualization_host() {
 }
 
 function post_virtualization_host() {
-	postHelper.createConsumerPool("virt_guest", 5);
+	postHelper.createConsumerPool("virt_guest", product.getAttribute("allowed_guests"));
 }
 function pre_virtualization_host_platform() {
 	virtualization_common();
@@ -25,7 +25,7 @@ function pre_virtualization_host_platform() {
 
 function post_virtualization_host_platform() {
 	// unlimited guests:
-	postHelper.createConsumerPool("virt_guest", -1);
+	postHelper.createConsumerPool("virt_guest", product.getAttribute("allowed_guests"));
 }
 
 function pre_global() {

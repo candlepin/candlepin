@@ -11,6 +11,7 @@ public class SpacewalkCertificateCurator {
     
     private EntitlementPoolCurator entitlementPoolCurator;
     private ProductCurator productCurator;
+    private AttributeCurator attributeCurator;
 
     
     public static final String PRODUCT_MONITORING = "monitoring";
@@ -19,13 +20,16 @@ public class SpacewalkCertificateCurator {
     public static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
     public static final String PRODUCT_VIRT_GUEST = "virt_guest";
     
+    public static final String ATTRIB_ALLOWED_GUESTS = "allowed_guests";
+
 
     @Inject
     public SpacewalkCertificateCurator(EntitlementPoolCurator entitlementPoolCurator, 
-            ProductCurator productCurator) {
+            ProductCurator productCurator, AttributeCurator attributeCurator) {
         
         this.entitlementPoolCurator = entitlementPoolCurator;
         this.productCurator = productCurator;
+        this.attributeCurator = attributeCurator;
     }
 
     public void parseCertificate(Certificate cert, Owner owner) throws ParseException {
@@ -106,6 +110,19 @@ public class SpacewalkCertificateCurator {
         Product p = productCurator.lookupByName(name);
         if (p == null) {
             p = new Product(name, name);
+
+            // Representing the implicit logic in the Satellite certificate:
+            if (name.equals(PRODUCT_VIRT_HOST)) {
+                Attribute a = new Attribute(ATTRIB_ALLOWED_GUESTS, new Long(5));
+                attributeCurator.create(a);
+                p.addAttribute(a);
+            }
+            else if (name.equals(PRODUCT_VIRT_HOST_PLATFORM)) {
+                Attribute a = new Attribute(ATTRIB_ALLOWED_GUESTS, new Long(-1));
+                attributeCurator.create(a);
+                p.addAttribute(a);
+            }
+
             productCurator.create(p);
         }
         
