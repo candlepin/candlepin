@@ -15,7 +15,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -112,20 +111,24 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         }
     }
     
-    @Ignore
     @Test
     public void entitlementWithValidConsumerAndProduct() {
+        
+        unitOfWork.beginWork();
         assertTrue(entitlementCurator.findAll().size() == 0);
         assertEquals(new Long(0), 
                 entitlementPoolCurator.lookupByOwnerAndProduct(owner, consumer, product).getCurrentMembers());
-       
+        unitOfWork.endWork();
+
+        unitOfWork.beginWork();
         WebResource r = resource()
             .path("/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getLabel());
         String s = r.accept("application/json")
              .type("application/json")
              .post(String.class);
-       
-       assertEntitlementSucceeded();
+        unitOfWork.endWork();
+        
+        assertEntitlementSucceeded();
     }
     
     @Test
@@ -176,13 +179,17 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     }
     
     protected void assertEntitlementSucceeded() {
+        unitOfWork.beginWork();
+        
         assertEquals(new Long(1), new Long(entitlementCurator.findAll().size()));
         assertEquals(new Long(1),  
             entitlementPoolCurator.lookupByOwnerAndProduct(owner, consumer, product).getCurrentMembers());
-        assertEquals(1, consumer.getConsumedProducts().size());
-        assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
+        assertEquals(1, consumerCurator.find(consumer.getId()).getConsumedProducts().size());
+        assertEquals(product.getId(), consumerCurator.find(consumer.getId()).getConsumedProducts().iterator()
                 .next().getId());
-        assertEquals(1, consumer.getEntitlements().size());
+        assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
+        
+        unitOfWork.endWork();
     }
     
 
