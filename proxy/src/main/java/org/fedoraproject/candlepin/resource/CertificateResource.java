@@ -22,9 +22,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.CertificateCurator;
@@ -75,7 +73,7 @@ public class CertificateResource  {
         
         try {
             if (base64cert == null || "".equals(base64cert)) {
-                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+                throw new BadRequestException("Empty certificate is being uploaded.");
             }
             
             encodedCert = base64cert;
@@ -90,13 +88,13 @@ public class CertificateResource  {
             spacewalkCertificateCurator.parseCertificate(cert, owner);
         }
         catch (JDOMException e) {
-            e.printStackTrace();
+            throw new BadRequestException("Invalid certificate is being uploaded: " + e.getMessage());
         }
         catch (IOException e) {
-            e.printStackTrace();
+            throw new BadRequestException("Invalid certificate is being uploaded: " + e.getMessage());
         }
         catch (ParseException e) {
-            e.printStackTrace();
+            throw new BadRequestException("Invalid certificate is being uploaded: " + e.getMessage());
         }
         return "uuid";
     }
@@ -116,7 +114,7 @@ public class CertificateResource  {
         return encodedCert;
     }
     
-    private Owner addOwner(Certificate cert) throws ParseException {
+    private Owner addOwner(Certificate cert) {
         Owner owner = ownerCurator.lookupByName(cert.getOwner());
         if (owner == null) {
             owner = new Owner(cert.getOwner());
