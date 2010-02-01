@@ -24,7 +24,8 @@ import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
-    @Inject
+    @Inject private EntitlementCurator entitlementCurator;
+    
     protected EntitlementPoolCurator() {
         super(EntitlementPool.class);
     }
@@ -98,5 +99,13 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
         
         return super.create(entity);
+    }
+    
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> entitlementsIn(EntitlementPool entitlementPool) {
+        return currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("pool", entitlementPool))
+            .list();
     }
 }
