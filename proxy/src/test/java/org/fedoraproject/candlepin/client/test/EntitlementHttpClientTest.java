@@ -15,6 +15,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -174,13 +175,41 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         }
     }
     
+    @Test
+    public void hasEntitlementWithEntitledProductShouldReturnTrue() {
+        Entitlement entitlement = entitler.createEntitlement(owner, consumer, product);
+        assertNotNull(entitlementCurator.find(entitlement.getId()));        
+        
+        WebResource r = resource().path(
+                "/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getLabel()
+        );
+        Entitlement returned = r.accept("application/json")
+             .type("application/json")
+             .get(Entitlement.class);
+        
+        assertEntitlementsAreSame(entitlement, returned);
+    }
+    
+    @Test
+    public void hasEntitlementWithoutEntitledProductShouldReturnFalse() {
+        try {
+            WebResource r = resource().path(
+                    "/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getLabel()
+            );
+            r.accept("application/json")
+                 .type("application/json")
+                 .get(Entitlement.class);
+            fail();
+        } catch (UniformInterfaceException e) {
+            assertHttpResponse(404, e.getResponse());
+        }
+    }
+    
     protected void assertHttpResponse(int code, ClientResponse response) {
         assertEquals(code, response.getStatus());
     }
     
     protected void assertEntitlementSucceeded() {
-        unitOfWork.beginWork();
-        
         assertEquals(new Long(1), new Long(entitlementCurator.findAll().size()));
         assertEquals(new Long(1),  
             entitlementPoolCurator.lookupByOwnerAndProduct(owner, consumer, product).getCurrentMembers());
@@ -188,8 +217,6 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertEquals(product.getId(), consumerCurator.find(consumer.getId()).getConsumedProducts().iterator()
                 .next().getId());
         assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
-        
-        unitOfWork.endWork();
     }
     
 

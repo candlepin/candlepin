@@ -125,7 +125,7 @@ public class EntitlementResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/consumer/{consumer_uuid}/product/{product_label}")
-    public boolean hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
+    public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_label") String productLabel) {
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
@@ -136,10 +136,12 @@ public class EntitlementResource {
             
         for (Entitlement e : consumer.getEntitlements()) {
             if (e.getProduct().equals(product)) {
-                return true;
+                return e;
             }
         }
-        return false;
+        
+        throw new NotFoundException(
+                "Consumer: " + consumerUuid + " has no entitlement for product " + productLabel);
     }
     
     /**
