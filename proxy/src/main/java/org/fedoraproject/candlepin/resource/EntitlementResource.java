@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resource;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -203,7 +204,17 @@ public class EntitlementResource {
         if (toReturn != null) {
             return toReturn;
         }
-        
+        throw new NotFoundException("Entitlement with ID '" + dbid + "' could not be found");
+    }
+    
+    @DELETE
+    @Path("{dbid}")
+    public void deleteEntitlement(@PathParam("dbid") Long dbid) {
+        Entitlement toDelete = entitlementCurator.find(dbid);
+        if (toDelete != null) {
+            entitlementCurator.delete(toDelete);
+            return;
+        }
         throw new NotFoundException("Entitlement with ID '" + dbid + "' could not be found");
     }
 

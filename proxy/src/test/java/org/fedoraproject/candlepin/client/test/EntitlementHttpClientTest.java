@@ -15,7 +15,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -200,6 +199,37 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
                  .type("application/json")
                  .get(Entitlement.class);
             fail();
+        } catch (UniformInterfaceException e) {
+            assertHttpResponse(404, e.getResponse());
+        }
+    }
+    
+    @Test
+    public void deleteEntitlementWithValidIdShouldPass() {
+        unitOfWork.beginWork();
+        Entitlement entitlement = entitler.createEntitlement(owner, consumer, product);
+        assertNotNull(entitlementCurator.find(entitlement.getId()));
+        unitOfWork.endWork();
+        
+        unitOfWork.beginWork();
+        WebResource r = resource().path(
+                "/entitlement/" + entitlement.getId()
+        );
+        r.accept("application/json")
+             .type("application/json")
+             .delete();
+        unitOfWork.endWork();
+        
+        assertNull(entitlementCurator.find(entitlement.getId()));
+    }
+    
+    @Test
+    public void deleteEntitlementWithInvalidIdShouldFail() {
+        try {
+            WebResource r = resource().path("/entitlement/1234");
+            r.accept("application/json")
+                 .type("application/json")
+                 .delete();
         } catch (UniformInterfaceException e) {
             assertHttpResponse(404, e.getResponse());
         }
