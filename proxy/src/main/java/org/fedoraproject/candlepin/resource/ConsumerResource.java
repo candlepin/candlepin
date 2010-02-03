@@ -21,8 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -39,6 +41,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -200,14 +203,15 @@ public class ConsumerResource {
 
     @GET
     @Path("{consumer_uuid}/certificates")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public String getClientCertificates(@PathParam("consumer_uuid") String consumerUuid) {
+    @Produces({MediaType.APPLICATION_JSON})
+    public List<ClientCertificate> getClientCertificates(@PathParam("consumer_uuid") String consumerUuid) {
         log.debug("Getting client certificates for consumer: " + consumerUuid);
 
+        List<ClientCertificate> allCerts = new LinkedList<ClientCertificate>();
+        
         // Using a static (and unusable) cert for now for demo purposes:
         try {
             byte[] bytes = getBytesFromFile("/testcert-cert.p12");
-            String id = null;
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream stream = new ObjectOutputStream(baos);
             stream.write(bytes);
@@ -215,8 +219,14 @@ public class ConsumerResource {
             stream.close();
 
             Base64 encoder = new Base64();
-            id = new String(encoder.encode(baos.toByteArray()));
-            return id;
+            ClientCertificate cert = new 
+                ClientCertificate(new String(encoder.encode(baos.toByteArray())));
+            
+            allCerts.add(cert);
+            // Add it again just so we can see multiple return values:
+            allCerts.add(cert);
+            
+            return allCerts;
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);

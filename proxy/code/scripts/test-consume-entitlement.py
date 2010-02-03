@@ -53,11 +53,12 @@ conn = httplib.HTTPConnection("localhost", 8080)
 params = urllib.urlencode({})
 headers = {"Content-type":"application/json",
            "Accept": "application/json"}
-path = '/candlepin/consumer/%s/certificate/product/14' % \
+path = '/candlepin/consumer/%s/certificates' % \
         (consumer_uuid)
 conn.request("GET", path, params, headers)
 response = conn.getresponse()
 print("Status: %d Response: %s" % (response.status, response.reason))
 rsp = response.read()
 conn.close()
-print("Got certificate: %s" % rsp)
+print("Response:")
+print(rsp)
