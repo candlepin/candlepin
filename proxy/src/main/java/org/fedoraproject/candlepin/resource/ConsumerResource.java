@@ -14,11 +14,20 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.net.URI;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -27,6 +36,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -173,5 +184,42 @@ public class ConsumerResource {
     public Product getProduct(@PathParam("cid") String cid,
                        @PathParam("pid") String pid) {
         return null;
+    }
+
+    public byte[] getBytesFromFile(String path) throws Exception {
+        InputStream is = this.getClass().getResource(path).openStream();
+        byte [] bytes = null;
+        try {
+            bytes = IOUtils.toByteArray(is);
+        }
+        finally {
+            IOUtils.closeQuietly(is);
+        }
+        return bytes;
+    }
+
+    @GET
+    @Path("{consumer_uuid}/certificates")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public String getClientCertificates(@PathParam("consumer_uuid") String consumerUuid) {
+        log.debug("Getting client certificates for consumer: " + consumerUuid);
+
+        // Using a static (and unusable) cert for now for demo purposes:
+        try {
+            byte[] bytes = getBytesFromFile("/testcert-cert.p12");
+            String id = null;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream stream = new ObjectOutputStream(baos);
+            stream.write(bytes);
+            stream.flush();
+            stream.close();
+
+            Base64 encoder = new Base64();
+            id = new String(encoder.encode(baos.toByteArray()));
+            return id;
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

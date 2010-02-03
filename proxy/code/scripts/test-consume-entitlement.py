@@ -6,10 +6,9 @@ import simplejson as json
 import base64
 
 conn = httplib.HTTPConnection("localhost", 8080)
+print
 
-# POST new user
 print("Creating a new consumer:")
-
 consumer_type = {"label": "system"}
 facts_metadata = {"entry": [
     {"key": "a", "value": "1"},
@@ -28,21 +27,37 @@ print("Created consumer: %s" % rsp)
 conn.close()
 consumer_uuid = json.loads(rsp)['uuid']
 print("Consumer UUID: %s" % consumer_uuid)
+print
 
 
-# Entitle consumer for rhel-server:
+# Consume a virtualization_host entitlement:
 print("Consuming virtualization host entitlement:")
 conn = httplib.HTTPConnection("localhost", 8080)
 params = urllib.urlencode({
-    "consumer_uuid": consumer_uuid,
-    "product_label": "virtualization_host"
 })
 headers = {"Content-type":"application/json",
            "Accept": "application/json"}
-conn.request("POST", '/candlepin/entitlement/entitle', params, headers)
+path = '/candlepin/entitlement/consumer/%s/product/%s' % \
+        (consumer_uuid, "virtualization_host")
+conn.request("POST", path, params, headers)
 response = conn.getresponse()
 print("Status: %d Response: %s" % (response.status, response.reason))
 rsp = response.read()
 conn.close()
 print("Entitlement claimed: %s" % rsp)
 
+
+# Get my certificates:
+print("Getting certificates:")
+conn = httplib.HTTPConnection("localhost", 8080)
+params = urllib.urlencode({})
+headers = {"Content-type":"application/json",
+           "Accept": "application/json"}
+path = '/candlepin/consumer/%s/certificate/product/14' % \
+        (consumer_uuid)
+conn.request("GET", path, params, headers)
+response = conn.getresponse()
+print("Status: %d Response: %s" % (response.status, response.reason))
+rsp = response.read()
+conn.close()
+print("Got certificate: %s" % rsp)

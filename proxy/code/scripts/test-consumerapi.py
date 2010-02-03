@@ -31,14 +31,28 @@ params = {"type_label": 'system'}
 print params
 headers = {"Content-type": "application/json",
            "Accept": "application/json"}
-print "JSON: %s" % json.dumps(params)
-print "JSON: %s" % type(json.dumps(params))
 conn = httplib.HTTPConnection("localhost", 8080)
 conn.request("POST", '/candlepin/consumer/', urllib.urlencode(params), headers)
 response = conn.getresponse()
 print("Status: %d Response: %s" % (response.status, response.reason))
 rsp = response.read()
 print("created consumer: %s" % rsp)
+conn.close()
+
+consumer_uuid = json.loads(rsp)['uuid']
+print("Consumer UUID: %s" % consumer_uuid)
+
+# Request list of certificates:
+params = {}
+headers = {"Content-type": "application/json",
+           "Accept": "application/json"}
+conn = httplib.HTTPConnection("localhost", 8080)
+conn.request("POST", '/candlepin/consumer/%s/certificates' % consumer_uuid,
+        urllib.urlencode(params), headers)
+response = conn.getresponse()
+print("Status: %d Response: %s" % (response.status, response.reason))
+rsp = response.read()
+print("certificates: %s" % rsp)
 conn.close()
 
 ## GET list of consumers
