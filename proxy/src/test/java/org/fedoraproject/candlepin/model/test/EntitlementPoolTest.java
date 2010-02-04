@@ -143,7 +143,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
-        entitler.createEntitlement(owner, consumer, newProduct);
+        entitler.entitle(owner, consumer, newProduct);
         
         assertFalse(entitlementPoolCurator.find(consumerPool.getId()).entitlementsAvailable());
     }
@@ -164,7 +164,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         consumerPool = entitlementPoolCurator.create(consumerPool);
         
         assertEquals(0, consumer.getEntitlements().size());
-        entitler.createEntitlement(owner, consumer, newProduct);
+        entitler.entitle(owner, consumer, newProduct);
         
         assertTrue(consumerCurator.find(consumer.getId()).getConsumedProducts().contains(newProduct));
         assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
@@ -188,8 +188,8 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         Entitler anotherEntitler = 
             injector.getInstance(Entitler.class);
         
-        entitler.createEntitlement(owner, consumer, newProduct);
-        anotherEntitler.createEntitlement(owner, consumer, newProduct);
+        entitler.entitle(owner, consumer, newProduct);
+        anotherEntitler.entitle(owner, consumer, newProduct);
         
         assertFalse(entitlementPoolCurator.find(consumerPool.getId()).entitlementsAvailable());
     }
@@ -213,8 +213,8 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
             injector.getInstance(Entitler.class);
         
         
-        Entitlement e1 = entitler.createEntitlement(owner, consumer, newProduct);
-        Entitlement e2 = anotherEntitler.createEntitlement(owner, consumer, newProduct);
+        Entitlement e1 = entitler.entitle(owner, consumer, newProduct);
+        Entitlement e2 = anotherEntitler.entitle(owner, consumer, newProduct);
         assertNotNull(e1);
         assertNull(e2);
     }

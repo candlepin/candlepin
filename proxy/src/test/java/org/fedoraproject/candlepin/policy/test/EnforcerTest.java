@@ -18,16 +18,18 @@ import static org.junit.Assert.*;
 
 import java.util.Date;
 
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
-import org.fedoraproject.candlepin.policy.java.JavaEnforcer;
+import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
+import org.fedoraproject.candlepin.policy.js.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,15 +39,17 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Before
     public void createEnforcer() {
-        enforcer = new JavaEnforcer(new DateSourceForTesting(2010, 1, 1),
-                entitlementPoolCurator, productCurator);
+        PreEntHelper preHelper = new PreEntHelper();
+        PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator, productCurator);
+        enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
+                entitlementPoolCurator, productCurator, rulesCurator, preHelper, postHelper);
     }
     
     // grrr. have to test two conditions atm: sufficient number of entitlements *when* pool has not expired
     @Test
     public void shouldPassValidationWhenSufficientNumberOfEntitlementsIsAvailableAndNotExpired() {
-        ValidationResult result = enforcer.validate(new Consumer(),
-                entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2010, 10, 10)));
+        ValidationResult result = enforcer.pre(TestUtil.createConsumer(),
+                entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2010, 10, 10))).getResult();
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -53,8 +57,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     @Test
     public void shouldFailValidationWhenNoEntitlementsAreAvailable() {
-        ValidationResult result = enforcer.validate(new Consumer(),
-                entitlementPoolWithMembersAndExpiration(1, 1, expiryDate(2010, 10, 10)));
+        ValidationResult result = enforcer.pre(TestUtil.createConsumer(),
+                entitlementPoolWithMembersAndExpiration(1, 1, expiryDate(2010, 10, 10))).getResult();
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -62,8 +66,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     @Test
     public void shouldFailWhenEntitlementsAreExpired() {
-        ValidationResult result = enforcer.validate(new Consumer(),
-                entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2000, 1, 1)));
+        ValidationResult result = enforcer.pre(TestUtil.createConsumer(),
+                entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2000, 1, 1))).getResult();
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());

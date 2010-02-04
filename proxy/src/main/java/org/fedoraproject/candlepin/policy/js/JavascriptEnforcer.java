@@ -25,7 +25,6 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
-import org.fedoraproject.candlepin.policy.ValidationResult;
 
 import com.google.inject.Inject;
 
@@ -37,50 +36,48 @@ public class JavascriptEnforcer implements Enforcer {
     private EntitlementPoolCurator epCurator;
     private ProductCurator prodCurator;
     private RulesCurator rulesCurator;
+    private PreEntHelper preHelper;
+    private PostEntHelper postHelper;
 
     
     @Inject
     public JavascriptEnforcer(DateSource dateSource, EntitlementPoolCurator epCurator,
-            ProductCurator prodCurator, RulesCurator rulesCurator) {
+            ProductCurator prodCurator, RulesCurator rulesCurator, PreEntHelper preHelper,
+            PostEntHelper postHelper) {
         this.dateSource = dateSource;
         this.epCurator = epCurator;
         this.prodCurator = prodCurator;
         this.rulesCurator = rulesCurator;
+        this.preHelper = preHelper;
+        this.postHelper = postHelper;
 
         this.rules = new Rules(this.rulesCurator.getRules().getRules());
     }
 
 
     @Override
-    public ValidationResult validate(Consumer consumer, EntitlementPool entitlementPool) {
+    public PreEntHelper pre(Consumer consumer, EntitlementPool entitlementPool) {
 
-        ValidationResult result = rules.runPre(consumer, entitlementPool);
-        if (!result.isSuccessful()) {
+        rules.runPre(preHelper, consumer, entitlementPool);
+        if (!preHelper.getResult().isSuccessful()) {
 //            throw new
         }
 
-        if (!entitlementPool.entitlementsAvailable()) {
-        // TODO: These first checks should probably be pushed to an Enforcer
-        // base class, they are implicit and should be done for all
-        // implementations.
-            result.addError(new ValidationError("Not enough entitlements"));
-            return result;
-        }
-
         if (entitlementPool.isExpired(dateSource)) {
-            result.addError(new ValidationError("Entitlements for " +
+            preHelper.getResult().addError(new ValidationError("Entitlements for " +
                     entitlementPool.getProduct().getName() +
                     " expired on: " + entitlementPool.getEndDate()));
-            return result;
+            return preHelper;
         }
 
-        return result;
+        return preHelper;
     }
 
     @Override
-    public void runPostEntitlementActions(Entitlement ent) {
-        PostEntHelper postHelper = new PostEntHelper(epCurator, prodCurator, ent);
-        rules.runPost(ent, postHelper);
+    public PostEntHelper post(Entitlement ent) {
+        postHelper.init(ent);
+        rules.runPost(postHelper, ent);
+        return(postHelper);
     }
 
 }

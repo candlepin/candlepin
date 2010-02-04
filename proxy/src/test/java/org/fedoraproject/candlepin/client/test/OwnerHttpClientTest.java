@@ -65,13 +65,13 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
         for (int i = 0; i < MAX_POOL_MEMBERS.longValue()/2; i++) {
             Consumer c = TestUtil.createConsumer(type, owner);
             consumerCurator.create(c);
-            entitler.createEntitlement(owner, c, product);
+            entitler.entitle(owner, c, product);
         }
 
         for (int i = 0; i < MAX_POOL_MEMBERS.longValue()/2; i++) {
             Consumer c = TestUtil.createConsumer(type, owner);
             consumerCurator.create(c);
-            entitler.createEntitlement(owner, c, anotherProduct);
+            entitler.entitle(owner, c, anotherProduct);
         }
         
         WebResource r = resource().path("/owner/" + owner.getId() + "/entitlement");

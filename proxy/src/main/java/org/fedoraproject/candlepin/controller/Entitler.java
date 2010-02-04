@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -50,7 +51,11 @@ public class Entitler {
     }
 
     /**
-     * Create an entitlement.
+     * Request an entitlement.
+     * 
+     * If the entitlement cannot be granted, null will be returned.
+     * 
+     * TODO: Throw exception if entitlement not granted. Report why.
      * 
      * @param entPool
      * @param consumer
@@ -61,14 +66,15 @@ public class Entitler {
     //       will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement createEntitlement(Owner owner, Consumer consumer, Product product) {
+    public Entitlement entitle(Owner owner, Consumer consumer, Product product) {
         
         EntitlementPool ePool = epCurator.lookupByOwnerAndProduct(owner, consumer, product);
         if (ePool == null) {
             throw new RuntimeException("No entitlements for product: " + product.getName());
         }
         
-        ValidationResult result = enforcer.validate(consumer, ePool);
+        PreEntHelper preHelper = enforcer.pre(consumer, ePool);
+        ValidationResult result = preHelper.getResult();
         
         if (!result.isSuccessful()) {
             log.warn("Entitlement not granted: " + result.getErrors().toString());
@@ -80,20 +86,20 @@ public class Entitler {
         consumer.addEntitlement(e);
         consumer.addConsumedProduct(product);
 
-        if (!result.getFreeEntitlement()) {
-            ePool.bumpCurrentMembers();
-        }
-        else {
-            // Signal that this entitlement was granted for free:
-            log.debug("Granting free entitlement.");
+        if (preHelper.getGrantFreeEntitlement()) {
+            log.info("Granting free entitlement.");
             e.setIsFree(Boolean.TRUE);
         }
+        else {
+            ePool.bumpCurrentMembers();
+        }
 
+        enforcer.post(e);
+        
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
         EntitlementPool merged = epCurator.merge(ePool);
 
-        enforcer.runPostEntitlementActions(e);
 
         return e;
     }

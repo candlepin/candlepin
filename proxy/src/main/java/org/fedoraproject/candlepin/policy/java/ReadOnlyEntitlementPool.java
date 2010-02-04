@@ -12,20 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.policy;
+package org.fedoraproject.candlepin.policy.java;
 
-public class ValidationWarning {
-    private String resourceKey;
+import org.fedoraproject.candlepin.model.EntitlementPool;
 
-    public ValidationWarning(String resourceKey) {
-        this.resourceKey = resourceKey;
+public class ReadOnlyEntitlementPool {
+
+    private EntitlementPool entPool;
+    
+    public ReadOnlyEntitlementPool(EntitlementPool entPool) {
+        this.entPool = entPool;
     }
     
-    public String getResourceKey() {
-        return resourceKey;
-    }
-    
-    public String toString() {
-        return resourceKey;
+    public Boolean entitlementsAvailable() {
+        return entPool.entitlementsAvailable();
     }
 }

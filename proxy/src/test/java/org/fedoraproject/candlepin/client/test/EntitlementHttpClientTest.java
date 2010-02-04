@@ -72,7 +72,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         for (int i = 0; i < entitlementPool.getMaxMembers(); i++) {
             Consumer c = TestUtil.createConsumer(consumerType, owner);
             consumerCurator.create(c);
-            entitler.createEntitlement(owner, c, product);
+            entitler.entitle(owner, c, product);
         }
         
         WebResource r = resource().path("/entitlement/");
@@ -88,7 +88,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void getSingleEntitlement() {
         Consumer c = TestUtil.createConsumer(consumerType, owner);
         consumerCurator.create(c);
-        Entitlement entitlement = entitler.createEntitlement(owner, c, product);
+        Entitlement entitlement = entitler.entitle(owner, c, product);
         
         WebResource r = resource().path("/entitlement/" + entitlement.getId());
         Entitlement returned = r.accept("application/json")
@@ -176,7 +176,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     
     @Test
     public void hasEntitlementWithEntitledProductShouldReturnTrue() {
-        Entitlement entitlement = entitler.createEntitlement(owner, consumer, product);
+        Entitlement entitlement = entitler.entitle(owner, consumer, product);
         assertNotNull(entitlementCurator.find(entitlement.getId()));        
         
         WebResource r = resource().path(
@@ -207,7 +207,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void deleteEntitlementWithValidIdShouldPass() {
         unitOfWork.beginWork();
-        Entitlement entitlement = entitler.createEntitlement(owner, consumer, product);
+        Entitlement entitlement = entitler.entitle(owner, consumer, product);
         assertNotNull(entitlementCurator.find(entitlement.getId()));
         unitOfWork.endWork();
         

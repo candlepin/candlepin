@@ -62,3 +62,7 @@ rsp = response.read()
 conn.close()
 print("Response:")
 print(rsp)
+#results = json.loads(rsp)
+#for x in results['clientCertificate']:
+#    print x
+#    print

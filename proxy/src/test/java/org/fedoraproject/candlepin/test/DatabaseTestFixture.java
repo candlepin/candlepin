@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.junit.Before;
 
@@ -51,6 +52,7 @@ public class DatabaseTestFixture {
     protected SpacewalkCertificateCurator spacewalkCertificateCurator;
     protected EntitlementCurator entitlementCurator;
     protected AttributeCurator attributeCurator;
+    protected RulesCurator rulesCurator;
     protected WorkManager unitOfWork;
     
     @Before
@@ -74,6 +76,7 @@ public class DatabaseTestFixture {
         spacewalkCertificateCurator = injector.getInstance(SpacewalkCertificateCurator.class);
         entitlementCurator = injector.getInstance(EntitlementCurator.class);
         attributeCurator = injector.getInstance(AttributeCurator.class);
+        rulesCurator = injector.getInstance(RulesCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);

@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
@@ -28,8 +26,9 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.java.ReadOnlyConsumer;
+import org.fedoraproject.candlepin.policy.java.ReadOnlyEntitlement;
+import org.fedoraproject.candlepin.policy.java.ReadOnlyEntitlementPool;
 import org.fedoraproject.candlepin.policy.java.ReadOnlyProduct;
 
 /**
@@ -58,15 +57,16 @@ public class Rules {
         }
     }
 
-    public ValidationResult runPre(Consumer consumer, EntitlementPool pool) {
+    public void runPre(PreEntHelper preHelper, Consumer consumer, 
+            EntitlementPool pool) {
         Invocable inv = (Invocable)jsEngine;
         Product p = pool.getProduct();
-        ValidationResult result = new ValidationResult();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
-        jsEngine.put("result", result);
+        jsEngine.put("pool", new ReadOnlyEntitlementPool(pool));
+        jsEngine.put("pre", preHelper);
 
         try {
             inv.invokeFunction(PRE_PREFIX + p.getLabel());
@@ -87,11 +87,9 @@ public class Rules {
         catch (ScriptException e) {
             throw new RuleExecutionException(e);
         }
-
-        return result;
     }
     
-    public void runPost(Entitlement ent, PostEntHelper postHelper) {
+    public void runPost(PostEntHelper postHelper, Entitlement ent) {
         Invocable inv = (Invocable)jsEngine;
         EntitlementPool pool = ent.getPool();
         Consumer c = ent.getConsumer();
@@ -101,7 +99,8 @@ public class Rules {
         // TODO: Is a ReadOnlyEntitlement needed here?
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
         jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
-        jsEngine.put("postHelper", postHelper);
+        jsEngine.put("post", postHelper);
+        jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
 
         try {
             inv.invokeFunction(POST_PREFIX + p.getLabel());

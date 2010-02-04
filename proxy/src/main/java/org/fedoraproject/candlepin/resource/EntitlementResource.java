@@ -107,7 +107,7 @@ public class EntitlementResource {
         }
         
         // Attempt to create an entitlement:
-        Entitlement e = entitler.createEntitlement(owner, consumer, p);
+        Entitlement e = entitler.entitle(owner, consumer, p);
         // TODO: Probably need to get the validation result out somehow.
         // TODO: return 409?
         if (e == null) {
