@@ -78,7 +78,7 @@ define "candlepin" do
   test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, JERSEY_FOR_TEST
 
   #javadoc projects
-  package(:war)
+  package(:war).meta_inf << file('src/main/resources/META-INF/persistence.xml')
   
   #to use: buildr candlepin:schema_gen
   task :schema_gen do  
