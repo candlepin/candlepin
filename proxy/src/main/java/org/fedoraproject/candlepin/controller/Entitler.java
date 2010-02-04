@@ -98,7 +98,7 @@ public class Entitler {
         
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
-        EntitlementPool merged = epCurator.merge(ePool);
+        epCurator.merge(ePool);
 
 
         return e;

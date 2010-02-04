@@ -41,7 +41,6 @@ function pre_global() {
 				consumer.getParent().hasEntitlement("virtualization_host_platform")) && 
 				consumer.getParent().hasEntitlement(product.getLabel())) {
 			pre.grantFreeEntitlement();
-			print("DING $$$$$$$$$$$$$$$$\n");
 		}
 	}
 	else {

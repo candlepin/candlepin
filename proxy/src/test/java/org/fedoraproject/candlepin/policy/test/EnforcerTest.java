@@ -42,7 +42,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         PreEntHelper preHelper = new PreEntHelper();
         PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator, productCurator);
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
-                entitlementPoolCurator, productCurator, rulesCurator, preHelper, postHelper);
+                rulesCurator, preHelper, postHelper);
     }
     
     // grrr. have to test two conditions atm: sufficient number of entitlements *when* pool has not expired

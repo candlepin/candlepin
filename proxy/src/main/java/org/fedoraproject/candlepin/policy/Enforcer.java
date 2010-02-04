@@ -23,7 +23,7 @@ import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 public interface Enforcer {
 	
 	/**
-	 * Validate that a consumer can consume an entitlement for a product.
+	 * Run pre-entitlement checks.
 	 * 
 	 * Ensures sufficient entitlements remain, but also verifies all attributes 
 	 * on the product and relevant entitlement pool pass using the current 
@@ -32,15 +32,13 @@ public interface Enforcer {
 	 * This is run prior to granting an entitlement.
 	 *
 	 * @param consumer Consumer who wishes to consume an entitlement.
-	 * @param product Product consumer wishes to have access too.
+	 * @param enitlementPool Entitlement pool to consume from.
 	 * @return TODO
 	 */
 	public PreEntHelper pre(Consumer consumer, EntitlementPool enitlementPool);
 
 	/**
-	 * Execute post entitlement actions, which are also contained within the rules document.
-	 *
-	 * This is run following the granting of an entitlement.
+	 * Run post-entitlement actions.
 	 *
 	 * @param ent The entitlement that was just granted.
 	 */

@@ -20,8 +20,6 @@ import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
-import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
@@ -33,20 +31,16 @@ public class JavascriptEnforcer implements Enforcer {
     private static Logger log = Logger.getLogger(JavascriptEnforcer.class);
     private Rules rules;
     private DateSource dateSource;
-    private EntitlementPoolCurator epCurator;
-    private ProductCurator prodCurator;
     private RulesCurator rulesCurator;
     private PreEntHelper preHelper;
     private PostEntHelper postHelper;
 
     
     @Inject
-    public JavascriptEnforcer(DateSource dateSource, EntitlementPoolCurator epCurator,
-            ProductCurator prodCurator, RulesCurator rulesCurator, PreEntHelper preHelper,
+    public JavascriptEnforcer(DateSource dateSource, 
+            RulesCurator rulesCurator, PreEntHelper preHelper,
             PostEntHelper postHelper) {
         this.dateSource = dateSource;
-        this.epCurator = epCurator;
-        this.prodCurator = prodCurator;
         this.rulesCurator = rulesCurator;
         this.preHelper = preHelper;
         this.postHelper = postHelper;
@@ -59,9 +53,6 @@ public class JavascriptEnforcer implements Enforcer {
     public PreEntHelper pre(Consumer consumer, EntitlementPool entitlementPool) {
 
         rules.runPre(preHelper, consumer, entitlementPool);
-        if (!preHelper.getResult().isSuccessful()) {
-//            throw new
-        }
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(new ValidationError("Entitlements for " +
