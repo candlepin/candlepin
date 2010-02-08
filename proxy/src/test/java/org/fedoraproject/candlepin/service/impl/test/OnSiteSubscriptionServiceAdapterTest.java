@@ -14,6 +14,74 @@
  */
 package org.fedoraproject.candlepin.service.impl.test;
 
-public class OnSiteSubscriptionServiceAdapterTest {
+import java.util.List;
+
+import static org.junit.Assert.*;
+
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.OnSiteSubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
+import org.junit.Before;
+import org.junit.Test;
+
+public class OnSiteSubscriptionServiceAdapterTest extends DatabaseTestFixture {
+    
+    private SubscriptionCurator subCurator;
+    private Owner owner;
+    private Product p;
+    private Subscription s1;
+    private SubscriptionServiceAdapter adapter;
+
+    @Before
+    public void setUp() {
+        subCurator = injector.getInstance(SubscriptionCurator.class);
+        
+        owner = TestUtil.createOwner();
+        ownerCurator.create(owner);
+        p = TestUtil.createProduct();
+        productCurator.create(p);
+        
+        
+        s1 = new Subscription(owner, p.getId().toString(), new Long(100), 
+                TestUtil.createDate(2010, 2, 8), TestUtil.createDate(2050, 2, 8));
+        subCurator.create(s1);
+        
+        adapter = injector.getInstance(OnSiteSubscriptionServiceAdapter.class);
+    }
+    
+    @Test
+    public void testGetSubscriptions() {
+        List<Subscription> subs = adapter.getSubscriptions(owner, p.getId().toString());
+        assertEquals(1, subs.size());
+    }
+
+    @Test
+    public void testGetSubscriptionsNoneExist() {
+        Owner owner2 = TestUtil.createOwner();
+        ownerCurator.create(owner2);
+        List<Subscription> subs = adapter.getSubscriptions(owner2, p.getId().toString());
+        assertEquals(0, subs.size());
+    }
+    
+    @Test
+    public void testGetSubscription() {
+        Subscription s = adapter.getSubscription(owner, s1.getId());
+        assertNotNull(s);
+        assertEquals(new Long(100), s.getQuantity());
+        
+        s = adapter.getSubscription(owner, new Long(-15));
+        assertNull(s);
+        
+        Owner owner2 = TestUtil.createOwner();
+        ownerCurator.create(owner2);
+        s = adapter.getSubscription(owner2, s1.getId());
+        assertNull(s);
+    }
+
 
 }

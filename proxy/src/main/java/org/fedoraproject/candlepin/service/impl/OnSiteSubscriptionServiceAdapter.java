@@ -14,24 +14,33 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+
+import com.google.inject.Inject;
 
 public class OnSiteSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
+    
+    private SubscriptionCurator subCurator;
+    
+    @Inject
+    public OnSiteSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
+        this.subCurator = subCurator;
+    }
 
     @Override
     public List<Subscription> getSubscriptions(Owner owner, String productId) {
-        return new LinkedList<Subscription>();
+        return subCurator.listByOwnerAndProduct(owner, productId);
     }
 
     @Override
     public Subscription getSubscription(Owner owner, Long subscriptionId) {
-        return null;
+        return subCurator.lookupByOwnerAndId(owner, subscriptionId);
     }
 
 }

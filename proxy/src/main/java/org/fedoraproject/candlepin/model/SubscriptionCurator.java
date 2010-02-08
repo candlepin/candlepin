@@ -14,10 +14,31 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import org.hibernate.criterion.Restrictions;
+
 public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> {
 
     protected SubscriptionCurator() {
         super(Subscription.class);
+    }
+    
+    public List<Subscription> listByOwnerAndProduct(Owner o, String productId) {
+        List<Subscription> subs = (List<Subscription>)currentSession().createCriteria(Subscription.class)
+            .add(Restrictions.eq("owner", o))
+            .add(Restrictions.eq("productId", productId)).list();
+        if (subs == null) {
+            return new LinkedList<Subscription>();
+        }
+        return subs;
+    }
+    
+    public Subscription lookupByOwnerAndId(Owner o, Long subId) {
+        return (Subscription)currentSession().createCriteria(Subscription.class)
+            .add(Restrictions.eq("owner", o))
+            .add(Restrictions.eq("id", subId)).uniqueResult();
     }
 
 }
