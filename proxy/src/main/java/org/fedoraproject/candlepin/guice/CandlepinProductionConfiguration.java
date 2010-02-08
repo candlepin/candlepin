@@ -27,6 +27,8 @@ import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.OnSiteSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 
 import com.google.inject.AbstractModule;
@@ -51,5 +53,6 @@ public class CandlepinProductionConfiguration extends AbstractModule {
         bind(RulesResource.class);
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
+        bind(SubscriptionServiceAdapter.class).to(OnSiteSubscriptionServiceAdapter.class);
     }
 }

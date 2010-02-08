@@ -68,7 +68,8 @@ define "candlepin" do
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.6'
 
-  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J
+  # TODO: Remove HSQLDB when nobody needs to deploy with in-memory anymore:
+  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, HSQLDB
     
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 

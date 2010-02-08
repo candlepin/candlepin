@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -24,10 +25,13 @@ import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
-    @Inject private EntitlementCurator entitlementCurator;
+    private SubscriptionServiceAdapter subAdapter;
     
-    protected EntitlementPoolCurator() {
+
+    @Inject
+    protected EntitlementPoolCurator(SubscriptionServiceAdapter subAdapter) {
         super(EntitlementPool.class);
+        this.subAdapter = subAdapter;
     }
 
     @SuppressWarnings("unchecked")
@@ -44,6 +48,20 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     }
     
     /**
+     * Before executing any entitlement pool query, check our underlying subscription service
+     * and update the pool data. Must be careful to call this before we do any pool query.
+     * Note that refreshing the pools doesn't actually take any action, should a subscription
+     * be reduced, expired, or revoked. Pre-existing entitlements will need to be dealt with
+     * separately from this event.
+     *
+     * @param owner
+     * @param product
+     */
+    private void refreshPools(Owner owner, Product product) {
+        List<Subscription> subs = subAdapter.getSubscriptions(owner, product.getId().toString());
+    }
+
+    /**
      * Look for an entitlement pool for the given owner, consumer, product.
      *
      * Note that consumer can (and often will be null). This method first
@@ -55,6 +73,8 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      */
     public EntitlementPool lookupByOwnerAndProduct(Owner owner,
             Consumer consumer, Product product) {
+
+        refreshPools(owner, product);
 
         // If we were given a specific consumer, and a pool exists for that
         // specific consumer, return this pool instead.

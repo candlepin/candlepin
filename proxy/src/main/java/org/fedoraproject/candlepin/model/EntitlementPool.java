@@ -66,6 +66,12 @@ public class EntitlementPool implements Persisted {
     @JoinColumn(nullable = true)
     private Consumer consumer;
 
+    // An identifier for the subscription this pool is associated with. Note that
+    // this is not a database foreign key. The subscription identified could exist
+    // in another system only accessible to us as a service. Actual implementations
+    // of our SubscriptionService will be used to use this data.
+    private Long subscriptionId;
+
     /* Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlment
      * if ever revoked. */

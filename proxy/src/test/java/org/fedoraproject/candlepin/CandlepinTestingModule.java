@@ -24,6 +24,8 @@ import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.TestResource;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.OnSiteSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 
 import com.google.inject.AbstractModule;
@@ -46,5 +48,6 @@ public class CandlepinTestingModule extends AbstractModule {
         bind(TestResource.class);
         bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
+        bind(SubscriptionServiceAdapter.class).to(OnSiteSubscriptionServiceAdapter.class);
     }
 }
