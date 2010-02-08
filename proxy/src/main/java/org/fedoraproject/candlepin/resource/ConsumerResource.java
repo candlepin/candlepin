@@ -115,6 +115,7 @@ public class ConsumerResource {
         log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());
         log.debug("got metadata: ");
+        log.debug(in.getFacts().getMetadata());
         for (String key : in.getFacts().getMetadata().keySet()) {
             log.debug("   " + key + " = " + in.getFact(key));
         }
@@ -134,6 +135,7 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
+        log.debug("deleteing  consumer_uuid" + uuid);
         try {
             consumerCurator.delete(consumerCurator.lookupByUuid(uuid));
         } catch (RuntimeException e) {

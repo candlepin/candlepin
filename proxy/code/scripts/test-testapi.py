@@ -25,3 +25,14 @@ print("------------ TESTING json get")
 response = urllib.urlopen("http://localhost:8080/candlepin/test/")
 rsp = response.read()
 print("testjsonobject get: %s" % rsp)
+
+print("------------ TESTING json get consumertype")
+response = urllib.urlopen("http://localhost:8080/candlepin/test/consumertype")
+rsp = response.read()
+print("testjsonobject get: %s" % rsp)
+
+
+print("------------ TESTING json get consumer")
+response = urllib.urlopen("http://localhost:8080/candlepin/test/consumer")
+rsp = response.read()
+print("testjsonobject get: %s" % rsp)
