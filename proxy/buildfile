@@ -47,6 +47,8 @@ GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-s
 JERSEY_FOR_TEST = [group('jersey-test-framework', 'jersey-guice', :under=>'com.sun.jersey', :version=>'1.1.4.1'),
 					'com.sun.grizzly:grizzly-servlet-webserver:jar:1.9.8']
 
+# ADDED FOR RHEL5
+RHINO = 'rhino:js:jar:1.7R2'
 
 # causes GET /org/apache/axis2/axis2/1.2/axis2-1.2.jar
 # we want GET /candlepin/axis2-1.2.jar
@@ -68,15 +70,14 @@ define "candlepin" do
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.6'
 
-  # TODO: Remove HSQLDB when nobody needs to deploy with in-memory anymore:
-  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, HSQLDB
+  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, RHINO
     
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 
 	filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
   test.teardown { rm_rf 'target/classes/META-INF' }
-  test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, JERSEY_FOR_TEST
+  test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, JERSEY_FOR_TEST, RHINO
 
   #javadoc projects
   package(:war).meta_inf << file('src/main/resources/META-INF/persistence.xml')
