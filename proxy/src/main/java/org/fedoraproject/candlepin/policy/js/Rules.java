@@ -47,6 +47,9 @@ public class Rules {
     public Rules(String rulesBlob) {
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
+        if (jsEngine == null) {
+            throw new RuntimeException("No Javascript engine found");
+        }
         
         try {
             Reader reader = new StringReader(rulesBlob);
