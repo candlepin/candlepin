@@ -19,6 +19,7 @@ HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
              'org.hibernate:hibernate-commons-annotations:jar:3.4.0',
              'org.hibernate:hibernate-entitymanager:jar:3.4.0',
              'org.hibernate:hibernate-tools:jar:3.2.4',
+             'org.hibernate:hibernate-validator:jar:3.1.0.GA',
              'antlr:antlr:jar:2.7.6',
              'org.objectweb.asm:asm:jar:3.1',
              'net.sf.cglib:cglib:jar:2.2',
@@ -45,7 +46,7 @@ GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-s
            'javax.servlet:servlet-api:jar:2.5']
            
 JERSEY_FOR_TEST = [group('jersey-test-framework', 'jersey-guice', :under=>'com.sun.jersey', :version=>'1.1.4.1'),
-					'com.sun.grizzly:grizzly-servlet-webserver:jar:1.9.8']
+           'com.sun.grizzly:grizzly-servlet-webserver:jar:1.9.8']
 
 # causes GET /org/apache/axis2/axis2/1.2/axis2-1.2.jar
 # we want GET /candlepin/axis2-1.2.jar
@@ -71,13 +72,13 @@ define "candlepin" do
     
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 
-	filter('src/main/resources/META-INF').into('target/classes/META-INF').run
+    filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
   test.teardown { rm_rf 'target/classes/META-INF' }
   test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, JERSEY_FOR_TEST
 
   #javadoc projects
-  package(:war).meta_inf << file('src/main/resources/META-INF/persistence.xml')
+  package(:war)
   
   #to use: buildr candlepin:schema_gen
   task :schema_gen do  
@@ -85,7 +86,7 @@ define "candlepin" do
       ant('gen-schema') do |ant|
         rm_rf 'target/schemagen'
         mkdir_p 'target/schemagen'
-	filter('src/main/resources/META-INF').into('target/classes/META-INF').run
+        filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
