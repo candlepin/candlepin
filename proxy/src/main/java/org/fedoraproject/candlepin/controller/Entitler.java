@@ -68,7 +68,10 @@ public class Entitler {
     @Transactional
     public Entitlement entitle(Owner owner, Consumer consumer, Product product) {
         
-        EntitlementPool ePool = epCurator.lookupByOwnerAndProduct(owner, consumer, product);
+        // TODO: Don't assume we use the first pool here, once rules have support for 
+        // specifying the pool to use. 
+        EntitlementPool ePool = epCurator.listByOwnerAndProduct(owner, consumer, product)
+            .get(0);
         if (ePool == null) {
             throw new RuntimeException("No entitlements for product: " + product.getName());
         }

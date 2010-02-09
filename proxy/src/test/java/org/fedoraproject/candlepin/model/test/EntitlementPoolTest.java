@@ -63,11 +63,11 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         assertEquals(prod.getId(), lookedUp.getProduct().getId());
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testOwnerProductUniqueness() {
+    public void testMultiplePoolsForOwnerProductAllowed() {
         EntitlementPool duplicatePool = new EntitlementPool(owner, prod,
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
+        // Just need to see no exception is thrown.
         entitlementPoolCurator.create(duplicatePool);
     }
 
@@ -93,12 +93,11 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
 
 
         EntitlementPool lookedUp = entitlementPoolCurator.
-            lookupByOwnerAndProduct(owner, consumer, prod);
+            listByOwnerAndProduct(owner, consumer, prod).get(0);
         assertEquals(consumer.getId(), lookedUp.getConsumer().getId());
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testDuplicateConsumerSpecificPool() {
+    public void testDuplicateConsumerSpecificPoolAllowed() {
         EntitlementPool consumerPool = new EntitlementPool(owner, prod,
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
@@ -125,7 +124,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
 
 
         EntitlementPool lookedUp = entitlementPoolCurator.
-            lookupByOwnerAndProduct(owner, consumer, newProduct);
+            listByOwnerAndProduct(owner, consumer, newProduct).get(0);
         assertEquals(consumer.getId(), lookedUp.getConsumer().getId());
     }
     

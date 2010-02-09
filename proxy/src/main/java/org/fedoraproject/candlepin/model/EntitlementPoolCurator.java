@@ -62,16 +62,20 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     }
 
     /**
-     * Look for an entitlement pool for the given owner, consumer, product.
-     *
-     * Note that consumer can (and often will be null). This method first
-     * checks for a consumer specific method
+     * List all entitlement pools for the given owner, consumer, product.
+     * 
+     * We first check for a pool specific to the given consumer. The consumer parameter
+     * can be passed as null in which case we skip to the second scenario.
+     * 
+     * If consumer is null or no consumer specific pool exists, we query for all
+     * pools for this owner and the given product.
+     * 
      * @param owner
      * @param consumer
      * @param product
      * @return
      */
-    public EntitlementPool lookupByOwnerAndProduct(Owner owner,
+    public List<EntitlementPool> listByOwnerAndProduct(Owner owner,
             Consumer consumer, Product product) {
 
         refreshPools(owner, product);
@@ -79,46 +83,20 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         // If we were given a specific consumer, and a pool exists for that
         // specific consumer, return this pool instead.
         if (consumer != null) {
-            EntitlementPool result = (EntitlementPool)
+            List<EntitlementPool> result = (List<EntitlementPool>)
                 currentSession().createCriteria(EntitlementPool.class)
                 .add(Restrictions.eq("owner", owner))
                 .add(Restrictions.eq("product", product))
                 .add(Restrictions.eq("consumer", consumer))
-                .uniqueResult();
-            if (result != null) {
+                .list();
+            if (result != null && result.size() > 0) {
                 return result;
             }
         }
 
-        return (EntitlementPool) currentSession().createCriteria(EntitlementPool.class)
+        return (List<EntitlementPool>) currentSession().createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("product", product))
-            .uniqueResult();
-    }
-    
-    @Transactional
-    public EntitlementPool create(EntitlementPool entity) {
-        
-        // Make sure there isn't already a pool for this product. Ideally we'd catch
-        // this with a database constraint but I don't see how to do that just yet.
-        EntitlementPool existing = lookupByOwnerAndProduct(entity.getOwner(), 
-                entity.getConsumer(), entity.getProduct());
-
-        if (existing != null) {
-            if (entity.getConsumer() == null) {
-                throw new RuntimeException("Already an entitlement pool for owner " +
-                        entity.getOwner().getName() + " and product " +
-                        entity.getProduct().getLabel());
-
-            }
-            else if (existing.getConsumer() != null) {
-                throw new RuntimeException("Already an entitlement pool for owner " +
-                        entity.getOwner().getName() + " and product " +
-                        entity.getProduct().getLabel());
-            }
-        }
-        
-        return super.create(entity);
+            .add(Restrictions.eq("product", product)).list();
     }
     
     @Transactional

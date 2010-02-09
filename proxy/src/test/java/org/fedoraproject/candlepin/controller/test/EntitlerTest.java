@@ -106,8 +106,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         List<EntitlementPool> pools = entitlementPoolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
-        EntitlementPool virtHostPool = entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                null, virtHost);
+        EntitlementPool virtHostPool = entitlementPoolCurator.listByOwnerAndProduct(o,
+                null, virtHost).get(0);
         assertNotNull(virtHostPool);
     }
 
@@ -139,8 +139,8 @@ public class EntitlerTest extends DatabaseTestFixture {
 
         // Consuming a virt host entitlement should result in a pool just for us to consume
         // virt guests.
-        EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                parentSystem, virtGuest);
+        EntitlementPool consumerPool = entitlementPoolCurator.listByOwnerAndProduct(o,
+                parentSystem, virtGuest).get(0);
         assertNotNull(consumerPool);
         assertNotNull(consumerPool.getConsumer());
         assertEquals(parentSystem.getId(), consumerPool.getConsumer().getId());
@@ -154,8 +154,8 @@ public class EntitlerTest extends DatabaseTestFixture {
 
         // Consuming a virt host entitlement should result in a pool just for us to consume
         // virt guests.
-        EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                parentSystem, virtGuest);
+        EntitlementPool consumerPool = entitlementPoolCurator.listByOwnerAndProduct(o,
+                parentSystem, virtGuest).get(0);
         assertNotNull(consumerPool.getConsumer());
         assertEquals(parentSystem.getId(), consumerPool.getConsumer().getId());
         assertTrue(consumerPool.getMaxMembers() < 0);
@@ -172,8 +172,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         e = entitler.entitle(o, parentSystem, provisioning);
         assertNotNull(e);
         
-        EntitlementPool provisioningPool = entitlementPoolCurator.lookupByOwnerAndProduct(o, 
-                null, provisioning);
+        EntitlementPool provisioningPool = entitlementPoolCurator.listByOwnerAndProduct(o, 
+                null, provisioning).get(0);
         
         Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
         assertEquals(new Long(1), provisioningCount);
@@ -191,8 +191,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         Entitlement e = entitler.entitle(o, parentSystem, virtHost);
         assertNotNull(e);
         
-        EntitlementPool provisioningPool = entitlementPoolCurator.lookupByOwnerAndProduct(o, 
-                null, provisioning);
+        EntitlementPool provisioningPool = entitlementPoolCurator.listByOwnerAndProduct(o, 
+                null, provisioning).get(0);
         
         Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
         assertEquals(new Long(0), provisioningCount);
@@ -207,8 +207,8 @@ public class EntitlerTest extends DatabaseTestFixture {
     
     @Test
     public void testQuantityCheck() {
-        EntitlementPool monitoringPool = entitlementPoolCurator.lookupByOwnerAndProduct(o, 
-                null, monitoring);
+        EntitlementPool monitoringPool = entitlementPoolCurator.listByOwnerAndProduct(o, 
+                null, monitoring).get(0);
         assertEquals(new Long(5), monitoringPool.getMaxMembers());
         for (int i = 0; i < 5; i++) {
             Entitlement e = entitler.entitle(o, parentSystem, monitoring);

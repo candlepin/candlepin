@@ -81,7 +81,8 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
     private void assertChannelFamilyExists(String channelFamilyName, Long quantity) {
         Product product = productCurator.lookupByName(channelFamilyName);
         assertNotNull(product);
-        EntitlementPool entitlementPool = entitlementPoolCurator.lookupByOwnerAndProduct(owner, null, product);
+        EntitlementPool entitlementPool = entitlementPoolCurator.listByOwnerAndProduct(owner, 
+                null, product).get(0);
         assertNotNull(entitlementPool);
         assertEquals(quantity, entitlementPool.getMaxMembers());
         assertEquals(new Long(0), entitlementPool.getCurrentMembers());

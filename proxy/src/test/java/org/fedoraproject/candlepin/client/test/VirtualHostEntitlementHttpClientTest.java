@@ -62,8 +62,8 @@ public class VirtualHostEntitlementHttpClientTest extends AbstractGuiceGrizzlyTe
     
     @Test
     public void virtualizationHostConsumption() {
-        assertNull(entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                parentSystem, virtGuest));
+        assertEquals(0, entitlementPoolCurator.listByOwnerAndProduct(o,
+                parentSystem, virtGuest).size());
         
         WebResource r = resource()
             .path("/entitlement/consumer/" + parentSystem.getUuid() + "/product/" + virtHost.getLabel());
@@ -76,8 +76,8 @@ public class VirtualHostEntitlementHttpClientTest extends AbstractGuiceGrizzlyTe
 
     @Test
     public void virtualizationHostPlatformConsumption() {
-        assertNull(entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                parentSystem, virtGuest));
+        assertEquals(0, entitlementPoolCurator.listByOwnerAndProduct(o,
+                parentSystem, virtGuest).size());
 
         WebResource r = resource()
             .path("/entitlement/consumer/" + parentSystem.getUuid() + "/product/" + virtHostPlatform.getLabel());
@@ -91,8 +91,8 @@ public class VirtualHostEntitlementHttpClientTest extends AbstractGuiceGrizzlyTe
     private void assertVirtualizationHostConsumption() {
         // Consuming a virt host entitlement should result in a pool just for us to consume
         // virt guests.
-        EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                parentSystem, virtGuest);
+        EntitlementPool consumerPool = entitlementPoolCurator.listByOwnerAndProduct(o,
+                parentSystem, virtGuest).get(0);
         assertNotNull(consumerPool);
         assertNotNull(consumerPool.getConsumer());
         assertEquals(parentSystem.getId(), consumerPool.getConsumer().getId());
@@ -103,8 +103,8 @@ public class VirtualHostEntitlementHttpClientTest extends AbstractGuiceGrizzlyTe
     private void assertVirtualizationHostPlatformConsumption() {
         // Consuming a virt host entitlement should result in a pool just for us to consume
         // virt guests.
-        EntitlementPool consumerPool = entitlementPoolCurator.lookupByOwnerAndProduct(o,
-                parentSystem, virtGuest);
+        EntitlementPool consumerPool = entitlementPoolCurator.listByOwnerAndProduct(o,
+                parentSystem, virtGuest).get(0);
         assertNotNull(consumerPool.getConsumer());
         assertEquals(parentSystem.getId(), consumerPool.getConsumer().getId());
         assertTrue(consumerPool.getMaxMembers() < 0);
