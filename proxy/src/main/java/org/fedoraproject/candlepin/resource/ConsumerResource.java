@@ -238,21 +238,27 @@ public class ConsumerResource {
     @POST
     @Path("{consumer_uuid}/certificates")
     @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public List<ClientCertificateStatus> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
+    @Produces({MediaType.APPLICATION_JSON})
+    public List<ClientCertificate> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
                                                                     List<String> clientCertificateSertialNumbers){
         
         List<ClientCertificateStatus> updatedCertificateStatus =  new LinkedList<ClientCertificateStatus>();
        
         for (String serialNumber : clientCertificateSertialNumbers) {
-            log.debug("got a serial number: " + serialNumber);
-            
-            
-            
+            log.debug("got a serial number: " + serialNumber); 
+           
         }
         
+       List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
        
-       return updatedCertificateStatus;
+       for (ClientCertificate clientCert : clientCerts) {
+           log.debug("found client cert:" + clientCert);
+           ClientCertificateStatus clientCertficiateStatus = new ClientCertificateStatus("somenumber-111", "", clientCert);
+           updatedCertificateStatus.add(clientCertficiateStatus);
+       }
+  
+       return clientCerts;
+//       return updatedCertificateStatus;
         
     }
 }
