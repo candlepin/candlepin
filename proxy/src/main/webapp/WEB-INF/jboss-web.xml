@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 
 <jboss-web>
-  <context-root>/candlepin/</context-root>
+  <context-root>candlepin</context-root>
 </jboss-web>
