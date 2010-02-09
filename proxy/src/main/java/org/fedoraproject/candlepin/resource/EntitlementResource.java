@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -117,6 +118,26 @@ public class EntitlementResource {
         return CertGenerator.getCertString(); 
     }
 
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("consumer/{consumer_uuid}/product/{registration_token}")
+    public String entitleToken(@PathParam("consumer_uuid") String consumerUuid,
+            @PathParam("registration_token") String registrationToken) {
+        
+        //FIXME: this is just a stub, need SubscriptionService to look it up
+        Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current user's owner
+        
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new BadRequestException("No such consumer: " + consumerUuid);
+        }
+        
+       
+        
+        return "foo";
+    }
+    
     /**
      * Check to see if a given Consumer is entitled to given Product
      * @param consumerUuid consumerUuid to check if entitled or not
@@ -208,6 +229,35 @@ public class EntitlementResource {
     }
     
     @DELETE
+    @Path("/consumer/{consumer_uuid}/")
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public ClientCertificateStatus deleteAllEntitlements(@PathParam("consumer_uuid") String consumerUuid) {
+        //FIXME: stub
+       // Find all entitlements for this consumer id
+       // get all the associated clientCerts
+       // new list of ClientCertificateStatus
+       //   add all the revoked certs to it, with their new serial numbers, and "REVOKED" status
+        // 
+        // delete all the Entitlements 
+        // return the clientCertificateStatus list
+        return new ClientCertificateStatus();
+    }
+    
+    @DELETE
+    @Path("/consumer/{consumer_uuid}/{subscription_numbers}")
+    public void deleteEntitlementsBySerialNumber(@PathParam("consumer_uuid") String consumerUuid,
+                                                 @PathParam("subscription_numbers") String subscriptionNumberArgs) {
+        //FIXME: just a stub, needs CertifcateService (and/or a CertificateCurator) to lookup by serialNumber
+        
+        
+        // Need to parse off the value of subscriptionNumberArgs, probablt use comma seperated
+        // see IntergerList in sparklines example in jersey examples
+        // find all entitlements for this consumer and subscription numbers
+        // delete all of those (and/or return them to entitlement pool)
+        
+    }
+    
+    @DELETE
     @Path("{dbid}")
     public void deleteEntitlement(@PathParam("dbid") Long dbid) {
         Entitlement toDelete = entitlementCurator.find(dbid);
@@ -219,3 +269,4 @@ public class EntitlementResource {
     }
 
 }
+foo
