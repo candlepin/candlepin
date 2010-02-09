@@ -135,12 +135,25 @@ print("list of consumers: %s" % rsp)
 
 print("delete consumer")
 
-conn = httplib.HTTPConnection("localhost", 8080)
-conn.request("DELETE", '/candlepin/consumer/%s' % consumer_uuid)
-response = conn.getresponse()
-rsp = response.read()
+#conn = httplib.HTTPConnection("localhost", 8080)
+#conn.request("DELETE", '/candlepin/consumer/%s' % consumer_uuid)
+#response = conn.getresponse()
+#rsp = response.read()
 
-print "delete of consumer %s: %s" % (consumer_uuid, rsp)
+#print "delete of consumer %s: %s" % (consumer_uuid, rsp)
+
+
+headers = {"Content-type": "application/json",
+           "Accept": "application/json"}
+conn = httplib.HTTPConnection("localhost", 8080)
+serial_numbers = ["1", "2", "234234234", "Ilikecheese"]
+
+conn.request("POST", '/candlepin/consumer/%s/certificates' % consumer_uuid, json.dumps(serial_numbers), headers)
+response = conn.getresponse()
+print("Status: %d Response: %s" % (response.status, response.reason))
+rsp = response.read()
+print("created consumer: %s" % rsp)
+conn.close()
 
 ##print("Status: %d Response: %s" % (response.status, response.reason))
 ##conn.close()
