@@ -33,7 +33,15 @@ public interface SubscriptionServiceAdapter {
      * @param productId Product OID or SKU. (not clear yet)
      * @return
      */
-    public List<Subscription> getSubscriptions(Owner owner, String productId);
-    public Subscription getSubscription(Owner owner, Long subscriptionId);
+    public abstract List<Subscription> getSubscriptions(Owner owner, String productId);
+    
+    /**
+     * Query a specific subscription.
+     * @param owner
+     * @param subscriptionId
+     * @return
+     */
+    // TODO: Is owner required here?
+    public abstract Subscription getSubscription(Owner owner, Long subscriptionId);
 
 }

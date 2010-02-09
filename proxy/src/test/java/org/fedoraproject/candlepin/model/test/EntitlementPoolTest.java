@@ -16,12 +16,15 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -217,4 +220,57 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         assertNotNull(e1);
         assertNull(e2);
     }
+    
+    @Test
+    public void testRefreshPoolsWithNewSubscriptions() {
+        Product prod2 = TestUtil.createProduct();
+        productCurator.create(prod2);
+        
+        Subscription sub = new Subscription(owner, prod2.getId().toString(), new Long(2000), 
+                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9));
+        subCurator.create(sub);
+        
+        // Pool should get created just by doing this lookup:
+        List<EntitlementPool> pools = entitlementPoolCurator.listByOwnerAndProduct(owner, null, 
+                prod2); 
+        assertEquals(1, pools.size());
+        EntitlementPool newPool = pools.get(0); 
+        
+        assertEquals(sub.getId(), newPool.getSubscriptionId());
+        assertEquals(sub.getQuantity(), newPool.getMaxMembers());
+        assertEquals(sub.getStartDate(), newPool.getStartDate());
+        assertEquals(sub.getEndDate(), newPool.getEndDate());
+    }
+    
+    @Test
+    public void testRefreshPoolsWithChangedSubscriptions() {
+        Subscription sub = new Subscription(owner, prod.getId().toString(), new Long(2000), 
+                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9));
+        subCurator.create(sub);
+        assertTrue(pool.getMaxMembers() < sub.getQuantity());
+        assertTrue(pool.getStartDate() != sub.getStartDate());
+        assertTrue(pool.getEndDate() != sub.getEndDate());
+        
+        pool.setSubscriptionId(sub.getId());
+        entitlementPoolCurator.merge(pool);
+        entitlementPoolCurator.listByOwnerAndProduct(owner, null, prod);
+        
+        pool = entitlementPoolCurator.find(pool.getId());
+        assertEquals(sub.getId(), pool.getSubscriptionId());
+        assertEquals(sub.getQuantity(), pool.getMaxMembers());
+        assertEquals(sub.getStartDate(), pool.getStartDate());
+        assertEquals(sub.getEndDate(), pool.getEndDate());
+    }
+    
+    @Test
+    public void testRefreshPoolsWithRemovedSubscriptions() {
+        
+    }
+    
+    @Test
+    public void testSubscriptionIdUnique() {
+        
+    }
+    
+    // test subscription product changed exception
 }

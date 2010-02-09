@@ -223,4 +223,12 @@ public class EntitlementPool implements Persisted {
         this.sourceEntitlement = sourceEntitlement;
     }
 
+    public Long getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public void setSubscriptionId(Long subscriptionId) {
+        this.subscriptionId = subscriptionId;
+    }
+
 }

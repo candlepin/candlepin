@@ -14,8 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.hibernate.criterion.Restrictions;
@@ -58,7 +60,39 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @param product
      */
     private void refreshPools(Owner owner, Product product) {
-        List<Subscription> subs = subAdapter.getSubscriptions(owner, product.getId().toString());
+        List<Subscription> subs = subAdapter.getSubscriptions(owner, 
+                product.getId().toString());
+        List<EntitlementPool> pools = listByOwnerAndProductNoRefresh(owner, null, product);
+        
+        // Map all entitlement pools for this owner/product that have a subscription ID
+        // associated with them.
+        Map<Long, EntitlementPool> subToPoolMap = new HashMap<Long, EntitlementPool>();
+        for (EntitlementPool p : pools) {
+            if (p.getSubscriptionId() != null) {
+                subToPoolMap.put(p.getSubscriptionId(), p);
+            }
+        }
+        
+        for (Subscription sub : subs) {
+            // No pool exists for this subscription, create one:
+            if (!subToPoolMap.containsKey(sub.getId())) {
+                EntitlementPool newPool = new EntitlementPool(owner, product, 
+                        sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
+                newPool.setSubscriptionId(sub.getId());
+                create(newPool);
+            }
+            else {
+                EntitlementPool existingPool = subToPoolMap.get(sub.getId());
+                
+                // TODO: We're just updating the pool always now, would be much better 
+                // if we could check some kind of last modified date to determine if a change 
+                // has taken place:
+                existingPool.setMaxMembers(sub.getQuantity());
+                existingPool.setStartDate(sub.getStartDate());
+                existingPool.setEndDate(sub.getEndDate());
+                merge(existingPool);
+            }
+        }
     }
 
     /**
@@ -79,7 +113,11 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             Consumer consumer, Product product) {
 
         refreshPools(owner, product);
-
+        return listByOwnerAndProductNoRefresh(owner, consumer, product);
+    }
+    
+    private List<EntitlementPool> listByOwnerAndProductNoRefresh(Owner owner,
+            Consumer consumer, Product product) {
         // If we were given a specific consumer, and a pool exists for that
         // specific consumer, return this pool instead.
         if (consumer != null) {
@@ -97,6 +135,12 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         return (List<EntitlementPool>) currentSession().createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("product", product)).list();
+    }
+    
+    private EntitlementPool lookupBySubscriptionId(Long subId) {
+        return (EntitlementPool) currentSession().createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("subscriptionId", subId))
+            .uniqueResult();
     }
     
     @Transactional
