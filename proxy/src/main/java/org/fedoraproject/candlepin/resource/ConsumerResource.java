@@ -42,6 +42,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ClientCertificate;
+import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -50,7 +51,6 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
-
 import com.google.inject.Inject;
 
 /**
@@ -233,5 +233,26 @@ public class ConsumerResource {
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+    
+    @POST
+    @Path("{consumer_uuid}/certificates")
+    @Consumes({MediaType.APPLICATION_JSON})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public List<ClientCertificateStatus> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
+                                                                    List<String> clientCertificateSertialNumbers){
+        
+        List<ClientCertificateStatus> updatedCertificateStatus =  new LinkedList<ClientCertificateStatus>();
+       
+        for (String serialNumber : clientCertificateSertialNumbers) {
+            log.debug("got a serial number: " + serialNumber);
+            
+            
+            
+        }
+        
+       
+       return updatedCertificateStatus;
+        
     }
 }
