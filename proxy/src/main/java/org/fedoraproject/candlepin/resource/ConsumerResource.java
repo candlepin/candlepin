@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.ClientCertificateStatus;
+import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
