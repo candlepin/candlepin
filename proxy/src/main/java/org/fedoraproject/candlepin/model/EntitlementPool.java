@@ -66,6 +66,8 @@ public class EntitlementPool implements Persisted {
     @JoinColumn(nullable = true)
     private Consumer consumer;
 
+    private Boolean activeSubscription = Boolean.TRUE;
+
     // An identifier for the subscription this pool is associated with. Note that
     // this is not a database foreign key. The subscription identified could exist
     // in another system only accessible to us as a service. Actual implementations
@@ -231,4 +233,15 @@ public class EntitlementPool implements Persisted {
         this.subscriptionId = subscriptionId;
     }
 
+    public Boolean getActiveSubscription() {
+        return activeSubscription;
+    }
+
+    public void setActiveSubscription(Boolean activeSubscription) {
+        this.activeSubscription = activeSubscription;
+    }
+
+    public Boolean isActive() {
+        return activeSubscription;
+    }
 }
