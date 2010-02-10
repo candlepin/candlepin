@@ -75,7 +75,6 @@ public class JavascriptEnforcer implements Enforcer {
         catch (ScriptException ex) {
             throw new RuleParseException(ex);
         }
-        this.rules = new Rules(this.rulesCurator.getRules().getRules(), prodAdapter);
     }
 
 
@@ -97,16 +96,16 @@ public class JavascriptEnforcer implements Enforcer {
     private void runPre(PreEntHelper preHelper, Consumer consumer,
             EntitlementPool pool) {
         Invocable inv = (Invocable)jsEngine;
-        Product p = pool.getProduct();
+        String productOID = pool.getProduct();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
+        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductByOID(productOID)));
         jsEngine.put("pool", new ReadOnlyEntitlementPool(pool));
         jsEngine.put("pre", preHelper);
 
         try {
-            inv.invokeFunction(PRE_PREFIX + p.getLabel());
+            inv.invokeFunction(PRE_PREFIX + productOID);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if neither exists
@@ -137,16 +136,16 @@ public class JavascriptEnforcer implements Enforcer {
         Invocable inv = (Invocable)jsEngine;
         EntitlementPool pool = ent.getPool();
         Consumer c = ent.getConsumer();
-        Product p = pool.getProduct();
+        String productOID = pool.getProduct();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
-        jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
+        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductByOID(productOID)));
         jsEngine.put("post", postHelper);
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
 
         try {
-            inv.invokeFunction(POST_PREFIX + p.getLabel());
+            inv.invokeFunction(POST_PREFIX + productOID);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if neither exists
