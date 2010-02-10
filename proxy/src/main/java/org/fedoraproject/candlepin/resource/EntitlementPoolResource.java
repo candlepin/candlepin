@@ -55,4 +55,13 @@ public class EntitlementPoolResource {
         return entitlementPoolCurator.findAll();
     }
 
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("/consumer/consumer_uuid}")
+    public List<EntitlementPool> listByConsumer() {
+        // FIXME: not correct, we need to filter on only those
+        // owned by the Consumer
+        return entitlementPoolCurator.findAll();
+    }
+    
 }
