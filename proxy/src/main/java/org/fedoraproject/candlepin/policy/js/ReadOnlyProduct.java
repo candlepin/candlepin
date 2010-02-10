@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import org.fedoraproject.candlepin.model.Attribute;
+import org.fedoraproject.candlepin.model.Product;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.fedoraproject.candlepin.model.Attribute;
-import org.fedoraproject.candlepin.model.Product;
 
 public class ReadOnlyProduct {
 

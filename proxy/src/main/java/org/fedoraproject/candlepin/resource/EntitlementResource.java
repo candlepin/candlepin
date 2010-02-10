@@ -14,18 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.ClientCertificateStatus;
@@ -42,6 +30,19 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 
 import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 
 /**

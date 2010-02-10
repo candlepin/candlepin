@@ -14,18 +14,19 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
 import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
-
-import com.google.inject.Inject;
 
 /**
  * API gateway for the EntitlementPool

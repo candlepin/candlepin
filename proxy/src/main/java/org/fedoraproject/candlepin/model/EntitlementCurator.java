@@ -1,9 +1,9 @@
 package org.fedoraproject.candlepin.model;
 
+import com.wideplay.warp.persist.Transactional;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public EntitlementCurator() {

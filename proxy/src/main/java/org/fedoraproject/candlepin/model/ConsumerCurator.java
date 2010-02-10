@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     

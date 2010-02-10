@@ -14,17 +14,18 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.hibernate.criterion.Restrictions;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.hibernate.criterion.Restrictions;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 

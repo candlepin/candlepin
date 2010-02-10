@@ -14,17 +14,17 @@
  */
 package com.redhat.rhn.common.cert;
 
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
-
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
 
 /**
  * A class for parsing certificates from their XML form. 

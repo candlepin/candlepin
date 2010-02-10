@@ -1,8 +1,10 @@
 package org.fedoraproject.candlepin.client.test;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.client.test.ConsumerHttpClientTest.TestServletConfig;
 import org.fedoraproject.candlepin.controller.Entitler;
@@ -14,13 +16,16 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
 
 public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 

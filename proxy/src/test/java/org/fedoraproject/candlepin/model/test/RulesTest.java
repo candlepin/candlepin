@@ -2,6 +2,7 @@ package org.fedoraproject.candlepin.model.test;
 
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
 

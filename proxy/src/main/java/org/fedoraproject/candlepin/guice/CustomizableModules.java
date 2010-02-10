@@ -1,5 +1,7 @@
 package org.fedoraproject.candlepin.guice;
 
+import com.google.inject.Module;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,8 +12,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import com.google.inject.Module;
 
 public class CustomizableModules {
     

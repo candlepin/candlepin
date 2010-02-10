@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import java.util.LinkedList;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -24,6 +22,8 @@ import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
+
+import java.util.LinkedList;
 
 /**
  * configure Guice with the resource classes.

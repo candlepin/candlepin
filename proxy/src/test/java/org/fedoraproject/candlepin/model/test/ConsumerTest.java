@@ -14,11 +14,9 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
-
-import java.util.Map;
-
-import javax.persistence.PersistenceException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -29,8 +27,13 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Map;
+
+import javax.persistence.PersistenceException;
 
 
 

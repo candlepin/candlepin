@@ -14,9 +14,11 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -27,8 +29,11 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 public class EntitlementPoolTest extends DatabaseTestFixture {
 

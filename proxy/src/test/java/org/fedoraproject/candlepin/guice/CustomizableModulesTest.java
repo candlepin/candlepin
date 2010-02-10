@@ -1,14 +1,16 @@
 package org.fedoraproject.candlepin.guice;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import com.google.inject.Module;
+
+import org.junit.Test;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Set;
-
-import org.junit.Test;
-
-import com.google.inject.Module;
 
 public class CustomizableModulesTest {
 

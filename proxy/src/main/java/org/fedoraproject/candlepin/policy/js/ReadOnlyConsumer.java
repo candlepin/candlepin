@@ -14,11 +14,11 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ReadOnlyConsumer {
 

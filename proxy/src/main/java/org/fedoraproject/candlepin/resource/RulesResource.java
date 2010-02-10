@@ -1,8 +1,11 @@
 package org.fedoraproject.candlepin.resource;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.List;
+import org.fedoraproject.candlepin.model.Rules;
+import org.fedoraproject.candlepin.model.RulesCurator;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -12,12 +15,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.RulesCurator;
-import org.fedoraproject.candlepin.model.Rules;
-
-import com.google.inject.Inject;
 
 @Path("/rules")
 public class RulesResource {

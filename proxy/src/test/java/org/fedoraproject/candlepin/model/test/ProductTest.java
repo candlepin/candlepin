@@ -1,14 +1,17 @@
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
+import org.junit.Test;
 
 import java.util.List;
 
 import javax.persistence.PersistenceException;
-
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.junit.Test;
 
 public class ProductTest extends DatabaseTestFixture {
     

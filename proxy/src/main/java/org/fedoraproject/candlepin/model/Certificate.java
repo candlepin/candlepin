@@ -16,6 +16,8 @@
 package org.fedoraproject.candlepin.model;
 
 
+import org.hibernate.annotations.ForeignKey;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -30,8 +32,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.hibernate.annotations.ForeignKey;
 
 
 @XmlRootElement
