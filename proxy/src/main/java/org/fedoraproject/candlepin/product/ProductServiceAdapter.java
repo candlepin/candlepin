@@ -33,7 +33,7 @@ public interface ProductServiceAdapter {
      * @param subscriptionId
      * @return
      */
-    public Product getProduct(String productID);
+    public Product getProduct(String oid);
 
     /**
      * List all Products
