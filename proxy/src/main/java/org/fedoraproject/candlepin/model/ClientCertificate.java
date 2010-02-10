@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.io.Serializable;
+
+import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -23,10 +26,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name="certs")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ClientCertificate {
+public class ClientCertificate implements Persisted{
     
     // This must be Base64 encoded:
     private String bundle;
+    private Long id;
     
     public ClientCertificate() {
         
@@ -42,4 +46,15 @@ public class ClientCertificate {
     public void setBundle(String pkcs12Bundle) {
         this.bundle = pkcs12Bundle;
     }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    @Override
+    public Long getId() {
+        // TODO Auto-generated method stub
+        return this.id;
+    };
+
 }

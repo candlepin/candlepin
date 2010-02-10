@@ -21,6 +21,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.model.ClientCertificate;
+import org.fedoraproject.candlepin.model.ClientCertificateStatus;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 
@@ -79,4 +82,17 @@ public class TestResource {
     public ConsumerType getConsumerType() {
         return new ConsumerType("testtype");
     }
+    
+   @GET @Path("/consumer")
+   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+   public Consumer getConsumer() {
+       return new Consumer();
+   }
+   
+   @GET @Path("/certificate_status")
+   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+   public ClientCertificateStatus getCertificateStatus() {
+           return new  ClientCertificateStatus("123456", "AWESOME", new ClientCertificate());
+   }
+   
 }

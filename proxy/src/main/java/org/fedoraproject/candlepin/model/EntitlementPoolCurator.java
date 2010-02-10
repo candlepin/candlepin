@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.hibernate.criterion.Restrictions;
@@ -80,6 +81,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
                         sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
                 newPool.setSubscriptionId(sub.getId());
                 create(newPool);
+                subToPoolMap.remove(sub.getId());
             }
             else {
                 EntitlementPool existingPool = subToPoolMap.get(sub.getId());
@@ -93,6 +95,13 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
                 merge(existingPool);
             }
         }
+
+        // Iterate pools whose subscription disappeared:
+        for (Entry<Long, EntitlementPool> entry : subToPoolMap.entrySet()) {
+            entry.getValue().setActiveSubscription(Boolean.FALSE);
+            merge(entry.getValue());
+        }
+
     }
 
     /**
@@ -111,7 +120,6 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      */
     public List<EntitlementPool> listByOwnerAndProduct(Owner owner,
             Consumer consumer, Product product) {
-
         refreshPools(owner, product);
         return listByOwnerAndProductNoRefresh(owner, consumer, product);
     }

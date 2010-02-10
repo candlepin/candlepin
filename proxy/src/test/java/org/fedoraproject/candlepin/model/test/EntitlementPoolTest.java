@@ -253,6 +253,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         
         pool.setSubscriptionId(sub.getId());
         entitlementPoolCurator.merge(pool);
+
         entitlementPoolCurator.listByOwnerAndProduct(owner, null, prod);
         
         pool = entitlementPoolCurator.find(pool.getId());
@@ -264,7 +265,28 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     
     @Test
     public void testRefreshPoolsWithRemovedSubscriptions() {
+        Product prod2 = TestUtil.createProduct();
+        productCurator.create(prod2);
+
+        Subscription sub = new Subscription(owner, prod2.getId().toString(), new Long(2000),
+                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9));
+        subCurator.create(sub);
         
+        // Pool should get created just by doing this lookup:
+        List<EntitlementPool> pools = entitlementPoolCurator.listByOwnerAndProduct(owner, null,
+                prod2);
+        assertEquals(1, pools.size());
+        EntitlementPool newPool = pools.get(0);
+
+        // Now delete the subscription:
+        subCurator.delete(sub);
+
+        // Trigger the refresh:
+        pools = entitlementPoolCurator.listByOwnerAndProduct(owner, null,
+                prod2);
+        assertEquals(1, pools.size());
+        newPool = pools.get(0);
+        assertFalse(newPool.isActive());
     }
     
     @Test

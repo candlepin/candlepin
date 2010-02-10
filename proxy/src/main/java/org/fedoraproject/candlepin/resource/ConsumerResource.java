@@ -42,6 +42,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ClientCertificate;
+import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -50,7 +51,6 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
-
 import com.google.inject.Inject;
 
 /**
@@ -115,6 +115,7 @@ public class ConsumerResource {
         log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());
         log.debug("got metadata: ");
+        log.debug(in.getFacts().getMetadata());
         for (String key : in.getFacts().getMetadata().keySet()) {
             log.debug("   " + key + " = " + in.getFact(key));
         }
@@ -134,6 +135,7 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
+        log.debug("deleteing  consumer_uuid" + uuid);
         try {
             consumerCurator.delete(consumerCurator.lookupByUuid(uuid));
         } catch (RuntimeException e) {
@@ -231,5 +233,32 @@ public class ConsumerResource {
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+    
+    @POST
+    @Path("{consumer_uuid}/certificates")
+    @Consumes({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_JSON})
+    public List<ClientCertificate> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
+                                                                    List<String> clientCertificateSertialNumbers){
+        
+        List<ClientCertificateStatus> updatedCertificateStatus =  new LinkedList<ClientCertificateStatus>();
+       
+        for (String serialNumber : clientCertificateSertialNumbers) {
+            log.debug("got a serial number: " + serialNumber); 
+           
+        }
+        
+       List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
+       
+       for (ClientCertificate clientCert : clientCerts) {
+           log.debug("found client cert:" + clientCert);
+           ClientCertificateStatus clientCertficiateStatus = new ClientCertificateStatus("somenumber-111", "", clientCert);
+           updatedCertificateStatus.add(clientCertficiateStatus);
+       }
+  
+       return clientCerts;
+//       return updatedCertificateStatus;
+        
     }
 }

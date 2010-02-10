@@ -1,7 +1,5 @@
 package org.fedoraproject.candlepin.resource;
 
-
-
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
@@ -51,7 +49,6 @@ public class RulesResource {
     @GET
     @Produces({MediaType.TEXT_PLAIN})
     public String get() {
-         List<Rules> rules = rulesCurator.findAll();
-         return rules.get(0).getRules();
+         return rulesCurator.getRules().getRules();
     }
 }   
