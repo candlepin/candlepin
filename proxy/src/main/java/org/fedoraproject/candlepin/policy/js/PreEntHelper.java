@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.policy.ValidationResult;
-import org.fedoraproject.candlepin.policy.java.ReadOnlyEntitlementPool;
 
 /**
  * Helper class for the pre-entitlement functions in our Javascript rules.

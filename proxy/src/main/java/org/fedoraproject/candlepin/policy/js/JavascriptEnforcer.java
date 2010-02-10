@@ -32,10 +32,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
-import org.fedoraproject.candlepin.policy.java.ReadOnlyConsumer;
-import org.fedoraproject.candlepin.policy.java.ReadOnlyEntitlement;
-import org.fedoraproject.candlepin.policy.java.ReadOnlyEntitlementPool;
-import org.fedoraproject.candlepin.policy.java.ReadOnlyProduct;
 
 import com.google.inject.Inject;
 
