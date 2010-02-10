@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
