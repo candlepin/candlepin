@@ -86,6 +86,10 @@ public class Product implements Persisted {
         setLabel(label);
         setName(name);
     }
+    
+    public String getOID() {
+        return label ;
+    }
 
     protected Product() {
     }

@@ -27,21 +27,23 @@ import org.fedoraproject.candlepin.model.Product;
 public interface ProductServiceAdapter {
 
     /**
-     * Query a specific product by its ID
+     * Query a specific product by its OID
      * 
-     * @param owner
-     * @param subscriptionId
+     * @param oid
      * @return
      */
-    public Product getProduct(String oid);
+    public Product getProductByOID(String oid);
+    
+    /**
+     * Query a specific product by its Label
+     * 
+     * @param label
+     * @return
+     */
+    public Product getProductByLabel(String label);    
 
     /**
      * List all Products
-     * 
-     * @param owner
-     *            Owner.
-     * @param productId
-     *            Product OID or SKU. (not clear yet)
      * @return
      */
     public List<Product> getProducts();

@@ -24,6 +24,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.product.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -36,15 +37,15 @@ import com.google.inject.Inject;
 public class ProductResource {
 
     private static Logger log = Logger.getLogger(ProductResource.class);
-    private ProductCurator productCurator;
+    private ProductServiceAdapter prodAdapter;
 
 
     /**
      * default ctor
      */
     @Inject
-    public ProductResource(ProductCurator productCurator) {
-        this.productCurator = productCurator;
+    public ProductResource(ProductServiceAdapter prodAdapter) {
+        this.prodAdapter = prodAdapter;
     }
     
     
@@ -55,6 +56,6 @@ public class ProductResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Product> list() {
-        return productCurator.findAll();
+        return prodAdapter.getProducts() ;
     }
 }

@@ -128,7 +128,7 @@ public class Entitlement implements Persisted {
     /**
      * @return Returns the product.
      */
-    public Product getProduct() {
+    public String getProduct() {
         return this.pool.getProduct();
     }
 

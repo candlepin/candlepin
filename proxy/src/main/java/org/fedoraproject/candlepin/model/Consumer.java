@@ -84,19 +84,6 @@ public class Consumer implements Persisted {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private Set<Consumer> childConsumers;
-
-
-    // Separate mapping because in theory, a consumer could be consuming products they're
-    // not entitled to.
-    @ManyToMany
-    @ForeignKey(name = "fk_consumer_product_consumer_id",
-                inverseName = "fk_consumer_product_product_id")
-    @JoinTable(name = "cp_consumer_products",
-            joinColumns = @JoinColumn(name = "consumer_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id"),
-            uniqueConstraints = 
-                @UniqueConstraint(columnNames = {"consumer_id", "product_id"}))
-    private Set<Product> consumedProducts;
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy="consumer")
     private Set<Entitlement> entitlements;
@@ -104,6 +91,12 @@ public class Consumer implements Persisted {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "consumer_fact_id")
     private ConsumerFacts facts;
+    
+    // Separate mapping because in theory, a consumer could be consuming products they're
+    // not entitled to.    
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "fk_consumer_product_owner")
+    private Set<ConsumerProduct> consumedProducts;    
     
     public Consumer(String name, Owner owner, ConsumerType type) {
         this.name = name;
@@ -116,7 +109,7 @@ public class Consumer implements Persisted {
 
         this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
-        this.consumedProducts = new HashSet<Product>();
+        this.consumedProducts = new HashSet<ConsumerProduct>();
         this.entitlements = new HashSet<Entitlement>();
     }
     
@@ -135,7 +128,7 @@ public class Consumer implements Persisted {
         this.uuid = Util.generateUUID();
         this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
-        this.consumedProducts = new HashSet<Product>();
+        this.consumedProducts = new HashSet<ConsumerProduct>();
         this.entitlements = new HashSet<Entitlement>();
     }
 
@@ -192,16 +185,23 @@ public class Consumer implements Persisted {
         this.parent = parent;
     }
 
-    public Set<Product> getConsumedProducts() {
+    public Set<ConsumerProduct> getConsumedProducts() {
         return consumedProducts;
     }
 
-    public void setConsumedProducts(Set<Product> consumedProducts) {
+    public void setConsumedProducts(Set<ConsumerProduct> consumedProducts) {
         this.consumedProducts = consumedProducts;
     }
 
-    public void addConsumedProduct(Product p) {
+    public void addConsumedProduct(ConsumerProduct p) {
         this.consumedProducts.add(p);
+    }
+    
+    public void addConsumedProduct(Product product) {
+        ConsumerProduct cp = new ConsumerProduct() ;
+        cp.setConsumer(this) ;
+        cp.setProductOID(product.getOID()) ;
+        this.addConsumedProduct(cp) ;
     }
 
     @XmlTransient

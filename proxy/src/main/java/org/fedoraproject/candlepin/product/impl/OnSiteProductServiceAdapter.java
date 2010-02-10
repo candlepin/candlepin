@@ -33,9 +33,14 @@ public class OnSiteProductServiceAdapter implements ProductServiceAdapter {
 
     @Override
     //TODO Figure out what this really maps to
-    public Product getProduct(String oid) {
+    public Product getProductByOID(String oid) {
         return prodCurator.lookupByLabel(oid);
     }
+    
+    @Override
+    public Product getProductByLabel(String label) {
+        return prodCurator.lookupByLabel(label);
+    }    
 
     @Override
     public List<Product> getProducts() {

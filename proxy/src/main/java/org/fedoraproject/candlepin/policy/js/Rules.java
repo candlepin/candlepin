@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-
 import java.io.Reader;
 import java.io.StringReader;
 
@@ -23,90 +22,61 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.RulesCurator;
-import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.ValidationError;
+import org.fedoraproject.candlepin.policy.java.ReadOnlyConsumer;
+import org.fedoraproject.candlepin.policy.java.ReadOnlyEntitlement;
+import org.fedoraproject.candlepin.policy.java.ReadOnlyEntitlementPool;
+import org.fedoraproject.candlepin.policy.java.ReadOnlyProduct;
 import org.fedoraproject.candlepin.product.ProductServiceAdapter;
 
-import com.google.inject.Inject;
-
-public class JavascriptEnforcer implements Enforcer {
-    
-    private static Logger log = Logger.getLogger(JavascriptEnforcer.class);
-    private DateSource dateSource;
-    private RulesCurator rulesCurator;
-    private ProductServiceAdapter prodAdapter;    
-    private PreEntHelper preHelper;
-    private PostEntHelper postHelper;
+/**
+ * Interface to the compiled Javascript rules.
+ */
+public class Rules {
 
     private ScriptEngine jsEngine;
-
+    private ProductServiceAdapter prodAdapter ;
+    
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
     private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
     
-    @Inject
-    public JavascriptEnforcer(DateSource dateSource, 
-            RulesCurator rulesCurator, PreEntHelper preHelper,
-            PostEntHelper postHelper, ProductServiceAdapter prodAdapter) {
-        this.dateSource = dateSource;
-        this.rulesCurator = rulesCurator;
-        this.preHelper = preHelper;
-        this.postHelper = postHelper;
-        this.prodAdapter = prodAdapter ;
 
+    public Rules(String rulesBlob, ProductServiceAdapter prodAdapter) {
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
+        this.prodAdapter = prodAdapter ;
+        
         if (jsEngine == null) {
             throw new RuntimeException("No Javascript engine found");
         }
-
+        
         try {
-            Reader reader = new StringReader(this.rulesCurator.getRules().getRules());
+            Reader reader = new StringReader(rulesBlob);
             jsEngine.eval(reader);
         }
         catch (ScriptException ex) {
             throw new RuleParseException(ex);
         }
-        this.rules = new Rules(this.rulesCurator.getRules().getRules(), prodAdapter);
     }
 
-
-    @Override
-    public PreEntHelper pre(Consumer consumer, EntitlementPool entitlementPool) {
-
-        runPre(preHelper, consumer, entitlementPool);
-
-        if (entitlementPool.isExpired(dateSource)) {
-            preHelper.getResult().addError(new ValidationError("Entitlements for " +
-                    entitlementPool.getProduct() +
-                    " expired on: " + entitlementPool.getEndDate()));
-            return preHelper;
-        }
-
-        return preHelper;
-    }
-
-    private void runPre(PreEntHelper preHelper, Consumer consumer,
+    public void runPre(PreEntHelper preHelper, Consumer consumer, 
             EntitlementPool pool) {
         Invocable inv = (Invocable)jsEngine;
-        Product p = pool.getProduct();
+        String prodOID = pool.getProduct();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
+        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductByOID(prodOID)));
         jsEngine.put("pool", new ReadOnlyEntitlementPool(pool));
         jsEngine.put("pre", preHelper);
 
         try {
-            inv.invokeFunction(PRE_PREFIX + p.getLabel());
+            inv.invokeFunction(PRE_PREFIX + prodOID);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if neither exists
@@ -125,28 +95,22 @@ public class JavascriptEnforcer implements Enforcer {
             throw new RuleExecutionException(e);
         }
     }
-
-    @Override
-    public PostEntHelper post(Entitlement ent) {
-        postHelper.init(ent);
-        runPost(postHelper, ent);
-        return(postHelper);
-    }
-
-    private void runPost(PostEntHelper postHelper, Entitlement ent) {
+    
+    public void runPost(PostEntHelper postHelper, Entitlement ent) {
         Invocable inv = (Invocable)jsEngine;
         EntitlementPool pool = ent.getPool();
         Consumer c = ent.getConsumer();
-        Product p = pool.getProduct();
+        String prodOID = pool.getProduct();
 
         // Provide objects for the script:
+        // TODO: Is a ReadOnlyEntitlement needed here?
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
-        jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
+        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductByOID(prodOID)));
         jsEngine.put("post", postHelper);
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
 
         try {
-            inv.invokeFunction(POST_PREFIX + p.getLabel());
+            inv.invokeFunction(POST_PREFIX + prodOID);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if neither exists
@@ -166,6 +130,5 @@ public class JavascriptEnforcer implements Enforcer {
             throw new RuleExecutionException(e);
         }
     }
-
 
 }

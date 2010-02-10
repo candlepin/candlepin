@@ -44,7 +44,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
 
         pool = TestUtil.createEntitlementPool();
         owner = pool.getOwner();
-        prod = pool.getProduct();
+        prod = TestUtil.createProduct() ;
         consumer = TestUtil.createConsumer(owner);
         entitler = injector.getInstance(Entitler.class);
 
@@ -63,7 +63,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
                 EntitlementPool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
-        assertEquals(prod.getId(), lookedUp.getProduct().getId());
+        assertEquals(prod.getOID(), lookedUp.getProduct());
     }
 
     public void testMultiplePoolsForOwnerProductAllowed() {

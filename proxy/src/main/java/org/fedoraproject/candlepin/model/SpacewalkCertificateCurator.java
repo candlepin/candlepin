@@ -10,6 +10,7 @@ import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
 public class SpacewalkCertificateCurator {
     
     private EntitlementPoolCurator entitlementPoolCurator;
+    //TODO Need to go through the service for this.
     private ProductCurator productCurator;
     private AttributeCurator attributeCurator;
 
@@ -98,7 +99,7 @@ public class SpacewalkCertificateCurator {
         
         EntitlementPool ep = new EntitlementPool();
         ep.setOwner(owner);
-        ep.setProduct(p);
+        ep.setProduct(p.getOID());
         ep.setMaxMembers(maxmem);
         ep.setStartDate(start);
         ep.setEndDate(end);

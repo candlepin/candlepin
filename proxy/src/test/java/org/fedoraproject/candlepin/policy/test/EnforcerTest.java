@@ -26,6 +26,8 @@ import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
+import org.fedoraproject.candlepin.product.ProductServiceAdapter;
+import org.fedoraproject.candlepin.product.impl.OnSiteProductServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -40,9 +42,9 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Before
     public void createEnforcer() {
         PreEntHelper preHelper = new PreEntHelper();
-        PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator, productCurator);
+        PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator, productAdapter);
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
-                rulesCurator, preHelper, postHelper);
+                rulesCurator, preHelper, postHelper, productAdapter);
     }
     
     // grrr. have to test two conditions atm: sufficient number of entitlements *when* pool has not expired

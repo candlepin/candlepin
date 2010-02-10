@@ -181,7 +181,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertNotNull(entitlementCurator.find(entitlement.getId()));        
         
         WebResource r = resource().path(
-                "/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getLabel()
+                "/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getOID()
         );
         Entitlement returned = r.accept("application/json")
              .type("application/json")
@@ -253,7 +253,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     
 
     private void assertEntitlementsAreSame(Entitlement entitlement, Entitlement returned) {
-        assertEquals(entitlement.getId(), returned.getId());
+        assertEquals(entitlement.getId(), returned.getId());      
         assertEquals(entitlement.getProduct(), returned.getProduct());
         assertEquals(entitlement.getStartDate(), returned.getStartDate());
         assertEquals(entitlement.getIsFree(), returned.getIsFree());

@@ -25,8 +25,8 @@ import com.wideplay.warp.persist.Transactional;
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private ConsumerFactCurator consumerInfoCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private ConsumerProductCurator consumerProductCurator;
+    @Inject private EntitlementCurator entitlementCurator;    
 
     protected ConsumerCurator() {
         super(Consumer.class);
@@ -53,7 +53,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         
         // TODO: Are any of these read-only?
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
-        existingConsumer.setConsumedProducts(productCurator.bulkUpdate(updatedConsumer.getConsumedProducts()));
+        existingConsumer.setConsumedProducts(updatedConsumer.getConsumedProducts());
         existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
         existingConsumer.setFacts(consumerInfoCurator.update(updatedConsumer.getFacts()));
         existingConsumer.setName(updatedConsumer.getName());
