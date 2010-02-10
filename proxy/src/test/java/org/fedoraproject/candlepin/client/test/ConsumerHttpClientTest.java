@@ -1,15 +1,14 @@
 package org.fedoraproject.candlepin.client.test;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
@@ -18,6 +17,11 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
 
 public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
     

@@ -15,15 +15,6 @@
 package org.fedoraproject.candlepin.policy.js;
 
 
-import java.io.Reader;
-import java.io.StringReader;
-
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -35,6 +26,16 @@ import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.product.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
+import java.io.Reader;
+import java.io.StringReader;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 public class JavascriptEnforcer implements Enforcer {
     

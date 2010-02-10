@@ -2,6 +2,7 @@ package org.fedoraproject.candlepin.client.test;
 
 import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

@@ -14,9 +14,9 @@
  */
 package org.fedoraproject.candlepin.product;
 
-import java.util.List;
-
 import org.fedoraproject.candlepin.model.Product;
+
+import java.util.List;
 
 /**
  * Product data may originate from a separate service outside Candlepin in some

@@ -1,9 +1,9 @@
 package org.fedoraproject.candlepin.test;
 
+import org.fedoraproject.candlepin.DateSource;
+
 import java.util.Calendar;
 import java.util.Date;
-
-import org.fedoraproject.candlepin.DateSource;
 
 public class DateSourceForTesting implements DateSource {
     private Date currentDate;

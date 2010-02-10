@@ -78,7 +78,7 @@ define "candlepin" do
   test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, JERSEY_FOR_TEST
 
   #javadoc projects
-  package(:war)
+  package(:war).libs << HSQLDB
   
   #to use: buildr candlepin:schema_gen
   task :schema_gen do  

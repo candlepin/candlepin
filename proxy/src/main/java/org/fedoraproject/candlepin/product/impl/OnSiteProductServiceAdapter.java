@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.product.impl;
 
-import java.util.List;
-
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.product.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+
+import java.util.List;
 
 public class OnSiteProductServiceAdapter implements ProductServiceAdapter {
 

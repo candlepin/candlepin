@@ -14,18 +14,19 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
 import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
-
-import com.google.inject.Inject;
 
 /**
  * API gateway for the EntitlementPool
@@ -55,4 +56,13 @@ public class EntitlementPoolResource {
         return entitlementPoolCurator.findAll();
     }
 
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("/consumer/consumer_uuid}")
+    public List<EntitlementPool> listByConsumer() {
+        // FIXME: not correct, we need to filter on only those
+        // owned by the Consumer
+        return entitlementPoolCurator.findAll();
+    }
+    
 }

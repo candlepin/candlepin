@@ -16,34 +16,40 @@ package org.fedoraproject.candlepin.guice;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 
+import java.util.LinkedList;
+
 /**
  * configure Guice with the resource classes.
  */
 public class JerseyGuiceConfiguration extends GuiceServletContextListener {
 
-    /** {@inheritDoc} */
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(
-            PersistenceService.usingJpa()
-                .across(UnitOfWork.TRANSACTION)
-                .buildModule(),
+            new LinkedList<Module>() {{
+                add(PersistenceService.usingJpa()
+                    .across(UnitOfWork.REQUEST)
+                    .buildModule()
+                );
                 
-            new CandlepinProductionConfiguration(),
-
-            new ServletModule() {
-                /** {@inheritDoc} */
-                @Override
-                protected void configureServlets() {
-                    serve("/*").with(GuiceContainer.class);
-                }
-        });
+                add(new CandlepinProductionConfiguration());
+                
+                add(new ServletModule() {
+                        @Override
+                        protected void configureServlets() {
+                            serve("/*").with(GuiceContainer.class);
+                        }}
+                );
+                
+                addAll(new CustomizableModules().load());
+            }}
+        );
     }
-
 }
