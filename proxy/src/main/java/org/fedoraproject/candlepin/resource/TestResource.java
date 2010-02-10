@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
+import org.fedoraproject.candlepin.model.Product;
 
 
 /**
@@ -94,5 +95,13 @@ public class TestResource {
    public ClientCertificateStatus getCertificateStatus() {
            return new  ClientCertificateStatus("123456", "AWESOME", new ClientCertificate());
    }
+   
+   @GET @Path("/product")
+   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+   public Product getProduct() {
+       return new Product("test product", "SuperAwesomeEnterpriseHyperLinux");
+       //           return new  ClientCertificateStatus("123456", "AWESOME", new ClientCertificate());
+   }
+   
    
 }
