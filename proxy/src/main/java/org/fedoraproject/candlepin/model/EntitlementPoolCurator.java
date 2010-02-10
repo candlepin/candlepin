@@ -51,6 +51,19 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
     }
     
+    @SuppressWarnings("unchecked")
+    public List<EntitlementPool> listByConsumer(Consumer consumer) {
+        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
+            .createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("consumer", consumer)).list();
+        if (results == null) {
+            return new LinkedList<EntitlementPool>();
+        }
+        else {
+            return results;
+        }
+    }
+    
     /**
      * Before executing any entitlement pool query, check our underlying subscription service
      * and update the pool data. Must be careful to call this before we do any pool query.

@@ -45,7 +45,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -206,6 +208,7 @@ public class ConsumerResource {
 
         List<ClientCertificate> allCerts = new LinkedList<ClientCertificate>();
         
+        //FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
         try {
             byte[] bytes = getBytesFromFile("/testcert-cert.p12");
@@ -232,15 +235,16 @@ public class ConsumerResource {
     
     @POST
     @Path("{consumer_uuid}/certificates")
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON})
-    public List<ClientCertificate> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
-                                                                    List<String> clientCertificateSertialNumbers){
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public List<ClientCertificateStatus> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
+                                                                    List<ClientCertificateSerialNumber> clientCertificateSerialNumbers){
         
         List<ClientCertificateStatus> updatedCertificateStatus =  new LinkedList<ClientCertificateStatus>();
        
-        for (String serialNumber : clientCertificateSertialNumbers) {
-            log.debug("got a serial number: " + serialNumber); 
+        for (ClientCertificateSerialNumber serialNumber : clientCertificateSerialNumbers) {
+            log.debug("got a serial number: " + serialNumber.serialNumber); 
+            //FIXME: lookup the certs by serialNumber
            
         }
         
@@ -252,8 +256,10 @@ public class ConsumerResource {
            updatedCertificateStatus.add(clientCertficiateStatus);
        }
   
-       return clientCerts;
-//       return updatedCertificateStatus;
+       log.debug("clientCerts: " + clientCerts);
+       //return clientCerts;
+       //       return foo;
+       return updatedCertificateStatus;
         
     }
 }
