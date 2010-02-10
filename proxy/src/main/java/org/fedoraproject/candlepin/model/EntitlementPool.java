@@ -131,7 +131,7 @@ public class EntitlementPool implements Persisted {
         this.id = id;
     }
 
-    public String getProduct() {
+    public String getProductId() {
         return product;
     }
 

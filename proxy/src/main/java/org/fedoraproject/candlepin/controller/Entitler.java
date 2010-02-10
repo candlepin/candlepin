@@ -87,7 +87,7 @@ public class Entitler {
         Entitlement e = new Entitlement(ePool, consumer, new Date());
 
         consumer.addEntitlement(e);
-        consumer.addConsumedProduct(product);
+        consumerCurator.addConsumedProduct(consumer, product);
 
         if (preHelper.getGrantFreeEntitlement()) {
             log.info("Granting free entitlement.");

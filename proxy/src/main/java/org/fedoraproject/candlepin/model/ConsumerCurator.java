@@ -31,6 +31,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     protected ConsumerCurator() {
         super(Consumer.class);
     }
+    
+    public void addConsumedProduct(Consumer consumer, Product product) {
+        ConsumerProduct cp = new ConsumerProduct() ;
+        cp.setConsumer(consumer) ;
+        cp.setProductOID(product.getOID()) ;
+        consumer.addConsumedProduct(cp) ;
+    }
 
     public Consumer lookupByName(String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)

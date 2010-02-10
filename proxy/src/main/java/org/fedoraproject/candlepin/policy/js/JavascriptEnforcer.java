@@ -85,7 +85,7 @@ public class JavascriptEnforcer implements Enforcer {
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(new ValidationError("Entitlements for " +
-                    entitlementPool.getProduct() +
+                    entitlementPool.getProductId() +
                     " expired on: " + entitlementPool.getEndDate()));
             return preHelper;
         }
@@ -96,7 +96,7 @@ public class JavascriptEnforcer implements Enforcer {
     private void runPre(PreEntHelper preHelper, Consumer consumer,
             EntitlementPool pool) {
         Invocable inv = (Invocable)jsEngine;
-        String productOID = pool.getProduct();
+        String productOID = pool.getProductId();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
@@ -136,7 +136,7 @@ public class JavascriptEnforcer implements Enforcer {
         Invocable inv = (Invocable)jsEngine;
         EntitlementPool pool = ent.getPool();
         Consumer c = ent.getConsumer();
-        String productOID = pool.getProduct();
+        String productOID = pool.getProductId();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(c));

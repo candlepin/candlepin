@@ -197,13 +197,6 @@ public class Consumer implements Persisted {
         this.consumedProducts.add(p);
     }
     
-    public void addConsumedProduct(Product product) {
-        ConsumerProduct cp = new ConsumerProduct() ;
-        cp.setConsumer(this) ;
-        cp.setProductOID(product.getOID()) ;
-        this.addConsumedProduct(cp) ;
-    }
-
     @XmlTransient
     public Owner getOwner() {
         return owner;

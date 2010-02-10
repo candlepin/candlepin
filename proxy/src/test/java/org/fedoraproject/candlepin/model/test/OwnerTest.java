@@ -65,7 +65,7 @@ public class OwnerTest extends DatabaseTestFixture {
         Consumer c = new Consumer();
         c.setOwner(owner);
         owner.addConsumer(c);
-        c.addConsumedProduct(rhel);
+        consumerCurator.addConsumedProduct(c, rhel);
         assertEquals(1, owner.getConsumers().size());
         assertEquals(1, c.getConsumedProducts().size());
         
