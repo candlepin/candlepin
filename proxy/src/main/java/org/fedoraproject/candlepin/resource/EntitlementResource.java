@@ -90,7 +90,7 @@ public class EntitlementResource {
      */
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("consumer/{consumer_uuid}/product/{product_label}")
     public String entitle(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_label") String productLabel) {
@@ -120,8 +120,8 @@ public class EntitlementResource {
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/product/{registration_token}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Path("consumer/{consumer_uuid}/token/{registration_token}")
     public String entitleToken(@PathParam("consumer_uuid") String consumerUuid,
             @PathParam("registration_token") String registrationToken) {
         
@@ -145,8 +145,8 @@ public class EntitlementResource {
      * @return boolean if entitled or not
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/consumer/{consumer_uuid}/product/{product_label}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("consumer/{consumer_uuid}/product/{product_label}")
     public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_label") String productLabel) {
         
@@ -229,7 +229,7 @@ public class EntitlementResource {
     }
     
     @DELETE
-    @Path("/consumer/{consumer_uuid}/")
+    @Path("consumer/{consumer_uuid}/")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public ClientCertificateStatus deleteAllEntitlements(@PathParam("consumer_uuid") String consumerUuid) {
         //FIXME: stub
@@ -244,7 +244,7 @@ public class EntitlementResource {
     }
     
     @DELETE
-    @Path("/consumer/{consumer_uuid}/{subscription_numbers}")
+    @Path("consumer/{consumer_uuid}/{subscription_numbers}")
     public void deleteEntitlementsBySerialNumber(@PathParam("consumer_uuid") String consumerUuid,
                                                  @PathParam("subscription_numbers") String subscriptionNumberArgs) {
         //FIXME: just a stub, needs CertifcateService (and/or a CertificateCurator) to lookup by serialNumber
