@@ -23,13 +23,13 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
-public class OnSiteSubscriptionServiceAdapter implements
+public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
     
     private SubscriptionCurator subCurator;
     
     @Inject
-    public OnSiteSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
+    public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
         this.subCurator = subCurator;
     }
 

@@ -22,12 +22,12 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
-public class OnSiteProductServiceAdapter implements ProductServiceAdapter {
+public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     private ProductCurator prodCurator;
 
     @Inject
-    public OnSiteProductServiceAdapter(ProductCurator prodCurator) {
+    public DefaultProductServiceAdapter(ProductCurator prodCurator) {
         this.prodCurator = prodCurator;
     }
 

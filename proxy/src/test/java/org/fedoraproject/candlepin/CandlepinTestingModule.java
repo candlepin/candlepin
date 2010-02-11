@@ -18,7 +18,7 @@ import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.product.ProductServiceAdapter;
-import org.fedoraproject.candlepin.product.impl.OnSiteProductServiceAdapter;
+import org.fedoraproject.candlepin.product.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementPoolResource;
@@ -27,7 +27,7 @@ import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.OnSiteSubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 
 import com.google.inject.AbstractModule;
@@ -46,11 +46,11 @@ public class CandlepinTestingModule extends AbstractModule {
         bind(EntitlementPoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
-        bind(ProductServiceAdapter.class).to(OnSiteProductServiceAdapter.class);         
+        bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);         
         bind(ProductResource.class);
         bind(TestResource.class);
         bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
-        bind(SubscriptionServiceAdapter.class).to(OnSiteSubscriptionServiceAdapter.class);          
+        bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);          
     }
 }

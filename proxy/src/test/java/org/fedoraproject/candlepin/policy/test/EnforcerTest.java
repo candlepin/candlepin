@@ -26,7 +26,7 @@ import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.product.ProductServiceAdapter;
-import org.fedoraproject.candlepin.product.impl.OnSiteProductServiceAdapter;
+import org.fedoraproject.candlepin.product.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;

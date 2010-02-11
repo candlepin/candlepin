@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.OnSiteSubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 
@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class OnSiteSubscriptionServiceAdapterTest extends DatabaseTestFixture {
+public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     
     private Owner owner;
     private Product p;
@@ -50,7 +50,7 @@ public class OnSiteSubscriptionServiceAdapterTest extends DatabaseTestFixture {
                 TestUtil.createDate(2010, 2, 8), TestUtil.createDate(2050, 2, 8));
         subCurator.create(s1);
         
-        adapter = injector.getInstance(OnSiteSubscriptionServiceAdapter.class);
+        adapter = injector.getInstance(DefaultSubscriptionServiceAdapter.class);
     }
     
     @Test
