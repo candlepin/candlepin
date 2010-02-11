@@ -67,7 +67,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        ep = new EntitlementPool(owner, product, new Long(10), 
+        ep = new EntitlementPool(owner, product.getOID(), new Long(10), 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(ep);
 

@@ -112,18 +112,6 @@ public class EntitlementPool implements Persisted {
         this.currentMembers = new Long(0);
     }
     
-    public EntitlementPool(Owner ownerIn, Product productIn, Long maxMembersIn, 
-            Date startDateIn, Date endDateIn) {
-        this.owner = ownerIn;
-        this.productId = productIn.getOID();
-        this.maxMembers = maxMembersIn;
-        this.startDate = startDateIn;
-        this.endDate = endDateIn;
-        
-        // Always assume no current members if creating a new pool.
-        this.currentMembers = new Long(0);
-    }    
-
     public Long getId() {
         return id;
     }

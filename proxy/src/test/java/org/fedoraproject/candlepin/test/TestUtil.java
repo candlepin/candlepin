@@ -88,7 +88,7 @@ public class TestUtil {
     }
     
     public static EntitlementPool createEntitlementPool(Product product) {
-        EntitlementPool pool = new EntitlementPool(createOwner(), product, 
+        EntitlementPool pool = new EntitlementPool(createOwner(), product.getOID(), 
                 new Long(1000),
                 TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
         return pool;

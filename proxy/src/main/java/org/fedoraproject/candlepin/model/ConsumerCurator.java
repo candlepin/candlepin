@@ -25,7 +25,6 @@ import java.util.Set;
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private ConsumerFactCurator consumerInfoCurator;
-    @Inject private ConsumerProductCurator consumerProductCurator;
     @Inject private EntitlementCurator entitlementCurator;    
 
     protected ConsumerCurator() {

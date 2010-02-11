@@ -74,7 +74,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     }
 
     public void testMultiplePoolsForOwnerProductAllowed() {
-        EntitlementPool duplicatePool = new EntitlementPool(owner, prod,
+        EntitlementPool duplicatePool = new EntitlementPool(owner, prod.getOID(),
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
         // Just need to see no exception is thrown.
@@ -86,7 +86,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     public void testUnlimitedPool() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        EntitlementPool unlimitedPool = new EntitlementPool(owner, newProduct,
+        EntitlementPool unlimitedPool = new EntitlementPool(owner, newProduct.getOID(),
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
         entitlementPoolCurator.create(unlimitedPool);
@@ -95,7 +95,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerSpecificPool() {
-        EntitlementPool consumerPool = new EntitlementPool(owner, prod,
+        EntitlementPool consumerPool = new EntitlementPool(owner, prod.getOID(),
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
         consumerPool.setConsumer(consumer);
@@ -108,13 +108,13 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     }
 
     public void testDuplicateConsumerSpecificPoolAllowed() {
-        EntitlementPool consumerPool = new EntitlementPool(owner, prod,
+        EntitlementPool consumerPool = new EntitlementPool(owner, prod.getOID(),
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
         consumerPool.setConsumer(consumer);
         entitlementPoolCurator.create(consumerPool);
 
-        EntitlementPool consumerPoolDupe = new EntitlementPool(owner, prod,
+        EntitlementPool consumerPoolDupe = new EntitlementPool(owner, prod.getOID(),
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
         consumerPool.setConsumer(consumer);
@@ -126,7 +126,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct,
+        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct.getOID(),
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
                         .createDate(2050, 11, 30));
         consumerPool.setConsumer(consumer);
@@ -144,7 +144,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         
         productCurator.create(newProduct);
-        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct,
+        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct.getOID(),
                 NUMBER_OF_ENTITLEMENTS_AVAILABLE, 
                 TestUtil.createDate(2009, 11, 30), 
                 TestUtil.createDate(2050, 11, 30)
@@ -164,7 +164,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
         
-        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct,
+        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct.getOID(),
                 NUMBER_OF_ENTITLEMENTS_AVAILABLE, 
                 TestUtil.createDate(2009, 11, 30), 
                 TestUtil.createDate(2050, 11, 30)
@@ -189,7 +189,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
         
-        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct,
+        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct.getOID(),
                 NUMBER_OF_ENTITLEMENTS_AVAILABLE, 
                 TestUtil.createDate(2009, 11, 30), 
                 TestUtil.createDate(2050, 11, 30)
@@ -213,7 +213,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
         
-        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct,
+        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct.getOID(),
                 NUMBER_OF_ENTITLEMENTS_AVAILABLE, 
                 TestUtil.createDate(2009, 11, 30), 
                 TestUtil.createDate(2050, 11, 30)

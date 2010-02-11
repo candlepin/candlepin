@@ -50,11 +50,11 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
         anotherProduct = TestUtil.createProduct();
         productCurator.create(anotherProduct);
         
-        entitlementPool = new EntitlementPool(owner, product, MAX_POOL_MEMBERS, 
+        entitlementPool = new EntitlementPool(owner, product.getOID(), MAX_POOL_MEMBERS, 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(entitlementPool);
         
-        anotherEntitlementPool = new EntitlementPool(owner, anotherProduct, MAX_POOL_MEMBERS, 
+        anotherEntitlementPool = new EntitlementPool(owner, anotherProduct.getOID(), MAX_POOL_MEMBERS, 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(anotherEntitlementPool);
         

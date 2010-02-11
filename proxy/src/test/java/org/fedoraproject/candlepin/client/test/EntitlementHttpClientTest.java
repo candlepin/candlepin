@@ -58,14 +58,14 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        entitlementPool = new EntitlementPool(owner, product, MAX_MEMBERS_IN, 
+        entitlementPool = new EntitlementPool(owner, product.getOID(), MAX_MEMBERS_IN, 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(entitlementPool);
         
         exhaustedPoolProduct = TestUtil.createProduct();
         productCurator.create(exhaustedPoolProduct);
 
-        exhaustedPool = new EntitlementPool(owner, exhaustedPoolProduct, new Long(0), 
+        exhaustedPool = new EntitlementPool(owner, exhaustedPoolProduct.getOID(), new Long(0), 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(exhaustedPool);
         
