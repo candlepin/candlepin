@@ -52,10 +52,14 @@ public class ReadOnlyConsumer {
         return toReturn;
     }
     
-    public Set<ReadOnlyProduct> getConsumedProducts() {
-        //TODO HOW DO I FIX THIS
-        //return ReadOnlyProduct.fromProducts(consumer.getConsumedProducts());
-        return null ;
+    /**
+     * Return the list of consumed product IDs.
+     * 
+     * For now, just IDs rather than actual Product objects, as these would
+     * potentially require a service call. 
+     */
+    public Set<String> getConsumedProductIds() {
+        return consumer.getConsumedProductIds();
     }
     
     public String getFact(String factKey) {

@@ -189,6 +189,14 @@ public class Consumer implements Persisted {
     public Set<ConsumerProduct> getConsumedProducts() {
         return consumedProducts;
     }
+    
+    public Set<String> getConsumedProductIds() {
+        Set<String> consumedIds = new HashSet<String>();
+        for (ConsumerProduct p : consumedProducts) {
+            consumedIds.add(p.getProductOID());
+        }
+        return consumedIds;
+    }
 
     public void setConsumedProducts(Set<ConsumerProduct> consumedProducts) {
         this.consumedProducts = consumedProducts;
