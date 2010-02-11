@@ -121,7 +121,7 @@ public class EntitlementResource {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/product/{registration_token}")
+    @Path("consumer/{consumer_uuid}/token/{registration_token}")
     public String entitleToken(@PathParam("consumer_uuid") String consumerUuid,
             @PathParam("registration_token") String registrationToken) {
         

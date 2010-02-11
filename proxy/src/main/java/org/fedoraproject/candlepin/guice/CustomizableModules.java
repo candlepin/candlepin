@@ -1,8 +1,5 @@
 package org.fedoraproject.candlepin.guice;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -11,22 +8,19 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.fedoraproject.candlepin.configuration.CandlepinConfiguration;
 import com.google.inject.Module;
 
 public class CustomizableModules {
     
-    static private String CONFIGURATION_FILE_NAME = "/etc/candlepin/candlepin.conf";
-    protected File CONFIGURATION_FILE = new File(CONFIGURATION_FILE_NAME);
+    public final static String MODULE_CONFIG_PREFIX = "module.config";
     
     public Set<Module> load() {
-        if (CONFIGURATION_FILE.canRead()) {
-            try {
-                return customizedConfiguration();
-            } catch (Exception e) {
-                throw new RuntimeException("Exception when loading customized module configuration.", e);
-            }
+        Map<String, String> loaded = configuration().configurationWithPrefix(MODULE_CONFIG_PREFIX);
+        if (loaded.isEmpty()) {
+            return defaultConfiguration();
         }
-        return defaultConfiguration();
+        return customizedConfiguration(loaded);
     }
     
     public Set<Module> defaultConfiguration() {
@@ -35,18 +29,18 @@ public class CustomizableModules {
     }
     
     @SuppressWarnings("unchecked")
-    public Set<Module> customizedConfiguration() 
-            throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException {
-        
-        Map<String, String> loaded = 
-            loadCustomConfiguration(new BufferedInputStream(new FileInputStream(CONFIGURATION_FILE)));
-        Set toReturn = new HashSet();
-        
-        for (String guiceModuleName: loaded.keySet()) {
-            toReturn.add(Class.forName(loaded.get(guiceModuleName)).newInstance());
+    public Set<Module> customizedConfiguration(Map<String, String> loadedConfiguration) {
+        try {
+            Set toReturn = new HashSet();
+            
+            for (String guiceModuleName: loadedConfiguration.keySet()) {
+                toReturn.add(Class.forName(loadedConfiguration.get(guiceModuleName)).newInstance());
+            }
+            
+            return toReturn; 
+        } catch (Exception e) {
+            throw new RuntimeException("Exception when instantiation guice module.", e);
         }
-        
-        return toReturn;
     }
     
     @SuppressWarnings("unchecked")
@@ -54,5 +48,9 @@ public class CustomizableModules {
         Properties loaded = new Properties();
         loaded.load(input);
         return new HashMap(loaded);
+    }
+    
+    protected CandlepinConfiguration configuration() {
+        return new CandlepinConfiguration();
     }
 }

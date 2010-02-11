@@ -6,6 +6,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Set;
 
+import org.fedoraproject.candlepin.configuration.CandlepinConfiguration;
 import org.junit.Test;
 
 import com.google.inject.Module;
@@ -14,7 +15,8 @@ public class CustomizableModulesTest {
 
     @Test
     public void shouldLoadAndParseConfigurationFile() throws Exception {
-        Set<Module> loaded = new CustomizableModulesForTesting("customizable_modules_test.conf").load();
+        Set<Module> loaded = 
+            new CustomizableModulesForTesting(new CandlepinConfigurationForTesting("customizable_modules_test.conf")).load();
         
         assertEquals(1, loaded.size());
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
@@ -23,7 +25,9 @@ public class CustomizableModulesTest {
     @Test
     public void shouldFailWhenConfigurationContainsMissingClass() throws Exception {
         try {
-            new CustomizableModulesForTesting("customizable_modules_with_missing_class.conf").load();
+            new CustomizableModulesForTesting(
+                    new CandlepinConfigurationForTesting("customizable_modules_with_missing_class.conf")
+            ).load();
             fail();
         } catch (RuntimeException e) {
             assertTrue(e.getCause() instanceof ClassNotFoundException);
@@ -31,8 +35,21 @@ public class CustomizableModulesTest {
     }
     
     public static class CustomizableModulesForTesting extends CustomizableModules {
-        public CustomizableModulesForTesting(String fileName) throws URISyntaxException {
-            CONFIGURATION_FILE = new File(getClass().getResource(fileName).toURI()); 
+        private CandlepinConfiguration config;
+        
+        public CustomizableModulesForTesting(CandlepinConfiguration config) {
+            this.config = config;
+        }
+        
+        protected CandlepinConfiguration configuration() {
+            return config;
+        }
+    }
+    
+    public static class CandlepinConfigurationForTesting extends CandlepinConfiguration {
+        public CandlepinConfigurationForTesting(String fileName) throws URISyntaxException {
+            CONFIGURATION_FILE = new File(getClass().getResource(fileName).toURI());
+            initializeMap();
         }
     }
 }

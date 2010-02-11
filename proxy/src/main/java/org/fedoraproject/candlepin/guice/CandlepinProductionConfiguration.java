@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import com.google.inject.AbstractModule;
-import com.wideplay.warp.persist.jpa.JpaUnit;
-
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
@@ -34,11 +31,15 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.OnSiteSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 
+import com.google.inject.AbstractModule;
+import com.wideplay.warp.persist.jpa.JpaUnit;
+
 public class CandlepinProductionConfiguration extends AbstractModule {
 
     @Override
     public void configure() {        
         bind(JPAInitializer.class).asEagerSingleton();
+        
         bindConstant().annotatedWith(JpaUnit.class).to("production");        
         
         bind(CertificateResource.class);
