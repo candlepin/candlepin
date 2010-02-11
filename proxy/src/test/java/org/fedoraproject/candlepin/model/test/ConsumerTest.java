@@ -158,6 +158,21 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
     
     @Test
+    public void testLookupByUuidNonExistent() {
+        Consumer lookedUp = consumerCurator.lookupByUuid("this is not a uuid!");
+    }
+    
+    
+    @Test
+    public void testLookupByUuid() {
+        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        consumerCurator.create(consumer2);
+        
+        Consumer lookedUp = consumerCurator.lookupByUuid(consumer2.getUuid());
+        assertEquals(lookedUp.getUuid(), consumer2.getUuid());
+    }
+    
+    @Test
     public void testConsumerHierarchy() {
         Consumer child1 = new Consumer("child1", owner, consumerType);
         child1.setMetadataField("foo", "bar");

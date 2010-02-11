@@ -16,9 +16,14 @@ info = {
         "type": "system",
         }
 
+product = {'id':'1', 'name':'FooBarLinux', 'label':'fbl'}
+product = {"product":{"id":"1","label":"FooBarLinux","name":"fbl"}}
+product = {"id":"1","label":"FooBarLinux","name":"fbl"}
+
 consumer = {
     "type": {'label':"system"},
     "name":'billybob',
+#    "consumedProducts": product,
     "facts":{
         "metadata": {
             "entry":[
@@ -33,6 +38,11 @@ consumer = {
             },
     }
 }
+
+
+
+
+
 #params = {"type": 'system'}
 #print params
 headers = {"Content-type": "application/json",
@@ -146,9 +156,13 @@ print("delete consumer")
 headers = {"Content-type": "application/json",
            "Accept": "application/json"}
 conn = httplib.HTTPConnection("localhost", 8080)
-serial_numbers = ["1", "2", "234234234", "Ilikecheese"]
+serial_numbers = {"serialNumber":"SerialNumbersAreAwesome-1234"}
 
-conn.request("POST", '/candlepin/consumer/%s/certificates' % consumer_uuid, json.dumps(serial_numbers), headers)
+serial_numbers = {'certficate_serial_number': [{'serialNumber': 'SerialNumbersAreAwesome-1234'}, {'serialNumber': 'A different serial Number'}]}
+print json.dumps(serial_numbers)
+urlbuf = '/candlepin/consumer/%s/certificates/' % consumer_uuid
+print urlbuf
+conn.request("POST", urlbuf, json.dumps(serial_numbers), headers)
 response = conn.getresponse()
 print("Status: %d Response: %s" % (response.status, response.reason))
 rsp = response.read()
