@@ -14,11 +14,7 @@ public class JPAConfiguration {
     
     
     public static Properties parseConfig(Map<String, String> inputConfiguration) {
-        Properties toReturn = new Properties();
-        
-        for(String key: inputConfiguration.keySet()) {
-            toReturn.put(key.substring(PREFIX_LENGTH), inputConfiguration.get(key));
-        }
+        Properties toReturn = stripPrefixFromConfigKeys(inputConfiguration);
         
         if (!toReturn.containsKey(URL_CONFIG)) {
             defaultConfigurationSettings().get(URL_CONFIG);
@@ -34,6 +30,15 @@ public class JPAConfiguration {
         
         toReturn.putAll(immutableConfigurationSettings());
         
+        return toReturn;
+    }
+
+    public static Properties stripPrefixFromConfigKeys(Map<String, String> inputConfiguration) {
+        Properties toReturn = new Properties();
+        
+        for(String key: inputConfiguration.keySet()) {
+            toReturn.put(key.substring(PREFIX_LENGTH), inputConfiguration.get(key));
+        }
         return toReturn;
     }
     
