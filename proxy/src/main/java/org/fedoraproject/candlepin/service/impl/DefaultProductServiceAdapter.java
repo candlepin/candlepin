@@ -12,11 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.product.impl;
+package org.fedoraproject.candlepin.service.impl;
 
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
-import org.fedoraproject.candlepin.product.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 

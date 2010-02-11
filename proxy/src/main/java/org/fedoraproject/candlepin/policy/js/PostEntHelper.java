@@ -20,7 +20,7 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
-import org.fedoraproject.candlepin.product.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 

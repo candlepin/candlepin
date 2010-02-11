@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.product;
+package org.fedoraproject.candlepin.service;
 
 import org.fedoraproject.candlepin.model.Product;
 

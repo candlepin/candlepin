@@ -27,8 +27,8 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
-import org.fedoraproject.candlepin.product.ProductServiceAdapter;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 

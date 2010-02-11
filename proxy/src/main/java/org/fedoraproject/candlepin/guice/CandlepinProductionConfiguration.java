@@ -19,8 +19,6 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
-import org.fedoraproject.candlepin.product.ProductServiceAdapter;
-import org.fedoraproject.candlepin.product.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementPoolResource;
@@ -29,7 +27,9 @@ import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.TestResource;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 

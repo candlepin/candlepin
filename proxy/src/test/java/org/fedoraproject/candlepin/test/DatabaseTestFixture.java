@@ -21,7 +21,7 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.product.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.junit.Before;
 
 import com.google.inject.Guice;

@@ -23,7 +23,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
-import org.fedoraproject.candlepin.product.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
