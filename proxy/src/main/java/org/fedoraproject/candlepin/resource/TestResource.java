@@ -103,7 +103,6 @@ public class TestResource {
    public Consumer getConsumer() {
        Consumer consumer  = new Consumer();
        Product product = new Product("test product", "SuperAwesomeEnterpriseHyperLinux");
-       consumer.addConsumedProduct(product);
        return consumer;
        
    }
