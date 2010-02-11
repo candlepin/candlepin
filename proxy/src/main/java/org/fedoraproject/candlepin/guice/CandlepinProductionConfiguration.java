@@ -14,7 +14,10 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import java.util.Properties;
+
 import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.configuration.CandlepinConfiguration;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
@@ -41,6 +44,10 @@ public class CandlepinProductionConfiguration extends AbstractModule {
     @Override
     public void configure() {        
         bind(JPAInitializer.class).asEagerSingleton();
+        
+        bind(Properties.class)
+            .annotatedWith(JpaUnit.class)
+            .toInstance(new CandlepinConfiguration().jpaConfiguration()); 
         bindConstant().annotatedWith(JpaUnit.class).to("production");        
         
         bind(CertificateResource.class);

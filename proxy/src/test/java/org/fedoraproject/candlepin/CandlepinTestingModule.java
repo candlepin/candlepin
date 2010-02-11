@@ -38,7 +38,7 @@ public class CandlepinTestingModule extends AbstractModule {
     @Override
     public void configure() {
         
-        bind(JPAInitializer.class).asEagerSingleton();
+        bind(JPAInitializer.class).asEagerSingleton();        
         bindConstant().annotatedWith(JpaUnit.class).to("test");
         
         bind(CertificateResource.class);

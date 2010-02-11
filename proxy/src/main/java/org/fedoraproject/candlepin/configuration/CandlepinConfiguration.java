@@ -3,6 +3,7 @@ package org.fedoraproject.candlepin.configuration;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
 
 public class CandlepinConfiguration {
@@ -14,6 +15,13 @@ public class CandlepinConfiguration {
             loadConfiguration();
         }
         return configuration.subMap(prefix, prefix + Character.MAX_VALUE);
+    }
+    
+    public Properties jpaConfiguration() {
+        if (configuration == null) {
+            loadConfiguration();
+        }
+        return JPAConfiguration.parseConfig(configuration);
     }
     
     protected synchronized void loadConfiguration() {

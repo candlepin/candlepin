@@ -3,7 +3,7 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
     version="1.0">
 
-    <persistence-unit name="test" transaction-type="RESOURCE_LOCAL">
+     <persistence-unit name="test" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
@@ -20,15 +20,15 @@
     <persistence-unit name="production" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
 
-        <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
-            <property name="hibernate.connection.url" value="jdbc:postgresql:candlepin"/>
-
-            <property name="hibernate.connection.username" value="candlepin"/>
-            <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.show_sql" value="false" />
-        </properties>
+<!--        <properties>-->
+<!--            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>-->
+<!--            <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>-->
+<!--            <property name="hibernate.connection.url" value="jdbc:postgresql:candlepin"/>-->
+<!---->
+<!--            <property name="hibernate.connection.username" value="candlepin"/>-->
+<!--            <property name="hibernate.connection.password" value=""/>-->
+<!--            <property name="hibernate.show_sql" value="false" />-->
+<!--        </properties>-->
 
     </persistence-unit>
 
