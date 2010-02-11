@@ -14,22 +14,28 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private ConsumerFactCurator consumerInfoCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private EntitlementCurator entitlementCurator;    
 
     protected ConsumerCurator() {
         super(Consumer.class);
+    }
+    
+    public void addConsumedProduct(Consumer consumer, Product product) {
+        ConsumerProduct cp = new ConsumerProduct() ;
+        cp.setConsumer(consumer) ;
+        cp.setProductId(product.getId()) ;
+        consumer.addConsumedProduct(cp) ;
     }
 
     public Consumer lookupByName(String name) {
@@ -53,7 +59,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         
         // TODO: Are any of these read-only?
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
-        existingConsumer.setConsumedProducts(productCurator.bulkUpdate(updatedConsumer.getConsumedProducts()));
+        existingConsumer.setConsumedProducts(updatedConsumer.getConsumedProducts());
         existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
         existingConsumer.setFacts(consumerInfoCurator.update(updatedConsumer.getFacts()));
         existingConsumer.setName(updatedConsumer.getName());

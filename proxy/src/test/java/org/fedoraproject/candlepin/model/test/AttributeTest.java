@@ -1,16 +1,14 @@
 package org.fedoraproject.candlepin.model.test;
 
-import java.util.List;
-
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import static org.junit.Assert.assertEquals;
 
 import org.fedoraproject.candlepin.model.Attribute;
-import org.fedoraproject.candlepin.model.Certificate;
-import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import java.util.List;
 
 public class AttributeTest extends DatabaseTestFixture {
 

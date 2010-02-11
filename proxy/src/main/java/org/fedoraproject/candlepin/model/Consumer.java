@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.util.Util;
+
+import org.hibernate.annotations.ForeignKey;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,21 +29,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.fedoraproject.candlepin.util.Util;
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
@@ -84,19 +82,6 @@ public class Consumer implements Persisted {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private Set<Consumer> childConsumers;
-
-
-    // Separate mapping because in theory, a consumer could be consuming products they're
-    // not entitled to.
-    @ManyToMany
-    @ForeignKey(name = "fk_consumer_product_consumer_id",
-                inverseName = "fk_consumer_product_product_id")
-    @JoinTable(name = "cp_consumer_products",
-            joinColumns = @JoinColumn(name = "consumer_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id"),
-            uniqueConstraints = 
-                @UniqueConstraint(columnNames = {"consumer_id", "product_id"}))
-    private Set<Product> consumedProducts;
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy="consumer")
     private Set<Entitlement> entitlements;
@@ -104,6 +89,12 @@ public class Consumer implements Persisted {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "consumer_fact_id")
     private ConsumerFacts facts;
+    
+    // Separate mapping because in theory, a consumer could be consuming products they're
+    // not entitled to.    
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "fk_consumer_product_owner")
+    private Set<ConsumerProduct> consumedProducts;    
     
     public Consumer(String name, Owner owner, ConsumerType type) {
         this.name = name;
@@ -116,7 +107,7 @@ public class Consumer implements Persisted {
 
         this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
-        this.consumedProducts = new HashSet<Product>();
+        this.consumedProducts = new HashSet<ConsumerProduct>();
         this.entitlements = new HashSet<Entitlement>();
     }
     
@@ -135,7 +126,7 @@ public class Consumer implements Persisted {
         this.uuid = Util.generateUUID();
         this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
-        this.consumedProducts = new HashSet<Product>();
+        this.consumedProducts = new HashSet<ConsumerProduct>();
         this.entitlements = new HashSet<Entitlement>();
     }
 
@@ -192,18 +183,26 @@ public class Consumer implements Persisted {
         this.parent = parent;
     }
 
-    public Set<Product> getConsumedProducts() {
+    public Set<ConsumerProduct> getConsumedProducts() {
         return consumedProducts;
     }
+    
+    public Set<String> getConsumedProductIds() {
+        Set<String> consumedIds = new HashSet<String>();
+        for (ConsumerProduct p : consumedProducts) {
+            consumedIds.add(p.getProductId());
+        }
+        return consumedIds;
+    }
 
-    public void setConsumedProducts(Set<Product> consumedProducts) {
+    public void setConsumedProducts(Set<ConsumerProduct> consumedProducts) {
         this.consumedProducts = consumedProducts;
     }
 
-    public void addConsumedProduct(Product p) {
+    public void addConsumedProduct(ConsumerProduct p) {
         this.consumedProducts.add(p);
     }
-
+    
     @XmlTransient
     public Owner getOwner() {
         return owner;

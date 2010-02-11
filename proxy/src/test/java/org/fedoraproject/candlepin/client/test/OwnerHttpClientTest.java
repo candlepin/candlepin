@@ -1,8 +1,6 @@
 package org.fedoraproject.candlepin.client.test;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
 import org.fedoraproject.candlepin.client.test.ConsumerHttpClientTest.TestServletConfig;
 import org.fedoraproject.candlepin.controller.Entitler;
@@ -14,12 +12,15 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
 
 public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
@@ -49,11 +50,11 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
         anotherProduct = TestUtil.createProduct();
         productCurator.create(anotherProduct);
         
-        entitlementPool = new EntitlementPool(owner, product, MAX_POOL_MEMBERS, 
+        entitlementPool = new EntitlementPool(owner, product.getId(), MAX_POOL_MEMBERS, 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(entitlementPool);
         
-        anotherEntitlementPool = new EntitlementPool(owner, anotherProduct, MAX_POOL_MEMBERS, 
+        anotherEntitlementPool = new EntitlementPool(owner, anotherProduct.getId(), MAX_POOL_MEMBERS, 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(anotherEntitlementPool);
         

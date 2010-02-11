@@ -5,8 +5,9 @@ VERSION_NUMBER = "1.0.0"
 GROUP = "candlepin"
 COPYRIGHT = ""
 
-#AXIS2 = 'candlepin:axis2:jar:1.2'
-#AXIS2 = 'org.apache.axis2:axis2:jar:1.2'
+#############################################################################
+# DEPENDENCIES
+#############################################################################
 JERSEY = [group('jersey-core', 'jersey-json', 'jersey-server', 'jersey-client', :under=>'com.sun.jersey', :version=>'1.1.2-ea'),
         'javax.persistence:persistence-api:jar:1.0.2' ,
         'org.codehaus:jettison:jar:1.1',
@@ -48,18 +49,18 @@ GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-s
 JERSEY_FOR_TEST = [group('jersey-test-framework', 'jersey-guice', :under=>'com.sun.jersey', :version=>'1.1.4.1'),
            'com.sun.grizzly:grizzly-servlet-webserver:jar:1.9.8']
 
-# causes GET /org/apache/axis2/axis2/1.2/axis2-1.2.jar
-# we want GET /candlepin/axis2-1.2.jar
-
-#OPENJPA = ['org.apache.openjpa:openjpa-all:jar:0.9.7',
-#  'net.sourceforge.serp:serp:jar:1.12.0']
-
-
+#############################################################################
+# REPOSITORIES
+#
 # Specify Maven 2.0 remote repositories here, like this:
+#############################################################################
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin"
 repositories.remote << "http://www.ibiblio.org/maven2/"
 repositories.remote << "http://download.java.net/maven/2/"
 
+#############################################################################
+# PROJECT BUILD
+#############################################################################
 desc "The Proxy project"
 define "candlepin" do
 
@@ -77,10 +78,12 @@ define "candlepin" do
   test.teardown { rm_rf 'target/classes/META-INF' }
   test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, JERSEY_FOR_TEST
 
-  #javadoc projects
-  package(:war)
+  # javadoc projects
+  javadoc
+
+  package(:war).libs << HSQLDB
   
-  #to use: buildr candlepin:schema_gen
+  # to use: buildr candlepin:schema_gen
   task :schema_gen do  
     begin
       ant('gen-schema') do |ant|

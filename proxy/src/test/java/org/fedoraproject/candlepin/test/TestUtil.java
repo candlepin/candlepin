@@ -14,17 +14,18 @@
  */
 package org.fedoraproject.candlepin.test;
 
-import java.sql.Date;
-import java.util.Calendar;
-import java.util.Random;
-
-import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+
+import org.apache.commons.codec.binary.Base64;
+
+import java.sql.Date;
+import java.util.Calendar;
+import java.util.Random;
 
 /**
  * TestUtil for creating various testing objects.
@@ -86,8 +87,8 @@ public class TestUtil {
         return rhel;
     }
     
-    public static EntitlementPool createEntitlementPool() {
-        EntitlementPool pool = new EntitlementPool(createOwner(), createProduct(), 
+    public static EntitlementPool createEntitlementPool(Product product) {
+        EntitlementPool pool = new EntitlementPool(createOwner(), product.getId(), 
                 new Long(1000),
                 TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
         return pool;

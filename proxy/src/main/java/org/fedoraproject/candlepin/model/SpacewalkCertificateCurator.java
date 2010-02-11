@@ -1,15 +1,17 @@
 package org.fedoraproject.candlepin.model;
 
-import java.text.ParseException;
-import java.util.Date;
-
-import com.google.inject.Inject;
 import com.redhat.rhn.common.cert.Certificate;
 import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
+
+import com.google.inject.Inject;
+
+import java.text.ParseException;
+import java.util.Date;
 
 public class SpacewalkCertificateCurator {
     
     private EntitlementPoolCurator entitlementPoolCurator;
+    //TODO Need to go through the service for this.
     private ProductCurator productCurator;
     private AttributeCurator attributeCurator;
 
@@ -98,7 +100,7 @@ public class SpacewalkCertificateCurator {
         
         EntitlementPool ep = new EntitlementPool();
         ep.setOwner(owner);
-        ep.setProduct(p);
+        ep.setProductId(p.getId());
         ep.setMaxMembers(maxmem);
         ep.setStartDate(start);
         ep.setEndDate(end);

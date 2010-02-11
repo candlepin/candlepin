@@ -20,6 +20,7 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -31,14 +32,14 @@ import com.google.inject.Inject;
 public class PostEntHelper {
 
     EntitlementPoolCurator epCurator;
-    ProductCurator productCurator;
+    ProductServiceAdapter prodAdapter;
     Entitlement ent;
     
     @Inject
     public PostEntHelper(EntitlementPoolCurator epCurator, 
-            ProductCurator productCurator) {
+            ProductServiceAdapter prodAdapter) {
         this.epCurator = epCurator;
-        this.productCurator = productCurator;
+        this.prodAdapter = prodAdapter;
     }
     
     /**
@@ -62,13 +63,13 @@ public class PostEntHelper {
     public void createConsumerPool(String productLabel, Long quantity) {
         Consumer c = ent.getConsumer();
         
-        Product p = productCurator.lookupByLabel(productLabel);
+        Product p = prodAdapter.getProductByLabel(productLabel);
         if (p == null) {
             throw new RuleExecutionException("No such product: " + productLabel);
         }
         
         EntitlementPool consumerSpecificPool = new EntitlementPool(c.getOwner(), 
-                p, quantity, ent.getPool().getStartDate(), ent.getPool().getEndDate());
+                p.getId(), quantity, ent.getPool().getStartDate(), ent.getPool().getEndDate());
         consumerSpecificPool.setConsumer(c);
         consumerSpecificPool.setSourceEntitlement(ent);
         epCurator.create(consumerSpecificPool);

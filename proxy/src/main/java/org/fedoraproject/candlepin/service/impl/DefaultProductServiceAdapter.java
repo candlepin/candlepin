@@ -12,30 +12,34 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.product.impl;
-
-import java.util.List;
+package org.fedoraproject.candlepin.service.impl;
 
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
-import org.fedoraproject.candlepin.product.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
-public class OnSiteProductServiceAdapter implements ProductServiceAdapter {
+import java.util.List;
+
+public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     private ProductCurator prodCurator;
 
     @Inject
-    public OnSiteProductServiceAdapter(ProductCurator prodCurator) {
+    public DefaultProductServiceAdapter(ProductCurator prodCurator) {
         this.prodCurator = prodCurator;
     }
 
     @Override
-    //TODO Figure out what this really maps to
-    public Product getProduct(String oid) {
-        return prodCurator.lookupByLabel(oid);
+    public Product getProductById(String id) {
+        return prodCurator.lookupByLabel(id);
     }
+    
+    @Override
+    public Product getProductByLabel(String label) {
+        return prodCurator.lookupByLabel(label);
+    }    
 
     @Override
     public List<Product> getProducts() {

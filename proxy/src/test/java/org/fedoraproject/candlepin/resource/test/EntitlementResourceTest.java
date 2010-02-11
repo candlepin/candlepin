@@ -14,10 +14,8 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -29,14 +27,18 @@ import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -65,14 +67,14 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        ep = new EntitlementPool(owner, product, new Long(10), 
+        ep = new EntitlementPool(owner, product.getId(), new Long(10), 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(ep);
 
         entitler = injector.getInstance(Entitler.class);
 
         eapi = new EntitlementResource(entitlementPoolCurator, entitlementCurator, ownerCurator, consumerCurator, 
-                productCurator, dateSource, entitler);
+                productAdapter, entitler);
         
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }
@@ -86,7 +88,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         consumer = consumerCurator.lookupByUuid(consumer.getUuid());
         assertEquals(1, consumer.getConsumedProducts().size());
         assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
-                .next().getId());
+                .next().getProductId());
         assertEquals(1, consumer.getEntitlements().size());
         
         ep = entitlementPoolCurator.find(ep.getId());

@@ -14,7 +14,9 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -23,6 +25,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Test;
 
 public class OwnerTest extends DatabaseTestFixture {
@@ -65,14 +68,14 @@ public class OwnerTest extends DatabaseTestFixture {
         Consumer c = new Consumer();
         c.setOwner(owner);
         owner.addConsumer(c);
-        c.addConsumedProduct(rhel);
+        consumerCurator.addConsumedProduct(c, rhel);
         assertEquals(1, owner.getConsumers().size());
         assertEquals(1, c.getConsumedProducts().size());
         
         // EntitlementPool
         EntitlementPool pool = new EntitlementPool();
         owner.addEntitlementPool(pool);
-        pool.setProduct(rhel);
+        pool.setProductId(rhel.getId());
         assertEquals(1, owner.getEntitlementPools().size());  
     }
     

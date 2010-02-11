@@ -12,11 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.product;
-
-import java.util.List;
+package org.fedoraproject.candlepin.service;
 
 import org.fedoraproject.candlepin.model.Product;
+
+import java.util.List;
 
 /**
  * Product data may originate from a separate service outside Candlepin in some
@@ -27,21 +27,23 @@ import org.fedoraproject.candlepin.model.Product;
 public interface ProductServiceAdapter {
 
     /**
-     * Query a specific product by its ID
+     * Query a specific product by its string ID.
      * 
-     * @param owner
-     * @param subscriptionId
+     * @param id
      * @return
      */
-    public Product getProduct(String oid);
+    public Product getProductById(String id);
+    
+    /**
+     * Query a specific product by its Label
+     * 
+     * @param label
+     * @return
+     */
+    public Product getProductByLabel(String label);    
 
     /**
      * List all Products
-     * 
-     * @param owner
-     *            Owner.
-     * @param productId
-     *            Product OID or SKU. (not clear yet)
      * @return
      */
     public List<Product> getProducts();

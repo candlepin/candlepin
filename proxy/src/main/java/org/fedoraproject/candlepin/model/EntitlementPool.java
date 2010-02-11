@@ -14,6 +14,11 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.DateSource;
+
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.ForeignKey;
+
 import java.util.Date;
 import java.util.Set;
 
@@ -27,14 +32,10 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import org.hibernate.annotations.CollectionOfElements;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.fedoraproject.candlepin.DateSource;
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -57,11 +58,6 @@ public class EntitlementPool implements Persisted {
     private Owner owner;
     
     @ManyToOne
-    @ForeignKey(name = "fk_entitlement_pool_product")
-    @JoinColumn(nullable = false)
-    private Product product;
-    
-    @ManyToOne
     @ForeignKey(name = "fk_entitlement_pool_consumer")
     @JoinColumn(nullable = true)
     private Consumer consumer;
@@ -75,7 +71,7 @@ public class EntitlementPool implements Persisted {
     private Long subscriptionId;
 
     /* Indicates this pool was created as a result of granting an entitlement.
-     * Allows us to know that we need to clean this pool up if that entitlment
+     * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_pool_source_entitlement")
@@ -93,6 +89,9 @@ public class EntitlementPool implements Persisted {
     
     @Column(nullable = false)
     private Date endDate;
+    
+    @Column(nullable = true)
+    private String productId;    
 
     @CollectionOfElements
     @JoinTable(name="ENTITLEMENT_POOL_ATTRIBUTE")
@@ -101,10 +100,10 @@ public class EntitlementPool implements Persisted {
     public EntitlementPool() {
     }
 
-    public EntitlementPool(Owner ownerIn, Product productIn, Long maxMembersIn, 
+    public EntitlementPool(Owner ownerIn, String productIdIn, Long maxMembersIn, 
             Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
-        this.product = productIn;
+        this.productId = productIdIn;
         this.maxMembers = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -112,7 +111,7 @@ public class EntitlementPool implements Persisted {
         // Always assume no current members if creating a new pool.
         this.currentMembers = new Long(0);
     }
-
+    
     public Long getId() {
         return id;
     }
@@ -121,8 +120,8 @@ public class EntitlementPool implements Persisted {
         this.id = id;
     }
 
-    public Product getProduct() {
-        return product;
+    public String getProductId() {
+        return productId;
     }
 
     public Consumer getConsumer() {
@@ -133,10 +132,10 @@ public class EntitlementPool implements Persisted {
         this.consumer = consumerIn;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
+    public void setProductId(String productId) {
+        this.productId = productId;
     }
-
+    
     public Date getStartDate() {
         return startDate;
     }

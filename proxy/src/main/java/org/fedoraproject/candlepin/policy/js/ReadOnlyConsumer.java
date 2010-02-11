@@ -14,11 +14,11 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ReadOnlyConsumer {
 
@@ -52,17 +52,24 @@ public class ReadOnlyConsumer {
         return toReturn;
     }
     
-    public Set<ReadOnlyProduct> getConsumedProducts() {
-        return ReadOnlyProduct.fromProducts(consumer.getConsumedProducts());
+    /**
+     * Return the list of consumed product IDs.
+     * 
+     * For now, just IDs rather than actual Product objects, as these would
+     * potentially require a service call. 
+     */
+    public Set<String> getConsumedProductIds() {
+        return consumer.getConsumedProductIds();
     }
     
     public String getFact(String factKey) {
         return consumer.getFact(factKey);
     }
     
+    //TODO Is this correct?
     public boolean hasEntitlement(String productLabel) {
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProduct().getLabel().equals(productLabel)) {
+            if (e.getProductId().equals(productLabel)) {
                 return true;
             }
         }

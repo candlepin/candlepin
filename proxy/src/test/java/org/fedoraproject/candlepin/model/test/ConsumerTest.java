@@ -14,11 +14,9 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
-
-import java.util.Map;
-
-import javax.persistence.PersistenceException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -29,8 +27,13 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Map;
+
+import javax.persistence.PersistenceException;
 
 
 
@@ -61,8 +64,10 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer = new Consumer(CONSUMER_NAME, owner, consumerType);
         consumer.setMetadataField("foo", "bar");
         consumer.setMetadataField("foo1", "bar1");
-        consumer.addConsumedProduct(rhel);
-        consumer.addConsumedProduct(jboss);
+        
+        consumerCurator.addConsumedProduct(consumer, rhel);
+        consumerCurator.addConsumedProduct(consumer, jboss);
+        
         consumerCurator.create(consumer);
         
         unitOfWork.endWork();
@@ -121,7 +126,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testModifyMetadata() {
         consumer.setMetadataField("foo", "notbar");
-        consumerCurator.update(consumer);
+        consumerCurator.merge(consumer);
         
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals("notbar", lookedUp.getMetadataField("foo"));
@@ -153,6 +158,21 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
     
     @Test
+    public void testLookupByUuidNonExistent() {
+        Consumer lookedUp = consumerCurator.lookupByUuid("this is not a uuid!");
+    }
+    
+    
+    @Test
+    public void testLookupByUuid() {
+        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        consumerCurator.create(consumer2);
+        
+        Consumer lookedUp = consumerCurator.lookupByUuid(consumer2.getUuid());
+        assertEquals(lookedUp.getUuid(), consumer2.getUuid());
+    }
+    
+    @Test
     public void testConsumerHierarchy() {
         Consumer child1 = new Consumer("child1", owner, consumerType);
         child1.setMetadataField("foo", "bar");
@@ -164,7 +184,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumer.addChildConsumer(child1);
         consumer.addChildConsumer(child2);
-        consumerCurator.update(consumer);
+        consumerCurator.merge(consumer);
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(2, lookedUp.getChildConsumers().size());
@@ -177,12 +197,14 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer child1 = new Consumer("child1", owner, consumerType);
         child1.setMetadataField("foo", "bar");
         consumer.addChildConsumer(child1);
-        consumerCurator.update(consumer);
+        consumerCurator.create(child1);
+        consumerCurator.merge(consumer);
         
         unitOfWork.endWork();
         unitOfWork.beginWork();
 
         child1 = consumerCurator.find(child1.getId());
+        assertNotNull(child1);
         consumerCurator.delete(child1);
         
         assertNull(consumerCurator.find(child1.getId()));
@@ -197,7 +219,8 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer child1 = new Consumer("child1", owner, consumerType);
         child1.setMetadataField("foo", "bar");
         consumer.addChildConsumer(child1);
-        consumerCurator.update(consumer);
+        consumerCurator.create(child1);
+        consumerCurator.merge(consumer);
         
         consumerCurator.delete(consumer);
         
@@ -213,15 +236,16 @@ public class ConsumerTest extends DatabaseTestFixture {
         // Default consumer already consumes RHEL:
         Consumer child1 = new Consumer("child1", owner, consumerType);
         child1.setMetadataField("foo", "bar");
-        child1.addConsumedProduct(rhel);
+        consumerCurator.addConsumedProduct(child1, rhel);
         entityManager().persist(child1);
         commitTransaction();
     }
     
     @Test
     public void testAddEntitlements() {
-        EntitlementPool pool = TestUtil.createEntitlementPool();
-        entityManager().persist(pool.getProduct());
+        Product newProduct = TestUtil.createProduct();
+        productCurator.create(newProduct);
+        EntitlementPool pool = TestUtil.createEntitlementPool(newProduct);
         entityManager().persist(pool.getOwner());
         entityManager().persist(pool);
         
@@ -235,7 +259,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.addEntitlement(e1);
         consumer.addEntitlement(e2);
         consumer.addEntitlement(e3);
-        consumerCurator.update(consumer);
+        consumerCurator.merge(consumer);
         
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(3, lookedUp.getEntitlements().size());

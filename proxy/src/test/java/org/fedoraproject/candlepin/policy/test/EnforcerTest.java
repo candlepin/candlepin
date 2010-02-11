@@ -14,9 +14,8 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
-import static org.junit.Assert.*;
-
-import java.util.Date;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
@@ -30,8 +29,11 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Date;
 
 public class EnforcerTest extends DatabaseTestFixture {
 
@@ -40,9 +42,9 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Before
     public void createEnforcer() {
         PreEntHelper preHelper = new PreEntHelper();
-        PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator, productCurator);
+        PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator, productAdapter);
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
-                rulesCurator, preHelper, postHelper);
+                rulesCurator, preHelper, postHelper, productAdapter);
     }
     
     // grrr. have to test two conditions atm: sufficient number of entitlements *when* pool has not expired
@@ -79,7 +81,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     private EntitlementPool entitlementPoolWithMembersAndExpiration(
             final int currentMembers, final int maxMembers, Date expiry) {
-        return new EntitlementPool(new Owner(), new Product("label", "name"), 
+        return new EntitlementPool(new Owner(), new Product("label", "name").getId(), 
                 new Long(maxMembers), new Date(), expiry) {{
             setCurrentMembers(currentMembers);
         }};

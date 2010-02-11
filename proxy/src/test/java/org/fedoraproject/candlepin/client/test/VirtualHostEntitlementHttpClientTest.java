@@ -1,8 +1,8 @@
 package org.fedoraproject.candlepin.client.test;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.client.test.ConsumerHttpClientTest.TestServletConfig;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -13,11 +13,15 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.test.SpacewalkCertificateCuratorTest;
 import org.fedoraproject.candlepin.test.TestUtil;
+
+import com.redhat.rhn.common.cert.CertificateFactory;
+
+import com.sun.jersey.api.client.WebResource;
+
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.rhn.common.cert.CertificateFactory;
-import com.sun.jersey.api.client.WebResource;
+import java.util.List;
 
 public class VirtualHostEntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 

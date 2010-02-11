@@ -1,21 +1,23 @@
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
+import com.redhat.rhn.common.cert.CertificateFactory;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.redhat.rhn.common.cert.CertificateFactory;
 
 public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
     

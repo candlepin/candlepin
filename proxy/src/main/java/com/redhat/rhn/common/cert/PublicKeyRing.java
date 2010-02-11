@@ -14,14 +14,6 @@
  */
 package com.redhat.rhn.common.cert;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyException;
-import java.security.NoSuchProviderException;
-import java.security.Security;
-import java.security.SignatureException;
-
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
@@ -31,6 +23,14 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.KeyException;
+import java.security.NoSuchProviderException;
+import java.security.Security;
+import java.security.SignatureException;
 
 /**
  * A GPG public keyring.

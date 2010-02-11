@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.util.List;
-
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
@@ -23,13 +21,15 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
-public class OnSiteSubscriptionServiceAdapter implements
+import java.util.List;
+
+public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
     
     private SubscriptionCurator subCurator;
     
     @Inject
-    public OnSiteSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
+    public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
         this.subCurator = subCurator;
     }
 

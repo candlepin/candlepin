@@ -14,17 +14,18 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.hibernate.criterion.Restrictions;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.hibernate.criterion.Restrictions;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
 
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
@@ -42,6 +43,19 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
             .createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("owner", o)).list();
+        if (results == null) {
+            return new LinkedList<EntitlementPool>();
+        }
+        else {
+            return results;
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<EntitlementPool> listByConsumer(Consumer consumer) {
+        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
+            .createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("consumer", consumer)).list();
         if (results == null) {
             return new LinkedList<EntitlementPool>();
         }
@@ -77,7 +91,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         for (Subscription sub : subs) {
             // No pool exists for this subscription, create one:
             if (!subToPoolMap.containsKey(sub.getId())) {
-                EntitlementPool newPool = new EntitlementPool(owner, product, 
+                EntitlementPool newPool = new EntitlementPool(owner, product.getId(), 
                         sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
                 newPool.setSubscriptionId(sub.getId());
                 create(newPool);
@@ -132,7 +146,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             List<EntitlementPool> result = (List<EntitlementPool>)
                 currentSession().createCriteria(EntitlementPool.class)
                 .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.eq("product", product))
+                .add(Restrictions.eq("productId", product.getId()))
                 .add(Restrictions.eq("consumer", consumer))
                 .list();
             if (result != null && result.size() > 0) {
@@ -142,7 +156,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
 
         return (List<EntitlementPool>) currentSession().createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("product", product)).list();
+            .add(Restrictions.eq("productId", product.getId())).list();
     }
     
     private EntitlementPool lookupBySubscriptionId(Long subId) {

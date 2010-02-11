@@ -1,8 +1,10 @@
 package org.fedoraproject.candlepin.client.test;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.client.test.ConsumerHttpClientTest.TestServletConfig;
 import org.fedoraproject.candlepin.controller.Entitler;
@@ -14,13 +16,16 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
 
 public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
@@ -53,14 +58,14 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        entitlementPool = new EntitlementPool(owner, product, MAX_MEMBERS_IN, 
+        entitlementPool = new EntitlementPool(owner, product.getId(), MAX_MEMBERS_IN, 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(entitlementPool);
         
         exhaustedPoolProduct = TestUtil.createProduct();
         productCurator.create(exhaustedPoolProduct);
 
-        exhaustedPool = new EntitlementPool(owner, exhaustedPoolProduct, new Long(0), 
+        exhaustedPool = new EntitlementPool(owner, exhaustedPoolProduct.getId(), new Long(0), 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(exhaustedPool);
         
@@ -181,7 +186,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertNotNull(entitlementCurator.find(entitlement.getId()));        
         
         WebResource r = resource().path(
-                "/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getLabel()
+                "/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getId()
         );
         Entitlement returned = r.accept("application/json")
              .type("application/json")
@@ -247,14 +252,14 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
             .get(0).getCurrentMembers());
         assertEquals(1, consumerCurator.find(consumer.getId()).getConsumedProducts().size());
         assertEquals(product.getId(), consumerCurator.find(consumer.getId())
-                .getConsumedProducts().iterator().next().getId());
+                .getConsumedProducts().iterator().next().getProductId());
         assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
     }
     
 
     private void assertEntitlementsAreSame(Entitlement entitlement, Entitlement returned) {
-        assertEquals(entitlement.getId(), returned.getId());
-        assertEquals(entitlement.getProduct(), returned.getProduct());
+        assertEquals(entitlement.getId(), returned.getId());      
+        assertEquals(entitlement.getProductId(), returned.getProductId());
         assertEquals(entitlement.getStartDate(), returned.getStartDate());
         assertEquals(entitlement.getIsFree(), returned.getIsFree());
     }

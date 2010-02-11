@@ -14,6 +14,11 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Set;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -22,10 +27,20 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.ClientCertificate;
+import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
 import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -86,13 +101,56 @@ public class TestResource {
    @GET @Path("/consumer")
    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
    public Consumer getConsumer() {
-       return new Consumer();
+       Consumer consumer  = new Consumer();
+       Product product = new Product("test product", "SuperAwesomeEnterpriseHyperLinux");
+       return consumer;
+       
+   }
+   
+   
+   @GET @Path("/client_certificate")
+   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+   public ClientCertificate getCertificate() {
+           return new  ClientCertificate();
+   }
+   
+   @GET @Path("/client_certificate_serial_numbers")
+   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+   public List<ClientCertificateSerialNumber> getCertificateSerialNumber() {
+           List<ClientCertificateSerialNumber> serialNumberList = new LinkedList<ClientCertificateSerialNumber>();
+           serialNumberList.add(new  ClientCertificateSerialNumber("SerialNumbersAreAwesome-1234"));
+           serialNumberList.add(new  ClientCertificateSerialNumber("A different serial Number"));
+           return serialNumberList;
    }
    
    @GET @Path("/certificate_status")
    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
    public ClientCertificateStatus getCertificateStatus() {
            return new  ClientCertificateStatus("123456", "AWESOME", new ClientCertificate());
+   }
+   
+   
+   
+   
+   @GET @Path("/certificate_status_list")
+   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+   public List<ClientCertificateStatus> getCertificateStatusList() {
+           List<ClientCertificateStatus> certList = new LinkedList<ClientCertificateStatus>();
+           certList.add(new ClientCertificateStatus("blargh", "supertype", new ClientCertificate()));
+           return certList;
+   }
+   
+   @GET @Path("/product")
+   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+   public Product getProduct() {
+       return new Product("test product", "SuperAwesomeEnterpriseHyperLinux");
+       //           return new  ClientCertificateStatus("123456", "AWESOME", new ClientCertificate());
+   }
+   
+   @POST
+   @Path("/owner")
+   public Owner getOwner() {
+           return new Owner("test_owner");
    }
    
 }

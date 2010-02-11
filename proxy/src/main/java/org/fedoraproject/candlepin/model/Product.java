@@ -14,28 +14,25 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.ForeignKey;
+
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import org.hibernate.annotations.CollectionOfElements;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
-import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a Product that can be consumed and entitled. Products define
@@ -50,9 +47,9 @@ import org.hibernate.annotations.ForeignKey;
 @SequenceGenerator(name="seq_product", sequenceName="seq_product", allocationSize=1)
 public class Product implements Persisted {
 
+    // Product ID is stored as a string. Could be a product OID or label.
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_product")
-    private Long id;
+    private String id;
     
     @Column(nullable = false, unique = true)
     private String label;
@@ -83,18 +80,19 @@ public class Product implements Persisted {
      * @param name Human readable Product name
      */
     public Product(String label, String name) {
+        setId(label);
         setLabel(label);
         setName(name);
     }
-
+    
     protected Product() {
     }
 
-    public Long getId() {
-        return id;
+    public String getId() {
+        return id ;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

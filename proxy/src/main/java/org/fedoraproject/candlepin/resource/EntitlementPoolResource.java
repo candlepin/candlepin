@@ -14,14 +14,25 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 
@@ -36,13 +47,16 @@ public class EntitlementPoolResource {
     private static Logger log = Logger.getLogger(EntitlementPoolResource.class);
 
     private EntitlementPoolCurator entitlementPoolCurator;
+    private ConsumerCurator consumerCurator;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementPoolResource(EntitlementPoolCurator entitlementPoolCurator) {
+    public EntitlementPoolResource(EntitlementPoolCurator entitlementPoolCurator,
+                                    ConsumerCurator consumerCurator) {
         this.entitlementPoolCurator = entitlementPoolCurator;
+        this.consumerCurator = consumerCurator;
     }
    
     /**
@@ -55,4 +69,18 @@ public class EntitlementPoolResource {
         return entitlementPoolCurator.findAll();
     }
 
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("/consumer/{consumer_uuid}")
+    public List<EntitlementPool> listByConsumer(@PathParam("consumer_uuid") String consumer_uuid) {
+        // FIXME: not correct, we need to filter on only those
+        // owned by the Consumer
+        log.debug("listByConsumer, consumer_uuid is: " + consumer_uuid);
+        Consumer consumer = consumerCurator.lookupByUuid(consumer_uuid);
+        log.debug("consumer is :" + consumer.toString());
+        List<EntitlementPool>  eps = entitlementPoolCurator.listByConsumer(consumer);
+        log.debug("EntitlementPools: " + eps.toString());
+        return eps;
+    }
+    
 }

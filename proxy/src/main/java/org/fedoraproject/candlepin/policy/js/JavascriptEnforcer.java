@@ -15,15 +15,6 @@
 package org.fedoraproject.candlepin.policy.js;
 
 
-import java.io.Reader;
-import java.io.StringReader;
-
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -32,14 +23,26 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
+import java.io.Reader;
+import java.io.StringReader;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 public class JavascriptEnforcer implements Enforcer {
     
     private static Logger log = Logger.getLogger(JavascriptEnforcer.class);
     private DateSource dateSource;
     private RulesCurator rulesCurator;
+    private ProductServiceAdapter prodAdapter;    
     private PreEntHelper preHelper;
     private PostEntHelper postHelper;
 
@@ -53,12 +56,12 @@ public class JavascriptEnforcer implements Enforcer {
     @Inject
     public JavascriptEnforcer(DateSource dateSource, 
             RulesCurator rulesCurator, PreEntHelper preHelper,
-            PostEntHelper postHelper) {
+            PostEntHelper postHelper, ProductServiceAdapter prodAdapter) {
         this.dateSource = dateSource;
         this.rulesCurator = rulesCurator;
         this.preHelper = preHelper;
         this.postHelper = postHelper;
-
+        this.prodAdapter = prodAdapter ;
 
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
@@ -83,7 +86,7 @@ public class JavascriptEnforcer implements Enforcer {
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(new ValidationError("Entitlements for " +
-                    entitlementPool.getProduct().getName() +
+                    entitlementPool.getProductId() +
                     " expired on: " + entitlementPool.getEndDate()));
             return preHelper;
         }
@@ -94,16 +97,16 @@ public class JavascriptEnforcer implements Enforcer {
     private void runPre(PreEntHelper preHelper, Consumer consumer,
             EntitlementPool pool) {
         Invocable inv = (Invocable)jsEngine;
-        Product p = pool.getProduct();
+        String productId = pool.getProductId();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
+        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductById(productId)));
         jsEngine.put("pool", new ReadOnlyEntitlementPool(pool));
         jsEngine.put("pre", preHelper);
 
         try {
-            inv.invokeFunction(PRE_PREFIX + p.getLabel());
+            inv.invokeFunction(PRE_PREFIX + productId);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if neither exists
@@ -134,16 +137,16 @@ public class JavascriptEnforcer implements Enforcer {
         Invocable inv = (Invocable)jsEngine;
         EntitlementPool pool = ent.getPool();
         Consumer c = ent.getConsumer();
-        Product p = pool.getProduct();
+        String productId = pool.getProductId();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
-        jsEngine.put("product", new ReadOnlyProduct(pool.getProduct()));
+        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductById(productId)));
         jsEngine.put("post", postHelper);
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
 
         try {
-            inv.invokeFunction(POST_PREFIX + p.getLabel());
+            inv.invokeFunction(POST_PREFIX + productId);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if neither exists

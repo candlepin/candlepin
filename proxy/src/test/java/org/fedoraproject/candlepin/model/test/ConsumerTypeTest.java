@@ -1,14 +1,15 @@
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
+import org.junit.Test;
 
 import java.util.List;
 
 import javax.persistence.EntityManager;
-
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.junit.Test;
 
 public class ConsumerTypeTest extends DatabaseTestFixture {
 

@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import java.util.Date;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -31,6 +28,10 @@ import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
+
+import org.apache.log4j.Logger;
+
+import java.util.Date;
 
 public class Entitler {
     
@@ -87,7 +88,7 @@ public class Entitler {
         Entitlement e = new Entitlement(ePool, consumer, new Date());
 
         consumer.addEntitlement(e);
-        consumer.addConsumedProduct(product);
+        consumerCurator.addConsumedProduct(consumer, product);
 
         if (preHelper.getGrantFreeEntitlement()) {
             log.info("Granting free entitlement.");

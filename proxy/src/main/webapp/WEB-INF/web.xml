@@ -42,10 +42,12 @@
       <param-value>org.fedoraproject.candlepin.resource</param-value>
     </init-param>
 
+<!--
     <init-param>
     <param-name>com.sun.jersey.config.property.WadlGeneratorConfig</param-name>
         <param-value>com.sun.jersey.samples.extendedwadl.SampleWadlGeneratorConfig</param-value>
     </init-param>
+-->
 
     <init-param>
      <param-name>com.sun.jersey.config.feature.Trace</param-name>

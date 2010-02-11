@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.configuration.CandlepinConfiguration;
+
 import com.google.inject.Module;
 
 public class CustomizableModules {

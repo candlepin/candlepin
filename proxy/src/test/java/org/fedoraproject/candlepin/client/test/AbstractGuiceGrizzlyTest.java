@@ -37,15 +37,7 @@
 
 package org.fedoraproject.candlepin.client.test;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.ws.rs.core.UriBuilder;
-
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.junit.After;
 
 import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.GuiceServletContextListener;
@@ -53,6 +45,15 @@ import com.sun.grizzly.http.embed.GrizzlyWebServer;
 import com.sun.grizzly.http.servlet.ServletAdapter;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
+
+import org.junit.After;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ws.rs.core.UriBuilder;
 
 public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
     private static final Logger LOGGER = Logger.getLogger(AbstractGuiceGrizzlyTest.class.getName());

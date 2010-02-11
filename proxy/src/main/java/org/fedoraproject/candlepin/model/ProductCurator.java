@@ -14,14 +14,14 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import com.wideplay.warp.persist.Transactional;
+
+import org.hibernate.criterion.Restrictions;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import org.hibernate.criterion.Restrictions;
-
-import com.wideplay.warp.persist.Transactional;
 
 public class ProductCurator extends AbstractHibernateCurator<Product> {
 
@@ -35,6 +35,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult();
     }
 
+    public Product lookupById(String id) {
+        return (Product) currentSession().createCriteria(Product.class)
+            .add(Restrictions.like("id", id))
+            .uniqueResult();
+    }
+    
     public Product lookupByLabel(String label) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.like("label", label))

@@ -14,35 +14,9 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
-import java.net.URI;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.ClientCertificateStatus;
+import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -51,7 +25,31 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
+
 import com.google.inject.Inject;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 /**
  * API Gateway for Consumers
@@ -211,6 +209,7 @@ public class ConsumerResource {
 
         List<ClientCertificate> allCerts = new LinkedList<ClientCertificate>();
         
+        //FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
         try {
             byte[] bytes = getBytesFromFile("/testcert-cert.p12");
@@ -237,15 +236,16 @@ public class ConsumerResource {
     
     @POST
     @Path("{consumer_uuid}/certificates")
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON})
-    public List<ClientCertificate> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
-                                                                    List<String> clientCertificateSertialNumbers){
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public List<ClientCertificateStatus> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
+                                                                    List<ClientCertificateSerialNumber> clientCertificateSerialNumbers){
         
         List<ClientCertificateStatus> updatedCertificateStatus =  new LinkedList<ClientCertificateStatus>();
        
-        for (String serialNumber : clientCertificateSertialNumbers) {
-            log.debug("got a serial number: " + serialNumber); 
+        for (ClientCertificateSerialNumber serialNumber : clientCertificateSerialNumbers) {
+            log.debug("got a serial number: " + serialNumber.serialNumber); 
+            //FIXME: lookup the certs by serialNumber
            
         }
         
@@ -257,8 +257,10 @@ public class ConsumerResource {
            updatedCertificateStatus.add(clientCertficiateStatus);
        }
   
-       return clientCerts;
-//       return updatedCertificateStatus;
+       log.debug("clientCerts: " + clientCerts);
+       //return clientCerts;
+       //       return foo;
+       return updatedCertificateStatus;
         
     }
 }
