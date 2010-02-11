@@ -9,6 +9,7 @@ Vendor: Red Hat, Inc
 URL: http://fedorahosted.org/candlepin
 License: GLPv2
 Requires: jbossas >= 4.3.0
+BuildArch: noarch
 
 %global _binary_filedigest_algorithm 1
 %global _source_filedigest_algorithm 1
