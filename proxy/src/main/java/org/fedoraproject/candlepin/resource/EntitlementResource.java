@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -26,7 +25,6 @@ import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
@@ -59,21 +57,19 @@ public class EntitlementResource {
     private Entitler entitler;
     private EntitlementCurator entitlementCurator;
     
-    private DateSource dateSource;
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
             EntitlementCurator entitlementCurator,
             OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ProductServiceAdapter prodAdapter, DateSource dateSource, Entitler entitler) {
+            ProductServiceAdapter prodAdapter, Entitler entitler) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.prodAdapter = prodAdapter;
-        this.dateSource = dateSource;
         this.entitler = entitler;
     }
 
