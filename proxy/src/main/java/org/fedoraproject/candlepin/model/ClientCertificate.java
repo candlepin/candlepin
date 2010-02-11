@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name="certs")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ClientCertificate implements Persisted{
+public class ClientCertificate implements Persisted {
     
     // This must be Base64 encoded:
     private String bundle;

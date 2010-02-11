@@ -74,7 +74,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         entitler = injector.getInstance(Entitler.class);
 
         eapi = new EntitlementResource(entitlementPoolCurator, entitlementCurator, ownerCurator, consumerCurator, 
-                productCurator, dateSource, entitler);
+                productAdapter, dateSource, entitler);
         
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }

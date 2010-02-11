@@ -51,6 +51,19 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
     }
     
+    @SuppressWarnings("unchecked")
+    public List<EntitlementPool> listByConsumer(Consumer consumer) {
+        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
+            .createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("consumer", consumer)).list();
+        if (results == null) {
+            return new LinkedList<EntitlementPool>();
+        }
+        else {
+            return results;
+        }
+    }
+    
     /**
      * Before executing any entitlement pool query, check our underlying subscription service
      * and update the pool data. Must be careful to call this before we do any pool query.
@@ -78,7 +91,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         for (Subscription sub : subs) {
             // No pool exists for this subscription, create one:
             if (!subToPoolMap.containsKey(sub.getId())) {
-                EntitlementPool newPool = new EntitlementPool(owner, product, 
+                EntitlementPool newPool = new EntitlementPool(owner, product.getOID(), 
                         sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
                 newPool.setSubscriptionId(sub.getId());
                 create(newPool);
@@ -133,7 +146,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             List<EntitlementPool> result = (List<EntitlementPool>)
                 currentSession().createCriteria(EntitlementPool.class)
                 .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.eq("product", product))
+                .add(Restrictions.eq("productId", product.getOID()))
                 .add(Restrictions.eq("consumer", consumer))
                 .list();
             if (result != null && result.size() > 0) {
@@ -143,7 +156,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
 
         return (List<EntitlementPool>) currentSession().createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("product", product)).list();
+            .add(Restrictions.eq("productId", product.getOID())).list();
     }
     
     private EntitlementPool lookupBySubscriptionId(Long subId) {

@@ -25,11 +25,18 @@ import java.util.Set;
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private ConsumerFactCurator consumerInfoCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private ConsumerProductCurator consumerProductCurator;
+    @Inject private EntitlementCurator entitlementCurator;    
 
     protected ConsumerCurator() {
         super(Consumer.class);
+    }
+    
+    public void addConsumedProduct(Consumer consumer, Product product) {
+        ConsumerProduct cp = new ConsumerProduct() ;
+        cp.setConsumer(consumer) ;
+        cp.setProductOID(product.getOID()) ;
+        consumer.addConsumedProduct(cp) ;
     }
 
     public Consumer lookupByName(String name) {
@@ -53,7 +60,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         
         // TODO: Are any of these read-only?
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
-        existingConsumer.setConsumedProducts(productCurator.bulkUpdate(updatedConsumer.getConsumedProducts()));
+        existingConsumer.setConsumedProducts(updatedConsumer.getConsumedProducts());
         existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
         existingConsumer.setFacts(consumerInfoCurator.update(updatedConsumer.getFacts()));
         existingConsumer.setName(updatedConsumer.getName());

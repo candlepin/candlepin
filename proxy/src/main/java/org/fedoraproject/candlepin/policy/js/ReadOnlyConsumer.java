@@ -53,16 +53,19 @@ public class ReadOnlyConsumer {
     }
     
     public Set<ReadOnlyProduct> getConsumedProducts() {
-        return ReadOnlyProduct.fromProducts(consumer.getConsumedProducts());
+        //TODO HOW DO I FIX THIS
+        //return ReadOnlyProduct.fromProducts(consumer.getConsumedProducts());
+        return null ;
     }
     
     public String getFact(String factKey) {
         return consumer.getFact(factKey);
     }
     
+    //TODO Is this correct?
     public boolean hasEntitlement(String productLabel) {
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProduct().getLabel().equals(productLabel)) {
+            if (e.getProductId().equals(productLabel)) {
                 return true;
             }
         }

@@ -47,9 +47,11 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     public void createObjects() {
         beginTransaction();
 
-        pool = TestUtil.createEntitlementPool();
+        prod = TestUtil.createProduct(); 
+        productCurator.create(prod);
+        pool = TestUtil.createEntitlementPool(prod);
         owner = pool.getOwner();
-        prod = pool.getProduct();
+        
         consumer = TestUtil.createConsumer(owner);
         entitler = injector.getInstance(Entitler.class);
 
@@ -68,7 +70,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
                 EntitlementPool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
-        assertEquals(prod.getId(), lookedUp.getProduct().getId());
+        assertEquals(prod.getOID(), lookedUp.getProductId());
     }
 
     public void testMultiplePoolsForOwnerProductAllowed() {
@@ -173,7 +175,10 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         assertEquals(0, consumer.getEntitlements().size());
         entitler.entitle(owner, consumer, newProduct);
         
-        assertTrue(consumerCurator.find(consumer.getId()).getConsumedProducts().contains(newProduct));
+        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        assertEquals(1, lookedUp.getConsumedProducts().size());
+//        assertTrue(.getConsumedProducts().contains(
+//                newProduct));
         assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
     }
     

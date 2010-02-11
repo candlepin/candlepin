@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.product.ProductServiceAdapter;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 
 import com.google.inject.Inject;
@@ -54,7 +55,7 @@ public class EntitlementResource {
     private EntitlementPoolCurator epCurator;
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
-    private ProductCurator productCurator;
+    private ProductServiceAdapter prodAdapter;
     private Entitler entitler;
     private EntitlementCurator entitlementCurator;
     
@@ -65,13 +66,13 @@ public class EntitlementResource {
     public EntitlementResource(EntitlementPoolCurator epCurator, 
             EntitlementCurator entitlementCurator,
             OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ProductCurator productCurator, DateSource dateSource, Entitler entitler) {
+            ProductServiceAdapter prodAdapter, DateSource dateSource, Entitler entitler) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
-        this.productCurator = productCurator;
+        this.prodAdapter = prodAdapter;
         this.dateSource = dateSource;
         this.entitler = entitler;
     }
@@ -103,7 +104,7 @@ public class EntitlementResource {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
         
-        Product p = productCurator.lookupByLabel(productLabel);
+        Product p = prodAdapter.getProductByLabel(productLabel);
         if (p == null) {
             throw new BadRequestException("No such product: " + productLabel);
         }
@@ -154,11 +155,11 @@ public class EntitlementResource {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
         
-        Product product = productCurator.lookupByLabel(productLabel);
+        Product product = prodAdapter.getProductByLabel(productLabel);
         verifyExistence(product, productLabel);
             
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProduct().equals(product)) {
+            if (e.getProductId().equals(product.getOID())) {
                 return e;
             }
         }
