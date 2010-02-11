@@ -37,7 +37,7 @@ public class JPAConfiguration {
         Properties toReturn = new Properties();
         
         for(String key: inputConfiguration.keySet()) {
-            toReturn.put(key.substring(PREFIX_LENGTH), inputConfiguration.get(key));
+            toReturn.put(key.substring(PREFIX_LENGTH + 1), inputConfiguration.get(key));
         }
         return toReturn;
     }
