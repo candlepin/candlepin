@@ -24,8 +24,6 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -49,9 +47,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @SequenceGenerator(name="seq_product", sequenceName="seq_product", allocationSize=1)
 public class Product implements Persisted {
 
+    // Product ID is stored as a string. Could be a product OID or label.
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_product")
-    private Long id;
+    private String id;
     
     @Column(nullable = false, unique = true)
     private String label;
@@ -82,22 +80,19 @@ public class Product implements Persisted {
      * @param name Human readable Product name
      */
     public Product(String label, String name) {
+        setId(label);
         setLabel(label);
         setName(name);
     }
     
-    public String getOID() {
-        return label ;
-    }
-
     protected Product() {
     }
 
-    public Long getId() {
-        return id;
+    public String getId() {
+        return id ;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

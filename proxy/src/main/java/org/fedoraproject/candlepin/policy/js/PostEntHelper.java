@@ -69,7 +69,7 @@ public class PostEntHelper {
         }
         
         EntitlementPool consumerSpecificPool = new EntitlementPool(c.getOwner(), 
-                p.getOID(), quantity, ent.getPool().getStartDate(), ent.getPool().getEndDate());
+                p.getId(), quantity, ent.getPool().getStartDate(), ent.getPool().getEndDate());
         consumerSpecificPool.setConsumer(c);
         consumerSpecificPool.setSourceEntitlement(ent);
         epCurator.create(consumerSpecificPool);

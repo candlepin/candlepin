@@ -67,7 +67,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        ep = new EntitlementPool(owner, product.getOID(), new Long(10), 
+        ep = new EntitlementPool(owner, product.getId(), new Long(10), 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(ep);
 
@@ -88,7 +88,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         consumer = consumerCurator.lookupByUuid(consumer.getUuid());
         assertEquals(1, consumer.getConsumedProducts().size());
         assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
-                .next().getId());
+                .next().getProductId());
         assertEquals(1, consumer.getEntitlements().size());
         
         ep = entitlementPoolCurator.find(ep.getId());

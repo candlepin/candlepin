@@ -91,7 +91,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         for (Subscription sub : subs) {
             // No pool exists for this subscription, create one:
             if (!subToPoolMap.containsKey(sub.getId())) {
-                EntitlementPool newPool = new EntitlementPool(owner, product.getOID(), 
+                EntitlementPool newPool = new EntitlementPool(owner, product.getId(), 
                         sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
                 newPool.setSubscriptionId(sub.getId());
                 create(newPool);
@@ -146,7 +146,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             List<EntitlementPool> result = (List<EntitlementPool>)
                 currentSession().createCriteria(EntitlementPool.class)
                 .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.eq("productId", product.getOID()))
+                .add(Restrictions.eq("productId", product.getId()))
                 .add(Restrictions.eq("consumer", consumer))
                 .list();
             if (result != null && result.size() > 0) {
@@ -156,7 +156,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
 
         return (List<EntitlementPool>) currentSession().createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("productId", product.getOID())).list();
+            .add(Restrictions.eq("productId", product.getId())).list();
     }
     
     private EntitlementPool lookupBySubscriptionId(Long subId) {

@@ -58,14 +58,14 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        entitlementPool = new EntitlementPool(owner, product.getOID(), MAX_MEMBERS_IN, 
+        entitlementPool = new EntitlementPool(owner, product.getId(), MAX_MEMBERS_IN, 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(entitlementPool);
         
         exhaustedPoolProduct = TestUtil.createProduct();
         productCurator.create(exhaustedPoolProduct);
 
-        exhaustedPool = new EntitlementPool(owner, exhaustedPoolProduct.getOID(), new Long(0), 
+        exhaustedPool = new EntitlementPool(owner, exhaustedPoolProduct.getId(), new Long(0), 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(exhaustedPool);
         
@@ -186,7 +186,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertNotNull(entitlementCurator.find(entitlement.getId()));        
         
         WebResource r = resource().path(
-                "/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getOID()
+                "/entitlement/consumer/" + consumer.getUuid() + "/product/" + product.getId()
         );
         Entitlement returned = r.accept("application/json")
              .type("application/json")
@@ -252,7 +252,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
             .get(0).getCurrentMembers());
         assertEquals(1, consumerCurator.find(consumer.getId()).getConsumedProducts().size());
         assertEquals(product.getId(), consumerCurator.find(consumer.getId())
-                .getConsumedProducts().iterator().next().getId());
+                .getConsumedProducts().iterator().next().getProductId());
         assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
     }
     

@@ -155,7 +155,7 @@ public class EntitlementResource {
         verifyExistence(product, productLabel);
             
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProductId().equals(product.getOID())) {
+            if (e.getProductId().equals(product.getId())) {
                 return e;
             }
         }
