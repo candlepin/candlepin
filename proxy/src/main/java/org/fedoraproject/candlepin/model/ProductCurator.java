@@ -35,6 +35,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult();
     }
 
+    public Product lookupById(String id) {
+        return (Product) currentSession().createCriteria(Product.class)
+            .add(Restrictions.like("id", id))
+            .uniqueResult();
+    }
+    
     public Product lookupByLabel(String label) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.like("label", label))

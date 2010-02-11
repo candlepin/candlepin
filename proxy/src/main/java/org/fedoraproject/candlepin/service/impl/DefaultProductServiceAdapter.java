@@ -32,9 +32,8 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
-    //TODO Figure out what this really maps to
-    public Product getProductByOID(String oid) {
-        return prodCurator.lookupByLabel(oid);
+    public Product getProductById(String id) {
+        return prodCurator.lookupByLabel(id);
     }
     
     @Override

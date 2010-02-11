@@ -97,16 +97,16 @@ public class JavascriptEnforcer implements Enforcer {
     private void runPre(PreEntHelper preHelper, Consumer consumer,
             EntitlementPool pool) {
         Invocable inv = (Invocable)jsEngine;
-        String productOID = pool.getProductId();
+        String productId = pool.getProductId();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductByOID(productOID)));
+        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductById(productId)));
         jsEngine.put("pool", new ReadOnlyEntitlementPool(pool));
         jsEngine.put("pre", preHelper);
 
         try {
-            inv.invokeFunction(PRE_PREFIX + productOID);
+            inv.invokeFunction(PRE_PREFIX + productId);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if neither exists
@@ -137,16 +137,16 @@ public class JavascriptEnforcer implements Enforcer {
         Invocable inv = (Invocable)jsEngine;
         EntitlementPool pool = ent.getPool();
         Consumer c = ent.getConsumer();
-        String productOID = pool.getProductId();
+        String productId = pool.getProductId();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
-        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductByOID(productOID)));
+        jsEngine.put("product", new ReadOnlyProduct(prodAdapter.getProductById(productId)));
         jsEngine.put("post", postHelper);
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
 
         try {
-            inv.invokeFunction(POST_PREFIX + productOID);
+            inv.invokeFunction(POST_PREFIX + productId);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if neither exists

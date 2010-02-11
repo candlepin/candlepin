@@ -15,7 +15,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.hibernate.annotations.ForeignKey;
 
 /**
- * ConsumerProducts store the products which a consumer may be consumng products which they are not entitled to.
+ * ConsumerProducts store the products which a consumer may be consuming products which 
+ * they are not entitled to.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -57,7 +58,7 @@ public class ConsumerProduct implements Persisted {
         return productId;
     }
 
-    public void setProductOID(String productId) {
+    public void setProductId(String productId) {
         this.productId = productId;
     }
     

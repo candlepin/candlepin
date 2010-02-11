@@ -27,12 +27,12 @@ import java.util.List;
 public interface ProductServiceAdapter {
 
     /**
-     * Query a specific product by its OID
+     * Query a specific product by its string ID.
      * 
-     * @param oid
+     * @param id
      * @return
      */
-    public Product getProductByOID(String oid);
+    public Product getProductById(String id);
     
     /**
      * Query a specific product by its Label
