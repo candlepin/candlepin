@@ -6,7 +6,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -36,7 +35,7 @@ public class ConsumerProduct implements Persisted {
     private Consumer consumer;    
     
     @Column(nullable=false)
-    private String productOID ;
+    private String productId ;
 
     public Long getId() {
         return id;
@@ -54,12 +53,12 @@ public class ConsumerProduct implements Persisted {
         this.consumer = consumer;
     }
 
-    public String getProductOID() {
-        return productOID;
+    public String getProductId() {
+        return productId;
     }
 
-    public void setProductOID(String productOID) {
-        this.productOID = productOID;
+    public void setProductOID(String productId) {
+        this.productId = productId;
     }
     
 }
