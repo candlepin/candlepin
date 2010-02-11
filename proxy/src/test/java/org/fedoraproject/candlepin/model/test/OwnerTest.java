@@ -75,7 +75,7 @@ public class OwnerTest extends DatabaseTestFixture {
         // EntitlementPool
         EntitlementPool pool = new EntitlementPool();
         owner.addEntitlementPool(pool);
-        pool.setProduct(rhel);
+        pool.setProductId(rhel.getOID());
         assertEquals(1, owner.getEntitlementPools().size());  
     }
     

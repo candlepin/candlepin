@@ -71,7 +71,7 @@ public class EntitlementPool implements Persisted {
     private Long subscriptionId;
 
     /* Indicates this pool was created as a result of granting an entitlement.
-     * Allows us to know that we need to clean this pool up if that entitlment
+     * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_pool_source_entitlement")
@@ -91,7 +91,7 @@ public class EntitlementPool implements Persisted {
     private Date endDate;
     
     @Column(nullable = true)
-    private String product;    
+    private String productId;    
 
     @CollectionOfElements
     @JoinTable(name="ENTITLEMENT_POOL_ATTRIBUTE")
@@ -100,10 +100,10 @@ public class EntitlementPool implements Persisted {
     public EntitlementPool() {
     }
 
-    public EntitlementPool(Owner ownerIn, String productIn, Long maxMembersIn, 
+    public EntitlementPool(Owner ownerIn, String productIdIn, Long maxMembersIn, 
             Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
-        this.product = productIn;
+        this.productId = productIdIn;
         this.maxMembers = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -115,7 +115,7 @@ public class EntitlementPool implements Persisted {
     public EntitlementPool(Owner ownerIn, Product productIn, Long maxMembersIn, 
             Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
-        this.product = productIn.getOID();
+        this.productId = productIn.getOID();
         this.maxMembers = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -133,7 +133,7 @@ public class EntitlementPool implements Persisted {
     }
 
     public String getProductId() {
-        return product;
+        return productId;
     }
 
     public Consumer getConsumer() {
@@ -144,14 +144,10 @@ public class EntitlementPool implements Persisted {
         this.consumer = consumerIn;
     }
 
-    public void setProduct(String product) {
-        this.product = product;
+    public void setProductId(String productId) {
+        this.productId = productId;
     }
     
-    public void setProduct(Product product) {
-        this.product = product.getOID();
-    }    
-
     public Date getStartDate() {
         return startDate;
     }

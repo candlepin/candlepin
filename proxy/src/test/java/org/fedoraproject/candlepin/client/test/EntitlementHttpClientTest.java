@@ -259,7 +259,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     private void assertEntitlementsAreSame(Entitlement entitlement, Entitlement returned) {
         assertEquals(entitlement.getId(), returned.getId());      
-        assertEquals(entitlement.getProduct(), returned.getProduct());
+        assertEquals(entitlement.getProductId(), returned.getProductId());
         assertEquals(entitlement.getStartDate(), returned.getStartDate());
         assertEquals(entitlement.getIsFree(), returned.getIsFree());
     }

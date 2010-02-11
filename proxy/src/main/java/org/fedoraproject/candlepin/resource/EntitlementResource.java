@@ -159,7 +159,7 @@ public class EntitlementResource {
         verifyExistence(product, productLabel);
             
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProduct().equals(product)) {
+            if (e.getProductId().equals(product)) {
                 return e;
             }
         }

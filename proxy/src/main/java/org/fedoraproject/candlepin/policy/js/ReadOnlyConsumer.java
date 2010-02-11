@@ -65,7 +65,7 @@ public class ReadOnlyConsumer {
     //TODO Is this correct?
     public boolean hasEntitlement(String productLabel) {
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProduct().equals(productLabel)) {
+            if (e.getProductId().equals(productLabel)) {
                 return true;
             }
         }

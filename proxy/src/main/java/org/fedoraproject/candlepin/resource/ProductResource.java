@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCurator;
 
 import com.google.inject.Inject;
 
@@ -28,12 +27,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.product.ProductServiceAdapter;
 
-import com.google.inject.Inject;
 
 
 /**

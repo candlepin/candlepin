@@ -133,7 +133,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             List<EntitlementPool> result = (List<EntitlementPool>)
                 currentSession().createCriteria(EntitlementPool.class)
                 .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.eq("product", product.getOID()))
+                .add(Restrictions.eq("productId", product.getOID()))
                 .add(Restrictions.eq("consumer", consumer))
                 .list();
             if (result != null && result.size() > 0) {
@@ -143,7 +143,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
 
         return (List<EntitlementPool>) currentSession().createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("product", product.getOID())).list();
+            .add(Restrictions.eq("productId", product.getOID())).list();
     }
     
     private EntitlementPool lookupBySubscriptionId(Long subId) {

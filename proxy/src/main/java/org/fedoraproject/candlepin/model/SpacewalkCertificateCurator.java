@@ -100,7 +100,7 @@ public class SpacewalkCertificateCurator {
         
         EntitlementPool ep = new EntitlementPool();
         ep.setOwner(owner);
-        ep.setProduct(p.getOID());
+        ep.setProductId(p.getOID());
         ep.setMaxMembers(maxmem);
         ep.setStartDate(start);
         ep.setEndDate(end);
