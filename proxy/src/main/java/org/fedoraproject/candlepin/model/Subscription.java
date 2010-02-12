@@ -59,17 +59,20 @@ public class Subscription implements Persisted {
     @CollectionOfElements
     @JoinTable(name="SUBSCRIPTION_ATTRIBUTE")
     private Set<Attribute> attributes;
+    
+    private Date modified;
 
     public Subscription() {
     }
 
     public Subscription(Owner ownerIn, String productIdIn, Long maxMembersIn,
-            Date startDateIn, Date endDateIn) {
+            Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
         this.productId = productIdIn;
         this.quantity = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
+        this.modified = modified;
     }
 
     public Long getId() {
@@ -126,5 +129,13 @@ public class Subscription implements Persisted {
 
     public void setAttributes(Set<Attribute> attributes) {
         this.attributes = attributes;
+    }
+
+    public Date getModified() {
+        return modified;
+    }
+
+    public void setModified(Date modified) {
+        this.modified = modified;
     }
 }

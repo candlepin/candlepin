@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.service;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -28,20 +29,48 @@ import java.util.List;
 public interface SubscriptionServiceAdapter {
 
     /**
-     * List all Subscriptions for the given owner and product ID.
-     * @param owner Owner.
-     * @param productId Product OID or SKU. (not clear yet)
+     * List all subscriptions for the given owner and product, which have changed or been 
+     * created since the given date.
+     * 
+     * @param owner
+     * @param productId 
+     * @param sinceDate 
      * @return
      */
-    public abstract List<Subscription> getSubscriptions(Owner owner, String productId);
+    public List<Subscription> getSubscriptionsSince(Owner owner, String productId, 
+            Date sinceDate);
+
+    /**
+     * List all subscriptions for the given owner and product.
+     * 
+     * @param owner
+     * @param productId 
+     * @return
+     */
+    public List<Subscription> getSubscriptions(Owner owner, String productId); 
     
     /**
-     * Query a specific subscription.
-     * @param owner
+     * List all subscriptions which have been changed or created since the given date.
+     * 
+     * @param sinceDate 
+     * @return
+     */
+    public List<Subscription> getSubscriptionsSince(Date sinceDate);
+
+    /**
+     * Return a subscription for the given token.
+     * 
+     * @param token
+     * @return
+     */
+    public Subscription getSubscriptionForToken(String token);
+    
+    /**
+     * Lookup a specific subscription.
+     * 
      * @param subscriptionId
      * @return
      */
-    // TODO: Is owner required here?
-    public abstract Subscription getSubscription(Owner owner, Long subscriptionId);
+    public abstract Subscription getSubscription(Long subscriptionId);
 
 }

@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import httplib, urllib
-import sys
 import simplejson as json
 import base64
 

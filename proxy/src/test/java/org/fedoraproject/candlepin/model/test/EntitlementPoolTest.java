@@ -237,7 +237,8 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         productCurator.create(prod2);
         
         Subscription sub = new Subscription(owner, prod2.getId().toString(), new Long(2000), 
-                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9));
+                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9),
+                TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         
         // Pool should get created just by doing this lookup:
@@ -255,7 +256,8 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     @Test
     public void testRefreshPoolsWithChangedSubscriptions() {
         Subscription sub = new Subscription(owner, prod.getId().toString(), new Long(2000), 
-                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9));
+                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9),
+                TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         assertTrue(pool.getMaxMembers() < sub.getQuantity());
         assertTrue(pool.getStartDate() != sub.getStartDate());
@@ -279,7 +281,8 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         productCurator.create(prod2);
 
         Subscription sub = new Subscription(owner, prod2.getId().toString(), new Long(2000),
-                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9));
+                TestUtil.createDate(2010, 2, 9), TestUtil.createDate(3000, 2, 9),
+                TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         
         // Pool should get created just by doing this lookup:
