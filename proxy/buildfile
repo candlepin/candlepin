@@ -32,6 +32,7 @@ HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
 DB = 'org.postgresql:postgresql:jar:8.4-701'
 COMMONS = ['org.apache.commons:commons-beanutils:jar:1.7.0',
            'org.apache.commons:commons-codec:jar:1.4',
+           'commons-cli:commons-cli:jar:1.2',
            'org.apache.commons:commons-collections:jar:3.1',
            'org.apache.commons:commons-io:jar:1.3.2',
            'org.apache.commons:commons-logging:jar:1.1.1']
@@ -41,6 +42,7 @@ HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 
 CHECKSTYLE = ['com.puppycrawl:checkstyle:jar:5.0',
               'antlr:antlr:jar:2.7.6',
+              'google-collect:google-collect:jar:snapshot-20090211',
               COMMONS]
 
 BOUNCYCASTLE = group('bcprov', 'bcpg', :under=>'org.bouncycastle', :version=>'1.43')
@@ -113,11 +115,10 @@ define "candlepin" do
 
   task :checkstyle do
     begin
-      ant('checkstyle') do |checkstyle|
-        checkstyle.taskdef :resource=>"checkstyletask.properties", :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-#        ant.checkstyle :config=>"buildconf/checkstyle.xml" do
-#          ant.checkstyle.formatter :type=>"plain"
-#        end
+      ant('checkstyle') do |ant|
+        ant.taskdef :resource=>"checkstyletask.properties", :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+        ant.checkstyle :config=>"checkstyle.xml", :file=>"src/main/java/com/redhat/rhn/common/cert/CertificateFactory.java" do
+        end
       end
     end
   end
