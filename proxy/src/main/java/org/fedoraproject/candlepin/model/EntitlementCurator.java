@@ -28,9 +28,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @Transactional
     public Set<Entitlement> bulkUpdate(Set<Entitlement> entitlements) {
         Set<Entitlement> toReturn = new HashSet<Entitlement>();
-        for(Entitlement toUpdate: entitlements) {
+        for (Entitlement toUpdate : entitlements) {
             Entitlement found = find(toUpdate.getId()); 
-            if(found != null) {
+            if (found != null) {
                 toReturn.add(found);
                 continue;
             }

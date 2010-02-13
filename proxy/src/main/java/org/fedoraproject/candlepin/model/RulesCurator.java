@@ -36,7 +36,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         if (existingRuleSet.size() == 0) {
             return create(updatedRules);
         }
-        for (Rules rule: existingRuleSet) {
+        for (Rules rule : existingRuleSet) {
             delete(rule);
         }
         create(updatedRules);

@@ -27,7 +27,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     }
     
     public List<Subscription> listByOwnerAndProduct(Owner o, String productId) {
-        List<Subscription> subs = (List<Subscription>)currentSession().createCriteria(Subscription.class)
+        List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(Subscription.class)
             .add(Restrictions.eq("owner", o))
             .add(Restrictions.eq("productId", productId)).list();
         if (subs == null) {
@@ -37,13 +37,13 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     }
     
     public Subscription lookupByOwnerAndId(Long subId) {
-        return (Subscription)currentSession().createCriteria(Subscription.class)
+        return (Subscription) currentSession().createCriteria(Subscription.class)
             .add(Restrictions.eq("id", subId)).uniqueResult();
     }
 
     public List<Subscription> listByOwnerAndProductSince(Owner o, String productId, 
             Date sinceDate) {
-        List<Subscription> subs = (List<Subscription>)currentSession().createCriteria(
+        List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
                 Subscription.class)
             .add(Restrictions.eq("owner", o))
             .add(Restrictions.eq("productId", productId))
@@ -55,7 +55,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     }
     
     public List<Subscription> listSince(Date sinceDate) {
-        List<Subscription> subs = (List<Subscription>)currentSession().createCriteria(
+        List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
                 Subscription.class)
             .add(Restrictions.gt("modified", sinceDate)).list();
         if (subs == null) {

@@ -58,6 +58,6 @@ public class ProductResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Product> list() {
-        return prodAdapter.getProducts() ;
+        return prodAdapter.getProducts();
     }
 }

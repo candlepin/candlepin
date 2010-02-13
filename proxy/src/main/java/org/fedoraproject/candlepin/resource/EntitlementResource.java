@@ -87,8 +87,8 @@ public class EntitlementResource {
      * @return Entitled object
      */
     @POST
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/product/{product_label}")
     public String entitle(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_label") String productLabel) {
@@ -117,8 +117,8 @@ public class EntitlementResource {
     }
 
     @POST
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/token/{registration_token}")
     public String entitleToken(@PathParam("consumer_uuid") String consumerUuid,
             @PathParam("registration_token") String registrationToken) {

@@ -31,7 +31,7 @@ public class ConsumerProductCurator extends AbstractHibernateCurator<ConsumerPro
     
     public Set<ConsumerProduct> bulUpdate(Set<ConsumerProduct> consumerProducts) {
         Set<ConsumerProduct> toReturn = new HashSet<ConsumerProduct>();        
-        for(ConsumerProduct toUpdate: consumerProducts) { 
+        for (ConsumerProduct toUpdate : consumerProducts) { 
             toReturn.add(update(toUpdate));
         }
         return toReturn;        

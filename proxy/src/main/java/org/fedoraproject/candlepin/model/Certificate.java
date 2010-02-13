@@ -38,11 +38,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_certificate")
-@SequenceGenerator(name="seq_certificate", sequenceName="seq_certificate", allocationSize=1)
+@SequenceGenerator(name = "seq_certificate", sequenceName = "seq_certificate", allocationSize = 1)
 public class Certificate implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_certificate")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_certificate")
     private Long id;
     
    

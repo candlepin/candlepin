@@ -36,21 +36,21 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_products")
-@SequenceGenerator(name="seq_consumer_products", sequenceName="seq_consumer_products", allocationSize=1)
+@SequenceGenerator(name = "seq_consumer_products", sequenceName = "seq_consumer_products", allocationSize = 1)
 public class ConsumerProduct implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
     // product oid should be the key.
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_consumer_products")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_products")
     private Long id;
     
     @ManyToOne
     @ForeignKey(name = "fk_consumer_product_owner")
     private Consumer consumer;    
     
-    @Column(nullable=false)
-    private String productId ;
+    @Column(nullable = false)
+    private String productId;
 
     public Long getId() {
         return id;

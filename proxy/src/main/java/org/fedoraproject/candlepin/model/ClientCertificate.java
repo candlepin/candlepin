@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Represents a client X509 certificate, used to obtain access to some content.
  */
-@XmlRootElement(name="certs")
+@XmlRootElement(name = "certs")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class ClientCertificate implements Persisted {
     

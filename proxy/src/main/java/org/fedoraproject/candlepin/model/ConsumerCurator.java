@@ -32,10 +32,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
     
     public void addConsumedProduct(Consumer consumer, Product product) {
-        ConsumerProduct cp = new ConsumerProduct() ;
-        cp.setConsumer(consumer) ;
-        cp.setProductId(product.getId()) ;
-        consumer.addConsumedProduct(cp) ;
+        ConsumerProduct cp = new ConsumerProduct();
+        cp.setConsumer(consumer);
+        cp.setProductId(product.getId());
+        consumer.addConsumedProduct(cp);
     }
 
     public Consumer lookupByName(String name) {
@@ -75,7 +75,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public Set<Consumer> bulkUpdate(Set<Consumer> consumers) {
         Set<Consumer> toReturn = new HashSet<Consumer>();        
-        for(Consumer toUpdate: consumers) { 
+        for (Consumer toUpdate : consumers) { 
             toReturn.add(update(toUpdate));
         }
         return toReturn;

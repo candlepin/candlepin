@@ -28,12 +28,12 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "cp_rules")
-@SequenceGenerator(name="seq_rules", sequenceName="seq_rules", allocationSize=1)
+@SequenceGenerator(name = "seq_rules", sequenceName = "seq_rules", allocationSize = 1)
 @Embeddable
 public class Rules implements Persisted {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_rules")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_rules")
     private Long id;
 
     @Lob

@@ -43,8 +43,8 @@ public class RulesResource {
     }
     
     @POST
-    @Consumes({MediaType.TEXT_PLAIN})
-    @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({ MediaType.TEXT_PLAIN })
+    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public String upload(String rulesBuffer) {
         
         if (rulesBuffer == null || "".equals(rulesBuffer)) {
@@ -58,7 +58,7 @@ public class RulesResource {
     
     
     @GET
-    @Produces({MediaType.TEXT_PLAIN})
+    @Produces({ MediaType.TEXT_PLAIN })
     public String get() {
          return rulesCurator.getRules().getRules();
     }

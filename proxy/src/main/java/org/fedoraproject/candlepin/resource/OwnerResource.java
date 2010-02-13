@@ -72,7 +72,7 @@ public class OwnerResource {
         }
         
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
-        for (EntitlementPool pool: owner.getEntitlementPools()) {
+        for (EntitlementPool pool : owner.getEntitlementPools()) {
             toReturn.addAll(entitlementPoolCurator.entitlementsIn(pool));
         }
         

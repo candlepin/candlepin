@@ -105,7 +105,7 @@ public class ConsumerResource {
      * @return newly created Consumer
      */
     @POST
-    @Consumes({MediaType.APPLICATION_JSON})
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer create(Consumer in) {
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
@@ -203,7 +203,7 @@ public class ConsumerResource {
 
     @GET
     @Path("{consumer_uuid}/certificates")
-    @Produces({MediaType.APPLICATION_JSON})
+    @Produces({ MediaType.APPLICATION_JSON })
     public List<ClientCertificate> getClientCertificates(@PathParam("consumer_uuid") String consumerUuid) {
         log.debug("Getting client certificates for consumer: " + consumerUuid);
 
@@ -236,12 +236,14 @@ public class ConsumerResource {
     
     @POST
     @Path("{consumer_uuid}/certificates")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public List<ClientCertificateStatus> getClientCertificateStatus(@PathParam("consumer_uuid") String consumerUuid, 
-                                                                    List<ClientCertificateSerialNumber> clientCertificateSerialNumbers){
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public List<ClientCertificateStatus> getClientCertificateStatus(
+        @PathParam("consumer_uuid") String consumerUuid, 
+        List<ClientCertificateSerialNumber> clientCertificateSerialNumbers) {
         
-        List<ClientCertificateStatus> updatedCertificateStatus =  new LinkedList<ClientCertificateStatus>();
+        List<ClientCertificateStatus> updatedCertificateStatus =
+            new LinkedList<ClientCertificateStatus>();
        
         for (ClientCertificateSerialNumber serialNumber : clientCertificateSerialNumbers) {
             log.debug("got a serial number: " + serialNumber.serialNumber); 

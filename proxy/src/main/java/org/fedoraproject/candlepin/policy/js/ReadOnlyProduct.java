@@ -41,7 +41,7 @@ public class ReadOnlyProduct {
     
     public Set<ReadOnlyProduct> getChildProducts() {
         Set<ReadOnlyProduct> toReturn = new HashSet<ReadOnlyProduct>();
-        for(Product toProxy: product.getChildProducts()) {
+        for (Product toProxy : product.getChildProducts()) {
             toReturn.add(new ReadOnlyProduct(toProxy));
         }
         return toReturn;
@@ -56,7 +56,7 @@ public class ReadOnlyProduct {
     
     public static Set<ReadOnlyProduct> fromProducts(Set<Product> products) {
         Set<ReadOnlyProduct> toReturn = new HashSet<ReadOnlyProduct>();
-        for (Product toProxy: products) {
+        for (Product toProxy : products) {
             toReturn.add(new ReadOnlyProduct(toProxy));
         }
         return toReturn;
@@ -64,7 +64,7 @@ public class ReadOnlyProduct {
 
     private void initializeReadOnlyAttributes() {
         attributes = new HashMap<String, Long>();
-        for(Attribute current: product.getAttributes()) {
+        for (Attribute current : product.getAttributes()) {
             attributes.put(current.getName(), current.getQuantity());
         }
     }

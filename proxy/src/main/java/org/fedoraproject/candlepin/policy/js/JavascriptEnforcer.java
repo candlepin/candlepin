@@ -61,7 +61,7 @@ public class JavascriptEnforcer implements Enforcer {
         this.rulesCurator = rulesCurator;
         this.preHelper = preHelper;
         this.postHelper = postHelper;
-        this.prodAdapter = prodAdapter ;
+        this.prodAdapter = prodAdapter;
 
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
@@ -96,7 +96,7 @@ public class JavascriptEnforcer implements Enforcer {
 
     private void runPre(PreEntHelper preHelper, Consumer consumer,
             EntitlementPool pool) {
-        Invocable inv = (Invocable)jsEngine;
+        Invocable inv = (Invocable) jsEngine;
         String productId = pool.getProductId();
 
         // Provide objects for the script:
@@ -130,11 +130,11 @@ public class JavascriptEnforcer implements Enforcer {
     public PostEntHelper post(Entitlement ent) {
         postHelper.init(ent);
         runPost(postHelper, ent);
-        return(postHelper);
+        return postHelper;
     }
 
     private void runPost(PostEntHelper postHelper, Entitlement ent) {
-        Invocable inv = (Invocable)jsEngine;
+        Invocable inv = (Invocable) jsEngine;
         EntitlementPool pool = ent.getPool();
         Consumer c = ent.getConsumer();
         String productId = pool.getProductId();

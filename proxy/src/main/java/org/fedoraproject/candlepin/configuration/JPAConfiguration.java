@@ -50,25 +50,25 @@ public class JPAConfiguration {
     public static Properties stripPrefixFromConfigKeys(Map<String, String> inputConfiguration) {
         Properties toReturn = new Properties();
         
-        for(String key: inputConfiguration.keySet()) {
+        for (String key : inputConfiguration.keySet()) {
             toReturn.put(key.substring(PREFIX_LENGTH + 1), inputConfiguration.get(key));
         }
         return toReturn;
     }
     
     public static Map<String, String> immutableConfigurationSettings() {
-        return new HashMap<String, String>() {{
+        return new HashMap<String, String>() { {
             put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
             put("hibernate.connection.driver_class", "org.postgresql.Driver");
             put("hibernate.show_sql", "false");
-        }};
+        } };
     }
     
     public static Map<String, String> defaultConfigurationSettings() {
-        return new HashMap<String, String>() {{
+        return new HashMap<String, String>() { {
             put(URL_CONFIG, "jdbc:postgresql:candlepin");
             put(USER_CONFIG, "candlepin");
             put(PASSWORD_CONFIG, "");
-        }};
+        } };
     }    
 }

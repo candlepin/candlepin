@@ -48,7 +48,7 @@ public class CustomizableModules {
         try {
             Set toReturn = new HashSet();
             
-            for (String guiceModuleName: loadedConfiguration.keySet()) {
+            for (String guiceModuleName : loadedConfiguration.keySet()) {
                 toReturn.add(Class.forName(loadedConfiguration.get(guiceModuleName)).newInstance());
             }
             

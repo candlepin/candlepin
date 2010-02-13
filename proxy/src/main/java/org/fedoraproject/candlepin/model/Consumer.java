@@ -51,11 +51,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer")
-@SequenceGenerator(name="seq_consumer", sequenceName="seq_consumer", allocationSize=1)
+@SequenceGenerator(name = "seq_consumer", sequenceName = "seq_consumer", allocationSize = 1)
 public class Consumer implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_consumer")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer")
     private Long id;
     
     @Column(nullable = false, unique = true)
@@ -83,7 +83,7 @@ public class Consumer implements Persisted {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private Set<Consumer> childConsumers;
     
-    @OneToMany(cascade = CascadeType.ALL, mappedBy="consumer")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
     private Set<Entitlement> entitlements;
     
     @OneToOne(cascade = CascadeType.ALL)

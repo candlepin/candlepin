@@ -54,11 +54,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement")
-@SequenceGenerator(name="seq_entitlement", sequenceName="seq_entitlement", allocationSize=1)
+@SequenceGenerator(name = "seq_entitlement", sequenceName = "seq_entitlement", allocationSize = 1)
 public class Entitlement implements Persisted {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_entitlement")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_entitlement")
     private Long id;
     
     @ManyToOne

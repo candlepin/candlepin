@@ -45,11 +45,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement_pool")
-@SequenceGenerator(name="seq_entitlement_pool", sequenceName="seq_entitlement_pool", allocationSize=1)
+@SequenceGenerator(name = "seq_entitlement_pool", sequenceName = "seq_entitlement_pool", allocationSize = 1)
 public class EntitlementPool implements Persisted {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_entitlement_pool")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_entitlement_pool")
     private Long id;
     
     @ManyToOne
@@ -94,7 +94,7 @@ public class EntitlementPool implements Persisted {
     private String productId;    
 
     @CollectionOfElements
-    @JoinTable(name="ENTITLEMENT_POOL_ATTRIBUTE")
+    @JoinTable(name = "ENTITLEMENT_POOL_ATTRIBUTE")
     private Set<Attribute> attributes;
 
     public EntitlementPool() {

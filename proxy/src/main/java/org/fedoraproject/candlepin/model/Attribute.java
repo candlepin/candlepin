@@ -39,12 +39,12 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "cp_attribute")
-@SequenceGenerator(name="seq_attribute", sequenceName="seq_attribute", allocationSize=1)
+@SequenceGenerator(name = "seq_attribute", sequenceName = "seq_attribute", allocationSize = 1)
 @Embeddable
 public class Attribute  implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_attribute")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_attribute")
     private Long id;
     
     
@@ -102,6 +102,6 @@ public class Attribute  implements Persisted {
     
     @Override
     public int hashCode() {
-        return name.hashCode()*31 + quantity.hashCode();
+        return name.hashCode() * 31 + quantity.hashCode();
     }
 }

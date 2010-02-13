@@ -33,11 +33,11 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "cp_subscription")
-@SequenceGenerator(name="seq_subscription", sequenceName="seq_subscription", allocationSize=1)
+@SequenceGenerator(name = "seq_subscription", sequenceName = "seq_subscription", allocationSize = 1)
 public class Subscription implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_subscription")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_subscription")
     private Long id;
 
     @ManyToOne
@@ -57,7 +57,7 @@ public class Subscription implements Persisted {
     private Date endDate;
 
     @CollectionOfElements
-    @JoinTable(name="SUBSCRIPTION_ATTRIBUTE")
+    @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
     private Set<Attribute> attributes;
     
     private Date modified;

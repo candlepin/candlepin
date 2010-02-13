@@ -46,7 +46,7 @@ public class ReadOnlyConsumer {
     
     public Set<ReadOnlyConsumer> getChildConsumers() {
         Set<ReadOnlyConsumer> toReturn = new HashSet<ReadOnlyConsumer>();
-        for (Consumer toProxy: consumer.getChildConsumers()) {
+        for (Consumer toProxy : consumer.getChildConsumers()) {
             toReturn.add(new ReadOnlyConsumer(toProxy));
         }
         return toReturn;
