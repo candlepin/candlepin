@@ -96,7 +96,7 @@
     </module>
 
     <module name="MissingDeprecated" />
-    <module name="MissingOverride" />
+    <!-- <module name="MissingOverride" /> -->
 
     <!--
        #######################################################################
@@ -322,7 +322,7 @@
     </module>
     <module name="NoWhitespaceAfter">
       <property name="tokens" value="BNOT, DEC, DOT, INC, LNOT, UNARY_MINUS,
-        UNARY_PLUS, TYPECAST"/>
+        UNARY_PLUS"/>
     </module> 
     <module name="NoWhitespaceBefore">
       <property name="tokens" value="SEMI, POST_DEC, POST_INC"/>
