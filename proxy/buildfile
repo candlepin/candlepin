@@ -119,6 +119,9 @@ define "candlepin" do
   task :checkstyle do
     begin
       ant('checkstyle') do |ant|
+        rm_rf 'reports/checkstyle_report.xml'
+        mkdir_p 'reports'
+
         ant.taskdef :resource=>"checkstyletask.properties", :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
         ant.checkstyle :config=>"buildconf/checkstyle.xml" do
           ant.formatter :type=>'plain'
