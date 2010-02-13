@@ -113,11 +113,25 @@ define "candlepin" do
     end
   end
 
+  #
+  # CHECKSTYLE task, a Buildr plugin would be better, but this is faster
+  #
   task :checkstyle do
     begin
       ant('checkstyle') do |ant|
         ant.taskdef :resource=>"checkstyletask.properties", :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-        ant.checkstyle :config=>"checkstyle.xml", :file=>"src/main/java/com/redhat/rhn/common/cert/CertificateFactory.java" do
+        ant.checkstyle :config=>"buildconf/checkstyle.xml" do
+          ant.formatter :type=>'plain'
+          ant.formatter :type=>'xml', :toFile=>"reports/checkstyle_report.xml"
+
+          ant.property :key=>'javadoc.method.scope', :value=>'public'
+          ant.property :key=>'javadoc.type.scope', :value=>'package'
+          ant.property :key=>'javadoc.var.scope', :value=>'package'
+          ant.property :key=>'javadoc.lazy', :value=>'false'
+          ant.property :key=>'checkstyle.cache.file', :value=>'target/checkstyle.cache.src'
+          ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
+
+          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java'
         end
       end
     end
