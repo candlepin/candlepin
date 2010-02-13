@@ -38,23 +38,23 @@ public class CertificateFactory {
     private static final String ELEM_CERT = "rhn-cert";
 
     private static final FieldExtractor[] FIELD_EXTRACTORS = {
-            new SimpleExtractor("product", true),
-            new SimpleExtractor("owner", true),
-            new SimpleExtractor("issued", true),
-            new SimpleExtractor("expires", true),
-            new SimpleExtractor("slots", true),
-            new SimpleExtractor("monitoring-slots", "monitoringSlots"),
-            new SimpleExtractor("provisioning-slots", "provisioningSlots"),
-            new SimpleExtractor("virtualization_host", "virtualizationSlots"),
-            new SimpleExtractor("virtualization_host_platform",
+        new SimpleExtractor("product", true),
+        new SimpleExtractor("owner", true),
+        new SimpleExtractor("issued", true),
+        new SimpleExtractor("expires", true),
+        new SimpleExtractor("slots", true),
+        new SimpleExtractor("monitoring-slots", "monitoringSlots"),
+        new SimpleExtractor("provisioning-slots", "provisioningSlots"),
+        new SimpleExtractor("virtualization_host", "virtualizationSlots"),
+        new SimpleExtractor("virtualization_host_platform",
                     "virtualizationPlatformSlots"),
-            new SimpleExtractor("nonlinux-slots", "nonlinuxSlots"),
-            new SimpleExtractor("satellite-version", "satelliteVersion"),
-            new SimpleExtractor("generation"),
-            new ChannelFamilyExtractor("channel-families") };
+        new SimpleExtractor("nonlinux-slots", "nonlinuxSlots"),
+        new SimpleExtractor("satellite-version", "satelliteVersion"),
+        new SimpleExtractor("generation"),
+        new ChannelFamilyExtractor("channel-families") };
 
     private static final HashMap<String, FieldExtractor> FIELD_MAP =
-            new HashMap<String, FieldExtractor>();
+        new HashMap<String, FieldExtractor>();
 
     static {
         for (int i = 0; i < FIELD_EXTRACTORS.length; i++) {
