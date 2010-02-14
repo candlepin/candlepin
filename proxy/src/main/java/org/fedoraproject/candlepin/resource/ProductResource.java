@@ -41,9 +41,10 @@ public class ProductResource {
     private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
 
-
     /**
      * default ctor
+     * @param prodAdapter Product Adapter used to interact with multiple
+     * services.
      */
     @Inject
     public ProductResource(ProductServiceAdapter prodAdapter) {
