@@ -30,36 +30,51 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+/**
+ * Rules API entry path
+ */
 @Path("/rules")
 public class RulesResource {
-    
-    
+
     private static Logger log = Logger.getLogger(CertificateResource.class);
     private RulesCurator rulesCurator;
-    
+
+    /**
+     * Default ctor
+     * @param rulesCurator Curator used to interact with Rules.
+     */
     @Inject
     public RulesResource(RulesCurator rulesCurator) {
         this.rulesCurator = rulesCurator;
     }
-    
+
+    /**
+     * Uploads new Rules, returns a copy of the uploaded rules.
+     * @param rulesBuffer rules to upload.
+     * @return a copy of the uploaded rules.
+     */
     @POST
     @Consumes({ MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON,
+                MediaType.APPLICATION_XML })
     public String upload(String rulesBuffer) {
-        
+
         if (rulesBuffer == null || "".equals(rulesBuffer)) {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
-  
+
         Rules rules = new Rules(rulesBuffer);
-        rulesCurator.update(rules);        
+        rulesCurator.update(rules);
         return rulesBuffer;
     }
-    
-    
+
+    /**
+     * return a the rules as a string.
+     * @return a the rules as a string.
+     */
     @GET
     @Produces({ MediaType.TEXT_PLAIN })
     public String get() {
-         return rulesCurator.getRules().getRules();
+        return rulesCurator.getRules().getRules();
     }
-}   
+}
