@@ -18,6 +18,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+/**
+ * Utility class to interact with the EntityManager.
+ */
 public class EntityManagerUtil {
     
     public static final String DEFAULT_PERSISTENCE_UNIT = "test";
@@ -37,6 +40,10 @@ public class EntityManagerUtil {
         return Persistence.createEntityManagerFactory(persistenceUnit);
     }
 
+    /**
+     * Creates a new EntityManager.
+     * @return new EntityManager.
+     */
     public static EntityManager createEntityManager() {
         return EMF.createEntityManager();
     }
