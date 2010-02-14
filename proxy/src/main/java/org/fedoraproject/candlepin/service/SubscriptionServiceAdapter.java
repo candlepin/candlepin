@@ -22,55 +22,53 @@ import java.util.List;
 
 /**
  * Subscription data may originate from a separate service outside Candlepin
- * in some configurations. This interface defines the operations Candlepin requires
- * related to Subscription data, different implementations can handle whether or not
- * this info comes from Candlepin's DB or from a separate service.
+ * in some configurations. This interface defines the operations Candlepin
+ * requires related to Subscription data, different implementations can
+ * handle whether or not this info comes from Candlepin's DB or from a
+ * separate service.
  */
 public interface SubscriptionServiceAdapter {
 
     /**
-     * List all subscriptions for the given owner and product, which have changed or been 
-     * created since the given date.
-     * 
-     * @param owner
-     * @param productId 
-     * @param sinceDate 
-     * @return
+     * List all subscriptions for the given owner and product, which have
+     * changed or been created since the given date.
+     * @param owner Owner of the subscriptions.
+     * @param productId product id filter.
+     * @param sinceDate changed since or created since date.
+     * @return all subscriptions for the given owner and product, which have
+     * changed or been created since the given date.
      */
-    public List<Subscription> getSubscriptionsSince(Owner owner, String productId, 
+    List<Subscription> getSubscriptionsSince(Owner owner, String productId,
             Date sinceDate);
 
     /**
      * List all subscriptions for the given owner and product.
-     * 
-     * @param owner
-     * @param productId 
-     * @return
+     * @param owner Owner of the subscriptions.
+     * @param productId product id filter.
+     * @return all subscriptions for the given owner and product.
      */
-    public List<Subscription> getSubscriptions(Owner owner, String productId); 
+    List<Subscription> getSubscriptions(Owner owner, String productId);
     
     /**
-     * List all subscriptions which have been changed or created since the given date.
-     * 
-     * @param sinceDate 
-     * @return
+     * List all subscriptions which have been changed or created since the
+     * given date.
+     * @param sinceDate changed since or created since date.
+     * @return all subscriptions which have been changed since the
+     * given date.
      */
-    public List<Subscription> getSubscriptionsSince(Date sinceDate);
+    List<Subscription> getSubscriptionsSince(Date sinceDate);
 
     /**
      * Return a subscription for the given token.
-     * 
-     * @param token
-     * @return
+     * @param token token for subscription.
+     * @return a subscription for the given token.
      */
-    public Subscription getSubscriptionForToken(String token);
+    Subscription getSubscriptionForToken(String token);
     
     /**
      * Lookup a specific subscription.
-     * 
-     * @param subscriptionId
-     * @return
+     * @param subscriptionId id of the subscription to return.
+     * @return Subscription whose id matches subscriptionId
      */
-    public abstract Subscription getSubscription(Long subscriptionId);
-
+    Subscription getSubscription(Long subscriptionId);
 }
