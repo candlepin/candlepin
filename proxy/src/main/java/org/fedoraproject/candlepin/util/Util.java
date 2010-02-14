@@ -21,6 +21,14 @@ import java.util.UUID;
  */
 public class Util {
 
+    private Util() {
+        // default ctor
+    }
+
+    /**
+     * Generates a random UUID.
+     * @return a fandom UUID.
+     */
     public static String generateUUID() {
         return UUID.randomUUID().toString();
     }
