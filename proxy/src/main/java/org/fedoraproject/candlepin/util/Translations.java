@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.fedoraproject.candlepin.util;
 
 import java.lang.reflect.InvocationTargetException;
@@ -59,8 +58,7 @@ public class Translations {
     }
     
     private static Object findMatch(Method[] methods, Object have,
-                                    Class want, boolean bestMatch)
-            throws TranslationException {
+        Class want, boolean bestMatch) throws TranslationException {
         
         for (int i = 0; i < methods.length; i++) {
             Class returnType = methods[i].getReturnType();
