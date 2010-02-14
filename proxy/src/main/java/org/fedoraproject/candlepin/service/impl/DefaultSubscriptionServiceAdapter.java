@@ -24,11 +24,18 @@ import com.google.inject.Inject;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * default SubscriptionAdapter implementation
+ */
 public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
     
     private SubscriptionCurator subCurator;
-    
+
+    /**
+     * default ctor
+     * @param subCurator SubscriptionCurator
+     */
     @Inject
     public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
         this.subCurator = subCurator;
