@@ -19,7 +19,14 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+/**
+ * Thrown when a resource is not found.
+ */
 public class NotFoundException extends WebApplicationException {
+    /**
+     * ctor
+     * @param message Exception message string.
+     */
     public NotFoundException(String message) {
         super(Response.status(Status.NOT_FOUND)
                 .entity(message)
