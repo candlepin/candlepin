@@ -46,9 +46,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -66,6 +64,12 @@ public class ConsumerResource {
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
 
+    /**
+     * ctor
+     * @param ownerCurator interact with owners
+     * @param consumerCurator interact with curators
+     * @param consumerTypeCurator interact with consumers.
+     */
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
             ConsumerTypeCurator consumerTypeCurator) {
@@ -84,7 +88,12 @@ public class ConsumerResource {
     public List<Consumer> list() {
         return consumerCurator.findAll();
     }
-    
+   
+    /**
+     * Return the consumer identified by the given uuid.
+     * @param uuid uuid of the consumer sought.
+     * @return the consumer identified by the given uuid.
+     */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
@@ -95,13 +104,13 @@ public class ConsumerResource {
             return toReturn;
         }
 
-        throw new NotFoundException("Consumer with UUID '" + uuid + "' could not be found"); 
+        throw new NotFoundException(
+            "Consumer with UUID '" + uuid + "' could not be found"); 
     }
     
     /**
      * Create a Consumer
-     * @param ci Consumer metadata encapsulated in a ConsumerInfo.
-     * @param type Consumer type
+     * @param in Consumer metadata encapsulated in a ConsumerInfo.
      * @return newly created Consumer
      */
     @POST
@@ -119,16 +128,22 @@ public class ConsumerResource {
         }
         
         if (type == null) {
-            throw new BadRequestException("No such consumer type: " + in.getType().getLabel());
+            throw new BadRequestException(
+                "No such consumer type: " + in.getType().getLabel());
         }
 
         try {
             return consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e) {
             throw new BadRequestException(e.getMessage());
         }
     }
-    
+   
+    /**
+     * delete the consumer.
+     * @param uuid uuid of the consumer to delete.
+     */
     @DELETE
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
@@ -136,7 +151,8 @@ public class ConsumerResource {
         log.debug("deleteing  consumer_uuid" + uuid);
         try {
             consumerCurator.delete(consumerCurator.lookupByUuid(uuid));
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e) {
             throw new NotFoundException(e.getMessage());
         }
     }
@@ -189,6 +205,12 @@ public class ConsumerResource {
         return null;
     }
 
+    /**
+     * Return the content of the file identified by the given filename.
+     * @param path filename path.
+     * @return the content of the file identified by the given filename.
+     * @throws Exception if there's a problem loading the file.
+     */
     public byte[] getBytesFromFile(String path) throws Exception {
         InputStream is = this.getClass().getResource(path).openStream();
         byte [] bytes = null;
@@ -201,10 +223,18 @@ public class ConsumerResource {
         return bytes;
     }
 
+    /**
+     * Return the client certificate for the given consumer.
+     * @param consumerUuid uuid of the consumer whose client certificate is
+     * sought.
+     * @return list of the client certificates for the given consumer.
+     */
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
-    public List<ClientCertificate> getClientCertificates(@PathParam("consumer_uuid") String consumerUuid) {
+    public List<ClientCertificate> getClientCertificates(
+        @PathParam("consumer_uuid") String consumerUuid) {
+
         log.debug("Getting client certificates for consumer: " + consumerUuid);
 
         List<ClientCertificate> allCerts = new LinkedList<ClientCertificate>();
@@ -233,7 +263,13 @@ public class ConsumerResource {
             throw new RuntimeException(ex);
         }
     }
-    
+   
+    /**
+     * Retrieve the client certificate and it's status for the given Consumer.
+     * @param consumerUuid uuid for the consumer whose certificates are sought.
+     * @param clientCertificateSerialNumbers list of the serial numbers.
+     * @return list of client certificate status.
+     */
     @POST
     @Path("{consumer_uuid}/certificates")
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -251,18 +287,18 @@ public class ConsumerResource {
            
         }
         
-       List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
-       
-       for (ClientCertificate clientCert : clientCerts) {
-           log.debug("found client cert:" + clientCert);
-           ClientCertificateStatus clientCertficiateStatus = new ClientCertificateStatus("somenumber-111", "", clientCert);
-           updatedCertificateStatus.add(clientCertficiateStatus);
-       }
-  
-       log.debug("clientCerts: " + clientCerts);
-       //return clientCerts;
-       //       return foo;
-       return updatedCertificateStatus;
-        
+        List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
+
+        for (ClientCertificate clientCert : clientCerts) {
+            log.debug("found client cert:" + clientCert);
+            ClientCertificateStatus clientCertficiateStatus =
+                new ClientCertificateStatus("somenumber-111", "", clientCert);
+            updatedCertificateStatus.add(clientCertficiateStatus);
+        }
+
+        log.debug("clientCerts: " + clientCerts);
+        //return clientCerts;
+        //       return foo;
+        return updatedCertificateStatus;
     }
 }
