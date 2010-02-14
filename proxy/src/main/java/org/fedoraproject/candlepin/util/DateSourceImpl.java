@@ -18,7 +18,11 @@ import org.fedoraproject.candlepin.DateSource;
 
 import java.util.Date;
 
+/**
+ * TODO: not sure what this is
+ */
 public class DateSourceImpl implements DateSource {
+
     @Override
     public Date currentDate() {
         return new Date();
