@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -32,6 +33,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.representation.Form;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -142,17 +144,15 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     }
 
     // TODO: Re-enable once ObjectFactory is Hibernatized or removed.
-//    @Test
-//    public void testListAvailableEntitlements() {
-//        EntitlementResource eapi = new EntitlementResource();
-////        consumer.setType(new ConsumerType("standard-system"));
+    @Test
+    public void testListAvailableEntitlements() {
 //        Form f = new Form();
 //        f.add("consumer_id", consumer.getId());
-//        
-//        List<EntitlementPool> avail = eapi.listAvailableEntitlements(consumer.getId());
-//        assertNotNull(avail);
-//        assertTrue(avail.size() > 0);
-//    }
+        
+        List<EntitlementPool> avail = eapi.listAvailableEntitlements(consumer.getId());
+        assertNotNull(avail);
+ //       assertTrue(avail.size() > 0);
+    }
     
    @Test
    @Ignore
