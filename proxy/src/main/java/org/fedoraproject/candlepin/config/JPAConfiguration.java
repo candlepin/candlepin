@@ -32,15 +32,29 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+/**
+ * JPAConfiguration
+ * @version $Rev$
+ */
 public class JPAConfiguration {
-    final public static String JPA_CONFIG_PREFIX = "jpa.config";
-    final public static int PREFIX_LENGTH = JPA_CONFIG_PREFIX.length();
+    /** JPA configuration prefix */
+    public static final String JPA_CONFIG_PREFIX = "jpa.config";
+    /** Length of the <code>JPA_CONFIG_PREFIX</code> */
+    public static final int PREFIX_LENGTH = JPA_CONFIG_PREFIX.length();
     
-    final public static String URL_CONFIG = "hibernate.connection.url";
-    final public static String USER_CONFIG = "hibernate.connection.username";
-    final public static String PASSWORD_CONFIG = "hibernate.connection.password";
+    /** hibernate connection url */
+    public static final String URL_CONFIG = "hibernate.connection.url";
+    /** Comment for <code>USER_CONFIG</code> */
+    public static final String USER_CONFIG = "hibernate.connection.username";
+    /** Comment for <code>PASSWORD_CONFIG</code> */
+    public static final String PASSWORD_CONFIG = "hibernate.connection.password";
     
     
+    /**
+     * Converts the given Map into a Properties object. 
+     * @param inputConfiguration Configuration to be converted.
+     * @return config as a Properties file
+     */
     public Properties parseConfig(Map<String, String> inputConfiguration) {
         
         Properties toReturn = new Properties(defaultConfigurationSettings());
@@ -48,6 +62,11 @@ public class JPAConfiguration {
         return toReturn;
     }
 
+    /**
+     * Return a copy of the input without the prefixes.
+     * @param inputConfiguration Configuration to be converted.
+     * @return config as a Properties object without the prefixes.
+     */
     public Properties stripPrefixFromConfigKeys(Map<String, String> inputConfiguration) {
         Properties toReturn = new Properties();
         
@@ -57,21 +76,49 @@ public class JPAConfiguration {
         return toReturn;
     }
     
+    /**
+     * @return the default jpa configuration
+     */
     public Properties defaultConfigurationSettings() {
         try {
             return loadDefaultConfigurationSettings(
-                    "production", new File(getClass().getResource("persistence.xml").toURI()));
-        } catch (Exception e) {
-            throw new RuntimeException("exception when loading setting from persistence.xml", e);
+                "production",
+                new File(getClass().getResource("persistence.xml").toURI()));
+        }
+        catch (Exception e) {
+            throw new RuntimeException(
+                    "exception when loading setting from persistence.xml", e);
         }
     }
 
-    public Properties loadDefaultConfigurationSettings(String persistenceUnit, File configFile) 
-            throws XPathExpressionException, IOException, ParserConfigurationException, SAXException {
+    /**
+     * loads the default configuration from the file.
+     * @param persistenceUnit JPA persistence unit name.
+     * @param configFile location of the configuration file.
+     * @return jpa configuration as a JPA for the given unit name.
+     * @throws XPathExpressionException thrown for invalid xml file
+     * @throws IOException thrown if file is not found.
+     * @throws ParserConfigurationException thrown for invalid xml file
+     * @throws SAXException thrown for invalid xml file
+     */
+    public Properties loadDefaultConfigurationSettings(
+            String persistenceUnit, File configFile) 
+        throws XPathExpressionException, IOException,
+            ParserConfigurationException, SAXException {
         return parsePropertiesFromConfigFile(persistenceUnit, parseXML(configFile));
     }
     
-    public Document parseXML(File file) throws IOException, ParserConfigurationException, SAXException {
+    /**
+     * parses the XML file.
+     * @param file file to parse
+     * @return returns XML Document for the given file.
+     * @throws IOException thrown if there's a problem reading a file.
+     * @throws ParserConfigurationException thrown for invalid xml file.
+     * @throws SAXException thrown for invalid xml file.
+     */
+    public Document parseXML(File file)
+        throws IOException, ParserConfigurationException, SAXException {
+
         DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
         domFactory.setNamespaceAware(false); 
         DocumentBuilder builder = domFactory.newDocumentBuilder();
@@ -79,11 +126,20 @@ public class JPAConfiguration {
         return doc;
     }
     
-    public Properties parsePropertiesFromConfigFile(String persistenceUnitName, Document doc) 
-            throws XPathExpressionException {
+    /**
+     * @param persistenceUnitName jpa persistence unit name
+     * @param doc XML Document
+     * @return configuration as a Properties.
+     * @throws XPathExpressionException thrown for invalid xml file.
+     */
+    public Properties parsePropertiesFromConfigFile(
+                String persistenceUnitName, Document doc) 
+        throws XPathExpressionException {
         
         XPath xpath = XPathFactory.newInstance().newXPath();
-        XPathExpression expr = xpath.compile("//persistence-unit[@name='" + persistenceUnitName + "']/properties/property");
+        XPathExpression expr = xpath.compile(
+                "//persistence-unit[@name='" + persistenceUnitName +
+                "']/properties/property");
 
         Object result = expr.evaluate(doc, XPathConstants.NODESET);
         NodeList nodes = (NodeList) result;
