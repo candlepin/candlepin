@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.configuration;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Properties;
 
