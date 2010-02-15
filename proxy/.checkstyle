@@ -2,8 +2,8 @@
 
 <fileset-config file-format-version="1.2.0" simple-config="false">
   <local-check-config name="candlepin-src-checkstyle" location="buildconf/checkstyle.xml" type="project" description="">
-    <property name="checkstyle.header.file" value="/home/devel/jesusr/dev/candlepin/proxy/buildconf/LICENSE.txt"/>
-    <property name="checkstyle.cache.file" value="/home/devel/jesusr/dev/candlepin/proxy/target/checkstyle.cache.src"/>
+    <property name="checkstyle.header.file" value="${basedir}/buildconf/LICENSE.txt"/>
+    <property name="checkstyle.cache.file" value="${basedir}/target/checkstyle.cache.src"/>
     <property name="javadoc.type.scope" value="package"/>
     <property name="javadoc.method.scope" value="public"/>
     <property name="javadoc.lazy" value="false"/>
@@ -11,8 +11,8 @@
     <additional-data name="protect-config-file" value="true"/>
   </local-check-config>
   <local-check-config name="candlepin-test-checkstyle" location="buildconf/checkstyle.xml" type="project" description="">
-    <property name="checkstyle.header.file" value="/home/devel/jesusr/dev/candlepin/proxy/buildconf/LICENSE.txt"/>
-    <property name="checkstyle.cache.file" value="/home/devel/jesusr/dev/candlepin/proxy/target/checkstyle.cache.src"/>
+    <property name="checkstyle.header.file" value="${basedir}/buildconf/LICENSE.txt"/>
+    <property name="checkstyle.cache.file" value="${basedir}/target/checkstyle.cache.src"/>
     <property name="javadoc.type.scope" value="nothing"/>
     <property name="javadoc.method.scope" value="nothing"/>
     <property name="javadoc.lazy" value="true"/>
