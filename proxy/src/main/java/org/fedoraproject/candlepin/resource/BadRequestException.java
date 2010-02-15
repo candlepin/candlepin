@@ -19,7 +19,14 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+/**
+ * Represents a BAD_REQUEST (HTTP 400) error.
+ */
 public class BadRequestException extends WebApplicationException {
+    /**
+     * default ctor
+     * @param message Exception message
+     */
     public BadRequestException(String message) {
         super(Response.status(Status.BAD_REQUEST)
                 .entity(message)
