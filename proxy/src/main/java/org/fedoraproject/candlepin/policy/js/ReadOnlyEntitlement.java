@@ -16,13 +16,24 @@ package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.model.Entitlement;
 
+/**
+ * Represents a read-only entitlement.
+ */
 public class ReadOnlyEntitlement {
     private Entitlement ent;
-    
+  
+    /**
+     * ctor
+     * @param e read-write Entitlement to be copied.
+     */
     public ReadOnlyEntitlement(Entitlement e) {
         this.ent = e;
     }
-    
+   
+    /**
+     * Returns true if the entitlement is free and accessible.
+     * @return true if the entitlement is free and accessible.
+     */
     public Boolean getIsFree() {
         return ent.getIsFree();
     }
