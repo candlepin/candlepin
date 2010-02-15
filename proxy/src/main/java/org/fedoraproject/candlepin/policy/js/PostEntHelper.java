@@ -19,60 +19,66 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
 /**
- * Post Entitlement Helper, this object is provided as a global variable to the 
+ * Post Entitlement Helper, this object is provided as a global variable to the
  * post entitlement javascript functions allowing them to perform a specific set
  * of operations we support.
  */
 public class PostEntHelper {
 
-    EntitlementPoolCurator epCurator;
-    ProductServiceAdapter prodAdapter;
-    Entitlement ent;
-    
+    private EntitlementPoolCurator epCurator;
+    private ProductServiceAdapter prodAdapter;
+    private Entitlement ent;
+
+    /**
+     * ctor
+     * @param epCurator interact with EntitlementPools
+     * @param prodAdapter interact with Product service
+     */
     @Inject
-    public PostEntHelper(EntitlementPoolCurator epCurator, 
+    public PostEntHelper(EntitlementPoolCurator epCurator,
             ProductServiceAdapter prodAdapter) {
         this.epCurator = epCurator;
         this.prodAdapter = prodAdapter;
     }
-    
+
     /**
      * Separated from constructor because these objects are not something Guice
-     * can inject. Must be called before the post helper is passed in to the Javascript
-     * engine.
-     * 
+     * can inject. Must be called before the post helper is passed in to the
+     * Javascript engine.
+     *
      * @param ent Entitlement just created.
      */
     public void init(Entitlement ent) {
         this.ent = ent;
     }
-    
+
     /**
-     * Create an entitlement pool for a product and limit it to a particular consumer.
-     * 
+     * Create an entitlement pool for a product and limit it to a particular
+     * consumer.
+     *
      * @param productLabel Label of the product the pool is for.
-     * @param quantity Number of entitlements for this pool. Use a negative number for
-     *                 an unlimited pool.
+     * @param quantity Number of entitlements for this pool. Use a negative
+     * number for an unlimited pool.
      */
     public void createConsumerPool(String productLabel, Long quantity) {
         Consumer c = ent.getConsumer();
-        
+
         Product p = prodAdapter.getProductByLabel(productLabel);
         if (p == null) {
             throw new RuleExecutionException("No such product: " + productLabel);
         }
-        
-        EntitlementPool consumerSpecificPool = new EntitlementPool(c.getOwner(), 
-                p.getId(), quantity, ent.getPool().getStartDate(), ent.getPool().getEndDate());
+
+        EntitlementPool consumerSpecificPool = new EntitlementPool(
+            c.getOwner(), p.getId(), quantity, ent.getPool().getStartDate(),
+            ent.getPool().getEndDate());
+
         consumerSpecificPool.setConsumer(c);
         consumerSpecificPool.setSourceEntitlement(ent);
         epCurator.create(consumerSpecificPool);
     }
-    
 }
