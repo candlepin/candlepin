@@ -14,8 +14,15 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+/**
+ * Thrown if there is a problem parsing the Rules definition file.
+ */
 public class RuleParseException extends RuntimeException {
 
+    /**
+     * default ctor
+     * @param t actual cause of the error.
+     */
     public RuleParseException(Throwable t) {
         super(t);
     }

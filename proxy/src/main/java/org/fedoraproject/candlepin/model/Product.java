@@ -44,7 +44,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_product")
-@SequenceGenerator(name="seq_product", sequenceName="seq_product", allocationSize=1)
+@SequenceGenerator(name = "seq_product", sequenceName = "seq_product", allocationSize = 1)
 public class Product implements Persisted {
 
     // Product ID is stored as a string. Could be a product OID or label.
@@ -67,7 +67,7 @@ public class Product implements Persisted {
     private Set<Product> childProducts;
 
     @CollectionOfElements
-    @JoinTable(name="PRODUCT_ATTRIBUTE")
+    @JoinTable(name = "PRODUCT_ATTRIBUTE")
     //   @JoinColumn(name="ATTRIBUTE_ID")
     private Set<Attribute> attributes;
 
@@ -89,7 +89,7 @@ public class Product implements Persisted {
     }
 
     public String getId() {
-        return id ;
+        return id;
     }
 
     public void setId(String id) {
@@ -161,6 +161,6 @@ public class Product implements Persisted {
 	
 	@Override
 	public int hashCode() {
-	    return label.hashCode()*31 + name.hashCode();
+	    return label.hashCode() * 31 + name.hashCode();
 	}
 }

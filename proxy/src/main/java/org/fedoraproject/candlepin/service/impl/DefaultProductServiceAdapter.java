@@ -22,10 +22,17 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
+/**
+ * Default implementation of the ProductserviceAdapter.
+ */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     private ProductCurator prodCurator;
 
+    /**
+     * default ctor
+     * @param prodCurator Product Curator for interacting with Products.
+     */
     @Inject
     public DefaultProductServiceAdapter(ProductCurator prodCurator) {
         this.prodCurator = prodCurator;

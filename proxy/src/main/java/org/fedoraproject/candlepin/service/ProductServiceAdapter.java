@@ -28,24 +28,21 @@ public interface ProductServiceAdapter {
 
     /**
      * Query a specific product by its string ID.
-     * 
-     * @param id
-     * @return
+     * @param id product id
+     * @return specific product
      */
-    public Product getProductById(String id);
+    Product getProductById(String id);
     
     /**
      * Query a specific product by its Label
-     * 
-     * @param label
-     * @return
+     * @param label product label
+     * @return specific product
      */
-    public Product getProductByLabel(String label);    
+    Product getProductByLabel(String label);    
 
     /**
      * List all Products
-     * @return
+     * @return all products.
      */
-    public List<Product> getProducts();
-
+    List<Product> getProducts();
 }

@@ -44,13 +44,13 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_facts")
-@SequenceGenerator(name="seq_consumer_facts", sequenceName="seq_consumer_facts", allocationSize=1)
+@SequenceGenerator(name = "seq_consumer_facts", sequenceName = "seq_consumer_facts", allocationSize = 1)
 public class ConsumerFacts implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
     // metadata data key should be the identifier.
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_consumer_facts")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_facts")
     private Long id;
     
     @OneToOne(mappedBy = "facts")

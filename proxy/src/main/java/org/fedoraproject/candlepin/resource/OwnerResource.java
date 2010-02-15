@@ -44,16 +44,19 @@ public class OwnerResource {
     private EntitlementPoolCurator entitlementPoolCurator;
 
     /**
-     * @param modelClassIn
+     * @param ownerCurator interact with Owner.
+     * @param entitlementPoolCurator interact with entitlement pools.
      */
     @Inject
-    public OwnerResource(OwnerCurator ownerCurator, EntitlementPoolCurator entitlementPoolCurator) {
+    public OwnerResource(OwnerCurator ownerCurator,
+            EntitlementPoolCurator entitlementPoolCurator) {
+
         this.ownerCurator = ownerCurator;
         this.entitlementPoolCurator = entitlementPoolCurator;
     }
 
     /**
-     * Return list of Owners
+     * Return list of Owners.
      * @return list of Owners
      */
     @GET
@@ -62,6 +65,11 @@ public class OwnerResource {
         return ownerCurator.findAll();  
     }
 
+    /**
+     * Return the entitlements for the owner of the given id.
+     * @param ownerId id of the owner whose entitlements are sought.
+     * @return the entitlements for the owner of the given id.
+     */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/entitlement")
@@ -72,7 +80,7 @@ public class OwnerResource {
         }
         
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
-        for (EntitlementPool pool: owner.getEntitlementPools()) {
+        for (EntitlementPool pool : owner.getEntitlementPools()) {
             toReturn.addAll(entitlementPoolCurator.entitlementsIn(pool));
         }
         

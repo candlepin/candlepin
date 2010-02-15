@@ -22,41 +22,70 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Represents a read-only copy of a Product.
+ */
 public class ReadOnlyProduct {
 
     private final Product product;
     private Map<String, Long> attributes = null;
 
+    /**
+     * read-only product contructor.
+     * @param product read/write product to copy
+     */
     public ReadOnlyProduct(Product product) {
         this.product = product;
     }
-    
+   
+    /**
+     * Return the product label
+     * @return the product label
+     */
     public String getLabel() {
         return product.getLabel();
     }
-    
+   
+    /**
+     * Return the product name
+     * @return the product name
+     */
     public String getName() {
         return product.getName();
     }
-    
+   
+    /**
+     * Return the read-only copies of the child Products.
+     * @return the read-only copies of the child Products.
+     */
     public Set<ReadOnlyProduct> getChildProducts() {
         Set<ReadOnlyProduct> toReturn = new HashSet<ReadOnlyProduct>();
-        for(Product toProxy: product.getChildProducts()) {
+        for (Product toProxy : product.getChildProducts()) {
             toReturn.add(new ReadOnlyProduct(toProxy));
         }
         return toReturn;
     }
-    
+   
+    /**
+     * Return product attribute matching the given name.
+     * @param name attribute name
+     * @return attribute value
+     */
     public Long getAttribute(String name) {
         if (attributes == null) {
             initializeReadOnlyAttributes();
         }
         return attributes.get(name);
     }
-    
+   
+    /**
+     * Return a list of read-only products from the given set of products.
+     * @param products read/write version of products.
+     * @return read-only versions of products.
+     */
     public static Set<ReadOnlyProduct> fromProducts(Set<Product> products) {
         Set<ReadOnlyProduct> toReturn = new HashSet<ReadOnlyProduct>();
-        for (Product toProxy: products) {
+        for (Product toProxy : products) {
             toReturn.add(new ReadOnlyProduct(toProxy));
         }
         return toReturn;
@@ -64,7 +93,7 @@ public class ReadOnlyProduct {
 
     private void initializeReadOnlyAttributes() {
         attributes = new HashMap<String, Long>();
-        for(Attribute current: product.getAttributes()) {
+        for (Attribute current : product.getAttributes()) {
             attributes.put(current.getName(), current.getQuantity());
         }
     }

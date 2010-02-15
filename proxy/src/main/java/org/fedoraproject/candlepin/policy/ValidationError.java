@@ -14,17 +14,32 @@
  */
 package org.fedoraproject.candlepin.policy;
 
+/**
+ * Represents an error during the validation process.
+ */
 public class ValidationError {
     private String resourceKey;
 
+    /**
+     * ctor
+     * @param resourceKey key of the validation error
+     */
     public ValidationError(String resourceKey) {
         this.resourceKey = resourceKey;
     }
-    
+   
+    /**
+     * Return the value of th eresource key.
+     * @return the value of th eresource key.
+     */
     public String getResourceKey() {
         return resourceKey;
     }
-    
+
+    /**
+     * return String representation.
+     * @return String representation.
+     */
     public String toString() {
         return resourceKey;
     }

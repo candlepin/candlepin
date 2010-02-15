@@ -42,11 +42,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_owner")
-@SequenceGenerator(name="seq_owner", sequenceName="seq_owner", allocationSize=1)
+@SequenceGenerator(name = "seq_owner", sequenceName = "seq_owner", allocationSize = 1)
 public class Owner implements Persisted {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_owner")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_owner")
     private Long id;
     
     @Column(nullable = false, unique = true)

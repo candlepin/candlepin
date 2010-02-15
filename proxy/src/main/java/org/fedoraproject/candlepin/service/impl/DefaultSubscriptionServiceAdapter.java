@@ -21,13 +21,21 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
+import java.util.Date;
 import java.util.List;
 
+/**
+ * default SubscriptionAdapter implementation
+ */
 public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
     
     private SubscriptionCurator subCurator;
-    
+
+    /**
+     * default ctor
+     * @param subCurator SubscriptionCurator
+     */
     @Inject
     public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
         this.subCurator = subCurator;
@@ -39,8 +47,25 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public Subscription getSubscription(Owner owner, Long subscriptionId) {
-        return subCurator.lookupByOwnerAndId(owner, subscriptionId);
+    public Subscription getSubscription(Long subscriptionId) {
+        return subCurator.lookupByOwnerAndId(subscriptionId);
+    }
+
+    @Override
+    public Subscription getSubscriptionForToken(String token) {
+        // Not implemented for default subscription adapter.
+        return null;
+    }
+
+    @Override
+    public List<Subscription> getSubscriptionsSince(Owner owner,
+            String productId, Date sinceDate) {
+        return subCurator.listByOwnerAndProductSince(owner, productId, sinceDate);
+    }
+
+    @Override
+    public List<Subscription> getSubscriptionsSince(Date sinceDate) {
+        return subCurator.listSince(sinceDate);
     }
 
 }

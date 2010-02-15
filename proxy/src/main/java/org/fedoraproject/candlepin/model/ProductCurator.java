@@ -80,7 +80,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public Set<Product> bulkUpdate(Set<Product> products) {
         Set<Product> toReturn = new HashSet<Product>();
-        for(Product toUpdate: products) {
+        for (Product toUpdate : products) {
             toReturn.add(update(toUpdate));
         }
         return toReturn;

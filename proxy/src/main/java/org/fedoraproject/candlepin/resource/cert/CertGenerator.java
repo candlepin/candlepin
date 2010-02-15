@@ -147,7 +147,7 @@ public class CertGenerator {
         // issuer
         //
         String issuer =
-           "C=AU, O=The Players of Candlepin, OU=Candlepin Primary Certificate";
+            "C=AU, O=The Players of Candlepin, OU=Candlepin Primary Certificate";
 
         //
         // subjects name table.

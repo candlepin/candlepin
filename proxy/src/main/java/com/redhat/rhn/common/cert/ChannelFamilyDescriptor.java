@@ -52,9 +52,8 @@ public class ChannelFamilyDescriptor implements Comparable {
         return "channel-families-family-" + getFamily() + "-quantity-" + getQuantity();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public int compareTo(Object obj) {
         ChannelFamilyDescriptor other = (ChannelFamilyDescriptor) obj;
         // The sort order for families is kinda odd; this replicates

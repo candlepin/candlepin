@@ -20,27 +20,30 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 
+/**
+ * Enforces the entitlement rules definitions.
+ */
 public interface Enforcer {
-	
-	/**
-	 * Run pre-entitlement checks.
-	 * 
-	 * Ensures sufficient entitlements remain, but also verifies all attributes 
-	 * on the product and relevant entitlement pool pass using the current 
-	 * policy.
-	 * 
-	 * This is run prior to granting an entitlement.
-	 *
-	 * @param consumer Consumer who wishes to consume an entitlement.
-	 * @param enitlementPool Entitlement pool to consume from.
-	 * @return TODO
-	 */
-	public PreEntHelper pre(Consumer consumer, EntitlementPool enitlementPool);
+    
+    /**
+     * Run pre-entitlement checks.
+     * 
+     * Ensures sufficient entitlements remain, but also verifies all attributes 
+     * on the product and relevant entitlement pool pass using the current 
+     * policy.
+     * 
+     * This is run prior to granting an entitlement.
+     *
+     * @param consumer Consumer who wishes to consume an entitlement.
+     * @param enitlementPool Entitlement pool to consume from.
+     * @return TODO
+     */
+    PreEntHelper pre(Consumer consumer, EntitlementPool enitlementPool);
 
-	/**
-	 * Run post-entitlement actions.
-	 *
-	 * @param ent The entitlement that was just granted.
-	 */
-	public PostEntHelper post(Entitlement ent);
+    /**
+     * Run post-entitlement actions.
+     *
+     * @param ent The entitlement that was just granted.
+     */
+    PostEntHelper post(Entitlement ent);
 }

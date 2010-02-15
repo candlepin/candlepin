@@ -52,7 +52,13 @@ public class CertificateResource  {
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
 
     private static Logger log = Logger.getLogger(CertificateResource.class);
-    
+   
+    /**
+     * default ctor
+     * @param ownerCurator interact with the owner.
+     * @param spacewalkCertificateCurator interact with spacewalk certificate
+     * @param certificateCurator interact with certificates
+     */
     @Inject
     public CertificateResource(OwnerCurator ownerCurator,
                                SpacewalkCertificateCurator spacewalkCertificateCurator,
@@ -90,18 +96,25 @@ public class CertificateResource  {
             spacewalkCertificateCurator.parseCertificate(cert, owner);
         }
         catch (JDOMException e) {
-            throw new BadRequestException("Invalid certificate is being uploaded: " + e.getMessage());
+            throw new BadRequestException(
+                "Invalid certificate is being uploaded: " + e.getMessage());
         }
         catch (IOException e) {
-            throw new BadRequestException("Invalid certificate is being uploaded: " + e.getMessage());
+            throw new BadRequestException(
+                "Invalid certificate is being uploaded: " + e.getMessage());
         }
         catch (ParseException e) {
-            throw new BadRequestException("Invalid certificate is being uploaded: " + e.getMessage());
+            throw new BadRequestException(
+                "Invalid certificate is being uploaded: " + e.getMessage());
         }
         return "uuid";
     }
     
 
+    /**
+     * Return the encoded certificate.
+     * @return the encoded certificate.
+     */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public String get() {

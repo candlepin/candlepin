@@ -59,6 +59,15 @@ public class EntitlementResource {
     
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
+    /**
+     * ctor
+     * @param epCurator interact with Entitlement Pools.
+     * @param entitlementCurator interact with entitlements.
+     * @param ownerCurator interact with owners.
+     * @param consumerCurator interact with consumers.
+     * @param prodAdapter interact with products.
+     * @param entitler This is what actually does the work.
+     */
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
             EntitlementCurator entitlementCurator,
@@ -82,18 +91,19 @@ public class EntitlementResource {
 
     /**
      * Entitles the given Consumer with the given Product.
-     * @param c Consumer to be entitled
-     * @param p The Product
+     * @param consumerUuid Consumer identifier to be entitled
+     * @param productLabel Product identifying label.
      * @return Entitled object
      */
     @POST
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/product/{product_label}")
     public String entitle(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_label") String productLabel) {
         
-        Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current user's owner
+        // TODO: actually get current user's owner
+        Owner owner = ownerCurator.findAll().get(0);
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
@@ -116,22 +126,27 @@ public class EntitlementResource {
         return CertGenerator.getCertString(); 
     }
 
+    /**
+     * Entitles the given consumer, and returns the token.
+     * @param consumerUuid Consumer identifier.
+     * @param registrationToken registration token.
+     * @return token
+     */
     @POST
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/token/{registration_token}")
     public String entitleToken(@PathParam("consumer_uuid") String consumerUuid,
             @PathParam("registration_token") String registrationToken) {
         
         //FIXME: this is just a stub, need SubscriptionService to look it up
-        Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current user's owner
+        // TODO: actually get current user's owner
+        Owner owner = ownerCurator.findAll().get(0);
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
-        
-       
         
         return "foo";
     }
@@ -139,7 +154,7 @@ public class EntitlementResource {
     /**
      * Check to see if a given Consumer is entitled to given Product
      * @param consumerUuid consumerUuid to check if entitled or not
-     * @param productId productUuid to check if entitled or not
+     * @param productLabel productLabel to check if entitled or not
      * @return boolean if entitled or not
      */
     @GET
@@ -161,13 +176,15 @@ public class EntitlementResource {
         }
         
         throw new NotFoundException(
-                "Consumer: " + consumerUuid + " has no entitlement for product " + productLabel);
+            "Consumer: " + consumerUuid + " has no entitlement for product " +
+            productLabel);
     }
     
     /**
-     * Match/List the available entitlements for a given Consumer.  Right now
-     * this returns ALL entitlements because we haven't built any filtering logic.
-     * @param consumerId Unique id of Consumer
+     * Match/List the available entitlements for a given Consumer. Right
+     * now this returns ALL entitlements because we haven't built any
+     * filtering logic.
+     * @param consumerUuid Unique id of Consumer
      * @return List<Entitlement> of applicable 
      */
     // TODO: right now returns *all* available entitlement pools
@@ -214,7 +231,12 @@ public class EntitlementResource {
     public List<Entitlement> list() {
         return entitlementCurator.findAll();
     }
-    
+   
+    /**
+     * Return the entitlement for the given id.
+     * @param dbid entitlement id.
+     * @return the entitlement for the given id.
+     */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{dbid}")
@@ -223,38 +245,63 @@ public class EntitlementResource {
         if (toReturn != null) {
             return toReturn;
         }
-        throw new NotFoundException("Entitlement with ID '" + dbid + "' could not be found");
+        throw new NotFoundException(
+            "Entitlement with ID '" + dbid + "' could not be found");
     }
-    
+   
+    /**
+     * Deletes all entitlements for the consumer whose id matches the given
+     * uuid.
+     * @param consumerUuid id of the consumer whose entitlements are to be
+     * deleted.
+     * @return certificate and status.
+     */
     @DELETE
     @Path("consumer/{consumer_uuid}/")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public ClientCertificateStatus deleteAllEntitlements(@PathParam("consumer_uuid") String consumerUuid) {
+    public ClientCertificateStatus deleteAllEntitlements(
+            @PathParam("consumer_uuid") String consumerUuid) {
+
         //FIXME: stub
-       // Find all entitlements for this consumer id
-       // get all the associated clientCerts
-       // new list of ClientCertificateStatus
-       //   add all the revoked certs to it, with their new serial numbers, and "REVOKED" status
+        // Find all entitlements for this consumer id
+        // get all the associated clientCerts
+        // new list of ClientCertificateStatus
+        //   add all the revoked certs to it, with their new
+        //      serial numbers, and "REVOKED" status
         // 
         // delete all the Entitlements 
         // return the clientCertificateStatus list
         return new ClientCertificateStatus();
     }
-    
+   
+    /**
+     * Removes the entitlements associated with the given serial number.
+     * @param consumerUuid Unique id for the Consumer.
+     * @param subscriptionNumberArgs comma seperated list of subscription
+     * numbers.
+     */
     @DELETE
     @Path("consumer/{consumer_uuid}/{subscription_numbers}")
-    public void deleteEntitlementsBySerialNumber(@PathParam("consumer_uuid") String consumerUuid,
-                                                 @PathParam("subscription_numbers") String subscriptionNumberArgs) {
-        //FIXME: just a stub, needs CertifcateService (and/or a CertificateCurator) to lookup by serialNumber
+    public void deleteEntitlementsBySerialNumber(
+            @PathParam("consumer_uuid") String consumerUuid,
+            @PathParam("subscription_numbers") String subscriptionNumberArgs) {
+
+        //FIXME: just a stub, needs CertifcateService (and/or a
+        //CertificateCurator) to lookup by serialNumber
         
         
-        // Need to parse off the value of subscriptionNumberArgs, probablt use comma seperated
-        // see IntergerList in sparklines example in jersey examples
-        // find all entitlements for this consumer and subscription numbers
-        // delete all of those (and/or return them to entitlement pool)
+        // Need to parse off the value of subscriptionNumberArgs, probably
+        // use comma seperated see IntergerList in sparklines example in
+        // jersey examples find all entitlements for this consumer and
+        // subscription numbers delete all of those (and/or return them to
+        // entitlement pool)
         
     }
-    
+   
+    /**
+     * Removes the entitlement identified by the given dbid.
+     * @param dbid the entitlement to delete.
+     */
     @DELETE
     @Path("{dbid}")
     public void deleteEntitlement(@PathParam("dbid") Long dbid) {
@@ -263,7 +310,8 @@ public class EntitlementResource {
             entitlementCurator.delete(toDelete);
             return;
         }
-        throw new NotFoundException("Entitlement with ID '" + dbid + "' could not be found");
+        throw new NotFoundException(
+            "Entitlement with ID '" + dbid + "' could not be found");
     }
 
 }

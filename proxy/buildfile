@@ -30,14 +30,20 @@ HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
              'org.slf4j:slf4j-simple:jar:1.5.8',
              'org.freemarker:freemarker:jar:2.3.15' ]
 DB = 'org.postgresql:postgresql:jar:8.4-701'
-COMMONS = ['org.apache.commons:commons-collections:jar:3.1',
-           'org.apache.commons:commons-logging:jar:1.1.1',
+COMMONS = ['org.apache.commons:commons-beanutils:jar:1.7.0',
            'org.apache.commons:commons-codec:jar:1.4',
-           'org.apache.commons:commons-beanutils:jar:1.7.0',
-           'org.apache.commons:commons-io:jar:1.3.2']
+           'commons-cli:commons-cli:jar:1.2',
+           'org.apache.commons:commons-collections:jar:3.1',
+           'org.apache.commons:commons-io:jar:1.3.2',
+           'org.apache.commons:commons-logging:jar:1.1.1']
 JDOM = 'org.jdom:jdom:jar:1.0'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
+
+CHECKSTYLE = ['com.puppycrawl:checkstyle:jar:5.0',
+              'antlr:antlr:jar:2.7.6',
+              'google-collect:google-collect:jar:snapshot-20090211',
+              COMMONS]
 
 BOUNCYCASTLE = group('bcprov', 'bcpg', :under=>'org.bouncycastle', :version=>'1.43')
 GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-servlet', 'guice-throwingproviders', :under=>'com.google.guice', :version=>'2.0'),
@@ -69,7 +75,7 @@ define "candlepin" do
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.6'
 
-  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J
+  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE
     
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 
@@ -104,6 +110,33 @@ define "candlepin" do
       end
     ensure
       rm_rf 'target/classes/META-INF'
+    end
+  end
+
+  #
+  # CHECKSTYLE task, a Buildr plugin would be better, but this is faster
+  #
+  task :checkstyle do
+    begin
+      ant('checkstyle') do |ant|
+        rm_rf 'reports/checkstyle_report.xml'
+        mkdir_p 'reports'
+
+        ant.taskdef :resource=>"checkstyletask.properties", :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+        ant.checkstyle :config=>"buildconf/checkstyle.xml" do
+          ant.formatter :type=>'plain'
+          ant.formatter :type=>'xml', :toFile=>"reports/checkstyle_report.xml"
+
+          ant.property :key=>'javadoc.method.scope', :value=>'public'
+          ant.property :key=>'javadoc.type.scope', :value=>'package'
+          ant.property :key=>'javadoc.var.scope', :value=>'package'
+          ant.property :key=>'javadoc.lazy', :value=>'false'
+          ant.property :key=>'checkstyle.cache.file', :value=>'target/checkstyle.cache.src'
+          ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
+
+          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java'
+        end
+      end
     end
   end
   

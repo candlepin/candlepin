@@ -33,11 +33,11 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "cp_subscription")
-@SequenceGenerator(name="seq_subscription", sequenceName="seq_subscription", allocationSize=1)
+@SequenceGenerator(name = "seq_subscription", sequenceName = "seq_subscription", allocationSize = 1)
 public class Subscription implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="seq_subscription")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_subscription")
     private Long id;
 
     @ManyToOne
@@ -57,19 +57,22 @@ public class Subscription implements Persisted {
     private Date endDate;
 
     @CollectionOfElements
-    @JoinTable(name="SUBSCRIPTION_ATTRIBUTE")
+    @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
     private Set<Attribute> attributes;
+    
+    private Date modified;
 
     public Subscription() {
     }
 
     public Subscription(Owner ownerIn, String productIdIn, Long maxMembersIn,
-            Date startDateIn, Date endDateIn) {
+            Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
         this.productId = productIdIn;
         this.quantity = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
+        this.modified = modified;
     }
 
     public Long getId() {
@@ -126,5 +129,13 @@ public class Subscription implements Persisted {
 
     public void setAttributes(Set<Attribute> attributes) {
         this.attributes = attributes;
+    }
+
+    public Date getModified() {
+        return modified;
+    }
+
+    public void setModified(Date modified) {
+        this.modified = modified;
     }
 }
