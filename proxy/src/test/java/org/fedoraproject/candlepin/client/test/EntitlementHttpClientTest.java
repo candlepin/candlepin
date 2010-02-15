@@ -195,6 +195,35 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     }
     
     @Test
+    public void entitlementForConsumerNoProductShouldFail() {
+        try {
+            WebResource r  = resource().
+                path("/entitlment/consumer/" + consumer.getUuid() + "/token/1234567");
+            String s = r.accept("application/json")
+                .type("application/json")
+                .post(String.class);
+            fail();  
+        } catch (UniformInterfaceException e) {
+            assertHttpResponse(400, e.getResponse());
+        }
+    }
+    
+    @Test
+    public void entitlementForRegNumberShouldFail() {
+        try {
+            WebResource r  = resource().
+                path("/entitlment/consumer/" + consumer.getUuid() + "/token/1234567");
+            String s = r.accept("application/json")
+                .type("application/json")
+                .post(String.class);
+            fail();  
+        } catch (UniformInterfaceException e) {
+            assertHttpResponse(400, e.getResponse());
+        }
+    }
+    
+    
+    @Test
     public void hasEntitlementWithEntitledProductShouldReturnTrue() {
         Entitlement entitlement = entitler.entitle(owner, consumer, product);
         assertNotNull(entitlementCurator.find(entitlement.getId()));        
