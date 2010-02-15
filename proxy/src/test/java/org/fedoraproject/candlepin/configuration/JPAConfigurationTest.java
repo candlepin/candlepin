@@ -14,12 +14,15 @@
  */
 package org.fedoraproject.candlepin.configuration;
 
+import static org.junit.Assert.*;
+
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.fedoraproject.candlepin.config.JPAConfiguration;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class JPAConfigurationTest {
 
@@ -43,7 +46,8 @@ public class JPAConfigurationTest {
     @Test
     public void shouldReturnPropertyElementsOfConfigurationFile() throws Exception {
         Properties loaded = 
-            new JPAConfiguration().loadDefaultConfigurationSettings("testing", "persistence_for_testing.xml");
+            new JPAConfiguration().loadDefaultConfigurationSettings(
+                    "testing", new File(getClass().getResource("./persistence_for_testing.xml").toURI()));
         
         assertEquals(3, loaded.size());
         assertEquals("first", (String) loaded.get("first"));

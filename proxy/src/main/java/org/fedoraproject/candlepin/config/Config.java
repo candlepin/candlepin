@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.configuration;
+package org.fedoraproject.candlepin.config;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import java.util.TreeMap;
 /**
  * Defines the default Candlepin configuration
  */
-public class CandlepinConfiguration {
+public class Config {
     protected File CONFIGURATION_FILE = new File("/etc/candlepin/candlepin.conf");
     protected static TreeMap<String, String> configuration = null;
    
@@ -61,7 +61,7 @@ public class CandlepinConfiguration {
     
     protected Map<String, String> loadProperties() {
         try {
-            return new ConfigurationFileLoader(CONFIGURATION_FILE).loadProperties();
+            return new ConfigurationFileLoader().loadProperties(CONFIGURATION_FILE);
         }
         catch (IOException e) {
             throw new RuntimeException("Problem loading candlepin configuration file.", e);

@@ -12,8 +12,9 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.configuration;
+package org.fedoraproject.candlepin.config;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
@@ -58,22 +59,23 @@ public class JPAConfiguration {
     
     public Properties defaultConfigurationSettings() {
         try {
-            return loadDefaultConfigurationSettings("production", "persistence.xml");
+            return loadDefaultConfigurationSettings(
+                    "production", new File(getClass().getResource("persistence.xml").toURI()));
         } catch (Exception e) {
             throw new RuntimeException("exception when loading setting from persistence.xml", e);
         }
     }
 
-    public Properties loadDefaultConfigurationSettings(String persistenceUnit, String configFile) 
+    public Properties loadDefaultConfigurationSettings(String persistenceUnit, File configFile) 
             throws XPathExpressionException, IOException, ParserConfigurationException, SAXException {
         return parsePropertiesFromConfigFile(persistenceUnit, parseXML(configFile));
     }
     
-    public Document parseXML(String fileName) throws IOException, ParserConfigurationException, SAXException {
+    public Document parseXML(File file) throws IOException, ParserConfigurationException, SAXException {
         DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
         domFactory.setNamespaceAware(false); 
         DocumentBuilder builder = domFactory.newDocumentBuilder();
-        Document doc = builder.parse(getClass().getResourceAsStream(fileName));
+        Document doc = builder.parse(file);
         return doc;
     }
     

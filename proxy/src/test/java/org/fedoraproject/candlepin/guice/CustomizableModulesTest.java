@@ -20,7 +20,7 @@ import static org.junit.Assert.fail;
 
 import com.google.inject.Module;
 
-import org.fedoraproject.candlepin.configuration.CandlepinConfiguration;
+import org.fedoraproject.candlepin.config.Config;
 import org.junit.Test;
 
 import java.io.File;
@@ -51,18 +51,18 @@ public class CustomizableModulesTest {
     }
     
     public static class CustomizableModulesForTesting extends CustomizableModules {
-        private CandlepinConfiguration config;
+        private Config config;
         
-        public CustomizableModulesForTesting(CandlepinConfiguration config) {
+        public CustomizableModulesForTesting(Config config) {
             this.config = config;
         }
         
-        protected CandlepinConfiguration configuration() {
+        protected Config configuration() {
             return config;
         }
     }
     
-    public static class CandlepinConfigurationForTesting extends CandlepinConfiguration {
+    public static class CandlepinConfigurationForTesting extends Config {
         public CandlepinConfigurationForTesting(String fileName) throws URISyntaxException {
             CONFIGURATION_FILE = new File(getClass().getResource(fileName).toURI());
             initializeMap();
