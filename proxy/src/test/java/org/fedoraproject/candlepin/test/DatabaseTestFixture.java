@@ -36,6 +36,7 @@ import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.junit.Before;
 
 import com.google.inject.Guice;
@@ -61,6 +62,7 @@ public class DatabaseTestFixture {
     protected OwnerCurator ownerCurator;
     protected ProductCurator productCurator;
     protected ProductServiceAdapter productAdapter ;
+    protected SubscriptionServiceAdapter subAdapter;
     protected ConsumerCurator consumerCurator;
     protected ConsumerTypeCurator consumerTypeCurator;
     protected CertificateCurator certificateCurator;
@@ -99,6 +101,7 @@ public class DatabaseTestFixture {
         subCurator = injector.getInstance(SubscriptionCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
         productAdapter = injector.getInstance(ProductServiceAdapter.class) ;
+        subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
