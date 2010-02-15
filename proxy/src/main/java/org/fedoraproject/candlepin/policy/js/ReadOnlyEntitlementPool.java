@@ -16,14 +16,24 @@ package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.model.EntitlementPool;
 
+/**
+ * represents a read-only entitlement pool
+ */
 public class ReadOnlyEntitlementPool {
 
     private EntitlementPool entPool;
-    
+  
+    /**
+     * @param entPool the read-write version of the EntitlementPool to copy.
+     */
     public ReadOnlyEntitlementPool(EntitlementPool entPool) {
         this.entPool = entPool;
     }
-    
+   
+    /**
+     * Returns true if there are available entitlements remaining.
+     * @return true if there are available entitlements remaining.
+     */
     public Boolean entitlementsAvailable() {
         return entPool.entitlementsAvailable();
     }
