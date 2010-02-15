@@ -19,10 +19,18 @@ package org.fedoraproject.candlepin.policy.js;
  */
 public class RuleExecutionException extends RuntimeException {
 
+    /**
+     * ctor
+     * @param t Actual cause of the error.
+     */
     public RuleExecutionException(Throwable t) {
         super(t);
     }
-    
+
+    /**
+     * ctor
+     * @param msg Exception message
+     */
     public RuleExecutionException(String msg) {
         super(msg);
     }
