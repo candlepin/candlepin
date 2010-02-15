@@ -72,6 +72,8 @@ public class EntitlementResource {
         this.prodAdapter = prodAdapter;
         this.entitler = entitler;
     }
+    
+    
 
     private void verifyExistence(Object o, String id) {
         if (o == null) {
@@ -179,10 +181,10 @@ public class EntitlementResource {
 
 //        log.debug("consumerCurator: " + consumerCurator.toString());
 //        log.debug("epCurator: " + epCurator.toString());
-//        Consumer consumer = consumerCurator.find(consumerUuid);
+        Consumer consumer = consumerCurator.find(consumerUuid);
 //        log.debug("consumer: " + consumer.toString());
-//        return epCurator.listByConsumer(consumer);
-        return epCurator.findAll();
+        return epCurator.listByConsumer(consumer);
+//        return epCurator.findAll();
         
 //        Consumer c = consumerCurator.find(consumerId);
 //        List<EntitlementPool> entitlementPools = epCurator.findAll();
