@@ -78,8 +78,8 @@ public class EntitlementPoolResource {
 
         // FIXME: not correct, we need to filter on only those
         // owned by the Consumer
-        log.debug("listByConsumer, consumer_uuid is: " + consumer_uuid);
-        Consumer consumer = consumerCurator.lookupByUuid(consumer_uuid);
+        log.debug("listByConsumer, consumer_uuid is: " + consumerUuid);
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         log.debug("consumer is :" + consumer.toString());
         List<EntitlementPool>  eps = entitlementPoolCurator.listByConsumer(consumer);
         log.debug("EntitlementPools: " + eps.toString());
