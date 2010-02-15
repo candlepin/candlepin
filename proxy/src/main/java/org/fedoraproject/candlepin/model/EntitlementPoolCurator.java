@@ -121,16 +121,18 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     /**
      * List all entitlement pools for the given owner, consumer, product.
      * 
-     * We first check for a pool specific to the given consumer. The consumer parameter
-     * can be passed as null in which case we skip to the second scenario.
+     * We first check for a pool specific to the given consumer. The
+     * consumer parameter can be passed as null in which case we skip to
+     * the second scenario.
      * 
-     * If consumer is null or no consumer specific pool exists, we query for all
-     * pools for this owner and the given product.
+     * If consumer is null or no consumer specific pool exists, we query for
+     * all pools for this owner and the given product.
      * 
-     * @param owner
-     * @param consumer
-     * @param product
-     * @return
+     * @param owner owner of the entitlement pool
+     * @param consumer consumer to be filtered
+     * @param product product filter.
+     * @return list of EntitlementPools for the given owner, consumer, product
+     * combination.
      */
     public List<EntitlementPool> listByOwnerAndProduct(Owner owner,
             Consumer consumer, Product product) {

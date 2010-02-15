@@ -57,10 +57,11 @@ public class Entitler {
      * If the entitlement cannot be granted, null will be returned.
      * 
      * TODO: Throw exception if entitlement not granted. Report why.
-     * 
-     * @param entPool
-     * @param consumer
-     * @return
+     *
+     * @param owner owner of the entitlement pool
+     * @param consumer consumer requesting to be entitled
+     * @param product product to be entitled.
+     * @return Entitlement
      */
     //
     // NOTE: after calling this method both entitlement pool and consumer parameters
