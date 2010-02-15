@@ -21,7 +21,7 @@ public class CandlepinConfiguration {
         if (configuration == null) {
             loadConfiguration();
         }
-        return JPAConfiguration.parseConfig(configuration);
+        return new JPAConfiguration().parseConfig(configuration);
     }
     
     protected synchronized void loadConfiguration() {

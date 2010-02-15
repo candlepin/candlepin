@@ -1,8 +1,22 @@
 package org.fedoraproject.candlepin.configuration;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Properties;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 public class JPAConfiguration {
     final public static String JPA_CONFIG_PREFIX = "jpa.config";
@@ -13,27 +27,14 @@ public class JPAConfiguration {
     final public static String PASSWORD_CONFIG = "hibernate.connection.password";
     
     
-    public static Properties parseConfig(Map<String, String> inputConfiguration) {
-        Properties toReturn = stripPrefixFromConfigKeys(inputConfiguration);
+    public Properties parseConfig(Map<String, String> inputConfiguration) {
         
-        if (!toReturn.containsKey(URL_CONFIG)) {
-            defaultConfigurationSettings().get(URL_CONFIG);
-        }
-        
-        if (!toReturn.containsKey(USER_CONFIG)) {
-            defaultConfigurationSettings().get(USER_CONFIG);
-        }
-        
-        if (!toReturn.containsKey(PASSWORD_CONFIG)) {
-            defaultConfigurationSettings().get(PASSWORD_CONFIG);
-        }
-        
-        toReturn.putAll(immutableConfigurationSettings());
-        
+        Properties toReturn = new Properties(defaultConfigurationSettings());
+        toReturn.putAll(stripPrefixFromConfigKeys(inputConfiguration));
         return toReturn;
     }
 
-    public static Properties stripPrefixFromConfigKeys(Map<String, String> inputConfiguration) {
+    public Properties stripPrefixFromConfigKeys(Map<String, String> inputConfiguration) {
         Properties toReturn = new Properties();
         
         for(String key: inputConfiguration.keySet()) {
@@ -42,19 +43,46 @@ public class JPAConfiguration {
         return toReturn;
     }
     
-    public static Map<String, String> immutableConfigurationSettings() {
-        return new HashMap<String, String>() {{
-            put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-            put("hibernate.connection.driver_class", "org.postgresql.Driver");
-            put("hibernate.show_sql", "false");
-        }};
+    public Properties defaultConfigurationSettings() {
+        try {
+            return loadDefaultConfigurationSettings("production", "persistence.xml");
+        } catch (Exception e) {
+            throw new RuntimeException("exception when loading setting from persistence.xml", e);
+        }
+    }
+
+    public Properties loadDefaultConfigurationSettings(String persistenceUnit, String configFile) 
+            throws XPathExpressionException, IOException, ParserConfigurationException, SAXException {
+        return parsePropertiesFromConfigFile(persistenceUnit, parseXML(configFile));
     }
     
-    public static Map<String, String> defaultConfigurationSettings() {
-        return new HashMap<String, String>() {{
-            put(URL_CONFIG, "jdbc:postgresql:candlepin");
-            put(USER_CONFIG, "candlepin");
-            put(PASSWORD_CONFIG, "");
-        }};
-    }    
+    public Document parseXML(String fileName) throws IOException, ParserConfigurationException, SAXException {
+        DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
+        domFactory.setNamespaceAware(false); 
+        DocumentBuilder builder = domFactory.newDocumentBuilder();
+        Document doc = builder.parse(getClass().getResourceAsStream(fileName));
+        return doc;
+    }
+    
+    public Properties parsePropertiesFromConfigFile(String persistenceUnitName, Document doc) 
+            throws XPathExpressionException {
+        
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        XPathExpression expr = xpath.compile("//persistence-unit[@name='" + persistenceUnitName + "']/properties/property");
+
+        Object result = expr.evaluate(doc, XPathConstants.NODESET);
+        NodeList nodes = (NodeList) result;
+        Properties toReturn = new Properties();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            String name = nodeValue(nodes, i, "name");
+            String value = nodeValue(nodes, i, "value");
+            toReturn.put(name, value);
+        }
+        
+        return toReturn;
+    }
+
+    private String nodeValue(NodeList nodes, int i, String name) {
+        return nodes.item(i).getAttributes().getNamedItem(name).getNodeValue();
+    }
 }

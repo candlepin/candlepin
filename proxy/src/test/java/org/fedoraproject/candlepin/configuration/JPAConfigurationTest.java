@@ -19,10 +19,21 @@ public class JPAConfigurationTest {
             put(JPAConfiguration.JPA_CONFIG_PREFIX + "." + key2, "value");
         }};
         
-        Properties stripped = JPAConfiguration.stripPrefixFromConfigKeys(configuraton);
+        Properties stripped = new JPAConfiguration().stripPrefixFromConfigKeys(configuraton);
         
         assertEquals(2, stripped.size());
         assertTrue(stripped.containsKey(key1));
         assertTrue(stripped.containsKey(key2));
+    }
+    
+    @Test
+    public void shouldReturnPropertyElementsOfConfigurationFile() throws Exception {
+        Properties loaded = 
+            new JPAConfiguration().loadDefaultConfigurationSettings("testing", "persistence_for_testing.xml");
+        
+        assertEquals(3, loaded.size());
+        assertEquals("first", (String) loaded.get("first"));
+        assertEquals("second", (String) loaded.get("second"));
+        assertEquals("third", (String) loaded.get("third"));
     }
 }
