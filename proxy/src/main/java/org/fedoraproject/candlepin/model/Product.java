@@ -61,12 +61,12 @@ public class Product implements Persisted {
     @ForeignKey(name = "fk_product_product_id",
                 inverseName = "fk_product_child_product_id")
     @JoinTable(name = "cp_product_hierarchy",
-            joinColumns = @JoinColumn(name = "PARENT_PRODUCT_ID"),
-            inverseJoinColumns = @JoinColumn(name = "CHILD_PRODUCT_ID"))
+            joinColumns = @JoinColumn(name = "parent_product_id"),
+            inverseJoinColumns = @JoinColumn(name = "child_product_id"))
     private Set<Product> childProducts;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "PRODUCT_ATTRIBUTE")
+    @JoinTable(name = "cp_product_attribute")
     //   @JoinColumn(name="ATTRIBUTE_ID")
     private Set<Attribute> attributes;
 

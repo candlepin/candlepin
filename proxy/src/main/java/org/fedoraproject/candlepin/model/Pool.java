@@ -90,7 +90,7 @@ public class Pool implements Persisted {
     private String productId;    
 
     @CollectionOfElements
-    @JoinTable(name = "POOL_ATTRIBUTE")
+    @JoinTable(name = "cp_entitlement_pool_attribute")
     private Set<Attribute> attributes;
 
     /**

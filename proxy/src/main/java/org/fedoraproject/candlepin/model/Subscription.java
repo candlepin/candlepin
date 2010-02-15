@@ -61,7 +61,7 @@ public class Subscription implements Persisted {
     private Date endDate;
 
     @CollectionOfElements
-    @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
+    @JoinTable(name = "cp_subscription_attribute")
     private Set<Attribute> attributes;
     
     private Date modified;
