@@ -73,13 +73,8 @@ public class EntitlementPoolResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/consumer/{consumer_uuid}")
     public List<EntitlementPool> listByConsumer(@PathParam("consumer_uuid") String consumer_uuid) {
-        // FIXME: not correct, we need to filter on only those
-        // owned by the Consumer
-        log.debug("listByConsumer, consumer_uuid is: " + consumer_uuid);
         Consumer consumer = consumerCurator.lookupByUuid(consumer_uuid);
-        log.debug("consumer is :" + consumer.toString());
         List<EntitlementPool>  eps = entitlementPoolCurator.listByConsumer(consumer);
-        log.debug("EntitlementPools: " + eps.toString());
         return eps;
     }
     

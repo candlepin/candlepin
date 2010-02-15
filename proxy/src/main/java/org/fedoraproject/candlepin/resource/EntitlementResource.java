@@ -177,6 +177,11 @@ public class EntitlementResource {
     public List<EntitlementPool> listAvailableEntitlements(
         @PathParam("consumer_uuid") Long consumerUuid) {
 
+//        log.debug("consumerCurator: " + consumerCurator.toString());
+//        log.debug("epCurator: " + epCurator.toString());
+//        Consumer consumer = consumerCurator.find(consumerUuid);
+//        log.debug("consumer: " + consumer.toString());
+//        return epCurator.listByConsumer(consumer);
         return epCurator.findAll();
         
 //        Consumer c = consumerCurator.find(consumerId);
