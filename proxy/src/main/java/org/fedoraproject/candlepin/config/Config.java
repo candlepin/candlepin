@@ -27,9 +27,11 @@ public class Config {
     protected File CONFIGURATION_FILE = new File("/etc/candlepin/candlepin.conf");
     protected static TreeMap<String, String> configuration = null;
    
+
     /**
-     * TODO: not sure what this returns
-     * @return TODO: something
+     * Return configuration entry for the given prefix.
+     * @param prefix prefix for the entry sought.
+     * @return configuration entry for the given prefix.
      */
     public Map<String, String> configurationWithPrefix(String prefix) {
         if (configuration == null) {
