@@ -20,13 +20,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.fedoraproject.candlepin.config.Config;
 import org.junit.Test;
 
 public class CandlepinConfigurationTest {
 
     @Test
     public void returnAllKeysWithAPrefixFromHead() {
-        CandlepinConfiguration config = new CandlepinConfigurationForTesting(
+        Config config = new CandlepinConfigurationForTesting(
                 new HashMap<String, String>() {{
                     put("a.b.a.b", "value");
                     put("a.b.c.d", "value");
@@ -43,7 +44,7 @@ public class CandlepinConfigurationTest {
     
     @Test
     public void returnAllKeysWithAPrefixInTheMiddle() {
-        CandlepinConfiguration config = new CandlepinConfigurationForTesting(
+        Config config = new CandlepinConfigurationForTesting(
                 new HashMap<String, String>() {{
                     put("a.b.a.b", "value");
                     put("a.b.c.d", "value");
@@ -62,7 +63,7 @@ public class CandlepinConfigurationTest {
     
     @Test
     public void returnAllKeysWithAPrefixFromTail() {
-        CandlepinConfiguration config = new CandlepinConfigurationForTesting(
+        Config config = new CandlepinConfigurationForTesting(
                 new HashMap<String, String>() {{
                     put("a.b.a.b", "value");
                     put("a.b.c.d", "value");
@@ -78,7 +79,7 @@ public class CandlepinConfigurationTest {
         assertTrue(withPrefix.containsKey("a.c.e.f"));
     }
     
-    public static class CandlepinConfigurationForTesting extends CandlepinConfiguration {
+    public static class CandlepinConfigurationForTesting extends Config {
         public CandlepinConfigurationForTesting(Map<String, String> inConfig) {
             configuration = new TreeMap<String, String>(inConfig);
         }

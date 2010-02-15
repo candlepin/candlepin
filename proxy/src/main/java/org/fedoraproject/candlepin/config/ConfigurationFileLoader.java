@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.configuration;
+package org.fedoraproject.candlepin.config;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -24,13 +24,8 @@ import java.util.Map;
 import java.util.Properties;
 
 public class ConfigurationFileLoader {
-    protected File configurationFile;
     
-    public ConfigurationFileLoader(File configurationFile) {
-        this.configurationFile = configurationFile;
-    }
-
-    public Map<String, String> loadProperties() throws IOException {
+    public Map<String, String> loadProperties(File configurationFile) throws IOException {
         if (configurationFile.canRead()) {
             return loadConfiguration(new BufferedInputStream(new FileInputStream(configurationFile)));
         }

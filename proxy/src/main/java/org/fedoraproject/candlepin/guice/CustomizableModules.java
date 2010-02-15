@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.fedoraproject.candlepin.configuration.CandlepinConfiguration;
+import org.fedoraproject.candlepin.config.Config;
 
 import com.google.inject.Module;
 
@@ -65,7 +65,7 @@ public class CustomizableModules {
         return new HashMap(loaded);
     }
     
-    protected CandlepinConfiguration configuration() {
-        return new CandlepinConfiguration();
+    protected Config configuration() {
+        return new Config();
     }
 }
