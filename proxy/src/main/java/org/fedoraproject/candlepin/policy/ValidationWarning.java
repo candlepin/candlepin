@@ -14,17 +14,32 @@
  */
 package org.fedoraproject.candlepin.policy;
 
+/**
+ * Represents a validation warning
+ */
 public class ValidationWarning {
     private String resourceKey;
 
+    /**
+     * ctor
+     * @param resourceKey resource key
+     */
     public ValidationWarning(String resourceKey) {
         this.resourceKey = resourceKey;
     }
-    
+   
+    /**
+     * Return the resource key
+     * @return the resource key
+     */
     public String getResourceKey() {
         return resourceKey;
     }
-    
+  
+    /**
+     * String representation.
+     * @return String representation.
+     */
     public String toString() {
         return resourceKey;
     }
