@@ -26,32 +26,51 @@ public class PreEntHelper {
     
     private Boolean grantFreeEntitlement = Boolean.FALSE;
     private ValidationResult result;
-    
+   
+    /**
+     * default ctor
+     */
     public PreEntHelper() {
         result = new ValidationResult();
     }
-    
+   
+    /**
+     * Add an error message to the validation results.
+     * @param resourceKey key of the error message.
+     */
     public void addError(String resourceKey) {
         result.addError(resourceKey);
     }
-    
+   
+    /**
+     * Add a warning message to the validation.
+     * @param resourceKey key 
+     */
     public void addWarning(String resourceKey) {
         result.addWarning(resourceKey);
     }
     
     /**
-     * Called by a rule who wishes to indicate the entitlement is free, and not counted
-     * against the owner's overall consumption. This translates into a flag on the 
-     * Entitlement object itself.
+     * Called by a rule who wishes to indicate the entitlement is free,
+     * and not counted against the owner's overall consumption. This
+     * translates into a flag on the Entitlement object itself.
      */
     public void grantFreeEntitlement() {
         grantFreeEntitlement = Boolean.TRUE;
     }
-    
+   
+    /**
+     * Return true if we are to grant free entitlements.
+     * @return true if we are to grant free entitlements.
+     */
     public Boolean getGrantFreeEntitlement() {
         return grantFreeEntitlement;
     }
-    
+   
+    /**
+     * Return the result of the validation
+     * @return the result of the validation
+     */
     public ValidationResult getResult() {
         return result;
     }
@@ -59,13 +78,14 @@ public class PreEntHelper {
     /**
      * Verify entitlements are available in the given pool.
      * 
-     * WARNING: It is extremely important the author of a rules file makes sure this
-     * function is called at appropriate times in pre_global() and normally within all product
-     * specific functions. If not, entitlements will be granted with no checking against 
-     * overall consumption limits, leaving a scenario that will have to be dealt with
-     * via compliance checking.
+     * WARNING: It is extremely important the author of a rules file makes
+     * sure this function is called at appropriate times in pre_global() and
+     * normally within all product specific functions. If not, entitlements
+     * will be granted with no checking against overall consumption limits,
+     * leaving a scenario that will have to be dealt with via compliance
+     * checking.
      *  
-     * @param entPool
+     * @param entPool read-only entitlement pool to be checked.
      */
     public void checkQuantity(ReadOnlyEntitlementPool entPool) {
         if (!entPool.entitlementsAvailable()) {
