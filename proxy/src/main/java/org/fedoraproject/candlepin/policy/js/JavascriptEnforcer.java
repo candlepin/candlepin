@@ -19,7 +19,6 @@ import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
@@ -37,12 +36,15 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+/**
+ * Enforces the Javascript Rules definition.
+ */
 public class JavascriptEnforcer implements Enforcer {
-    
+
     private static Logger log = Logger.getLogger(JavascriptEnforcer.class);
     private DateSource dateSource;
     private RulesCurator rulesCurator;
-    private ProductServiceAdapter prodAdapter;    
+    private ProductServiceAdapter prodAdapter;
     private PreEntHelper preHelper;
     private PostEntHelper postHelper;
 
@@ -52,9 +54,17 @@ public class JavascriptEnforcer implements Enforcer {
     private static final String POST_PREFIX = "post_";
     private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
-    
+
+    /**
+     * ctor
+     * @param dateSource TODO: not sure
+     * @param rulesCurator interact with rules
+     * @param preHelper interact with pre-processing helper.
+     * @param postHelper interact with post-processing helper.
+     * @param prodAdapter interact with product service.
+     */
     @Inject
-    public JavascriptEnforcer(DateSource dateSource, 
+    public JavascriptEnforcer(DateSource dateSource,
             RulesCurator rulesCurator, PreEntHelper preHelper,
             PostEntHelper postHelper, ProductServiceAdapter prodAdapter) {
         this.dateSource = dateSource;
@@ -78,7 +88,12 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
-
+    /**
+     * Run before any processing of the entitlements occurs.
+     * @param consumer Consumer to pre-process.
+     * @param entitlementPool Entitlement Pool to pre-process.
+     * @return The helper class to execute the pre-processing step.
+     */
     @Override
     public PreEntHelper pre(Consumer consumer, EntitlementPool entitlementPool) {
 
@@ -109,8 +124,8 @@ public class JavascriptEnforcer implements Enforcer {
             inv.invokeFunction(PRE_PREFIX + productId);
         }
         catch (NoSuchMethodException e) {
-            // No method for this product, try to find a global function, if neither exists
-            // this is ok and we'll just carry on.
+            // No method for this product, try to find a global function, if
+            // neither exists this is ok and we'll just carry on.
             try {
                 inv.invokeFunction(GLOBAL_PRE_FUNCTION);
             }
@@ -126,6 +141,11 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
+    /**
+     * Post-processing method
+     * @param ent Post-process the entitlement.
+     * @return post-processing helper
+     */
     @Override
     public PostEntHelper post(Entitlement ent) {
         postHelper.init(ent);
@@ -149,8 +169,8 @@ public class JavascriptEnforcer implements Enforcer {
             inv.invokeFunction(POST_PREFIX + productId);
         }
         catch (NoSuchMethodException e) {
-            // No method for this product, try to find a global function, if neither exists
-            // this is ok and we'll just carry on.
+            // No method for this product, try to find a global function, if
+            // neither exists this is ok and we'll just carry on.
             try {
                 inv.invokeFunction(GLOBAL_POST_FUNCTION);
             }
@@ -166,6 +186,4 @@ public class JavascriptEnforcer implements Enforcer {
             throw new RuleExecutionException(e);
         }
     }
-
-
 }
