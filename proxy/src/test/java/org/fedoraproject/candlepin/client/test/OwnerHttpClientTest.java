@@ -51,60 +51,64 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void setUp() throws Exception {
         TestServletConfig.servletInjector = injector;
         startServer(TestServletConfig.class);
-        
+
         owner = TestUtil.createOwner();
         ownerCurator.create(owner);
-        
+
         type = new ConsumerType("some-consumer-type");
         consumerTypeCurator.create(type);
-        
+
         product = TestUtil.createProduct();
         productCurator.create(product);
-        
+
         anotherProduct = TestUtil.createProduct();
         productCurator.create(anotherProduct);
-        
-        entitlementPool = new EntitlementPool(owner, product.getId(), MAX_POOL_MEMBERS, 
-                TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+
+        entitlementPool = new EntitlementPool(owner, product.getId(),
+                MAX_POOL_MEMBERS, TestDateUtil.date(2010, 1, 1), TestDateUtil
+                        .date(2020, 12, 31));
         entitlementPoolCurator.create(entitlementPool);
-        
-        anotherEntitlementPool = new EntitlementPool(owner, anotherProduct.getId(), MAX_POOL_MEMBERS, 
-                TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+
+        anotherEntitlementPool = new EntitlementPool(owner, anotherProduct
+                .getId(), MAX_POOL_MEMBERS, TestDateUtil.date(2010, 1, 1),
+                TestDateUtil.date(2020, 12, 31));
         entitlementPoolCurator.create(anotherEntitlementPool);
-        
+
         entitler = injector.getInstance(Entitler.class);
     }
-    
+
     @Test
     public void listEntitlementsForExistingOwnerShouldPass() {
-        for (int i = 0; i < MAX_POOL_MEMBERS.longValue()/2; i++) {
+        for (int i = 0; i < MAX_POOL_MEMBERS.longValue() / 2; i++) {
             Consumer c = TestUtil.createConsumer(type, owner);
             consumerCurator.create(c);
             entitler.entitle(owner, c, product);
         }
 
-        for (int i = 0; i < MAX_POOL_MEMBERS.longValue()/2; i++) {
+        for (int i = 0; i < MAX_POOL_MEMBERS.longValue() / 2; i++) {
             Consumer c = TestUtil.createConsumer(type, owner);
             consumerCurator.create(c);
             entitler.entitle(owner, c, anotherProduct);
         }
-        
-        WebResource r = resource().path("/owner/" + owner.getId() + "/entitlement");
-        List<Entitlement> returned = r.accept("application/json")
-             .type("application/json")
-             .get(new GenericType<List<Entitlement>>() {});
-        
+
+        WebResource r = resource().path(
+                "/owner/" + owner.getId() + "/entitlement");
+        List<Entitlement> returned = r.accept("application/json").type(
+                "application/json").get(new GenericType<List<Entitlement>>() {
+                });
+
         assertEquals(MAX_POOL_MEMBERS, new Long(returned.size()));
     }
-    
+
     @Test
     public void listEntitlementsForNonExistantOwnerShouldFail() {
         try {
             WebResource r = resource().path("/owner/1234/entitlement");
-            r.accept("application/json")
-                 .type("application/json")
-                 .get(new GenericType<List<Entitlement>>() {});
-        } catch (UniformInterfaceException e) {
+            r.accept("application/json").type("application/json").get(
+                    new GenericType<List<Entitlement>>() {
+                    });
+        }
+        catch (UniformInterfaceException e) {
             assertEquals(404, e.getResponse().getStatus());
         }
     }

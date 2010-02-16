@@ -35,10 +35,8 @@ import java.util.Map;
 
 import javax.persistence.PersistenceException;
 
-
-
 public class ConsumerTest extends DatabaseTestFixture {
-    
+
     private Owner owner;
     private Product rhel;
     private Product jboss;
@@ -46,51 +44,52 @@ public class ConsumerTest extends DatabaseTestFixture {
     private ConsumerType consumerType;
     private static final String CONSUMER_TYPE_NAME = "test-consumer-type";
     private static final String CONSUMER_NAME = "Test Consumer";
-    
+
     @Before
     public void setUpTestObjects() {
         unitOfWork.beginWork();
-        
+
         owner = new Owner("Example Corporation");
         rhel = new Product("rhel", "Red Hat Enterprise Linux");
         jboss = new Product("jboss", "JBoss");
-        
+
         ownerCurator.create(owner);
         productCurator.create(rhel);
         productCurator.create(jboss);
-        
+
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);
         consumer = new Consumer(CONSUMER_NAME, owner, consumerType);
         consumer.setMetadataField("foo", "bar");
         consumer.setMetadataField("foo1", "bar1");
-        
+
         consumerCurator.addConsumedProduct(consumer, rhel);
         consumerCurator.addConsumedProduct(consumer, jboss);
-        
+
         consumerCurator.create(consumer);
-        
+
         unitOfWork.endWork();
     }
-    
+
     @Test(expected = PersistenceException.class)
     public void testConsumerTypeRequired() {
         Consumer newConsumer = new Consumer();
         newConsumer.setName("cname");
         newConsumer.setOwner(owner);
-        
+
         consumerCurator.create(newConsumer);
     }
 
     @Test
     public void testLookup() throws Exception {
-        Consumer lookedUp = consumerCurator.find(consumer.getId()); 
+        Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(consumer.getId(), lookedUp.getId());
         assertEquals(consumer.getName(), lookedUp.getName());
-        assertEquals(consumer.getType().getLabel(), lookedUp.getType().getLabel());
+        assertEquals(consumer.getType().getLabel(), lookedUp.getType()
+                .getLabel());
         assertNotNull(consumer.getUuid());
     }
-    
+
     @Test
     public void testInfo() {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
@@ -101,13 +100,13 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals("bar1", metadata.get("foo1"));
         assertEquals("bar1", lookedUp.getFacts().getFact("foo1"));
     }
-    
+
     @Test
     public void testMetadataInfo() {
         Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
         consumer2.setMetadataField("foo", "bar2");
         consumerCurator.create(consumer2);
-        
+
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         Map<String, String> metadata = lookedUp.getFacts().getMetadata();
         assertEquals(2, metadata.keySet().size());
@@ -115,63 +114,66 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals("bar", lookedUp.getFacts().getFact("foo"));
         assertEquals("bar1", metadata.get("foo1"));
         assertEquals("bar1", lookedUp.getFacts().getFact("foo1"));
-        assertEquals(consumer.getId(), lookedUp.getFacts().getConsumer().getId());
-        
+        assertEquals(consumer.getId(), lookedUp.getFacts().getConsumer()
+                .getId());
+
         Consumer lookedUp2 = consumerCurator.find(consumer2.getId());
         metadata = lookedUp2.getFacts().getMetadata();
         assertEquals(1, metadata.keySet().size());
         assertEquals("bar2", metadata.get("foo"));
     }
-    
+
     @Test
     public void testModifyMetadata() {
         consumer.setMetadataField("foo", "notbar");
         consumerCurator.merge(consumer);
-        
+
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals("notbar", lookedUp.getMetadataField("foo"));
     }
-    
+
     @Test
     public void testMetadataDeleteCascading() {
         Consumer attachedConsumer = consumerCurator.find(consumer.getId());
         Long consumerInfoId = attachedConsumer.getFacts().getId();
 
-        assertNotNull((ConsumerFacts)entityManager().find(ConsumerFacts.class, consumerInfoId));
-        
+        assertNotNull((ConsumerFacts) entityManager().find(ConsumerFacts.class,
+                consumerInfoId));
+
         consumerCurator.delete(attachedConsumer);
-        
-        assertNull((ConsumerFacts)entityManager().find(ConsumerFacts.class, consumerInfoId));
+
+        assertNull((ConsumerFacts) entityManager().find(ConsumerFacts.class,
+                consumerInfoId));
     }
 
     @Test
     public void testConsumedProducts() {
         entityManager().clear();
-        Consumer lookedUp = (Consumer)entityManager().find(Consumer.class, consumer.getId());
+        Consumer lookedUp = (Consumer) entityManager().find(Consumer.class,
+                consumer.getId());
         assertEquals(2, lookedUp.getConsumedProducts().size());
     }
-    
+
     @Test
     public void testRemoveConsumedProducts() {
         consumerCurator.delete(consumerCurator.find(consumer.getId()));
         assertNull(consumerCurator.find(consumer.getId()));
     }
-    
+
     @Test
     public void testLookupByUuidNonExistent() {
         Consumer lookedUp = consumerCurator.lookupByUuid("this is not a uuid!");
     }
-    
-    
+
     @Test
     public void testLookupByUuid() {
         Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
         consumerCurator.create(consumer2);
-        
+
         Consumer lookedUp = consumerCurator.lookupByUuid(consumer2.getUuid());
         assertEquals(lookedUp.getUuid(), consumer2.getUuid());
     }
-    
+
     @Test
     public void testConsumerHierarchy() {
         Consumer child1 = new Consumer("child1", owner, consumerType);
@@ -189,31 +191,31 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(2, lookedUp.getChildConsumers().size());
     }
-    
+
     @Test
     public void testChildDeleteNoCascade() {
         unitOfWork.beginWork();
-        
+
         Consumer child1 = new Consumer("child1", owner, consumerType);
         child1.setMetadataField("foo", "bar");
         consumer.addChildConsumer(child1);
         consumerCurator.create(child1);
         consumerCurator.merge(consumer);
-        
+
         unitOfWork.endWork();
         unitOfWork.beginWork();
 
         child1 = consumerCurator.find(child1.getId());
         assertNotNull(child1);
         consumerCurator.delete(child1);
-        
+
         assertNull(consumerCurator.find(child1.getId()));
-        
+
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(0, lookedUp.getChildConsumers().size());
         unitOfWork.endWork();
     }
-    
+
     @Test
     public void testParentDeleteCascadesToChildren() {
         Consumer child1 = new Consumer("child1", owner, consumerType);
@@ -221,18 +223,19 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.addChildConsumer(child1);
         consumerCurator.create(child1);
         consumerCurator.merge(consumer);
-        
+
         consumerCurator.delete(consumer);
-        
+
         assertNull(consumerCurator.find(consumer.getId()));
         assertNull(consumerCurator.find(child1.getId()));
     }
-    
-    // This this looks like a stupid test but this was actually failing at one point. :)
+
+    // This this looks like a stupid test but this was actually failing at one
+    // point. :)
     @Test
     public void testMultipleConsumersSameConsumedProduct() {
         beginTransaction();
-        
+
         // Default consumer already consumes RHEL:
         Consumer child1 = new Consumer("child1", owner, consumerType);
         child1.setMetadataField("foo", "bar");
@@ -240,7 +243,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         entityManager().persist(child1);
         commitTransaction();
     }
-    
+
     @Test
     public void testAddEntitlements() {
         Product newProduct = TestUtil.createProduct();
@@ -248,21 +251,21 @@ public class ConsumerTest extends DatabaseTestFixture {
         EntitlementPool pool = TestUtil.createEntitlementPool(newProduct);
         entityManager().persist(pool.getOwner());
         entityManager().persist(pool);
-        
+
         Entitlement e1 = TestUtil.createEntitlement(pool, consumer);
         Entitlement e2 = TestUtil.createEntitlement(pool, consumer);
         Entitlement e3 = TestUtil.createEntitlement(pool, consumer);
         entityManager().persist(e1);
         entityManager().persist(e2);
         entityManager().persist(e3);
-        
+
         consumer.addEntitlement(e1);
         consumer.addEntitlement(e2);
         consumer.addEntitlement(e3);
         consumerCurator.merge(consumer);
-        
+
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(3, lookedUp.getEntitlements().size());
     }
-    
+
 }

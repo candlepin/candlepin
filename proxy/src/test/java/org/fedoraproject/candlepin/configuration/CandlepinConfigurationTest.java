@@ -28,58 +28,68 @@ public class CandlepinConfigurationTest {
     @Test
     public void returnAllKeysWithAPrefixFromHead() {
         Config config = new CandlepinConfigurationForTesting(
-                new HashMap<String, String>() {{
-                    put("a.b.a.b", "value");
-                    put("a.b.c.d", "value");
-                    put("a.b.e.f", "value");
-                    put("a.c.a.a", "value");
-                }});
-        
+                new HashMap<String, String>() {
+
+                    {
+                        put("a.b.a.b", "value");
+                        put("a.b.c.d", "value");
+                        put("a.b.e.f", "value");
+                        put("a.c.a.a", "value");
+                    }
+                });
+
         Map<String, String> withPrefix = config.configurationWithPrefix("a.b");
         assertEquals(3, withPrefix.size());
         assertTrue(withPrefix.containsKey("a.b.a.b"));
         assertTrue(withPrefix.containsKey("a.b.c.d"));
         assertTrue(withPrefix.containsKey("a.b.e.f"));
     }
-    
+
     @Test
     public void returnAllKeysWithAPrefixInTheMiddle() {
         Config config = new CandlepinConfigurationForTesting(
-                new HashMap<String, String>() {{
-                    put("a.b.a.b", "value");
-                    put("a.b.c.d", "value");
-                    put("a.c.a.b", "value");
-                    put("a.c.c.d", "value");
-                    put("a.c.e.f", "value");
-                    put("a.d.a.b", "value");
-                }});
-        
+                new HashMap<String, String>() {
+
+                    {
+                        put("a.b.a.b", "value");
+                        put("a.b.c.d", "value");
+                        put("a.c.a.b", "value");
+                        put("a.c.c.d", "value");
+                        put("a.c.e.f", "value");
+                        put("a.d.a.b", "value");
+                    }
+                });
+
         Map<String, String> withPrefix = config.configurationWithPrefix("a.c");
         assertEquals(3, withPrefix.size());
         assertTrue(withPrefix.containsKey("a.c.a.b"));
         assertTrue(withPrefix.containsKey("a.c.c.d"));
         assertTrue(withPrefix.containsKey("a.c.e.f"));
     }
-    
+
     @Test
     public void returnAllKeysWithAPrefixFromTail() {
         Config config = new CandlepinConfigurationForTesting(
-                new HashMap<String, String>() {{
-                    put("a.b.a.b", "value");
-                    put("a.b.c.d", "value");
-                    put("a.c.a.b", "value");
-                    put("a.c.c.d", "value");
-                    put("a.c.e.f", "value");
-                }});
-        
+                new HashMap<String, String>() {
+
+                    {
+                        put("a.b.a.b", "value");
+                        put("a.b.c.d", "value");
+                        put("a.c.a.b", "value");
+                        put("a.c.c.d", "value");
+                        put("a.c.e.f", "value");
+                    }
+                });
+
         Map<String, String> withPrefix = config.configurationWithPrefix("a.c");
         assertEquals(3, withPrefix.size());
         assertTrue(withPrefix.containsKey("a.c.a.b"));
         assertTrue(withPrefix.containsKey("a.c.c.d"));
         assertTrue(withPrefix.containsKey("a.c.e.f"));
     }
-    
+
     public static class CandlepinConfigurationForTesting extends Config {
+
         public CandlepinConfigurationForTesting(Map<String, String> inConfig) {
             configuration = new TreeMap<String, String>(inConfig);
         }

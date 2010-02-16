@@ -61,14 +61,14 @@ public class DatabaseTestFixture {
     
     protected OwnerCurator ownerCurator;
     protected ProductCurator productCurator;
-    protected ProductServiceAdapter productAdapter ;
+    protected ProductServiceAdapter productAdapter;
     protected SubscriptionServiceAdapter subAdapter;
     protected ConsumerCurator consumerCurator;
     protected ConsumerTypeCurator consumerTypeCurator;
     protected CertificateCurator certificateCurator;
     protected EntitlementPoolCurator entitlementPoolCurator;
     protected DateSourceForTesting dateSource;
-    protected SpacewalkCertificateCurator spacewalkCertificateCurator;
+    protected SpacewalkCertificateCurator spacewalkCertCurator;
     protected EntitlementCurator entitlementCurator;
     protected AttributeCurator attributeCurator;
     protected RulesCurator rulesCurator;
@@ -94,32 +94,33 @@ public class DatabaseTestFixture {
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         certificateCurator = injector.getInstance(CertificateCurator.class);
         entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
-        spacewalkCertificateCurator = injector.getInstance(SpacewalkCertificateCurator.class);
+        spacewalkCertCurator = injector.getInstance(SpacewalkCertificateCurator.class);
         entitlementCurator = injector.getInstance(EntitlementCurator.class);
         attributeCurator = injector.getInstance(AttributeCurator.class);
         rulesCurator = injector.getInstance(RulesCurator.class);
         subCurator = injector.getInstance(SubscriptionCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
-        productAdapter = injector.getInstance(ProductServiceAdapter.class) ;
+        productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
     }
     
-    /*
-     * As long as we are using in-memory db we don't need to clean it out; 
-     * a new instance will be created for each test. cleanDb() is *not* being currently invoked.
+    /**
+     * As long as we are using in-memory db we don't need to clean it out; a new
+     * instance will be created for each test. cleanDb() is *not* being
+     * currently invoked.
      * 
-     * Cleans out everything in the database. Currently we test against an 
+     * Cleans out everything in the database. Currently we test against an
      * in-memory hsqldb, so this should be ok.
      * 
-     *  WARNING: Don't flip the persistence unit to point to an actual live 
-     *  DB or you'll lose everything.
-     *  
-     *  WARNING: If you're creating objects in tables that have static 
-     *  pre-populated content, we may not want to wipe those tables here.
-     *  This situation hasn't arisen yet.
+     * WARNING: Don't flip the persistence unit to point to an actual live DB or
+     * you'll lose everything.
+     * 
+     * WARNING: If you're creating objects in tables that have static
+     * pre-populated content, we may not want to wipe those tables here. This
+     * situation hasn't arisen yet.
      */
     @SuppressWarnings("unchecked")
     public void cleanDb() {
@@ -134,13 +135,15 @@ public class DatabaseTestFixture {
             em.remove(e);
         }
 
-        List<EntitlementPool> pools = em.createQuery("from EntitlementPool p").getResultList();
+        List<EntitlementPool> pools =
+            em.createQuery("from EntitlementPool p").getResultList();
+        
         for (EntitlementPool p : pools) {
             em.remove(p);
         }
 
-        // TODO: Would rather be doing this, but such a bulk delete does not seem to respect
-        // the cascade to child products and thus fails.
+        // TODO: Would rather be doing this, but such a bulk delete does not
+        // seem to respect the cascade to child products and thus fails.
         // em.createQuery("delete from Product").executeUpdate();
         List<Product> products = em.createQuery("from Product p").getResultList();
         for (Product p : products) {
@@ -152,13 +155,15 @@ public class DatabaseTestFixture {
             em.remove(c);
         }
 
-        List<Certificate> certificates = em.createQuery("from Certificate c").getResultList();
-        for (Certificate c : certificates){
+        List<Certificate> certificates =
+            em.createQuery("from Certificate c").getResultList();
+        
+        for (Certificate c : certificates) {
             em.remove(c);
         }
         
         List<Attribute> attributes = em.createQuery("from Attribute c").getResultList();
-        for (Attribute a : attributes){
+        for (Attribute a : attributes) {
             em.remove(a);
         }
         
@@ -168,7 +173,8 @@ public class DatabaseTestFixture {
             em.remove(o);
         }
 
-//        List<ConsumerInfo> consumerInfos = em.createQuery("from ConsumerInfo c").getResultList();
+//        List<ConsumerInfo> consumerInfos =
+//            em.createQuery("from ConsumerInfo c").getResultList();
 //        for (ConsumerInfo c : consumerInfos) {
 //            em.remove(c);
 //        }

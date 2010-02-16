@@ -42,48 +42,61 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Before
     public void createEnforcer() {
         PreEntHelper preHelper = new PreEntHelper();
-        PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator, productAdapter);
+        PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator,
+                productAdapter);
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
                 rulesCurator, preHelper, postHelper, productAdapter);
     }
-    
-    // grrr. have to test two conditions atm: sufficient number of entitlements *when* pool has not expired
+
+    // grrr. have to test two conditions atm: sufficient number of entitlements
+    // *when* pool has not expired
+    //
+    // shouldPassValidationWhenSufficientNumberOfEntitlementsIsAvailableAndNotExpired
     @Test
-    public void shouldPassValidationWhenSufficientNumberOfEntitlementsIsAvailableAndNotExpired() {
-        ValidationResult result = enforcer.pre(TestUtil.createConsumer(),
-                entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2010, 10, 10))).getResult();
+    public void passValidationEnoughNumberOfEntitlementsIsAvailableAndNotExpired() {
+        ValidationResult result = enforcer.pre(
+                TestUtil.createConsumer(),
+                entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2010,
+                        10, 10))).getResult();
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
-    
+
     @Test
     public void shouldFailValidationWhenNoEntitlementsAreAvailable() {
-        ValidationResult result = enforcer.pre(TestUtil.createConsumer(),
-                entitlementPoolWithMembersAndExpiration(1, 1, expiryDate(2010, 10, 10))).getResult();
+        ValidationResult result = enforcer.pre(
+                TestUtil.createConsumer(),
+                entitlementPoolWithMembersAndExpiration(1, 1, expiryDate(2010,
+                        10, 10))).getResult();
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
-    
+
     @Test
     public void shouldFailWhenEntitlementsAreExpired() {
-        ValidationResult result = enforcer.pre(TestUtil.createConsumer(),
-                entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2000, 1, 1))).getResult();
+        ValidationResult result = enforcer.pre(
+                TestUtil.createConsumer(),
+                entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2000,
+                        1, 1))).getResult();
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
-    
+
     private Date expiryDate(int year, int month, int day) {
         return TestDateUtil.date(year, month, day);
     }
-    
+
     private EntitlementPool entitlementPoolWithMembersAndExpiration(
             final int currentMembers, final int maxMembers, Date expiry) {
-        return new EntitlementPool(new Owner(), new Product("label", "name").getId(), 
-                new Long(maxMembers), new Date(), expiry) {{
-            setCurrentMembers(currentMembers);
-        }};
-    }    
+        return new EntitlementPool(new Owner(), new Product("label", "name")
+                .getId(), new Long(maxMembers), new Date(), expiry) {
+
+            {
+                setCurrentMembers(currentMembers);
+            }
+        };
+    }
 }

@@ -37,12 +37,13 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class VirtualHostEntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
+public class VirtualHostEntitlementHttpClientTest extends
+        AbstractGuiceGrizzlyTest {
 
     private Product virtHost;
     private Product virtHostPlatform;
     private Product virtGuest;
-    
+
     private Owner o;
     private Consumer parentSystem;
 
@@ -50,45 +51,47 @@ public class VirtualHostEntitlementHttpClientTest extends AbstractGuiceGrizzlyTe
     public void setUp() throws Exception {
         TestServletConfig.servletInjector = injector;
         startServer(TestServletConfig.class);
-        
+
         o = TestUtil.createOwner();
         ownerCurator.create(o);
-        
-        String certString = SpacewalkCertificateCuratorTest.readCertificate(
-                "/certs/spacewalk-with-channel-families.cert");
-        spacewalkCertificateCurator.parseCertificate(CertificateFactory.read(certString), o);
+
+        String certString = SpacewalkCertificateCuratorTest
+                .readCertificate("/certs/spacewalk-with-channel-families.cert");
+        spacewalkCertCurator.parseCertificate(CertificateFactory
+                .read(certString), o);
 
         List<EntitlementPool> pools = entitlementPoolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
-        virtHost = productCurator.lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
+        virtHost = productCurator
+                .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
         assertNotNull(virtHost);
-        
-        virtHostPlatform = productCurator.lookupByLabel(
-                SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM);
-        
-        virtGuest = productCurator.lookupByLabel(
-                SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
-        
+
+        virtHostPlatform = productCurator
+                .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM);
+
+        virtGuest = productCurator
+                .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
+
         ConsumerType system = new ConsumerType(ConsumerType.SYSTEM);
         consumerTypeCurator.create(system);
-        
+
         parentSystem = new Consumer("system", o, system);
         parentSystem.getFacts().setFact("total_guests", "0");
         consumerCurator.create(parentSystem);
     }
-    
+
     @Test
     public void virtualizationHostConsumption() {
         assertEquals(0, entitlementPoolCurator.listByOwnerAndProduct(o,
                 parentSystem, virtGuest).size());
-        
-        WebResource r = resource()
-            .path("/entitlement/consumer/" + parentSystem.getUuid() + "/product/" + virtHost.getLabel());
-        String s = r.accept("application/json")
-             .type("application/json")
-             .post(String.class);
-        
+
+        WebResource r = resource().path(
+                "/entitlement/consumer/" + parentSystem.getUuid() + "/product/" +
+                virtHost.getLabel());
+        String s = r.accept("application/json").type("application/json").post(
+                String.class);
+
         assertVirtualizationHostConsumption();
     }
 
@@ -97,37 +100,38 @@ public class VirtualHostEntitlementHttpClientTest extends AbstractGuiceGrizzlyTe
         assertEquals(0, entitlementPoolCurator.listByOwnerAndProduct(o,
                 parentSystem, virtGuest).size());
 
-        WebResource r = resource()
-            .path("/entitlement/consumer/" + parentSystem.getUuid() + "/product/" + virtHostPlatform.getLabel());
-        String s = r.accept("application/json")
-             .type("application/json")
-             .post(String.class);
+        WebResource r = resource().path(
+                "/entitlement/consumer/" + parentSystem.getUuid() + "/product/" +
+                        virtHostPlatform.getLabel());
+        String s = r.accept("application/json").type("application/json").post(
+                String.class);
 
         assertVirtualizationHostPlatformConsumption();
     }
 
     private void assertVirtualizationHostConsumption() {
-        // Consuming a virt host entitlement should result in a pool just for us to consume
+        // Consuming a virt host entitlement should result in a pool just for us
+        // to consume
         // virt guests.
-        EntitlementPool consumerPool = entitlementPoolCurator.listByOwnerAndProduct(o,
-                parentSystem, virtGuest).get(0);
+        EntitlementPool consumerPool = entitlementPoolCurator
+                .listByOwnerAndProduct(o, parentSystem, virtGuest).get(0);
         assertNotNull(consumerPool);
         assertNotNull(consumerPool.getConsumer());
         assertEquals(parentSystem.getId(), consumerPool.getConsumer().getId());
         assertEquals(new Long(5), consumerPool.getMaxMembers());
         assertNotNull(consumerPool.getSourceEntitlement().getId());
     }
-    
+
     private void assertVirtualizationHostPlatformConsumption() {
-        // Consuming a virt host entitlement should result in a pool just for us to consume
+        // Consuming a virt host entitlement should result in a pool just for us
+        // to consume
         // virt guests.
-        EntitlementPool consumerPool = entitlementPoolCurator.listByOwnerAndProduct(o,
-                parentSystem, virtGuest).get(0);
+        EntitlementPool consumerPool = entitlementPoolCurator
+                .listByOwnerAndProduct(o, parentSystem, virtGuest).get(0);
         assertNotNull(consumerPool.getConsumer());
         assertEquals(parentSystem.getId(), consumerPool.getConsumer().getId());
         assertTrue(consumerPool.getMaxMembers() < 0);
         assertNotNull(consumerPool.getSourceEntitlement().getId());
     }
-    
 
 }

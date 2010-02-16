@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -33,7 +32,6 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.representation.Form;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -75,8 +73,9 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
 
         entitler = injector.getInstance(Entitler.class);
 
-        eapi = new EntitlementResource(entitlementPoolCurator, entitlementCurator, ownerCurator, consumerCurator, 
-                productAdapter, subAdapter, entitler);
+        eapi = new EntitlementResource(
+                entitlementPoolCurator, entitlementCurator, ownerCurator,
+                consumerCurator, productAdapter, subAdapter, entitler);
         
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }
@@ -97,7 +96,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         assertEquals(new Long(1), ep.getCurrentMembers());
     }
     
-    @Test(expected=RuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testMaxMembership() {
         // 10 entitlements available, lets try to entitle 11 consumers.
         for (int i = 0; i < ep.getMaxMembers(); i++) {
@@ -112,7 +111,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         eapi.entitle(c.getUuid(), product.getLabel());
     }
     
-    @Test(expected=RuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
         eapi.entitle(consumer.getUuid(), product.getLabel());
@@ -154,8 +153,8 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
  //       assertTrue(avail.size() > 0);
     }
     
-   @Test
-   @Ignore
+    @Test
+    @Ignore
     public void testJson() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);

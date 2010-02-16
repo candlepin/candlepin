@@ -40,7 +40,9 @@ public class CertificateTest extends DatabaseTestFixture {
         
         ownerCurator.create(owner);
         certificateCurator.create(
-                new Certificate("This is not actually a certificate. No entitlements for you!", owner));
+                new Certificate(
+                "This is not actually a certificate. No entitlements for you!",
+                owner));
     }
     
     
