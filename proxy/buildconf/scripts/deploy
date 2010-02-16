@@ -21,7 +21,8 @@ fi
 
 buildr candlepin:schema_gen
 $TC_CMD stop
-dropdb candlepin && createdb candlepin
+dropdb candlepin 
+createdb candlepin
 psql candlepin < target/schemagen/candlepin-proxy.sql
 psql candlepin < code/schema/postgresql/populate-defaults.sql
 
