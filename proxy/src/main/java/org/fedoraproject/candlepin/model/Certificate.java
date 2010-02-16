@@ -119,6 +119,4 @@ public class Certificate implements Persisted {
     public void setOwner(Owner ownerIn) {
         this.owner = ownerIn;
     }
-
-    
 }
