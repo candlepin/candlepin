@@ -113,7 +113,7 @@ conn.close()
 
 data = json.loads(rsp)
 certs = data['certs']
-pprint.pprint(certs)
+#pprint.pprint(certs)
 for i in certs:
     buf = i['bundle']
 #    print
@@ -131,6 +131,13 @@ for i in certs:
 response = urllib.urlopen('http://localhost:8080/candlepin/consumer/')
 rsp = response.read()
 print("list of consumers: %s" % rsp)
+
+## Get a specific entitlement
+response = urllib.urlopen('http://localhost:8080/candlepin/consumer/%s' % consumer_uuid)
+rsp = response.read()
+print("list of entitlements for %s : %s" % (consumer_uuid,rsp))
+ents = json.loads(rsp)
+print ents
 
 ## GET candlepin user
 #response = urllib.urlopen('http://localhost:8080/candlepin/consumer/candlepin')

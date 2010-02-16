@@ -21,7 +21,7 @@ class Rest(object):
 
         self.headers = {"json": self.json_headers,
                         "text": self.text_headers}
-        self.debug = None
+        self.debug = debug
 
         # default content type
         self.content_type = None
@@ -48,7 +48,9 @@ class Rest(object):
         if self.debug and self.debug >2:
             print "output: %s" % rsp
 
-        return self.demarshal(rsp, content_type)
+        if rsp != "":
+            return self.demarshal(rsp, content_type)
+        return None
 
     def get(self, path, content_type="json"):
         return self._request("GET", path, content_type=content_type)
@@ -107,13 +109,35 @@ class CandlePinApi:
         blob = self.rest.post(path, data=consumer)
         return blob
 
+    def unRegisterConsumer(self, username, password, consumer_uuid):
+        path = "/consumer/%s" % consumer_uuid
+        blob = self.rest.delete(path)
+        return blob
+
+    def bindProduct(self, consumer_uuid, product_label):
+        path = "/entitlement/consumer/%s/product/%s" % (consumer_uuid, product_label)
+        blob = self.rest.post(path)
+        return blob
+
+    def bindRegToken(self, consumer_uuid, regtoken):
+        path = "/entitlement/consumer/%s/token/%s" % (consumer_uuid, regtoken)
+        blob = self.rest.post(path)
+        return blob
+
+    def syncCertificates(self, consumer_uuid, certificate_list):
+        path = "/consumer/%s/certificates" % consumer_uuid
+        return self.rest.post(path,data=certificate_list)
+
+
 if __name__ == "__main__":
-    rest = Rest()
-    rest.debug = 10
-    print rest.get("/rules", content_type="text")
 
+    cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=10)
+    ret = cp.registerConsumer("whoever", "doesntmatter", "some system", {'arch':'i386', 'cpu':'intel'}, {'os':'linux', 'release':'4.2'})
+    print ret
+    print cp.unRegisterConsumer("dontuser", "notreallyapassword", ret['uuid'])
 
-    cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
-    print cp.registerConsumer("whoever", "doesntmatter", "some system", {'arch':'i386', 'cpu':'intel'}, {'os':'linux', 'release':'4.2'})
+    ret =  cp.registerConsumer("whoever", "doesntmatter", "some system", {'arch':'i386', 'cpu':'intel'}, {'os':'linux', 'release':'4.2'})
+#    print cp.bindProduct(ret['uuid'], "monitoring")
 
+    print cp.syncCertificates(ret['uuid'], [])
 
