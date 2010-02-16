@@ -3,6 +3,8 @@
 *.bak
 *.pyc
 *.pyo
+*.rpm
+*.gz
 *.src.rpm
 *.git.*.rpm
 proxy/build
