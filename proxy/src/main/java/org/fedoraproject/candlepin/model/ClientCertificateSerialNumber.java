@@ -15,7 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import java.io.Serializable;
-import javax.persistence.Entity;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,14 +27,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class ClientCertificateSerialNumber implements Persisted {
 
-    public long id;
-    public String serialNumber;
+    private long id;
+    private String serialNumber;
     
     
+    /**
+     * default ctor
+     */
     public ClientCertificateSerialNumber() {
         
     }
     
+    /**
+     * @param serialNumber serial number of the certificate.
+     */
     public ClientCertificateSerialNumber(String serialNumber) {
         this.serialNumber = serialNumber;
     }

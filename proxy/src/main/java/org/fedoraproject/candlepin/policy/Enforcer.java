@@ -44,6 +44,7 @@ public interface Enforcer {
      * Run post-entitlement actions.
      *
      * @param ent The entitlement that was just granted.
+     * @return post-entitlement processor
      */
     PostEntHelper post(Entitlement ent);
 }

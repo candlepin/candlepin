@@ -17,15 +17,29 @@ package org.fedoraproject.candlepin.config;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * JPAConfiguration
+ * @version $Rev$
+ */
 public class JPAConfiguration {
-    final public static String JPA_CONFIG_PREFIX = "jpa.config";
-    final public static int PREFIX_LENGTH = JPA_CONFIG_PREFIX.length();
+    /** JPA configuration prefix */
+    public static final String JPA_CONFIG_PREFIX = "jpa.config";
+    /** Length of the <code>JPA_CONFIG_PREFIX</code> */
+    public static final int PREFIX_LENGTH = JPA_CONFIG_PREFIX.length();
     
-    final public static String URL_CONFIG = "hibernate.connection.url";
-    final public static String USER_CONFIG = "hibernate.connection.username";
-    final public static String PASSWORD_CONFIG = "hibernate.connection.password";
+    /** hibernate connection url */
+    public static final String URL_CONFIG = "hibernate.connection.url";
+    /** Comment for <code>USER_CONFIG</code> */
+    public static final String USER_CONFIG = "hibernate.connection.username";
+    /** Comment for <code>PASSWORD_CONFIG</code> */
+    public static final String PASSWORD_CONFIG = "hibernate.connection.password";
     
     
+    /**
+     * Converts the given Map into a Properties object. 
+     * @param inputConfiguration Configuration to be converted.
+     * @return config as a Properties file
+     */
     public Properties parseConfig(Map<String, String> inputConfiguration) {
         
         Properties toReturn = new Properties();
@@ -33,6 +47,11 @@ public class JPAConfiguration {
         return toReturn;
     }
 
+    /**
+     * Return a copy of the input without the prefixes.
+     * @param inputConfiguration Configuration to be converted.
+     * @return config as a Properties object without the prefixes.
+     */
     public Properties stripPrefixFromConfigKeys(Map<String, String> inputConfiguration) {
         Properties toReturn = new Properties();
         

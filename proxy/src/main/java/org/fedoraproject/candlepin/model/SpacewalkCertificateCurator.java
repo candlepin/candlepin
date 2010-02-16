@@ -22,6 +22,9 @@ import com.google.inject.Inject;
 import java.text.ParseException;
 import java.util.Date;
 
+/**
+ * SpacewalkCertificateCurator
+ */
 public class SpacewalkCertificateCurator {
     
     private EntitlementPoolCurator entitlementPoolCurator;
@@ -39,6 +42,12 @@ public class SpacewalkCertificateCurator {
     public static final String ATTRIB_ALLOWED_GUESTS = "allowed_guests";
 
 
+    /**
+     * ctor
+     * @param entitlementPoolCurator interact with entitlement pools
+     * @param productCurator interact with products
+     * @param attributeCurator interact with attributes.
+     */
     @Inject
     public SpacewalkCertificateCurator(EntitlementPoolCurator entitlementPoolCurator, 
             ProductCurator productCurator, AttributeCurator attributeCurator) {
@@ -48,6 +57,12 @@ public class SpacewalkCertificateCurator {
         this.attributeCurator = attributeCurator;
     }
 
+    /**
+     * parses the Spacewalk certificate.
+     * @param cert Spacewalk certificate
+     * @param owner owner of the certificate
+     * @throws ParseException thrown if problem parsing.
+     */
     public void parseCertificate(Certificate cert, Owner owner) throws ParseException {
 
         // get the product the cert is for (and the channel families 

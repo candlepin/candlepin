@@ -51,6 +51,6 @@ public class CandlepinTestingModule extends AbstractModule {
         bind(TestResource.class);
         bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
-        bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);          
+        bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);
     }
 }

@@ -61,12 +61,13 @@ public class EntitlerTest extends DatabaseTestFixture {
         
         String certString = SpacewalkCertificateCuratorTest.readCertificate(
                 "/certs/spacewalk-with-channel-families.cert");
-        spacewalkCertificateCurator.parseCertificate(CertificateFactory.read(certString), o);
+        spacewalkCertCurator.parseCertificate(CertificateFactory.read(certString), o);
 
         List<EntitlementPool> pools = entitlementPoolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
-        virtHost = productCurator.lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
+        virtHost = productCurator
+                .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
         assertNotNull(virtHost);
         
         virtHostPlatform = productCurator.lookupByLabel(

@@ -25,6 +25,10 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+/**
+ * AbstractHibernateCurator
+ * @param <E> Entity specific curator.
+ */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     private final Class<E> entityType;
@@ -35,22 +39,36 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         this.entityType = entityType;
     }
 
+    /**
+     * @param id db id of entity to be found.
+     * @return entity matching given id, or null otherwise.
+     */
     public E find(Serializable id) {
         return id == null ? null : get(entityType, id);
     }
 
+    /**
+     * @param entity to be created.
+     * @return newly created entity
+     */
     @Transactional
     public E create(E entity) {
         save(entity);
         return entity;
     }
     
+    /**
+     * @return all entities for a particular type.
+     */
     @SuppressWarnings("unchecked")
-    @Transactional()
+    @Transactional
     public List<E> findAll() {
         return (List<E>) currentSession().createCriteria(entityType).list();
     }
     
+    /**
+     * @param entity to be deleted.
+     */
     @Transactional
     public void delete(E entity) {
         E toDelete = find(entity.getId());
@@ -58,6 +76,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         flush();
     }
     
+    /**
+     * @param entity entity to be merged.
+     * @return merged entity.
+     */
     @Transactional
     public E merge(E entity) {
         return getEntityManager().merge(entity);

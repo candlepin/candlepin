@@ -33,6 +33,9 @@ import org.apache.log4j.Logger;
 
 import java.util.Date;
 
+/**
+ * Entitler
+ */
 public class Entitler {
     
     private EntitlementPoolCurator epCurator;

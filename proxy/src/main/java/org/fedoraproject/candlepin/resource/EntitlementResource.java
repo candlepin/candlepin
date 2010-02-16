@@ -25,8 +25,10 @@ import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -54,6 +56,7 @@ public class EntitlementResource {
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ProductServiceAdapter prodAdapter;
+    private SubscriptionServiceAdapter subAdapter; 
     private Entitler entitler;
     private EntitlementCurator entitlementCurator;
     
@@ -66,27 +69,52 @@ public class EntitlementResource {
      * @param ownerCurator interact with owners.
      * @param consumerCurator interact with consumers.
      * @param prodAdapter interact with products.
+     * @param subAdapter interact with subscription
      * @param entitler This is what actually does the work.
      */
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
             EntitlementCurator entitlementCurator,
             OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ProductServiceAdapter prodAdapter, Entitler entitler) {
+            ProductServiceAdapter prodAdapter, SubscriptionServiceAdapter subAdapter, 
+            Entitler entitler) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.prodAdapter = prodAdapter;
+        this.subAdapter = subAdapter;
         this.entitler = entitler;
     }
+    
+    
 
     private void verifyExistence(Object o, String id) {
         if (o == null) {
             throw new RuntimeException(o.getClass().getName() + " with ID: [" + 
                     id + "] not found");
         }
+    }
+    
+    /**
+     *  Entitlese the given Consumer with best fit Product.
+     *  @param consumerUuid Consumer identifier to be entitled
+     *  @return Entitlend object
+     */
+    @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("consumer/{consumer_uuid}/")
+    public String entitle(@PathParam("consumer_uuid") String consumerUuid) {
+     
+        // TODO: actually get current user's owner
+        Owner owner = ownerCurator.findAll().get(0);
+        
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        
+        // FIXME: this is just a hardcoded cert...
+        return CertGenerator.getCertString(); 
     }
 
     /**
@@ -144,11 +172,22 @@ public class EntitlementResource {
         Owner owner = ownerCurator.findAll().get(0);
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        
+        Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
+        // get a subscripotion by regtoken
+
+        Product p = prodAdapter.getProductById(s.getProductId());
+
+        Entitlement e = entitler.entitle(owner, consumer, p);
+        // return it
+        
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
         
-        return "foo";
+        // FIXME: just stubbed out, we need to return the cert associated with
+        // entitlement
+        return CertGenerator.getCertString();
     }
     
     /**
@@ -194,7 +233,12 @@ public class EntitlementResource {
     public List<EntitlementPool> listAvailableEntitlements(
         @PathParam("consumer_uuid") Long consumerUuid) {
 
-        return epCurator.findAll();
+//        log.debug("consumerCurator: " + consumerCurator.toString());
+//        log.debug("epCurator: " + epCurator.toString());
+        Consumer consumer = consumerCurator.find(consumerUuid);
+//        log.debug("consumer: " + consumer.toString());
+        return epCurator.listByConsumer(consumer);
+//        return epCurator.findAll();
         
 //        Consumer c = consumerCurator.find(consumerId);
 //        List<EntitlementPool> entitlementPools = epCurator.findAll();

@@ -29,10 +29,16 @@ public class ClientCertificate implements Persisted {
     private String bundle;
     private Long id;
     
+    /**
+     * default ctor
+     */
     public ClientCertificate() {
         
     }
     
+    /**
+     * @param pkcs12Bundle pkcs12 bundle
+     */
     public ClientCertificate(String pkcs12Bundle) {
         this.bundle = pkcs12Bundle;
     }
@@ -52,6 +58,6 @@ public class ClientCertificate implements Persisted {
     public Long getId() {
         // TODO Auto-generated method stub
         return this.id;
-    };
+    }
 
 }

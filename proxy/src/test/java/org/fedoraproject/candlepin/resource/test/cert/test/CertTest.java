@@ -26,6 +26,7 @@ import org.bouncycastle.x509.X509Attribute;
 import org.bouncycastle.x509.X509V2AttributeCertificate;
 import org.bouncycastle.x509.X509V2AttributeCertificateGenerator;
 import org.bouncycastle.x509.examples.AttrCertExample;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -45,27 +46,23 @@ import java.util.Date;
  */
 public class CertTest {
 
-    @Test
-    public void testCertGenerator() {
-        String cert = CertGenerator.getCertString();
-//        System.out.println("Cert: " + cert);
-    }
+    private RSAPublicKeySpec pubKeySpec;
+    private RSAPrivateCrtKeySpec privKeySpec;
+    private RSAPublicKeySpec caPubKeySpec;
+    private RSAPrivateCrtKeySpec caPrivKeySpec;
     
-    @Test
-    public void testCertExample() throws Exception {
-
-        Security.addProvider(new BouncyCastleProvider());
-
+    @Before
+    public void setupKeys() {
         //
         // personal keys
         //
-        RSAPublicKeySpec pubKeySpec = new RSAPublicKeySpec(
+        pubKeySpec = new RSAPublicKeySpec(
             new BigInteger("b4a7e46170574f16a97082b22be58b6a2a629798419" + 
                            "be12872a4bdba626cfae9900f76abfb12139dce5de5" +
                            "6564fab2b6543165a040c606887420e33d91ed7ed7", 16), 
             new BigInteger("11", 16));
 
-        RSAPrivateCrtKeySpec privKeySpec = new RSAPrivateCrtKeySpec(
+        privKeySpec = new RSAPrivateCrtKeySpec(
             new BigInteger("b4a7e46170574f16a97082b22be58b6a2a629798419" + 
                            "be12872a4bdba626cfae9900f76abfb12139dce5de5" +
                            "6564fab2b6543165a040c606887420e33d91ed7ed7", 16),
@@ -87,7 +84,7 @@ public class CertTest {
         //
         // ca keys
         //
-        RSAPublicKeySpec caPubKeySpec = new RSAPublicKeySpec(
+        caPubKeySpec = new RSAPublicKeySpec(
             new BigInteger("b259d2d6e627a768c94be36164c2d9fc79d97aab925" +
                            "3140e5bf17751197731d6f7540d2509e7b9ffee0a70" +
                            "a6e26d56e92d2edd7f85aba85600b69089f35f6bdbf" +
@@ -96,7 +93,7 @@ public class CertTest {
                            "e44cfe01998e62b6c3637d3fc0391079b26ee36d5", 16),
             new BigInteger("11", 16));
 
-        RSAPrivateCrtKeySpec caPrivKeySpec = new RSAPrivateCrtKeySpec(
+        caPrivKeySpec = new RSAPrivateCrtKeySpec(
             new BigInteger("b259d2d6e627a768c94be36164c2d9fc79d97aab925" +
                            "3140e5bf17751197731d6f7540d2509e7b9ffee0a70" +
                            "a6e26d56e92d2edd7f85aba85600b69089f35f6bdbf" +
@@ -125,6 +122,17 @@ public class CertTest {
             new BigInteger("dae7651ee69ad1d081ec5e7188ae126f6004ff39556" + 
                            "bde90e0b870962fa7b926d070686d8244fe5a9aa709" +
                            "a95686a104614834b0ada4b10f53197a5cb4c97339", 16));
+    }
+    @Test
+    public void testCertGenerator() {
+        String cert = CertGenerator.getCertString();
+//        System.out.println("Cert: " + cert);
+    }
+    
+    @Test
+    public void testCertExample() throws Exception {
+
+        Security.addProvider(new BouncyCastleProvider());
 
         //
         // set up the keys
@@ -276,10 +284,5 @@ public class CertTest {
 //                System.out.println("rolesyntax read from cert!");
             }
         }
-        
-
-        
-  
-        // CertificateFactory.getInstance
     }
 }

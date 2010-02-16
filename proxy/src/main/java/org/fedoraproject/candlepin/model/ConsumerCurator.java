@@ -22,6 +22,9 @@ import org.hibernate.criterion.Restrictions;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * ConsumerCurator
+ */
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private ConsumerFactCurator consumerInfoCurator;
@@ -31,6 +34,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         super(Consumer.class);
     }
     
+    /**
+     * Add consumed product by associating the product to the given consumer.
+     * @param consumer consumer to update.
+     * @param product Product to associate.
+     */
     public void addConsumedProduct(Consumer consumer, Product product) {
         ConsumerProduct cp = new ConsumerProduct();
         cp.setConsumer(consumer);
@@ -38,18 +46,32 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         consumer.addConsumedProduct(cp);
     }
 
+    /**
+     * Lookup consumer by its name
+     * @param name consumer name to find
+     * @return Consumer whose name matches the given name, null otherwise.
+     */
     public Consumer lookupByName(String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.like("name", name))
             .uniqueResult();
     }
 
+    /**
+     * Lookup the Consumer by its uuid.
+     * @param uuid Consumer uuid sought.
+     * @return Consumer whose uuid matches the given value, or null otherwise.
+     */
     public Consumer lookupByUuid(String uuid) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.like("uuid", uuid))
             .uniqueResult();
     }
     
+    /**
+     * @param updatedConsumer updated Consumer values.
+     * @return Updated consumers
+     */
     @Transactional
     public Consumer update(Consumer updatedConsumer) {
         Consumer existingConsumer = find(updatedConsumer.getId());
@@ -60,7 +82,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // TODO: Are any of these read-only?
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
         existingConsumer.setConsumedProducts(updatedConsumer.getConsumedProducts());
-        existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
+        existingConsumer.setEntitlements(
+                entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
         existingConsumer.setFacts(consumerInfoCurator.update(updatedConsumer.getFacts()));
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
@@ -72,6 +95,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return existingConsumer;
     }
     
+    /**
+     * @param consumers consumers to update
+     * @return updated consumers
+     */
     @Transactional
     public Set<Consumer> bulkUpdate(Set<Consumer> consumers) {
         Set<Consumer> toReturn = new HashSet<Consumer>();        

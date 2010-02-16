@@ -39,6 +39,9 @@ import org.fedoraproject.candlepin.util.DateSourceImpl;
 import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 
+/**
+ * CandlepinProductionConfiguration
+ */
 public class CandlepinProductionConfiguration extends AbstractModule {
 
     @Override

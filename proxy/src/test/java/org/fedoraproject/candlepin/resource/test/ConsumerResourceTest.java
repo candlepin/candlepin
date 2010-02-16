@@ -45,8 +45,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
 
-        consumerResource = new ConsumerResource(ownerCurator, consumerCurator, consumerTypeCurator);
-        standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
+        consumerResource = new ConsumerResource(
+                ownerCurator, consumerCurator, consumerTypeCurator);
+        standardSystemType = consumerTypeCurator.create(
+                new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
     }
     
@@ -65,7 +67,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateConsumer() {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
-        toSubmit.setFacts(new ConsumerFacts() {{ setFact(METADATA_NAME, METADATA_VALUE); }});
+        toSubmit.setFacts(new ConsumerFacts() {
+
+            {
+                setFact(METADATA_NAME, METADATA_VALUE);
+            }
+        });
 
         Consumer created = consumerResource.create(toSubmit);
         
@@ -78,7 +85,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Ignore // TODO: implement 'delete' functionality
     public void testDeleteResource() {
-        Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME, owner, standardSystemType));
+        Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME,
+                owner, standardSystemType));
         //consumerResource.delete(created.getUuid());
         
         assertNull(consumerCurator.find(created.getId()));

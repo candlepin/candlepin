@@ -23,34 +23,54 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * interact with Products.
+ */
 public class ProductCurator extends AbstractHibernateCurator<Product> {
 
+    /**
+     * default ctor
+     */
     public ProductCurator() {
         super(Product.class);
     }
 
+    /**
+     * @param name the product name to lookup
+     * @return the Product which matches the given name.
+     */
     public Product lookupByName(String name) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.like("name", name))
             .uniqueResult();
     }
 
+    /**
+     * @param id product id to lookup
+     * @return the Product which matches the given id.
+     */
     public Product lookupById(String id) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.like("id", id))
             .uniqueResult();
     }
     
+    /**
+     * @param label product label to lookup
+     * @return the Product which matches the given label.
+     */
     public Product lookupByLabel(String label) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.like("label", label))
             .uniqueResult();
     }
     
+    /**
+     * @return all Products
+     */
     @SuppressWarnings("unchecked")
     public List<Product> listAll() {
-        List<Product> results = (List<Product>) currentSession()
-            .createCriteria(Product.class).list();
+        List<Product> results = currentSession().createCriteria(Product.class).list();
         if (results == null) {
             return new LinkedList<Product>();
         }
@@ -59,6 +79,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
     }
     
+    /**
+     * @param updated Product to update
+     * @return the updated Product
+     */
     @Transactional
     public Product update(Product updated) {
         Product existingProduct = find(updated.getId());
@@ -77,6 +101,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return existingProduct;
     }
     
+    /**
+     * @param products set of products to update.
+     * @return updated products.
+     */
     @Transactional
     public Set<Product> bulkUpdate(Set<Product> products) {
         Set<Product> toReturn = new HashSet<Product>();

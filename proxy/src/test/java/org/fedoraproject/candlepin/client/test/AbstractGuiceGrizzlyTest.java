@@ -1,3 +1,18 @@
+/**
+ * Copyright (c) 2009 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
+
 /*
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -56,8 +71,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
 
 public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
-    private static final Logger LOGGER = Logger.getLogger(AbstractGuiceGrizzlyTest.class.getName());
-
+    private static final Logger LOGGER = Logger.getLogger(
+            AbstractGuiceGrizzlyTest.class.getName());
     public static final String CONTEXT = "/test";
 
     private final int port = 9997;
@@ -86,11 +101,12 @@ public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
 
         sa.setContextPath(baseUri.getRawPath());
 
-        ws.addGrizzlyAdapter(sa, new String[] {""} );
+        ws.addGrizzlyAdapter(sa, new String[] {""});
 
         try {
             ws.start();
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -107,16 +123,17 @@ public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
                 ws.stop();
                 ws = null;
             }
-        } catch( Exception e ) {
-            LOGGER.log(Level.WARNING, "Could not stop grizzly...", e );
+        }
+        catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Could not stop grizzly...", e);
         }
     }
     
     @After
     public void tearDown() throws Exception {
-        LOGGER.info( "tearDown..." );
+        LOGGER.info("tearDown...");
         stopGrizzly();
-        LOGGER.info( "done..." );
+        LOGGER.info("done...");
     }
 
     public WebResource resource() {

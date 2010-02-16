@@ -54,7 +54,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement")
-@SequenceGenerator(name = "seq_entitlement", sequenceName = "seq_entitlement", allocationSize = 1)
+@SequenceGenerator(name = "seq_entitlement", sequenceName = "seq_entitlement",
+        allocationSize = 1)
 public class Entitlement implements Persisted {
     
     @Id
@@ -86,6 +87,9 @@ public class Entitlement implements Persisted {
     // like this.
     private Boolean isFree = Boolean.FALSE;
 
+    /**
+     * default ctor
+     */
     public Entitlement() {
     }
     
@@ -103,6 +107,12 @@ public class Entitlement implements Persisted {
         this.id = id;
     }
 
+    /**
+     * ctor
+     * @param poolIn pool associated with the entitlement
+     * @param consumerIn consumer associated with the entitlement
+     * @param startDateIn when the entitlement starts.
+     */
     public Entitlement(EntitlementPool poolIn, Consumer consumerIn, Date startDateIn) {
         pool = poolIn;
         owner = consumerIn.getOwner();
@@ -160,23 +170,40 @@ public class Entitlement implements Persisted {
         startDate = startDateIn;
     }
 
+    /**
+     * @return return the associated Consumer
+     */
     @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
 
+    /**
+     * associates the given consumer with this entitlement.
+     * @param consumer consumer to associate.
+     */
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
     }
 
+    /**
+     * @return returns true if the entitlement is free.
+     */
     public Boolean isFree() {
         return getIsFree();
     }
     
+    /**
+     * @return true if the entitlement is free.
+     * TODO: why do we have this method?
+     */
     public Boolean getIsFree() {
         return isFree;
     }
 
+    /**
+     * @param isFree true if entitlement should be available.
+     */
     public void setIsFree(Boolean isFree) {
         this.isFree = isFree;
     } 

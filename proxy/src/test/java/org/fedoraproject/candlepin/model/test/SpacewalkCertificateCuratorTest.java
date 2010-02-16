@@ -51,45 +51,48 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
     @Test
     public void parseChannelFamily() throws Exception {
         
-        Map<String, Long> channelFamilies = new HashMap<String, Long>() {{
-           put("rhel-server", new Long(2000)); 
-           put("rhel-cluster", new Long(4000)); 
-           put("rhel-gfs", new Long(4000)); 
-           put("rhel-client-workstation", new Long(1000)); 
-           put("rhel-client-vt", new Long(1000)); 
-           put("rhel-devsuite", new Long(4000)); 
-           put("rhel-client-supplementary", new Long(2000)); 
-           put("rhel-s390x-server-supplementary", new Long(1000)); 
-           put("rhel-client-workstation-fastrack", new Long(1000)); 
-           put("rhn-tools", new Long(6000)); 
-           put("rhel-client", new Long(2000)); 
-           put("rhel-server-fastrack", new Long(2000)); 
-           put("rhel-server-hts", new Long(8000)); 
-           put("rhel-server-vt", new Long(2000)); 
-           put("rhel-server-cluster-storage", new Long(1000)); 
-           put("rhel-server-cluster", new Long(1000)); 
-           put("rhel-s390x-fastrack", new Long(1000)); 
-           put("rhel-rhaps", new Long(4000)); 
-           put("rhel-client-fastrack", new Long(2000)); 
-           put("rhn-proxy", new Long(100)); 
-           put("rhel-server-supplementary", new Long(2000)); 
-           put("rhel-s390x-server", new Long(1000)); 
-           put("rhel-server-productivity", new Long(1000)); 
-           put("rhel-server-productivity-z", new Long(1000)); 
-           put("rhel-server-supplementary-z", new Long(1000)); 
-           put("rhel-server-vt-z", new Long(1000)); 
-           put("rhel-server-z", new Long(1000)); 
-           put("rhel-appstk", new Long(1000)); 
-           put("jb-appplatform", new Long(1000)); 
-           put("jb-middleware", new Long(1000)); 
-        }};
+        Map<String, Long> channelFamilies = new HashMap<String, Long>() {
+
+            {
+                put("rhel-server", new Long(2000));
+                put("rhel-cluster", new Long(4000));
+                put("rhel-gfs", new Long(4000));
+                put("rhel-client-workstation", new Long(1000));
+                put("rhel-client-vt", new Long(1000));
+                put("rhel-devsuite", new Long(4000));
+                put("rhel-client-supplementary", new Long(2000));
+                put("rhel-s390x-server-supplementary", new Long(1000));
+                put("rhel-client-workstation-fastrack", new Long(1000));
+                put("rhn-tools", new Long(6000));
+                put("rhel-client", new Long(2000));
+                put("rhel-server-fastrack", new Long(2000));
+                put("rhel-server-hts", new Long(8000));
+                put("rhel-server-vt", new Long(2000));
+                put("rhel-server-cluster-storage", new Long(1000));
+                put("rhel-server-cluster", new Long(1000));
+                put("rhel-s390x-fastrack", new Long(1000));
+                put("rhel-rhaps", new Long(4000));
+                put("rhel-client-fastrack", new Long(2000));
+                put("rhn-proxy", new Long(100));
+                put("rhel-server-supplementary", new Long(2000));
+                put("rhel-s390x-server", new Long(1000));
+                put("rhel-server-productivity", new Long(1000));
+                put("rhel-server-productivity-z", new Long(1000));
+                put("rhel-server-supplementary-z", new Long(1000));
+                put("rhel-server-vt-z", new Long(1000));
+                put("rhel-server-z", new Long(1000));
+                put("rhel-appstk", new Long(1000));
+                put("jb-appplatform", new Long(1000));
+                put("jb-middleware", new Long(1000));
+            }
+        };
         
-        spacewalkCertificateCurator.parseCertificate(
+        spacewalkCertCurator.parseCertificate(
                 CertificateFactory.read(certificateWithChannelFamilies),
                 owner
         );
         
-        for(String channelFamily: channelFamilies.keySet()) {
+        for (String channelFamily : channelFamilies.keySet()) {
             assertChannelFamilyExists(channelFamily, channelFamilies.get(channelFamily));
         }
     }
@@ -97,7 +100,8 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
     private void assertChannelFamilyExists(String channelFamilyName, Long quantity) {
         Product product = productCurator.lookupByName(channelFamilyName);
         assertNotNull(product);
-        EntitlementPool entitlementPool = entitlementPoolCurator.listByOwnerAndProduct(owner, 
+        EntitlementPool entitlementPool = entitlementPoolCurator
+                .listByOwnerAndProduct(owner, 
                 null, product).get(0);
         assertNotNull(entitlementPool);
         assertEquals(quantity, entitlementPool.getMaxMembers());

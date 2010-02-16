@@ -31,9 +31,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+/**
+ * Represents a Subscription
+ */
 @Entity
 @Table(name = "cp_subscription")
-@SequenceGenerator(name = "seq_subscription", sequenceName = "seq_subscription", allocationSize = 1)
+@SequenceGenerator(name = "seq_subscription", sequenceName = "seq_subscription",
+allocationSize = 1)
 public class Subscription implements Persisted {
 
     @Id
@@ -62,9 +66,19 @@ public class Subscription implements Persisted {
     
     private Date modified;
 
+    /** default ctor */
     public Subscription() {
     }
 
+    /**
+     * ctor
+     * @param ownerIn subscription owner
+     * @param productIdIn product id associated with the subscription
+     * @param maxMembersIn quantity
+     * @param startDateIn when the subscription starts
+     * @param endDateIn when the subscription ends.
+     * @param modified when the subscription last changed.
+     */
     public Subscription(Owner ownerIn, String productIdIn, Long maxMembersIn,
             Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
@@ -75,66 +89,115 @@ public class Subscription implements Persisted {
         this.modified = modified;
     }
 
+    /**
+     * @return the subscription id
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * @param id subscription id
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * @return then owner of the subscription.
+     */
     public Owner getOwner() {
         return owner;
     }
 
+    /**
+     * @param owner The owner associated with the subscription.
+     */
     public void setOwner(Owner owner) {
         this.owner = owner;
     }
 
+    /**
+     * @return the product id associated with this subscription.
+     */
     public String getProductId() {
         return productId;
     }
 
+    /**
+     * @param productId The product id associated with this subscription.
+     */
     public void setProductId(String productId) {
         this.productId = productId;
     }
 
+    /**
+     * @return quantity of this subscription.
+     */
     public Long getQuantity() {
         return quantity;
     }
 
+    /**
+     * @param quantity number of allowed usage.
+     */
     public void setQuantity(Long quantity) {
         this.quantity = quantity;
     }
 
+    /**
+     * @return when the subscription started.
+     */
     public Date getStartDate() {
         return startDate;
     }
 
+    /**
+     * @param startDate when the subscription is to begin.
+     */
     public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
 
+    /**
+     * @return when the subscription ends.
+     */
     public Date getEndDate() {
         return endDate;
     }
 
+    /**
+     * @param endDate when the subscription ends.
+     */
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
 
+    /**
+     * @return the attributes of the subscription.
+     */
     public Set<Attribute> getAttributes() {
         return attributes;
     }
 
+    /**
+     * Replaces all of the attributes of the subscription.
+     * @param attributes set of attributes for the subscription.
+     */
     public void setAttributes(Set<Attribute> attributes) {
         this.attributes = attributes;
     }
 
+    /**
+     * @return when the subscription was last changed.
+     */
     public Date getModified() {
         return modified;
     }
 
+    /**
+     * @param modified when the subscription was changed.
+     */
     public void setModified(Date modified) {
         this.modified = modified;
     }

@@ -29,41 +29,44 @@ import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Test;
 
 public class OwnerTest extends DatabaseTestFixture {
-    
+
     @Test
     public void testCreate() throws Exception {
         String ownerName = "Example Corporation";
         Owner o = new Owner(ownerName);
         ownerCurator.create(o);
-        
-        Owner result = (Owner)entityManager().createQuery(
-                "select o from Owner o where o.name = :name")
-                .setParameter("name", ownerName).getSingleResult();
-        
+
+        Owner result = (Owner) entityManager().createQuery(
+                "select o from Owner o where o.name = :name").setParameter(
+                "name", ownerName).getSingleResult();
+
         assertNotNull(result);
         assertEquals(ownerName, result.getName());
         assertTrue(result.getId() > 0);
         assertEquals(o.getId(), result.getId());
     }
-    
+
     @Test
     public void testList() throws Exception {
-        int beforeCount = entityManager().createQuery("select o from Owner as o").getResultList().size();
-        
+        int beforeCount = entityManager().createQuery(
+                "select o from Owner as o").getResultList().size();
+
         for (int i = 0; i < 10; i++) {
             ownerCurator.create(new Owner("Corp " + i));
         }
-        
-        int afterCount = entityManager().createQuery("select o from Owner as o").getResultList().size();
+
+        int afterCount = entityManager()
+                .createQuery("select o from Owner as o").getResultList().size();
         assertEquals(10, afterCount - beforeCount);
     }
-    
+
     @Test
     public void testObjectRelationships() throws Exception {
         Owner owner = new Owner("test-owner");
         // Product
-        Product rhel = new Product("Red Hat Enterprise Linux", "Red Hat Enterprise Linux");
-        
+        Product rhel = new Product("Red Hat Enterprise Linux",
+                "Red Hat Enterprise Linux");
+
         // Consumer
         Consumer c = new Consumer();
         c.setOwner(owner);
@@ -71,14 +74,14 @@ public class OwnerTest extends DatabaseTestFixture {
         consumerCurator.addConsumedProduct(c, rhel);
         assertEquals(1, owner.getConsumers().size());
         assertEquals(1, c.getConsumedProducts().size());
-        
+
         // EntitlementPool
         EntitlementPool pool = new EntitlementPool();
         owner.addEntitlementPool(pool);
         pool.setProductId(rhel.getId());
-        assertEquals(1, owner.getEntitlementPools().size());  
+        assertEquals(1, owner.getEntitlementPools().size());
     }
-    
+
     @Test
     public void bidirectionalConsumers() throws Exception {
         beginTransaction();
@@ -88,16 +91,16 @@ public class OwnerTest extends DatabaseTestFixture {
         Consumer c2 = TestUtil.createConsumer(consumerType, o);
         o.addConsumer(c1);
         o.addConsumer(c2);
-        
+
         ownerCurator.create(o);
         consumerTypeCurator.create(consumerType);
         consumerCurator.create(c1);
         consumerCurator.create(c2);
 
         assertEquals(2, o.getConsumers().size());
-        
-        Owner lookedUp = ownerCurator.find(o.getId()); 
+
+        Owner lookedUp = ownerCurator.find(o.getId());
         assertEquals(2, lookedUp.getConsumers().size());
     }
-    
+
 }

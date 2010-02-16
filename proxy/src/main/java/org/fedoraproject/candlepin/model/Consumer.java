@@ -90,12 +90,18 @@ public class Consumer implements Persisted {
     @JoinColumn(name = "consumer_fact_id")
     private ConsumerFacts facts;
     
-    // Separate mapping because in theory, a consumer could be consuming products they're
-    // not entitled to.    
+    // Separate mapping because in theory, a consumer could be consuming
+    // products they're not entitled to.    
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "fk_consumer_product_owner")
     private Set<ConsumerProduct> consumedProducts;    
     
+    /**
+     * ctor
+     * @param name name of consumer
+     * @param owner owner of the consumer
+     * @param type the type
+     */
     public Consumer(String name, Owner owner, ConsumerType type) {
         this.name = name;
         this.owner = owner;
@@ -111,7 +117,16 @@ public class Consumer implements Persisted {
         this.entitlements = new HashSet<Entitlement>();
     }
     
-    public static Consumer createFromConsumer(Consumer copyFrom, Owner owner, ConsumerType type) {
+    /**
+     * Utility method to construct a Consumer.
+     * @param copyFrom consumer to copy
+     * @param owner owner of the consumer.
+     * @param type the type
+     * @return copied consumer.
+     */
+    public static Consumer createFromConsumer(
+            Consumer copyFrom, Owner owner, ConsumerType type) {
+        
         Consumer toReturn = new Consumer(copyFrom.name, owner, type);
         toReturn.getFacts().setMetadata(copyFrom.getFacts().getMetadata());
         
@@ -122,6 +137,9 @@ public class Consumer implements Persisted {
         return toReturn;
     }
 
+    /**
+     * default ctor
+     */
     public Consumer() {
         this.uuid = Util.generateUUID();
         this.facts = new ConsumerFacts(this);
@@ -130,63 +148,108 @@ public class Consumer implements Persisted {
         this.entitlements = new HashSet<Entitlement>();
     }
 
+    /**
+     * @return the Consumer's uuid
+     */
     public String getUuid() {
         return uuid;
     }
 
+    /**
+     * @param uuid the uuid of this consumer.
+     */
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * @param id the db id.
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * @return the name of this consumer.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @param name the name of this consumer.
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * @return this consumers type.
+     */
     public ConsumerType getType() {
         return type;
     }
     
+    /**
+     * @param typeIn consumer type
+     */
     public void setType(ConsumerType typeIn) {
         type = typeIn;
     }
 
+    /**
+     * @return child consumers.
+     */
     public Set<Consumer> getChildConsumers() {
         return childConsumers;
     }
 
+    /**
+     * @param childConsumers children consumers.
+     */
     public void setChildConsumers(Set<Consumer> childConsumers) {
         this.childConsumers = childConsumers;
     }
     
+    /**
+     * @param child child consumer.
+     */
     public void addChildConsumer(Consumer child) {
         child.setParent(this);
         this.childConsumers.add(child);
     }
 
+    /**
+     * @return this Consumer's parent.
+     */
     public Consumer getParent() {
         return parent;
     }
 
+    /**
+     * @param parent parant consumer
+     */
     public void setParent(Consumer parent) {
         this.parent = parent;
     }
 
+    /**
+     * @return the consumed products.
+     */
     public Set<ConsumerProduct> getConsumedProducts() {
         return consumedProducts;
     }
     
+    /**
+     * @return the consumed products ids.
+     */
     public Set<String> getConsumedProductIds() {
         Set<String> consumedIds = new HashSet<String>();
         for (ConsumerProduct p : consumedProducts) {
@@ -195,19 +258,32 @@ public class Consumer implements Persisted {
         return consumedIds;
     }
 
+    /**
+     * @param consumedProducts set of consumed products.
+     */
     public void setConsumedProducts(Set<ConsumerProduct> consumedProducts) {
         this.consumedProducts = consumedProducts;
     }
 
+    /**
+     * @param p Consumer product to consume.
+     */
     public void addConsumedProduct(ConsumerProduct p) {
         this.consumedProducts.add(p);
     }
     
+    /**
+     * @return the owner of this Consumer.
+     */
     @XmlTransient
     public Owner getOwner() {
         return owner;
     }
 
+    /**
+     * Associates an owner to this Consumer.
+     * @param owner owner to associate to this Consumer.
+     */
     public void setOwner(Owner owner) {
         this.owner = owner;
     }
@@ -219,15 +295,26 @@ public class Consumer implements Persisted {
     }
 
     
+    /**
+     * @return all facts about this consumer.
+     */
     public ConsumerFacts getFacts() {
         return facts;
     }
     
+    /**
+     * Returns the value of the fact with the given key.
+     * @param factKey specific fact to retrieve.
+     * @return the value of the fact with the given key.
+     */
     public String getFact(String factKey) {
         return facts.getFact(factKey);
     }
 
     
+    /**
+     * @param factsIn facts about this consumer.
+     */
     public void setFacts(ConsumerFacts factsIn) {
         facts = factsIn;
     }
@@ -246,14 +333,14 @@ public class Consumer implements Persisted {
     
     /**
      * Get a metadata field value
-     * @param name of field to fetch
+     * @param nameIn of field to fetch
      * @return String field value.
      */
-    public String getMetadataField(String name) {
-       if (this.getFacts().getMetadata() !=  null) {
-           return getFacts().getMetadata().get(name);
-       }
-       return null;
+    public String getMetadataField(String nameIn) {
+        if (this.getFacts().getMetadata() != null) {
+            return getFacts().getMetadata().get(nameIn);
+        }
+        return null;
     }
 
     /**
@@ -283,8 +370,12 @@ public class Consumer implements Persisted {
 
     @Override
     public boolean equals(Object anObject) {
-        if (this == anObject) return true;
-        if (!(anObject instanceof Consumer)) return false;
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof Consumer)) {
+            return false;
+        }
         
         Consumer another = (Consumer) anObject;
         

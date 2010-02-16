@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import org.fedoraproject.candlepin.config.Config;
+
+import com.google.inject.Module;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -22,44 +26,66 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.fedoraproject.candlepin.config.Config;
-
-import com.google.inject.Module;
-
+/**
+ * CustomizableModules
+ */
 public class CustomizableModules {
     
-    public final static String MODULE_CONFIG_PREFIX = "module.config";
+    public static final String MODULE_CONFIG_PREFIX = "module.config";
     
+    /**
+     * @return returns the set of modules to use.
+     */
     public Set<Module> load() {
-        Map<String, String> loaded = configuration().configurationWithPrefix(MODULE_CONFIG_PREFIX);
+        Map<String, String> loaded =
+            configuration().configurationWithPrefix(MODULE_CONFIG_PREFIX);
+
         if (loaded.isEmpty()) {
             return defaultConfiguration();
         }
         return customizedConfiguration(loaded);
     }
     
+    /**
+     * @return returns default set of modules.
+     */
     public Set<Module> defaultConfiguration() {
 //        bind(SubscriptionServiceAdapter.class).to(OnSiteSubscriptionServiceAdapter.class);
         return new HashSet<Module>();
     }
     
+    /**
+     * Reads the given configuration and returns the set of modules.
+     * @param loadedConfiguration configuration to parse.
+     * @return Set of configured modules.
+     */
     @SuppressWarnings("unchecked")
     public Set<Module> customizedConfiguration(Map<String, String> loadedConfiguration) {
         try {
             Set toReturn = new HashSet();
             
             for (String guiceModuleName : loadedConfiguration.keySet()) {
-                toReturn.add(Class.forName(loadedConfiguration.get(guiceModuleName)).newInstance());
+                toReturn.add(Class.forName(
+                        loadedConfiguration.get(guiceModuleName)).newInstance());
             }
             
             return toReturn; 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException("Exception when instantiation guice module.", e);
         }
     }
-    
+
+    /**
+     * Load custom configuration from the given input stream.
+     * @param input Stream containing configuration information.
+     * @return Map of the configuration.
+     * @throws IOException thrown if there is a problem reading the stream.
+     */
     @SuppressWarnings("unchecked")
-    public Map<String, String> loadCustomConfiguration(InputStream input) throws IOException {
+    public Map<String, String> loadCustomConfiguration(InputStream input)
+        throws IOException {
+
         Properties loaded = new Properties();
         loaded.load(input);
         return new HashMap(loaded);

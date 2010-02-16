@@ -20,28 +20,51 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Subscription manager.
+ */
 public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> {
 
     protected SubscriptionCurator() {
         super(Subscription.class);
     }
-    
+
+    /**
+     * Returns a list of subscriptions filtered by owner and product.
+     * @param o Owner of the subscription.
+     * @param productId Product Id to filter the subscription for.
+     * @return a list of subscriptions filtered by owner and product.
+     */
     public List<Subscription> listByOwnerAndProduct(Owner o, String productId) {
-        List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(Subscription.class)
+        List<Subscription> subs = (List<Subscription>) currentSession()
+            .createCriteria(Subscription.class)
             .add(Restrictions.eq("owner", o))
             .add(Restrictions.eq("productId", productId)).list();
+
         if (subs == null) {
             return new LinkedList<Subscription>();
         }
         return subs;
     }
-    
+
+    /**
+     * Return Subscription for the given subscription id.
+     * @param subId subscription id
+     * @return subscription whose id matches the given value.
+     */
     public Subscription lookupByOwnerAndId(Long subId) {
         return (Subscription) currentSession().createCriteria(Subscription.class)
             .add(Restrictions.eq("id", subId)).uniqueResult();
     }
 
-    public List<Subscription> listByOwnerAndProductSince(Owner o, String productId, 
+    /**
+     * Return a list of subscriptions filtered by owner, product, since date.
+     * @param o Owner of the subscription.
+     * @param productId Id of the product to filter.
+     * @param sinceDate date since modified.
+     * @return a list of subscriptions filtered by owner, product, since date.
+     */
+    public List<Subscription> listByOwnerAndProductSince(Owner o, String productId,
             Date sinceDate) {
         List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
                 Subscription.class)
@@ -53,7 +76,12 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         }
         return subs;
     }
-    
+
+    /**
+     * Return list of subscriptions from added since the given date.
+     * @param sinceDate Date used in searches.
+     * @return list of subscriptions from added since the given date.
+     */
     public List<Subscription> listSince(Date sinceDate) {
         List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
                 Subscription.class)
@@ -63,5 +91,5 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         }
         return subs;
     }
-    
+
 }

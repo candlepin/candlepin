@@ -30,14 +30,14 @@ public class ConsumerTypeTest extends DatabaseTestFixture {
     @Test
     public void testSomething() {
         beginTransaction();
-        
+
         ConsumerType ct = new ConsumerType("standard-system");
         entityManager().persist(ct);
-        
+
         commitTransaction();
-        
-        List<EntityManager> results = entityManager().createQuery("select ct from ConsumerType as ct")
-            .getResultList();
+
+        List<EntityManager> results = entityManager().createQuery(
+                "select ct from ConsumerType as ct").getResultList();
         assertEquals(1, results.size());
     }
 }

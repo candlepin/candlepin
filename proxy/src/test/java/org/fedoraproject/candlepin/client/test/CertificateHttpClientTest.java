@@ -37,7 +37,7 @@ public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Before
     public void setUp() throws Exception {
-        TestServletConfig.servletInjector = injector;
+        TestServletConfig.setServletInjector(injector);
         startServer(TestServletConfig.class);
         
         InputStream is = this.getClass().getResourceAsStream(
@@ -71,7 +71,8 @@ public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
                  .type("application/json")
                  .post(String.class, "");
             fail();
-        } catch (UniformInterfaceException e) {
+        }
+        catch (UniformInterfaceException e) {
             assertEquals(400, e.getResponse().getStatus());
         }
     }
@@ -82,10 +83,11 @@ public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
             WebResource r = resource().path("/certificate");
             r.accept("application/json")
                  .type("application/json")
-                 .post(String.class, 
-                         TestUtil.xmlToBase64String(sampleCertXml.substring(0, 20)));
+                 .post(String.class,
+                    TestUtil.xmlToBase64String(sampleCertXml.substring(0, 20)));
             fail();
-        } catch (UniformInterfaceException e) {
+        }
+        catch (UniformInterfaceException e) {
             assertEquals(400, e.getResponse().getStatus());
         }
     }

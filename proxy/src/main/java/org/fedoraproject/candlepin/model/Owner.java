@@ -172,8 +172,12 @@ public class Owner implements Persisted {
     
     @Override
     public boolean equals(Object anObject) {
-        if (this == anObject) return true;
-        if (!(anObject instanceof Owner)) return false;
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof Owner)) {
+            return false;
+        }
         
         Owner another = (Owner) anObject;
         

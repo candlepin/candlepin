@@ -73,8 +73,9 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
 
         entitler = injector.getInstance(Entitler.class);
 
-        eapi = new EntitlementResource(entitlementPoolCurator, entitlementCurator, ownerCurator, consumerCurator, 
-                productAdapter, entitler);
+        eapi = new EntitlementResource(
+                entitlementPoolCurator, entitlementCurator, ownerCurator,
+                consumerCurator, productAdapter, subAdapter, entitler);
         
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }
@@ -95,7 +96,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         assertEquals(new Long(1), ep.getCurrentMembers());
     }
     
-    @Test(expected=RuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testMaxMembership() {
         // 10 entitlements available, lets try to entitle 11 consumers.
         for (int i = 0; i < ep.getMaxMembers(); i++) {
@@ -110,7 +111,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         eapi.entitle(c.getUuid(), product.getLabel());
     }
     
-    @Test(expected=RuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
         eapi.entitle(consumer.getUuid(), product.getLabel());
@@ -142,20 +143,18 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     }
 
     // TODO: Re-enable once ObjectFactory is Hibernatized or removed.
-//    @Test
-//    public void testListAvailableEntitlements() {
-//        EntitlementResource eapi = new EntitlementResource();
-////        consumer.setType(new ConsumerType("standard-system"));
+    @Test
+    public void testListAvailableEntitlements() {
 //        Form f = new Form();
 //        f.add("consumer_id", consumer.getId());
-//        
-//        List<EntitlementPool> avail = eapi.listAvailableEntitlements(consumer.getId());
-//        assertNotNull(avail);
-//        assertTrue(avail.size() > 0);
-//    }
+        
+        List<EntitlementPool> avail = eapi.listAvailableEntitlements(consumer.getId());
+        assertNotNull(avail);
+ //       assertTrue(avail.size() > 0);
+    }
     
-   @Test
-   @Ignore
+    @Test
+    @Ignore
     public void testJson() {
         ClientConfig cc = new DefaultClientConfig();
         Client c = Client.create(cc);
