@@ -122,7 +122,8 @@ define "candlepin" do
         rm_rf 'reports/checkstyle_report.xml'
         mkdir_p 'reports'
 
-        ant.taskdef :resource=>"checkstyletask.properties", :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+        ant.taskdef :resource=>"checkstyletask.properties",
+          :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
 
         # check the main src
         ant.checkstyle :config=>"buildconf/checkstyle.xml" do
@@ -156,7 +157,7 @@ define "candlepin" do
       end
     end
   end
-  
+
 end
 
 
