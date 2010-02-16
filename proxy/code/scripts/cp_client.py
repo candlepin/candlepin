@@ -140,6 +140,35 @@ class BindCommand(CliCommand):
         if self.options.regtoken:
             print cp.bindRegToken(self.options.consumer, self.options.regtoken)
 
+class UnBindCommand(CliCommand):
+    def __init__(self):
+        usage = "usage: %prog unbind --consumer [consumer_uuid] --serialnumbers [serial1,serial2,serial3]"
+        shortdesc = "unbind"
+        desc = "unbind"
+        CliCommand.__init__(self, "unbind", usage, shortdesc, desc)
+
+        self.consumer = None
+        self.serial_numbers = None
+        self.parser.add_option("--consumer", dest="consumer", 
+                               help="consumer")
+        self.parser.add_option("--serialnumbers", dest="serial_numbers",
+                               help="serial_numbers")
+
+    def _validate_options(self):
+        CliCommand._validate_options(self)
+
+    def _do_command(self):
+        """
+        Executes the command.
+        """
+        cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
+
+        if not self.options.serial_numbers:
+            print cp.unBindAll(self.options.consumer)
+
+        if self.options.serial_numbers:
+            print cp.unBindBySerialNumbers(self.options.consumer, self.options.serial_numbers)
+
 
 class SyncCertificatesCommand(CliCommand):
     def __init__(self):
@@ -163,16 +192,40 @@ class SyncCertificatesCommand(CliCommand):
 
         print cp.syncCertificates(self.options.consumer, [])
 
+class GetEntitlementPoolsCommand(CliCommand):
+    def __init__(self):
+        usage = "usage: %prog getEntitlementPools --consumer [consumer_uuid]"
+        shortdesc = "getEntitlementPools"
+        desc = "getEntitlementPools"
+        CliCommand.__init__(self, "getEntitlementPools", usage, shortdesc, desc)
+
+        self.consumer = None
+        self.parser.add_option("--consumer", dest="consumer", 
+                               help="consumer")
+
+    def _validate_options(self):
+        CliCommand._validate_options(self)
+
+    def _do_command(self):
+        """
+        Executes the command.
+        """
+        cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
+
+        print cp.getEntitlementPools(self.options.consumer)
+
 
 # taken wholseale from rho...
 class CLI:
     def __init__(self):
         self.cli_commands = {}
-        for clazz in [RegisterCommand, UnRegisterCommand, BindCommand, SyncCertificatesCommand]:
+        for clazz in [RegisterCommand, UnRegisterCommand, BindCommand, 
+                      SyncCertificatesCommand, UnBindCommand, GetEntitlementPoolsCommand]:
                 cmd = clazz()
                 # ignore the base class
                 if cmd.name != "cli":
                     self.cli_commands[cmd.name] = cmd 
+
 
     def _add_command(self, cmd):
         self.cli_commands[cmd.name] = cmd
