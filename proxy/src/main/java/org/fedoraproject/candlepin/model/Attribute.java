@@ -24,22 +24,28 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-
-
 /**
- * 
- * 
- *      Attributes can be thought of as a hint on some restriction on the usage of an entitlement.
- *       They will not actually contain the logic on how to enforce the Attribute, but basically just act as a constant the policy rules can look for, and a little metadata that may be required to enforce.
- * Attributes can be affiliated with a given product in the product database, or they can be affiliated with entitlements granted within a particular customer's order/certificate.
- * All Attributes must pass for the entitlement to be granted to a consumer. Not sure if this statement will stand the test of time, may be some issues here with "enabling" attributes vs "restricting" attributes and knowing when to grant/not grant based on the outcome of multiple checks. Will see how it goes.
- * Attributes can be associated with a product, or more commonly with an order of that product contained in the cert. For us, this probably means they'll be associated with entitlement pools in the database.
- *         o If the same Attribute is found on both the product and the entitlement pool, the entitlement pool's version can be assumed as the authoritative one to check. 
+ * Attributes can be thought of as a hint on some restriction on the usage of an
+ * entitlement. They will not actually contain the logic on how to enforce the
+ * Attribute, but basically just act as a constant the policy rules can look
+ * for, and a little metadata that may be required to enforce. Attributes can be
+ * affiliated with a given product in the product database, or they can be
+ * affiliated with entitlements granted within a particular customer's
+ * order/certificate. All Attributes must pass for the entitlement to be granted
+ * to a consumer. Not sure if this statement will stand the test of time, may be
+ * some issues here with "enabling" attributes vs "restricting" attributes and
+ * knowing when to grant/not grant based on the outcome of multiple checks. Will
+ * see how it goes. Attributes can be associated with a product, or more
+ * commonly with an order of that product contained in the cert. For us, this
+ * probably means they'll be associated with entitlement pools in the database.
+ * o If the same Attribute is found on both the product and the entitlement
+ * pool, the entitlement pool's version can be assumed as the authoritative one
+ * to check.
  */
-
 @Entity
 @Table(name = "cp_attribute")
-@SequenceGenerator(name = "seq_attribute", sequenceName = "seq_attribute", allocationSize = 1)
+@SequenceGenerator(name = "seq_attribute", sequenceName = "seq_attribute",
+        allocationSize = 1)
 @Embeddable
 public class Attribute  implements Persisted {
 
@@ -49,25 +55,32 @@ public class Attribute  implements Persisted {
     
     
     @Column(nullable = false)
-	private String name;
+    private String name;
     
 //    @Column(nullable = false)
     @Column
-	private Long quantity;
+    private Long quantity;
 
+    /**
+     * default ctor
+     */
     public Attribute() {
 
     }
 
+    /**
+     * @param name attribute name
+     * @param quantity quantity of the attribute.
+     */
     public Attribute(String name, Long quantity) {
         this.name = name;
         this.quantity = quantity;
     }
 
-	public String getName() {
-		return name;
-	}
-	
+    public String getName() {
+        return name;
+    }
+    
     /**
      * @return the id
      */
@@ -76,22 +89,26 @@ public class Attribute  implements Persisted {
     }
     
     
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public Long getQuantity() {
-		return quantity;
-	}
+    public Long getQuantity() {
+        return quantity;
+    }
 
-	public void setQuantity(Long quantity) {
-		this.quantity = quantity;
-	}
-	
+    public void setQuantity(Long quantity) {
+        this.quantity = quantity;
+    }
+    
     @Override
     public boolean equals(Object anObject) {
-        if (this == anObject) return true;
-        if (!(anObject instanceof Attribute)) return false;
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof Attribute)) {
+            return false;
+        }
         
         Attribute another = (Attribute) anObject;
         

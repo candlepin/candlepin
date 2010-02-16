@@ -16,11 +16,21 @@ package org.fedoraproject.candlepin.model;
 
 import com.wideplay.warp.persist.Transactional;
 
+/**
+ * ConsumerFactCurator
+ */
 public class ConsumerFactCurator extends AbstractHibernateCurator<ConsumerFacts> {
+    /**
+     * default ctor
+     */
     public ConsumerFactCurator() {
         super(ConsumerFacts.class);
     }
     
+    /**
+     * @param updated facts to update
+     * @return updated facts.
+     */
     @Transactional
     public ConsumerFacts update(ConsumerFacts updated) {
         return getEntityManager().merge(updated);

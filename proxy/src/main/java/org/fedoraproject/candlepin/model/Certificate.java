@@ -34,11 +34,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 
+/**
+ * Certificate
+ */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_certificate")
-@SequenceGenerator(name = "seq_certificate", sequenceName = "seq_certificate", allocationSize = 1)
+@SequenceGenerator(name = "seq_certificate", sequenceName = "seq_certificate",
+        allocationSize = 1)
 public class Certificate implements Persisted {
 
     @Id
@@ -57,11 +61,19 @@ public class Certificate implements Persisted {
     private Owner owner;
     
     
+    /**
+     * represents a certificate.
+     * @param certificateIn certificate as a string
+     * @param ownerIn owner of the certificate
+     */
     public Certificate(String certificateIn, Owner ownerIn) {
         certificate = certificateIn;
         owner = ownerIn;   
     }
     
+    /**
+     * default ctor
+     */
     public Certificate() {
     }
     

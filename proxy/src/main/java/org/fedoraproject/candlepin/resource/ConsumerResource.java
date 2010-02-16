@@ -282,7 +282,7 @@ public class ConsumerResource {
             new LinkedList<ClientCertificateStatus>();
        
         for (ClientCertificateSerialNumber serialNumber : clientCertificateSerialNumbers) {
-            log.debug("got a serial number: " + serialNumber.serialNumber); 
+            log.debug("got a serial number: " + serialNumber.getSerialNumber()); 
             //FIXME: lookup the certs by serialNumber
            
         }

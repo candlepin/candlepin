@@ -56,8 +56,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
 
 public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
-    private static final Logger LOGGER = Logger.getLogger(AbstractGuiceGrizzlyTest.class.getName());
-
+    private static final Logger LOGGER = Logger.getLogger(
+            AbstractGuiceGrizzlyTest.class.getName());
     public static final String CONTEXT = "/test";
 
     private final int port = 9997;
@@ -86,11 +86,12 @@ public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
 
         sa.setContextPath(baseUri.getRawPath());
 
-        ws.addGrizzlyAdapter(sa, new String[] {""} );
+        ws.addGrizzlyAdapter(sa, new String[] {""});
 
         try {
             ws.start();
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -107,16 +108,17 @@ public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
                 ws.stop();
                 ws = null;
             }
-        } catch( Exception e ) {
-            LOGGER.log(Level.WARNING, "Could not stop grizzly...", e );
+        }
+        catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Could not stop grizzly...", e);
         }
     }
     
     @After
     public void tearDown() throws Exception {
-        LOGGER.info( "tearDown..." );
+        LOGGER.info("tearDown...");
         stopGrizzly();
-        LOGGER.info( "done..." );
+        LOGGER.info("done...");
     }
 
     public WebResource resource() {

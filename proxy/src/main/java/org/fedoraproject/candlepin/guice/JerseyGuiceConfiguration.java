@@ -32,25 +32,24 @@ public class JerseyGuiceConfiguration extends GuiceServletContextListener {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(
-            new LinkedList<Module>() { {
-                add(PersistenceService.usingJpa()
-                    .across(UnitOfWork.REQUEST)
-                    .buildModule()
-                );
-                
+        return Guice.createInjector(new LinkedList<Module>() {
+
+            {
+                add(PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
+                        .buildModule());
+
                 add(new CandlepinProductionConfiguration());
-                
+
                 add(new ServletModule() {
-                        @Override
-                        protected void configureServlets() {
-                            serve("/*").with(GuiceContainer.class);
-                        }
+
+                    @Override
+                    protected void configureServlets() {
+                        serve("/*").with(GuiceContainer.class);
                     }
-                );
-                
+                });
+
                 addAll(new CustomizableModules().load());
-            } }
-        );
+            }
+        });
     }
 }

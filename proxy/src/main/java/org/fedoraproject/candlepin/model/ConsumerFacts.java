@@ -62,44 +62,72 @@ public class ConsumerFacts implements Persisted {
     // http://bit.ly/liststringjpa
     @MapKeyManyToMany(targetEntity = String.class)
     @CollectionOfElements(targetElement = String.class)
-    @Cascade(value = { org.hibernate.annotations.CascadeType.ALL })
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> metadata;
     
+    /**
+     * default ctor
+     */
     public ConsumerFacts() {
         metadata = new HashMap<String, String>();
     }
     
+    /**
+     * creates a new fact associated with the given Consumer.
+     * @param consumerIn Consumer to be associated.
+     */
     public ConsumerFacts(Consumer consumerIn) {
         metadata = new HashMap<String, String>();
         consumer = consumerIn;
     }
 
+    /** {@inheritDoc} */
     public Long getId() {
         return id;
     }
 
+    /**
+     * @param id fact id.
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * @return the associated Consumer.
+     */
     @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
 
+    /**
+     * @param consumerIn consumer to associate.
+     */
     public void setConsumer(Consumer consumerIn) {
         consumer = consumerIn;
     }
     
+    /**
+     * @return the metadata
+     */
     public Map<String, String> getMetadata() {
         return metadata;
     }
 
     
+    /**
+     * @param metadataIn replaces the metadata.
+     */
     public void setMetadata(Map<String, String> metadataIn) {
         metadata = metadataIn;
     }
     
+    /**
+     * Sets the value of the fact with the given name.
+     * @param name fact name to be modified.
+     * @param value new value for the fact.
+     */
     public void setFact(String name, String value) {
         if (this.metadata ==  null) {
             metadata = new HashMap<String, String>();
@@ -108,10 +136,15 @@ public class ConsumerFacts implements Persisted {
         
     }
     
+    /**
+     * Returns the fact whose name matches the given name.
+     * @param name fact name sought.
+     * @return sthe fact whose name matches the given name.
+     */
     public String getFact(String name) {
-       if (this.metadata !=  null) {
-           return metadata.get(name);
-       }
-       return null;
+        if (this.metadata != null) {
+            return metadata.get(name);
+        }
+        return null;
     }
 }

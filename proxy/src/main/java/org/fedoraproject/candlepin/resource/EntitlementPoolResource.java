@@ -60,7 +60,7 @@ public class EntitlementPoolResource {
      * @return the list of available entitlement pools.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<EntitlementPool> list() {
         return entitlementPoolCurator.findAll();
     }
@@ -71,10 +71,11 @@ public class EntitlementPoolResource {
      * @return all the entitlement pools for the consumer with the given uuid.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("/consumer/{consumer_uuid}")
-    public List<EntitlementPool> listByConsumer(@PathParam("consumer_uuid") String consumer_uuid) {
-        Consumer consumer = consumerCurator.lookupByUuid(consumer_uuid);
+    public List<EntitlementPool> listByConsumer(
+            @PathParam("consumer_uuid") String consumerUuid) {
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         List<EntitlementPool>  eps = entitlementPoolCurator.listByConsumer(consumer);
         return eps;
     }
