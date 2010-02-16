@@ -49,7 +49,7 @@ public class VirtualHostEntitlementHttpClientTest extends
 
     @Before
     public void setUp() throws Exception {
-        TestServletConfig.servletInjector = injector;
+        TestServletConfig.setServletInjector(injector);
         startServer(TestServletConfig.class);
 
         o = TestUtil.createOwner();

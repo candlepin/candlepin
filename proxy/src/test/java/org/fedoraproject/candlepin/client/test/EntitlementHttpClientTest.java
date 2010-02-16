@@ -57,7 +57,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Before
     public void setUp() {
-        TestServletConfig.servletInjector = injector;
+        TestServletConfig.setServletInjector(injector);
         startServer(TestServletConfig.class);
 
         consumerType = new ConsumerType("some-consumer-type");

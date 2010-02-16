@@ -49,7 +49,7 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Before
     public void setUp() throws Exception {
-        TestServletConfig.servletInjector = injector;
+        TestServletConfig.setServletInjector(injector);
         startServer(TestServletConfig.class);
 
         owner = TestUtil.createOwner();

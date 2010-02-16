@@ -37,7 +37,7 @@ public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Before
     public void setUp() throws Exception {
-        TestServletConfig.servletInjector = injector;
+        TestServletConfig.setServletInjector(injector);
         startServer(TestServletConfig.class);
         
         InputStream is = this.getClass().getResourceAsStream(

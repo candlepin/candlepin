@@ -49,7 +49,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Before
     public void setUp() {
-        TestServletConfig.servletInjector = injector;
+        TestServletConfig.setServletInjector(injector);
         startServer(TestServletConfig.class);
 
         standardSystemType = consumerTypeCurator.create(new ConsumerType(
@@ -197,7 +197,18 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     public static class TestServletConfig extends GuiceServletContextListener {
 
-        public static Injector servletInjector;
+        private static Injector servletInjector;
+
+        public Injector getServletInjector() {
+            return servletInjector;
+        }
+        
+        /**
+         * @param injectorIn
+         */
+        public static void setServletInjector(Injector injectorIn) {
+            servletInjector = injectorIn;
+        }
 
         @Override
         protected Injector getInjector() {
