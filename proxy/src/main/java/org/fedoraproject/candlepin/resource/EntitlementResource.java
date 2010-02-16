@@ -174,7 +174,9 @@ public class EntitlementResource {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         
         Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
-        // get a subscripotion by regtoken
+        if (s == null) {
+            throw new BadRequestException("No such token: " + registrationToken);
+        }
 
         Product p = prodAdapter.getProductById(s.getProductId());
 

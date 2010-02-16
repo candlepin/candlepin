@@ -200,7 +200,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementForConsumerNoProductShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlment/consumer/" + consumer.getUuid() +
+                    "/entitlement/consumer/" + consumer.getUuid() +
                             "/token/1234567");
             String s = r.accept("application/json").type("application/json")
                     .post(String.class);
@@ -215,7 +215,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementForRegNumberShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlment/consumer/" + consumer.getUuid() +
+                    "/entitlement/consumer/" + consumer.getUuid() +
                             "/token/1234567");
             String s = r.accept("application/json").type("application/json")
                     .post(String.class);
