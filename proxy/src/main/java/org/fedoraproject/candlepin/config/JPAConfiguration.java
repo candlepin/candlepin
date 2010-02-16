@@ -83,7 +83,7 @@ public class JPAConfiguration {
         try {
             return loadDefaultConfigurationSettings(
                 "production",
-                new File(getClass().getResource("persistence.xml").toURI()));
+                new File(getClass().getResource("/META-INF/persistence.xml").toURI()));
         }
         catch (Exception e) {
             throw new RuntimeException(

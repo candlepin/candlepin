@@ -34,7 +34,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_type")
-@SequenceGenerator(name = "seq_consumer_type", sequenceName = "seq_consumer_type", allocationSize = 1)
+@SequenceGenerator(name = "seq_consumer_type", sequenceName = "seq_consumer_type",
+        allocationSize = 1)
 public class ConsumerType implements Persisted {
 
     @Id
@@ -48,6 +49,9 @@ public class ConsumerType implements Persisted {
     public static final String SYSTEM = "system"; // physical system
     public static final String VIRT_SYSTEM = "virt_system"; 
     
+    /**
+     * default ctor
+     */
     public ConsumerType() {
     }
 
@@ -59,10 +63,14 @@ public class ConsumerType implements Persisted {
         this.label = labelIn;
     }
     
+    /** {@inheritDoc} */
     public Long getId() {
         return id;
     }
     
+    /**
+     * @param id type id
+     */
     public void setId(Long id) {
         this.id = id;
     }
@@ -91,13 +99,16 @@ public class ConsumerType implements Persisted {
 
     @Override
     public boolean equals(Object anObject) {
-        if (this == anObject) return true;
-        if (!(anObject instanceof ConsumerType)) return false;
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof ConsumerType)) {
+            return false;
+        }
         
         ConsumerType another = (ConsumerType) anObject;
         
-        return 
-            label.equals(another.getLabel());
+        return label.equals(another.getLabel());
     }
     
     @Override

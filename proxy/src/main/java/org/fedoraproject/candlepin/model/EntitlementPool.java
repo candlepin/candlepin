@@ -45,7 +45,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement_pool")
-@SequenceGenerator(name = "seq_entitlement_pool", sequenceName = "seq_entitlement_pool", allocationSize = 1)
+@SequenceGenerator(name = "seq_entitlement_pool",
+        sequenceName = "seq_entitlement_pool", allocationSize = 1)
 public class EntitlementPool implements Persisted {
     
     @Id
@@ -97,9 +98,20 @@ public class EntitlementPool implements Persisted {
     @JoinTable(name = "ENTITLEMENT_POOL_ATTRIBUTE")
     private Set<Attribute> attributes;
 
+    /**
+     * default ctor
+     */
     public EntitlementPool() {
     }
 
+    /**
+     * ctor
+     * @param ownerIn owner of the pool
+     * @param productIdIn product id associated with the pool.
+     * @param maxMembersIn maximum members of the pool.
+     * @param startDateIn when the pool started.
+     * @param endDateIn when the pool expires.
+     */
     public EntitlementPool(Owner ownerIn, String productIdIn, Long maxMembersIn, 
             Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
@@ -112,66 +124,113 @@ public class EntitlementPool implements Persisted {
         this.currentMembers = new Long(0);
     }
     
+    /** {@inheritDoc} */
     public Long getId() {
         return id;
     }
 
+    /**
+     * @param id new db id.
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * @return the product id associated with this pool.
+     */
     public String getProductId() {
         return productId;
     }
 
+    /**
+     * @return the Consumer associated with the pool.
+     */
     public Consumer getConsumer() {
         return consumer;
     }
 
+    /**
+     * @param consumerIn Consumer to be associated.
+     */
     public void setConsumer(Consumer consumerIn) {
         this.consumer = consumerIn;
     }
 
+    /**
+     * @param productId Id of product to be associated.
+     */
     public void setProductId(String productId) {
         this.productId = productId;
     }
     
+    /**
+     * @return when the pool became active.
+     */
     public Date getStartDate() {
         return startDate;
     }
 
+    /**
+     * @param startDate set the pool active date.
+     */
     public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
 
+    /**
+     * @return when the pool expires.
+     */
     public Date getEndDate() {
         return endDate;
     }
 
+    /**
+     * @param endDate set the pool expiration date.
+     */
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
 
+    /**
+     * @return quantity
+     */
     public Long getMaxMembers() {
         return maxMembers;
     }
 
+    /**
+     * @param maxMembers quantity
+     */
     public void setMaxMembers(Long maxMembers) {
         this.maxMembers = maxMembers;
     }
 
+    /**
+     * @return number of active members (uses).
+     */
     public Long getCurrentMembers() {
         return currentMembers;
     }
 
+    /**
+     * @param currentMembers set the activate uses.
+     * TODO: is this really needed?
+     */
     public void setCurrentMembers(long currentMembers) {
         this.currentMembers = currentMembers;
     }
     
+    /**
+     * @return owner of the pool.
+     */
     public Owner getOwner() {
         return owner;
     }
 
+    /**
+     * @param owner changes the owner of the pool.
+     */
     @XmlTransient
     public void setOwner(Owner owner) {
         this.owner = owner;
@@ -184,18 +243,35 @@ public class EntitlementPool implements Persisted {
         this.currentMembers = this.currentMembers + 1;
     }
 
-	public Set<Attribute> getAttributes() {
-		return attributes;
-	}
+    /**
+     * @return attributes associated with the pool.
+     */
+    public Set<Attribute> getAttributes() {
+        return attributes;
+    }
 
-	public void setAttributes(Set<Attribute> attributes) {
-		this.attributes = attributes;
-	}
-	
-	public boolean isExpired(DateSource dateSource) {
-	    return getEndDate().before(dateSource.currentDate());
-	}
-	
+    /**
+     * Replaces all of the attributes of this pool.
+     * @param attributes attributes to change.
+     */
+    public void setAttributes(Set<Attribute> attributes) {
+        this.attributes = attributes;
+    }
+
+    /**
+     * returns true if the pool is considered expired based on the given date.
+     * @param dateSource date to compare to.
+     * @return true if the pool is considered expired based on the given date.
+     */
+    public boolean isExpired(DateSource dateSource) {
+        return getEndDate().before(dateSource.currentDate());
+    }
+
+    /**
+     * Returns true if there are entitlements available in this pool, basically
+     * if the current members is less than the max members.
+     * @return true if current members is less than max members.
+     */
     public boolean entitlementsAvailable() {
         if (isUnlimited()) {
             return true;
@@ -206,40 +282,61 @@ public class EntitlementPool implements Persisted {
         }
         return false;
     }
-	/**
-	 * @return True if entitlement pool is unlimited.
-	 */
-	public boolean isUnlimited() {
-		if (this.getMaxMembers() < 0) {
-			return true;
-		}
-		return false;
-	}
+    /**
+     * @return True if entitlement pool is unlimited.
+     */
+    public boolean isUnlimited() {
+        if (this.getMaxMembers() < 0) {
+            return true;
+        }
+        return false;
+    }
 
+    /**
+     * @return source entitlement.
+     */
     public Entitlement getSourceEntitlement() {
         return sourceEntitlement;
     }
 
+    /**
+     * @param sourceEntitlement source entitlement
+     */
     public void setSourceEntitlement(Entitlement sourceEntitlement) {
         this.sourceEntitlement = sourceEntitlement;
     }
 
+    /**
+     * @return subscription id associated with this pool.
+     */
     public Long getSubscriptionId() {
         return subscriptionId;
     }
 
+    /**
+     * @param subscriptionId associates the given subscription.
+     */
     public void setSubscriptionId(Long subscriptionId) {
         this.subscriptionId = subscriptionId;
     }
 
+    /**
+     * @return true if this pool represents an active subscription.
+     */
     public Boolean getActiveSubscription() {
         return activeSubscription;
     }
 
+    /**
+     * @param activeSubscription TODO
+     */
     public void setActiveSubscription(Boolean activeSubscription) {
         this.activeSubscription = activeSubscription;
     }
 
+    /**
+     * @return true TODO
+     */
     public Boolean isActive() {
         return activeSubscription;
     }

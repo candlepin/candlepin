@@ -22,6 +22,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
+/**
+ * RulesCurator
+ */
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     protected RulesCurator() {
@@ -29,6 +32,11 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     }
     
     
+    /**
+     * updates the rules to the given values.
+     * @param updatedRules latest rules
+     * @return a copy of the latest rules
+     */
     @Transactional
     // This seems lame...
     public Rules update(Rules updatedRules) {
@@ -54,7 +62,8 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
             while ((line = reader.readLine()) != null) {
                 builder.append(line + "\n");
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -62,6 +71,9 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         create(rules);
     }
     
+    /**
+     * @return the rules
+     */
     public Rules getRules() {
         List<Rules> existingRuleSet = findAll();
         if (existingRuleSet.size() == 0) {

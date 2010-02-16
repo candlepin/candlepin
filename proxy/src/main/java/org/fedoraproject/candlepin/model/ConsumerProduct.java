@@ -29,14 +29,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.hibernate.annotations.ForeignKey;
 
 /**
- * ConsumerProducts store the products which a consumer may be consuming products which 
- * they are not entitled to.
+ * ConsumerProducts store the products which a consumer may be consuming
+ * products which they are not entitled to.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_products")
-@SequenceGenerator(name = "seq_consumer_products", sequenceName = "seq_consumer_products", allocationSize = 1)
+@SequenceGenerator(name = "seq_consumer_products",
+        sequenceName = "seq_consumer_products", allocationSize = 1)
 public class ConsumerProduct implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
@@ -52,26 +53,43 @@ public class ConsumerProduct implements Persisted {
     @Column(nullable = false)
     private String productId;
 
+    /** {@inheritDoc} */
     public Long getId() {
         return id;
     }
 
+    /**
+     * @param id db id
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * @return the Consumer portion of the association.
+     */
     public Consumer getConsumer() {
         return consumer;
     }
 
+    /**
+     * associate Consumer to a Product
+     * @param consumer consumer to associate
+     */
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
     }
 
+    /**
+     * @return return the product id associated with the Consumer.
+     */
     public String getProductId() {
         return productId;
     }
 
+    /**
+     * @param productId associate the product to a Consumer.
+     */
     public void setProductId(String productId) {
         this.productId = productId;
     }

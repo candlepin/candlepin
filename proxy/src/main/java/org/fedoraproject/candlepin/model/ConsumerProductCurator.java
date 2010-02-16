@@ -19,16 +19,30 @@ import java.util.Set;
 
 import com.wideplay.warp.persist.Transactional;
 
+/**
+ * ConsumerProductCurator
+ */
 public class ConsumerProductCurator extends AbstractHibernateCurator<ConsumerProduct> {
+    /**
+     * default ctor
+     */
     public ConsumerProductCurator() {
         super(ConsumerProduct.class);
     }
     
+    /**
+     * @param updated ConsumerProduct to update
+     * @return the updated ConsumerProduct
+     */
     @Transactional
     public ConsumerProduct update(ConsumerProduct updated) {
         return getEntityManager().merge(updated);
     }    
     
+    /**
+     * @param consumerProducts consumer products to update
+     * @return updated consumer products
+     */
     public Set<ConsumerProduct> bulUpdate(Set<ConsumerProduct> consumerProducts) {
         Set<ConsumerProduct> toReturn = new HashSet<ConsumerProduct>();        
         for (ConsumerProduct toUpdate : consumerProducts) { 

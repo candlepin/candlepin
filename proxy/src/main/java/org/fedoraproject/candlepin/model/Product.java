@@ -88,22 +88,37 @@ public class Product implements Persisted {
     protected Product() {
     }
 
+    /** {@inheritDoc} */
     public String getId() {
         return id;
     }
 
+    /**
+     * @param id product id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * @return set of child products.
+     */
     public Set<Product> getChildProducts() {
         return childProducts;
     }
 
+    /**
+     * replaces all of the product children with the new set.
+     * @param childProducts new child products.
+     */
     public void setChildProducts(Set<Product> childProducts) {
         this.childProducts = childProducts;
     }
 
+    /**
+     * Add the given product as a child of this product.
+     * @param p child product to add.
+     */
     public void addChildProduct(Product p) {
         if (this.childProducts ==  null) {
             this.childProducts = new HashSet<Product>();
@@ -111,10 +126,16 @@ public class Product implements Persisted {
         this.childProducts.add(p);
     }
     
+    /**
+     * @return the product label
+     */
     public String getLabel() {
         return label;
     }
 
+    /**
+     * @param labelIn product label
+     */
     public void setLabel(String labelIn) {
         label = labelIn;
     }
@@ -124,43 +145,65 @@ public class Product implements Persisted {
         return "Product [label = " + label + "]";
     }
     
+    /**
+     * @return the product name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * sets the product name.
+     * @param name name of the product
+     */
     public void setName(String name) {
         this.name = name;
     }
 
-	public Set<Attribute> getAttributes() {
-		return attributes;
-	}
+    /**
+     * @return the Product attributes
+     */
+    public Set<Attribute> getAttributes() {
+        return attributes;
+    }
 
-	public void setAttributes(Set<Attribute> attributes) {
-		this.attributes = attributes;
-	}
-	
-	public void addAttribute(Attribute attrib) {
-	    if (this.attributes == null) {
-	        this.attributes = new HashSet<Attribute>();
-	    }
-	    this.attributes.add(attrib);
-	}
+    /**
+     * Replaces all of the product attributes with the given set.
+     * @param attributes attributes which will replace the current set.
+     */
+    public void setAttributes(Set<Attribute> attributes) {
+        this.attributes = attributes;
+    }
 
-	@Override
-	public boolean equals(Object anObject) {
-	    if (this == anObject) return true;
-	    if (!(anObject instanceof Product)) return false;
-	    
-	    Product another = (Product) anObject;
-	    
-	    return 
-	        label.equals(another.getLabel()) &&
-	        name.equals(another.getName());
-	}
-	
-	@Override
-	public int hashCode() {
-	    return label.hashCode() * 31 + name.hashCode();
-	}
+    /**
+     * add an attribute to the product
+     * @param attrib attribute to be added.
+     */
+    public void addAttribute(Attribute attrib) {
+        if (this.attributes == null) {
+            this.attributes = new HashSet<Attribute>();
+        }
+        this.attributes.add(attrib);
+    }
+
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof Product)) {
+            return false;
+        }
+
+        Product another = (Product) anObject;
+
+        return
+            label.equals(another.getLabel()) &&
+            name.equals(another.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return label.hashCode() * 31 + name.hashCode();
+    }
 }

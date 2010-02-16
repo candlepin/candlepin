@@ -26,6 +26,9 @@ import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+/**
+ * Rules
+ */
 @Entity
 @Table(name = "cp_rules")
 @SequenceGenerator(name = "seq_rules", sequenceName = "seq_rules", allocationSize = 1)
@@ -40,10 +43,17 @@ public class Rules implements Persisted {
     @Column(name = "rules_blob")
     private String rules;
     
+    /**
+     * ctor
+     * @param rulesBlob Rules script
+     */
     public Rules(String rulesBlob) {
         this.rules = rulesBlob;
     }
     
+    /**
+     * default ctor
+     */
     public Rules() {
     }
     

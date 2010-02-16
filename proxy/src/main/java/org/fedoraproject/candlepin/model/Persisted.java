@@ -16,6 +16,12 @@ package org.fedoraproject.candlepin.model;
 
 import java.io.Serializable;
 
+/**
+ * Persisted TODO: what is this for?
+ */
 public interface Persisted {
-    public Serializable getId();
+    /**
+     * @return the database id
+     */
+    Serializable getId();
 }

@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * EntitlementPoolCurator
+ */
 public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
 
     private SubscriptionServiceAdapter subAdapter;
@@ -38,6 +41,11 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         this.subAdapter = subAdapter;
     }
 
+    /**
+     * Returns list of pools owned by the given Owner.
+     * @param o Owner to filter
+     * @return pools owned by the given Owner.
+     */
     @SuppressWarnings("unchecked")
     public List<EntitlementPool> listByOwner(Owner o) {
         List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
@@ -51,6 +59,11 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
     }
     
+    /**
+     * Returns list of pools owned by the given consumer.
+     * @param consumer Consumer to filter
+     * @return list of pools owned by the given consumer.
+     */
     @SuppressWarnings("unchecked")
     public List<EntitlementPool> listByConsumer(Consumer consumer) {
         List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
@@ -65,22 +78,23 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     }
     
     /**
-     * Before executing any entitlement pool query, check our underlying subscription service
-     * and update the pool data. Must be careful to call this before we do any pool query.
-     * Note that refreshing the pools doesn't actually take any action, should a subscription
-     * be reduced, expired, or revoked. Pre-existing entitlements will need to be dealt with
-     * separately from this event.
+     * Before executing any entitlement pool query, check our underlying
+     * subscription service and update the pool data. Must be careful to call
+     * this before we do any pool query. Note that refreshing the pools doesn't
+     * actually take any action, should a subscription be reduced, expired, or
+     * revoked. Pre-existing entitlements will need to be dealt with separately
+     * from this event.
      *
-     * @param owner
-     * @param product
+     * @param owner Owner to be refreshed.
+     * @param product Products to refresh.
      */
     private void refreshPools(Owner owner, Product product) {
         List<Subscription> subs = subAdapter.getSubscriptions(owner, 
                 product.getId().toString());
         List<EntitlementPool> pools = listByOwnerAndProductNoRefresh(owner, null, product);
         
-        // Map all entitlement pools for this owner/product that have a subscription ID
-        // associated with them.
+        // Map all entitlement pools for this owner/product that have a
+        // subscription ID associated with them.
         Map<Long, EntitlementPool> subToPoolMap = new HashMap<Long, EntitlementPool>();
         for (EntitlementPool p : pools) {
             if (p.getSubscriptionId() != null) {
@@ -100,9 +114,9 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             else {
                 EntitlementPool existingPool = subToPoolMap.get(sub.getId());
                 
-                // TODO: We're just updating the pool always now, would be much better 
-                // if we could check some kind of last modified date to determine if a change 
-                // has taken place:
+                // TODO: We're just updating the pool always now, would be much
+                // better if we could check some kind of last modified date to
+                // determine if a change has taken place:
                 existingPool.setMaxMembers(sub.getQuantity());
                 existingPool.setStartDate(sub.getStartDate());
                 existingPool.setEndDate(sub.getEndDate());
@@ -156,17 +170,24 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             }
         }
 
-        return (List<EntitlementPool>) currentSession().createCriteria(EntitlementPool.class)
+        return (List<EntitlementPool>) currentSession().createCriteria(
+                EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("productId", product.getId())).list();
     }
     
-    private EntitlementPool lookupBySubscriptionId(Long subId) {
-        return (EntitlementPool) currentSession().createCriteria(EntitlementPool.class)
-            .add(Restrictions.eq("subscriptionId", subId))
-            .uniqueResult();
-    }
+// TODO: remove this if it isn't needed.
+//
+//    private EntitlementPool lookupBySubscriptionId(Long subId) {
+//        return (EntitlementPool) currentSession().createCriteria(EntitlementPool.class)
+//            .add(Restrictions.eq("subscriptionId", subId))
+//            .uniqueResult();
+//    }
     
+    /**
+     * @param entitlementPool entitlement pool to search.
+     * @return entitlements in the given pool.
+     */
     @Transactional
     @SuppressWarnings("unchecked")
     public List<Entitlement> entitlementsIn(EntitlementPool entitlementPool) {

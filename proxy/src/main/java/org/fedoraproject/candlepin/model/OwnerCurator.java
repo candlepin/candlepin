@@ -19,22 +19,31 @@ import org.hibernate.criterion.Restrictions;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * OwnerCurator
+ */
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     
     protected OwnerCurator() {
         super(Owner.class);
     }
 
+    /**
+     * @param name owner's name to lookup.
+     * @return the owner whose name matches the one given.
+     */
     public Owner lookupByName(String name) {
         return (Owner) currentSession().createCriteria(Owner.class)
         .add(Restrictions.like("name", name))
         .uniqueResult();
     }
 
+    /**
+     * @return list of known owners.
+     */
     @SuppressWarnings("unchecked")
     public List<Owner> listAll() {
-        List<Owner> results = (List<Owner>) currentSession()
-            .createCriteria(Owner.class).list();
+        List<Owner> results = currentSession().createCriteria(Owner.class).list();
         if (results == null) {
             return new LinkedList<Owner>();
         }

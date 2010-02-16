@@ -23,11 +23,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * ConfigurationFileLoader
+ */
 public class ConfigurationFileLoader {
     
-    public Map<String, String> loadProperties(File configurationFile) throws IOException {
+    /**
+     * @param configurationFile config file to read
+     * @return returns the configuration as a Map
+     * @throws IOException thrown if there is a problem reading the file.
+     */
+    public Map<String, String> loadProperties(File configurationFile)
+        throws IOException {
+
         if (configurationFile.canRead()) {
-            return loadConfiguration(new BufferedInputStream(new FileInputStream(configurationFile)));
+            return loadConfiguration(
+                new BufferedInputStream(new FileInputStream(configurationFile)));
         }
         return new HashMap<String, String>();
     }
