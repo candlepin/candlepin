@@ -14,23 +14,8 @@
  */
 package org.fedoraproject.candlepin.config;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 public class JPAConfiguration {
     final public static String JPA_CONFIG_PREFIX = "jpa.config";
@@ -43,7 +28,7 @@ public class JPAConfiguration {
     
     public Properties parseConfig(Map<String, String> inputConfiguration) {
         
-        Properties toReturn = new Properties(defaultConfigurationSettings());
+        Properties toReturn = new Properties();
         toReturn.putAll(stripPrefixFromConfigKeys(inputConfiguration));
         return toReturn;
     }
@@ -55,49 +40,5 @@ public class JPAConfiguration {
             toReturn.put(key.substring(PREFIX_LENGTH + 1), inputConfiguration.get(key));
         }
         return toReturn;
-    }
-    
-    public Properties defaultConfigurationSettings() {
-        try {
-            return loadDefaultConfigurationSettings(
-                    "production", new File(getClass().getResource("persistence.xml").toURI()));
-        } catch (Exception e) {
-            throw new RuntimeException("exception when loading setting from persistence.xml", e);
-        }
-    }
-
-    public Properties loadDefaultConfigurationSettings(String persistenceUnit, File configFile) 
-            throws XPathExpressionException, IOException, ParserConfigurationException, SAXException {
-        return parsePropertiesFromConfigFile(persistenceUnit, parseXML(configFile));
-    }
-    
-    public Document parseXML(File file) throws IOException, ParserConfigurationException, SAXException {
-        DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-        domFactory.setNamespaceAware(false); 
-        DocumentBuilder builder = domFactory.newDocumentBuilder();
-        Document doc = builder.parse(file);
-        return doc;
-    }
-    
-    public Properties parsePropertiesFromConfigFile(String persistenceUnitName, Document doc) 
-            throws XPathExpressionException {
-        
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        XPathExpression expr = xpath.compile("//persistence-unit[@name='" + persistenceUnitName + "']/properties/property");
-
-        Object result = expr.evaluate(doc, XPathConstants.NODESET);
-        NodeList nodes = (NodeList) result;
-        Properties toReturn = new Properties();
-        for (int i = 0; i < nodes.getLength(); i++) {
-            String name = nodeValue(nodes, i, "name");
-            String value = nodeValue(nodes, i, "value");
-            toReturn.put(name, value);
-        }
-        
-        return toReturn;
-    }
-
-    private String nodeValue(NodeList nodes, int i, String name) {
-        return nodes.item(i).getAttributes().getNamedItem(name).getNodeValue();
-    }
+    }    
 }
