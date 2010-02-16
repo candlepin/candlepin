@@ -124,9 +124,24 @@ class CandlePinApi:
         blob = self.rest.post(path)
         return blob
 
+    def unBindAll(self, consumer_uuid):
+        path = "/entitlement/consumer/%s" % consumer_uuid
+        blob = self.rest.delete(path)
+        return blob
+
+    def unBindBySerialNumbers(self, consumer_uuid, serial_number_list):
+        path = "/entitlement/consumer/%s/%s" % (consumer_uuid, ','.join(serial_number_list))
+        blob = self.rest.delete(path)
+        return blob
+
     def syncCertificates(self, consumer_uuid, certificate_list):
         path = "/consumer/%s/certificates" % consumer_uuid
         return self.rest.post(path,data=certificate_list)
+
+    def getEntitlementPools(self, consumer_uuid):
+        path = "/entitlementpool/consumer/%s" % consumer_uuid
+        return self.rest.get(path)
+
 
 
 if __name__ == "__main__":
@@ -137,7 +152,19 @@ if __name__ == "__main__":
     print cp.unRegisterConsumer("dontuser", "notreallyapassword", ret['uuid'])
 
     ret =  cp.registerConsumer("whoever", "doesntmatter", "some system", {'arch':'i386', 'cpu':'intel'}, {'os':'linux', 'release':'4.2'})
+
+    # broken atm
 #    print cp.bindProduct(ret['uuid'], "monitoring")
 
-    print cp.syncCertificates(ret['uuid'], [])
+    uuid = ret['uuid']
+    ret = cp.syncCertificates(uuid, [])
+    print ret
 
+#    ret = cp.unBindAll(uuid)
+#    print ret
+
+    ret = cp.getEntitlementPools(uuid)
+    print ret
+
+    ret = cp.unBindAll(uuid)
+    print ret
