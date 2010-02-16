@@ -32,8 +32,8 @@ public class CustomizableModulesTest {
     @Test
     public void shouldLoadAndParseConfigurationFile() throws Exception {
         Set<Module> loaded = new CustomizableModulesForTesting(
-                new CandlepinConfigurationForTesting(
-                        "customizable_modules_test.conf")).load();
+            new CandlepinConfigurationForTesting(
+                "customizable_modules_test.conf")).load();
 
         assertEquals(1, loaded.size());
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
@@ -44,9 +44,8 @@ public class CustomizableModulesTest {
         throws Exception {
         try {
             new CustomizableModulesForTesting(
-                    new CandlepinConfigurationForTesting(
-                            "customizable_modules_with_missing_class.conf"))
-                    .load();
+                new CandlepinConfigurationForTesting(
+                    "customizable_modules_with_missing_class.conf")).load();
             fail();
         }
         catch (RuntimeException e) {
@@ -55,7 +54,7 @@ public class CustomizableModulesTest {
     }
 
     public static class CustomizableModulesForTesting extends
-            CustomizableModules {
+        CustomizableModules {
 
         private Config config;
 
@@ -73,7 +72,7 @@ public class CustomizableModulesTest {
         public CandlepinConfigurationForTesting(String fileName)
             throws URISyntaxException {
             CONFIGURATION_FILE = new File(getClass().getResource(fileName)
-                    .toURI());
+                .toURI());
             initializeMap();
         }
     }
