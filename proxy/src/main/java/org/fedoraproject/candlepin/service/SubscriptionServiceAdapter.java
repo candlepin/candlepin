@@ -33,13 +33,11 @@ public interface SubscriptionServiceAdapter {
      * List all subscriptions for the given owner and product, which have
      * changed or been created since the given date.
      * @param owner Owner of the subscriptions.
-     * @param productId product id filter.
      * @param sinceDate changed since or created since date.
      * @return all subscriptions for the given owner and product, which have
      * changed or been created since the given date.
      */
-    List<Subscription> getSubscriptionsSince(Owner owner, String productId,
-            Date sinceDate);
+    List<Subscription> getSubscriptionsSince(Owner owner, Date sinceDate);
 
     /**
      * List all subscriptions for the given owner and product.

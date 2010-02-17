@@ -64,12 +64,10 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      * @param sinceDate date since modified.
      * @return a list of subscriptions filtered by owner, product, since date.
      */
-    public List<Subscription> listByOwnerAndProductSince(Owner o, String productId,
-            Date sinceDate) {
+    public List<Subscription> listByOwnerAndProductSince(Owner o, Date sinceDate) {
         List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
                 Subscription.class)
             .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("productId", productId))
             .add(Restrictions.gt("modified", sinceDate)).list();
         if (subs == null) {
             return new LinkedList<Subscription>();

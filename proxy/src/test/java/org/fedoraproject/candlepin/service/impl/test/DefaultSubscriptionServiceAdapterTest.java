@@ -92,8 +92,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
 
     @Test
     public void testGetSubscriptionsSince() {
-        List<Subscription> subs = adapter.getSubscriptionsSince(owner, p.getId(),
-                TestUtil.createDate(2010, 1, 20));
+        List<Subscription> subs = adapter.getSubscriptionsSince(owner, TestUtil.createDate(2010, 1, 20));
         assertEquals(1, subs.size());
         assertEquals(s1.getId(), subs.get(0).getId());
     }
