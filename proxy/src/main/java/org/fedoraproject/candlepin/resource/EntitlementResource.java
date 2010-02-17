@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementBindResult;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
@@ -127,7 +128,7 @@ public class EntitlementResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/product/{product_label}")
-    public String entitle(@PathParam("consumer_uuid") String consumerUuid, 
+    public EntitlementBindResult entitle(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_label") String productLabel) {
         
         // TODO: actually get current user's owner
@@ -151,7 +152,7 @@ public class EntitlementResource {
             throw new BadRequestException("Entitlement refused.");
         }
         
-        return CertGenerator.getCertString(); 
+        return new EntitlementBindResult(true);
     }
 
     /**
@@ -164,7 +165,7 @@ public class EntitlementResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/token/{registration_token}")
-    public String entitleToken(@PathParam("consumer_uuid") String consumerUuid,
+    public EntitlementBindResult entitleToken(@PathParam("consumer_uuid") String consumerUuid,
             @PathParam("registration_token") String registrationToken) {
         
         //FIXME: this is just a stub, need SubscriptionService to look it up
@@ -173,6 +174,7 @@ public class EntitlementResource {
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         
+        //FIXME: getSubscriptionForToken is a stub, always "works"
         Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
         if (s == null) {
             throw new BadRequestException("No such token: " + registrationToken);
@@ -189,7 +191,7 @@ public class EntitlementResource {
         
         // FIXME: just stubbed out, we need to return the cert associated with
         // entitlement
-        return CertGenerator.getCertString();
+        return new EntitlementBindResult(true);
     }
     
     /**
@@ -305,19 +307,14 @@ public class EntitlementResource {
     @DELETE
     @Path("consumer/{consumer_uuid}/")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public ClientCertificateStatus deleteAllEntitlements(
+    public void deleteAllEntitlements(
             @PathParam("consumer_uuid") String consumerUuid) {
-
-        //FIXME: stub
-        // Find all entitlements for this consumer id
-        // get all the associated clientCerts
-        // new list of ClientCertificateStatus
-        //   add all the revoked certs to it, with their new
-        //      serial numbers, and "REVOKED" status
-        // 
-        // delete all the Entitlements 
-        // return the clientCertificateStatus list
-        return new ClientCertificateStatus();
+        
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        for (EntitlementPool ep : epCurator.listByConsumer(consumer) ) {
+            log.debug("ep: " + ep.toString() + "  " + ep.getId());
+            epCurator.delete(ep);
+        }
     }
    
     /**
