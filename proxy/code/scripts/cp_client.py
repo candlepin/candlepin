@@ -15,18 +15,20 @@ class CliCommand(object):
         self.shortdesc = shortdesc
         if shortdesc is not None and description is None:
             description = shortdesc
+        self.debug = 0
         self.parser = OptionParser(usage=usage, description=description)
         self._add_common_options()
         self.name = name
+
+        self.cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=self.debug)
 
     def _add_common_options(self):
         """ Add options that apply to all sub-commands. """
 
 #        self.parser.add_option("--log", dest="log_file", metavar="FILENAME",
 #                help="log file name (will be overwritten)")
-#        self.parser.add_option("--log-level", dest="log_level",
-#                default="critical", metavar="LEVEL",
-#                help=_("log level (debug/info/warning/error/critical)"))
+        self.parser.add_option("--debug", dest="debug",
+                default=0, help="debug level")
 
     def _do_command(self):
         pass
@@ -66,8 +68,8 @@ class RegisterCommand(CliCommand):
         """
         Executes the command.
         """
-        cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
-        print cp.registerConsumer(self.options.username, self.options.password, self.options.system, {}, {})
+
+        print self.cp.registerConsumer(self.options.username, self.options.password, self.options.system, {}, {})
 
 
 class UnRegisterCommand(CliCommand):
@@ -94,11 +96,9 @@ class UnRegisterCommand(CliCommand):
         """
         Executes the command.
         """
-        cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
-
         # FIXME: should probably at least pretend to find some hardwrae here
         #print cp.registerConsumer(self.options.username, self.options.password, self.options.system, {}, {})
-        print cp.unRegisterConsumer(self.options.username, self.options.password, self.options.consumer)
+        print self.cp.unRegisterConsumer(self.options.username, self.options.password, self.options.consumer)
 
 
 
@@ -130,15 +130,13 @@ class BindCommand(CliCommand):
         """
         Executes the command.
         """
-        cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
-
         # FIXME: should probably at least pretend to find some hardwrae here
         #print cp.registerConsumer(self.options.username, self.options.password, self.options.system, {}, {})
         if self.options.product:
-            print cp.bindProduct(self.options.consumer, self.options.product)
+            print self.cp.bindProduct(self.options.consumer, self.options.product)
 
         if self.options.regtoken:
-            print cp.bindRegToken(self.options.consumer, self.options.regtoken)
+            print self.cp.bindRegToken(self.options.consumer, self.options.regtoken)
 
 class UnBindCommand(CliCommand):
     def __init__(self):
@@ -161,13 +159,12 @@ class UnBindCommand(CliCommand):
         """
         Executes the command.
         """
-        cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
 
         if not self.options.serial_numbers:
-            print cp.unBindAll(self.options.consumer)
+            print self.cp.unBindAll(self.options.consumer)
 
         if self.options.serial_numbers:
-            print cp.unBindBySerialNumbers(self.options.consumer, self.options.serial_numbers)
+            print self.cp.unBindBySerialNumbers(self.options.consumer, self.options.serial_numbers)
 
 
 class SyncCertificatesCommand(CliCommand):
@@ -188,9 +185,7 @@ class SyncCertificatesCommand(CliCommand):
         """
         Executes the command.
         """
-        cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
-
-        print cp.syncCertificates(self.options.consumer, [])
+        print self.cp.syncCertificates(self.options.consumer, [])
 
 class GetEntitlementPoolsCommand(CliCommand):
     def __init__(self):
@@ -210,9 +205,7 @@ class GetEntitlementPoolsCommand(CliCommand):
         """
         Executes the command.
         """
-        cp = candlepinapi.CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin", debug=None)
-
-        print cp.getEntitlementPools(self.options.consumer)
+        print self.cp.getEntitlementPools(self.options.consumer)
 
 
 # taken wholseale from rho...

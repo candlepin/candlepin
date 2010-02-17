@@ -154,7 +154,7 @@ if __name__ == "__main__":
     ret =  cp.registerConsumer("whoever", "doesntmatter", "some system", {'arch':'i386', 'cpu':'intel'}, {'os':'linux', 'release':'4.2'})
 
     # broken atm
-#    print cp.bindProduct(ret['uuid'], "monitoring")
+    print cp.bindProduct(ret['uuid'], "monitoring")
 
     uuid = ret['uuid']
     ret = cp.syncCertificates(uuid, [])
