@@ -29,4 +29,5 @@ proxy/reports
 jaas/bin
 .DS_Store
 .DS_Store
+proxy/.project
 *~
