@@ -52,7 +52,10 @@ public class CandlepinProductionConfiguration extends AbstractModule {
         bind(Properties.class)
             .annotatedWith(JpaUnit.class)
             .toInstance(new Config().jpaConfiguration()); 
-        bindConstant().annotatedWith(JpaUnit.class).to("production");
+
+        // We default to test persistence unit (HSQL), /etc/candlepin/candlepin.conf
+        // will override:
+        bindConstant().annotatedWith(JpaUnit.class).to("test");
         
         bind(CertificateResource.class);
         bind(ConsumerResource.class);

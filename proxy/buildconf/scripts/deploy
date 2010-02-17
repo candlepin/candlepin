@@ -19,12 +19,12 @@ if [ "$?" -ne 0 ]; then
     fi
 fi
 
-buildr candlepin:schema_gen
+#buildr candlepin:schema_gen
 $TC_CMD stop
-dropdb candlepin
-createdb candlepin
-psql candlepin < target/schemagen/candlepin-proxy.sql
-psql candlepin < code/schema/postgresql/populate-defaults.sql
+#dropdb candlepin
+#createdb candlepin
+#psql candlepin < target/schemagen/candlepin-proxy.sql
+#psql candlepin < code/schema/postgresql/populate-defaults.sql
 
 buildr package test=no
 
