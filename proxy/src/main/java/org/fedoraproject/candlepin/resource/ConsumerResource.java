@@ -53,7 +53,6 @@ import javax.ws.rs.core.UriInfo;
  * API Gateway for Consumers
  */
 @Path("/consumer")
-
 public class ConsumerResource {
     
     @Context 

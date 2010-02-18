@@ -26,7 +26,7 @@ $TC_CMD stop
 #psql candlepin < target/schemagen/candlepin-proxy.sql
 #psql candlepin < code/schema/postgresql/populate-defaults.sql
 
-buildr package test=no
+buildr clean package test=no
 
 sudo rm -rf $TC_HOME/webapps/candlepin*
 sudo cp target/candlepin-1.0.0.war $TC_HOME/webapps/candlepin.war
