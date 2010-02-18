@@ -1,5 +1,4 @@
 import unittest
-
 import httplib, urllib
 import simplejson as json
 
