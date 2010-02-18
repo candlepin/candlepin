@@ -61,6 +61,13 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     
     /**
      * Returns list of pools owned by the given consumer.
+     *
+     * WARNING: This is an extremely rare case where an entitlement pool is created for use
+     * by a single specific consumer.
+     *
+     * TODO: Should this code be removed entirely? Created for the Satellite virt
+     * entitlements.
+     *
      * @param consumer Consumer to filter
      * @return list of pools owned by the given consumer.
      */
