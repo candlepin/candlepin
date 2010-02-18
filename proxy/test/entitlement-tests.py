@@ -9,8 +9,7 @@ class EntitlementTests(CandlepinTests):
 
  def setUp(self):
         
-	#self.conn = httplib.HTTPConnection("localhost", 8080)
-	self.conn = httplib.HTTPConnection("statler.usersys.redhat.com", 8080)
+	self.conn = httplib.HTTPConnection("localhost", 8080)
         # Create a consumer and store it's UUID:
         consumer_type = {"label": "system"}
         facts_metadata = {"entry": [
