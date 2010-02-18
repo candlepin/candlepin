@@ -29,10 +29,10 @@ class EntitlementTests(CandlepinTests):
 	#print('conn.request='+self.rsp) 
 
  def test_uuid(self):
-        if self.consumer_uuid != None:
-	    pass
-	else:
-	    assert False
+         if self.consumer_uuid != None:
+        pass
+    else:
+        assert False
    
  def test_dbid(self):
         self.conn.request("GET", '/candlepin/consumer/'+self.consumer_uuid+'/certificates', json.dumps(self.params), self.headers)
@@ -40,7 +40,7 @@ class EntitlementTests(CandlepinTests):
         rsp = response.read()
         consumer_cert = json.loads(rsp)['certs']
    	if consumer_cert != None:
-	    pass
+         pass
 	else:
 	    assert False		
 
@@ -48,10 +48,10 @@ class EntitlementTests(CandlepinTests):
         self.conn.request("GET", '/candlepin/entitlement', json.dumps(self.params), self.headers)
         response = self.conn.getresponse()
         rsp = response.read()
-	if self.debug:
-	    print('\n')
-	    print('list of entitlements:'+ rsp)
-	    print('\n')
+    if self.debug:
+        print('\n')
+        print('list of entitlements:'+ rsp)
+        print('\n')
    	if rsp != None:
 	    pass
 	else:
