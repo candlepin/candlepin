@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
+import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -66,6 +67,7 @@ public class CandlepinProductionConfiguration extends AbstractModule {
         bind(RulesResource.class);
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
+        bind(StatusResource.class);
         bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class); 
     }
 }
