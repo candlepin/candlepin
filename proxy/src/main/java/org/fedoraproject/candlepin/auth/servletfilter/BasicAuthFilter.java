@@ -13,10 +13,13 @@ import org.apache.log4j.Logger;
 
 import com.google.inject.Singleton;
 
+/**
+ * BasicAuthFilter
+ */
 @Singleton
 public class BasicAuthFilter implements Filter {
     
-    Logger log = Logger.getLogger(BasicAuthFilter.class);
+    private static Logger log = Logger.getLogger(BasicAuthFilter.class);
     
     private FilterConfig filterConfig = null;
     

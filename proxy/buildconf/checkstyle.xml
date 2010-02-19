@@ -221,6 +221,7 @@
       <property name="allowMissingThrowsTags" value="${javadoc.lazy}" />
       <property name="allowMissingReturnTag" value="${javadoc.lazy}" />
       <property name="allowMissingPropertyJavadoc" value="true" />
+      <property name="allowMissingJavadoc" value="true" />
     </module>
     <module name="JavadocVariable">
       <property name="scope" value="${javadoc.var.scope}" />

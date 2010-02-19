@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -165,7 +164,8 @@ public class EntitlementResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/token/{registration_token}")
-    public EntitlementBindResult entitleToken(@PathParam("consumer_uuid") String consumerUuid,
+    public EntitlementBindResult entitleToken(
+            @PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("registration_token") String registrationToken) {
         
         //FIXME: this is just a stub, need SubscriptionService to look it up
@@ -302,7 +302,6 @@ public class EntitlementResource {
      * uuid.
      * @param consumerUuid id of the consumer whose entitlements are to be
      * deleted.
-     * @return certificate and status.
      */
     @DELETE
     @Path("consumer/{consumer_uuid}/")
@@ -311,7 +310,7 @@ public class EntitlementResource {
             @PathParam("consumer_uuid") String consumerUuid) {
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        for (EntitlementPool ep : epCurator.listByConsumer(consumer) ) {
+        for (EntitlementPool ep : epCurator.listByConsumer(consumer)) {
             log.debug("ep: " + ep.toString() + "  " + ep.getId());
             epCurator.delete(ep);
         }
