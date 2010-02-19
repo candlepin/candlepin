@@ -1,3 +1,17 @@
+/**
+ * Copyright (c) 2009 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
 package org.fedoraproject.candlepin.resource;
 
 import javax.ws.rs.GET;
@@ -11,6 +25,9 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 
 import com.google.inject.Inject;
 
+/**
+ * Candlepin server administration REST calls.
+ */
 @Path("/admin")
 public class AdminResource {
 
@@ -22,6 +39,15 @@ public class AdminResource {
         this.consumerTypeCurator = consumerTypeCurator;
     }
 
+    /**
+     * Initialize the Candlepin database.
+     * 
+     * Currently this just creates static'ish database entries for things like
+     * consumer types. This call needs to happen once after a database is created.
+     * Repeated calls are not required, but will be harmless.
+     * 
+     * @return Description if db was or already is initialized.
+     */
     @GET
     @Produces({MediaType.TEXT_PLAIN})
     @Path("init")

@@ -60,7 +60,6 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     /**
      * Return a list of subscriptions filtered by owner, product, since date.
      * @param o Owner of the subscription.
-     * @param productId Id of the product to filter.
      * @param sinceDate date since modified.
      * @return a list of subscriptions filtered by owner, product, since date.
      */
