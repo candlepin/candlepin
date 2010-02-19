@@ -126,7 +126,9 @@ define "candlepin" do
           :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
 
         # check the main src
-        ant.checkstyle :config=>"buildconf/checkstyle.xml" do
+        ant.checkstyle :config=>"buildconf/checkstyle.xml",
+                       :classpath=>Buildr.artifacts(CHECKSTYLE, JDOM).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR) do
+
           ant.formatter :type=>'plain'
           ant.formatter :type=>'xml', :toFile=>"reports/checkstyle_report.xml"
 
