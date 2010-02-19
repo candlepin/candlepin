@@ -32,6 +32,6 @@ sudo rm -rf $TC_HOME/webapps/candlepin*
 sudo cp target/candlepin-1.0.0.war $TC_HOME/webapps/candlepin.war
 $TC_CMD start
 
-sleep 5
+sleep 10
 echo "Initializing Candlepin..."
 wget -qO- http://localhost:8080/candlepin/admin/init
