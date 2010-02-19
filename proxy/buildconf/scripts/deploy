@@ -19,15 +19,19 @@ if [ "$?" -ne 0 ]; then
     fi
 fi
 
-buildr candlepin:schema_gen
+#buildr candlepin:schema_gen
 $TC_CMD stop
-dropdb candlepin
-createdb candlepin
-psql candlepin < target/schemagen/candlepin-proxy.sql
-psql candlepin < code/schema/postgresql/populate-defaults.sql
+#dropdb -U candlepin candlepin
+#createdb -U candlepin candlepin
+#psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
+#psql -U candlepin < code/schema/postgresql/populate-defaults.sql
 
-buildr package test=no
+buildr clean package test=no
 
 sudo rm -rf $TC_HOME/webapps/candlepin*
 sudo cp target/candlepin-1.0.0.war $TC_HOME/webapps/candlepin.war
 $TC_CMD start
+
+sleep 10
+echo "Initializing Candlepin..."
+wget -qO- http://localhost:8080/candlepin/admin/init
