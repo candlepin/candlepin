@@ -22,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import java.sql.*;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -33,6 +35,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
+
+import com.sun.jersey.core.util.Base64; 
+
 import org.fedoraproject.candlepin.resource.ForbiddenException;
 
 /**
