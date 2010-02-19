@@ -11,11 +11,17 @@ import javax.servlet.ServletResponse;
 
 import org.apache.log4j.Logger;
 
+import com.google.inject.Singleton;
+
+@Singleton
 public class BasicAuthFilter implements Filter {
     
     Logger log = Logger.getLogger(BasicAuthFilter.class);
     
     private FilterConfig filterConfig = null;
+    
+    public BasicAuthFilter() {
+    }
     
     public void init(FilterConfig filterConfig) throws ServletException {
        this.filterConfig = filterConfig;
