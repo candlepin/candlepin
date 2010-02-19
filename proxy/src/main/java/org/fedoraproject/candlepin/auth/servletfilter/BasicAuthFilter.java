@@ -11,9 +11,12 @@ import javax.servlet.ServletResponse;
 
 import org.apache.log4j.Logger;
 
+/**
+ * BasicAuthFilter
+ */
 public class BasicAuthFilter implements Filter {
     
-    Logger log = Logger.getLogger(BasicAuthFilter.class);
+    private static Logger log = Logger.getLogger(BasicAuthFilter.class);
     
     private FilterConfig filterConfig = null;
     
