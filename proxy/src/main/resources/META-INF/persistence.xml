@@ -25,7 +25,7 @@
             <property name="hibernate.connection.url" value="jdbc:postgresql:candlepin"/>
             
             <!-- Note this line wipes the DB every restart, only used for testing. -->
-            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <!-- property name="hibernate.hbm2ddl.auto" value="create-drop"-->
             
             <property name="hibernate.connection.username" value="candlepin"/>
             <property name="hibernate.connection.password" value=""/>
