@@ -19,7 +19,7 @@ class CandlepinTests(unittest.TestCase):
         rsp = urlopen("%s/certificate" % CANDLEPIN_SERVER).read()
         if rsp.strip() == "":
             print("Cert upload required.")
-            cert = SPACEWALK_PUBLIC_CERT
+            cert = open('code/scripts/spacewalk-public.cert', 'rb').read()
             encoded_cert = base64.b64encode(cert)
             params = {"base64cert": encoded_cert}
             headers = {"Content-type": "application/json",
@@ -28,12 +28,17 @@ class CandlepinTests(unittest.TestCase):
             conn = httplib.HTTPConnection("localhost", 8080)
             conn.request("POST", '/candlepin/certificate/', json.dumps(encoded_cert), headers)
             response = conn.getresponse()
+            print("Status: %s Reason: %s" % (response.status, response.reason))
             rsp = response.read()
             conn.close()
 
 
             rsp = urlopen("%s/certificate" % CANDLEPIN_SERVER).read()
             self.assertTrue(rsp.strip() != "")
+
+    def assertResponse(self, expected_status, response):
+        if response.status != expected_status:
+            self.fail("Status: %s Reason: %s" % (response.status, response.reason))
 
 
 ## GET see if there's a certificate
