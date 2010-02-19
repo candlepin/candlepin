@@ -21,10 +21,10 @@ fi
 
 #buildr candlepin:schema_gen
 $TC_CMD stop
-#dropdb candlepin
-#createdb candlepin
-#psql candlepin < target/schemagen/candlepin-proxy.sql
-#psql candlepin < code/schema/postgresql/populate-defaults.sql
+#dropdb -U candlepin candlepin
+#createdb -U candlepin candlepin
+#psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
+#psql -U candlepin < code/schema/postgresql/populate-defaults.sql
 
 buildr clean package test=no
 
