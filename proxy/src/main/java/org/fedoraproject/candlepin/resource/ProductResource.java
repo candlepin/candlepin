@@ -14,25 +14,23 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.Product;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
-
 import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
-
+import com.google.inject.Inject;
 
 /**
  * API Gateway into /product
+ * 
  * @version $Rev$
  */
 @Path("/product")
@@ -43,22 +41,44 @@ public class ProductResource {
 
     /**
      * default ctor
-     * @param prodAdapter Product Adapter used to interact with multiple
-     * services.
+     * 
+     * @param prodAdapter
+     *            Product Adapter used to interact with multiple services.
      */
     @Inject
     public ProductResource(ProductServiceAdapter prodAdapter) {
         this.prodAdapter = prodAdapter;
     }
-    
-    
+
     /**
      * returns the list of Products available.
+     * 
      * @return the list of available products.
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Product> list() {
         return prodAdapter.getProducts();
+    }
+
+    /**
+     * Return the consumer identified by the given uuid.
+     * 
+     * @param pid
+     *            uuid of the consumer sought.
+     * @return the consumer identified by the given uuid.
+     */
+    @GET
+    @Path("/{product_uuid}")    
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public Product getProduct(@PathParam("product_uuid") String pid) {
+        Product toReturn = prodAdapter.getProductById(pid);
+
+        if (toReturn != null) {
+            return toReturn;
+        }
+
+        throw new NotFoundException("Product with UUID '" + pid +
+            "' could not be found");
     }
 }
