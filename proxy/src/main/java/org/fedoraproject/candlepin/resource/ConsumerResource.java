@@ -41,6 +41,7 @@ import java.io.ObjectOutputStream;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -60,28 +61,46 @@ public class ConsumerResource {
     
     @Context 
     private UriInfo uriInfo;
-
+    
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private OwnerCurator ownerCurator;
+    private Owner owner;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerIdentityCertificateCurator consumerIdCertCurator;
 
-    /**
-     * ctor
-     * @param ownerCurator interact with owners
-     * @param consumerCurator interact with curators
-     * @param consumerTypeCurator interact with consumers.
-     */
+	private String username;
+
+	/**
+	 * ctor
+	 * 
+	 * @param ownerCurator
+	 *            interact with owners
+	 * @param consumerCurator
+	 *            interact with curators
+	 * @param consumerTypeCurator
+	 *            interact with consumers.
+	 * 
+	 *            TODO: Changing the constructor means a bunch of the tests need
+	 *            to be updated. Find out if this is the right way to do this.
+	 */
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
             ConsumerTypeCurator consumerTypeCurator,
-            ConsumerIdentityCertificateCurator consumerIdCertCurator) {
+            ConsumerIdentityCertificateCurator consumerIdCertCurator,
+            @Context HttpServletRequest request) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerIdCertCurator = consumerIdCertCurator;
+        this.username = (String) request.getAttribute("username");
+        if(username != null){
+            this.owner = ownerCurator.lookupByName(username);
+            if(owner == null){
+            	owner = ownerCurator.create(new Owner(username));
+            }
+        }
     }
    
     /**
@@ -127,7 +146,6 @@ public class ConsumerResource {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
         Consumer consumer = new Consumer();
-        
         
         log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());
