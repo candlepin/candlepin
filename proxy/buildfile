@@ -88,6 +88,8 @@ define "candlepin" do
   # javadoc projects
   javadoc
 
+  package(:jar)
+
   package(:war).libs << HSQLDB
   
   # to use: buildr candlepin:schema_gen
