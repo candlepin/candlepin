@@ -28,7 +28,7 @@ public class ClientCertificateStatus implements Persisted {
     private String serialNumber;
     private String status;
     private ClientCertificate certificate;
-    private Long id;
+    private Long id; // TODO: Unused for detached entities?
     
     /**
      * default ctor
