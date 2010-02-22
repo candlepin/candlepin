@@ -45,7 +45,7 @@ public interface SubscriptionServiceAdapter {
      * @param productId product id filter.
      * @return all subscriptions for the given owner and product.
      */
-    List<Subscription> getSubscriptions(Owner owner);
+    List<Subscription> getSubscriptions(Owner owner, String productId);
     
     /**
      * List all subscriptions which have been changed or created since the

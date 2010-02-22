@@ -67,5 +67,4 @@ public class DefaultSubscriptionServiceAdapter implements
     public List<Subscription> getSubscriptionsSince(Date sinceDate) {
         return subCurator.listSince(sinceDate);
     }
-
 }
