@@ -48,6 +48,7 @@ CHECKSTYLE = ['com.puppycrawl:checkstyle:jar:5.0',
 BOUNCYCASTLE = group('bcprov', 'bcpg', :under=>'org.bouncycastle', :version=>'1.43')
 GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-servlet', 'guice-throwingproviders', :under=>'com.google.guice', :version=>'2.0'),
            'com.wideplay.warp:warp-persist:jar:2.0-20090214',
+           'com.wideplay.warp:warp-servlet:jar:0.9_06',
            'com.sun.jersey:jersey-guice:jar:1.1.4.1',
            'aopalliance:aopalliance:jar:1.0',
            'javax.servlet:servlet-api:jar:2.5']
