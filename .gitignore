@@ -20,5 +20,6 @@ proxy/*.jar
 proxy/*.txt
 proxy/*.out
 proxy/target
+proxy/target-eclipse
 proxy/reports
 *~
