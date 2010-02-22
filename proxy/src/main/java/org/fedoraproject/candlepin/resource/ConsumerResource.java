@@ -31,6 +31,7 @@ import com.google.inject.Inject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.bouncycastle.ocsp.CertificateStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -111,12 +112,17 @@ public class ConsumerResource {
      * Create a Consumer
      * @param in Consumer metadata encapsulated in a ConsumerInfo.
      * @return newly created Consumer
+     * 
+     *  We are calling this "registerConsumer" in the api discussions
      */
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(Consumer in) {
+    public String create(Consumer in) {
+        // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
+        Consumer consumer = new Consumer();
+        
         
         log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());
@@ -132,7 +138,8 @@ public class ConsumerResource {
         }
 
         try {
-            return consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
+            consumer = consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
+            return consumerCurator.getCertificateForConsumer(consumer);
         }
         catch (RuntimeException e) {
             throw new BadRequestException(e.getMessage());

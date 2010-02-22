@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
+import org.fedoraproject.candlepin.service.CertificateServiceAdapter;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.HashSet;
@@ -29,7 +30,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private ConsumerFactCurator consumerInfoCurator;
     @Inject private EntitlementCurator entitlementCurator;    
-
+    private CertificateServiceAdapter certificateServiceAdaptor;
+    
     protected ConsumerCurator() {
         super(Consumer.class);
     }
@@ -67,6 +69,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .add(Restrictions.like("uuid", uuid))
             .uniqueResult();
     }
+    
+    /**
+     *  Get the identity cert for a consumer via CertificateService
+     *  @param Consumer
+     *  @return an identity cert
+     * 
+     */
+     public String getCertificateForConsumer(Consumer consumer) {
+         
+         ClientCertificateStatus certStatus = certificateServiceAdaptor.generateIdentityCert(consumer);
+         
+         return certStatus.getClientCertificate().getBundle();
+     }
+    
     
     /**
      * @param updatedConsumer updated Consumer values.
