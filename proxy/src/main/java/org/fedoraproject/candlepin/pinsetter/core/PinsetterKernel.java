@@ -38,12 +38,12 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Taskomatic Kernel.
+ * Pinsetter Kernel.
  * @version $Rev$
  */
-public class SchedulerKernel {
+public class PinsetterKernel {
 
-    private static Logger log = Logger.getLogger(SchedulerKernel.class);
+    private static Logger log = Logger.getLogger(PinsetterKernel.class);
 
     private byte[] shutdownLock = new byte[0];
     private Scheduler scheduler = null;
@@ -53,7 +53,7 @@ public class SchedulerKernel {
      * Kernel main driver behind Taskomatic
      * @throws InstantiationException thrown if this.scheduler can't be initialized.
      */
-    public SchedulerKernel() throws InstantiationException {
+    public PinsetterKernel() throws InstantiationException {
         Properties props = Config.get().getNamespaceProperties("org.quartz");
         // create a this.schedulerFactory
         try {
