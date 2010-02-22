@@ -28,7 +28,7 @@ import java.util.Set;
 public class ReadOnlyProduct {
 
     private final Product product;
-    private Map<String, Long> attributes = null;
+    private Map<String, String> attributes = null;
 
     /**
      * read-only product contructor.
@@ -71,7 +71,7 @@ public class ReadOnlyProduct {
      * @param name attribute name
      * @return attribute value
      */
-    public Long getAttribute(String name) {
+    public String getAttribute(String name) {
         if (attributes == null) {
             initializeReadOnlyAttributes();
         }
@@ -92,7 +92,7 @@ public class ReadOnlyProduct {
     }
 
     private void initializeReadOnlyAttributes() {
-        attributes = new HashMap<String, Long>();
+        attributes = new HashMap<String, String>();
         for (Attribute current : product.getAttributes()) {
             attributes.put(current.getName(), current.getQuantity());
         }

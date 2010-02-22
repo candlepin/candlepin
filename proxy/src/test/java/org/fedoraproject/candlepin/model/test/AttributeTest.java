@@ -56,31 +56,28 @@ public class AttributeTest extends DatabaseTestFixture {
     @Test
     public void testAttributeSetQuantity() {
         Attribute newAttr = new Attribute();
-        Long someNumber = new Long(100);
         String someName = "OwesUsMoney_100";
         newAttr.setName(someName);
-        newAttr.setQuantity(someNumber);
+        newAttr.setQuantity("100");
         persistAndCommit(newAttr);
     }
 
     @Test
     public void testAttributeGetQuantity() {
         Attribute newAttr = new Attribute();
-        Long someNumber = new Long(200);
         String someName = "OwesUsMoney_100";
         newAttr.setName(someName);
-        newAttr.setQuantity(someNumber);
+        newAttr.setQuantity("100");
         persistAndCommit(newAttr);
-        assertEquals(someNumber, newAttr.getQuantity());
+        assertEquals("100", newAttr.getQuantity());
     }
 
     @Test
     public void testLookup() {
         Attribute newAttr = new Attribute();
-        Long someNumber = new Long(100);
         String someName = "OwesUsMoney_100";
         newAttr.setName(someName);
-        newAttr.setQuantity(someNumber);
+        newAttr.setQuantity("100");
         persistAndCommit(newAttr);
 
         Attribute foundAttr = attributeCurator.find(newAttr.getId());

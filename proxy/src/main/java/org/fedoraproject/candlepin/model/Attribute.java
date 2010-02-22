@@ -53,13 +53,12 @@ public class Attribute  implements Persisted {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_attribute")
     private Long id;
     
-    
     @Column(nullable = false)
     private String name;
     
 //    @Column(nullable = false)
     @Column
-    private Long quantity;
+    private String value;
 
     /**
      * default ctor
@@ -72,9 +71,9 @@ public class Attribute  implements Persisted {
      * @param name attribute name
      * @param quantity quantity of the attribute.
      */
-    public Attribute(String name, Long quantity) {
+    public Attribute(String name, String quantity) {
         this.name = name;
-        this.quantity = quantity;
+        this.value = quantity;
     }
 
     public String getName() {
@@ -93,12 +92,12 @@ public class Attribute  implements Persisted {
         this.name = name;
     }
 
-    public Long getQuantity() {
-        return quantity;
+    public String getQuantity() {
+        return value;
     }
 
-    public void setQuantity(Long quantity) {
-        this.quantity = quantity;
+    public void setQuantity(String quantity) {
+        this.value = quantity;
     }
     
     @Override
@@ -114,11 +113,11 @@ public class Attribute  implements Persisted {
         
         return 
             name.equals(another.getName()) &&
-            quantity.equals(another.getQuantity());
+            value.equals(another.getQuantity());
     }
     
     @Override
     public int hashCode() {
-        return name.hashCode() * 31 + quantity.hashCode();
+        return name.hashCode() * 31 + value.hashCode();
     }
 }
