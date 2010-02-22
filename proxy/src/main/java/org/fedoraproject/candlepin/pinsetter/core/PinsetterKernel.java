@@ -50,8 +50,9 @@ public class PinsetterKernel {
     private ChainedListener chainedJobListener = null;
 
     /**
-     * Kernel main driver behind Taskomatic
-     * @throws InstantiationException thrown if this.scheduler can't be initialized.
+     * Kernel main driver behind Pinsetter
+     * @throws InstantiationException thrown if this.scheduler can't be
+     * initialized.
      */
     public PinsetterKernel() throws InstantiationException {
         Properties props = Config.get().getNamespaceProperties("org.quartz");
@@ -60,16 +61,12 @@ public class PinsetterKernel {
             SchedulerFactory fact = new StdSchedulerFactory(props);
 
             // this.scheduler
-            this.scheduler = fact.getScheduler();
-            this.scheduler.setJobFactory(new RhnJobFactory());
+            scheduler = fact.getScheduler();
+            scheduler.setJobFactory(new HighlanderJobFactory());
 
-            // Setup TriggerListener chain
-            this.chainedJobListener = new ChainedListener();
-            this.chainedJobListener.addListener(new TaskEnvironmentListener());
-            this.chainedJobListener.addListener(new LoggingListener());
+            // Setup TriggerListener chains here.
         }
         catch (SchedulerException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             throw new InstantiationException("this.scheduler failed");
         }
@@ -78,20 +75,14 @@ public class PinsetterKernel {
     /**
      * Starts Taskomatic
      * This method does not return until the this.scheduler is shutdown
-     * @throws TaskomaticException error occurred during Quartz or Hibernate startup
+     * @throws PinsetterException error occurred during Quartz or Hibernate startup
      */
-    public void startup() throws TaskomaticException {
-        HibernateFactory.createSessionFactory();
-        if (!HibernateFactory.isInitialized()) {
-            throw new TaskomaticException("HibernateFactory failed to initialize");
-        }
-        MessageQueue.startMessaging();
-        MessageQueue.configureDefaultActions();
+    public void startup() throws PinsetterException {
         try {
-            this.scheduler.start();
-            synchronized (this.shutdownLock) {
+            scheduler.start();
+            synchronized (shutdownLock) {
                 try {
-                    this.shutdownLock.wait();
+                    shutdownLock.wait();
                 }
                 catch (InterruptedException ignored) {
                     return;
@@ -99,7 +90,7 @@ public class PinsetterKernel {
             }
         }
         catch (SchedulerException e) {
-            throw new TaskomaticException(e.getMessage(), e);
+            throw new PinsetterException(e.getMessage(), e);
         }
     }
 
@@ -137,8 +128,8 @@ public class PinsetterKernel {
         if (log.isDebugEnabled()) {
             log.debug("Scheduling tasks");
         }
-        Map pendingJobs = new HashMap();
-        List jobImpls = new ArrayList();
+        Map<String,String[]> pendingJobs = new HashMap<String,String[]>();
+        List<String> jobImpls = new ArrayList<String>();
         if (log.isDebugEnabled()) {
             log.debug("No manual overrides detected...Using configuration");
         }
@@ -182,7 +173,7 @@ public class PinsetterKernel {
             count++;
         }
         try {
-            this.scheduler.addTriggerListener(this.chainedJobListener);
+            scheduler.addTriggerListener(chainedJobListener);
         }
         catch (SchedulerException e) {
             throw new ConfigException(e.getLocalizedMessage(), e);
@@ -191,21 +182,19 @@ public class PinsetterKernel {
     }
 
     /**
-     * Shutsdown the application
+     * Shuts down the application
      */
     protected void shutdown() {
         try {
-            this.scheduler.standby();
+            scheduler.standby();
             deleteAllJobs();
-            this.scheduler.shutdown();
+            scheduler.shutdown();
         }
         catch (SchedulerException e) {
             // TODO Figure out what to do with this guy
             e.printStackTrace();
         }
         finally {
-            MessageQueue.stopMessaging();
-            HibernateFactory.closeSessionFactory();
             // Wake up thread waiting in startup() so it can exit
             synchronized (this.shutdownLock) {
                 this.shutdownLock.notify();
