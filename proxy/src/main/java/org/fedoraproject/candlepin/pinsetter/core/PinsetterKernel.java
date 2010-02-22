@@ -14,11 +14,7 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
-import com.redhat.rhn.common.conf.Config;
-import com.redhat.rhn.common.conf.ConfigDefaults;
-import com.redhat.rhn.common.conf.ConfigException;
-import com.redhat.rhn.common.hibernate.HibernateFactory;
-import com.redhat.rhn.common.messaging.MessageQueue;
+import org.fedoraproject.candlepin.config.Config;
 
 import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
@@ -44,6 +40,9 @@ import java.util.Properties;
 public class PinsetterKernel {
 
     private static Logger log = Logger.getLogger(PinsetterKernel.class);
+    private static final String TASK_GROUP = "Pinsetter Batch Engine Group";
+    private static final String TASKS = "pinsetter.tasks";
+    private static final String DEFAULT_TASKS = "pinsetter.default_tasks";
 
     private byte[] shutdownLock = new byte[0];
     private Scheduler scheduler = null;
@@ -73,7 +72,7 @@ public class PinsetterKernel {
     }
 
     /**
-     * Starts Taskomatic
+     * Starts Pinsetter
      * This method does not return until the this.scheduler is shutdown
      * @throws PinsetterException error occurred during Quartz or Hibernate startup
      */
@@ -135,13 +134,13 @@ public class PinsetterKernel {
         }
 
         // get the default tasks first
-        String[] jobs = config.getStringArray(ConfigDefaults.TASKOMATIC_DEFAULT_TASKS);
+        String[] jobs = config.getStringArray(DEFAULT_TASKS);
         if (jobs != null && jobs.length > 0) {
             jobImpls.addAll(Arrays.asList(jobs));
         }
 
         // get other tasks
-        String[] addlJobs = config.getStringArray(ConfigDefaults.TASKOMATIC_TASKS);
+        String[] addlJobs = config.getStringArray(TASKS);
         if (addlJobs != null && addlJobs.length > 0) {
             jobImpls.addAll(Arrays.asList(addlJobs));
         }
@@ -157,7 +156,7 @@ public class PinsetterKernel {
             if (log.isDebugEnabled()) {
                 log.debug("Scheduling " + jobImpl);
             }
-            String schedulerEntry = config.getString("taskomatic." + jobImpl + ".schedule");
+            String schedulerEntry = config.getString("pinsetter." + jobImpl + ".schedule");
             if (schedulerEntry != null && schedulerEntry.length() > 0) {
                 if (log.isDebugEnabled()) {
                     log.debug("Scheduler entry for " + jobImpl + ": " + schedulerEntry);
@@ -218,11 +217,11 @@ public class PinsetterKernel {
                 String crontab = data[1];
                 String jobName = jobImpl + "-" + suffix;
                 JobDetail detail = new JobDetail(jobName,
-                        TaskomaticConstants.TASK_GROUP,
+                        TASK_GROUP,
                         this.getClass().getClassLoader().loadClass(jobImpl));
                 Trigger trigger = null;
                 trigger = new CronTrigger(jobImpl,
-                        TaskomaticConstants.TASK_GROUP, crontab);
+                        TASK_GROUP, crontab);
                 trigger.setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
                 trigger.addTriggerListener(this.chainedJobListener.getName());
                 this.scheduler.scheduleJob(detail, trigger);

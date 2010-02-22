@@ -14,43 +14,31 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
 /**
- * PinsetterServlet
+ * PinsetterContextListener
  * @version $Rev$
  */
-public class PinsetterServlet extends HttpServlet {
-
-    private PinsetterKernel pinsetter;
+public class PinsetterContextListener implements ServletContextListener {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void init() throws ServletException {
-        try {
-            pinsetter = new PinsetterKernel();
-            pinsetter.startup();
-        }
-        catch (InstantiationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (PinsetterException pe) {
-            // TODO Auto-generated catch block
-            pe.printStackTrace();
-        }
+    public void contextDestroyed(ServletContextEvent sceIn) {
+        // TODO Auto-generated method stub
+
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void destroy() {
-        if (pinsetter != null) {
-            pinsetter.shutdown();
-        }
+    public void contextInitialized(ServletContextEvent sceIn) {
+        // TODO Auto-generated method stub
+
     }
+
 }
