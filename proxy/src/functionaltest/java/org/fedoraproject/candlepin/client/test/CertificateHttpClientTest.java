@@ -14,9 +14,7 @@
  */
 package org.fedoraproject.candlepin.client.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.client.test.ConsumerHttpClientTest.TestServletConfig;
 import org.fedoraproject.candlepin.test.TestUtil;
