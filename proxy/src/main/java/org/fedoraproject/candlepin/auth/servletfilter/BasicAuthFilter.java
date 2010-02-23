@@ -74,10 +74,9 @@ public class BasicAuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        String auth = httpRequest.getHeader("authorization");
+        String auth = httpRequest.getHeader("Authorization");
         if (auth != null && auth.toUpperCase().startsWith("BASIC ")
-            && httpRequest.getMethod().equals("POST")
-            && httpRequest.getRequestURI().equals("/candlepin/consumer")) {
+            && httpRequest.getMethod().equals("POST")) {
 
             String userpassEncoded = auth.substring(6);
             String[] userpass = Base64.base64Decode(userpassEncoded).split(":");
