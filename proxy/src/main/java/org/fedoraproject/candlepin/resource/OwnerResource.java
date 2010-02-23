@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
 
@@ -64,6 +65,27 @@ public class OwnerResource {
     public List<Owner> list() {
         return ownerCurator.findAll();  
     }
+    
+    /**
+     * Return the owner identified by the given uuid.
+     * 
+     * @param pid
+     *            uuid of the owner sought.
+     * @return the owner identified by the given id.
+     */
+    @GET
+    @Path("/{owner_id}")    
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public Owner getOwner(@PathParam("owner_id") Long owner_id) {
+        Owner toReturn = ownerCurator.find(owner_id) ;
+
+        if (toReturn != null) {
+            return toReturn;
+        }
+
+        throw new NotFoundException("Owner with UUID '" + owner_id +
+            "' could not be found");
+    }    
 
     /**
      * Return the entitlements for the owner of the given id.

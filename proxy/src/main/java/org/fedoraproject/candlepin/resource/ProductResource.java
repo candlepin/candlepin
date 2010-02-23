@@ -62,11 +62,11 @@ public class ProductResource {
     }
 
     /**
-     * Return the consumer identified by the given uuid.
+     * Return the Product identified by the given uuid.
      * 
      * @param pid
-     *            uuid of the consumer sought.
-     * @return the consumer identified by the given uuid.
+     *            uuid of the product sought.
+     * @return the product identified by the given uuid.
      */
     @GET
     @Path("/{product_uuid}")    
