@@ -15,8 +15,6 @@
 
 package org.fedoraproject.candlepin.model;
 
-import java.util.Map;
-
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -25,10 +23,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 
 /**
  * Attributes can be thought of as a hint on some restriction on the usage of an
@@ -56,8 +50,6 @@ public class Attribute  implements Persisted {
 //    @Column(nullable = false)
     @Column
     private String value;
-
-    private Boolean containsJson = Boolean.FALSE;
 
     /**
      * default ctor
@@ -120,34 +112,4 @@ public class Attribute  implements Persisted {
         return name.hashCode() * 31 + value.hashCode();
     }
 
-    public Boolean getContainsJson() {
-        return containsJson;
-    }
-
-    public Boolean containsJson() {
-        return getContainsJson();
-    }
-
-    public void setContainsJson(Boolean containsJson) {
-        this.containsJson = containsJson;
-    }
-
-    /**
-     * Convert a value containing json to a map.
-     */
-    public Map getValueMap() {
-        if (!getContainsJson()) {
-            throw new RuntimeException("Attribute value does not contain JSON.");
-        }
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            Map result = mapper.readValue(value, new
-                TypeReference<Map>() {} );
-            return result;
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Error parsing json: " + value, e);
-        }
-
-    }
 }

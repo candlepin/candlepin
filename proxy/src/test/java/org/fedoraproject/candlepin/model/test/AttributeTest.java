@@ -21,15 +21,11 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
 
-import java.util.List;
-import java.util.Map;
-
 public class AttributeTest extends DatabaseTestFixture {
 
     @Test
     public void testLookup() {
         Attribute newAttr = new Attribute("OwesUsMoney_100", "100");
-        assertFalse(newAttr.getContainsJson());
         attributeCurator.create(newAttr);
 
         Attribute foundAttr = attributeCurator.find(newAttr.getId());
@@ -37,50 +33,4 @@ public class AttributeTest extends DatabaseTestFixture {
         assertEquals(newAttr.getValue(), foundAttr.getValue());
     }
 
-    @Test
-    public void testJsonSimple() {
-        String json = "{\"a\": \"1\", \"b\": \"2\"}";
-        Attribute a = new Attribute("jsonattr", json);
-        a.setContainsJson(true);
-        attributeCurator.create(a);
-
-        Attribute foundAttr = attributeCurator.find(a.getId());
-        assertTrue(foundAttr.containsJson());
-        Map data = foundAttr.getValueMap();
-        assertEquals("1", data.get("a"));
-        assertEquals("2", data.get("b"));
-    }
-
-    @Test
-    public void testJsonComplex() {
-        String json = "{\"a\": [\"1\"], \"b\": {\"c\": \"2\"}}";
-        Attribute a = new Attribute("jsonattr", json);
-        a.setContainsJson(true);
-        attributeCurator.create(a);
-
-        Attribute foundAttr = attributeCurator.find(a.getId());
-        assertTrue(foundAttr.containsJson());
-        Map data = foundAttr.getValueMap();
-        List l = (List)data.get("a");
-        assertEquals(1, l.size());
-        assertEquals("1", l.get(0));
-
-        Map subData = (Map)data.get("b");
-        assertEquals("2", subData.get("c"));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testDoesNotContainJson() {
-        String json = "{\"a\": [\"1\"], \"b\": {\"c\": \"2\"}}";
-        Attribute a = new Attribute("jsonattr", json);
-        a.getValueMap();
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testBadJson() {
-        String json = "{\"a\": [\"1\"], b\": {\"c\": \"2\"}}";
-        Attribute a = new Attribute("jsonattr", json);
-        a.setContainsJson(true);
-        a.getValueMap();
-    }
 }
