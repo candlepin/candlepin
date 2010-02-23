@@ -17,39 +17,36 @@ class EntitlementTests(CandlepinTests):
                 "a": "1",
                 "b": "2",
                 "c": "3"}
-        self.consumer_uuid = self.cp.registerConsumer("fakeuser", "fakepw", "consumername", hardware=facts_metadata)['uuid']
+        self.consumer_uuid = self.cp.registerConsumer("fakeuser", "fakepw", 
+                "consumername", hardware=facts_metadata)['uuid']
 
         #TODO: remove print lines after tests have been added
         #print('conn.request='+self.rsp) 
 
     def test_uuid(self):
-        if self.consumer_uuid != None:
-            pass
-        else:
-            assert False
+        self.assertTrue(self.consumer_uuid != None)
    
-    def test_dbid(self):
-        self.conn.request("GET", '/candlepin/consumer/'+self.consumer_uuid+'/certificates', json.dumps(self.params), self.headers)
-        response = self.conn.getresponse()
-        rsp = response.read()
-        consumer_cert = json.loads(rsp)['certs']
-        if consumer_cert != None:
-             pass
-        else:
-            assert False        
+    def test_certificates(self):
+        # Assumes consumer has an entitlement granted to a product:
+        result = self.cp.syncCertificates(self.consumer_uuid, [])
+        print result
+        certs = result['clientCertStatus']
+        self.assertTrue(certs != None)
 
-    def test_entitlement(self):
-        self.conn.request("GET", '/candlepin/entitlement', json.dumps(self.params), self.headers)
-        response = self.conn.getresponse()
-        rsp = response.read()
-        if self.debug:
-            print('\n')
-            print('list of entitlements:'+ rsp)
-            print('\n')
-        if rsp != None:
-            pass
-        else:
-            assert False 
+
+    # TODO: Not really testing anything yet:
+    #def test_entitlements(self):
+    #    self.conn.request("GET", '/candlepin/entitlement', json.dumps(self.params), self.headers)
+    #    response = self.conn.getresponse()
+    #    rsp = response.read()
+    #    if self.debug:
+    #        print('\n')
+    #        print('list of entitlements:'+ rsp)
+    #        print('\n')
+    #    if rsp != None:
+    #        pass
+    #    else:
+    #        assert False 
  
     #def test_entitlement_id(self):
     #    # TODO: test not ready yet, need a way to create an entitlement first
@@ -84,12 +81,8 @@ class EntitlementTests(CandlepinTests):
     #        entitlement_productId = dict_inner["productId"]
     #        self.assertTrue(entitlement_productId != None)
 
-    def test_entitlement_product_id(self):
-        self.conn.request("GET", '/candlepin/product', json.dumps(self.params), self.headers)
-        self.response = self.conn.getresponse()
-        self.rsp = self.response.read()
-        #self.entitlement_id = json.loads(self.rsp)['id']
-        if self.debug:
-            #print('list of product='+self.rsp)
-            print('\n')
-        self.assertTrue(self.rsp != None)
+    def test_products(self):
+        result = self.cp.getProducts()
+        self.assertTrue("product" in result)
+        products_list = result['product']
+        self.assertEquals(6, len(products_list))

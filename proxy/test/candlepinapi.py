@@ -146,6 +146,10 @@ class CandlePinApi:
         path = "/entitlementpool/consumer/%s" % consumer_uuid
         return self.rest.get(path)
 
+    def getProducts(self):
+        path = "/product/"
+        return self.rest.get(path)
+
 
 
 if __name__ == "__main__":
