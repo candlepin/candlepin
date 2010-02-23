@@ -118,7 +118,7 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public String create(Consumer in) {
+    public ClientCertificateStatus create(Consumer in) {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
         Consumer consumer = new Consumer();
@@ -139,7 +139,9 @@ public class ConsumerResource {
 
         try {
             consumer = consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
-            return consumerCurator.getCertificateForConsumer(consumer);
+            ClientCertificateStatus certStatus = consumerCurator.getCertificateForConsumer(consumer);
+            return certStatus;
+            
         }
         catch (RuntimeException e) {
             throw new BadRequestException(e.getMessage());

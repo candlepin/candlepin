@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -74,10 +75,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             }
         });
 
-        String certBundle = consumerResource.create(toSubmit);
+        ClientCertificateStatus certStatus = consumerResource.create(toSubmit);
         
-        assertNotNull(certBundle);
-        assertNotNull(certBundle);
+        assertNotNull(certStatus);
+        assertNotNull(certStatus);
 //        assertNotNull(consumerCurator.find(created.getId()));
 //        assertEquals(standardSystemType.getLabel(), created.getType().getLabel());
 //        assertEquals(METADATA_VALUE, created.getMetadataField(METADATA_NAME));
