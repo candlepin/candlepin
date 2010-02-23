@@ -35,9 +35,9 @@ public class StatusResource {
     }
     
     /**
-     *  /status to see if a server is up and runing 
-    */
-    
+     * /status to see if a server is up and runing
+     * @return Status
+     */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public Status status() {
