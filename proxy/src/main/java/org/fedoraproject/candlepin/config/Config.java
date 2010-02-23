@@ -39,6 +39,12 @@ public class Config {
         }
         return configuration.subMap(prefix, prefix + Character.MAX_VALUE);
     }
+
+    public Properties getNamespaceProperties(String prefix) {
+        Properties p = new Properties();
+        p.putAll(configurationWithPrefix(prefix));
+        return p;
+    }
    
     /**
      * Returns the JPA Configuration properties.
@@ -68,5 +74,32 @@ public class Config {
         catch (IOException e) {
             throw new RuntimeException("Problem loading candlepin configuration file.", e);
         }
+    }
+
+    /**
+     * @param s configuration key
+     * @return value associated with the given configuration key.
+     */
+    public String getString(String s) {
+        return configuration.get(s);
+    }
+
+    /**
+     * get the config entry for string s
+     *
+     * @param s string to get the value of
+     * @return the value as an array
+     */
+    public String[] getStringArray(String s) {
+        if (s == null) {
+            return null;
+        }
+        String value = getString(s);
+
+        if (value == null) {
+            return null;
+        }
+
+        return value.split(",");
     }
 }
