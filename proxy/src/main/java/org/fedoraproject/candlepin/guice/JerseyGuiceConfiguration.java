@@ -14,25 +14,24 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import java.util.LinkedList;
-
-import org.fedoraproject.candlepin.auth.servletfilter.BasicAuthFilter;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.servlet.GuiceServletContextListener;
+import com.google.inject.servlet.ServletModule;
+import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
-import com.wideplay.warp.servlet.Servlets;
-import com.wideplay.warp.servlet.WarpServletContextListener;
+
+import java.util.LinkedList;
 
 /**
  * configure Guice with the resource classes.
  */
-public class JerseyGuiceConfiguration extends WarpServletContextListener {
+public class JerseyGuiceConfiguration extends GuiceServletContextListener {
 
     @Override
-    protected Injector getInjector() {        
+    protected Injector getInjector() {
         return Guice.createInjector(new LinkedList<Module>() {
 
             {
@@ -40,13 +39,14 @@ public class JerseyGuiceConfiguration extends WarpServletContextListener {
                         .buildModule());
 
                 add(new CandlepinProductionConfiguration());
-                
-                add(
-                        Servlets.configure()
-                            .filters()
-                            .servlets()
-                        .buildModule()
-                );
+
+                add(new ServletModule() {
+
+                    @Override
+                    protected void configureServlets() {
+                        serve("/*").with(GuiceContainer.class);
+                    }
+                });
 
                 addAll(new CustomizableModules().load());
             }
