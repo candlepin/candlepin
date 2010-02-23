@@ -28,7 +28,6 @@ import org.quartz.impl.StdSchedulerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -47,6 +46,7 @@ public class PinsetterKernel {
     private byte[] shutdownLock = new byte[0];
     private Scheduler scheduler = null;
     private ChainedListener chainedJobListener = null;
+    private Config config = null;
 
     /**
      * Kernel main driver behind Pinsetter
@@ -54,7 +54,18 @@ public class PinsetterKernel {
      * initialized.
      */
     public PinsetterKernel() throws InstantiationException {
-        Properties props = Config.get().getNamespaceProperties("org.quartz");
+        this(new Config());
+    }
+
+    /**
+     * Kernel main driver behind Pinsetter
+     * @param conf Configuration to use
+     * @throws InstantiationException thrown if this.scheduler can't be
+     * initialized.
+     */
+    public PinsetterKernel(Config conf) throws InstantiationException {
+        config = conf;
+        Properties props = config.getNamespaceProperties("org.quartz");
         // create a this.schedulerFactory
         try {
             SchedulerFactory fact = new StdSchedulerFactory(props);
@@ -66,8 +77,8 @@ public class PinsetterKernel {
             // Setup TriggerListener chains here.
         }
         catch (SchedulerException e) {
-            e.printStackTrace();
-            throw new InstantiationException("this.scheduler failed");
+            throw new InstantiationException("this.scheduler failed: " +
+                e.getMessage());
         }
     }
 
@@ -110,20 +121,18 @@ public class PinsetterKernel {
 
     /**
      * Configures the system.
-     * @param config Configuration object containing config values.
-     * @throws ConfigException thrown if there is a problem creating jobs by name.
+     * @param conf Configuration object containing config values.
      */
-    public void configure(Config config) throws ConfigException {
+    public void configure(Config conf) {
         configure(config, null);
     }
 
     /**
      * Configures the system.
-     * @param config Configuration object containing config values.
+     * @param conf Configuration object containing config values.
      * @param overrides Map containing configuration overrides based on cli params
-     * @throws ConfigException thrown if there is a problem creating jobs by name.
      */
-    public void configure(Config config, Map overrides) throws ConfigException {
+    public void configure(Config conf, Map<String, String> overrides) {
         if (log.isDebugEnabled()) {
             log.debug("Scheduling tasks");
         }
@@ -148,11 +157,10 @@ public class PinsetterKernel {
         // Bail if there is nothing to configure
         if (jobImpls == null || jobImpls.size() == 0) {
             log.warn("No tasks to schedule");
-            throw new ConfigException("No tasks to schedule");
+            throw new RuntimeException("No tasks to schedule");
         }
         int count = 0;
-        for (Iterator iter = jobImpls.iterator(); iter.hasNext();) {
-            String jobImpl = (String) iter.next();
+        for (String jobImpl : jobImpls) {
             if (log.isDebugEnabled()) {
                 log.debug("Scheduling " + jobImpl);
             }
@@ -175,7 +183,7 @@ public class PinsetterKernel {
             scheduler.addTriggerListener(chainedJobListener);
         }
         catch (SchedulerException e) {
-            throw new ConfigException(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getLocalizedMessage(), e);
         }
         scheduleJobs(pendingJobs);
     }
@@ -202,17 +210,16 @@ public class PinsetterKernel {
     }
 
 
-    private void scheduleJobs(Map pendingJobs) throws ConfigException {
+    private void scheduleJobs(Map<String, String[]> pendingJobs) {
        // No jobs to schedule
        // This would be quite odd, but it could happen
         if (pendingJobs == null || pendingJobs.size() == 0) {
             log.error("No tasks scheduled");
-            throw new ConfigException("No tasks scheduled");
+            throw new RuntimeException("No tasks scheduled");
         }
         try {
-            for (Iterator iter = pendingJobs.keySet().iterator(); iter.hasNext();) {
-                String suffix = (String) iter.next();
-                String[] data = (String[]) pendingJobs.get(suffix);
+            for (String suffix : pendingJobs.keySet()) {
+                String[] data = pendingJobs.get(suffix);
                 String jobImpl = data[0];
                 String crontab = data[1];
                 String jobName = jobImpl + "-" + suffix;
@@ -232,7 +239,7 @@ public class PinsetterKernel {
         }
         catch (Throwable t) {
             log.error(t.getMessage(), t);
-            throw new ConfigException(t.getMessage(), t);
+            throw new RuntimeException(t.getMessage(), t);
         }
     }
 
