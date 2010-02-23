@@ -59,6 +59,30 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
     }
     
+    
+    /**
+     * Returns list of pools available for the consumer.
+     * @param c Consumer to filter
+     * @return pools owned by the given Owner.
+     */
+//    @SuppressWarnings("unchecked")
+    public List<EntitlementPool> listAvailableEntitlements(Consumer c) {
+        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
+            .createCriteria(EntitlementPool.class)
+            .add(Restrictions.eq("activeSubscription", Boolean.TRUE))
+            .add(Restrictions.eq("owner", c.getOwner())).list();
+            // FIXME: is start date now or earlier?
+            // FIXME: is end date later?
+            // FIXME: sort by enddate?
+            // FIXME: currentmembers < maxmembers
+        if (results == null) {
+            return new LinkedList<EntitlementPool>();
+        }
+        else {
+            return results;
+        }
+    }
+    
     /**
      * Returns list of pools owned by the given consumer.
      *

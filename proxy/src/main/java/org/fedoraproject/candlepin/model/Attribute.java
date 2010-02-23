@@ -28,19 +28,10 @@ import javax.persistence.Table;
  * Attributes can be thought of as a hint on some restriction on the usage of an
  * entitlement. They will not actually contain the logic on how to enforce the
  * Attribute, but basically just act as a constant the policy rules can look
- * for, and a little metadata that may be required to enforce. Attributes can be
- * affiliated with a given product in the product database, or they can be
- * affiliated with entitlements granted within a particular customer's
- * order/certificate. All Attributes must pass for the entitlement to be granted
- * to a consumer. Not sure if this statement will stand the test of time, may be
- * some issues here with "enabling" attributes vs "restricting" attributes and
- * knowing when to grant/not grant based on the outcome of multiple checks. Will
- * see how it goes. Attributes can be associated with a product, or more
- * commonly with an order of that product contained in the cert. For us, this
- * probably means they'll be associated with entitlement pools in the database.
- * o If the same Attribute is found on both the product and the entitlement
- * pool, the entitlement pool's version can be assumed as the authoritative one
- * to check.
+ * for. Attributes may also be used to carry more complex JSON data specific to
+ * a particular deployment of Candlepin.
+ *
+ * Attributes are used by both Products and Entitlement Pools.
  */
 @Entity
 @Table(name = "cp_attribute")
@@ -53,13 +44,12 @@ public class Attribute  implements Persisted {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_attribute")
     private Long id;
     
-    
     @Column(nullable = false)
     private String name;
     
 //    @Column(nullable = false)
     @Column
-    private Long quantity;
+    private String value;
 
     /**
      * default ctor
@@ -72,9 +62,9 @@ public class Attribute  implements Persisted {
      * @param name attribute name
      * @param quantity quantity of the attribute.
      */
-    public Attribute(String name, Long quantity) {
+    public Attribute(String name, String quantity) {
         this.name = name;
-        this.quantity = quantity;
+        this.value = quantity;
     }
 
     public String getName() {
@@ -93,12 +83,12 @@ public class Attribute  implements Persisted {
         this.name = name;
     }
 
-    public Long getQuantity() {
-        return quantity;
+    public String getValue() {
+        return value;
     }
 
-    public void setQuantity(Long quantity) {
-        this.quantity = quantity;
+    public void setValue(String value) {
+        this.value = value;
     }
     
     @Override
@@ -114,11 +104,12 @@ public class Attribute  implements Persisted {
         
         return 
             name.equals(another.getName()) &&
-            quantity.equals(another.getQuantity());
+            value.equals(another.getValue());
     }
     
     @Override
     public int hashCode() {
-        return name.hashCode() * 31 + quantity.hashCode();
+        return name.hashCode() * 31 + value.hashCode();
     }
+
 }

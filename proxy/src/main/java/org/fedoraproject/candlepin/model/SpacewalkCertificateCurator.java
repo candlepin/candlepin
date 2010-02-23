@@ -144,12 +144,12 @@ public class SpacewalkCertificateCurator {
 
             // Representing the implicit logic in the Satellite certificate:
             if (name.equals(PRODUCT_VIRT_HOST)) {
-                Attribute a = new Attribute(ATTRIB_ALLOWED_GUESTS, new Long(5));
+                Attribute a = new Attribute(ATTRIB_ALLOWED_GUESTS, "5");
                 attributeCurator.create(a);
                 p.addAttribute(a);
             }
             else if (name.equals(PRODUCT_VIRT_HOST_PLATFORM)) {
-                Attribute a = new Attribute(ATTRIB_ALLOWED_GUESTS, new Long(-1));
+                Attribute a = new Attribute(ATTRIB_ALLOWED_GUESTS, "-1");
                 attributeCurator.create(a);
                 p.addAttribute(a);
             }

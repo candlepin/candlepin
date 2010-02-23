@@ -84,6 +84,9 @@ public class TestUtil {
         int random =  randomInt();
         Product rhel = new Product("test-product-" + random, 
                 "Test Product " + random);
+
+
+
         return rhel;
     }
     

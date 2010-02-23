@@ -32,8 +32,10 @@ import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.TestResource;
+import org.fedoraproject.candlepin.service.CertificateServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultCertificateServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -73,6 +75,7 @@ public class CandlepinProductionConfiguration extends AbstractModule {
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
         bind(StatusResource.class);
-        bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class); 
+        bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);
+        bind(CertificateServiceAdapter.class).to(DefaultCertificateServiceAdapter.class);
     }
 }

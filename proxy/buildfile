@@ -13,6 +13,7 @@ JERSEY = [group('jersey-core', 'jersey-json', 'jersey-server', 'jersey-client', 
         'org.codehaus:jettison:jar:1.1',
         'org.apache:xalan-j2:jar:2.6.0',
         'javax.ws:jsr311-api:jar:1.1' ]
+JACKSON = ['org.codehaus.jackson:jackson-core-lgpl:jar:1.4.1', 'org.codehaus.jackson:jackson-mapper-lgpl:jar:1.4.1']
 JUNIT = 'junit:junit:jar:4.5'
 LOG4J = 'log4j:log4j:jar:1.2.14'
 HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
@@ -76,7 +77,7 @@ define "candlepin" do
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.6'
 
-  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE
+  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE, JACKSON
     
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 
@@ -158,6 +159,7 @@ define "candlepin" do
           ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
 
           ant.fileset :dir=>"src/test/java", :includes=>'**/*.java'
+          ant.fileset :dir=>"src/functionaltest/java", :includes=>'**/*.java'
         end
       end
     end

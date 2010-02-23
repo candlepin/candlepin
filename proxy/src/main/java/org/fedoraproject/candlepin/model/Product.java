@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
 
@@ -67,6 +68,8 @@ public class Product implements Persisted {
     private Set<Product> childProducts;
 
     @CollectionOfElements
+    @Cascade({org.hibernate.annotations.CascadeType.PERSIST,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinTable(name = "PRODUCT_ATTRIBUTE")
     //   @JoinColumn(name="ATTRIBUTE_ID")
     private Set<Attribute> attributes;
@@ -184,6 +187,15 @@ public class Product implements Persisted {
             this.attributes = new HashSet<Attribute>();
         }
         this.attributes.add(attrib);
+    }
+    
+    public String getAttribute(String key) {
+        for (Attribute a : attributes) {
+            if (a.getName().equals(key)) {
+                return a.getValue();
+            }
+        }
+        return null;
     }
 
     @Override
