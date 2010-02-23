@@ -152,7 +152,7 @@ create table cp_subscription (
 )
 INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
 
-create sequence "seq_attribute"
+create sequence seq_attribute
 	Minvalue 1 Maxvalue 1.00000000000000E+27
     	Increment By 1 Start With 1
     	Nocache  Noorder  Nocycle;
@@ -162,32 +162,32 @@ create sequence seq_certificate
     	Increment By 1 Start With 1
     	Nocache  Noorder  Nocycle;
 
-create sequence "seq_consumer"
+create sequence seq_consumer
 	Minvalue 1 Maxvalue 1.00000000000000E+27
     	Increment By 1 Start With 1
     	Nocache  Noorder  Nocycle;
 
-create sequence "seq_consumer_facts"
+create sequence seq_consumer_facts
 	Minvalue 1 Maxvalue 1.00000000000000E+27
     	Increment By 1 Start With 1
     	Nocache  Noorder  Nocycle;
 
-create sequence "seq_consumer_products"
+create sequence seq_consumer_products
 	Minvalue 1 Maxvalue 1.00000000000000E+27
     	Increment By 1 Start With 1
     	Nocache  Noorder  Nocycle;
 
-create sequence "seq_consumer_type"
+create sequence seq_consumer_type
 	Minvalue 1 Maxvalue 1.00000000000000E+27
     	Increment By 1 Start With 1
     	Nocache  Noorder  Nocycle;
 
-create sequence "seq_entitlement"
+create sequence seq_entitlement
 	Minvalue 1 Maxvalue 1.00000000000000E+27
     	Increment By 1 Start With 1
     	Nocache  Noorder  Nocycle;
 
-create sequence "seq_entitlement_pool"
+create sequence seq_entitlement_pool
 	Minvalue 1 Maxvalue 1.00000000000000E+27
     	Increment By 1 Start With 1
     	Nocache  Noorder  Nocycle;
