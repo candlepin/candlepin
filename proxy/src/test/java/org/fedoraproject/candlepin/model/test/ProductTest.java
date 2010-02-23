@@ -18,12 +18,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.PersistenceException;
 
@@ -34,7 +40,7 @@ public class ProductTest extends DatabaseTestFixture {
     public void normalCreate() {
 
         Product prod = new Product("cptest-label", "My Product");
-        persistAndCommit(prod);
+        productCurator.create(prod);
 
         List<Product> results = entityManager().createQuery(
                 "select p from Product as p").getResultList();
@@ -45,7 +51,7 @@ public class ProductTest extends DatabaseTestFixture {
     public void nameRequired() {
 
         Product prod = new Product("someproductlabel", null);
-        persistAndCommit(prod);
+        productCurator.create(prod);
 
     }
 
@@ -53,17 +59,17 @@ public class ProductTest extends DatabaseTestFixture {
     public void labelRequired() {
 
         Product prod = new Product(null, "My Product Name");
-        persistAndCommit(prod);
+        productCurator.create(prod);
     }
 
     @Test(expected = PersistenceException.class)
     public void nameUnique() {
 
         Product prod = new Product("label1", "name");
-        persistAndCommit(prod);
+        productCurator.create(prod);
 
         Product prod2 = new Product("label2", "name");
-        persistAndCommit(prod2);
+        productCurator.create(prod2);
     }
 
     @Test(expected = PersistenceException.class)
@@ -71,9 +77,9 @@ public class ProductTest extends DatabaseTestFixture {
 
         Product prod = new Product("label1", "name");
         Product prod2 = new Product("label1", "name2");
-        persistAndCommit(prod);
+        productCurator.create(prod);
 
-        persistAndCommit(prod2);
+        productCurator.create(prod2);
     }
 
     @Test
@@ -149,6 +155,65 @@ public class ProductTest extends DatabaseTestFixture {
                 "another_name")));
         assertFalse(new Product("label", "name").equals(new Product(
                 "another_label", "name")));
+    }
+    
+    @Test
+    public void testWithSimpleJsonAttribute() throws Exception {
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("a", "1");
+        data.put("b", "2");
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonData = mapper.writeValueAsString(data);
+        
+        Product prod = new Product("cptest-label", "My Product");
+        Attribute a = new Attribute("content_sets", jsonData);
+        prod.addAttribute(a);
+        attributeCurator.create(a);
+        productCurator.create(prod);
+        
+        Product lookedUp = productCurator.find(prod.getId());
+        assertEquals(jsonData, lookedUp.getAttribute("content_sets"));
+        
+        data = mapper.readValue(lookedUp.getAttribute("content_sets"), 
+            new TypeReference<Map<String, String>>(){});
+        assertEquals("1", data.get("a"));
+        assertEquals("2", data.get("b"));
+    }
+
+    @Test
+    public void testJsonListOfHashes() throws Exception {
+        List<Map<String, String>> data = new LinkedList<Map<String,String>>();
+        Map<String, String> contentSet1 = new HashMap<String, String>();
+        contentSet1.put("name", "cs1");
+        contentSet1.put("url", "url");
+        
+        Map<String, String> contentSet2 = new HashMap<String, String>();
+        contentSet2.put("name", "cs2");
+        contentSet2.put("url", "url2");
+        
+        data.add(contentSet1);
+        data.add(contentSet2);
+
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonData = mapper.writeValueAsString(data);
+        System.out.println(jsonData);
+        
+        Product prod = new Product("cptest-label", "My Product");
+        Attribute a = new Attribute("content_sets", jsonData);
+        prod.addAttribute(a);
+        attributeCurator.create(a);
+        productCurator.create(prod);
+        
+        Product lookedUp = productCurator.find(prod.getId());
+        assertEquals(jsonData, lookedUp.getAttribute("content_sets"));
+        
+        data = mapper.readValue(lookedUp.getAttribute("content_sets"), 
+            new TypeReference<List<Map<String, String>>>(){});
+        Map<String, String> cs1 = data.get(0);
+        assertEquals("cs1", cs1.get("name"));
+        
+        Map<String, String> cs2 = data.get(1);
+        assertEquals("cs2", cs2.get("name"));
     }
 
 }
