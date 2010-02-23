@@ -39,6 +39,7 @@ class Rest(object):
             print "url: %s" % full_url
         conn.request(http_type, url_path, body=self.marshal(data, content_type), headers=self.headers[content_type])
         response = conn.getresponse()
+        print("Status: %s Reason: %s" % (response.status, response.reason))
         rsp = response.read()
         
         if self.debug:
@@ -91,9 +92,12 @@ class CandlePinApi:
             entrys.append({'key': key,
                           'value': hardware[key]})
 
-        for key in products:
-            entrys.append({'key':key,
-                           'value':products[key]})
+        # Don't think this is used yet, and definitely shouldn't
+        # be going into the entrys map:
+        #if products is not None:
+        #    for key in products:
+        #        entrys.append({'key':key,
+        #                       'value':products[key]})
                               
         consumer = {
             "type": {'label':"system"},

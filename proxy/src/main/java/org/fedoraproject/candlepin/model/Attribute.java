@@ -15,6 +15,8 @@
 
 package org.fedoraproject.candlepin.model;
 
+import java.util.Map;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -24,23 +26,18 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+
 /**
  * Attributes can be thought of as a hint on some restriction on the usage of an
  * entitlement. They will not actually contain the logic on how to enforce the
  * Attribute, but basically just act as a constant the policy rules can look
- * for, and a little metadata that may be required to enforce. Attributes can be
- * affiliated with a given product in the product database, or they can be
- * affiliated with entitlements granted within a particular customer's
- * order/certificate. All Attributes must pass for the entitlement to be granted
- * to a consumer. Not sure if this statement will stand the test of time, may be
- * some issues here with "enabling" attributes vs "restricting" attributes and
- * knowing when to grant/not grant based on the outcome of multiple checks. Will
- * see how it goes. Attributes can be associated with a product, or more
- * commonly with an order of that product contained in the cert. For us, this
- * probably means they'll be associated with entitlement pools in the database.
- * o If the same Attribute is found on both the product and the entitlement
- * pool, the entitlement pool's version can be assumed as the authoritative one
- * to check.
+ * for. Attributes may also be used to carry more complex JSON data specific to
+ * a particular deployment of Candlepin.
+ *
+ * Attributes are used by both Products and Entitlement Pools.
  */
 @Entity
 @Table(name = "cp_attribute")
@@ -59,6 +56,8 @@ public class Attribute  implements Persisted {
 //    @Column(nullable = false)
     @Column
     private String value;
+
+    private Boolean containsJson = Boolean.FALSE;
 
     /**
      * default ctor
@@ -92,12 +91,12 @@ public class Attribute  implements Persisted {
         this.name = name;
     }
 
-    public String getQuantity() {
+    public String getValue() {
         return value;
     }
 
-    public void setQuantity(String quantity) {
-        this.value = quantity;
+    public void setValue(String value) {
+        this.value = value;
     }
     
     @Override
@@ -113,11 +112,42 @@ public class Attribute  implements Persisted {
         
         return 
             name.equals(another.getName()) &&
-            value.equals(another.getQuantity());
+            value.equals(another.getValue());
     }
     
     @Override
     public int hashCode() {
         return name.hashCode() * 31 + value.hashCode();
+    }
+
+    public Boolean getContainsJson() {
+        return containsJson;
+    }
+
+    public Boolean containsJson() {
+        return getContainsJson();
+    }
+
+    public void setContainsJson(Boolean containsJson) {
+        this.containsJson = containsJson;
+    }
+
+    /**
+     * Convert a value containing json to a map.
+     */
+    public Map getValueMap() {
+        if (!getContainsJson()) {
+            throw new RuntimeException("Attribute value does not contain JSON.");
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            Map result = mapper.readValue(value, new
+                TypeReference<Map>() {} );
+            return result;
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Error parsing json: " + value, e);
+        }
+
     }
 }

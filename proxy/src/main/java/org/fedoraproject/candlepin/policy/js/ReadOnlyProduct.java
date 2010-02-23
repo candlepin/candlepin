@@ -94,7 +94,7 @@ public class ReadOnlyProduct {
     private void initializeReadOnlyAttributes() {
         attributes = new HashMap<String, String>();
         for (Attribute current : product.getAttributes()) {
-            attributes.put(current.getName(), current.getQuantity());
+            attributes.put(current.getName(), current.getValue());
         }
     }
 }

@@ -150,4 +150,5 @@ public class ProductTest extends DatabaseTestFixture {
         assertFalse(new Product("label", "name").equals(new Product(
                 "another_label", "name")));
     }
+
 }
