@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * HighlanderJobFactory is a custom Quartz JobFactory implementation which
- * insures that only one instance of a job class is every instantiated.
+ * insures that only one instance of a job class is ever instantiated.
  * @version $Rev$
  */
 public class HighlanderJobFactory implements JobFactory {
@@ -38,7 +38,7 @@ public class HighlanderJobFactory implements JobFactory {
         throws SchedulerException {
 
         Class jobClass = trigger.getJobDetail().getJobClass();
-        Job retval = (Job) jobImplCache.get(jobClass.getName());
+        Job retval = jobImplCache.get(jobClass.getName());
         if (retval == null) {
             try {
                 retval = (Job) jobClass.newInstance();
@@ -50,5 +50,4 @@ public class HighlanderJobFactory implements JobFactory {
         }
         return retval;
     }
-
 }
