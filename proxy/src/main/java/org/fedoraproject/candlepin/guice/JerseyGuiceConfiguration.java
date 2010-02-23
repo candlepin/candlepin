@@ -14,21 +14,21 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import java.util.LinkedList;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.servlet.GuiceServletContextListener;
-import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
-
-import java.util.LinkedList;
+import com.wideplay.warp.servlet.Servlets;
+import com.wideplay.warp.servlet.WarpServletContextListener;
 
 /**
  * configure Guice with the resource classes.
  */
-public class JerseyGuiceConfiguration extends GuiceServletContextListener {
+public class JerseyGuiceConfiguration extends WarpServletContextListener {
 
     @Override
     protected Injector getInjector() {
@@ -39,14 +39,14 @@ public class JerseyGuiceConfiguration extends GuiceServletContextListener {
                         .buildModule());
 
                 add(new CandlepinProductionConfiguration());
-
-                add(new ServletModule() {
-
-                    @Override
-                    protected void configureServlets() {
-                        serve("/*").with(GuiceContainer.class);
-                    }
-                });
+                
+                add(
+                    Servlets.configure()
+                        .filters()
+                        .servlets()
+                            .serve("/*").with(GuiceContainer.class)
+                     .buildModule()
+                );
 
                 addAll(new CustomizableModules().load());
             }
