@@ -85,38 +85,16 @@ public class PinsetterKernel {
     /**
      * Starts Pinsetter
      * This method does not return until the this.scheduler is shutdown
-     * @throws PinsetterException error occurred during Quartz or Hibernate startup
+     * @throws PinsetterException error occurred during Quartz or Hibernate
+     * startup
      */
     public void startup() throws PinsetterException {
         try {
             scheduler.start();
-            synchronized (shutdownLock) {
-                try {
-                    shutdownLock.wait();
-                }
-                catch (InterruptedException ignored) {
-                    return;
-                }
-            }
         }
         catch (SchedulerException e) {
             throw new PinsetterException(e.getMessage(), e);
         }
-    }
-
-    /**
-     * Initiates the shutdown process. Needs to happen in a
-     * separate thread to prevent Quartz scheduler errors.
-     */
-    public void startShutdown() {
-        Runnable shutdownTask = new Runnable() {
-            public void run() {
-                shutdown();
-            }
-        };
-        Thread t = new Thread(shutdownTask);
-        t.setDaemon(true);
-        t.start();
     }
 
     /**
@@ -130,7 +108,8 @@ public class PinsetterKernel {
     /**
      * Configures the system.
      * @param conf Configuration object containing config values.
-     * @param overrides Map containing configuration overrides based on cli params
+     * @param overrides Map containing configuration overrides based on cli
+     * params
      */
     public void configure(Config conf, Map<String, String> overrides) {
         if (log.isDebugEnabled()) {
@@ -191,7 +170,7 @@ public class PinsetterKernel {
     /**
      * Shuts down the application
      */
-    protected void shutdown() {
+    public void shutdown() {
         try {
             scheduler.standby();
             deleteAllJobs();
