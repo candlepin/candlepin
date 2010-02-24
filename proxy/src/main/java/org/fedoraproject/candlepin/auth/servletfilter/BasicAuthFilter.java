@@ -57,16 +57,27 @@ public class BasicAuthFilter implements Filter {
     }
 
     public void doFilter(ServletRequest request, ServletResponse response,
-                         FilterChain chain)
-        throws IOException, ServletException {
-      
+        FilterChain chain) throws IOException, ServletException {
+
         log.debug("in basic auth filter");
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+        
+        if (httpRequest.getMethod().equals("POST")) {
+            processPost(request, response, chain, httpRequest, httpResponse);
+        } else {
+            // Anything that is not a POST is passed through
+            chain.doFilter(request, response);
+        }
+        log.debug("leaving basic auth filter");
+    }
 
+    private void processPost(ServletRequest request, ServletResponse response,
+        FilterChain chain, HttpServletRequest httpRequest,
+        HttpServletResponse httpResponse) {
         String auth = httpRequest.getHeader("Authorization");
-        if (auth != null && auth.toUpperCase().startsWith("BASIC ")
-            && httpRequest.getMethod().equals("POST")) {
+       
+        if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
 
             String userpassEncoded = auth.substring(6);
             String[] userpass = Base64.base64Decode(userpassEncoded).split(":");
@@ -83,25 +94,29 @@ public class BasicAuthFilter implements Filter {
                 log.error(ex.getMessage());
                 httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
             }
+        }else {
+            // Anything that is a POST that is not using BASIC auth, then it's forbidden
+            httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
         }
-        chain.doFilter(request, response);
-        log.debug("leaving basic auth filter");
     }
 
     private void doBasicAuth(String username, String password)
         throws InstantiationException, IllegalAccessException,
         ClassNotFoundException, SQLException {
         Properties properties = new Config().dbBasicAuthConfiguration();
-       
+
         String query = properties.getProperty("database.query");
         String dbUrl = properties.getProperty("database.connection.url");
-        String passwordColumn = properties.getProperty("database.password.column");
-        String dbPassword = properties.getProperty("database.connection.password");
+        String passwordColumn = properties
+            .getProperty("database.password.column");
+        String dbPassword = properties
+            .getProperty("database.connection.password");
         String dbUser = properties.getProperty("database.connection.username");
         String dbDriver = properties.getProperty("database.connection.driver");
-        
+
         Class.forName(dbDriver).newInstance();
-        Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        Connection conn = DriverManager
+            .getConnection(dbUrl, dbUser, dbPassword);
         PreparedStatement st = conn.prepareStatement(query);
         st.setString(1, username);
         ResultSet rs = st.executeQuery();
@@ -111,7 +126,9 @@ public class BasicAuthFilter implements Filter {
         }
 
         if (passwordAssertion != null && passwordAssertion.equals(password)) {
-            log.info("BASIC user authenication succeeded for user: "+ username);
+            log
+                .info("BASIC user authenication succeeded for user: "
+                    + username);
         }
         else {
             throw new ForbiddenException(
