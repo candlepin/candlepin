@@ -14,27 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.ClientCertificate;
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
-import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.ConsumerFacts;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Product;
-
-import com.google.inject.Inject;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-import org.bouncycastle.ocsp.CertificateStatus;
-
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
@@ -52,6 +31,25 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.ClientCertificate;
+import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
+import org.fedoraproject.candlepin.model.ClientCertificateStatus;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerFacts;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Product;
+
+import com.google.inject.Inject;
 
 /**
  * API Gateway for Consumers

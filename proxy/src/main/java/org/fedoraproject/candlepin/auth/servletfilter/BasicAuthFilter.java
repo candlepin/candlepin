@@ -22,8 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import java.sql.*;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -35,14 +33,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
-
-import com.sun.jersey.core.util.Base64; 
-
 import org.fedoraproject.candlepin.resource.ForbiddenException;
 
-/**
- * BasicAuthFilter
- */
 import com.google.inject.Singleton;
 import com.sun.jersey.core.util.Base64;
 
@@ -67,9 +59,7 @@ public class BasicAuthFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
                          FilterChain chain)
         throws IOException, ServletException {
-        
-        FilterChain chain) throws IOException, ServletException {
-
+      
         log.debug("in basic auth filter");
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
