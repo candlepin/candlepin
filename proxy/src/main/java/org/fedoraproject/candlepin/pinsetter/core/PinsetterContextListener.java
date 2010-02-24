@@ -22,6 +22,7 @@ import javax.servlet.ServletContextListener;
  * @version $Rev$
  */
 public class PinsetterContextListener implements ServletContextListener {
+    //PinsetterKernel pk = new PinsetterKernel();
 
     /**
      * {@inheritDoc}
