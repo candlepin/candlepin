@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth.servletfilter;
+package org.fedoraproject.candlepin.servletfilter.auth;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -39,13 +39,13 @@ import com.google.inject.Singleton;
 import com.sun.jersey.core.util.Base64;
 
 @Singleton
-public class BasicAuthFilter implements Filter {
+public class BasicAuthViaDbFilter implements Filter {
 
-    Logger log = Logger.getLogger(BasicAuthFilter.class);
+    Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
 
     private FilterConfig filterConfig = null;
 
-    public BasicAuthFilter() {
+    public BasicAuthViaDbFilter() {
     }
 
     public void init(FilterConfig filterConfig) throws ServletException {

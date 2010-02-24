@@ -26,6 +26,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.servlet.Filter;
+
+import static com.google.inject.name.Names.*;
+
 /**
  * CustomizableModules
  */
@@ -40,18 +44,7 @@ public class CustomizableModules {
         Map<String, String> loaded =
             configuration().configurationWithPrefix(MODULE_CONFIG_PREFIX);
 
-        if (loaded.isEmpty()) {
-            return defaultConfiguration();
-        }
         return customizedConfiguration(loaded);
-    }
-    
-    /**
-     * @return returns default set of modules.
-     */
-    public Set<Module> defaultConfiguration() {
-//        bind(SubscriptionServiceAdapter.class).to(OnSiteSubscriptionServiceAdapter.class);
-        return new HashSet<Module>();
     }
     
     /**

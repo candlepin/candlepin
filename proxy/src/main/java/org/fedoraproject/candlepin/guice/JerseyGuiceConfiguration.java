@@ -14,16 +14,26 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import static com.google.inject.name.Names.*;
+
 import java.util.LinkedList;
+
+import javax.servlet.Filter;
+
+import org.fedoraproject.candlepin.LoggingFilter;
+import org.fedoraproject.candlepin.servletfilter.auth.FilterConstants;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.util.Modules;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.servlet.Servlets;
 import com.wideplay.warp.servlet.WarpServletContextListener;
+
 
 /**
  * configure Guice with the resource classes.
@@ -43,12 +53,14 @@ public class JerseyGuiceConfiguration extends WarpServletContextListener {
                 add(
                     Servlets.configure()
                         .filters()
+                            .filter("/*").through(LoggingFilter.class)
+                            .filter("/*").through(Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)))
                         .servlets()
                             .serve("/*").with(GuiceContainer.class)
                      .buildModule()
                 );
 
-                addAll(new CustomizableModules().load());
+                add(Modules.override(new DefaultConfig()).with(new CustomizableModules().load()));
             }
         });
     }
