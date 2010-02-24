@@ -58,6 +58,7 @@ public class EntitlementPool implements Persisted {
     @JoinColumn(nullable = false)
     private Owner owner;
     
+    // WARNING: This is for an edge case, rarely used.
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_pool_consumer")
     @JoinColumn(nullable = true)

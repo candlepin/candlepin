@@ -25,6 +25,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -55,7 +56,7 @@ public class Entitler {
     }
 
     /**
-     * Request an entitlement.
+     * Request an entitlement by product.
      * 
      * If the entitlement cannot be granted, null will be returned.
      * 
@@ -81,6 +82,32 @@ public class Entitler {
             throw new RuntimeException("No entitlements for product: " + product.getName());
         }
         
+        return entitle(consumer, product, ePool);
+    }
+
+    /**
+     * Request an entitlement by pool..
+     *
+     * If the entitlement cannot be granted, null will be returned.
+     *
+     * TODO: Throw exception if entitlement not granted. Report why.
+     *
+     * @param owner owner of the entitlement pool
+     * @param consumer consumer requesting to be entitled
+     * @param product product to be entitled.
+     * @param pool entitlement pool to consume from
+     * @return Entitlement
+     */
+    @Transactional
+    public Entitlement entitle(Owner owner, Consumer consumer, Product product,
+        EntitlementPool pool) {
+
+        return entitle(consumer, product, pool);
+    }
+
+
+    private Entitlement entitle(Consumer consumer, Product product,
+        EntitlementPool ePool) {
         PreEntHelper preHelper = enforcer.pre(consumer, ePool);
         ValidationResult result = preHelper.getResult();
         

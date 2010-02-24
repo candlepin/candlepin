@@ -75,7 +75,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         entitler = injector.getInstance(Entitler.class);
 
         eapi = new EntitlementResource(
-                entitlementPoolCurator, entitlementCurator, ownerCurator,
+                entitlementPoolCurator, entitlementCurator,
                 consumerCurator, productAdapter, subAdapter, entitler);
         
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
@@ -83,7 +83,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testEntitle() throws Exception {
-        EntitlementBindResult result = eapi.entitle(consumer.getUuid(), product.getLabel());
+        EntitlementBindResult result = eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
         
         
         //assertNotNull(cert);
@@ -104,19 +104,19 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         for (int i = 0; i < ep.getMaxMembers(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
             consumerCurator.create(c);
-            eapi.entitle(c.getUuid(), product.getLabel());
+            eapi.entitleByProduct(c.getUuid(), product.getLabel());
         }
         
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
         consumerCurator.create(c);
-        eapi.entitle(c.getUuid(), product.getLabel());
+        eapi.entitleByProduct(c.getUuid(), product.getLabel());
     }
     
     @Test(expected = RuntimeException.class)
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
-        eapi.entitle(consumer.getUuid(), product.getLabel());
+        eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
     }
     
     @Test
@@ -137,24 +137,13 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     @Ignore
     public void testHasEntitlement() {
         
-        eapi.entitle(consumer.getUuid(), product.getLabel());
+        eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
 
         // TODO: Disabling this test, boils into ObjectFactory things that need
         // to be fixed before we can do this check! Sorry! :) - dgoodwin
 //        assertTrue(eapi.hasEntitlement(consumer.getUuid(), product.getUuid()));
     }
 
-    // TODO: Re-enable once ObjectFactory is Hibernatized or removed.
-    @Test
-    public void testListAvailableEntitlements() {
-//        Form f = new Form();
-//        f.add("consumer_id", consumer.getId());
-        
-        List<EntitlementPool> avail = eapi.listAvailableEntitlements(consumer.getId());
-        assertNotNull(avail);
- //       assertTrue(avail.size() > 0);
-    }
-    
     @Test
     @Ignore
     public void testJson() {

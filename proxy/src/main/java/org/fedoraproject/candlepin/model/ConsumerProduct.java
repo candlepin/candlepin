@@ -29,8 +29,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.hibernate.annotations.ForeignKey;
 
 /**
- * ConsumerProducts store the products which a consumer may be consuming
- * products which they are not entitled to.
+ * ConsumerProducts store the products which a consumer may be consuming.
+ *
+ * NOTE: They are not necessarily entitled to all of these.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)

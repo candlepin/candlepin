@@ -62,10 +62,11 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     
     /**
      * Returns list of pools available for the consumer.
+     *
      * @param c Consumer to filter
      * @return pools owned by the given Owner.
      */
-//    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     public List<EntitlementPool> listAvailableEntitlements(Consumer c) {
         List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
             .createCriteria(EntitlementPool.class)
@@ -75,6 +76,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             // FIXME: is end date later?
             // FIXME: sort by enddate?
             // FIXME: currentmembers < maxmembers
+            // FIXME: do we need to run through rules for each of these? (expensive!)
         if (results == null) {
             return new LinkedList<EntitlementPool>();
         }
@@ -87,7 +89,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * Returns list of pools owned by the given consumer.
      *
      * WARNING: This is an extremely rare case where an entitlement pool is created for use
-     * by a single specific consumer.
+     * by a single specific consumer. Normally you will not be calling this.
      *
      * TODO: Should this code be removed entirely? Created for the Satellite virt
      * entitlements.

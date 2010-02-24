@@ -17,21 +17,37 @@ class EntitlementTests(CandlepinTests):
                 "a": "1",
                 "b": "2",
                 "c": "3"}
-        self.consumer_uuid = self.cp.registerConsumer("fakeuser", "fakepw", 
-                "consumername", hardware=facts_metadata)['uuid']
-
-        #TODO: remove print lines after tests have been added
-        #print('conn.request='+self.rsp) 
+        response = self.cp.registerConsumer("fakeuser", "fakepw",
+                "consumername", hardware=facts_metadata)
+        self.uuid = response['uuid']
 
     def test_uuid(self):
-        self.assertTrue(self.consumer_uuid != None)
+        self.assertTrue(self.uuid != None)
    
     def test_certificates(self):
         # Assumes consumer has an entitlement granted to a product:
-        result = self.cp.syncCertificates(self.consumer_uuid, [])
-        print result
+        result = self.cp.syncCertificates(self.uuid, [])
         certs = result['clientCertStatus']
         self.assertTrue(certs != None)
+
+    def test_bind_by_entitlement_pool(self):
+        # First we list all entitlement pools available to this consumer:
+        virt_host = 'virtualization_host'
+        results = self.cp.getEntitlementPools(self.uuid)
+        pools = {}
+        for pool in results['entitlementPool']:
+            pools[pool['productId']] = pool
+            print pool
+            print
+        self.assertTrue(virt_host in pools)
+
+        # Request a virtualization_host entitlement:
+        result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+
+        # Now list consumer's entitlements:
+        result = self.cp.getEntitlements(self.uuid)
+        print result
+
 
 
     # TODO: Not really testing anything yet:
