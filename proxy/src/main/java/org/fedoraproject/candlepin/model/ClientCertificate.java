@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class ClientCertificate implements Persisted {
     
     // This must be Base64 encoded:
-    private String bundle;
+    private Bundle bundle;
     private Long id;
     
     /**
@@ -39,15 +39,16 @@ public class ClientCertificate implements Persisted {
     /**
      * @param pkcs12Bundle pkcs12 bundle
      */
-    public ClientCertificate(String pkcs12Bundle) {
-        this.bundle = pkcs12Bundle;
+    public ClientCertificate(Bundle certBundle) {
+        this.bundle = certBundle;
     }
-    public String getBundle() {
+
+    public Bundle getBundle() {
         return bundle;
     }
 
-    public void setBundle(String pkcs12Bundle) {
-        this.bundle = pkcs12Bundle;
+    public void setBundle(Bundle certBundle) {
+        this.bundle = certBundle;
     }
     
     public void setId(Long id) {
