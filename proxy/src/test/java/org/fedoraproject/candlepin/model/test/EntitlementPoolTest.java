@@ -105,6 +105,19 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         assertEquals(consumer.getId(), lookedUp.getConsumer().getId());
     }
 
+    @Test
+    public void testConsumerSpecificPoolExcludedFromList() {
+        EntitlementPool consumerPool = new EntitlementPool(owner, prod.getId(),
+                new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
+                        .createDate(2050, 11, 30));
+        consumerPool.setConsumer(consumer);
+        entitlementPoolCurator.create(consumerPool);
+
+        List<EntitlementPool> pools = entitlementPoolCurator.listAvailableEntitlementPools(
+            consumer);
+        assertFalse(pools.contains(consumerPool));
+    }
+
     public void testDuplicateConsumerSpecificPoolAllowed() {
         EntitlementPool consumerPool = new EntitlementPool(owner, prod.getId(),
                 new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil

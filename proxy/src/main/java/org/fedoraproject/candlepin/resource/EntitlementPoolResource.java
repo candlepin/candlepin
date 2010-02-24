@@ -77,7 +77,7 @@ public class EntitlementPoolResource {
     public List<EntitlementPool> listByConsumer(
             @PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        List<EntitlementPool>  eps = entitlementPoolCurator.listAvailableEntitlements(
+        List<EntitlementPool>  eps = entitlementPoolCurator.listAvailableEntitlementPools(
             consumer);
         return eps;
     }
