@@ -58,12 +58,6 @@ public class EntitlementPool implements Persisted {
     @JoinColumn(nullable = false)
     private Owner owner;
     
-    // WARNING: This is for an edge case, rarely used.
-    @ManyToOne
-    @ForeignKey(name = "fk_entitlement_pool_consumer")
-    @JoinColumn(nullable = true)
-    private Consumer consumer;
-
     private Boolean activeSubscription = Boolean.TRUE;
 
     // An identifier for the subscription this pool is associated with. Note that
@@ -142,20 +136,6 @@ public class EntitlementPool implements Persisted {
      */
     public String getProductId() {
         return productId;
-    }
-
-    /**
-     * @return the Consumer associated with the pool.
-     */
-    public Consumer getConsumer() {
-        return consumer;
-    }
-
-    /**
-     * @param consumerIn Consumer to be associated.
-     */
-    public void setConsumer(Consumer consumerIn) {
-        this.consumer = consumerIn;
     }
 
     /**

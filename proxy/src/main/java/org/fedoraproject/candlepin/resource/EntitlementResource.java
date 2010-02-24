@@ -348,24 +348,24 @@ public class EntitlementResource {
             "Entitlement with ID '" + dbid + "' could not be found");
     }
    
-    /**
-     * Deletes all entitlements for the consumer whose id matches the given
-     * uuid.
-     * @param consumerUuid id of the consumer whose entitlements are to be
-     * deleted.
-     */
-    @DELETE
-    @Path("consumer/{consumer_uuid}/")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public void deleteAllEntitlements(
-            @PathParam("consumer_uuid") String consumerUuid) {
-        
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        for (EntitlementPool ep : epCurator.listByConsumer(consumer)) {
-            log.debug("ep: " + ep.toString() + "  " + ep.getId());
-            epCurator.delete(ep);
-        }
-    }
+//    /**
+//     * Deletes all entitlements for the consumer whose id matches the given
+//     * uuid.
+//     * @param consumerUuid id of the consumer whose entitlements are to be
+//     * deleted.
+//     */
+//    @DELETE
+//    @Path("consumer/{consumer_uuid}/")
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    public void deleteAllEntitlements(
+//            @PathParam("consumer_uuid") String consumerUuid) {
+//        // FIXME: This is deleting consumer specific pools (which are rare), not entitlements.
+//        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+//        for (EntitlementPool ep : epCurator.listConsumerSpecificPools(consumer)) {
+//            log.debug("ep: " + ep.toString() + "  " + ep.getId());
+//            epCurator.delete(ep);
+//        }
+//    }
    
     /**
      * Removes the entitlements associated with the given serial number.

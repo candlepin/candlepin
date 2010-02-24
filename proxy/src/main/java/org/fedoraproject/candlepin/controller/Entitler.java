@@ -76,7 +76,7 @@ public class Entitler {
         
         // TODO: Don't assume we use the first pool here, once rules have support for 
         // specifying the pool to use. 
-        EntitlementPool ePool = epCurator.listByOwnerAndProduct(owner, consumer, product)
+        EntitlementPool ePool = epCurator.listByOwnerAndProduct(owner, product)
             .get(0);
         if (ePool == null) {
             throw new RuntimeException("No entitlements for product: " + product.getName());

@@ -109,7 +109,6 @@ public class CertificateResource  {
         }
         return encodedCert;
     }
-    
 
     /**
      * Return the encoded certificate.

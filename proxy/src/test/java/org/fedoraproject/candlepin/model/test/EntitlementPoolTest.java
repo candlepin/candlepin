@@ -93,62 +93,6 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testConsumerSpecificPool() {
-        EntitlementPool consumerPool = new EntitlementPool(owner, prod.getId(),
-                new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
-                        .createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
-        entitlementPoolCurator.create(consumerPool);
-
-        EntitlementPool lookedUp = entitlementPoolCurator
-                .listByOwnerAndProduct(owner, consumer, prod).get(0);
-        assertEquals(consumer.getId(), lookedUp.getConsumer().getId());
-    }
-
-    @Test
-    public void testConsumerSpecificPoolExcludedFromList() {
-        EntitlementPool consumerPool = new EntitlementPool(owner, prod.getId(),
-                new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
-                        .createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
-        entitlementPoolCurator.create(consumerPool);
-
-        List<EntitlementPool> pools = entitlementPoolCurator.listAvailableEntitlementPools(
-            consumer);
-        assertFalse(pools.contains(consumerPool));
-    }
-
-    public void testDuplicateConsumerSpecificPoolAllowed() {
-        EntitlementPool consumerPool = new EntitlementPool(owner, prod.getId(),
-                new Long(-1), TestUtil.createDate(2009, 11, 30), TestUtil
-                        .createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
-        entitlementPoolCurator.create(consumerPool);
-
-        EntitlementPool consumerPoolDupe = new EntitlementPool(owner, prod
-                .getId(), new Long(-1), TestUtil.createDate(2009, 11, 30),
-                TestUtil.createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
-        entitlementPoolCurator.create(consumerPoolDupe);
-    }
-
-    @Test
-    public void testConsumerSpecificPoolForNewProduct() {
-        Product newProduct = TestUtil.createProduct();
-        productCurator.create(newProduct);
-
-        EntitlementPool consumerPool = new EntitlementPool(owner, newProduct
-                .getId(), new Long(-1), TestUtil.createDate(2009, 11, 30),
-                TestUtil.createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
-        entitlementPoolCurator.create(consumerPool);
-
-        EntitlementPool lookedUp = entitlementPoolCurator
-                .listByOwnerAndProduct(owner, consumer, newProduct).get(0);
-        assertEquals(consumer.getId(), lookedUp.getConsumer().getId());
-    }
-
-    @Test
     public void createEntitlementShouldIncreaseNumberOfMembers() {
         Long numAvailEntitlements = new Long(1);
         Product newProduct = TestUtil.createProduct();
@@ -157,7 +101,6 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         EntitlementPool consumerPool = new EntitlementPool(owner, newProduct
                 .getId(), numAvailEntitlements, TestUtil
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
 
         entitler.entitle(owner, consumer, newProduct);
@@ -176,7 +119,6 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         EntitlementPool consumerPool = new EntitlementPool(owner, newProduct
                 .getId(), numAvailEntitlements, TestUtil
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
@@ -200,7 +142,6 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         EntitlementPool consumerPool = new EntitlementPool(owner, newProduct
                 .getId(), numAvailEntitlements, TestUtil
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
@@ -222,7 +163,6 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         EntitlementPool consumerPool = new EntitlementPool(owner, newProduct
                 .getId(), numAvailEntitlements, TestUtil
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool.setConsumer(consumer);
         consumerPool = entitlementPoolCurator.create(consumerPool);
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
@@ -246,7 +186,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
 
         // Pool should get created just by doing this lookup:
         List<EntitlementPool> pools = entitlementPoolCurator
-                .listByOwnerAndProduct(owner, null, prod2);
+                .listByOwnerAndProduct(owner, prod2);
         assertEquals(1, pools.size());
         EntitlementPool newPool = pools.get(0);
 
@@ -270,7 +210,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
         pool.setSubscriptionId(sub.getId());
         entitlementPoolCurator.merge(pool);
 
-        entitlementPoolCurator.listByOwnerAndProduct(owner, null, prod);
+        entitlementPoolCurator.listByOwnerAndProduct(owner, prod);
 
         pool = entitlementPoolCurator.find(pool.getId());
         assertEquals(sub.getId(), pool.getSubscriptionId());
@@ -292,7 +232,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
 
         // Pool should get created just by doing this lookup:
         List<EntitlementPool> pools = entitlementPoolCurator
-                .listByOwnerAndProduct(owner, null, prod2);
+                .listByOwnerAndProduct(owner, prod2);
         assertEquals(1, pools.size());
         EntitlementPool newPool = pools.get(0);
 
@@ -301,7 +241,7 @@ public class EntitlementPoolTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         pools = entitlementPoolCurator
-                .listByOwnerAndProduct(owner, null, prod2);
+                .listByOwnerAndProduct(owner, prod2);
         assertEquals(1, pools.size());
         newPool = pools.get(0);
         assertFalse(newPool.isActive());

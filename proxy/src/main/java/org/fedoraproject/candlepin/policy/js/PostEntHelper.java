@@ -57,28 +57,4 @@ public class PostEntHelper {
         this.ent = ent;
     }
 
-    /**
-     * Create an entitlement pool for a product and limit it to a particular
-     * consumer.
-     *
-     * @param productLabel Label of the product the pool is for.
-     * @param quantity Number of entitlements for this pool. Use a negative
-     * number for an unlimited pool.
-     */
-    public void createConsumerPool(String productLabel, Long quantity) {
-        Consumer c = ent.getConsumer();
-
-        Product p = prodAdapter.getProductByLabel(productLabel);
-        if (p == null) {
-            throw new RuleExecutionException("No such product: " + productLabel);
-        }
-
-        EntitlementPool consumerSpecificPool = new EntitlementPool(
-            c.getOwner(), p.getId(), quantity, ent.getPool().getStartDate(),
-            ent.getPool().getEndDate());
-
-        consumerSpecificPool.setConsumer(c);
-        consumerSpecificPool.setSourceEntitlement(ent);
-        epCurator.create(consumerSpecificPool);
-    }
 }
