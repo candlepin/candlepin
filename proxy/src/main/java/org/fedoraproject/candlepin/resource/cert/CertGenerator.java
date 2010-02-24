@@ -29,6 +29,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
@@ -50,11 +51,13 @@ public class CertGenerator {
         // do nothing
     }
 
+    
+    
     /**
      * returns certificate string
      * @return certificate string
      */
-    public static String getCertString() {
+    public static X509Certificate genCert() {
         X509Certificate retval = null;
         Security.addProvider(new BouncyCastleProvider());
         //
@@ -128,9 +131,16 @@ public class CertGenerator {
             throw new RuntimeException(e);
         }
         
-        return retval.toString();
+        return retval;
     }
     
+    public static X509Certificate createConsumerIdentityCert(String name, String email,
+        PublicKey pubKey, PrivateKey caPrivKey, PublicKey caPubKey) throws Exception {
+        
+        // FIXME: replace with something we can generate a useful cert with
+        return genCert();
+    }
+   
     /**
      * we generate a certificate signed by our CA's intermediate certficate
      * @param name Name on certificate

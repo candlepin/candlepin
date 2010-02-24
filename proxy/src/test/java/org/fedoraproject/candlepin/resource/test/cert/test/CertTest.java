@@ -123,11 +123,12 @@ public class CertTest {
                            "bde90e0b870962fa7b926d070686d8244fe5a9aa709" +
                            "a95686a104614834b0ada4b10f53197a5cb4c97339", 16));
     }
-    @Test
-    public void testCertGenerator() {
-        String cert = CertGenerator.getCertString();
+
+ //   @Test
+ //   public void testCertGenerator() {
+ //       String cert = CertGenerator.getCertString();
 //        System.out.println("Cert: " + cert);
-    }
+ //   }
     
     @Test
     public void testCertExample() throws Exception {

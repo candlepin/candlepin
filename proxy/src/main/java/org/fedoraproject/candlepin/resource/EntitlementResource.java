@@ -114,7 +114,7 @@ public class EntitlementResource {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         
         // FIXME: this is just a hardcoded cert...
-        return CertGenerator.getCertString(); 
+        return CertGenerator.genCert().toString(); 
     }
 
     /**

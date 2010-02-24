@@ -47,7 +47,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void setUp() {
 
         consumerResource = new ConsumerResource(
-                ownerCurator, consumerCurator, consumerTypeCurator);
+                    ownerCurator, consumerCurator,
+                    consumerTypeCurator, consumerIdCertCurator);
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
@@ -75,13 +76,13 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             }
         });
 
-        ClientCertificateStatus certStatus = consumerResource.create(toSubmit);
+        Consumer submitted  = consumerResource.create(toSubmit);
         
-        assertNotNull(certStatus);
-        assertNotNull(certStatus);
-//        assertNotNull(consumerCurator.find(created.getId()));
-//        assertEquals(standardSystemType.getLabel(), created.getType().getLabel());
-//        assertEquals(METADATA_VALUE, created.getMetadataField(METADATA_NAME));
+        assertNotNull(submitted);
+        assertNotNull(submitted);
+        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
+        assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
     }
     
     @Ignore // TODO: implement 'delete' functionality

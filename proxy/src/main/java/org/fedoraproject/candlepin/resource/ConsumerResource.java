@@ -20,6 +20,8 @@ import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -63,6 +65,7 @@ public class ConsumerResource {
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
+    private ConsumerIdentityCertificateCurator consumerIdCertCurator;
 
     /**
      * ctor
@@ -72,11 +75,13 @@ public class ConsumerResource {
      */
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ConsumerTypeCurator consumerTypeCurator) {
+            ConsumerTypeCurator consumerTypeCurator,
+            ConsumerIdentityCertificateCurator consumerIdCertCurator) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
+        this.consumerIdCertCurator = consumerIdCertCurator;
     }
    
     /**
@@ -118,7 +123,7 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public ClientCertificateStatus create(Consumer in) {
+    public Consumer create(Consumer in) {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
         Consumer consumer = new Consumer();
@@ -139,8 +144,10 @@ public class ConsumerResource {
 
         try {
             consumer = consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
-            ClientCertificateStatus certStatus = consumerCurator.getCertificateForConsumer(consumer);
-            return certStatus;
+            
+            ConsumerIdentityCertificate idCert = consumerIdCertCurator.getCert();
+            consumer.setIdCert(idCert);
+            return consumer;
             
         }
         catch (RuntimeException e) {

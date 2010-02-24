@@ -1,5 +1,6 @@
 package org.fedoraproject.candlepin.service.impl;
 
+import java.security.cert.X509Certificate;
 import java.util.Date;
 
 import org.fedoraproject.candlepin.model.ClientCertificate;
@@ -23,11 +24,7 @@ public class DefaultCertificateServiceAdapter implements
     @Override
     public ClientCertificateStatus generateIdentityCert(Consumer consumer) {
         // TODO Auto-generated method stub
-
-        String cert = CertGenerator.getCertString();
-        ClientCertificateStatus certStatus = new ClientCertificateStatus();
-        ClientCertificate clientCertificate = new ClientCertificate(cert);
-        certStatus.setClientCertificate(clientCertificate);
+        ClientCertificateStatus certStatus =  new ClientCertificateStatus();
         return certStatus;
     }
 

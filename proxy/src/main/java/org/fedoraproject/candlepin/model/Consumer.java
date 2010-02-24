@@ -34,6 +34,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -63,6 +64,9 @@ public class Consumer implements Persisted {
 
     @Column(nullable = false)
     private String name;
+    
+    @Transient
+    private ConsumerIdentityCertificate idCert;
     
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -176,6 +180,14 @@ public class Consumer implements Persisted {
         this.id = id;
     }
 
+    public ConsumerIdentityCertificate getIdCert() {
+        return idCert;
+    }
+
+    public void setIdCert(ConsumerIdentityCertificate idCert) {
+        this.idCert = idCert;
+    }
+    
     /**
      * @return the name of this consumer.
      */

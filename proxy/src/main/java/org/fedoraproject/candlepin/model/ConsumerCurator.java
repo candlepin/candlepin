@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.service.CertificateServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.hibernate.criterion.Restrictions;
 
@@ -32,17 +31,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private ConsumerFactCurator consumerInfoCurator;
     @Inject private EntitlementCurator entitlementCurator;    
-    private CertificateServiceAdapter certificateServiceAdaptor;
     private static Logger log = Logger.getLogger(ConsumerCurator.class);
     
     protected ConsumerCurator() {
         super(Consumer.class);
-    }
-    
-    @Inject
-    protected ConsumerCurator(CertificateServiceAdapter certAdapter) {
-        super(Consumer.class);
-        this.certificateServiceAdaptor = certAdapter;
     }
     
     /**
@@ -79,19 +71,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .uniqueResult();
     }
     
-    /**
-     *  Get the identity cert for a consumer via CertificateService
-     *  @param Consumer
-     *  @return an identity cert
-     * 
-     */
-     public ClientCertificateStatus getCertificateForConsumer(Consumer consumer) {
-         
-         ClientCertificateStatus certStatus = certificateServiceAdaptor.generateIdentityCert(consumer);
-         
-         //return certStatus.getClientCertificate().getBundle();
-         return certStatus;
-     }
     
     
     /**
