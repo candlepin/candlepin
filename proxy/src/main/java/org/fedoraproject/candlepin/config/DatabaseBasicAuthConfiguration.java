@@ -14,14 +14,12 @@
  */
 package org.fedoraproject.candlepin.config;
 
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * DatabaseBasicAuthConfiguration
  * @version $Rev$
  */
-public class DatabaseBasicAuthConfiguration {
+class DatabaseBasicAuthConfiguration extends ConfigurationParser {
     /** Basic auth configuration prefix */
     public static final String BASIC_AUTH_CONFIG_PREFIX = "basic.auth.config";
     /** Length of the <code>BASIC_AUTH_CONFIG_PREFIX</code> */
@@ -40,30 +38,7 @@ public class DatabaseBasicAuthConfiguration {
     /** Comment for <code>PASSWORD_COLUMN_CONFIG</code> */
     public static final String PASSWORD_COLUMN_CONFIG = "database.password.column";
     
-    
-    /**
-     * Converts the given Map into a Properties object. 
-     * @param inputConfiguration Configuration to be converted.
-     * @return config as a Properties file
-     */
-    public Properties parseConfig(Map<String, String> inputConfiguration) {
-        
-        Properties toReturn = new Properties();
-        toReturn.putAll(stripPrefixFromConfigKeys(inputConfiguration));
-        return toReturn;
-    }
-
-    /**
-     * Return a copy of the input without the prefixes.
-     * @param inputConfiguration Configuration to be converted.
-     * @return config as a Properties object without the prefixes.
-     */
-    public Properties stripPrefixFromConfigKeys(Map<String, String> inputConfiguration) {
-        Properties toReturn = new Properties();
-        
-        for (String key : inputConfiguration.keySet()) {
-            toReturn.put(key.substring(PREFIX_LENGTH + 1), inputConfiguration.get(key));
-        }
-        return toReturn;
+    public int prefixLength() {
+        return PREFIX_LENGTH;
     }    
 }
