@@ -19,7 +19,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerListener;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -32,7 +31,7 @@ public class ChainedListener implements TriggerListener {
 
     public static final String LISTENER_NAME = "ChainedListener";
 
-    private List listenerChain = new ArrayList();
+    private List<TriggerListener> listenerChain = new ArrayList<TriggerListener>();
 
     /**
      * {@inheritDoc}
@@ -46,8 +45,7 @@ public class ChainedListener implements TriggerListener {
      */
     public void triggerComplete(Trigger trigger, JobExecutionContext ctx,
             int triggerInstructionCode) {
-        for (Iterator iter = this.listenerChain.iterator(); iter.hasNext();) {
-            TriggerListener listener = (TriggerListener) iter.next();
+        for (TriggerListener listener : listenerChain) {
             listener.triggerComplete(trigger, ctx, triggerInstructionCode);
         }
     }
@@ -56,8 +54,7 @@ public class ChainedListener implements TriggerListener {
      * {@inheritDoc}
      */
     public void triggerFired(Trigger trigger, JobExecutionContext ctx) {
-        for (Iterator iter = this.listenerChain.iterator(); iter.hasNext();) {
-            TriggerListener listener = (TriggerListener) iter.next();
+        for (TriggerListener listener : listenerChain) {
             listener.triggerFired(trigger, ctx);
         }
     }
@@ -66,8 +63,7 @@ public class ChainedListener implements TriggerListener {
      * {@inheritDoc}
      */
     public void triggerMisfired(Trigger trigger) {
-        for (Iterator iter = this.listenerChain.iterator(); iter.hasNext();) {
-            TriggerListener listener = (TriggerListener) iter.next();
+        for (TriggerListener listener : listenerChain) {
             listener.triggerMisfired(trigger);
         }
     }
@@ -77,8 +73,7 @@ public class ChainedListener implements TriggerListener {
      */
     public boolean vetoJobExecution(Trigger trigger, JobExecutionContext ctx) {
         boolean retval = false;
-        for (Iterator iter = this.listenerChain.iterator(); iter.hasNext();) {
-            TriggerListener listener = (TriggerListener) iter.next();
+        for (TriggerListener listener : listenerChain) {
             boolean tmp = listener.vetoJobExecution(trigger, ctx);
             if (!retval && tmp) {
                 retval = true;
@@ -92,8 +87,8 @@ public class ChainedListener implements TriggerListener {
      * @param listener listener to be added
      */
     public void addListener(TriggerListener listener) {
-        if (this.listenerChain.indexOf(listener) == -1) {
-            this.listenerChain.add(listener);
+        if (listenerChain.indexOf(listener) == -1) {
+            listenerChain.add(listener);
         }
     }
 }
