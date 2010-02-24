@@ -44,7 +44,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/certificate")
 public class CertificateResource  {
-    private static String encodedCert = ""; // bad bad bad
+    private static String encodedCert = ""; //FIXME bad bad bad
 
     
     private OwnerCurator ownerCurator;
@@ -107,7 +107,7 @@ public class CertificateResource  {
             throw new BadRequestException(
                 "Invalid certificate is being uploaded: " + e.getMessage());
         }
-        return "uuid";
+        return encodedCert;
     }
     
 
