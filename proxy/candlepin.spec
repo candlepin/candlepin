@@ -2,7 +2,7 @@ Summary: Candlepin
 Name: candlepin
 Source: candlepin-bin.tar.gz
 Version: 0.0.2
-Release: 1
+Release: 2
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Group: Internet/Applications
 Vendor: Red Hat, Inc
@@ -13,6 +13,8 @@ BuildArch: noarch
 
 %global _binary_filedigest_algorithm 1
 %global _source_filedigest_algorithm 1
+%global _binary_payload w9.gzdio
+%global _source_payload w9.gzdio
 
 %description
 Candlepin Entitlement Management
