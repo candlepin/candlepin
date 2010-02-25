@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.configuration.CandlepinConfigurationTest.CandlepinConfigurationForTesting;
+import org.fedoraproject.candlepin.config.CandlepinConfigurationTest.CandlepinConfigurationForTesting;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterException;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
 
@@ -41,17 +41,6 @@ import java.util.TreeMap;
  */
 public class PinsetterKernelTest {
     private PinsetterKernel pk = null;
-
-    @Test
-    public void defaultCtor() {
-        try {
-            new PinsetterKernel();
-            fail();
-        }
-        catch (InstantiationException ie) {
-            assertTrue(true);
-        }
-    }
 
     @Test
     public void configure() throws InstantiationException {

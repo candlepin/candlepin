@@ -54,7 +54,7 @@ public class PinsetterKernel implements SchedulerService {
      * @throws InstantiationException thrown if this.scheduler can't be
      * initialized.
      */
-    public PinsetterKernel() throws InstantiationException {
+    protected PinsetterKernel() throws InstantiationException {
         this(new Config());
     }
 
