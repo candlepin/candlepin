@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import javax.servlet.Filter;
+import javax.servlet.http.HttpServlet;
 
 import org.fedoraproject.candlepin.LoggingFilter;
 import org.fedoraproject.candlepin.servletfilter.auth.FilterConstants;
@@ -29,19 +30,18 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.Singleton;
+import com.google.inject.servlet.GuiceServletContextListener;
+import com.google.inject.servlet.ServletModule;
 import com.google.inject.util.Modules;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
+import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
-import com.wideplay.warp.servlet.Servlets;
-import com.wideplay.warp.servlet.WarpServletContextListener;
 
 
 /**
  * configure Guice with the resource classes.
  */
-public class JerseyGuiceConfiguration extends WarpServletContextListener {
+public class JerseyGuiceConfiguration extends GuiceServletContextListener {
     
     private final static String CANDLEPIN_SERVLET = "CANDLEPIN";
 
@@ -55,22 +55,17 @@ public class JerseyGuiceConfiguration extends WarpServletContextListener {
 
                 add(new CandlepinProductionConfiguration());
                 
-                add(
-                    Servlets.configure()
-                        .filters()
-                            .filter("/*").through(LoggingFilter.class)
-                            .filter("/*").through(Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)))
-                        .servlets()
-                            .serve("/*").with(
-                                Key.get(ServletContainer.class, named(CANDLEPIN_SERVLET)),
-                                new HashMap<String, String>() {{
-                                    put("com.sun.jersey.config.property.packages", "org.fedoraproject.candlepin.resource");
-                                }})
-                     .buildModule()
+                add(new ServletModule() {{
+                        filter("/*").through(LoggingFilter.class);
+                        filter("/*").through(Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)));
+                        serve("/*").with(GuiceContainer.class,
+                            new HashMap<String, String>() {{
+                                  put("com.sun.jersey.config.property.packages", "org.fedoraproject.candlepin.resource");
+                            }}
+                        );
+                    }}
                 );
                 
-                add(new ServletConfig());
-
                 add(Modules.override(new DefaultConfig()).with(new CustomizableModules().load()));
             }
         });
@@ -79,7 +74,7 @@ public class JerseyGuiceConfiguration extends WarpServletContextListener {
     protected class ServletConfig extends AbstractModule {
         @Override
         protected void configure() {
-            bind(ServletContainer.class).annotatedWith(named(CANDLEPIN_SERVLET)).to(ServletContainer.class).in(Singleton.class);
+            bind(HttpServlet.class).annotatedWith(named(CANDLEPIN_SERVLET)).to(GuiceContainer.class);
         }
     }
 }
