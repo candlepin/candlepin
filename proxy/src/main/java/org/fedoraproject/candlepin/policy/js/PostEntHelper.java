@@ -14,11 +14,8 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
-import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;

@@ -33,7 +33,6 @@ import com.google.inject.Inject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.bouncycastle.ocsp.CertificateStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;

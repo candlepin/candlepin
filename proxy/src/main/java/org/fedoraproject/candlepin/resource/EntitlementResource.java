@@ -23,7 +23,6 @@ import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
@@ -61,16 +60,6 @@ public class EntitlementResource {
     
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
-    /**
-     * ctor
-     * @param epCurator interact with Entitlement Pools.
-     * @param entitlementCurator interact with entitlements.
-     * @param ownerCurator interact with owners.
-     * @param consumerCurator interact with consumers.
-     * @param prodAdapter interact with products.
-     * @param subAdapter interact with subscription
-     * @param entitler This is what actually does the work.
-     */
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
             EntitlementCurator entitlementCurator,
@@ -156,14 +145,15 @@ public class EntitlementResource {
      * Request an entitlement from a specific pool.
      *
      * @param consumerUuid Consumer identifier to be entitled
-     * @param productLabel Product identifying label.
-     * @return Entitled object
+     * @param poolId Entitlement pool id.
+     * @return boolean
      */
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/entitlementpool/{pool_id}")
-    public EntitlementBindResult entitleByPool(@PathParam("consumer_uuid") String consumerUuid,
+    public EntitlementBindResult entitleByPool(
+            @PathParam("consumer_uuid") String consumerUuid,
             @PathParam("pool_id") Long poolId) {
 
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
@@ -314,10 +304,6 @@ public class EntitlementResource {
         return entitlementCurator.findAll();
     }
    
-    /**
-     * Return list of Entitlements
-     * @return list of Entitlements
-     */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}")
@@ -359,7 +345,8 @@ public class EntitlementResource {
 //    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 //    public void deleteAllEntitlements(
 //            @PathParam("consumer_uuid") String consumerUuid) {
-//        // FIXME: This is deleting consumer specific pools (which are rare), not entitlements.
+//        // FIXME: This is deleting consumer specific pools (which are rare),
+    // not entitlements.
 //        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
 //        for (EntitlementPool ep : epCurator.listConsumerSpecificPools(consumer)) {
 //            log.debug("ep: " + ep.toString() + "  " + ep.getId());
