@@ -34,13 +34,6 @@ public interface ProductServiceAdapter {
     Product getProductById(String id);
     
     /**
-     * Query a specific product by its Label
-     * @param label product label
-     * @return specific product
-     */
-    Product getProductByLabel(String label);    
-
-    /**
      * List all Products
      * @return all products.
      */

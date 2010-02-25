@@ -56,6 +56,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
     
     /**
+     * Looking a product based on label. This should seldom be used, generally we 
+     * refer to products by their ID.
+     * 
      * @param label product label to lookup
      * @return the Product which matches the given label.
      */
