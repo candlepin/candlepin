@@ -14,24 +14,15 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
-//import org.codehaus.jackson.map.ObjectMapper;
-//import org.codehaus.jackson.type.TypeReference;
-import org.fedoraproject.candlepin.model.Attribute;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-
-import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.PersistenceException;
+
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.junit.Test;
 
 public class ProductTest extends DatabaseTestFixture {
 

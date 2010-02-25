@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.configuration;
+package org.fedoraproject.candlepin.config;
 
 import static org.junit.Assert.*;
 
@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.fedoraproject.candlepin.config.JPAConfiguration;
 import org.junit.Test;
 
 public class JPAConfigurationTest {

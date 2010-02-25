@@ -78,9 +78,6 @@ public class ConsumerResource {
 	 *            interact with curators
 	 * @param consumerTypeCurator
 	 *            interact with consumers.
-	 * 
-	 *            TODO: Changing the constructor means a bunch of the tests need
-	 *            to be updated. Find out if this is the right way to do this.
 	 */
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,

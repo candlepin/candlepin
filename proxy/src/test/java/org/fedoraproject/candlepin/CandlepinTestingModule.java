@@ -14,6 +14,11 @@
  */
 package org.fedoraproject.candlepin;
 
+import static org.mockito.Mockito.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
@@ -52,5 +57,8 @@ public class CandlepinTestingModule extends AbstractModule {
         bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
         bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);
+        
+        bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
+        bind(HttpServletResponse.class).toInstance(mock(HttpServletResponse.class));
     }
 }

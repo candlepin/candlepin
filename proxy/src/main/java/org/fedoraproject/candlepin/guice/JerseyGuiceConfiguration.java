@@ -28,7 +28,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.servlet.Servlets;
@@ -56,7 +56,7 @@ public class JerseyGuiceConfiguration extends WarpServletContextListener {
                             .filter("/*").through(LoggingFilter.class)
                             .filter("/*").through(Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)))
                         .servlets()
-                            .serve("/*").with(GuiceContainer.class)
+                            .serve("/*").with(ServletContainer.class)
                      .buildModule()
                 );
 

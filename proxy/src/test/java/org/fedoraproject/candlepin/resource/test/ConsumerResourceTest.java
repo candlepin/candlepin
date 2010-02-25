@@ -38,15 +38,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private static final String CONSUMER_NAME = "consumer name";
     
     private ConsumerType standardSystemType;
+    
     private ConsumerResource consumerResource;
     private Owner owner;
 
     @Before
     public void setUp() {
 
-        consumerResource = new ConsumerResource(ownerCurator, consumerCurator,
-            consumerTypeCurator, consumerIdCertCurator,
-            httpServletRequest);
+        consumerResource = injector.getInstance(ConsumerResource.class);
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
