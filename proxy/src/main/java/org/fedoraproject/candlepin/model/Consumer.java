@@ -95,7 +95,8 @@ public class Consumer implements Persisted {
     private ConsumerFacts facts;
     
     // Separate mapping because in theory, a consumer could be consuming
-    // products they're not entitled to.    
+    // products they're not entitled to.
+    @XmlTransient
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "fk_consumer_product_owner")
     private Set<ConsumerProduct> consumedProducts;    

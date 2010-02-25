@@ -17,7 +17,11 @@ package org.fedoraproject.candlepin.model;
 import com.wideplay.warp.persist.Transactional;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+
+import org.hibernate.criterion.Restrictions;
 
 /**
  * EntitlementCurator
@@ -48,4 +52,18 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
         return toReturn;
     }
+
+    public List<Entitlement> listByConsumer(Consumer consumer) {
+        List<Entitlement> results = (List<Entitlement>) currentSession()
+            .createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer)).list();
+        if (results == null) {
+            return new LinkedList<Entitlement>();
+        }
+        else {
+            return results;
+        }
+    }
+
+
 }

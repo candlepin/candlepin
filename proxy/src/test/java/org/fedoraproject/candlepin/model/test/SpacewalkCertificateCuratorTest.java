@@ -102,7 +102,7 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
         assertNotNull(product);
         EntitlementPool entitlementPool = entitlementPoolCurator
                 .listByOwnerAndProduct(owner, 
-                null, product).get(0);
+                    product).get(0);
         assertNotNull(entitlementPool);
         assertEquals(quantity, entitlementPool.getMaxMembers());
         assertEquals(new Long(0), entitlementPool.getCurrentMembers());

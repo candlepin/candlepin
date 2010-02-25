@@ -39,7 +39,8 @@ class Rest(object):
             print "url: %s" % full_url
         conn.request(http_type, url_path, body=self.marshal(data, content_type), headers=self.headers[content_type])
         response = conn.getresponse()
-        print("Status: %s Reason: %s" % (response.status, response.reason))
+        if response.status != 200:
+            raise Exception("%s - %s" % (response.status, response.reason))
         rsp = response.read()
         
         if self.debug:
@@ -123,6 +124,11 @@ class CandlePinApi:
         blob = self.rest.post(path)
         return blob
 
+    def bindPool(self, consumer_uuid, pool_id):
+        path = "/entitlement/consumer/%s/entitlementpool/%s" % (consumer_uuid, pool_id)
+        blob = self.rest.post(path)
+        return blob
+
     def bindRegToken(self, consumer_uuid, regtoken):
         path = "/entitlement/consumer/%s/token/%s" % (consumer_uuid, regtoken)
         blob = self.rest.post(path)
@@ -144,6 +150,10 @@ class CandlePinApi:
 
     def getEntitlementPools(self, consumer_uuid):
         path = "/entitlementpool/consumer/%s" % consumer_uuid
+        return self.rest.get(path)
+
+    def getEntitlements(self, consumer_uuid):
+        path = "/entitlement/consumer/%s" % consumer_uuid
         return self.rest.get(path)
 
     def getProducts(self):

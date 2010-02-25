@@ -40,14 +40,9 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     @Override
     public Product getProductById(String id) {
-        return prodCurator.lookupByLabel(id);
+        return prodCurator.lookupById(id);
     }
     
-    @Override
-    public Product getProductByLabel(String label) {
-        return prodCurator.lookupByLabel(label);
-    }    
-
     @Override
     public List<Product> getProducts() {
         return prodCurator.findAll();

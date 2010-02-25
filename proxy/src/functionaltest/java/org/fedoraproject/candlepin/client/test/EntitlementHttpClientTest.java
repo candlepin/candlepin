@@ -137,7 +137,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         unitOfWork.beginWork();
         assertTrue(entitlementCurator.findAll().size() == 0);
         assertEquals(new Long(0), entitlementPoolCurator.listByOwnerAndProduct(
-                owner, consumer, product).get(0).getCurrentMembers());
+                owner, product).get(0).getCurrentMembers());
         unitOfWork.endWork();
 
         unitOfWork.beginWork();
@@ -288,7 +288,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     protected void assertEntitlementSucceeded() {
         assertEquals(new Long(1), new Long(entitlementCurator.findAll().size()));
         assertEquals(new Long(1), entitlementPoolCurator.listByOwnerAndProduct(
-                owner, consumer, product).get(0).getCurrentMembers());
+                owner, product).get(0).getCurrentMembers());
         assertEquals(1, consumerCurator.find(consumer.getId())
                 .getConsumedProducts().size());
         assertEquals(product.getId(), consumerCurator.find(consumer.getId())

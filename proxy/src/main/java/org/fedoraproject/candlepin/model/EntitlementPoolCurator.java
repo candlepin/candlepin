@@ -62,11 +62,12 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     
     /**
      * Returns list of pools available for the consumer.
+     *
      * @param c Consumer to filter
      * @return pools owned by the given Owner.
      */
-//    @SuppressWarnings("unchecked")
-    public List<EntitlementPool> listAvailableEntitlements(Consumer c) {
+    @SuppressWarnings("unchecked")
+    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c) {
         List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
             .createCriteria(EntitlementPool.class)
             .add(Restrictions.eq("activeSubscription", Boolean.TRUE))
@@ -75,31 +76,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
             // FIXME: is end date later?
             // FIXME: sort by enddate?
             // FIXME: currentmembers < maxmembers
-        if (results == null) {
-            return new LinkedList<EntitlementPool>();
-        }
-        else {
-            return results;
-        }
-    }
-    
-    /**
-     * Returns list of pools owned by the given consumer.
-     *
-     * WARNING: This is an extremely rare case where an entitlement pool is created for use
-     * by a single specific consumer.
-     *
-     * TODO: Should this code be removed entirely? Created for the Satellite virt
-     * entitlements.
-     *
-     * @param consumer Consumer to filter
-     * @return list of pools owned by the given consumer.
-     */
-    @SuppressWarnings("unchecked")
-    public List<EntitlementPool> listByConsumer(Consumer consumer) {
-        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
-            .createCriteria(EntitlementPool.class)
-            .add(Restrictions.eq("consumer", consumer)).list();
+            // FIXME: do we need to run through rules for each of these? (expensive!)
         if (results == null) {
             return new LinkedList<EntitlementPool>();
         }
@@ -122,7 +99,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     private void refreshPools(Owner owner, Product product) {
         List<Subscription> subs = subAdapter.getSubscriptions(owner, 
                 product.getId().toString());
-        List<EntitlementPool> pools = listByOwnerAndProductNoRefresh(owner, null, product);
+        List<EntitlementPool> pools = listByOwnerAndProductNoRefresh(owner, product);
         
         // Map all entitlement pools for this owner/product that have a
         // subscription ID associated with them.
@@ -164,56 +141,27 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     }
 
     /**
-     * List all entitlement pools for the given owner, consumer, product.
-     * 
-     * We first check for a pool specific to the given consumer. The
-     * consumer parameter can be passed as null in which case we skip to
-     * the second scenario.
-     * 
-     * If consumer is null or no consumer specific pool exists, we query for
-     * all pools for this owner and the given product.
+     * List all entitlement pools for the given owner and product.
      * 
      * @param owner owner of the entitlement pool
-     * @param consumer consumer to be filtered
      * @param product product filter.
      * @return list of EntitlementPools for the given owner, consumer, product
      * combination.
      */
     public List<EntitlementPool> listByOwnerAndProduct(Owner owner,
-            Consumer consumer, Product product) {
+            Product product) {
         refreshPools(owner, product);
-        return listByOwnerAndProductNoRefresh(owner, consumer, product);
+        return listByOwnerAndProductNoRefresh(owner, product);
     }
     
+    @SuppressWarnings("unchecked")
     private List<EntitlementPool> listByOwnerAndProductNoRefresh(Owner owner,
-            Consumer consumer, Product product) {
-        // If we were given a specific consumer, and a pool exists for that
-        // specific consumer, return this pool instead.
-        if (consumer != null) {
-            List<EntitlementPool> result = (List<EntitlementPool>)
-                currentSession().createCriteria(EntitlementPool.class)
-                .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.eq("productId", product.getId()))
-                .add(Restrictions.eq("consumer", consumer))
-                .list();
-            if (result != null && result.size() > 0) {
-                return result;
-            }
-        }
-
+        Product product) {
         return (List<EntitlementPool>) currentSession().createCriteria(
                 EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("productId", product.getId())).list();
     }
-    
-// TODO: remove this if it isn't needed.
-//
-//    private EntitlementPool lookupBySubscriptionId(Long subId) {
-//        return (EntitlementPool) currentSession().createCriteria(EntitlementPool.class)
-//            .add(Restrictions.eq("subscriptionId", subId))
-//            .uniqueResult();
-//    }
     
     /**
      * @param entitlementPool entitlement pool to search.

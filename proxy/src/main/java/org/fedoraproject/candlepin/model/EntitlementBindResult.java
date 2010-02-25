@@ -15,8 +15,6 @@
 
 package org.fedoraproject.candlepin.model;
 
-import java.io.Serializable;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,28 +23,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "entitlement_bind_result")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntitlementBindResult implements Persisted {
-
-    private long id;
-    public Boolean getResult() {
-        return result;
-    }
-
-    public void setResult(Boolean result) {
-        this.result = result;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
+public class EntitlementBindResult {
 
     private Boolean result;
     
-    /**
-     * default ctor
-     */
     public EntitlementBindResult() {
-      
     }
     
     public EntitlementBindResult(Boolean result) {
@@ -54,10 +35,12 @@ public class EntitlementBindResult implements Persisted {
         
     }
     
-    @Override
-    public Serializable getId() {
-        // TODO Auto-generated method stub
-        return id;
+    public Boolean getResult() {
+        return result;
+    }
+
+    public void setResult(Boolean result) {
+        this.result = result;
     }
 
 }

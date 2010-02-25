@@ -14,43 +14,44 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
-
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
 /**
  * Owner Resource
  */
 @Path("/owner")
 public class OwnerResource {
-    
+
     private static Logger log = Logger.getLogger(OwnerResource.class);
     private OwnerCurator ownerCurator;
     private EntitlementPoolCurator entitlementPoolCurator;
 
     /**
-     * @param ownerCurator interact with Owner.
-     * @param entitlementPoolCurator interact with entitlement pools.
+     * @param ownerCurator
+     *            interact with Owner.
+     * @param entitlementPoolCurator
+     *            interact with entitlement pools.
      */
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
-            EntitlementPoolCurator entitlementPoolCurator) {
+        EntitlementPoolCurator entitlementPoolCurator) {
 
         this.ownerCurator = ownerCurator;
         this.entitlementPoolCurator = entitlementPoolCurator;
@@ -58,54 +59,77 @@ public class OwnerResource {
 
     /**
      * Return list of Owners.
+     * 
      * @return list of Owners
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Owner> list() {
-        return ownerCurator.findAll();  
+        return ownerCurator.findAll();
     }
-    
+
     /**
-     * Return the owner identified by the given uuid.
+     * Return the owner identified by the given ID.
      * 
-     * @param pid
-     *            uuid of the owner sought.
+     * @param ownerId Owner ID.
      * @return the owner identified by the given id.
      */
     @GET
-    @Path("/{owner_id}")    
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("/{owner_id}")
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Owner getOwner(@PathParam("owner_id") Long owner_id) {
-        Owner toReturn = ownerCurator.find(owner_id) ;
+        Owner toReturn = ownerCurator.find(owner_id);
 
         if (toReturn != null) {
             return toReturn;
         }
 
-        throw new NotFoundException("Owner with UUID '" + owner_id +
-            "' could not be found");
-    }    
+        throw new NotFoundException("Owner with UUID '" + owner_id
+            + "' could not be found");
+    }
+
+    /**
+     * Creates a new Owner
+     * 
+     * @param pid
+     *            uuid of the owner sought.
+     * @return the owner identified by the given id.
+     */
+    @POST
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public Owner createOwner(Owner owner) {
+        Owner toReturn = ownerCurator.create(owner);
+
+        if (toReturn != null) {
+            return toReturn;
+        }
+
+        throw new BadRequestException("Cound not create the Owner");
+    }
 
     /**
      * Return the entitlements for the owner of the given id.
-     * @param ownerId id of the owner whose entitlements are sought.
+     * 
+     * @param ownerId
+     *            id of the owner whose entitlements are sought.
      * @return the entitlements for the owner of the given id.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/entitlement")
-    public List<Entitlement> ownerEntitlements(@PathParam("owner_id") Long ownerId) {
+    public List<Entitlement> ownerEntitlements(
+        @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
         if (owner == null) {
-            throw new NotFoundException("owner with id: " + ownerId + " was not found.");
+            throw new NotFoundException("owner with id: " + ownerId
+                + " was not found.");
         }
-        
+
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
         for (EntitlementPool pool : owner.getEntitlementPools()) {
             toReturn.addAll(entitlementPoolCurator.entitlementsIn(pool));
         }
-        
+
         return toReturn;
     }
 }

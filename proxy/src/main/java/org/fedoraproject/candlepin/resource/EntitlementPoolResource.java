@@ -66,8 +66,9 @@ public class EntitlementPoolResource {
     }
 
     /**
-     * Returns all the entitlement pools for the consumer with the given uuid.
-     * @param consumerUuid whose entitlement pools are sought.
+     * Returns all the entitlement pools available to a consumer.
+     *
+     * @param consumerUuid Consumer requesting available entitlement pools.
      * @return all the entitlement pools for the consumer with the given uuid.
      */
     @GET
@@ -76,7 +77,8 @@ public class EntitlementPoolResource {
     public List<EntitlementPool> listByConsumer(
             @PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        List<EntitlementPool>  eps = entitlementPoolCurator.listByConsumer(consumer);
+        List<EntitlementPool>  eps = entitlementPoolCurator.listAvailableEntitlementPools(
+            consumer);
         return eps;
     }
     

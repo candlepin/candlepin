@@ -44,7 +44,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     public void addConsumedProduct(Consumer consumer, Product product) {
         ConsumerProduct cp = new ConsumerProduct();
-        cp.setConsumer(consumer);
         cp.setProductId(product.getId());
         consumer.addConsumedProduct(cp);
     }

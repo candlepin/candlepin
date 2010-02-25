@@ -23,7 +23,6 @@ import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
@@ -53,7 +52,6 @@ import javax.ws.rs.core.MediaType;
 public class EntitlementResource {
     
     private EntitlementPoolCurator epCurator;
-    private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ProductServiceAdapter prodAdapter;
     private SubscriptionServiceAdapter subAdapter; 
@@ -62,26 +60,15 @@ public class EntitlementResource {
     
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
-    /**
-     * ctor
-     * @param epCurator interact with Entitlement Pools.
-     * @param entitlementCurator interact with entitlements.
-     * @param ownerCurator interact with owners.
-     * @param consumerCurator interact with consumers.
-     * @param prodAdapter interact with products.
-     * @param subAdapter interact with subscription
-     * @param entitler This is what actually does the work.
-     */
     @Inject
     public EntitlementResource(EntitlementPoolCurator epCurator, 
             EntitlementCurator entitlementCurator,
-            OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
+            ConsumerCurator consumerCurator,
             ProductServiceAdapter prodAdapter, SubscriptionServiceAdapter subAdapter, 
             Entitler entitler) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
-        this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.prodAdapter = prodAdapter;
         this.subAdapter = subAdapter;
@@ -98,7 +85,8 @@ public class EntitlementResource {
     }
     
     /**
-     *  Entitlese the given Consumer with best fit Product.
+     *  Entitles the given Consumer with best fit Product.
+     *
      *  @param consumerUuid Consumer identifier to be entitled
      *  @return Entitlend object
      */
@@ -108,11 +96,11 @@ public class EntitlementResource {
     @Path("consumer/{consumer_uuid}/")
     public String entitle(@PathParam("consumer_uuid") String consumerUuid) {
      
-        // TODO: actually get current user's owner
-        Owner owner = ownerCurator.findAll().get(0);
-        
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         
+        // TODO: this is doing a NO-OP. Can we determine what products a consumer has
+        // installed or should this be the client tools responsibility?
+
         // FIXME: this is just a hardcoded cert...
         return CertGenerator.genCert().toString(); 
     }
@@ -120,27 +108,26 @@ public class EntitlementResource {
     /**
      * Entitles the given Consumer with the given Product.
      * @param consumerUuid Consumer identifier to be entitled
-     * @param productLabel Product identifying label.
+     * @param productId Product identifying label.
      * @return Entitled object
      */
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/product/{product_label}")
-    public EntitlementBindResult entitle(@PathParam("consumer_uuid") String consumerUuid, 
-            @PathParam("product_label") String productLabel) {
-        
-        // TODO: actually get current user's owner
-        Owner owner = ownerCurator.findAll().get(0);
+    @Path("consumer/{consumer_uuid}/product/{product_id}")
+    public EntitlementBindResult entitleByProduct(
+        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("product_id") String productId) {
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
+        Owner owner = consumer.getOwner();
         
-        Product p = prodAdapter.getProductByLabel(productLabel);
+        Product p = prodAdapter.getProductById(productId);
         if (p == null) {
-            throw new BadRequestException("No such product: " + productLabel);
+            throw new BadRequestException("No such product: " + productId);
         }
         
         // Attempt to create an entitlement:
@@ -151,6 +138,45 @@ public class EntitlementResource {
             throw new BadRequestException("Entitlement refused.");
         }
         
+        return new EntitlementBindResult(true);
+    }
+
+    /**
+     * Request an entitlement from a specific pool.
+     *
+     * @param consumerUuid Consumer identifier to be entitled
+     * @param poolId Entitlement pool id.
+     * @return boolean
+     */
+    @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("consumer/{consumer_uuid}/entitlementpool/{pool_id}")
+    public EntitlementBindResult entitleByPool(
+            @PathParam("consumer_uuid") String consumerUuid,
+            @PathParam("pool_id") Long poolId) {
+
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new BadRequestException("No such consumer: " + consumerUuid);
+        }
+        Owner owner = consumer.getOwner();
+
+        EntitlementPool pool = epCurator.find(poolId);
+        if (pool == null) {
+            throw new BadRequestException("No such entitlement pool: " + poolId);
+        }
+
+        Product prod = prodAdapter.getProductById(pool.getProductId());
+
+        // Attempt to create an entitlement:
+        Entitlement e = entitler.entitle(owner, consumer, prod, pool);
+        // TODO: Probably need to get the validation result out somehow.
+        // TODO: return 409?
+        if (e == null) {
+            throw new BadRequestException("Entitlement refused.");
+        }
+
         return new EntitlementBindResult(true);
     }
 
@@ -169,10 +195,8 @@ public class EntitlementResource {
             @PathParam("registration_token") String registrationToken) {
         
         //FIXME: this is just a stub, need SubscriptionService to look it up
-        // TODO: actually get current user's owner
-        Owner owner = ownerCurator.findAll().get(0);
-        
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        Owner owner = consumer.getOwner();
         
         //FIXME: getSubscriptionForToken is a stub, always "works"
         Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
@@ -197,20 +221,20 @@ public class EntitlementResource {
     /**
      * Check to see if a given Consumer is entitled to given Product
      * @param consumerUuid consumerUuid to check if entitled or not
-     * @param productLabel productLabel to check if entitled or not
+     * @param productId productLabel to check if entitled or not
      * @return boolean if entitled or not
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/product/{product_label}")
     public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
-            @PathParam("product_label") String productLabel) {
+            @PathParam("product_id") String productId) {
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
         
-        Product product = prodAdapter.getProductByLabel(productLabel);
-        verifyExistence(product, productLabel);
+        Product product = prodAdapter.getProductById(productId);
+        verifyExistence(product, productId);
             
         for (Entitlement e : consumer.getEntitlements()) {
             if (e.getProductId().equals(product.getId())) {
@@ -220,50 +244,50 @@ public class EntitlementResource {
         
         throw new NotFoundException(
             "Consumer: " + consumerUuid + " has no entitlement for product " +
-            productLabel);
+            productId);
     }
     
-    /**
-     * Match/List the available entitlements for a given Consumer. Right
-     * now this returns ALL entitlements because we haven't built any
-     * filtering logic.
-     * @param consumerUuid Unique id of Consumer
-     * @return List<Entitlement> of applicable 
-     */
-    // TODO: right now returns *all* available entitlement pools
-    @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/consumer/{consumer_uuid}")
-    public List<EntitlementPool> listAvailableEntitlements(
-        @PathParam("consumer_uuid") Long consumerUuid) {
-
-//        log.debug("consumerCurator: " + consumerCurator.toString());
-//        log.debug("epCurator: " + epCurator.toString());
-        Consumer consumer = consumerCurator.find(consumerUuid);
-//        log.debug("consumer: " + consumer.toString());
-        return epCurator.listByConsumer(consumer);
-//        return epCurator.findAll();
-        
-//        Consumer c = consumerCurator.find(consumerId);
-//        List<EntitlementPool> entitlementPools = epCurator.findAll();
-//        List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
-//        EntitlementMatcher matcher = new EntitlementMatcher();
-//        for (EntitlementPool ep : entitlementPools) {
-//            boolean add = false;
-//            System.out.println("max = " + ep.getMaxMembers());
-//            System.out.println("cur = " + ep.getCurrentMembers());
-//            if (ep.getMaxMembers() > ep.getCurrentMembers()) {
-//                add = true;
-//            }
-//            if (matcher.isCompatible(c, ep.getProduct())) {
-//                add = true;
-//            }
-//            if (add) {
-//                retval.add(ep);
-//            }
-//        }
-//        return retval;
-    }
+//    /**
+//     * Match/List the available entitlements for a given Consumer. Right
+//     * now this returns ALL entitlements because we haven't built any
+//     * filtering logic.
+//     * @param consumerUuid Unique id of Consumer
+//     * @return List<Entitlement> of applicable
+//     */
+//    // TODO: right now returns *all* available entitlement pools
+//    @GET
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    @Path("/consumer/{consumer_uuid}")
+//    public List<EntitlementPool> listAvailableEntitlements(
+//        @PathParam("consumer_uuid") Long consumerUuid) {
+//
+////        log.debug("consumerCurator: " + consumerCurator.toString());
+////        log.debug("epCurator: " + epCurator.toString());
+//        Consumer consumer = consumerCurator.find(consumerUuid);
+////        log.debug("consumer: " + consumer.toString());
+//        return epCurator.listByConsumer(consumer);
+////        return epCurator.findAll();
+//
+////        Consumer c = consumerCurator.find(consumerId);
+////        List<EntitlementPool> entitlementPools = epCurator.findAll();
+////        List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
+////        EntitlementMatcher matcher = new EntitlementMatcher();
+////        for (EntitlementPool ep : entitlementPools) {
+////            boolean add = false;
+////            System.out.println("max = " + ep.getMaxMembers());
+////            System.out.println("cur = " + ep.getCurrentMembers());
+////            if (ep.getMaxMembers() > ep.getCurrentMembers()) {
+////                add = true;
+////            }
+////            if (matcher.isCompatible(c, ep.getProduct())) {
+////                add = true;
+////            }
+////            if (add) {
+////                retval.add(ep);
+////            }
+////        }
+////        return retval;
+//    }
 
     
     // TODO:
@@ -280,6 +304,19 @@ public class EntitlementResource {
         return entitlementCurator.findAll();
     }
    
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("consumer/{consumer_uuid}")
+    public List<Entitlement> listAllForConsumer(
+        @PathParam("consumer_uuid") String consumerUuid) {
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new BadRequestException("No such consumer: " + consumerUuid);
+        }
+
+        return entitlementCurator.listByConsumer(consumer);
+    }
+
     /**
      * Return the entitlement for the given id.
      * @param dbid entitlement id.
@@ -297,24 +334,25 @@ public class EntitlementResource {
             "Entitlement with ID '" + dbid + "' could not be found");
     }
    
-    /**
-     * Deletes all entitlements for the consumer whose id matches the given
-     * uuid.
-     * @param consumerUuid id of the consumer whose entitlements are to be
-     * deleted.
-     */
-    @DELETE
-    @Path("consumer/{consumer_uuid}/")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public void deleteAllEntitlements(
-            @PathParam("consumer_uuid") String consumerUuid) {
-        
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        for (EntitlementPool ep : epCurator.listByConsumer(consumer)) {
-            log.debug("ep: " + ep.toString() + "  " + ep.getId());
-            epCurator.delete(ep);
-        }
-    }
+//    /**
+//     * Deletes all entitlements for the consumer whose id matches the given
+//     * uuid.
+//     * @param consumerUuid id of the consumer whose entitlements are to be
+//     * deleted.
+//     */
+//    @DELETE
+//    @Path("consumer/{consumer_uuid}/")
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    public void deleteAllEntitlements(
+//            @PathParam("consumer_uuid") String consumerUuid) {
+//        // FIXME: This is deleting consumer specific pools (which are rare),
+    // not entitlements.
+//        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+//        for (EntitlementPool ep : epCurator.listConsumerSpecificPools(consumer)) {
+//            log.debug("ep: " + ep.toString() + "  " + ep.getId());
+//            epCurator.delete(ep);
+//        }
+//    }
    
     /**
      * Removes the entitlements associated with the given serial number.
