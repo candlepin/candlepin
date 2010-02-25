@@ -14,14 +14,17 @@
  */
 package org.fedoraproject.candlepin.config;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.fedoraproject.candlepin.config.Config;
+
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
-
-import org.fedoraproject.candlepin.config.Config;
-import org.junit.Test;
 
 public class CandlepinConfigurationTest {
 
@@ -82,6 +85,45 @@ public class CandlepinConfigurationTest {
                 });
 
         Map<String, String> withPrefix = config.configurationWithPrefix("a.c");
+        assertEquals(3, withPrefix.size());
+        assertTrue(withPrefix.containsKey("a.c.a.b"));
+        assertTrue(withPrefix.containsKey("a.c.c.d"));
+        assertTrue(withPrefix.containsKey("a.c.e.f"));
+    }
+
+    @Test
+    public void returnStringArray() {
+        Config config = new CandlepinConfigurationForTesting(
+                new HashMap<String, String>() {
+
+                    {
+                        put("a.b.a.b", "1,2,3,4");
+                    }
+                });
+
+        String[] value = config.getStringArray("a.b.a.b");
+        assertEquals(4, value.length);
+        assertEquals("1", value[0]);
+        assertEquals("2", value[1]);
+        assertEquals("3", value[2]);
+        assertEquals("4", value[3]);
+    }
+
+    @Test
+    public void returnNamespaceProperties() {
+        Config config = new CandlepinConfigurationForTesting(
+                new HashMap<String, String>() {
+
+                    {
+                        put("a.b.a.b", "value1");
+                        put("a.b.c.d", "value2");
+                        put("a.c.a.b", "value3");
+                        put("a.c.c.d", "value4");
+                        put("a.c.e.f", "value5");
+                    }
+                });
+
+        Properties withPrefix = config.getNamespaceProperties("a.c");
         assertEquals(3, withPrefix.size());
         assertTrue(withPrefix.containsKey("a.c.a.b"));
         assertTrue(withPrefix.containsKey("a.c.c.d"));

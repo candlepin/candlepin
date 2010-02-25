@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.resource.OwnerResource;
@@ -44,6 +45,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         assertNotNull(submitted);
         assertNotNull(ownerCurator.find(submitted.getId()));
+        assertTrue(submitted.getEntitlementPools().size() == 0) ;
     }
 
 }
