@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.model.Bundle;
 import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
@@ -33,7 +34,6 @@ import com.google.inject.Inject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.bouncycastle.ocsp.CertificateStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -265,9 +265,12 @@ public class ConsumerResource {
             stream.close();
 
             Base64 encoder = new Base64();
-            ClientCertificate cert = new 
-                ClientCertificate(new String(encoder.encode(baos.toByteArray())));
-            
+            // FIXME : these won't be a pkcs12 bundle
+            ClientCertificate cert = new ClientCertificate();
+            Bundle b = new Bundle();
+            b.setEntitlementCert(baos.toByteArray());
+            cert.setBundle(b);
+
             allCerts.add(cert);
             // Add it again just so we can see multiple return values:
             allCerts.add(cert);

@@ -69,10 +69,9 @@ public class OwnerResource {
     }
 
     /**
-     * Return the owner identified by the given uuid.
+     * Return the owner identified by the given ID.
      * 
-     * @param pid
-     *            uuid of the owner sought.
+     * @param ownerId Owner ID.
      * @return the owner identified by the given id.
      */
     @GET
