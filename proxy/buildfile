@@ -14,7 +14,7 @@ JERSEY = [group('jersey-core', 'jersey-json', 'jersey-server', 'jersey-client', 
         'org.apache:xalan-j2:jar:2.6.0',
         'javax.ws:jsr311-api:jar:1.1' ]
 JACKSON = ['org.codehaus.jackson:jackson-core-lgpl:jar:1.4.1', 'org.codehaus.jackson:jackson-mapper-lgpl:jar:1.4.1']
-JUNIT = 'junit:junit:jar:4.5'
+JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
 LOG4J = 'log4j:log4j:jar:1.2.14'
 HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
              'org.hibernate:hibernate-annotations:jar:3.4.0',
@@ -69,6 +69,7 @@ QUARTZ = 'quartz:quartz:jar:1.5.2'
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin"
 repositories.remote << "http://www.ibiblio.org/maven2/"
 repositories.remote << "http://download.java.net/maven/2/"
+repositories.remote << "http://repo2.maven.org/maven2/org/mockito/mockito-all"
 
 #############################################################################
 # PROJECT BUILD

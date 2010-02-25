@@ -57,6 +57,17 @@ public class Config {
         return new JPAConfiguration().parseConfig(configuration);
     }
     
+    /**
+     * Returns the Database Basic Authentication Configuration properties
+     * @return the Database Basic Authentication Configuration properties
+     */
+    public Properties dbBasicAuthConfiguration(){
+        if (configuration == null) {
+            loadConfiguration();
+        }
+        return new DatabaseBasicAuthConfiguration().parseConfig(configuration);
+    }
+    
     protected synchronized void loadConfiguration() {
         if (configuration == null) {
             initializeMap();

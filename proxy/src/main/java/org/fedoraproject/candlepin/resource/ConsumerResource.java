@@ -14,10 +14,31 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Bundle;
 import org.fedoraproject.candlepin.model.ClientCertificate;
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
+import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -31,27 +52,6 @@ import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
 /**
  * API Gateway for Consumers
  */
@@ -60,28 +60,43 @@ public class ConsumerResource {
     
     @Context 
     private UriInfo uriInfo;
-
+    
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private OwnerCurator ownerCurator;
+    private Owner owner;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerIdentityCertificateCurator consumerIdCertCurator;
 
-    /**
-     * ctor
-     * @param ownerCurator interact with owners
-     * @param consumerCurator interact with curators
-     * @param consumerTypeCurator interact with consumers.
-     */
+	private String username;
+
+	/**
+	 * ctor
+	 * 
+	 * @param ownerCurator
+	 *            interact with owners
+	 * @param consumerCurator
+	 *            interact with curators
+	 * @param consumerTypeCurator
+	 *            interact with consumers.
+	 */
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
             ConsumerTypeCurator consumerTypeCurator,
-            ConsumerIdentityCertificateCurator consumerIdCertCurator) {
+            ConsumerIdentityCertificateCurator consumerIdCertCurator,
+            @Context HttpServletRequest request) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerIdCertCurator = consumerIdCertCurator;
+        this.username = (String) request.getAttribute("username");
+        if(username != null){
+            this.owner = ownerCurator.lookupByName(username);
+            if(owner == null){
+            	owner = ownerCurator.create(new Owner(username));
+            }
+        }
     }
    
     /**
@@ -127,7 +142,6 @@ public class ConsumerResource {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
         Consumer consumer = new Consumer();
-        
         
         log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());

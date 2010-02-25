@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth.servletfilter;
+package org.fedoraproject.candlepin.servletfilter.auth;
 
 import java.io.IOException;
 
@@ -23,31 +23,19 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.log4j.Logger;
+public class PassThroughAuthenticationFilter implements Filter {
 
-/**
- * BasicAuthFilter
- */
-public class BasicAuthFilter implements Filter {
-    
-    private static Logger log = Logger.getLogger(BasicAuthFilter.class);
-    
-    private FilterConfig filterConfig = null;
+    public PassThroughAuthenticationFilter() {
+    }
     
     public void init(FilterConfig filterConfig) throws ServletException {
-        this.filterConfig = filterConfig;
     }
     
     public void destroy() {
-        this.filterConfig = null;
     }
-
-    public void doFilter(ServletRequest request, ServletResponse response,
-                         FilterChain chain)
-        throws IOException, ServletException {
-        
-        log.debug("in basic auth filter");
+    
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
+           throws IOException, ServletException {
         chain.doFilter(request, response);
-        log.debug("leaving basic auth filter");
     }
 }

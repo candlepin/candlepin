@@ -14,6 +14,13 @@
  */
 package org.fedoraproject.candlepin.test;
 
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.servlet.http.HttpServletRequest;
+
 import org.fedoraproject.candlepin.CandlepinTestingModule;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Attribute;
@@ -46,12 +53,6 @@ import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
 
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-
 /**
  * Test fixture for test classes requiring access to the database.
  */
@@ -76,6 +77,7 @@ public class DatabaseTestFixture {
     protected RulesCurator rulesCurator;
     protected SubscriptionCurator subCurator;
     protected WorkManager unitOfWork;
+    protected HttpServletRequest httpServletRequest;
 
     
     @Before

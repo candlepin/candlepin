@@ -18,14 +18,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -40,15 +38,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private static final String CONSUMER_NAME = "consumer name";
     
     private ConsumerType standardSystemType;
+    
     private ConsumerResource consumerResource;
     private Owner owner;
 
     @Before
     public void setUp() {
 
-        consumerResource = new ConsumerResource(
-                    ownerCurator, consumerCurator,
-                    consumerTypeCurator, consumerIdCertCurator);
+        consumerResource = injector.getInstance(ConsumerResource.class);
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
