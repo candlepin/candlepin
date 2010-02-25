@@ -25,8 +25,6 @@ import org.junit.Test;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
 import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.spi.TriggerFiredBundle;
@@ -59,18 +57,5 @@ public class HighlanderFactoryTest {
         Job j = hf.newJob(tfb);
         assertNotNull(j);
         assertEquals(TestJob.class, j.getClass());
-    }
-
-    public static class TestJob implements Job {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void execute(JobExecutionContext arg0In)
-            throws JobExecutionException {
-            System.out.println("we got called");
-        }
-
     }
 }

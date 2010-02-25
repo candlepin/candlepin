@@ -20,9 +20,16 @@ import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.configuration.CandlepinConfigurationTest.CandlepinConfigurationForTesting;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterException;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
 
 import org.junit.Test;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.JobListener;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -84,6 +91,85 @@ public class PinsetterKernelTest {
         catch (Throwable t) {
             fail(t.getMessage());
         }
+    }
+    
+    @Test
+    public void testScheduleJobString() throws InstantiationException, PinsetterException, SchedulerException {
+        Config config = new CandlepinConfigurationForTesting(
+            new HashMap<String, String>() {
+
+                {
+                    put("org.quartz.threadPool.class",
+                        "org.quartz.simpl.SimpleThreadPool");
+                    put("org.quartz.threadPool.threadCount", "25");
+                    put("org.quartz.threadPool.threadPriority", "5");
+
+                }
+            });
+
+        pk = new PinsetterKernel(config);
+        assertNotNull(pk);
+        
+        pk.startup();
+
+
+        Scheduler s = pk.getScheduler();
+        String[] groups = s.getJobGroupNames();
+        for (String grp : groups) {
+            String[] jobs = s.getJobNames(grp);
+            for (String job : jobs) {
+                System.out.println(job);
+                JobDetail d = s.getJobDetail(job, grp);
+                s.addJobListener(new ListenerJob());
+            }
+        }
+        
+        // TODO: test needs to be fixed big time
+        // every second
+        pk.scheduleJob(TestJob.class, "testjob", "*/1 * * * * ?");
+        Thread.yield();
+        pk.shutdown();
+        
+    }
+
+    public static class ListenerJob implements JobListener {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "listener";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void jobExecutionVetoed(JobExecutionContext contextIn) {
+            // TODO Auto-generated method stub
+            
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void jobToBeExecuted(JobExecutionContext contextIn) {
+            // TODO Auto-generated method stub
+            
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void jobWasExecuted(JobExecutionContext ctx,
+            JobExecutionException jobException) {
+            System.out.println("JOB RAN! " + ctx.getJobDetail().getName());
+            assertTrue(ctx.getJobDetail().getJobClass().equals(TestJob.class));
+        }
+        
     }
 
     public static class TestConfig extends Config {

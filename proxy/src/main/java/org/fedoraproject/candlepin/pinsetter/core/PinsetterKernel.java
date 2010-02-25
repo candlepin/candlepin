@@ -25,6 +25,7 @@ import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ import java.util.Properties;
  * Pinsetter Kernel.
  * @version $Rev$
  */
-public class PinsetterKernel {
+public class PinsetterKernel implements SchedulerService {
 
     private static Logger log = Logger.getLogger(PinsetterKernel.class);
     private static final String TASK_GROUP = "Pinsetter Batch Engine Group";
@@ -75,6 +76,7 @@ public class PinsetterKernel {
             scheduler.setJobFactory(new HighlanderJobFactory());
 
             // Setup TriggerListener chains here.
+            chainedJobListener = new ChainedListener();
         }
         catch (SchedulerException e) {
             throw new InstantiationException("this.scheduler failed: " +
@@ -202,18 +204,16 @@ public class PinsetterKernel {
                 String jobImpl = data[0];
                 String crontab = data[1];
                 String jobName = jobImpl + "-" + suffix;
-                JobDetail detail = new JobDetail(jobName,
-                        TASK_GROUP,
-                        this.getClass().getClassLoader().loadClass(jobImpl));
+ 
                 Trigger trigger = null;
                 trigger = new CronTrigger(jobImpl,
                         TASK_GROUP, crontab);
                 trigger.setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
-                trigger.addTriggerListener(this.chainedJobListener.getName());
-                this.scheduler.scheduleJob(detail, trigger);
-                if (log.isDebugEnabled()) {
-                    log.debug("Scheduled " + detail.getFullName());
-                }
+                //trigger.addTriggerListener(this.chainedJobListener.getName());
+                
+                scheduleJob(
+                    this.getClass().getClassLoader().loadClass(jobImpl),
+                    jobName, trigger);
             }
         }
         catch (Throwable t) {
@@ -222,6 +222,47 @@ public class PinsetterKernel {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void scheduleJob(Class job, String jobName, String crontab)
+        throws PinsetterException {
+        
+        try {
+            Trigger trigger = new CronTrigger(job.getName(), TASK_GROUP, crontab);
+            trigger.setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
+            //trigger.addTriggerListener(chainedJobListener.getName());
+            scheduleJob(job, jobName, trigger);
+        }
+        catch (ParseException pe) {
+            throw new PinsetterException("problem parsing schedule", pe);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void scheduleJob(Class job, String jobName, Trigger trigger) throws PinsetterException {
+        try {
+            JobDetail detail = new JobDetail(jobName, TASK_GROUP, job);
+            //trigger.addTriggerListener(chainedJobListener.getName());
+            this.scheduler.scheduleJob(detail, trigger);
+            if (log.isDebugEnabled()) {
+                log.debug("Scheduled " + detail.getFullName());
+            }
+        }
+        catch (SchedulerException se) {
+            throw new PinsetterException("problem scheduling " + jobName, se);
+        }       
+    }
+    
+    // TODO: GET RID OF ME!!
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+    
     private void deleteAllJobs() {
         boolean done = false;
         while (!done) {
@@ -243,4 +284,5 @@ public class PinsetterKernel {
             }
         }
     }
+
 }
