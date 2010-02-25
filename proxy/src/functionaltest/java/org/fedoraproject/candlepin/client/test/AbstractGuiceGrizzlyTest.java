@@ -52,36 +52,111 @@
 
 package org.fedoraproject.candlepin.client.test;
 
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-
-import com.google.inject.servlet.GuiceFilter;
-import com.google.inject.servlet.GuiceServletContextListener;
-import com.sun.grizzly.http.embed.GrizzlyWebServer;
-import com.sun.grizzly.http.servlet.ServletAdapter;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-
-import org.junit.After;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.UriBuilder;
 
-public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
+import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
+import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.model.AttributeCurator;
+import org.fedoraproject.candlepin.model.CertificateCurator;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.RulesCurator;
+import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.test.DateSourceForTesting;
+import org.fedoraproject.candlepin.test.TestDateUtil;
+import org.junit.After;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.servlet.GuiceFilter;
+import com.google.inject.servlet.GuiceServletContextListener;
+import com.google.inject.servlet.ServletModule;
+import com.sun.grizzly.http.embed.GrizzlyWebServer;
+import com.sun.grizzly.http.servlet.ServletAdapter;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import com.wideplay.warp.persist.PersistenceService;
+import com.wideplay.warp.persist.UnitOfWork;
+import com.wideplay.warp.persist.WorkManager;
+
+public abstract class AbstractGuiceGrizzlyTest {
     private static final Logger LOGGER = Logger.getLogger(
             AbstractGuiceGrizzlyTest.class.getName());
     public static final String CONTEXT = "/test";
-
     private final int port = 9997;
-
     private final URI baseUri = getUri().build();
-
     private GrizzlyWebServer ws;
-
     private GuiceFilter f;
+
+    protected EntityManagerFactory emf;
+    protected Injector injector;
+    
+    protected OwnerCurator ownerCurator;
+    protected ProductCurator productCurator;
+    protected ProductServiceAdapter productAdapter;
+    protected SubscriptionServiceAdapter subAdapter;
+    protected ConsumerCurator consumerCurator;
+    protected ConsumerIdentityCertificateCurator consumerIdCertCurator;
+    protected ConsumerTypeCurator consumerTypeCurator;
+    protected CertificateCurator certificateCurator;
+    protected EntitlementPoolCurator entitlementPoolCurator;
+    protected DateSourceForTesting dateSource;
+    protected SpacewalkCertificateCurator spacewalkCertCurator;
+    protected EntitlementCurator entitlementCurator;
+    protected AttributeCurator attributeCurator;
+    protected RulesCurator rulesCurator;
+    protected SubscriptionCurator subCurator;
+    protected WorkManager unitOfWork;
+    protected HttpServletRequest httpServletRequest;
+    
+    public void setUp() throws Exception {
+        startServer(TestServletConfig.class);
+        injector = TestServletConfig.getServletInjector();
+        initializeCurators();
+    }
+    
+    public void initializeCurators() {
+        injector = TestServletConfig.getServletInjector();
+        
+        injector.getInstance(EntityManagerFactory.class); 
+        emf = injector.getProvider(EntityManagerFactory.class).get();
+        
+        ownerCurator = injector.getInstance(OwnerCurator.class);
+        productCurator = injector.getInstance(ProductCurator.class);
+        consumerCurator = injector.getInstance(ConsumerCurator.class);
+        consumerIdCertCurator = injector.getInstance(ConsumerIdentityCertificateCurator.class);
+        consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
+        certificateCurator = injector.getInstance(CertificateCurator.class);
+        entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
+        spacewalkCertCurator = injector.getInstance(SpacewalkCertificateCurator.class);
+        entitlementCurator = injector.getInstance(EntitlementCurator.class);
+        attributeCurator = injector.getInstance(AttributeCurator.class);
+        rulesCurator = injector.getInstance(RulesCurator.class);
+        subCurator = injector.getInstance(SubscriptionCurator.class);
+        unitOfWork = injector.getInstance(WorkManager.class);
+        productAdapter = injector.getInstance(ProductServiceAdapter.class);
+        subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
+       
+        dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
+        dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
+
+    }
 
     public UriBuilder getUri() {
         return UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT);
@@ -140,5 +215,35 @@ public abstract class AbstractGuiceGrizzlyTest extends DatabaseTestFixture {
         final Client c = Client.create();
         final WebResource rootResource = c.resource(getUri().build());
         return rootResource;
+    }
+    
+    public static class TestServletConfig extends GuiceServletContextListener {
+
+        private static Injector servletInjector;
+
+        public static Injector getServletInjector() {
+            return servletInjector;
+        }
+        
+        @Override
+        protected Injector getInjector() {
+            
+            servletInjector = Guice.createInjector(
+                    new CandlepinCommonTestingModule(),
+                    
+                    PersistenceService.usingJpa()
+                        .across(UnitOfWork.REQUEST)
+                        .buildModule(),
+                        
+                    new ServletModule() {
+                        @Override
+                        protected void configureServlets() {
+                            serve("*").with(GuiceContainer.class);
+                        }
+                    }
+            );
+
+            return servletInjector;
+        }
     }
 }

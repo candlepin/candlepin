@@ -16,18 +16,16 @@ package org.fedoraproject.candlepin.client.test;
 
 import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.client.test.ConsumerHttpClientTest.TestServletConfig;
-import org.fedoraproject.candlepin.test.TestUtil;
-
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
+import org.fedoraproject.candlepin.test.TestUtil;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 
 public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
 
@@ -35,8 +33,7 @@ public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Before
     public void setUp() throws Exception {
-        TestServletConfig.setServletInjector(injector);
-        startServer(TestServletConfig.class);
+        super.setUp();
         
         InputStream is = this.getClass().getResourceAsStream(
             "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");

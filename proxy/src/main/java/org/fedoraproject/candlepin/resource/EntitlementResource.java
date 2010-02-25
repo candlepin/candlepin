@@ -226,7 +226,7 @@ public class EntitlementResource {
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/product/{product_label}")
+    @Path("consumer/{consumer_uuid}/product/{product_id}")
     public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_id") String productId) {
         

@@ -14,9 +14,10 @@
  */
 package org.fedoraproject.candlepin.client.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.client.test.ConsumerHttpClientTest.TestServletConfig;
+import java.util.List;
+
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -26,15 +27,12 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.List;
 
 public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
@@ -49,8 +47,7 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Before
     public void setUp() throws Exception {
-        TestServletConfig.setServletInjector(injector);
-        startServer(TestServletConfig.class);
+        super.setUp();
 
         owner = TestUtil.createOwner();
         ownerCurator.create(owner);

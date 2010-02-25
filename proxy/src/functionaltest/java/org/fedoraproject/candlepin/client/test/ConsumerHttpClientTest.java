@@ -14,28 +14,20 @@
  */
 package org.fedoraproject.candlepin.client.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+
+import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
-
-import com.google.inject.Injector;
-import com.google.inject.servlet.GuiceServletContextListener;
-import com.google.inject.servlet.ServletModule;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 
 public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
@@ -46,12 +38,11 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
     private ConsumerType standardSystemType;
     private Owner owner;
     private Consumer consumer;
-
+    
     @Before
-    public void setUp() {
-        TestServletConfig.setServletInjector(injector);
-        startServer(TestServletConfig.class);
-
+    public void setUp() throws Exception {
+        super.setUp();
+        
         standardSystemType = consumerTypeCurator.create(new ConsumerType(
                 "standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
@@ -193,33 +184,5 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
         // transient...
         assertEquals(first.getFact(METADATA_NAME), second
                 .getFact(METADATA_NAME));
-    }
-
-    public static class TestServletConfig extends GuiceServletContextListener {
-
-        private static Injector servletInjector;
-
-        public Injector getServletInjector() {
-            return servletInjector;
-        }
-        
-        /**
-         * @param injectorIn
-         */
-        public static void setServletInjector(Injector injectorIn) {
-            servletInjector = injectorIn;
-        }
-
-        @Override
-        protected Injector getInjector() {
-
-            return servletInjector.createChildInjector(new ServletModule() {
-
-                @Override
-                protected void configureServlets() {
-                    serve("*").with(GuiceContainer.class);
-                }
-            });
-        }
     }
 }
