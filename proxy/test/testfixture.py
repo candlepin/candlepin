@@ -43,7 +43,7 @@ class CandlepinTests(unittest.TestCase):
             self.fail("Status: %s Reason: %s" % (response.status, response.reason))
 
     def __read_cert(self, cert_file='code/scripts/spacewalk-public.cert'):
-        cert_file = os.path.join(__file__, '..', cert_file)
+        cert_file = os.path.abspath(os.path.join(__file__, '../..', cert_file))
         return open(cert_file, 'rb').read()
 
 
