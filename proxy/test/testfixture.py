@@ -42,9 +42,9 @@ class CandlepinTests(unittest.TestCase):
         if response.status != expected_status:
             self.fail("Status: %s Reason: %s" % (response.status, response.reason))
 
-    def __read_cert(self, cert_path='code/scripts/spacewalk-public.cert'):
-        root = os.abspath(os.join(__file__, '..'))
-        return open(os.join(root, cert_path), 'rb').read()
+    def __read_cert(self, cert_file='code/scripts/spacewalk-public.cert'):
+        cert_file = os.join(__file__, '..', cert_file)
+        return open(cert_file, 'rb').read()
 
 
 ## GET see if there's a certificate
