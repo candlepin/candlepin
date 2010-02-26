@@ -18,6 +18,7 @@ import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
 
 import com.google.inject.Inject;
+import com.sun.jersey.core.util.Base64;
 
 import org.apache.log4j.Logger;
 
@@ -54,7 +55,7 @@ public class RulesResource {
      * @return a copy of the uploaded rules.
      */
     @POST
-    @Consumes({ MediaType.TEXT_PLAIN })
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON,
                 MediaType.APPLICATION_XML })
     public String upload(String rulesBuffer) {
@@ -63,7 +64,14 @@ public class RulesResource {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
-        Rules rules = new Rules(rulesBuffer);
+        Rules rules = null ;
+        try {
+            String decoded = Base64.base64Decode(rulesBuffer);
+            rules = new Rules(decoded);
+        } catch (Throwable t) {
+            log.error("Exception in rules upload", t) ;
+            throw new BadRequestException("Error decoding the rules. The text should be base 64 encded") ;
+        }
         rulesCurator.update(rules);
         return rulesBuffer;
     }
@@ -73,8 +81,14 @@ public class RulesResource {
      * @return a the rules as a string.
      */
     @GET
-    @Produces({ MediaType.TEXT_PLAIN })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.APPLICATION_XML})
     public String get() {
-        return rulesCurator.getRules().getRules();
+        String rules = rulesCurator.getRules().getRules() ;
+        if ((rules != null) && (rules.length() > 0)) {
+            System.out.println(rules) ;
+            return new String(Base64.encode(rules)) ;
+        } else {
+            return "" ;
+        }
     }
 }

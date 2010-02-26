@@ -5,21 +5,11 @@ import sys
 import simplejson as json
 import base64
 
-# read and encode the cert
-#cert = open('spacewalk-public.cert', 'rb').read()
-#encoded_cert = base64.b64encode(cert)
-
+# Read the files from the file, and encode them
 filename = sys.argv[1]
 f = open(filename)
 rules = f.read()
-#rules = open("whatever something or another, blah blah"
-
-# GET see if there's a certificate
-
-#response = urllib.urlopen('http://localhost:8080/candlepin/rules')
-#rsp = response.read()
-#print("get: %s" % rsp)
-
+rules = base64.b64encode(rules)
 
 # http://stackoverflow.com/questions/111945/is-there-anyway-to-do-http-put-in-python
 import urllib2
@@ -31,15 +21,14 @@ url = opener.open(request)
 
 response = urllib.urlopen('http://localhost:8080/candlepin/rules')
 rsp = response.read()
+rsp = base64.standard_b64decode(rsp)
 print("------------")
 print(rsp)
-
-
 
 #"""
-# GET see if there's a certificate
+# GET see if the rules are still there.
 response = urllib.urlopen('http://localhost:8080/candlepin/rules')
 rsp = response.read()
+rsp = base64.standard_b64decode(rsp)
 print("------------")
 print(rsp)
-#print(base64.standard_b64decode(rsp))
