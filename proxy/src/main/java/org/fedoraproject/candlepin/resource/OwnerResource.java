@@ -143,7 +143,7 @@ public class OwnerResource {
      */
     @GET
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("{owner_id}/entitlementpool")
+    @Path("{owner_id}/pool")
     public List<EntitlementPool> ownerEntitlementPools(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
