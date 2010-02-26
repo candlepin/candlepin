@@ -57,7 +57,7 @@ public class Owner implements Persisted {
     
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy = "owner", targetEntity = EntitlementPool.class)
-    @ForeignKey(name = "fk_user_owner_id")
+    //@ForeignKey(name = "fk_user_owner_id")
     private Set<EntitlementPool> entitlementPools;
         
     @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)

@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -132,4 +133,26 @@ public class OwnerResource {
 
         return toReturn;
     }
+    
+    /**
+     * Return the entitlement pools for the owner of the given id.
+     * 
+     * @param ownerId
+     *            id of the owner whose entitlement pools are sought.
+     * @return the entitlement pools for the owner of the given id.
+     */
+    @GET
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{owner_id}/entitlementpool")
+    public List<EntitlementPool> ownerEntitlementPools(
+        @PathParam("owner_id") Long ownerId) {
+        Owner owner = ownerCurator.find(ownerId);
+        if (owner == null) {
+            throw new NotFoundException("owner with id: " + ownerId
+                + " was not found.");
+        }
+
+        System.out.println(owner.getEntitlementPools().size()) ;
+        return new ArrayList<EntitlementPool>(owner.getEntitlementPools()) ; 
+    }    
 }
