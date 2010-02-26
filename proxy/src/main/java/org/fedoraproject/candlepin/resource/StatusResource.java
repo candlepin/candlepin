@@ -29,19 +29,19 @@ import com.google.inject.Inject;
 @Path("/status")
 public class StatusResource {
 
-    
     @Inject
     public StatusResource() {
     }
-    
+
     /**
-     * /status to see if a server is up and runing
-     * @return Status
+     * status to see if a server is up and running
+     * 
+     * @return the running status
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     public Status status() {
         Status status = new Status(true);
-        return  status;
+        return status;
     }
-}   
+}

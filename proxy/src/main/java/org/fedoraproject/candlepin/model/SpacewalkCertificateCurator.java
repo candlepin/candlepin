@@ -134,6 +134,7 @@ public class SpacewalkCertificateCurator {
         ep.setStartDate(start);
         ep.setEndDate(end);
         ep.setCurrentMembers(0);
+        owner.addEntitlementPool(ep);
         entitlementPoolCurator.create(ep);
     }
     

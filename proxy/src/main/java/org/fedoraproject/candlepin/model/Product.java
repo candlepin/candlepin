@@ -67,9 +67,7 @@ public class Product implements Persisted {
             inverseJoinColumns = @JoinColumn(name = "CHILD_PRODUCT_ID"))
     private Set<Product> childProducts;
 
-    @CollectionOfElements
-    @Cascade({org.hibernate.annotations.CascadeType.PERSIST,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "PRODUCT_ATTRIBUTE")
     //   @JoinColumn(name="ATTRIBUTE_ID")
     private Set<Attribute> attributes;
@@ -189,10 +187,10 @@ public class Product implements Persisted {
         this.attributes.add(attrib);
     }
     
-    public String getAttribute(String key) {
+    public Attribute getAttribute(String key) {
         for (Attribute a : attributes) {
             if (a.getName().equals(key)) {
-                return a.getValue();
+                return a;
             }
         }
         return null;

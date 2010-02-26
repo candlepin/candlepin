@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
 
@@ -28,6 +29,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -35,7 +38,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 /**
  * API gateway for the EntitlementPool
  */
-@Path("/entitlementpool")
+@Path("/pool")
 public class EntitlementPoolResource {
 
     private static Logger log = Logger.getLogger(EntitlementPoolResource.class);
@@ -61,9 +64,32 @@ public class EntitlementPoolResource {
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public List<EntitlementPool> list() {
-        return entitlementPoolCurator.findAll();
+    public Pools list() {
+        Pools returnValue = new Pools() ;
+        returnValue.pool = entitlementPoolCurator.findAll() ;
+        return returnValue;
     }
+    
+    /**
+     * Return the Entitlement Pool for the given id
+     * 
+     * @param id
+     *            the id of the pool
+     * @return the pool identified by the id
+     */
+    @GET
+    @Path("/{pool_id}")    
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public EntitlementPool getProduct(@PathParam("pool_id") Long id) {
+        EntitlementPool toReturn = entitlementPoolCurator.find(id) ;
+
+        if (toReturn != null) {
+            return toReturn;
+        }
+
+        throw new NotFoundException("Entitlement Pool with ID '" + id +
+            "' could not be found");
+    }    
 
     /**
      * Returns all the entitlement pools available to a consumer.

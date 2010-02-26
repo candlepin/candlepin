@@ -169,9 +169,9 @@ public class ProductTest extends DatabaseTestFixture {
         productCurator.create(prod);
         
         Product lookedUp = productCurator.find(prod.getId());
-        assertEquals(jsonData, lookedUp.getAttribute("content_sets"));
+        assertEquals(jsonData, lookedUp.getAttribute("content_sets").getValue());
         
-        data = mapper.readValue(lookedUp.getAttribute("content_sets"), 
+        data = mapper.readValue(lookedUp.getAttribute("content_sets").getValue(),
             new TypeReference<Map<String, String>>(){});
         assertEquals("1", data.get("a"));
         assertEquals("2", data.get("b"));
@@ -202,15 +202,55 @@ public class ProductTest extends DatabaseTestFixture {
         productCurator.create(prod);
         
         Product lookedUp = productCurator.find(prod.getId());
-        assertEquals(jsonData, lookedUp.getAttribute("content_sets"));
+        assertEquals(jsonData, lookedUp.getAttribute("content_sets").getValue());
         
-        data = mapper.readValue(lookedUp.getAttribute("content_sets"), 
+        data = mapper.readValue(lookedUp.getAttribute("content_sets").getValue(),
             new TypeReference<List<Map<String, String>>>(){});
         Map<String, String> cs1 = data.get(0);
         assertEquals("cs1", cs1.get("name"));
         
         Map<String, String> cs2 = data.get(1);
         assertEquals("cs2", cs2.get("name"));
+    }
+
+    @Test
+    public void testProductWithContentSets() {
+        // NOTE: Not using value on the Attributes which have children, but you easily could,
+        // perhaps a string list of the children labels or what not.
+        Attribute contentSets = new Attribute("content_sets", "");
+        for (int i = 0; i < 5; i++) {
+            // assume family label as attribute name:
+            Attribute channelFamily = new Attribute("channelfamilylabel" + i, "");
+            channelFamily.addChildAttribute("family_id", "some family id");
+            channelFamily.addChildAttribute("family_name", "some family name");
+            channelFamily.addChildAttribute("flex_quantity", "5");
+            channelFamily.addChildAttribute("physical_quantity", "10");
+
+            // Now add the channels as a child of the channel family:
+            Attribute channels = new Attribute("channels", "");
+            for (int j = 0; j < 3; j++) {
+                Attribute channel = new Attribute("channel" + j, ""); // assume channel ID?
+                channel.addChildAttribute("channel_name", "chan name");
+                channel.addChildAttribute("channel_desc", "description");
+                channel.addChildAttribute("channel_basedir", "basedir");
+                channels.addChildAttribute(channel);
+            }
+
+            // Finish the mapping:
+            channelFamily.addChildAttribute(channels);
+            contentSets.addChildAttribute(channelFamily);
+        }
+
+        Product prod = new Product("cptest-label", "My Product");
+        prod.addAttribute(contentSets);
+        productCurator.create(prod);
+
+        Product lookedUp = productCurator.find(prod.getId());
+        Attribute testing = lookedUp.getAttribute("content_sets");
+        assertEquals(5, testing.getChildAttributes().size());
+        testing = testing.getChildAttribute("channelfamilylabel0");
+        testing = testing.getChildAttribute("channels");
+        assertEquals(3, testing.getChildAttributes().size());
     }
 
 }

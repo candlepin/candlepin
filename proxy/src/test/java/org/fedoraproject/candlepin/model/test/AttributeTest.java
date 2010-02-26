@@ -31,6 +31,25 @@ public class AttributeTest extends DatabaseTestFixture {
         Attribute foundAttr = attributeCurator.find(newAttr.getId());
         assertEquals(newAttr.getName(), foundAttr.getName());
         assertEquals(newAttr.getValue(), foundAttr.getValue());
+        assertEquals(0, foundAttr.getChildAttributes().size());
+    }
+
+    @Test
+    public void testChildAttributes() {
+        Attribute parent = new Attribute("parent", "p");
+        Attribute child1 = new Attribute("child1", "c1");
+        Attribute grandChild1 = new Attribute("grandChild1", "gc1");
+        Attribute child2 = new Attribute("child2", "c2");
+
+        child1.addChildAttribute(grandChild1);
+        parent.addChildAttribute(child1);
+        parent.addChildAttribute(child2);
+        attributeCurator.create(parent);
+
+        Attribute foundAttr = attributeCurator.find(parent.getId());
+        assertEquals(2, parent.getChildAttributes().size());
+        assertEquals(1, parent.getChildAttribute(child1.getName())
+            .getChildAttributes().size());
     }
 
 }

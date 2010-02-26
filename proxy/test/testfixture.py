@@ -2,6 +2,7 @@ import unittest
 import httplib, urllib
 import simplejson as json
 import base64
+import os
 
 from urllib import urlopen
 
@@ -19,7 +20,8 @@ class CandlepinTests(unittest.TestCase):
         rsp = urlopen("%s/certificate" % CANDLEPIN_SERVER).read()
         if rsp.strip() == "":
             print("Cert upload required.")
-            cert = open('code/scripts/spacewalk-public.cert', 'rb').read()
+
+            cert = self.__read_cert()
             encoded_cert = base64.b64encode(cert)
             params = {"base64cert": encoded_cert}
             headers = {"Content-type": "application/json",
@@ -39,6 +41,10 @@ class CandlepinTests(unittest.TestCase):
     def assertResponse(self, expected_status, response):
         if response.status != expected_status:
             self.fail("Status: %s Reason: %s" % (response.status, response.reason))
+
+    def __read_cert(self, cert_file='code/scripts/spacewalk-public.cert'):
+        cert_file = os.path.abspath(os.path.join(__file__, '../..', cert_file))
+        return open(cert_file, 'rb').read()
 
 
 ## GET see if there's a certificate

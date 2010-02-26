@@ -149,7 +149,7 @@ class CandlePinApi:
         return self.rest.post(path,data=certificate_list)
 
     def getEntitlementPools(self, consumer_uuid):
-        path = "/entitlementpool/consumer/%s" % consumer_uuid
+        path = "/pool/consumer/%s" % consumer_uuid
         return self.rest.get(path)
 
     def getEntitlements(self, consumer_uuid):

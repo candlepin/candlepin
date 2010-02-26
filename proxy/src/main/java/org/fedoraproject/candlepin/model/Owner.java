@@ -29,6 +29,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 
@@ -57,7 +59,7 @@ public class Owner implements Persisted {
     
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy = "owner", targetEntity = EntitlementPool.class)
-    @ForeignKey(name = "fk_user_owner_id")
+    //@ForeignKey(name = "fk_user_owner_id")
     private Set<EntitlementPool> entitlementPools;
         
     @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)
@@ -129,6 +131,7 @@ public class Owner implements Persisted {
     /**
      * @return the entitlementPools
      */
+    @XmlElement(name="pool")
     public Set<EntitlementPool> getEntitlementPools() {
         return entitlementPools;
     }

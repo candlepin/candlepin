@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * Represents a pool of products eligible to be consumed (entitled).
  * For every Product there will be a corresponding Pool.
  */
-@XmlRootElement
+@XmlRootElement(name="pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement_pool")
