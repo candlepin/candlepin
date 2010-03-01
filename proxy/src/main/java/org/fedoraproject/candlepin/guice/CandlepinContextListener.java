@@ -41,7 +41,7 @@ import com.wideplay.warp.persist.UnitOfWork;
 /**
  * configure Guice with the resource classes.
  */
-public class JerseyGuiceConfiguration extends GuiceServletContextListener {
+public class CandlepinContextListener extends GuiceServletContextListener {
     
     private final static String CANDLEPIN_SERVLET = "CANDLEPIN";
 
@@ -53,7 +53,7 @@ public class JerseyGuiceConfiguration extends GuiceServletContextListener {
                 add(PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
                         .buildModule());
 
-                add(new CandlepinProductionConfiguration());
+                add(new CandlepinModule());
                 
                 add(new ServletModule() {{
                         filter("/*").through(LoggingFilter.class);

@@ -22,7 +22,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 
-public class JPAConfigurationTest {
+public class JPAConfigParserTest {
 
     @Test
     public void shouldStripJPAConfigKeyPrefixes() {
@@ -32,12 +32,12 @@ public class JPAConfigurationTest {
         Map<String, String> configuraton = new HashMap<String, String>() {
 
             {
-                put(JPAConfiguration.JPA_CONFIG_PREFIX + "." + key1, "value");
-                put(JPAConfiguration.JPA_CONFIG_PREFIX + "." + key2, "value");
+                put(JPAConfigParser.JPA_CONFIG_PREFIX + "." + key1, "value");
+                put(JPAConfigParser.JPA_CONFIG_PREFIX + "." + key2, "value");
             }
         };
 
-        Properties stripped = new JPAConfiguration()
+        Properties stripped = new JPAConfigParser()
                 .stripPrefixFromConfigKeys(configuraton);
 
         assertEquals(2, stripped.size());

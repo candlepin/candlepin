@@ -3,7 +3,7 @@ package org.fedoraproject.candlepin.config;
 import java.util.Map;
 import java.util.Properties;
 
-public abstract class ConfigurationParser {
+abstract class ConfigurationParser {
 
     /**
      * Converts the given Map into a Properties object. 

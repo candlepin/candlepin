@@ -19,7 +19,7 @@ package org.fedoraproject.candlepin.config;
  * DatabaseBasicAuthConfiguration
  * @version $Rev$
  */
-class DatabaseBasicAuthConfiguration extends ConfigurationParser {
+class DbBasicAuthConfigParser extends ConfigurationParser {
     /** Basic auth configuration prefix */
     public static final String BASIC_AUTH_CONFIG_PREFIX = "basic.auth.config";
     /** Length of the <code>BASIC_AUTH_CONFIG_PREFIX</code> */

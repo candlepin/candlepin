@@ -54,7 +54,7 @@ public class Config {
         if (configuration == null) {
             loadConfiguration();
         }
-        return new JPAConfiguration().parseConfig(configuration);
+        return new JPAConfigParser().parseConfig(configuration);
     }
     
     /**
@@ -65,7 +65,7 @@ public class Config {
         if (configuration == null) {
             loadConfiguration();
         }
-        return new DatabaseBasicAuthConfiguration().parseConfig(configuration);
+        return new DbBasicAuthConfigParser().parseConfig(configuration);
     }
     
     protected synchronized void loadConfiguration() {

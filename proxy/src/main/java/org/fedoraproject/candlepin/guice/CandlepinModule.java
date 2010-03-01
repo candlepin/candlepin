@@ -47,7 +47,7 @@ import com.wideplay.warp.persist.jpa.JpaUnit;
 /**
  * CandlepinProductionConfiguration
  */
-public class CandlepinProductionConfiguration extends AbstractModule {
+public class CandlepinModule extends AbstractModule {
 
     @Override
     public void configure() {        
