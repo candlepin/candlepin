@@ -28,7 +28,7 @@
    =======================================================================
    -->
   <listener>
-    <listener-class>org.fedoraproject.candlepin.guice.JerseyGuiceConfiguration</listener-class>
+    <listener-class>org.fedoraproject.candlepin.guice.CandlepinContextListener</listener-class>
   </listener>
   <!--
    =======================================================================

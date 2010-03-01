@@ -46,6 +46,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.ConfigDirectory;
 
+import com.google.inject.Singleton;
+
+/**
+ * SSLAuthFilter
+ */
 public class SSLAuthFilter implements Filter {
     private static final String CA_CERTIFICATE = "ca.crt";
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
@@ -68,11 +73,11 @@ public class SSLAuthFilter implements Filter {
     }
     
     public void init(FilterConfig filterConfig) throws ServletException {
-       this.filterConfig = filterConfig;
+        this.filterConfig = filterConfig;
     }
     
     public void destroy() {
-       this.filterConfig = null;
+        this.filterConfig = null;
     }
     
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 

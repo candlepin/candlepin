@@ -23,7 +23,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.config.Config;
-
 import com.google.inject.Module;
 
 /**

@@ -20,21 +20,17 @@ import static org.junit.Assert.assertNull;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
 import java.util.Map;
 
 import javax.persistence.PersistenceException;

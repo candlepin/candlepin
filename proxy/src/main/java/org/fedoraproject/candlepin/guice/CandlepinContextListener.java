@@ -41,9 +41,9 @@ import com.wideplay.warp.persist.UnitOfWork;
 /**
  * configure Guice with the resource classes.
  */
-public class JerseyGuiceConfiguration extends GuiceServletContextListener {
+public class CandlepinContextListener extends GuiceServletContextListener {
     
-    private final static String CANDLEPIN_SERVLET = "CANDLEPIN";
+    private static final String CANDLEPIN_SERVLET = "CANDLEPIN";
 
     @Override
     protected Injector getInjector() {
@@ -51,31 +51,40 @@ public class JerseyGuiceConfiguration extends GuiceServletContextListener {
 
             {
                 add(PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
-                        .buildModule());
+                    .buildModule());
 
-                add(new CandlepinProductionConfiguration());
-                
-                add(new ServletModule() {{
+                add(new CandlepinModule());
+
+                add(new ServletModule() {
+                    {
                         filter("/*").through(LoggingFilter.class);
                         filter("/*").through(Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)));
                         filter("/*").through(Key.get(Filter.class, named(FilterConstants.SSL_AUTH)));
                         serve("/*").with(GuiceContainer.class,
-                            new HashMap<String, String>() {{
-                                  put("com.sun.jersey.config.property.packages", "org.fedoraproject.candlepin.resource");
-                            }}
-                        );
-                    }}
-                );
-                
-                add(Modules.override(new DefaultConfig()).with(new CustomizableModules().load()));
+                            new HashMap<String, String>() {
+                                {
+                                    put(
+                                        "com.sun.jersey.config.property.packages",
+                                        "org.fedoraproject.candlepin.resource");
+                                }
+                            });
+                    }
+                });
+
+                add(Modules.override(new DefaultConfig()).with(
+                    new CustomizableModules().load()));
             }
         });
     }
     
+    /**
+     * ServletConfig
+     */
     protected class ServletConfig extends AbstractModule {
         @Override
         protected void configure() {
-            bind(HttpServlet.class).annotatedWith(named(CANDLEPIN_SERVLET)).to(GuiceContainer.class);
+            bind(HttpServlet.class).annotatedWith(named(CANDLEPIN_SERVLET)).to(
+                GuiceContainer.class);
         }
     }
 }

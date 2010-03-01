@@ -64,7 +64,7 @@ public class OwnerResource {
      * @return list of Owners
      */
     @GET
-    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Owner> list() {
         return ownerCurator.findAll();
     }
@@ -77,27 +77,27 @@ public class OwnerResource {
      */
     @GET
     @Path("/{owner_id}")
-    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Owner getOwner(@PathParam("owner_id") Long owner_id) {
-        Owner toReturn = ownerCurator.find(owner_id);
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public Owner getOwner(@PathParam("owner_id") Long ownerId) {
+        Owner toReturn = ownerCurator.find(ownerId);
 
         if (toReturn != null) {
             return toReturn;
         }
 
-        throw new NotFoundException("Owner with UUID '" + owner_id
-            + "' could not be found");
+        throw new NotFoundException("Owner with UUID '" + ownerId +
+            "' could not be found");
     }
 
     /**
      * Creates a new Owner
      * 
-     * @param pid
+     * @param owner
      *            uuid of the owner sought.
      * @return the owner identified by the given id.
      */
     @POST
-    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Owner createOwner(Owner owner) {
         Owner toReturn = ownerCurator.create(owner);
 
@@ -116,14 +116,14 @@ public class OwnerResource {
      * @return the entitlements for the owner of the given id.
      */
     @GET
-    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/entitlement")
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
         if (owner == null) {
-            throw new NotFoundException("owner with id: " + ownerId
-                + " was not found.");
+            throw new NotFoundException("owner with id: " + ownerId +
+                " was not found.");
         }
 
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
@@ -142,17 +142,17 @@ public class OwnerResource {
      * @return the entitlement pools for the owner of the given id.
      */
     @GET
-    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/pool")
     public List<EntitlementPool> ownerEntitlementPools(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
         if (owner == null) {
-            throw new NotFoundException("owner with id: " + ownerId
-                + " was not found.");
+            throw new NotFoundException("owner with id: " + ownerId +
+                " was not found.");
         }
 
-        System.out.println(owner.getEntitlementPools().size()) ;
-        return new ArrayList<EntitlementPool>(owner.getEntitlementPools()) ; 
+        System.out.println(owner.getEntitlementPools().size());
+        return new ArrayList<EntitlementPool>(owner.getEntitlementPools()); 
     }    
 }

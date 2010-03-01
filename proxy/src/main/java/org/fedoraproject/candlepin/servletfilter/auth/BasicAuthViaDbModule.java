@@ -20,6 +20,9 @@ import javax.servlet.Filter;
 
 import com.google.inject.AbstractModule;
 
+/**
+ * BasicAuthViaDbModule
+ */
 public class BasicAuthViaDbModule extends AbstractModule {
     @Override
     public void configure() {

@@ -56,18 +56,18 @@ public class Config {
         if (configuration == null) {
             loadConfiguration();
         }
-        return new JPAConfiguration().parseConfig(configuration);
+        return new JPAConfigParser().parseConfig(configuration);
     }
     
     /**
      * Returns the Database Basic Authentication Configuration properties
      * @return the Database Basic Authentication Configuration properties
      */
-    public Properties dbBasicAuthConfiguration(){
+    public Properties dbBasicAuthConfiguration() {
         if (configuration == null) {
             loadConfiguration();
         }
-        return new DatabaseBasicAuthConfiguration().parseConfig(configuration);
+        return new DbBasicAuthConfigParser().parseConfig(configuration);
     }
     
     protected synchronized void loadConfiguration() {

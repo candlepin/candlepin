@@ -19,7 +19,7 @@ package org.fedoraproject.candlepin.config;
  * JPAConfiguration
  * @version $Rev$
  */
-class JPAConfiguration extends ConfigurationParser {
+class JPAConfigParser extends ConfigurationParser {
     /** JPA configuration prefix */
     public static final String JPA_CONFIG_PREFIX = "jpa.config";
     /** Length of the <code>JPA_CONFIG_PREFIX</code> */

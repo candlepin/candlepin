@@ -38,10 +38,13 @@ import org.fedoraproject.candlepin.resource.ForbiddenException;
 import com.google.inject.Singleton;
 import com.sun.jersey.core.util.Base64;
 
+/**
+ * BasicAuthViaDbFilter
+ */
 @Singleton
 public class BasicAuthViaDbFilter implements Filter {
 
-    Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
+    private Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
 
     private FilterConfig filterConfig = null;
 
@@ -65,7 +68,8 @@ public class BasicAuthViaDbFilter implements Filter {
         
         if (httpRequest.getMethod().equals("POST")) {
             processPost(request, response, chain, httpRequest, httpResponse);
-        } else {
+        }
+        else {
             // Anything that is not a POST is passed through
             chain.doFilter(request, response);
         }
@@ -94,8 +98,10 @@ public class BasicAuthViaDbFilter implements Filter {
                 log.error(ex.getMessage());
                 httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
             }
-        }else {
-            // Anything that is a POST that is not using BASIC auth, then it's forbidden
+        }
+        else {
+            // Anything that is a POST that is not using BASIC auth, then it's
+            // forbidden
             httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
         }
     }
@@ -126,9 +132,7 @@ public class BasicAuthViaDbFilter implements Filter {
         }
 
         if (passwordAssertion != null && passwordAssertion.equals(password)) {
-            log
-                .info("BASIC user authenication succeeded for user: "
-                    + username);
+            log.info("BASIC user authenication succeeded for user: " + username);
         }
         else {
             throw new ForbiddenException(

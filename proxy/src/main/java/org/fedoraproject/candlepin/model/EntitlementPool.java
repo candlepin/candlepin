@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * Represents a pool of products eligible to be consumed (entitled).
  * For every Product there will be a corresponding Pool.
  */
-@XmlRootElement(name="pool")
+@XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement_pool")
@@ -320,5 +320,10 @@ public class EntitlementPool implements Persisted {
      */
     public Boolean isActive() {
         return activeSubscription;
+    }
+
+    public String toString() {
+        return "EntitlementPool [id = " + getId() + ", product = " + getProductId() +
+            ", quantity = " + getMaxMembers() + ", expires = " + getEndDate() + "]";
     }
 }

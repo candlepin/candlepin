@@ -68,33 +68,31 @@ public class ConsumerResource {
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerIdentityCertificateCurator consumerIdCertCurator;
 
-	private String username;
+    private String username;
 
-	/**
-	 * ctor
-	 * 
-	 * @param ownerCurator
-	 *            interact with owners
-	 * @param consumerCurator
-	 *            interact with curators
-	 * @param consumerTypeCurator
-	 *            interact with consumers.
-	 */
+    /**
+     * @param ownerCurator interact with owner
+     * @param consumerCurator interact with consumer
+     * @param consumerTypeCurator interact wtih consumerType
+     * @param consumerIdCertCurator interact wtih consumerIdCert
+     * @param request servlet request
+     */
     @Inject
-    public ConsumerResource(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ConsumerTypeCurator consumerTypeCurator,
-            ConsumerIdentityCertificateCurator consumerIdCertCurator,
-            @Context HttpServletRequest request) {
+    public ConsumerResource(OwnerCurator ownerCurator,
+        ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator,
+        ConsumerIdentityCertificateCurator consumerIdCertCurator,
+        @Context HttpServletRequest request) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerIdCertCurator = consumerIdCertCurator;
         this.username = (String) request.getAttribute("username");
-        if(username != null){
+        if (username != null) {
             this.owner = ownerCurator.lookupByName(username);
-            if(owner == null){
-            	owner = ownerCurator.create(new Owner(username));
+            if (owner == null) {
+                owner = ownerCurator.create(new Owner(username));
             }
         }
     }

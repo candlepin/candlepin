@@ -39,7 +39,7 @@ public class StatusResource {
      * @return the running status
      */
     @GET
-    @Produces( { MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     public Status status() {
         Status status = new Status(true);
         return status;
