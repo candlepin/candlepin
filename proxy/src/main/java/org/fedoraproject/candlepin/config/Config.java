@@ -20,13 +20,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.fedoraproject.candlepin.ConfigDirectory;
-
 /**
  * Defines the default Candlepin configuration
  */
 public class Config {
-    protected File CONFIGURATION_FILE = new File(ConfigDirectory.directory(), "candlepin.conf");
+    public static final File CONFIG_DIR = new File("/etc/candlepin");
+    protected File CONFIG_FILE = new File(CONFIG_DIR, "candlepin.conf");
     protected static TreeMap<String, String> configuration = null;
    
 
@@ -82,7 +81,7 @@ public class Config {
     
     protected Map<String, String> loadProperties() {
         try {
-            return new ConfigurationFileLoader().loadProperties(CONFIGURATION_FILE);
+            return new ConfigurationFileLoader().loadProperties(CONFIG_FILE);
         }
         catch (IOException e) {
             throw new RuntimeException("Problem loading candlepin configuration file.", e);

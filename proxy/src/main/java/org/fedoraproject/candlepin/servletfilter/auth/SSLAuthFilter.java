@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.servletfilter.auth;
 
+import org.fedoraproject.candlepin.config.Config;
+
+import org.apache.log4j.Logger;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,11 +46,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.ConfigDirectory;
-
-import com.google.inject.Singleton;
 
 /**
  * SSLAuthFilter
@@ -137,7 +136,7 @@ public class SSLAuthFilter implements Filter {
     protected InputStream caCertificate() throws FileNotFoundException {
         return new BufferedInputStream(
             new FileInputStream(
-                new File(ConfigDirectory.directory(), CA_CERTIFICATE)
+                new File(Config.CONFIG_DIR, CA_CERTIFICATE)
             )
         ); 
     }
