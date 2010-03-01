@@ -24,11 +24,15 @@ import org.fedoraproject.candlepin.servletfilter.auth.PassThroughAuthenticationF
 
 import com.google.inject.AbstractModule;
 
+/**
+ * DefaultConfig
+ */
 class DefaultConfig extends AbstractModule {
 
     @Override
-    public void configure() {        
+    public void configure() {
         bind(LoggingFilter.class).asEagerSingleton();
-        bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(PassThroughAuthenticationFilter.class).asEagerSingleton();
+        bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(
+            PassThroughAuthenticationFilter.class).asEagerSingleton();
     }
 }

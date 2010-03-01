@@ -17,8 +17,6 @@ package org.fedoraproject.candlepin.config;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.fedoraproject.candlepin.config.Config;
-
 import org.junit.Test;
 
 import java.util.HashMap;

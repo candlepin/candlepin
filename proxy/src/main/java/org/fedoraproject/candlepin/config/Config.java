@@ -61,7 +61,7 @@ public class Config {
      * Returns the Database Basic Authentication Configuration properties
      * @return the Database Basic Authentication Configuration properties
      */
-    public Properties dbBasicAuthConfiguration(){
+    public Properties dbBasicAuthConfiguration() {
         if (configuration == null) {
             loadConfiguration();
         }

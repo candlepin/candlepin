@@ -68,7 +68,7 @@ public class Attribute  implements Persisted {
     @JoinTable(name = "cp_attribute_hierarchy",
         joinColumns = @JoinColumn(name = "PARENT_ATTRIBUTE_ID"),
         inverseJoinColumns = @JoinColumn(name = "CHILD_ATTRIBUTE_ID"))
-    Set<Attribute> childAttributes;
+    private Set<Attribute> childAttributes;
 
     /**
      * default ctor

@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -83,7 +82,8 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testEntitle() throws Exception {
-        EntitlementBindResult result = eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
+        EntitlementBindResult result = eapi.entitleByProduct(
+            consumer.getUuid(), product.getLabel());
         
         
         //assertNotNull(cert);

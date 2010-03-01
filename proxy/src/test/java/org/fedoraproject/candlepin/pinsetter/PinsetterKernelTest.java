@@ -54,16 +54,20 @@ public class PinsetterKernelTest {
                     put("org.quartz.threadPool.threadPriority", "5");
 
                     // clustering
-//                    put("org.quartz.scheduler.instanceName", "MyClusteredScheduler");
+//                    put("org.quartz.scheduler.instanceName",
+//                        "MyClusteredScheduler");
 //                    put("org.quartz.scheduler.instanceId", "AUTO");
-//                    put("org.quartz.jobStore.class", "org.quartz.impl.jdbcjobstore.JobStoreTX");
+//                    put("org.quartz.jobStore.class",
+//                        "org.quartz.impl.jdbcjobstore.JobStoreTX");
 //                    put("org.quartz.jobStore.driverDelegateClass",
 //                        "org.quartz.impl.jdbcjobstore.HSQLDBDelegate");
 //                    put("org.quartz.jobStore.tablePrefix", "QRTZ_");
 //                    put("org.quartz.jobStore.isClustered", "true");
 //
-//                    put("org.quartz.dataSource.myDS.driver", "org.hsqldb.jdbcDriver");
-//                    put("org.quartz.dataSource.myDS.URL", "jdbc:hsqldb:mem:unit-testing-jpa");
+//                    put("org.quartz.dataSource.myDS.driver",
+//                        "org.hsqldb.jdbcDriver");
+//                    put("org.quartz.dataSource.myDS.URL",
+//                        "jdbc:hsqldb:mem:unit-testing-jpa");
 //                    put("org.quartz.dataSource.myDS.user", "sa");
 //                    put("org.quartz.dataSource.myDS.password", "");
 //                    put("org.quartz.jobStore.dataSource", "myDS");
@@ -83,7 +87,8 @@ public class PinsetterKernelTest {
     }
     
     @Test
-    public void testScheduleJobString() throws InstantiationException, PinsetterException, SchedulerException {
+    public void testScheduleJobString() throws InstantiationException,
+        PinsetterException, SchedulerException {
         Config config = new CandlepinConfigurationForTesting(
             new HashMap<String, String>() {
 

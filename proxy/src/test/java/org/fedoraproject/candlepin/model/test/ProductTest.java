@@ -179,7 +179,7 @@ public class ProductTest extends DatabaseTestFixture {
 
     @Test
     public void testJsonListOfHashes() throws Exception {
-        List<Map<String, String>> data = new LinkedList<Map<String,String>>();
+        List<Map<String, String>> data = new LinkedList<Map<String, String>>();
         Map<String, String> contentSet1 = new HashMap<String, String>();
         contentSet1.put("name", "cs1");
         contentSet1.put("url", "url");
@@ -215,8 +215,9 @@ public class ProductTest extends DatabaseTestFixture {
 
     @Test
     public void testProductWithContentSets() {
-        // NOTE: Not using value on the Attributes which have children, but you easily could,
-        // perhaps a string list of the children labels or what not.
+        // NOTE: Not using value on the Attributes which have children, but you
+        // easily could, perhaps a string list of the children labels or
+        // what not.
         Attribute contentSets = new Attribute("content_sets", "");
         for (int i = 0; i < 5; i++) {
             // assume family label as attribute name:

@@ -53,7 +53,8 @@ public class HighlanderFactoryTest {
         JobDetail jd = new JobDetail("testjob", "group", TestJob.class);
         Trigger trigger = new CronTrigger("testjob", "group", crontab);
 
-        TriggerFiredBundle tfb = new TriggerFiredBundle(jd, trigger, null, false, null, null, null, null);
+        TriggerFiredBundle tfb = new TriggerFiredBundle(jd, trigger, null,
+            false, null, null, null, null);
         Job j = hf.newJob(tfb);
         assertNotNull(j);
         assertEquals(TestJob.class, j.getClass());

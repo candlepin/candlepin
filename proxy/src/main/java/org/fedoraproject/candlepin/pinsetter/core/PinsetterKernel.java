@@ -117,7 +117,7 @@ public class PinsetterKernel implements SchedulerService {
         if (log.isDebugEnabled()) {
             log.debug("Scheduling tasks");
         }
-        Map<String,String[]> pendingJobs = new HashMap<String,String[]>();
+        Map<String, String[]> pendingJobs = new HashMap<String, String[]>();
         List<String> jobImpls = new ArrayList<String>();
         if (log.isDebugEnabled()) {
             log.debug("No manual overrides detected...Using configuration");
@@ -244,7 +244,8 @@ public class PinsetterKernel implements SchedulerService {
      * {@inheritDoc}
      */
     @Override
-    public void scheduleJob(Class job, String jobName, Trigger trigger) throws PinsetterException {
+    public void scheduleJob(Class job, String jobName, Trigger trigger)
+        throws PinsetterException {
         try {
             JobDetail detail = new JobDetail(jobName, TASK_GROUP, job);
             //trigger.addTriggerListener(chainedJobListener.getName());

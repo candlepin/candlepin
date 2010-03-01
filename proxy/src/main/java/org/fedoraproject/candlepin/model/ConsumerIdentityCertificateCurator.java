@@ -20,6 +20,9 @@ import java.security.cert.X509Certificate;
 
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 
+/**
+ * ConsumerIdentityCertificateCurator
+ */
 public class ConsumerIdentityCertificateCurator extends
     AbstractHibernateCurator<ConsumerIdentityCertificate> {
 

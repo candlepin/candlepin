@@ -26,10 +26,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.servlet.Filter;
-
-import static com.google.inject.name.Names.*;
-
 /**
  * CustomizableModules
  */
