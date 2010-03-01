@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
@@ -30,6 +31,8 @@ import org.apache.log4j.Logger;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -47,31 +50,28 @@ public class JavascriptEnforcer implements Enforcer {
     private ProductServiceAdapter prodAdapter;
     private PreEntHelper preHelper;
     private PostEntHelper postHelper;
+    private EntitlementPoolCurator epCurator;
 
     private ScriptEngine jsEngine;
 
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
+    private static final String SELECT_POOL_PREFIX = "select_pool_";
+    private static final String GLOBAL_SELECT_POOL_FUNCTION = SELECT_POOL_PREFIX + "global";
     private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
 
-    /**
-     * ctor
-     * @param dateSource TODO: not sure
-     * @param rulesCurator interact with rules
-     * @param preHelper interact with pre-processing helper.
-     * @param postHelper interact with post-processing helper.
-     * @param prodAdapter interact with product service.
-     */
     @Inject
     public JavascriptEnforcer(DateSource dateSource,
             RulesCurator rulesCurator, PreEntHelper preHelper,
-            PostEntHelper postHelper, ProductServiceAdapter prodAdapter) {
+            PostEntHelper postHelper, ProductServiceAdapter prodAdapter,
+            EntitlementPoolCurator epCurator) {
         this.dateSource = dateSource;
         this.rulesCurator = rulesCurator;
         this.preHelper = preHelper;
         this.postHelper = postHelper;
         this.prodAdapter = prodAdapter;
+        this.epCurator = epCurator;
 
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
@@ -88,12 +88,6 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
-    /**
-     * Run before any processing of the entitlements occurs.
-     * @param consumer Consumer to pre-process.
-     * @param entitlementPool Entitlement Pool to pre-process.
-     * @return The helper class to execute the pre-processing step.
-     */
     @Override
     public PreEntHelper pre(Consumer consumer, EntitlementPool entitlementPool) {
 
@@ -141,11 +135,6 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
-    /**
-     * Post-processing method
-     * @param ent Post-process the entitlement.
-     * @return post-processing helper
-     */
     @Override
     public PostEntHelper post(Entitlement ent) {
         postHelper.init(ent);
@@ -185,5 +174,77 @@ public class JavascriptEnforcer implements Enforcer {
         catch (ScriptException e) {
             throw new RuleExecutionException(e);
         }
+    }
+
+    public EntitlementPool selectBestPool(Consumer consumer, String productId) {
+        // Fetch all entitlement pools for this product:
+        List<EntitlementPool> pools = epCurator.listByOwnerAndProductId(
+            consumer.getOwner(), productId);
+
+        Invocable inv = (Invocable) jsEngine;
+
+        log.info("Selecting best entitlement pool for product: " + productId);
+        List<ReadOnlyEntitlementPool> readOnlyPools =
+            new LinkedList<ReadOnlyEntitlementPool>();
+        for (EntitlementPool p : pools) {
+            log.info("   " + p);
+            readOnlyPools.add(new ReadOnlyEntitlementPool(p));
+        }
+
+        // Provide objects for the script:
+        jsEngine.put("pools", readOnlyPools);
+
+        ReadOnlyEntitlementPool result = null;
+        try {
+            result = (ReadOnlyEntitlementPool) inv.invokeFunction(
+                SELECT_POOL_PREFIX + productId);
+            log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX + productId);
+        }
+        catch (NoSuchMethodException e) {
+            // No method for this product, try to find a global function, if
+            // neither exists this is ok and we'll just carry on.
+            try {
+                result = (ReadOnlyEntitlementPool) inv.invokeFunction(
+                    GLOBAL_SELECT_POOL_FUNCTION);
+                log.info("Excuted javascript rule: " + GLOBAL_SELECT_POOL_FUNCTION);
+            }
+            catch (NoSuchMethodException ex) {
+                log.warn("No default rule found: " + GLOBAL_SELECT_POOL_FUNCTION);
+                log.warn("Resorting to default pool selection behavior.");
+                return selectBestPoolDefault(pools);
+            }
+            catch (ScriptException ex) {
+                throw new RuleExecutionException(ex);
+            }
+        }
+        catch (ScriptException e) {
+            throw new RuleExecutionException(e);
+        }
+
+        if (pools.size() > 0 && result == null) {
+            throw new RuleExecutionException("Rule did not select a pool for product: " +
+                productId);
+        }
+
+        for (EntitlementPool p : pools) {
+            if (p.getId().equals(result.getId())) {
+                log.debug("Best pool: " + p);
+                return p;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Default behavior if no product specific and no global pool select rules exist.
+     * @param pools Pools to choose from.
+     * @return First pool in the list. (default behavior)
+     */
+    private EntitlementPool selectBestPoolDefault(List<EntitlementPool> pools) {
+        if (pools.size() > 0) {
+            return pools.get(0);
+        }
+        return null;
     }
 }

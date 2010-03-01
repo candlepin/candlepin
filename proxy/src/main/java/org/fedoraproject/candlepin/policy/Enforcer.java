@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementPool;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
+import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 
 /**
  * Enforces the entitlement rules definitions.
@@ -47,4 +48,19 @@ public interface Enforcer {
      * @return post-entitlement processor
      */
     PostEntHelper post(Entitlement ent);
+
+    /**
+     * Select the best entitlement pool available for the given product ID.
+     *
+     * If no pools are available, null will be returned.
+     *
+     * Will throw RuleExecutionException if both pools and a rule exist, but no pool
+     * is returned from the rule.
+     *
+     * @param productId Product ID
+     * @return best pool as determined by the rules.
+     * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
+     * pool is returned.
+     */
+    EntitlementPool selectBestPool(Consumer consumer, String productId);
 }

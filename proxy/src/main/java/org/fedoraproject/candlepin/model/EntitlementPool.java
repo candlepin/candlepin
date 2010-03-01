@@ -321,4 +321,9 @@ public class EntitlementPool implements Persisted {
     public Boolean isActive() {
         return activeSubscription;
     }
+
+    public String toString() {
+        return "EntitlementPool [id = " + getId() + ", product = " + getProductId() +
+            ", quantity = " + getMaxMembers() + ", expires = " + getEndDate() + "]";
+    }
 }
