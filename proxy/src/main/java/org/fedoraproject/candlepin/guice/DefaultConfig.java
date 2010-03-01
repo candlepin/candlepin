@@ -30,5 +30,6 @@ class DefaultConfig extends AbstractModule {
     public void configure() {        
         bind(LoggingFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(PassThroughAuthenticationFilter.class).asEagerSingleton();
+        bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH)).to(PassThroughAuthenticationFilter.class).asEagerSingleton();
     }
 }
