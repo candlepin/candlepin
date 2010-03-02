@@ -28,5 +28,24 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
  */
 @XmlRootElement
 public class Pools {
-    public List<EntitlementPool> pool;
+    private List<EntitlementPool> pool;
+    
+    public Pools() {
+
+    }
+    
+    public Pools(List<EntitlementPool> pools) {
+        this.pool = pools;
+    }
+    
+    public List<EntitlementPool> getPool() {
+        return pool;
+    }
+
+    
+    public void setPool(List<EntitlementPool> pool) {
+        this.pool = pool;
+    }
+    
+    
 }

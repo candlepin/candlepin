@@ -89,21 +89,21 @@ public class EntitlementPoolResource {
         System.out.println(ownerId);
         System.out.println(productId);
         if ((ownerId == null) && (productId == null)) {
-            returnValue.pool = entitlementPoolCurator.findAll();
+            returnValue.setPool(entitlementPoolCurator.findAll());
         }
         else if (ownerId == null) {
             Product product = productServiceAdapter.getProductById(productId);
-            returnValue.pool = entitlementPoolCurator.listByProduct(product);
+            returnValue.setPool(entitlementPoolCurator.listByProduct(product));
         }
         else if (productId == null) {
             Owner owner = ownerCurator.find(ownerId);
-            returnValue.pool = entitlementPoolCurator.listByOwner(owner);
+            returnValue.setPool(entitlementPoolCurator.listByOwner(owner));
         }
         else {
             Owner owner = ownerCurator.find(ownerId);
             Product product = productServiceAdapter.getProductById(productId);
-            returnValue.pool = entitlementPoolCurator.listByOwnerAndProduct(
-                owner, product);
+            returnValue.setPool(entitlementPoolCurator.listByOwnerAndProduct(
+                owner, product));
         }
         return returnValue;
     }
@@ -117,7 +117,7 @@ public class EntitlementPoolResource {
      */
     @GET
     @Path("/{pool_id}")
-    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public EntitlementPool getProduct(@PathParam("pool_id") Long id) {
         EntitlementPool toReturn = entitlementPoolCurator.find(id);
 
@@ -137,7 +137,7 @@ public class EntitlementPoolResource {
      * @return all the entitlement pools for the consumer with the given uuid.
      */
     @GET
-    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/consumer/{consumer_uuid}")
     public List<EntitlementPool> listByConsumer(
         @PathParam("consumer_uuid") String consumerUuid) {
