@@ -8,6 +8,7 @@
     <property name="javadoc.method.scope" value="public"/>
     <property name="javadoc.lazy" value="false"/>
     <property name="javadoc.var.scope" value="package"/>
+    <property name="javadoc.missing.param" value="true"/>
     <additional-data name="protect-config-file" value="true"/>
   </local-check-config>
   <local-check-config name="candlepin-test-checkstyle" location="buildconf/checkstyle.xml" type="project" description="">
@@ -17,6 +18,7 @@
     <property name="javadoc.method.scope" value="nothing"/>
     <property name="javadoc.lazy" value="true"/>
     <property name="javadoc.var.scope" value="nothing"/>
+    <property name="javadoc.missing.param" value="false"/>
     <additional-data name="protect-config-file" value="true"/>
   </local-check-config>
   <fileset name="all" enabled="false" check-config-name="candlepin-src-checkstyle" local="true">
