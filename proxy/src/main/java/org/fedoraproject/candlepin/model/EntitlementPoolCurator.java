@@ -23,6 +23,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,14 +66,14 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         return listAvailableEntitlementPools(c, null, (String) null, true);
     }
     
-    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c, Owner o, Product p,
-        boolean activeOnly) {
+    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c, Owner o,
+            Product p, boolean activeOnly) {
         String productId = (p == null) ? null : p.getId();
         return listAvailableEntitlementPools(c, o, productId, activeOnly);
     }
     
-    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
-        boolean activeOnly) {
+    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, boolean activeOnly) {
         List<EntitlementPool> results = null ;
         Criteria crit = currentSession().createCriteria(EntitlementPool.class);
         if (activeOnly) {
@@ -84,11 +85,12 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         if (o != null) {
             crit.add(Restrictions.eq("owner", o));            
         }
+
         if (productId != null) {
             crit.add(Restrictions.eq("productId", productId));
         }
-        // FIXME: is start date now or earlier?
-        // FIXME: is end date later?
+        crit.add(Restrictions.lt("startDate", new Date())); // TODO: is this right?
+        crit.add(Restrictions.gt("endDate", new Date())); // TODO: is this right?
         // FIXME: sort by enddate?
         // FIXME: currentmembers < maxmembers
         // FIXME: do we need to run through rules for each of these? (expensive!)        

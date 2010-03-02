@@ -1,0 +1,73 @@
+/**
+ * Copyright (c) 2009 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
+package org.fedoraproject.candlepin.model.test;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
+
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
+import org.junit.Before;
+import org.junit.Test;
+
+
+public class EntitlementPoolCuratorTest extends DatabaseTestFixture {
+
+    private Owner owner;
+    private Product product;
+    private Consumer consumer;
+
+    @Before
+    public void setUp() {
+        owner = TestUtil.createOwner();
+        ownerCurator.create(owner);
+
+        product = TestUtil.createProduct();
+        productCurator.create(product);
+
+        consumer = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(consumer.getType());
+        consumerCurator.create(consumer);
+    }
+
+    @Test
+    public void testPoolNotYetActive() {
+        EntitlementPool pool = new EntitlementPool(owner, product.getId(), new Long(100),
+                TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        entitlementPoolCurator.create(pool);
+
+        List<EntitlementPool> results =
+            entitlementPoolCurator.listAvailableEntitlementPools(consumer);
+        assertEquals(0, results.size());
+
+    }
+
+    @Test
+    public void testPoolExpired() {
+        EntitlementPool pool = new EntitlementPool(owner, product.getId(), new Long(100),
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
+        entitlementPoolCurator.create(pool);
+
+        List<EntitlementPool> results =
+            entitlementPoolCurator.listAvailableEntitlementPools(consumer);
+        assertEquals(0, results.size());
+
+    }
+}
