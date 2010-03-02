@@ -161,6 +161,6 @@ public class OwnerResource {
             throw new NotFoundException("owner with id: " + ownerId +
                 " was not found.");
         }
-        return entitlementPoolCurator.listByOwner(owner);
+        return poolCurator.listByOwner(owner);
     }    
 }
