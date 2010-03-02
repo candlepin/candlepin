@@ -103,7 +103,7 @@ public class PoolTest extends DatabaseTestFixture {
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        entitler.entitle(owner, consumer, newProduct);
+        entitler.entitle(consumer, newProduct);
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable());
@@ -122,12 +122,8 @@ public class PoolTest extends DatabaseTestFixture {
         consumerPool = poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
-        entitler.entitle(owner, consumer, newProduct);
+        entitler.entitle(consumer, newProduct);
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
-        assertEquals(1, lookedUp.getConsumedProducts().size());
-        // assertTrue(.getConsumedProducts().contains(
-        // newProduct));
         assertEquals(1, consumerCurator.find(consumer.getId())
                 .getEntitlements().size());
     }
@@ -146,8 +142,8 @@ public class PoolTest extends DatabaseTestFixture {
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
 
-        entitler.entitle(owner, consumer, newProduct);
-        anotherEntitler.entitle(owner, consumer, newProduct);
+        entitler.entitle(consumer, newProduct);
+        anotherEntitler.entitle(consumer, newProduct);
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable());
@@ -167,8 +163,8 @@ public class PoolTest extends DatabaseTestFixture {
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
 
-        Entitlement e1 = entitler.entitle(owner, consumer, newProduct);
-        Entitlement e2 = anotherEntitler.entitle(owner, consumer, newProduct);
+        Entitlement e1 = entitler.entitle(consumer, newProduct);
+        Entitlement e2 = anotherEntitler.entitle(consumer, newProduct);
         assertNotNull(e1);
         assertNull(e2);
     }

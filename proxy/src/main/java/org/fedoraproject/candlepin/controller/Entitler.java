@@ -61,7 +61,6 @@ public class Entitler {
      * 
      * TODO: Throw exception if entitlement not granted. Report why.
      *
-     * @param owner owner of the entitlement pool
      * @param consumer consumer requesting to be entitled
      * @param product product to be entitled.
      * @return Entitlement
@@ -71,17 +70,18 @@ public class Entitler {
     //       will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitle(Owner owner, Consumer consumer, Product product) {
+    public Entitlement entitle(Consumer consumer, Product product) {
+        Owner owner = consumer.getOwner();
         
         // TODO: Don't assume we use the first pool here, once rules have support for 
         // specifying the pool to use. 
-        Pool ePool = epCurator.listByOwnerAndProduct(owner, product)
-            .get(0);
-        if (ePool == null) {
+
+        Pool pool = epCurator.listByOwnerAndProduct(owner, product).get(0);
+        if (pool == null) {
             throw new RuntimeException("No entitlements for product: " + product.getName());
         }
         
-        return entitle(consumer, product, ePool);
+        return addEntitlement(consumer, pool);
     }
 
     /**
@@ -91,23 +91,18 @@ public class Entitler {
      *
      * TODO: Throw exception if entitlement not granted. Report why.
      *
-     * @param owner owner of the entitlement pool
      * @param consumer consumer requesting to be entitled
-     * @param product product to be entitled.
      * @param pool entitlement pool to consume from
      * @return Entitlement
      */
     @Transactional
-    public Entitlement entitle(Owner owner, Consumer consumer, Product product,
-        Pool pool) {
-
-        return entitle(consumer, product, pool);
+    public Entitlement entitle(Consumer consumer, Pool pool) {
+        return addEntitlement(consumer, pool);
     }
 
 
-    private Entitlement entitle(Consumer consumer, Product product,
-        Pool ePool) {
-        PreEntHelper preHelper = enforcer.pre(consumer, ePool);
+    private Entitlement addEntitlement(Consumer consumer, Pool pool) {
+        PreEntHelper preHelper = enforcer.pre(consumer, pool);
         ValidationResult result = preHelper.getResult();
         
         if (!result.isSuccessful()) {
@@ -115,27 +110,38 @@ public class Entitler {
             return null;
         }
 
-        Entitlement e = new Entitlement(ePool, consumer, new Date());
-
+        Entitlement e = new Entitlement(pool, consumer, new Date());
         consumer.addEntitlement(e);
-        consumerCurator.addConsumedProduct(consumer, product);
 
         if (preHelper.getGrantFreeEntitlement()) {
             log.info("Granting free entitlement.");
             e.setIsFree(Boolean.TRUE);
         }
         else {
-            ePool.bumpCurrentMembers();
+            pool.bumpCurrentMembers();
         }
 
         enforcer.post(e);
         
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
-        epCurator.merge(ePool);
-
+        epCurator.merge(pool);
 
         return e;
     }
-    
+
+    // TODO:  Does the enforcer have any rules around removing entitlements?
+    @Transactional
+    public void revokeEntitlement(Entitlement entitlement) {
+        if (!entitlement.isFree()) {
+            // put this entitlement back in the pool
+            entitlement.getPool().dockCurrentMembers();
+        }
+
+        Consumer consumer = entitlement.getConsumer();
+        consumer.removeEntitlement(entitlement);
+
+        epCurator.merge(entitlement.getPool());
+        entitlementCurator.delete(entitlement);
+    }
 }

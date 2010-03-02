@@ -39,7 +39,7 @@ class Rest(object):
             print "url: %s" % full_url
         conn.request(http_type, url_path, body=self.marshal(data, content_type), headers=self.headers[content_type])
         response = conn.getresponse()
-        if response.status != 200:
+        if response.status not in  [200, 204]:
             raise Exception("%s - %s" % (response.status, response.reason))
         rsp = response.read()
         

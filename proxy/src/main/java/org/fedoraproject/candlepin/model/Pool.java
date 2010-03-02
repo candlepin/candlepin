@@ -221,7 +221,11 @@ public class Pool implements Persisted {
      * Add 1 to the current members.
      */
     public void bumpCurrentMembers() {
-        this.currentMembers = this.currentMembers + 1;
+        this.currentMembers++;
+    }
+
+    public void dockCurrentMembers() {
+        this.currentMembers--;
     }
 
     /**

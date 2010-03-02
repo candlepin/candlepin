@@ -78,17 +78,6 @@ public class ReadOnlyConsumer {
         }
         return toReturn;
     }
-    
-    /**
-     * Return the list of consumed product IDs.
-     * 
-     * For now, just IDs rather than actual Product objects, as these would
-     * potentially require a service call. 
-     * @return the list of consumed product IDs.
-     */
-    public Set<String> getConsumedProductIds() {
-        return consumer.getConsumedProductIds();
-    }
    
     /**
      * Return the value of the fact assigned to the given key.
