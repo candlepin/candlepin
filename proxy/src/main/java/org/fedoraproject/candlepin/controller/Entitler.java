@@ -18,8 +18,8 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
@@ -38,14 +38,14 @@ import java.util.Date;
  */
 public class Entitler {
     
-    private EntitlementPoolCurator epCurator;
+    private PoolCurator epCurator;
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
     private Enforcer enforcer;
     private static Logger log = Logger.getLogger(Entitler.class);
     
     @Inject
-    protected Entitler(EntitlementPoolCurator epCurator,
+    protected Entitler(PoolCurator epCurator,
             EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
             Enforcer enforcer) {
         this.epCurator = epCurator;
@@ -75,7 +75,7 @@ public class Entitler {
         
         // TODO: Don't assume we use the first pool here, once rules have support for 
         // specifying the pool to use. 
-        EntitlementPool ePool = epCurator.listByOwnerAndProduct(owner, product)
+        Pool ePool = epCurator.listByOwnerAndProduct(owner, product)
             .get(0);
         if (ePool == null) {
             throw new RuntimeException("No entitlements for product: " + product.getName());
@@ -99,14 +99,14 @@ public class Entitler {
      */
     @Transactional
     public Entitlement entitle(Owner owner, Consumer consumer, Product product,
-        EntitlementPool pool) {
+        Pool pool) {
 
         return entitle(consumer, product, pool);
     }
 
 
     private Entitlement entitle(Consumer consumer, Product product,
-        EntitlementPool ePool) {
+        Pool ePool) {
         PreEntHelper preHelper = enforcer.pre(consumer, ePool);
         ValidationResult result = preHelper.getResult();
         

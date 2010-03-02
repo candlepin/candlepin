@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin.test;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
@@ -90,14 +90,14 @@ public class TestUtil {
         return rhel;
     }
     
-    public static EntitlementPool createEntitlementPool(Product product) {
-        EntitlementPool pool = new EntitlementPool(createOwner(), product.getId(), 
+    public static Pool createEntitlementPool(Product product) {
+        Pool pool = new Pool(createOwner(), product.getId(), 
                 new Long(1000),
                 TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
         return pool;
     }
     
-    public static Entitlement createEntitlement(EntitlementPool pool, Consumer c) {
+    public static Entitlement createEntitlement(Pool pool, Consumer c) {
         Entitlement e = new Entitlement(pool, c, pool.getStartDate());
         return e;
     }
@@ -106,7 +106,8 @@ public class TestUtil {
         Calendar cal = Calendar.getInstance();
             
         cal.set(Calendar.YEAR, year);
-        cal.set(Calendar.MONTH, month);
+        // Watchout, Java expects month as 0-11
+        cal.set(Calendar.MONTH, month - 1);
         cal.set(Calendar.DATE, day);
 
         cal.set(Calendar.HOUR_OF_DAY, 0);

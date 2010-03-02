@@ -27,8 +27,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 
@@ -42,20 +42,14 @@ public class OwnerResource {
 
     private static Logger log = Logger.getLogger(OwnerResource.class);
     private OwnerCurator ownerCurator;
-    private EntitlementPoolCurator entitlementPoolCurator;
+    private PoolCurator poolCurator;
 
-    /**
-     * @param ownerCurator
-     *            interact with Owner.
-     * @param entitlementPoolCurator
-     *            interact with entitlement pools.
-     */
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
-        EntitlementPoolCurator entitlementPoolCurator) {
+        PoolCurator poolCurator) {
 
         this.ownerCurator = ownerCurator;
-        this.entitlementPoolCurator = entitlementPoolCurator;
+        this.poolCurator = poolCurator;
     }
 
     /**
@@ -127,8 +121,8 @@ public class OwnerResource {
         }
 
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
-        for (EntitlementPool pool : owner.getEntitlementPools()) {
-            toReturn.addAll(entitlementPoolCurator.entitlementsIn(pool));
+        for (Pool pool : owner.getEntitlementPools()) {
+            toReturn.addAll(poolCurator.entitlementsIn(pool));
         }
 
         return toReturn;
@@ -144,7 +138,7 @@ public class OwnerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/pool")
-    public List<EntitlementPool> ownerEntitlementPools(
+    public List<Pool> ownerEntitlementPools(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
         if (owner == null) {
@@ -153,6 +147,6 @@ public class OwnerResource {
         }
 
         System.out.println(owner.getEntitlementPools().size());
-        return new ArrayList<EntitlementPool>(owner.getEntitlementPools()); 
+        return new ArrayList<Pool>(owner.getEntitlementPools()); 
     }    
 }

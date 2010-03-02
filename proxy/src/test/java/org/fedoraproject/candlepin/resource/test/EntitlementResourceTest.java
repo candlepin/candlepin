@@ -20,7 +20,7 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.EntitlementBindResult;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
@@ -48,7 +48,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     
     private Consumer consumer;
     private Product product;
-    private EntitlementPool ep;
+    private Pool ep;
     private Owner owner;    
     private EntitlementResource eapi;
     private Entitler entitler;
@@ -67,14 +67,14 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        ep = new EntitlementPool(owner, product.getId(), new Long(10), 
+        ep = new Pool(owner, product.getId(), new Long(10), 
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
-        entitlementPoolCurator.create(ep);
+        poolCurator.create(ep);
 
         entitler = injector.getInstance(Entitler.class);
 
         eapi = new EntitlementResource(
-                entitlementPoolCurator, entitlementCurator,
+                poolCurator, entitlementCurator,
                 consumerCurator, productAdapter, subAdapter, entitler);
         
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
@@ -94,7 +94,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
                 .next().getProductId());
         assertEquals(1, consumer.getEntitlements().size());
         
-        ep = entitlementPoolCurator.find(ep.getId());
+        ep = poolCurator.find(ep.getId());
         assertEquals(new Long(1), ep.getCurrentMembers());
     }
     

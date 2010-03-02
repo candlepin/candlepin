@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin.policy.test;
 import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
@@ -56,10 +56,10 @@ public class EnforcerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
 
         PreEntHelper preHelper = new PreEntHelper();
-        PostEntHelper postHelper = new PostEntHelper(entitlementPoolCurator,
+        PostEntHelper postHelper = new PostEntHelper(poolCurator,
                 productAdapter);
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
-                rulesCurator, preHelper, postHelper, productAdapter, entitlementPoolCurator);
+                rulesCurator, preHelper, postHelper, productAdapter, poolCurator);
     }
 
     // grrr. have to test two conditions atm: sufficient number of entitlements
@@ -103,9 +103,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         return TestDateUtil.date(year, month, day);
     }
 
-    private EntitlementPool entitlementPoolWithMembersAndExpiration(
+    private Pool entitlementPoolWithMembersAndExpiration(
             final int currentMembers, final int maxMembers, Date expiry) {
-        return new EntitlementPool(new Owner(), new Product("label", "name")
+        return new Pool(new Owner(), new Product("label", "name")
                 .getId(), new Long(maxMembers), new Date(), expiry) {
 
             {
@@ -116,44 +116,44 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolLongestExpiry() {
-        EntitlementPool pool1 = new EntitlementPool(owner, LONGEST_EXPIRY_PRODUCT,
+        Pool pool1 = new Pool(owner, LONGEST_EXPIRY_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2050, 02, 26));
-        EntitlementPool pool2 = new EntitlementPool(owner, LONGEST_EXPIRY_PRODUCT,
+        Pool pool2 = new Pool(owner, LONGEST_EXPIRY_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2051, 02, 26));
-        EntitlementPool desired = new EntitlementPool(owner, LONGEST_EXPIRY_PRODUCT,
+        Pool desired = new Pool(owner, LONGEST_EXPIRY_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2060, 02, 26));
-        EntitlementPool pool3 = new EntitlementPool(owner, LONGEST_EXPIRY_PRODUCT,
+        Pool pool3 = new Pool(owner, LONGEST_EXPIRY_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2055, 02, 26));
-        entitlementPoolCurator.create(pool1);
-        entitlementPoolCurator.create(pool2);
-        entitlementPoolCurator.create(desired);
-        entitlementPoolCurator.create(pool3);
+        poolCurator.create(pool1);
+        poolCurator.create(pool2);
+        poolCurator.create(desired);
+        poolCurator.create(pool3);
 
-        EntitlementPool result = enforcer.selectBestPool(consumer,
+        Pool result = enforcer.selectBestPool(consumer,
             LONGEST_EXPIRY_PRODUCT);
         assertEquals(desired.getId(), result.getId());
     }
 
     @Test
     public void testSelectBestPoolMostAvailable() {
-        EntitlementPool pool1 = new EntitlementPool(owner, HIGHEST_QUANTITY_PRODUCT,
+        Pool pool1 = new Pool(owner, HIGHEST_QUANTITY_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2050, 02, 26));
-        EntitlementPool desired = new EntitlementPool(owner, HIGHEST_QUANTITY_PRODUCT,
+        Pool desired = new Pool(owner, HIGHEST_QUANTITY_PRODUCT,
             new Long(500), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2051, 02, 26));
-        EntitlementPool pool2 = new EntitlementPool(owner, HIGHEST_QUANTITY_PRODUCT,
+        Pool pool2 = new Pool(owner, HIGHEST_QUANTITY_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2060, 02, 26));
-        entitlementPoolCurator.create(pool1);
-        entitlementPoolCurator.create(pool2);
-        entitlementPoolCurator.create(desired);
+        poolCurator.create(pool1);
+        poolCurator.create(pool2);
+        poolCurator.create(desired);
 
-        EntitlementPool result = enforcer.selectBestPool(consumer,
+        Pool result = enforcer.selectBestPool(consumer,
             HIGHEST_QUANTITY_PRODUCT);
         assertEquals(desired.getId(), result.getId());
     }
@@ -161,33 +161,33 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void testSelectBestPoolNoPools() {
         // There are no pools for the product in this case:
-        EntitlementPool result = enforcer.selectBestPool(consumer,
+        Pool result = enforcer.selectBestPool(consumer,
             HIGHEST_QUANTITY_PRODUCT);
         assertNull(result);
     }
 
     @Test(expected = RuleExecutionException.class)
     public void testSelectBestPoolBadRule() {
-        EntitlementPool pool1 = new EntitlementPool(owner, BAD_RULE_PRODUCT,
+        Pool pool1 = new Pool(owner, BAD_RULE_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2050, 02, 26));
-        entitlementPoolCurator.create(pool1);
+        poolCurator.create(pool1);
 
         enforcer.selectBestPool(consumer, BAD_RULE_PRODUCT);
     }
 
     @Test
     public void testSelectBestPoolDefaultRule() {
-        EntitlementPool pool1 = new EntitlementPool(owner, NO_RULE_PRODUCT,
+        Pool pool1 = new Pool(owner, NO_RULE_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2050, 02, 26));
-        EntitlementPool pool2 = new EntitlementPool(owner, NO_RULE_PRODUCT,
+        Pool pool2 = new Pool(owner, NO_RULE_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2060, 02, 26));
-        entitlementPoolCurator.create(pool1);
-        entitlementPoolCurator.create(pool2);
+        poolCurator.create(pool1);
+        poolCurator.create(pool2);
 
-        EntitlementPool result = enforcer.selectBestPool(consumer,
+        Pool result = enforcer.selectBestPool(consumer,
             NO_RULE_PRODUCT);
         assertEquals(pool1.getId(), result.getId());
     }

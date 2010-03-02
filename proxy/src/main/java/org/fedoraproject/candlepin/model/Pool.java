@@ -47,7 +47,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_entitlement_pool")
 @SequenceGenerator(name = "seq_entitlement_pool",
         sequenceName = "seq_entitlement_pool", allocationSize = 1)
-public class EntitlementPool implements Persisted {
+public class Pool implements Persisted {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_entitlement_pool")
@@ -96,7 +96,7 @@ public class EntitlementPool implements Persisted {
     /**
      * default ctor
      */
-    public EntitlementPool() {
+    public Pool() {
     }
 
     /**
@@ -107,7 +107,7 @@ public class EntitlementPool implements Persisted {
      * @param startDateIn when the pool started.
      * @param endDateIn when the pool expires.
      */
-    public EntitlementPool(Owner ownerIn, String productIdIn, Long maxMembersIn, 
+    public Pool(Owner ownerIn, String productIdIn, Long maxMembersIn, 
             Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
         this.productId = productIdIn;

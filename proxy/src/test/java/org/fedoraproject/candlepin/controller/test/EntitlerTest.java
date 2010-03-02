@@ -24,7 +24,7 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
@@ -63,7 +63,7 @@ public class EntitlerTest extends DatabaseTestFixture {
                 "/certs/spacewalk-with-channel-families.cert");
         spacewalkCertCurator.parseCertificate(CertificateFactory.read(certString), o);
 
-        List<EntitlementPool> pools = entitlementPoolCurator.listByOwner(o);
+        List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
         virtHost = productCurator
@@ -109,10 +109,10 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitlementPoolsCreated() {
-        List<EntitlementPool> pools = entitlementPoolCurator.listByOwner(o);
+        List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
-        EntitlementPool virtHostPool = entitlementPoolCurator.listByOwnerAndProduct(o,
+        Pool virtHostPool = poolCurator.listByOwnerAndProduct(o,
                 virtHost).get(0);
         assertNotNull(virtHostPool);
     }
@@ -149,7 +149,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         e = entitler.entitle(o, parentSystem, provisioning);
         assertNotNull(e);
         
-        EntitlementPool provisioningPool = entitlementPoolCurator.listByOwnerAndProduct(o, 
+        Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
                 provisioning).get(0);
         
         Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
@@ -168,7 +168,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         Entitlement e = entitler.entitle(o, parentSystem, virtHost);
         assertNotNull(e);
         
-        EntitlementPool provisioningPool = entitlementPoolCurator.listByOwnerAndProduct(o, 
+        Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
                 provisioning).get(0);
         
         Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
@@ -184,7 +184,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     
     @Test
     public void testQuantityCheck() {
-        EntitlementPool monitoringPool = entitlementPoolCurator.listByOwnerAndProduct(o, 
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, 
                 monitoring).get(0);
         assertEquals(new Long(5), monitoringPool.getMaxMembers());
         for (int i = 0; i < 5; i++) {

@@ -20,8 +20,8 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementBindResult;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/entitlement")
 public class EntitlementResource {
     
-    private EntitlementPoolCurator epCurator;
+    private PoolCurator epCurator;
     private ConsumerCurator consumerCurator;
     private ProductServiceAdapter prodAdapter;
     private SubscriptionServiceAdapter subAdapter; 
@@ -61,7 +61,7 @@ public class EntitlementResource {
     private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     @Inject
-    public EntitlementResource(EntitlementPoolCurator epCurator, 
+    public EntitlementResource(PoolCurator epCurator, 
             EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
             ProductServiceAdapter prodAdapter, SubscriptionServiceAdapter subAdapter, 
@@ -162,7 +162,7 @@ public class EntitlementResource {
         }
         Owner owner = consumer.getOwner();
 
-        EntitlementPool pool = epCurator.find(poolId);
+        Pool pool = epCurator.find(poolId);
         if (pool == null) {
             throw new BadRequestException("No such entitlement pool: " + poolId);
         }

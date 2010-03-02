@@ -18,7 +18,7 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * This object exists only to expose entitlement pools as a collection with the
@@ -28,22 +28,22 @@ import org.fedoraproject.candlepin.model.EntitlementPool;
  */
 @XmlRootElement
 public class Pools {
-    private List<EntitlementPool> pool;
+    private List<Pool> pool;
     
     public Pools() {
 
     }
     
-    public Pools(List<EntitlementPool> pools) {
+    public Pools(List<Pool> pools) {
         this.pool = pools;
     }
     
-    public List<EntitlementPool> getPool() {
+    public List<Pool> getPool() {
         return pool;
     }
 
     
-    public void setPool(List<EntitlementPool> pool) {
+    public void setPool(List<Pool> pool) {
         this.pool = pool;
     }
     

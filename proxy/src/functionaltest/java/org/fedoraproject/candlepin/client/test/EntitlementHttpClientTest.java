@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -44,9 +44,9 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     private Consumer consumer;
     private ConsumerType consumerType;
     private Product product;
-    private EntitlementPool entitlementPool;
+    private Pool entitlementPool;
     private Entitler entitler;
-    private EntitlementPool exhaustedPool;
+    private Pool exhaustedPool;
     private Product exhaustedPoolProduct;
 
     @Before
@@ -65,18 +65,18 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         product = TestUtil.createProduct();
         productCurator.create(product);
 
-        entitlementPool = new EntitlementPool(owner, product.getId(),
+        entitlementPool = new Pool(owner, product.getId(),
                 MAX_MEMBERS_IN, TestDateUtil.date(2010, 1, 1), TestDateUtil
                         .date(2020, 12, 31));
-        entitlementPoolCurator.create(entitlementPool);
+        poolCurator.create(entitlementPool);
 
         exhaustedPoolProduct = TestUtil.createProduct();
         productCurator.create(exhaustedPoolProduct);
 
-        exhaustedPool = new EntitlementPool(owner,
+        exhaustedPool = new Pool(owner,
                 exhaustedPoolProduct.getId(), new Long(0), TestDateUtil.date(
                         2010, 1, 1), TestDateUtil.date(2020, 12, 31));
-        entitlementPoolCurator.create(exhaustedPool);
+        poolCurator.create(exhaustedPool);
 
         entitler = injector.getInstance(Entitler.class);
     }
@@ -129,7 +129,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
         unitOfWork.beginWork();
         assertTrue(entitlementCurator.findAll().size() == 0);
-        assertEquals(new Long(0), entitlementPoolCurator.listByOwnerAndProduct(
+        assertEquals(new Long(0), poolCurator.listByOwnerAndProduct(
                 owner, product).get(0).getCurrentMembers());
         unitOfWork.endWork();
 
@@ -280,7 +280,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     protected void assertEntitlementSucceeded() {
         assertEquals(new Long(1), new Long(entitlementCurator.findAll().size()));
-        assertEquals(new Long(1), entitlementPoolCurator.listByOwnerAndProduct(
+        assertEquals(new Long(1), poolCurator.listByOwnerAndProduct(
                 owner, product).get(0).getCurrentMembers());
         assertEquals(1, consumerCurator.find(consumer.getId())
                 .getConsumedProducts().size());

@@ -16,19 +16,19 @@ package org.fedoraproject.candlepin.policy.js;
 
 import java.util.Date;
 
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * represents a read-only entitlement pool
  */
 public class ReadOnlyEntitlementPool {
 
-    private EntitlementPool entPool;
+    private Pool entPool;
   
     /**
      * @param entPool the read-write version of the EntitlementPool to copy.
      */
-    public ReadOnlyEntitlementPool(EntitlementPool entPool) {
+    public ReadOnlyEntitlementPool(Pool entPool) {
         this.entPool = entPool;
     }
    

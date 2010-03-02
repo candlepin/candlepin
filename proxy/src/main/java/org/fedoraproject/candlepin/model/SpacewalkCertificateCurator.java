@@ -27,7 +27,7 @@ import java.util.Date;
  */
 public class SpacewalkCertificateCurator {
     
-    private EntitlementPoolCurator entitlementPoolCurator;
+    private PoolCurator poolCurator;
     //TODO Need to go through the service for this.
     private ProductCurator productCurator;
     private AttributeCurator attributeCurator;
@@ -42,17 +42,11 @@ public class SpacewalkCertificateCurator {
     public static final String ATTRIB_ALLOWED_GUESTS = "allowed_guests";
 
 
-    /**
-     * ctor
-     * @param entitlementPoolCurator interact with entitlement pools
-     * @param productCurator interact with products
-     * @param attributeCurator interact with attributes.
-     */
     @Inject
-    public SpacewalkCertificateCurator(EntitlementPoolCurator entitlementPoolCurator, 
+    public SpacewalkCertificateCurator(PoolCurator poolCurator, 
             ProductCurator productCurator, AttributeCurator attributeCurator) {
         
-        this.entitlementPoolCurator = entitlementPoolCurator;
+        this.poolCurator = poolCurator;
         this.productCurator = productCurator;
         this.attributeCurator = attributeCurator;
     }
@@ -127,7 +121,7 @@ public class SpacewalkCertificateCurator {
 
         Product p = createProductIfDoesNotExist(pname);
         
-        EntitlementPool ep = new EntitlementPool();
+        Pool ep = new Pool();
         ep.setOwner(owner);
         ep.setProductId(p.getId());
         ep.setMaxMembers(maxmem);
@@ -135,7 +129,7 @@ public class SpacewalkCertificateCurator {
         ep.setEndDate(end);
         ep.setCurrentMembers(0);
         owner.addEntitlementPool(ep);
-        entitlementPoolCurator.create(ep);
+        poolCurator.create(ep);
     }
     
     private Product createProductIfDoesNotExist(String name) {

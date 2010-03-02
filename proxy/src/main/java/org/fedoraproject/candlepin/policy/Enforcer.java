@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.policy;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
@@ -39,7 +39,7 @@ public interface Enforcer {
      * @param enitlementPool Entitlement pool to consume from.
      * @return TODO
      */
-    PreEntHelper pre(Consumer consumer, EntitlementPool enitlementPool);
+    PreEntHelper pre(Consumer consumer, Pool enitlementPool);
 
     /**
      * Run post-entitlement actions.
@@ -62,5 +62,5 @@ public interface Enforcer {
      * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
      * pool is returned.
      */
-    EntitlementPool selectBestPool(Consumer consumer, String productId);
+    Pool selectBestPool(Consumer consumer, String productId);
 }
