@@ -20,8 +20,6 @@ import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.CandlepinConfigurationTest.CandlepinConfigurationForTesting;
-import org.fedoraproject.candlepin.pinsetter.core.PinsetterException;
-import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
 
 import org.junit.Test;
 import org.quartz.JobDetail;

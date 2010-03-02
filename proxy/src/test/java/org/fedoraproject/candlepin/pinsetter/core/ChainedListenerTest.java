@@ -17,8 +17,6 @@ package org.fedoraproject.candlepin.pinsetter.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.fedoraproject.candlepin.pinsetter.core.ChainedListener;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.CronTrigger;

@@ -19,8 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.fedoraproject.candlepin.pinsetter.core.HighlanderJobFactory;
-
 import org.junit.Test;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
