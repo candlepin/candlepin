@@ -27,7 +27,7 @@ public class Config {
     public static final File CONFIG_DIR = new File("/etc/candlepin");
     protected File CONFIG_FILE = new File(CONFIG_DIR, "candlepin.conf");
     protected static TreeMap<String, String> configuration = null;
-   
+
 
     /**
      * Return configuration entry for the given prefix.
@@ -41,12 +41,41 @@ public class Config {
         return configuration.subMap(prefix, prefix + Character.MAX_VALUE);
     }
 
+    /**
+     * Returns all of the entries with the given prefix.
+     * @param prefix part of the configuration key being sought.
+     * @return all of the entries with the given prefix.
+     */
     public Properties getNamespaceProperties(String prefix) {
+        return this.getNamespaceProperties(prefix, null);
+    }
+
+    /**
+     * Returns all of the entries with the given prefix, preloading the values
+     * contained in the given defaults. The default list is also filtered by
+     * prefix as well. For example, if you pass in a prefix of "a.c" and the
+     * defaults map contains a key that beings with "b.d" it WILL not be added
+     * to the returned Properties.
+     * @param prefix part of the configuration key being sought.
+     * @param defaults default values you'd like to see defined.
+     * @return all of the entries with the given prefix.
+     */
+    public Properties getNamespaceProperties(String prefix,
+        Map<String, String> defaults) {
+
         Properties p = new Properties();
+
+        if (defaults != null) {
+            for (String key : defaults.keySet()) {
+                if (key != null && key.startsWith(prefix)) {
+                    p.put(key, defaults.get(key));
+                }
+            }
+        }
         p.putAll(configurationWithPrefix(prefix));
         return p;
     }
-   
+
     /**
      * Returns the JPA Configuration properties.
      * @return the JPA Configuration properties.
@@ -57,7 +86,7 @@ public class Config {
         }
         return new JPAConfigParser().parseConfig(configuration);
     }
-    
+
     /**
      * Returns the Database Basic Authentication Configuration properties
      * @return the Database Basic Authentication Configuration properties
@@ -68,17 +97,17 @@ public class Config {
         }
         return new DbBasicAuthConfigParser().parseConfig(configuration);
     }
-    
+
     protected synchronized void loadConfiguration() {
         if (configuration == null) {
             initializeMap();
         }
     }
-    
+
     protected void initializeMap() {
         configuration = new TreeMap<String, String>(loadProperties());
     }
-    
+
     protected Map<String, String> loadProperties() {
         try {
             return new ConfigurationFileLoader().loadProperties(CONFIG_FILE);
