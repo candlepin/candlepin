@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.ArrayList;
@@ -49,15 +50,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      */
     @SuppressWarnings("unchecked")
     public List<EntitlementPool> listByOwner(Owner o) {
-        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
-            .createCriteria(EntitlementPool.class)
-            .add(Restrictions.eq("owner", o)).list();
-        if (results == null) {
-            return new LinkedList<EntitlementPool>();
-        }
-        else {
-            return results;
-        }
+        return listAvailableEntitlementPools(null, o, (String) null, true);
     }
     
     
@@ -69,21 +62,43 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      */
     @SuppressWarnings("unchecked")
     public List<EntitlementPool> listAvailableEntitlementPools(Consumer c) {
-        List<EntitlementPool> results = (List<EntitlementPool>) currentSession()
-            .createCriteria(EntitlementPool.class)
-            .add(Restrictions.eq("activeSubscription", Boolean.TRUE))
-            .add(Restrictions.eq("owner", c.getOwner())).list();
-            // FIXME: is start date now or earlier?
-            // FIXME: is end date later?
-            // FIXME: sort by enddate?
-            // FIXME: currentmembers < maxmembers
-            // FIXME: do we need to run through rules for each of these? (expensive!)
+        return listAvailableEntitlementPools(c, null, (String) null, true);
+    }
+    
+    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c, Owner o, Product p,
+        boolean activeOnly) {
+        String productId = (p == null) ? null : p.getId();
+        return listAvailableEntitlementPools(c, o, productId, activeOnly);
+    }
+    
+    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
+        boolean activeOnly) {
+        List<EntitlementPool> results = null ;
+        Criteria crit = currentSession().createCriteria(EntitlementPool.class);
+        if (activeOnly) {
+            crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
+        }
+        if (c != null) {
+            crit.add(Restrictions.eq("owner", c.getOwner()));
+        }  
+        if (o != null) {
+            crit.add(Restrictions.eq("owner", o));            
+        }
+        if (productId != null) {
+            crit.add(Restrictions.eq("productId", productId));
+        }
+        // FIXME: is start date now or earlier?
+        // FIXME: is end date later?
+        // FIXME: sort by enddate?
+        // FIXME: currentmembers < maxmembers
+        // FIXME: do we need to run through rules for each of these? (expensive!)        
+        results = (List<EntitlementPool>) crit.list();
+        
         if (results == null) {
-            return new LinkedList<EntitlementPool>();
+            results = new ArrayList<EntitlementPool>();
         }
-        else {
-            return results;
-        }
+        
+        return results ;
     }
     
     /**
@@ -148,12 +163,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @return list of EntitlementPools
      */
     public List<EntitlementPool> listByProduct(Product product) {
-        if (product == null) {
-            return new ArrayList<EntitlementPool>();
-        } 
-        else {
-            return listByProductId(product.getId());
-        }
+        return listAvailableEntitlementPools(null, null, product, true);        
     }
 
     /**
@@ -164,15 +174,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @return list of EntitlementPools
      */
     public List<EntitlementPool> listByProductId(String productId) {
-        List<EntitlementPool> returnValue = (List<EntitlementPool>) currentSession().createCriteria(
-                    EntitlementPool.class)
-                .add(Restrictions.eq("productId", productId)).list();
-        
-        if (returnValue == null) {
-            returnValue = new ArrayList<EntitlementPool>();
-        }
-        
-        return returnValue;
+        return listAvailableEntitlementPools(null, null, productId, true);
     }    
 
     /**
@@ -183,8 +185,9 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @return list of EntitlementPools
      */
     public List<EntitlementPool> listByOwnerAndProduct(Owner owner,
-            Product product) {
-        return listByOwnerAndProductId(owner, product.getId());
+            Product product) {  
+        refreshPools(owner, product.getId());        
+        return listAvailableEntitlementPools(null, owner, product, false);
     }
 
     /**
@@ -203,10 +206,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     @SuppressWarnings("unchecked")
     private List<EntitlementPool> listByOwnerAndProductNoRefresh(Owner owner,
         String productId) {
-        return (List<EntitlementPool>) currentSession().createCriteria(
-                EntitlementPool.class)
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("productId", productId)).list();
+        return listAvailableEntitlementPools(null, owner, productId, false);
     }
     
     /**

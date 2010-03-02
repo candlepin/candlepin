@@ -84,27 +84,37 @@ public class EntitlementPoolResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Pools list(@QueryParam("owner") Long ownerId,
+        @QueryParam("consumer") Long consumerId,
         @QueryParam("product") String productId) {
         Pools returnValue = new Pools();
-        System.out.println(ownerId);
-        System.out.println(productId);
-        if ((ownerId == null) && (productId == null)) {
+        if ((ownerId == null) && (productId == null) && (consumerId == null)) {
             returnValue.setPool(entitlementPoolCurator.findAll());
         }
-        else if (ownerId == null) {
-            Product product = productServiceAdapter.getProductById(productId);
-            returnValue.setPool(entitlementPoolCurator.listByProduct(product));
-        }
-        else if (productId == null) {
-            Owner owner = ownerCurator.find(ownerId);
-            returnValue.setPool(entitlementPoolCurator.listByOwner(owner));
-        }
         else {
-            Owner owner = ownerCurator.find(ownerId);
-            Product product = productServiceAdapter.getProductById(productId);
-            returnValue.setPool(entitlementPoolCurator.listByOwnerAndProduct(
-                owner, product));
+            Product p = null;
+            if (productId != null) {
+                p = productServiceAdapter.getProductById(productId);
+                if (p == null) {
+                    return returnValue;
+                }
+            }
+            Consumer c = null;
+            if (consumerId != null) {
+                c = consumerCurator.find(consumerId);
+                if (c == null) {
+                    return returnValue;
+                }                
+            }        
+            Owner o = null;
+            if (ownerId != null) {
+                o = ownerCurator.find(ownerId);
+                if (o == null) {
+                    return returnValue;
+                }                
+            }                   
+            returnValue.setPool(entitlementPoolCurator.listAvailableEntitlementPools(c, o, p, true));
         }
+
         return returnValue;
     }
 
