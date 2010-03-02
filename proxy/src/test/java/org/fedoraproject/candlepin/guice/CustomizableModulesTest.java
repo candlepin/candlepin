@@ -71,7 +71,7 @@ public class CustomizableModulesTest {
 
         public CandlepinConfigurationForTesting(String fileName)
             throws URISyntaxException {
-            CONFIGURATION_FILE = new File(getClass().getResource(fileName)
+            CONFIG_FILE = new File(getClass().getResource(fileName)
                 .toURI());
             initializeMap();
         }

@@ -37,7 +37,7 @@ public class ClientCertificate implements Persisted {
     }
     
     /**
-     * @param pkcs12Bundle pkcs12 bundle
+     * @param certBundle pkcs12 bundle
      */
     public ClientCertificate(Bundle certBundle) {
         this.bundle = certBundle;

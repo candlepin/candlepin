@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public class HighlanderJobFactory implements JobFactory {
 
-    private Map<String,Job> jobImplCache = new HashMap<String,Job>();
+    private Map<String, Job> jobImplCache = new HashMap<String, Job>();
 
     /**
      * {@inheritDoc}

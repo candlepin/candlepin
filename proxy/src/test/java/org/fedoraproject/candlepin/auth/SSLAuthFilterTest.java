@@ -31,11 +31,11 @@ import java.util.LinkedList;
 import org.junit.Before;
 import org.junit.Test;
 
-/*
+/**
  * some useful sources of certificate-related information: 
- *      http://www.herongyang.com/Cryptography/index.html
- *      (in particular: http://www.herongyang.com/Cryptography/OpenSSL-as-CA-Sign-CSR-Generated-by-keytool.html)
- *      http://www.chrissearle.org/blog/technical/installing_ca_signed_certificate_glassfish
+ * http://www.herongyang.com/Cryptography/index.html
+ * (in particular: http://bit.ly/a2sX1d )
+ * http://bit.ly/aOqTAV
  */
 public class SSLAuthFilterTest {
     
@@ -66,8 +66,14 @@ public class SSLAuthFilterTest {
     @Test
     public void validCertificateShouldPassVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
-        CertPath cp = certificateFactory.generateCertPath(new LinkedList<Certificate>() {{ add(certificatePath); }});
-        PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) cpv.validate(cp, PKIXparams);
+        CertPath cp = certificateFactory
+            .generateCertPath(new LinkedList<Certificate>() {
+                {
+                    add(certificatePath);
+                }
+            });
+        PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) cpv
+            .validate(cp, PKIXparams);
         
         assertEquals(
             "CN=Robert Paulson, OU=org unit, O=org, L=Halifax, ST=NS, C=CA", 
@@ -78,7 +84,13 @@ public class SSLAuthFilterTest {
     @Test(expected = CertPathValidatorException.class)
     public void invalidCertificateShouldFailVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
-        CertPath cp = certificateFactory.generateCertPath(new LinkedList<Certificate>() {{ add(selfSignedCertificate); }});
-        PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) cpv.validate(cp, PKIXparams);
+        CertPath cp = certificateFactory
+            .generateCertPath(new LinkedList<Certificate>() {
+                {
+                    add(selfSignedCertificate);
+                }
+            });
+        PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) cpv
+            .validate(cp, PKIXparams);
     }    
 }

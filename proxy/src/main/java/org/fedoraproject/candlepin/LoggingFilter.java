@@ -48,12 +48,13 @@ public class LoggingFilter implements Filter {
         throws IOException, ServletException {
         
         if (log.isDebugEnabled()) {
-            LoggingRequestWrapper lRequest = new LoggingRequestWrapper((HttpServletRequest) request) ;
-            log.debug("Request Body: "+ lRequest.getBody()) ;
+            LoggingRequestWrapper lRequest = new LoggingRequestWrapper(
+                (HttpServletRequest) request);
+            log.debug("Request Body: " + lRequest.getBody());
             chain.doFilter(lRequest, response);
         }
         else {
-            chain.doFilter(request, response) ;
+            chain.doFilter(request, response);
         }
 
     }

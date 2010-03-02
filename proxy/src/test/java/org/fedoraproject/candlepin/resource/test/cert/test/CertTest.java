@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource.test.cert.test;
 
-import org.fedoraproject.candlepin.resource.cert.CertGenerator;
-
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.GeneralName;

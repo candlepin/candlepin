@@ -14,10 +14,6 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import org.fedoraproject.candlepin.config.Config;
-
-import com.google.inject.Module;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -26,9 +22,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.servlet.Filter;
-
-import static com.google.inject.name.Names.*;
+import org.fedoraproject.candlepin.config.Config;
+import com.google.inject.Module;
 
 /**
  * CustomizableModules

@@ -86,7 +86,8 @@ public class DatabaseTestFixture {
         ownerCurator = injector.getInstance(OwnerCurator.class);
         productCurator = injector.getInstance(ProductCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
-        consumerIdCertCurator = injector.getInstance(ConsumerIdentityCertificateCurator.class);
+        consumerIdCertCurator = injector
+            .getInstance(ConsumerIdentityCertificateCurator.class);
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         certificateCurator = injector.getInstance(CertificateCurator.class);
         entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);

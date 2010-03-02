@@ -64,13 +64,15 @@ public class RulesResource {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
-        Rules rules = null ;
+        Rules rules = null;
         try {
             String decoded = Base64.base64Decode(rulesBuffer);
             rules = new Rules(decoded);
-        } catch (Throwable t) {
-            log.error("Exception in rules upload", t) ;
-            throw new BadRequestException("Error decoding the rules. The text should be base 64 encded") ;
+        }
+        catch (Throwable t) {
+            log.error("Exception in rules upload", t);
+            throw new BadRequestException(
+                "Error decoding the rules. The text should be base 64 encded");
         }
         rulesCurator.update(rules);
         return rulesBuffer;
@@ -81,14 +83,16 @@ public class RulesResource {
      * @return a the rules as a string.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.APPLICATION_XML})
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN,
+        MediaType.APPLICATION_XML })
     public String get() {
-        String rules = rulesCurator.getRules().getRules() ;
+        String rules = rulesCurator.getRules().getRules();
         if ((rules != null) && (rules.length() > 0)) {
-            System.out.println(rules) ;
-            return new String(Base64.encode(rules)) ;
-        } else {
-            return "" ;
+            System.out.println(rules);
+            return new String(Base64.encode(rules));
+        }
+        else {
+            return "";
         }
     }
 }

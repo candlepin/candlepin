@@ -21,6 +21,7 @@ import com.wideplay.warp.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -94,12 +95,12 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * from this event.
      *
      * @param owner Owner to be refreshed.
-     * @param product Products to refresh.
+     * @param productId Products to refresh.
      */
-    private void refreshPools(Owner owner, Product product) {
+    private void refreshPools(Owner owner, String productId) {
         List<Subscription> subs = subAdapter.getSubscriptions(owner, 
-                product.getId().toString());
-        List<EntitlementPool> pools = listByOwnerAndProductNoRefresh(owner, product);
+                productId);
+        List<EntitlementPool> pools = listByOwnerAndProductNoRefresh(owner, productId);
         
         // Map all entitlement pools for this owner/product that have a
         // subscription ID associated with them.
@@ -113,7 +114,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         for (Subscription sub : subs) {
             // No pool exists for this subscription, create one:
             if (!subToPoolMap.containsKey(sub.getId())) {
-                EntitlementPool newPool = new EntitlementPool(owner, product.getId(), 
+                EntitlementPool newPool = new EntitlementPool(owner, productId,
                         sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
                 newPool.setSubscriptionId(sub.getId());
                 create(newPool);
@@ -139,28 +140,73 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
 
     }
+    
+    /**
+     * List all entitlement pools for the given product.
+     * 
+     * @param product product filter.
+     * @return list of EntitlementPools
+     */
+    public List<EntitlementPool> listByProduct(Product product) {
+        if (product == null) {
+            return new ArrayList<EntitlementPool>();
+        } 
+        else {
+            return listByProductId(product.getId());
+        }
+    }
+
+    /**
+     * List all entitlement pools for the given owner and product.
+     *
+     * @param owner owner of the entitlement pool
+     * @param productId product filter.
+     * @return list of EntitlementPools
+     */
+    public List<EntitlementPool> listByProductId(String productId) {
+        List<EntitlementPool> returnValue = (List<EntitlementPool>) currentSession().createCriteria(
+                    EntitlementPool.class)
+                .add(Restrictions.eq("productId", productId)).list();
+        
+        if (returnValue == null) {
+            returnValue = new ArrayList<EntitlementPool>();
+        }
+        
+        return returnValue;
+    }    
 
     /**
      * List all entitlement pools for the given owner and product.
      * 
      * @param owner owner of the entitlement pool
      * @param product product filter.
-     * @return list of EntitlementPools for the given owner, consumer, product
-     * combination.
+     * @return list of EntitlementPools
      */
     public List<EntitlementPool> listByOwnerAndProduct(Owner owner,
             Product product) {
-        refreshPools(owner, product);
-        return listByOwnerAndProductNoRefresh(owner, product);
+        return listByOwnerAndProductId(owner, product.getId());
+    }
+
+    /**
+     * List all entitlement pools for the given owner and product.
+     *
+     * @param owner owner of the entitlement pool
+     * @param productId product filter.
+     * @return list of EntitlementPools
+     */
+    public List<EntitlementPool> listByOwnerAndProductId(Owner owner,
+            String productId) {
+        refreshPools(owner, productId);
+        return listByOwnerAndProductNoRefresh(owner, productId);
     }
     
     @SuppressWarnings("unchecked")
     private List<EntitlementPool> listByOwnerAndProductNoRefresh(Owner owner,
-        Product product) {
+        String productId) {
         return (List<EntitlementPool>) currentSession().createCriteria(
                 EntitlementPool.class)
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("productId", product.getId())).list();
+            .add(Restrictions.eq("productId", productId)).list();
     }
     
     /**

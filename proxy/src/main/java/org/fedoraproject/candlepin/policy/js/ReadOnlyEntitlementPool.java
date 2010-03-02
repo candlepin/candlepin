@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import java.util.Date;
+
 import org.fedoraproject.candlepin.model.EntitlementPool;
 
 /**
@@ -36,5 +38,23 @@ public class ReadOnlyEntitlementPool {
      */
     public Boolean entitlementsAvailable() {
         return entPool.entitlementsAvailable();
+    }
+
+    public Long getId() {
+        return entPool.getId();
+    }
+
+    public Long getMaxMembers() {
+        return entPool.getMaxMembers();
+    }
+
+    public Long getCurrentMembers() {
+        return entPool.getCurrentMembers();
+    }
+    public Date getStartDate() {
+        return entPool.getStartDate();
+    }
+    public Date getEndDate() {
+        return entPool.getEndDate();
     }
 }

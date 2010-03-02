@@ -24,7 +24,8 @@ import java.util.TreeMap;
  * Defines the default Candlepin configuration
  */
 public class Config {
-    protected File CONFIGURATION_FILE = new File("/etc/candlepin/candlepin.conf");
+    public static final File CONFIG_DIR = new File("/etc/candlepin");
+    protected File CONFIG_FILE = new File(CONFIG_DIR, "candlepin.conf");
     protected static TreeMap<String, String> configuration = null;
    
 
@@ -61,7 +62,7 @@ public class Config {
      * Returns the Database Basic Authentication Configuration properties
      * @return the Database Basic Authentication Configuration properties
      */
-    public Properties dbBasicAuthConfiguration(){
+    public Properties dbBasicAuthConfiguration() {
         if (configuration == null) {
             loadConfiguration();
         }
@@ -80,7 +81,7 @@ public class Config {
     
     protected Map<String, String> loadProperties() {
         try {
-            return new ConfigurationFileLoader().loadProperties(CONFIGURATION_FILE);
+            return new ConfigurationFileLoader().loadProperties(CONFIG_FILE);
         }
         catch (IOException e) {
             throw new RuntimeException("Problem loading candlepin configuration file.", e);

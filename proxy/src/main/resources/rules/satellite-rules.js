@@ -30,6 +30,36 @@ function post_virtualization_host_platform() {
 	post_global();
 }
 
+// Select pool for mythical product, based on which has the farthest expiry date:
+function select_pool_LONGEST001() {
+	var furthest = null;
+	var iter = pools.iterator();
+	while (iter.hasNext()) {
+		var p = iter.next();
+		if ((furthest == null) || (p.getEndDate() > furthest.getEndDate())) {
+			furthest = p;
+		}
+	}
+	return furthest;
+}
+
+function select_pool_QUANTITY001() {
+	var highestMax = null;
+	var iter = pools.iterator();
+	while (iter.hasNext()) {
+		var p = iter.next();
+		if ((highestMax == null) || (p.getMaxMembers() > highestMax.getMaxMembers())) {
+			highestMax = p;
+		}
+	}
+	return highestMax;
+}
+
+// Bad rule! Just return null instead of picking a pool like it should:
+function select_pool_BADRULE001() {
+	return null;
+}
+
 function pre_global() {
 	
 	// Support free entitlements for guests, if their parent has virt host or platform,

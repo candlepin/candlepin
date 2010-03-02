@@ -26,7 +26,7 @@ import java.util.Properties;
 /**
  * ConfigurationFileLoader
  */
-public class ConfigurationFileLoader {
+class ConfigurationFileLoader {
     
     /**
      * @param configurationFile config file to read

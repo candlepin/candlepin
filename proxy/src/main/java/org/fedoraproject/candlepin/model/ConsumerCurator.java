@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.HashSet;

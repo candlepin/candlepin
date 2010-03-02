@@ -39,7 +39,7 @@ public class ChainedListenerTest {
     private Trigger cron;
 
     @Before
-    public void setup() {
+    public void setUp() {
         cl = new ChainedListener();
         assertNotNull(cl);
         assertEquals(ChainedListener.LISTENER_NAME, cl.getName());
