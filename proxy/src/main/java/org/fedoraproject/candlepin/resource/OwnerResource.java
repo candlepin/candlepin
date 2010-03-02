@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -85,10 +86,7 @@ public class OwnerResource {
 
     /**
      * Creates a new Owner
-     * 
-     * @param owner
-     *            uuid of the owner sought.
-     * @return the owner identified by the given id.
+     * @return the new owner
      */
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -101,6 +99,24 @@ public class OwnerResource {
 
         throw new BadRequestException("Cound not create the Owner");
     }
+    
+    /**
+     * Deletes an owner
+     */
+    @DELETE
+    @Path("/{owner_id}")    
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    //FIXME No way this is as easy as this :)
+    public void deleteOwner(@PathParam("owner_id") Long ownerId) {
+        Owner owner = ownerCurator.find(ownerId);
+
+        if (owner == null) {
+            throw new BadRequestException("Owner with id " + ownerId + 
+                " could not be found");
+        }
+        
+        ownerCurator.delete(owner);
+    }    
 
     /**
      * Return the entitlements for the owner of the given id.
@@ -145,8 +161,6 @@ public class OwnerResource {
             throw new NotFoundException("owner with id: " + ownerId +
                 " was not found.");
         }
-
-        System.out.println(owner.getEntitlementPools().size());
-        return new ArrayList<Pool>(owner.getEntitlementPools()); 
+        return entitlementPoolCurator.listByOwner(owner);
     }    
 }

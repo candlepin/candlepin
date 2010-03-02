@@ -47,5 +47,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(ownerCurator.find(submitted.getId()));
         assertTrue(submitted.getEntitlementPools().size() == 0);
     }
+    
+    @Test    
+    public void testSimpleDeleteOwner() {
+        Owner owner = new Owner(OWNER_NAME);
+        ownerCurator.create(owner);
+        assertNotNull(owner.getId());
+        Long id = owner.getId();
+        ownerResource.deleteOwner(id);
+        owner = ownerCurator.find(id);
+        assertTrue(owner == null);
+    }
 
 }
