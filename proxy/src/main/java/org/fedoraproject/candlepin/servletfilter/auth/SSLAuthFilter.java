@@ -60,7 +60,9 @@ public class SSLAuthFilter implements Filter {
     private CertificateFactory certificateFactory;
     private PKIXParameters pKIXparams;
     
-    public SSLAuthFilter() throws CertificateException, FileNotFoundException, InvalidAlgorithmParameterException {
+    public SSLAuthFilter() 
+            throws CertificateException, FileNotFoundException, 
+            InvalidAlgorithmParameterException {
         certificateFactory = CertificateFactory.getInstance("X.509");
         
         X509Certificate caCertificate = (X509Certificate) certificateFactory
@@ -79,15 +81,16 @@ public class SSLAuthFilter implements Filter {
         this.filterConfig = null;
     }
     
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
-           throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, 
+           FilterChain chain) throws IOException, ServletException {
         
         debugMessage("in ssl auth filter");
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         
         try {
-            X509Certificate certs[] = (X509Certificate[]) httpRequest.getAttribute(CERTIFICATES_ATTR);
+            X509Certificate certs[] = 
+                (X509Certificate[]) httpRequest.getAttribute(CERTIFICATES_ATTR);
             
             if (certs == null || certs.length < 1) {
                 debugMessage("no certificate was present to authenticate the client");
@@ -123,7 +126,8 @@ public class SSLAuthFilter implements Filter {
             
         } catch (Exception e) {
             log.error(e.getMessage());
-            httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY); // TODO: not sure about 503 return code.
+            // TODO: not sure about 503 return code.
+            httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY); 
         } 
     }
 

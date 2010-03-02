@@ -144,6 +144,7 @@ define "candlepin" do
           ant.property :key=>'javadoc.type.scope', :value=>'package'
           ant.property :key=>'javadoc.var.scope', :value=>'package'
           ant.property :key=>'javadoc.lazy', :value=>'false'
+          ant.property :key=>'javadoc.missing.param', :value=>'true'
           ant.property :key=>'checkstyle.cache.file', :value=>'target/checkstyle.cache.src'
           ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
 
