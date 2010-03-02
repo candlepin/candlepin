@@ -58,8 +58,16 @@ public class CandlepinContextListener extends GuiceServletContextListener {
                 add(new ServletModule() {
                     {
                         filter("/*").through(LoggingFilter.class);
-                        filter("/*").through(Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)));
-                        filter("/*").through(Key.get(Filter.class, named(FilterConstants.SSL_AUTH)));
+                        filter("/*").through(
+                            Key.get(Filter.class, 
+                                    named(FilterConstants.BASIC_AUTH)
+                            )
+                        );
+                        filter("/*").through(
+                            Key.get(Filter.class, 
+                                    named(FilterConstants.SSL_AUTH)
+                            )
+                        );
                         serve("/*").with(GuiceContainer.class,
                             new HashMap<String, String>() {
                                 {
