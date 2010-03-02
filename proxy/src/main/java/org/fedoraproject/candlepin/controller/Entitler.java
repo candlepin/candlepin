@@ -61,7 +61,6 @@ public class Entitler {
      * 
      * TODO: Throw exception if entitlement not granted. Report why.
      *
-     * @param owner owner of the entitlement pool
      * @param consumer consumer requesting to be entitled
      * @param product product to be entitled.
      * @return Entitlement
@@ -92,9 +91,7 @@ public class Entitler {
      *
      * TODO: Throw exception if entitlement not granted. Report why.
      *
-     * @param owner owner of the entitlement pool
      * @param consumer consumer requesting to be entitled
-     * @param product product to be entitled.
      * @param pool entitlement pool to consume from
      * @return Entitlement
      */
