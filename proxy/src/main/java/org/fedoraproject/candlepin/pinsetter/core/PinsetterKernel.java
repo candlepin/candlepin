@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.pinsetter.core;
 
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.pinsetter.tasks.SubscriptionSyncTask;
 
 import com.google.inject.Inject;
 
@@ -297,8 +298,8 @@ public class PinsetterKernel implements SchedulerService {
                     "org.quartz.simpl.SimpleThreadPool");
                 put("org.quartz.threadPool.threadCount", "15");
                 put("org.quartz.threadPool.threadPriority", "5");
+                put(DEFAULT_TASKS, SubscriptionSyncTask.class.getName());
             }
         };
     }
-
 }

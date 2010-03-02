@@ -12,28 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.pinsetter.tasks;
+package org.fedoraproject.candlepin.pinsetter.core;
 
-import org.fedoraproject.candlepin.pinsetter.core.PinsetterJob;
-
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-
-import java.util.Date;
+import org.quartz.Job;
 
 /**
- * SubscriptionSyncTask
+ * PinsetterJob
  */
-public class SubscriptionSyncTask implements PinsetterJob {
+public interface PinsetterJob extends Job {
 
-    @Override
-    public void execute(final JobExecutionContext ctx)
-        throws JobExecutionException {
-        System.out.println("subscription sync ran: " + new Date().toString());
-    }
-
-    @Override
-    public String defaultSchedule() {
-        return "0 * * * * ?";
-    }
+    /**
+     * Returns the cron formatted schedule.
+     * @return the cron formatted schedule.
+     */
+    String defaultSchedule();
 }
