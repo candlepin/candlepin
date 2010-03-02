@@ -26,7 +26,6 @@ import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.RuleParseException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -117,8 +116,6 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolLongestExpiry() {
-        Product p = new Product(LONGEST_EXPIRY_PRODUCT, LONGEST_EXPIRY_PRODUCT);
-
         EntitlementPool pool1 = new EntitlementPool(owner, LONGEST_EXPIRY_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2050, 02, 26));
@@ -143,8 +140,6 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolMostAvailable() {
-        Product p = new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT);
-
         EntitlementPool pool1 = new EntitlementPool(owner, HIGHEST_QUANTITY_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2050, 02, 26));
@@ -166,8 +161,6 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void testSelectBestPoolNoPools() {
         // There are no pools for the product in this case:
-        Product p = new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT);
-
         EntitlementPool result = enforcer.selectBestPool(consumer,
             HIGHEST_QUANTITY_PRODUCT);
         assertNull(result);
@@ -175,21 +168,16 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test(expected = RuleExecutionException.class)
     public void testSelectBestPoolBadRule() {
-        Product p = new Product(BAD_RULE_PRODUCT, BAD_RULE_PRODUCT);
-
         EntitlementPool pool1 = new EntitlementPool(owner, BAD_RULE_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2050, 02, 26));
         entitlementPoolCurator.create(pool1);
 
-        EntitlementPool result = enforcer.selectBestPool(consumer,
-            BAD_RULE_PRODUCT);
+        enforcer.selectBestPool(consumer, BAD_RULE_PRODUCT);
     }
 
     @Test
     public void testSelectBestPoolDefaultRule() {
-        Product p = new Product(NO_RULE_PRODUCT, NO_RULE_PRODUCT);
-
         EntitlementPool pool1 = new EntitlementPool(owner, NO_RULE_PRODUCT,
             new Long(5), TestUtil.createDate(2000, 02, 26),
             TestUtil.createDate(2050, 02, 26));

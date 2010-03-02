@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin;
 
 import org.fedoraproject.candlepin.guice.JPAInitializer;
+import org.fedoraproject.candlepin.model.RulesCurator;
+import org.fedoraproject.candlepin.model.test.TestRulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.resource.CertificateResource;
@@ -52,5 +54,6 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
         bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);
+        bind(RulesCurator.class).to(TestRulesCurator.class);
     }
 }

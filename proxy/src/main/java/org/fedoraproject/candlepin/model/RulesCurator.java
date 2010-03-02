@@ -53,7 +53,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     }
     
     private void initiateRulesFromFile() {
-        String path = "/rules/satellite-rules.js";
+        String path = getDefaultRulesFile();
         InputStream is = this.getClass().getResourceAsStream(path);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder builder = new StringBuilder();
@@ -71,6 +71,10 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         create(rules);
     }
     
+    protected String getDefaultRulesFile() {
+        return "/rules/default-rules.js";
+    }
+
     /**
      * @return the rules
      */
