@@ -295,7 +295,7 @@ public class PinsetterKernel implements SchedulerService {
             {
                 put("org.quartz.threadPool.class",
                     "org.quartz.simpl.SimpleThreadPool");
-                put("org.quartz.threadPool.threadCount", "25");
+                put("org.quartz.threadPool.threadCount", "15");
                 put("org.quartz.threadPool.threadPriority", "5");
             }
         };
