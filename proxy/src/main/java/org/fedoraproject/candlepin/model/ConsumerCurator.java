@@ -35,17 +35,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     protected ConsumerCurator() {
         super(Consumer.class);
     }
-    
-    /**
-     * Add consumed product by associating the product to the given consumer.
-     * @param consumer consumer to update.
-     * @param product Product to associate.
-     */
-    public void addConsumedProduct(Consumer consumer, Product product) {
-        ConsumerProduct cp = new ConsumerProduct();
-        cp.setProductId(product.getId());
-        consumer.addConsumedProduct(cp);
-    }
 
     /**
      * Lookup consumer by its name
@@ -84,7 +73,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         
         // TODO: Are any of these read-only?
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
-        existingConsumer.setConsumedProducts(updatedConsumer.getConsumedProducts());
         existingConsumer.setEntitlements(
                 entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
         existingConsumer.setFacts(consumerInfoCurator.update(updatedConsumer.getFacts()));

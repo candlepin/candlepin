@@ -85,13 +85,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         EntitlementBindResult result = eapi.entitleByProduct(
             consumer.getUuid(), product.getLabel());
         
-        
-        //assertNotNull(cert);
-        
         consumer = consumerCurator.lookupByUuid(consumer.getUuid());
-        assertEquals(1, consumer.getConsumedProducts().size());
-        assertEquals(product.getId(), consumer.getConsumedProducts().iterator()
-                .next().getProductId());
         assertEquals(1, consumer.getEntitlements().size());
         
         ep = poolCurator.find(ep.getId());

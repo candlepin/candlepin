@@ -121,10 +121,10 @@ public class EntitlerTest extends DatabaseTestFixture {
     public void testVirtEntitleFailsIfAlreadyHasGuests() {
         parentSystem.getFacts().setFact("total_guests", "10");
         consumerCurator.update(parentSystem);
-        Entitlement e = entitler.entitle(o, parentSystem, virtHost);
+        Entitlement e = entitler.entitle(parentSystem, virtHost);
         assertNull(e);
         
-        e = entitler.entitle(o, parentSystem, virtHostPlatform);
+        e = entitler.entitle(parentSystem, virtHostPlatform);
         assertNull(e);
     }
     
@@ -132,21 +132,21 @@ public class EntitlerTest extends DatabaseTestFixture {
     public void testVirtEntitleFailsForVirtSystem() {
         parentSystem.setType(guestType);
         consumerCurator.update(parentSystem);
-        Entitlement e = entitler.entitle(o, parentSystem, virtHost);
+        Entitlement e = entitler.entitle(parentSystem, virtHost);
         assertNull(e);
         
-        e = entitler.entitle(o, parentSystem, virtHostPlatform);
+        e = entitler.entitle(parentSystem, virtHostPlatform);
         assertNull(e);
     }
     
     @Test
     public void testVirtSystemGetsWhatParentHasForFree() {
         // Give parent virt host ent:
-        Entitlement e = entitler.entitle(o, parentSystem, virtHost);
+        Entitlement e = entitler.entitle(parentSystem, virtHost);
         assertNotNull(e);
         
         // Give parent provisioning:
-        e = entitler.entitle(o, parentSystem, provisioning);
+        e = entitler.entitle(parentSystem, provisioning);
         assertNotNull(e);
         
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
@@ -156,7 +156,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertEquals(new Long(1), provisioningCount);
         
         // Now guest requests monitoring, and should get it for "free":
-        e = entitler.entitle(o, childVirtSystem, provisioning);
+        e = entitler.entitle(childVirtSystem, provisioning);
         assertNotNull(e);
         assertTrue(e.isFree());
         assertEquals(new Long(1), provisioningPool.getCurrentMembers());
@@ -165,7 +165,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     @Test
     public void testVirtSystemPhysicalEntitlement() {
         // Give parent virt host ent:
-        Entitlement e = entitler.entitle(o, parentSystem, virtHost);
+        Entitlement e = entitler.entitle(parentSystem, virtHost);
         assertNotNull(e);
         
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
@@ -174,7 +174,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
         assertEquals(new Long(0), provisioningCount);
         
-        e = entitler.entitle(o, childVirtSystem, provisioning);
+        e = entitler.entitle(childVirtSystem, provisioning);
         assertNotNull(e);
         assertFalse(e.isFree());
         // Should have resorted to consuming a physical entitlement, because the guest's
@@ -188,13 +188,22 @@ public class EntitlerTest extends DatabaseTestFixture {
                 monitoring).get(0);
         assertEquals(new Long(5), monitoringPool.getMaxMembers());
         for (int i = 0; i < 5; i++) {
-            Entitlement e = entitler.entitle(o, parentSystem, monitoring);
+            Entitlement e = entitler.entitle(parentSystem, monitoring);
             assertNotNull(e);
         }
         
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
-        Entitlement e = entitler.entitle(o, parentSystem, monitoring);
+        Entitlement e = entitler.entitle(parentSystem, monitoring);
         assertNull(e);
         assertEquals(new Long(5), monitoringPool.getCurrentMembers());
+    }
+
+    @Test
+    public void testRevocation() {
+        Entitlement e = entitler.entitle(parentSystem, monitoring);
+        entitler.revokeEntitlement(e);
+
+        List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
+        assertTrue(entitlements.isEmpty());
     }
 }

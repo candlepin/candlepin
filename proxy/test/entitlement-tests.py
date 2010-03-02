@@ -54,3 +54,25 @@ class EntitlementTests(CandlepinTests):
         self.assertTrue("product" in result)
         products_list = result['product']
         self.assertEquals(6, len(products_list))
+
+    def test_unbind_all_single(self):
+        pools = self.cp.getEntitlementPools(self.uuid) 
+        pool = pools['pool'][0]
+
+        self.cp.bindPool(self.uuid, pool['id'])
+        
+        # Now unbind it
+        self.cp.unBindAll(self.uuid)
+
+        self.assertEqual(None, self.cp.getEntitlements(self.uuid))
+
+    def test_unbind_all_multi(self):
+        pools = self.cp.getEntitlementPools(self.uuid)['pool']
+
+        if len(pools) > 1:
+            for pool in pools:
+                self.cp.bindPool(self.uuid, pool['id'])
+
+            # Unbind them all
+            self.cp.unBindAll(self.uuid)
+            self.assertEqual(None, self.cp.getEntitlements(self.uuid))
