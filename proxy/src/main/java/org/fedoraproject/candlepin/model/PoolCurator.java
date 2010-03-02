@@ -25,7 +25,6 @@ import org.hibernate.criterion.Restrictions;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -74,7 +73,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
-        List<Pool> results = null ;
+        List<Pool> results = null;
         Criteria crit = currentSession().createCriteria(Pool.class);
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
@@ -100,7 +99,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = new ArrayList<Pool>();
         }
         
-        return results ;
+        return results;
     }
     
     /**
@@ -171,7 +170,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * List all entitlement pools for the given owner and product.
      *
-     * @param owner owner of the entitlement pool
      * @param productId product filter.
      * @return list of EntitlementPools
      */

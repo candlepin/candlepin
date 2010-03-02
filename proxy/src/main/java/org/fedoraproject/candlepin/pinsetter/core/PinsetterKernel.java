@@ -58,7 +58,6 @@ public class PinsetterKernel implements SchedulerService {
      */
     protected PinsetterKernel() throws InstantiationException {
         this(new Config());
-        System.out.println("pk ctor");
     }
 
     /**
@@ -70,8 +69,11 @@ public class PinsetterKernel implements SchedulerService {
     @Inject
     public PinsetterKernel(Config conf) throws InstantiationException {
         config = conf;
-        Properties props = config.getNamespaceProperties("org.quartz");
-        // create a this.schedulerFactory
+
+        Properties props = config.getNamespaceProperties("org.quartz",
+            defaultConfig());
+
+        // create a schedulerFactory
         try {
             SchedulerFactory fact = new StdSchedulerFactory(props);
 
@@ -97,7 +99,7 @@ public class PinsetterKernel implements SchedulerService {
     public void startup() throws PinsetterException {
         try {
             scheduler.start();
-            configure(config);
+            configure(config, defaultConfig());
         }
         catch (SchedulerException e) {
             throw new PinsetterException(e.getMessage(), e);
@@ -107,18 +109,10 @@ public class PinsetterKernel implements SchedulerService {
     /**
      * Configures the system.
      * @param conf Configuration object containing config values.
-     */
-    public void configure(Config conf) {
-        configure(config, null);
-    }
-
-    /**
-     * Configures the system.
-     * @param conf Configuration object containing config values.
      * @param overrides Map containing configuration overrides based on cli
      * params
      */
-    public void configure(Config conf, Map<String, String> overrides) {
+    private void configure(Config conf, Map<String, String> overrides) {
         if (log.isDebugEnabled()) {
             log.debug("Scheduling tasks");
         }
@@ -143,10 +137,9 @@ public class PinsetterKernel implements SchedulerService {
         // Bail if there is nothing to configure
         if (jobImpls == null || jobImpls.size() == 0) {
             log.warn("No tasks to schedule");
-            //throw new RuntimeException("No tasks to schedule");
-            // TODO: revisit whether we should throw an exception or not.
             return;
         }
+
         int count = 0;
         for (String jobImpl : jobImpls) {
             if (log.isDebugEnabled()) {
@@ -173,6 +166,7 @@ public class PinsetterKernel implements SchedulerService {
         catch (SchedulerException e) {
             throw new RuntimeException(e.getLocalizedMessage(), e);
         }
+
         scheduleJobs(pendingJobs);
     }
 
@@ -196,7 +190,6 @@ public class PinsetterKernel implements SchedulerService {
             }
         }
     }
-
 
     private void scheduleJobs(Map<String, String[]> pendingJobs) {
        // No jobs to schedule
@@ -267,7 +260,7 @@ public class PinsetterKernel implements SchedulerService {
     }
     
     // TODO: GET RID OF ME!!
-    public Scheduler getScheduler() {
+    Scheduler getScheduler() {
         return scheduler;
     }
     
@@ -291,6 +284,21 @@ public class PinsetterKernel implements SchedulerService {
                 done = true;
             }
         }
+    }
+
+    /**
+     * Returns the default configuration if no config file is present.
+     * @return the default configuration if no config file is present.
+     */
+    private Map<String, String> defaultConfig() {
+        return new HashMap<String, String>() {
+            {
+                put("org.quartz.threadPool.class",
+                    "org.quartz.simpl.SimpleThreadPool");
+                put("org.quartz.threadPool.threadCount", "15");
+                put("org.quartz.threadPool.threadPriority", "5");
+            }
+        };
     }
 
 }

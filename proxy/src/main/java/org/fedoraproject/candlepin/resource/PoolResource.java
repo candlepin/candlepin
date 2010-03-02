@@ -135,8 +135,8 @@ public class PoolResource {
             return toReturn;
         }
 
-        throw new NotFoundException("Entitlement Pool with ID '" + id
-            + "' could not be found");
+        throw new NotFoundException("Entitlement Pool with ID '" + id +
+            "' could not be found");
     }
 
     /**

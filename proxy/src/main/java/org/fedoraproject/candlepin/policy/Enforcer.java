@@ -62,5 +62,6 @@ public interface Enforcer {
      * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
      * pool is returned.
      */
-    Pool selectBestPool(Consumer consumer, String productId);
+    Pool selectBestPool(Consumer consumer, String productId)
+        throws RuleExecutionException;
 }

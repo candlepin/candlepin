@@ -12,11 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.pinsetter;
+package org.fedoraproject.candlepin.pinsetter.core;
 
-import static org.junit.Assert.*;
-
-import org.fedoraproject.candlepin.pinsetter.core.PinsetterException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
