@@ -1,7 +1,8 @@
 NAME 		:= candlepin
 SPECFILE	= $(NAME).spec
 VERSION         := $(shell rpm -q --qf "%{VERSION}\n" --specfile $(SPECFILE)| head -1)
-RELEASE         := $(shell rpm -q --qf "%{RELEASE}\n" --specfile $(SPECFILE)| head -1)
+# This needs to be set as an ENV variable (ie, Hudson sets it)
+#RELEASE         := $(shell rpm -q --qf "%{RELEASE}\n" --specfile $(SPECFILE)| head -1)
 UPSTREAM_NAME   = $(PROJECT)
 
 TAG             = $(subst .,_,$(NAME)-$(VERSION)-$(RELEASE))
@@ -14,6 +15,7 @@ ARCHIVE         = $(NAME)-bin.tar.gz
 
 RPM_TOPDIR	= /tmp/$(NAME)-$(VERSION)-$(RELEASE)-build
 _RPM_OPTS	= --define "_topdir	    $(RPM_TOPDIR)" \
+		  --define "_release	    $(RELEASE)" \
 		  --define "_builddir	    %{_topdir}" \
 		  --define "_sourcedir	    $(shell pwd)" \
 		  --define "_specdir	    $(shell pwd)" \
@@ -23,6 +25,7 @@ _RPM_OPTS	= --define "_topdir	    $(RPM_TOPDIR)" \
 RPM_OPTS        = $(strip $(_RPM_OPTS))
 
 rpm: clean $(RPM_TOPDIR) $(SPECFILE) $(ARCHIVE)
+	echo $(RELEASE)
 	$(RPMBUILD) --clean $(RPM_OPTS) -bb $(SPECFILE)
 
 clean:
