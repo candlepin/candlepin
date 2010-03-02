@@ -12,23 +12,15 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servletfilter.auth;
+package org.fedoraproject.candlepin.model.test;
 
-import static com.google.inject.name.Names.*;
-
-import javax.servlet.Filter;
-
-import com.google.inject.AbstractModule;
+import org.fedoraproject.candlepin.model.RulesCurator;
 
 /**
- * Configuration Module for SSLAuthFilter
+ * Simple sub-class for testing with a different rules file.
  */
-public class SSLAuthModule extends AbstractModule {
-    @Override
-    public void configure() {
-        bind(Filter.class)
-            .annotatedWith(named(FilterConstants.SSL_AUTH))
-            .to(SSLAuthFilter.class)
-            .asEagerSingleton();
+public class TestRulesCurator extends RulesCurator {
+    protected String getDefaultRulesFile() {
+        return "/rules/test-rules.js";
     }
 }

@@ -12,23 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servletfilter.auth;
+package org.fedoraproject.candlepin.pinsetter.tasks;
 
-import static com.google.inject.name.Names.*;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
-import javax.servlet.Filter;
-
-import com.google.inject.AbstractModule;
+import java.util.Date;
 
 /**
- * Configuration Module for SSLAuthFilter
+ * SubscriptionSyncTask
  */
-public class SSLAuthModule extends AbstractModule {
+public class SubscriptionSyncTask implements Job {
+
     @Override
-    public void configure() {
-        bind(Filter.class)
-            .annotatedWith(named(FilterConstants.SSL_AUTH))
-            .to(SSLAuthFilter.class)
-            .asEagerSingleton();
+    public void execute(final JobExecutionContext ctx)
+        throws JobExecutionException {
+        System.out.println("subscription sync ran: " + new Date().toString());
     }
 }

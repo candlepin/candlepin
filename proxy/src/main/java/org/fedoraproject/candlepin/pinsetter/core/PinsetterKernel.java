@@ -8,13 +8,15 @@
  * along with this software; if not, see
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
  *
- * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * Red Hat trademarks are not licensed who under GPLv2. No permission is
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
 import org.fedoraproject.candlepin.config.Config;
+
+import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
@@ -56,6 +58,7 @@ public class PinsetterKernel implements SchedulerService {
      */
     protected PinsetterKernel() throws InstantiationException {
         this(new Config());
+        System.out.println("pk ctor");
     }
 
     /**
@@ -64,6 +67,7 @@ public class PinsetterKernel implements SchedulerService {
      * @throws InstantiationException thrown if this.scheduler can't be
      * initialized.
      */
+    @Inject
     public PinsetterKernel(Config conf) throws InstantiationException {
         config = conf;
         Properties props = config.getNamespaceProperties("org.quartz");
@@ -93,6 +97,7 @@ public class PinsetterKernel implements SchedulerService {
     public void startup() throws PinsetterException {
         try {
             scheduler.start();
+            configure(config);
         }
         catch (SchedulerException e) {
             throw new PinsetterException(e.getMessage(), e);

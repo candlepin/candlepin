@@ -217,7 +217,7 @@
       <property name="scope" value="${javadoc.method.scope}" />
       <property name="allowUndeclaredRTE" value="true" />
       <property name="allowThrowsTagsForSubclasses" value="${javadoc.lazy}" />
-      <property name="allowMissingParamTags" value="${javadoc.lazy}" />
+      <property name="allowMissingParamTags" value="${javadoc.missing.param}" />
       <property name="allowMissingThrowsTags" value="${javadoc.lazy}" />
       <property name="allowMissingReturnTag" value="${javadoc.lazy}" />
       <property name="allowMissingPropertyJavadoc" value="true" />
