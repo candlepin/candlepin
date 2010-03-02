@@ -106,7 +106,8 @@ public class TestUtil {
         Calendar cal = Calendar.getInstance();
             
         cal.set(Calendar.YEAR, year);
-        cal.set(Calendar.MONTH, month);
+        // Watchout, Java expects month as 0-11
+        cal.set(Calendar.MONTH, month - 1);
         cal.set(Calendar.DATE, day);
 
         cal.set(Calendar.HOUR_OF_DAY, 0);
