@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.pinsetter;
+package org.fedoraproject.candlepin.pinsetter.core;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -85,7 +85,7 @@ public class PinsetterKernelTest {
             fail(t.getMessage());
         }
     }
-    
+
     @Test
     public void testScheduleJobString() throws InstantiationException,
         PinsetterException, SchedulerException {
@@ -103,7 +103,7 @@ public class PinsetterKernelTest {
 
         pk = new PinsetterKernel(config);
         assertNotNull(pk);
-        
+
         pk.startup();
 
 
@@ -117,13 +117,13 @@ public class PinsetterKernelTest {
                 s.addJobListener(new ListenerJob());
             }
         }
-        
+
         // TODO: test needs to be fixed big time
         // every second
         pk.scheduleJob(TestJob.class, "testjob", "*/1 * * * * ?");
         Thread.yield();
         pk.shutdown();
-        
+
     }
 
     public static class ListenerJob implements JobListener {
@@ -142,7 +142,7 @@ public class PinsetterKernelTest {
         @Override
         public void jobExecutionVetoed(JobExecutionContext contextIn) {
             // TODO Auto-generated method stub
-            
+
         }
 
         /**
@@ -151,7 +151,7 @@ public class PinsetterKernelTest {
         @Override
         public void jobToBeExecuted(JobExecutionContext contextIn) {
             // TODO Auto-generated method stub
-            
+
         }
 
         /**
@@ -163,7 +163,7 @@ public class PinsetterKernelTest {
             System.out.println("JOB RAN! " + ctx.getJobDetail().getName());
             assertTrue(ctx.getJobDetail().getJobClass().equals(TestJob.class));
         }
-        
+
     }
 
     public static class TestConfig extends Config {
