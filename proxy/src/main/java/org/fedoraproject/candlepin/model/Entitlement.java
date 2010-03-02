@@ -78,7 +78,7 @@ public class Entitlement implements Persisted {
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_entitlement_pool")
     @JoinColumn(nullable = false)
-    private EntitlementPool pool;
+    private Pool pool;
 
     private Date startDate;
     
@@ -113,7 +113,7 @@ public class Entitlement implements Persisted {
      * @param consumerIn consumer associated with the entitlement
      * @param startDateIn when the entitlement starts.
      */
-    public Entitlement(EntitlementPool poolIn, Consumer consumerIn, Date startDateIn) {
+    public Entitlement(Pool poolIn, Consumer consumerIn, Date startDateIn) {
         pool = poolIn;
         owner = consumerIn.getOwner();
         consumer = consumerIn;
@@ -145,14 +145,14 @@ public class Entitlement implements Persisted {
     /**
      * @return Returns the pool.
      */
-    public EntitlementPool getPool() {
+    public Pool getPool() {
         return pool;
     }
 
     /**
      * @param poolIn The pool to set.
      */
-    public void setPool(EntitlementPool poolIn) {
+    public void setPool(Pool poolIn) {
         pool = poolIn;
     }
 

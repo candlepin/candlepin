@@ -21,7 +21,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
-import org.fedoraproject.candlepin.resource.EntitlementPoolResource;
+import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
@@ -45,7 +45,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
-        bind(EntitlementPoolResource.class);
+        bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
         bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);         

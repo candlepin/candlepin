@@ -18,8 +18,8 @@ package org.fedoraproject.candlepin.policy.js;
 import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
@@ -50,7 +50,7 @@ public class JavascriptEnforcer implements Enforcer {
     private ProductServiceAdapter prodAdapter;
     private PreEntHelper preHelper;
     private PostEntHelper postHelper;
-    private EntitlementPoolCurator epCurator;
+    private PoolCurator epCurator;
 
     private ScriptEngine jsEngine;
 
@@ -65,7 +65,7 @@ public class JavascriptEnforcer implements Enforcer {
     public JavascriptEnforcer(DateSource dateSource,
             RulesCurator rulesCurator, PreEntHelper preHelper,
             PostEntHelper postHelper, ProductServiceAdapter prodAdapter,
-            EntitlementPoolCurator epCurator) {
+            PoolCurator epCurator) {
         this.dateSource = dateSource;
         this.rulesCurator = rulesCurator;
         this.preHelper = preHelper;
@@ -89,7 +89,7 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     @Override
-    public PreEntHelper pre(Consumer consumer, EntitlementPool entitlementPool) {
+    public PreEntHelper pre(Consumer consumer, Pool entitlementPool) {
 
         runPre(preHelper, consumer, entitlementPool);
 
@@ -104,7 +104,7 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     private void runPre(PreEntHelper preHelper, Consumer consumer,
-            EntitlementPool pool) {
+            Pool pool) {
         Invocable inv = (Invocable) jsEngine;
         String productId = pool.getProductId();
 
@@ -144,7 +144,7 @@ public class JavascriptEnforcer implements Enforcer {
 
     private void runPost(PostEntHelper postHelper, Entitlement ent) {
         Invocable inv = (Invocable) jsEngine;
-        EntitlementPool pool = ent.getPool();
+        Pool pool = ent.getPool();
         Consumer c = ent.getConsumer();
         String productId = pool.getProductId();
 
@@ -176,9 +176,9 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
-    public EntitlementPool selectBestPool(Consumer consumer, String productId) {
+    public Pool selectBestPool(Consumer consumer, String productId) {
         // Fetch all entitlement pools for this product:
-        List<EntitlementPool> pools = epCurator.listByOwnerAndProductId(
+        List<Pool> pools = epCurator.listByOwnerAndProductId(
             consumer.getOwner(), productId);
 
         Invocable inv = (Invocable) jsEngine;
@@ -186,7 +186,7 @@ public class JavascriptEnforcer implements Enforcer {
         log.info("Selecting best entitlement pool for product: " + productId);
         List<ReadOnlyEntitlementPool> readOnlyPools =
             new LinkedList<ReadOnlyEntitlementPool>();
-        for (EntitlementPool p : pools) {
+        for (Pool p : pools) {
             log.info("   " + p);
             readOnlyPools.add(new ReadOnlyEntitlementPool(p));
         }
@@ -226,7 +226,7 @@ public class JavascriptEnforcer implements Enforcer {
                 productId);
         }
 
-        for (EntitlementPool p : pools) {
+        for (Pool p : pools) {
             if (p.getId().equals(result.getId())) {
                 log.debug("Best pool: " + p);
                 return p;
@@ -241,7 +241,7 @@ public class JavascriptEnforcer implements Enforcer {
      * @param pools Pools to choose from.
      * @return First pool in the list. (default behavior)
      */
-    private EntitlementPool selectBestPoolDefault(List<EntitlementPool> pools) {
+    private Pool selectBestPoolDefault(List<Pool> pools) {
         if (pools.size() > 0) {
             return pools.get(0);
         }

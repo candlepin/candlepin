@@ -15,7 +15,7 @@
 package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
@@ -27,7 +27,7 @@ import com.google.inject.Inject;
  */
 public class PostEntHelper {
 
-    private EntitlementPoolCurator epCurator;
+    private PoolCurator epCurator;
     private ProductServiceAdapter prodAdapter;
     private Entitlement ent;
 
@@ -37,7 +37,7 @@ public class PostEntHelper {
      * @param prodAdapter interact with Product service
      */
     @Inject
-    public PostEntHelper(EntitlementPoolCurator epCurator,
+    public PostEntHelper(PoolCurator epCurator,
             ProductServiceAdapter prodAdapter) {
         this.epCurator = epCurator;
         this.prodAdapter = prodAdapter;

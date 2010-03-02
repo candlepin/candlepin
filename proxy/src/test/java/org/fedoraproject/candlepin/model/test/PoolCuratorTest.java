@@ -19,7 +19,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -28,7 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-public class EntitlementPoolCuratorTest extends DatabaseTestFixture {
+public class PoolCuratorTest extends DatabaseTestFixture {
 
     private Owner owner;
     private Product product;
@@ -49,24 +49,24 @@ public class EntitlementPoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolNotYetActive() {
-        EntitlementPool pool = new EntitlementPool(owner, product.getId(), new Long(100),
+        Pool pool = new Pool(owner, product.getId(), new Long(100),
                 TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
-        entitlementPoolCurator.create(pool);
+        poolCurator.create(pool);
 
-        List<EntitlementPool> results =
-            entitlementPoolCurator.listAvailableEntitlementPools(consumer);
+        List<Pool> results =
+            poolCurator.listAvailableEntitlementPools(consumer);
         assertEquals(0, results.size());
 
     }
 
     @Test
     public void testPoolExpired() {
-        EntitlementPool pool = new EntitlementPool(owner, product.getId(), new Long(100),
+        Pool pool = new Pool(owner, product.getId(), new Long(100),
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
-        entitlementPoolCurator.create(pool);
+        poolCurator.create(pool);
 
-        List<EntitlementPool> results =
-            entitlementPoolCurator.listAvailableEntitlementPools(consumer);
+        List<Pool> results =
+            poolCurator.listAvailableEntitlementPools(consumer);
         assertEquals(0, results.size());
 
     }

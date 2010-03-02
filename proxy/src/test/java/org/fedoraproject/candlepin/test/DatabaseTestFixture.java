@@ -27,7 +27,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
@@ -59,7 +59,7 @@ public class DatabaseTestFixture {
     protected ConsumerIdentityCertificateCurator consumerIdCertCurator;
     protected ConsumerTypeCurator consumerTypeCurator;
     protected CertificateCurator certificateCurator;
-    protected EntitlementPoolCurator entitlementPoolCurator;
+    protected PoolCurator poolCurator;
     protected DateSourceForTesting dateSource;
     protected SpacewalkCertificateCurator spacewalkCertCurator;
     protected EntitlementCurator entitlementCurator;
@@ -90,7 +90,7 @@ public class DatabaseTestFixture {
             .getInstance(ConsumerIdentityCertificateCurator.class);
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         certificateCurator = injector.getInstance(CertificateCurator.class);
-        entitlementPoolCurator = injector.getInstance(EntitlementPoolCurator.class);
+        poolCurator = injector.getInstance(PoolCurator.class);
         spacewalkCertCurator = injector.getInstance(SpacewalkCertificateCurator.class);
         entitlementCurator = injector.getInstance(EntitlementCurator.class);
         attributeCurator = injector.getInstance(AttributeCurator.class);

@@ -33,14 +33,14 @@ import java.util.Map.Entry;
 /**
  * EntitlementPoolCurator
  */
-public class EntitlementPoolCurator extends AbstractHibernateCurator<EntitlementPool> {
+public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private SubscriptionServiceAdapter subAdapter;
     
 
     @Inject
-    protected EntitlementPoolCurator(SubscriptionServiceAdapter subAdapter) {
-        super(EntitlementPool.class);
+    protected PoolCurator(SubscriptionServiceAdapter subAdapter) {
+        super(Pool.class);
         this.subAdapter = subAdapter;
     }
 
@@ -50,7 +50,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @return pools owned by the given Owner.
      */
     @SuppressWarnings("unchecked")
-    public List<EntitlementPool> listByOwner(Owner o) {
+    public List<Pool> listByOwner(Owner o) {
         return listAvailableEntitlementPools(null, o, (String) null, true);
     }
     
@@ -62,20 +62,20 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @return pools owned by the given Owner.
      */
     @SuppressWarnings("unchecked")
-    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c) {
+    public List<Pool> listAvailableEntitlementPools(Consumer c) {
         return listAvailableEntitlementPools(c, null, (String) null, true);
     }
     
-    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c, Owner o,
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             Product p, boolean activeOnly) {
         String productId = (p == null) ? null : p.getId();
         return listAvailableEntitlementPools(c, o, productId, activeOnly);
     }
     
-    public List<EntitlementPool> listAvailableEntitlementPools(Consumer c, Owner o,
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
-        List<EntitlementPool> results = null ;
-        Criteria crit = currentSession().createCriteria(EntitlementPool.class);
+        List<Pool> results = null ;
+        Criteria crit = currentSession().createCriteria(Pool.class);
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
         }
@@ -94,10 +94,10 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         // FIXME: sort by enddate?
         // FIXME: currentmembers < maxmembers
         // FIXME: do we need to run through rules for each of these? (expensive!)        
-        results = (List<EntitlementPool>) crit.list();
+        results = (List<Pool>) crit.list();
         
         if (results == null) {
-            results = new ArrayList<EntitlementPool>();
+            results = new ArrayList<Pool>();
         }
         
         return results ;
@@ -117,12 +117,12 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
     private void refreshPools(Owner owner, String productId) {
         List<Subscription> subs = subAdapter.getSubscriptions(owner, 
                 productId);
-        List<EntitlementPool> pools = listByOwnerAndProductNoRefresh(owner, productId);
+        List<Pool> pools = listByOwnerAndProductNoRefresh(owner, productId);
         
         // Map all entitlement pools for this owner/product that have a
         // subscription ID associated with them.
-        Map<Long, EntitlementPool> subToPoolMap = new HashMap<Long, EntitlementPool>();
-        for (EntitlementPool p : pools) {
+        Map<Long, Pool> subToPoolMap = new HashMap<Long, Pool>();
+        for (Pool p : pools) {
             if (p.getSubscriptionId() != null) {
                 subToPoolMap.put(p.getSubscriptionId(), p);
             }
@@ -131,14 +131,14 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         for (Subscription sub : subs) {
             // No pool exists for this subscription, create one:
             if (!subToPoolMap.containsKey(sub.getId())) {
-                EntitlementPool newPool = new EntitlementPool(owner, productId,
+                Pool newPool = new Pool(owner, productId,
                         sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
                 newPool.setSubscriptionId(sub.getId());
                 create(newPool);
                 subToPoolMap.remove(sub.getId());
             }
             else {
-                EntitlementPool existingPool = subToPoolMap.get(sub.getId());
+                Pool existingPool = subToPoolMap.get(sub.getId());
                 
                 // TODO: We're just updating the pool always now, would be much
                 // better if we could check some kind of last modified date to
@@ -151,7 +151,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
 
         // Iterate pools whose subscription disappeared:
-        for (Entry<Long, EntitlementPool> entry : subToPoolMap.entrySet()) {
+        for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
             entry.getValue().setActiveSubscription(Boolean.FALSE);
             merge(entry.getValue());
         }
@@ -164,7 +164,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @param product product filter.
      * @return list of EntitlementPools
      */
-    public List<EntitlementPool> listByProduct(Product product) {
+    public List<Pool> listByProduct(Product product) {
         return listAvailableEntitlementPools(null, null, product, true);        
     }
 
@@ -175,7 +175,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @param productId product filter.
      * @return list of EntitlementPools
      */
-    public List<EntitlementPool> listByProductId(String productId) {
+    public List<Pool> listByProductId(String productId) {
         return listAvailableEntitlementPools(null, null, productId, true);
     }    
 
@@ -186,7 +186,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @param product product filter.
      * @return list of EntitlementPools
      */
-    public List<EntitlementPool> listByOwnerAndProduct(Owner owner,
+    public List<Pool> listByOwnerAndProduct(Owner owner,
             Product product) {  
         refreshPools(owner, product.getId());        
         return listAvailableEntitlementPools(null, owner, product, false);
@@ -199,14 +199,14 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      * @param productId product filter.
      * @return list of EntitlementPools
      */
-    public List<EntitlementPool> listByOwnerAndProductId(Owner owner,
+    public List<Pool> listByOwnerAndProductId(Owner owner,
             String productId) {
         refreshPools(owner, productId);
         return listByOwnerAndProductNoRefresh(owner, productId);
     }
     
     @SuppressWarnings("unchecked")
-    private List<EntitlementPool> listByOwnerAndProductNoRefresh(Owner owner,
+    private List<Pool> listByOwnerAndProductNoRefresh(Owner owner,
         String productId) {
         return listAvailableEntitlementPools(null, owner, productId, false);
     }
@@ -217,7 +217,7 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
      */
     @Transactional
     @SuppressWarnings("unchecked")
-    public List<Entitlement> entitlementsIn(EntitlementPool entitlementPool) {
+    public List<Entitlement> entitlementsIn(Pool entitlementPool) {
         return currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("pool", entitlementPool))
             .list();

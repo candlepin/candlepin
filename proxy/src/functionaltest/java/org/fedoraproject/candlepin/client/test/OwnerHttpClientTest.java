@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -39,11 +39,11 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
     private static final Long MAX_POOL_MEMBERS = new Long(10);
     private Owner owner;
     private Product product;
-    private EntitlementPool entitlementPool;
+    private Pool entitlementPool;
     private Entitler entitler;
     private ConsumerType type;
     private Product anotherProduct;
-    private EntitlementPool anotherEntitlementPool;
+    private Pool anotherEntitlementPool;
 
     @Before
     public void setUp() throws Exception {
@@ -61,15 +61,15 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
         anotherProduct = TestUtil.createProduct();
         productCurator.create(anotherProduct);
 
-        entitlementPool = new EntitlementPool(owner, product.getId(),
+        entitlementPool = new Pool(owner, product.getId(),
                 MAX_POOL_MEMBERS, TestDateUtil.date(2010, 1, 1), TestDateUtil
                         .date(2020, 12, 31));
-        entitlementPoolCurator.create(entitlementPool);
+        poolCurator.create(entitlementPool);
 
-        anotherEntitlementPool = new EntitlementPool(owner, anotherProduct
+        anotherEntitlementPool = new Pool(owner, anotherProduct
                 .getId(), MAX_POOL_MEMBERS, TestDateUtil.date(2010, 1, 1),
                 TestDateUtil.date(2020, 12, 31));
-        entitlementPoolCurator.create(anotherEntitlementPool);
+        poolCurator.create(anotherEntitlementPool);
 
         entitler = injector.getInstance(Entitler.class);
     }

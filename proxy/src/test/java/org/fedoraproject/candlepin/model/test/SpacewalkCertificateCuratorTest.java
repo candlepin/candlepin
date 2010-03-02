@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -100,7 +100,7 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
     private void assertChannelFamilyExists(String channelFamilyName, Long quantity) {
         Product product = productCurator.lookupByName(channelFamilyName);
         assertNotNull(product);
-        EntitlementPool entitlementPool = entitlementPoolCurator
+        Pool entitlementPool = poolCurator
                 .listByOwnerAndProduct(owner, 
                     product).get(0);
         assertNotNull(entitlementPool);

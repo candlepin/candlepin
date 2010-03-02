@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -248,7 +248,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testAddEntitlements() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        EntitlementPool pool = TestUtil.createEntitlementPool(newProduct);
+        Pool pool = TestUtil.createEntitlementPool(newProduct);
         entityManager().persist(pool.getOwner());
         entityManager().persist(pool);
 

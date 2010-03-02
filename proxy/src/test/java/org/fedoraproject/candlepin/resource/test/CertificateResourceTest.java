@@ -18,7 +18,7 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.CertificateResource;
@@ -75,7 +75,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         String encoded = TestUtil.xmlToBase64String(sampleCertXml);
         certResource.upload(encoded);
         Owner owner = ownerCurator.lookupByName("Spacewalk Public Cert");
-        List<EntitlementPool> entPools = entitlementPoolCurator.listByOwner(owner);
+        List<Pool> entPools = poolCurator.listByOwner(owner);
         assertEquals(5, entPools.size());
     }
 

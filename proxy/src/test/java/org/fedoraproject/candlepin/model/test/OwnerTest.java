@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.EntitlementPool;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -76,7 +76,7 @@ public class OwnerTest extends DatabaseTestFixture {
         assertEquals(1, c.getConsumedProducts().size());
 
         // EntitlementPool
-        EntitlementPool pool = new EntitlementPool();
+        Pool pool = new Pool();
         owner.addEntitlementPool(pool);
         pool.setProductId(rhel.getId());
         assertEquals(1, owner.getEntitlementPools().size());

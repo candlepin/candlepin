@@ -55,9 +55,9 @@ public class Owner implements Persisted {
     private Set<Consumer> consumers;
     
     // EntitlementPool is the owning side of this relationship.
-    @OneToMany(mappedBy = "owner", targetEntity = EntitlementPool.class)
+    @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     //@ForeignKey(name = "fk_user_owner_id")
-    private Set<EntitlementPool> entitlementPools;
+    private Set<Pool> entitlementPools;
         
     @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)
     private Set<Certificate> certificates;
@@ -68,7 +68,7 @@ public class Owner implements Persisted {
      */
     public Owner() {
         consumers = new HashSet<Consumer>();
-        entitlementPools = new HashSet<EntitlementPool>();
+        entitlementPools = new HashSet<Pool>();
         certificates = new HashSet<Certificate>();
     }
     
@@ -81,7 +81,7 @@ public class Owner implements Persisted {
         this.name = nameIn;
         
         consumers = new HashSet<Consumer>();
-        entitlementPools = new HashSet<EntitlementPool>();
+        entitlementPools = new HashSet<Pool>();
         certificates = new HashSet<Certificate>();
     }
     
@@ -129,13 +129,13 @@ public class Owner implements Persisted {
      * @return the entitlementPools
      */
     @XmlElement(name = "pool")
-    public Set<EntitlementPool> getEntitlementPools() {
+    public Set<Pool> getEntitlementPools() {
         return entitlementPools;
     }
     /**
      * @param entitlementPools the entitlementPools to set
      */
-    public void setEntitlementPools(Set<EntitlementPool> entitlementPools) {
+    public void setEntitlementPools(Set<Pool> entitlementPools) {
         this.entitlementPools = entitlementPools;
     }
     
@@ -153,10 +153,10 @@ public class Owner implements Persisted {
      * add owner to the pool, and reference to the pool.
      * @param pool EntitlementPool for this owner.
      */
-    public void addEntitlementPool(EntitlementPool pool) {
+    public void addEntitlementPool(Pool pool) {
         pool.setOwner(this);
         if (this.entitlementPools ==  null) {
-            this.entitlementPools = new HashSet<EntitlementPool>();
+            this.entitlementPools = new HashSet<Pool>();
         }
         this.entitlementPools.add(pool);
     }

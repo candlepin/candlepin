@@ -26,8 +26,8 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.EntitlementPool;
-import org.fedoraproject.candlepin.model.EntitlementPoolCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -39,11 +39,11 @@ import com.google.inject.Inject;
  * API gateway for the EntitlementPool
  */
 @Path("/pool")
-public class EntitlementPoolResource {
+public class PoolResource {
 
-    private static Logger log = Logger.getLogger(EntitlementPoolResource.class);
+    private static Logger log = Logger.getLogger(PoolResource.class);
 
-    private EntitlementPoolCurator entitlementPoolCurator;
+    private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
     private ProductServiceAdapter productServiceAdapter;
@@ -51,7 +51,7 @@ public class EntitlementPoolResource {
     /**
      * default ctor
      * 
-     * @param entitlementPoolCurator
+     * @param poolCurator
      *            interact with the entitlement pools.
      * @param consumerCurator
      *            interact with the consumers.
@@ -62,11 +62,11 @@ public class EntitlementPoolResource {
      *            
      */
     @Inject
-    public EntitlementPoolResource(
-        EntitlementPoolCurator entitlementPoolCurator,
+    public PoolResource(
+        PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         ProductServiceAdapter productServiceAdapter) {
-        this.entitlementPoolCurator = entitlementPoolCurator;
+        this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.productServiceAdapter = productServiceAdapter;
@@ -88,7 +88,7 @@ public class EntitlementPoolResource {
         @QueryParam("product") String productId) {
         Pools returnValue = new Pools();
         if ((ownerId == null) && (productId == null) && (consumerId == null)) {
-            returnValue.setPool(entitlementPoolCurator.findAll());
+            returnValue.setPool(poolCurator.findAll());
         }
         else {
             Product p = null;
@@ -112,7 +112,7 @@ public class EntitlementPoolResource {
                     return returnValue;
                 }                
             }                   
-            returnValue.setPool(entitlementPoolCurator.listAvailableEntitlementPools(c, o, p, true));
+            returnValue.setPool(poolCurator.listAvailableEntitlementPools(c, o, p, true));
         }
 
         return returnValue;
@@ -128,8 +128,8 @@ public class EntitlementPoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public EntitlementPool getProduct(@PathParam("pool_id") Long id) {
-        EntitlementPool toReturn = entitlementPoolCurator.find(id);
+    public Pool getProduct(@PathParam("pool_id") Long id) {
+        Pool toReturn = poolCurator.find(id);
 
         if (toReturn != null) {
             return toReturn;
@@ -149,10 +149,10 @@ public class EntitlementPoolResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/consumer/{consumer_uuid}")
-    public List<EntitlementPool> listByConsumer(
+    public List<Pool> listByConsumer(
         @PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        List<EntitlementPool> eps = entitlementPoolCurator
+        List<Pool> eps = poolCurator
             .listAvailableEntitlementPools(consumer);
         return eps;
     }
