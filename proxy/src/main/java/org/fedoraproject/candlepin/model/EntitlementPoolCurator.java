@@ -21,6 +21,7 @@ import com.wideplay.warp.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -139,6 +140,40 @@ public class EntitlementPoolCurator extends AbstractHibernateCurator<Entitlement
         }
 
     }
+    
+    /**
+     * List all entitlement pools for the given product.
+     * 
+     * @param product product filter.
+     * @return list of EntitlementPools
+     */
+    public List<EntitlementPool> listByProduct(Product product) {
+        if (product == null) {
+            return new ArrayList<EntitlementPool>();
+        } 
+        else {
+            return listByProductId(product.getId());
+        }
+    }
+
+    /**
+     * List all entitlement pools for the given owner and product.
+     *
+     * @param owner owner of the entitlement pool
+     * @param productId product filter.
+     * @return list of EntitlementPools
+     */
+    public List<EntitlementPool> listByProductId(String productId) {
+        List<EntitlementPool> returnValue = (List<EntitlementPool>) currentSession().createCriteria(
+                    EntitlementPool.class)
+                .add(Restrictions.eq("productId", productId)).list();
+        
+        if (returnValue == null) {
+            returnValue = new ArrayList<EntitlementPool>();
+        }
+        
+        return returnValue;
+    }    
 
     /**
      * List all entitlement pools for the given owner and product.
