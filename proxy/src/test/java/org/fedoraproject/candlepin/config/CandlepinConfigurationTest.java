@@ -15,7 +15,9 @@
 package org.fedoraproject.candlepin.config;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -126,6 +128,72 @@ public class CandlepinConfigurationTest {
         assertTrue(withPrefix.containsKey("a.c.a.b"));
         assertTrue(withPrefix.containsKey("a.c.c.d"));
         assertTrue(withPrefix.containsKey("a.c.e.f"));
+    }
+
+    @Test
+    public void returnNamespacePropsWithDefaults() {
+        Map<String, String> defaults = new HashMap<String, String>();
+        defaults.put("a.c.a.b", "defaultvalue");
+        defaults.put("a.c.not.e", "should have a value");
+        defaults.put("not.here", "is.ignored");
+
+        Config config = new CandlepinConfigurationForTesting(
+            new HashMap<String, String>() {
+
+                {
+                    put("a.b.a.b", "value1");
+                    put("a.b.c.d", "value2");
+                    put("a.c.a.b", "value3");
+                    put("a.c.c.d", "value4");
+                    put("a.c.e.f", "value5");
+                }
+            });
+
+        Properties withPrefix = config.getNamespaceProperties("a.c", defaults);
+        assertEquals(4, withPrefix.size());
+        assertTrue(withPrefix.containsKey("a.c.a.b"));
+        assertTrue(withPrefix.containsKey("a.c.c.d"));
+        assertTrue(withPrefix.containsKey("a.c.e.f"));
+        assertTrue(withPrefix.containsKey("a.c.not.e"));
+        assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
+        assertEquals("should have a value", withPrefix.getProperty("a.c.not.e"));
+        assertFalse(withPrefix.containsKey("not.here"));
+    }
+
+    @Test
+    public void namespaceWithNull() {
+        Map<String, String> defaults = new HashMap<String, String>();
+        defaults.put(null, null);
+
+        Config config = new CandlepinConfigurationForTesting(
+            new HashMap<String, String>() {
+
+                {
+                    put("a.c.a.b", "value3");
+                    put("a.c.c.d", "value4");
+                    put("a.c.e.f", "value5");
+                }
+            });
+
+        try {
+            Properties withPrefix = config.getNamespaceProperties("a.c", defaults);
+            assertEquals(3, withPrefix.size());
+            assertTrue(withPrefix.containsKey("a.c.a.b"));
+            assertTrue(withPrefix.containsKey("a.c.c.d"));
+            assertTrue(withPrefix.containsKey("a.c.e.f"));
+            assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
+
+            withPrefix = config.getNamespaceProperties("a.c", null);
+            assertEquals(3, withPrefix.size());
+            assertTrue(withPrefix.containsKey("a.c.a.b"));
+            assertTrue(withPrefix.containsKey("a.c.c.d"));
+            assertTrue(withPrefix.containsKey("a.c.e.f"));
+            assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
+        }
+        catch (NullPointerException npe) {
+            fail("getNamespaceProperties didn't check for null");
+        }
+
     }
 
     public static class CandlepinConfigurationForTesting extends Config {
