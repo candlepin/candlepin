@@ -22,15 +22,14 @@ import javax.servlet.ServletContextListener;
  * @version $Rev$
  */
 public class PinsetterContextListener implements ServletContextListener {
-    //PinsetterKernel pk = new PinsetterKernel();
+    private PinsetterKernel pk;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void contextDestroyed(ServletContextEvent sceIn) {
-        // TODO Auto-generated method stub
-
+        pk.shutdown();
     }
 
     /**
@@ -38,8 +37,21 @@ public class PinsetterContextListener implements ServletContextListener {
      */
     @Override
     public void contextInitialized(ServletContextEvent sceIn) {
-        // TODO Auto-generated method stub
-
+        System.out.println("ctx initialized");
+        try {
+            if (pk == null) {
+                pk = new PinsetterKernel();
+            }
+            pk.startup();
+        }
+        catch (PinsetterException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (InstantiationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
 }

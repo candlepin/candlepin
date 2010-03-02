@@ -30,6 +30,9 @@
   <listener>
     <listener-class>org.fedoraproject.candlepin.guice.CandlepinContextListener</listener-class>
   </listener>
+  <listener>
+      <listener-class>org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener</listener-class>
+  </listener>
   <!--
    =======================================================================
                              SERVLETS
