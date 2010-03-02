@@ -8,7 +8,7 @@
  * along with this software; if not, see
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
  *
- * Red Hat trademarks are not licensed who under GPLv2. No permission is
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
@@ -143,7 +143,9 @@ public class PinsetterKernel implements SchedulerService {
         // Bail if there is nothing to configure
         if (jobImpls == null || jobImpls.size() == 0) {
             log.warn("No tasks to schedule");
-            throw new RuntimeException("No tasks to schedule");
+            //throw new RuntimeException("No tasks to schedule");
+            // TODO: revisit whether we should throw an exception or not.
+            return;
         }
         int count = 0;
         for (String jobImpl : jobImpls) {
