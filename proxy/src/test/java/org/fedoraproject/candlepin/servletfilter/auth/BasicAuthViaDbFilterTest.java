@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.servletfilter.auth;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
@@ -58,6 +59,8 @@ public class BasicAuthViaDbFilterTest {
         // default requests are POST
         when(request.getMethod()).thenReturn("POST");
 
+        filter = new BasicAuthViaDbFilter();
+        filter.setConfig(new TestingConfiguration("candlepin.properties"));
     }
     
     @After
@@ -96,10 +99,12 @@ public class BasicAuthViaDbFilterTest {
         // return the correct kind of auth
         when(request.getHeader("Authorization")).thenReturn(
             "BASIC " + encodeUserPass("USER", "REDHAT"));
+        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("CANADA", "REDHAT"));
+        when(request.getMethod()).thenReturn("POST");
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // successful authentication puts the username attribute on the request
-        verify(request).setAttribute("username", "USER");
+        verify(request).setAttribute("username", "CANADA");
     }
     
     @Test
@@ -107,6 +112,8 @@ public class BasicAuthViaDbFilterTest {
         // return valid user, invalid pass
         when(request.getHeader("Authorization")).thenReturn(
             "BASIC " + encodeUserPass("USER", "REDHA"));
+        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("CANADA", "MICRO$OFT"));
+        when(request.getMethod()).thenReturn("POST");
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // unsuccessful authentication returns a 403
@@ -118,9 +125,11 @@ public class BasicAuthViaDbFilterTest {
         // return an invalid username
         when(request.getHeader("Authorization")).thenReturn(
             "BASIC " + encodeUserPass("USE", "REDHAT"));
+        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USA", "MICRO$OFT"));
+        when(request.getMethod()).thenReturn("POST");
         
         filter.doFilter(request, defaultResponse, defaultChain);
-        // unsuccessful authentication returns a 403
+     // unsuccessful authentication returns a 403
         verify(defaultResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
     }
     

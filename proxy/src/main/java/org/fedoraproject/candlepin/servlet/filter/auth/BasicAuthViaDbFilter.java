@@ -53,6 +53,9 @@ public class BasicAuthViaDbFilter implements Filter {
     @Inject
     public BasicAuthViaDbFilter(Config config) {
         this.config = config;
+    
+    public BasicAuthViaDbFilter() {
+        config = new Config();
     }
 
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -61,6 +64,11 @@ public class BasicAuthViaDbFilter implements Filter {
 
     public void destroy() {
         //this.filterConfig = null;
+    }
+
+    // config has to be overridable for testing
+    public void setConfig(Config configuration) { 
+        this.config = configuration;
     }
     
     public void doFilter(ServletRequest request, ServletResponse response,
