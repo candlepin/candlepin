@@ -5,11 +5,12 @@ import urllib
 import urllib2
 import sys
 import simplejson as json
+import os
 
 
 
 class Rest(object):
-    def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", debug=None):
+    def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", cert_file=None, key_file=None, debug=None):
         self.hostname = hostname
         self.port = port
         self.api_url = api_url
@@ -21,6 +22,9 @@ class Rest(object):
 
         self.headers = {"json": self.json_headers,
                         "text": self.text_headers}
+
+        self.cert_file = cert_file
+        self.key_file = key_file
         self.debug = debug
 
         # default content type
@@ -30,7 +34,11 @@ class Rest(object):
         if content_type is None and self.content_type:
             content_type = self.content_type
 
-        conn = httplib.HTTPConnection(self.hostname, self.port)
+        if self.cert_file:
+	        conn = httplib.HTTPSConnection(self.hostname, self.port, key_file = self.key_file, cert_file = self.cert_file)
+        else:
+            conn = httplib.HTTPConnection(self.hostname, self.port)
+
         if self.debug:
             conn.set_debuglevel(self.debug)
         url_path = "%s%s" % (self.api_url, path)
@@ -80,8 +88,8 @@ class Rest(object):
         return data
 
 class CandlePinApi:
-    def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", debug=None):
-        self.rest = Rest(hostname=hostname, port=port, api_url=api_url, debug=debug)
+    def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", cert_file=None, key_file=None, debug=None):
+        self.rest = Rest(hostname=hostname, port=port, api_url=api_url, cert_file=cert_file, key_file=key_file, debug=debug)
 
     def registerConsumer(self, userid, password, name, hardware=None, products=None):
         path = "/consumer"
