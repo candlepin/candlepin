@@ -149,7 +149,7 @@ public class EntitlementResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/entitlementpool/{pool_id}")
+    @Path("consumer/{consumer_uuid}/pool/{pool_id}")
     public EntitlementBindResult entitleByPool(
             @PathParam("consumer_uuid") String consumerUuid,
             @PathParam("pool_id") Long poolId) {
