@@ -50,6 +50,16 @@ public class LoggingFilter implements Filter {
         if (log.isDebugEnabled()) {
             LoggingRequestWrapper lRequest = new LoggingRequestWrapper(
                 (HttpServletRequest) request);
+            if (lRequest.getQueryString() != null) {
+                log.debug(String.format("Request: '%s %s?%s'", lRequest.getMethod(), 
+                    lRequest.getRequestURL(),
+                    lRequest.getQueryString()));
+            } 
+            else 
+            {
+                log.debug(String.format("Request: '%s %s'", lRequest.getMethod(), 
+                    lRequest.getRequestURL()));
+            }
             log.debug("Request Body: " + lRequest.getBody());
             chain.doFilter(lRequest, response);
         }
