@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 
 /**
- * BasicAuthFilter
+ * LoggingFilter
  */
 public class LoggingFilter implements Filter {
     
