@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.pinsetter.core;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.pinsetter.tasks.SubscriptionSyncTask;
+import org.fedoraproject.candlepin.util.PropertyUtil;
 
 import com.google.inject.Inject;
 
@@ -146,10 +147,25 @@ public class PinsetterKernel implements SchedulerService {
             if (log.isDebugEnabled()) {
                 log.debug("Scheduling " + jobImpl);
             }
-            String schedulerEntry = config.getString("pinsetter." + jobImpl + ".schedule");
+            
+            // get the default schedule from the job class in case one 
+            // is not found in the configuration.
+            String defvalue = "";
+            try {
+                defvalue = PropertyUtil.getStaticPropertyAsString(jobImpl,
+                    "DEFAULT_SCHEDULE");
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e.getLocalizedMessage(), e);
+            }
+
+            String schedulerEntry = config.getString("pinsetter." + jobImpl +
+                ".schedule", defvalue);
+
             if (schedulerEntry != null && schedulerEntry.length() > 0) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Scheduler entry for " + jobImpl + ": " + schedulerEntry);
+                    log.debug("Scheduler entry for " + jobImpl + ": " +
+                        schedulerEntry);
                 }
                 String[] data = new String[2];
                 data[0] = jobImpl;
@@ -209,7 +225,8 @@ public class PinsetterKernel implements SchedulerService {
                 Trigger trigger = null;
                 trigger = new CronTrigger(jobImpl,
                         TASK_GROUP, crontab);
-                trigger.setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
+                trigger
+                    .setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
                 //trigger.addTriggerListener(this.chainedJobListener.getName());
                 
                 scheduleJob(

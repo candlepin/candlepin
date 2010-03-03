@@ -14,8 +14,7 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
-import org.fedoraproject.candlepin.pinsetter.core.PinsetterJob;
-
+import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
@@ -24,16 +23,13 @@ import java.util.Date;
 /**
  * SubscriptionSyncTask
  */
-public class SubscriptionSyncTask implements PinsetterJob {
+public class SubscriptionSyncTask implements Job {
+    
+    public static final String DEFAULT_SCHEDULE = "0 * * * * ?";
 
     @Override
     public void execute(final JobExecutionContext ctx)
         throws JobExecutionException {
         System.out.println("subscription sync ran: " + new Date().toString());
-    }
-
-    @Override
-    public String defaultSchedule() {
-        return "0 * * * * ?";
     }
 }
