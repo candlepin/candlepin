@@ -33,7 +33,7 @@ class EntitlementTests(CandlepinTests):
     def test_bind_by_entitlement_pool(self):
         # First we list all entitlement pools available to this consumer:
         virt_host = 'virtualization_host'
-        results = self.cp.getEntitlementPools(self.uuid)
+        results = self.cp.getPools(self.uuid)
 	print results
         pools = {}
         for pool in results['pool']:
@@ -56,7 +56,7 @@ class EntitlementTests(CandlepinTests):
         self.assertEquals(6, len(products_list))
 
     def test_unbind_all_single(self):
-        pools = self.cp.getEntitlementPools(self.uuid) 
+        pools = self.cp.getPools(self.uuid) 
         pool = pools['pool'][0]
 
         self.cp.bindPool(self.uuid, pool['id'])
@@ -67,7 +67,7 @@ class EntitlementTests(CandlepinTests):
         self.assertEqual(None, self.cp.getEntitlements(self.uuid))
 
     def test_unbind_all_multi(self):
-        pools = self.cp.getEntitlementPools(self.uuid)['pool']
+        pools = self.cp.getPools(self.uuid)['pool']
 
         if len(pools) > 1:
             for pool in pools:
