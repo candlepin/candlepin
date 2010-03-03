@@ -38,8 +38,12 @@ public class BasicAuthViaDbFilterTest {
         defaultChain = mock(FilterChain.class);
         defaultResponse = mock(HttpServletResponse.class);
         request = mock(HttpServletRequest.class);
+        // default config values for hypersonic db
         filter = new BasicAuthViaDbFilter();
         filter.setConfig(new TestingConfiguration("candlepin.properties"));
+        // default requests are POST
+        when(request.getMethod()).thenReturn("POST");
+
     }
     
     @After
@@ -75,19 +79,17 @@ public class BasicAuthViaDbFilterTest {
     @Test
     public void testValidUser() throws Exception {
         // return the correct kind of auth
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("CANADA", "REDHAT"));
-        when(request.getMethod()).thenReturn("POST");
+        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USER", "REDHAT"));
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // successful authentication puts the username attribute on the request
-        verify(request).setAttribute("username", "CANADA");
+        verify(request).setAttribute("username", "USER");
     }
     
     @Test
     public void testInvalidPass() throws Exception { 
         // return valid user, invalid pass
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("CANADA", "MICRO$OFT"));
-        when(request.getMethod()).thenReturn("POST");
+        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USER", "REDHA"));
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // unsuccessful authentication returns a 403
@@ -97,11 +99,10 @@ public class BasicAuthViaDbFilterTest {
     @Test
     public void testInvalidUser() throws Exception { 
         // return an invalid username
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USA", "MICRO$OFT"));
-        when(request.getMethod()).thenReturn("POST");
+        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USE", "REDHAT"));
         
         filter.doFilter(request, defaultResponse, defaultChain);
-     // unsuccessful authentication returns a 403
+        // unsuccessful authentication returns a 403
         verify(defaultResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
     }
     
@@ -109,7 +110,7 @@ public class BasicAuthViaDbFilterTest {
     public void testGet() throws Exception { 
         when(request.getMethod()).thenReturn("GET");
         // invalid user; shouldnt matter
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USA", "PASSWORD"));
+        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USE", "PASSWORD"));
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // this should just pass on to the chain
@@ -119,8 +120,7 @@ public class BasicAuthViaDbFilterTest {
     @Test
     public void testInvalidDb() throws Exception { 
         // return an invalid username
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USA", "MICRO$OFT"));
-        when(request.getMethod()).thenReturn("POST");
+        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USER", "REDHAT"));
         
         filter.setConfig(new TestingConfiguration("candlepin-baddb.properties"));
         filter.doFilter(request, defaultResponse, defaultChain);
