@@ -94,13 +94,6 @@ public class Consumer implements Persisted {
     @JoinColumn(name = "consumer_fact_id")
     private ConsumerFacts facts;
     
-    // Separate mapping because in theory, a consumer could be consuming
-    // products they're not entitled to.
-    @XmlTransient
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "fk_consumer_product_owner")
-    private Set<ConsumerProduct> consumedProducts;    
-    
     /**
      * ctor
      * @param name name of consumer
@@ -118,7 +111,6 @@ public class Consumer implements Persisted {
 
         this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
-        this.consumedProducts = new HashSet<ConsumerProduct>();
         this.entitlements = new HashSet<Entitlement>();
     }
     
@@ -136,7 +128,6 @@ public class Consumer implements Persisted {
         toReturn.getFacts().setMetadata(copyFrom.getFacts().getMetadata());
         
         toReturn.childConsumers = copyFrom.childConsumers;
-        toReturn.consumedProducts = copyFrom.consumedProducts;
         toReturn.entitlements = copyFrom.entitlements;
         
         return toReturn;
@@ -149,7 +140,6 @@ public class Consumer implements Persisted {
         this.uuid = Util.generateUUID();
         this.facts = new ConsumerFacts(this);
         this.childConsumers = new HashSet<Consumer>();
-        this.consumedProducts = new HashSet<ConsumerProduct>();
         this.entitlements = new HashSet<Entitlement>();
     }
 
@@ -252,38 +242,6 @@ public class Consumer implements Persisted {
     public void setParent(Consumer parent) {
         this.parent = parent;
     }
-
-    /**
-     * @return the consumed products.
-     */
-    public Set<ConsumerProduct> getConsumedProducts() {
-        return consumedProducts;
-    }
-    
-    /**
-     * @return the consumed products ids.
-     */
-    public Set<String> getConsumedProductIds() {
-        Set<String> consumedIds = new HashSet<String>();
-        for (ConsumerProduct p : consumedProducts) {
-            consumedIds.add(p.getProductId());
-        }
-        return consumedIds;
-    }
-
-    /**
-     * @param consumedProducts set of consumed products.
-     */
-    public void setConsumedProducts(Set<ConsumerProduct> consumedProducts) {
-        this.consumedProducts = consumedProducts;
-    }
-
-    /**
-     * @param p Consumer product to consume.
-     */
-    public void addConsumedProduct(ConsumerProduct p) {
-        this.consumedProducts.add(p);
-    }
     
     /**
      * @return the owner of this Consumer.
@@ -378,7 +336,10 @@ public class Consumer implements Persisted {
      */
     public void addEntitlement(Entitlement entitlementIn) {
         this.entitlements.add(entitlementIn);
-        
+    }
+
+    public void removeEntitlement(Entitlement entitlement) {
+        this.entitlements.remove(entitlement);
     }
 
     @Override

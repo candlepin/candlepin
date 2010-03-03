@@ -63,9 +63,6 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.setMetadataField("foo", "bar");
         consumer.setMetadataField("foo1", "bar1");
 
-        consumerCurator.addConsumedProduct(consumer, rhel);
-        consumerCurator.addConsumedProduct(consumer, jboss);
-
         consumerCurator.create(consumer);
 
         unitOfWork.endWork();
@@ -147,14 +144,6 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testConsumedProducts() {
-        entityManager().clear();
-        Consumer lookedUp = (Consumer) entityManager().find(Consumer.class,
-                consumer.getId());
-        assertEquals(2, lookedUp.getConsumedProducts().size());
-    }
-
-    @Test
     public void testRemoveConsumedProducts() {
         consumerCurator.delete(consumerCurator.find(consumer.getId()));
         assertNull(consumerCurator.find(consumer.getId()));
@@ -228,20 +217,6 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         assertNull(consumerCurator.find(consumer.getId()));
         assertNull(consumerCurator.find(child1.getId()));
-    }
-
-    // This this looks like a stupid test but this was actually failing at one
-    // point. :)
-    @Test
-    public void testMultipleConsumersSameConsumedProduct() {
-        beginTransaction();
-
-        // Default consumer already consumes RHEL:
-        Consumer child1 = new Consumer("child1", owner, consumerType);
-        child1.setMetadataField("foo", "bar");
-        consumerCurator.addConsumedProduct(child1, rhel);
-        entityManager().persist(child1);
-        commitTransaction();
     }
 
     @Test

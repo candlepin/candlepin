@@ -22,7 +22,6 @@ import org.fedoraproject.candlepin.model.EntitlementBindResult;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
@@ -123,7 +122,6 @@ public class EntitlementResource {
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
-        Owner owner = consumer.getOwner();
         
         Product p = prodAdapter.getProductById(productId);
         if (p == null) {
@@ -131,7 +129,7 @@ public class EntitlementResource {
         }
         
         // Attempt to create an entitlement:
-        Entitlement e = entitler.entitle(owner, consumer, p);
+        Entitlement e = entitler.entitle(consumer, p);
         // TODO: Probably need to get the validation result out somehow.
         // TODO: return 409?
         if (e == null) {
@@ -160,17 +158,14 @@ public class EntitlementResource {
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
-        Owner owner = consumer.getOwner();
 
         Pool pool = epCurator.find(poolId);
         if (pool == null) {
             throw new BadRequestException("No such entitlement pool: " + poolId);
         }
 
-        Product prod = prodAdapter.getProductById(pool.getProductId());
-
         // Attempt to create an entitlement:
-        Entitlement e = entitler.entitle(owner, consumer, prod, pool);
+        Entitlement e = entitler.entitle(consumer, pool);
         // TODO: Probably need to get the validation result out somehow.
         // TODO: return 409?
         if (e == null) {
@@ -196,7 +191,6 @@ public class EntitlementResource {
         
         //FIXME: this is just a stub, need SubscriptionService to look it up
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        Owner owner = consumer.getOwner();
         
         //FIXME: getSubscriptionForToken is a stub, always "works"
         Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
@@ -206,7 +200,7 @@ public class EntitlementResource {
 
         Product p = prodAdapter.getProductById(s.getProductId());
 
-        Entitlement e = entitler.entitle(owner, consumer, p);
+        Entitlement e = entitler.entitle(consumer, p);
         // return it
         
         if (consumer == null) {
@@ -333,26 +327,27 @@ public class EntitlementResource {
         throw new NotFoundException(
             "Entitlement with ID '" + dbid + "' could not be found");
     }
-   
-//    /**
-//     * Deletes all entitlements for the consumer whose id matches the given
-//     * uuid.
-//     * @param consumerUuid id of the consumer whose entitlements are to be
-//     * deleted.
-//     */
-//    @DELETE
-//    @Path("consumer/{consumer_uuid}/")
-//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    public void deleteAllEntitlements(
-//            @PathParam("consumer_uuid") String consumerUuid) {
-//        // FIXME: This is deleting consumer specific pools (which are rare),
-    // not entitlements.
-//        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-//        for (EntitlementPool ep : epCurator.listConsumerSpecificPools(consumer)) {
-//            log.debug("ep: " + ep.toString() + "  " + ep.getId());
-//            epCurator.delete(ep);
-//        }
-//    }
+
+    /**
+     * Deletes all entitlements for the consumer whose id matches the given
+     * uuid.
+     * @param consumerUuid id of the consumer whose entitlements are to be
+     * deleted.
+     */
+    @DELETE
+    @Path("consumer/{consumer_uuid}")
+    public void deleteAllEntitlements(@PathParam("consumer_uuid") String consumerUuid) {
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+
+        if (consumer == null) {
+            throw new NotFoundException(
+                    "Consumer with ID " + consumerUuid + " could not be found.");
+        }
+
+        for (Entitlement entitlement : entitlementCurator.listByConsumer(consumer)) {
+            entitler.revokeEntitlement(entitlement);
+        }
+    }
    
     /**
      * Removes the entitlements associated with the given serial number.
