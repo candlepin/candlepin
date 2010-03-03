@@ -47,8 +47,10 @@ public class BasicAuthViaDbFilter implements Filter {
     private Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
 
     private FilterConfig filterConfig = null;
-
+    private Config config = null;
+    
     public BasicAuthViaDbFilter() {
+        config = new Config();
     }
 
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -59,6 +61,11 @@ public class BasicAuthViaDbFilter implements Filter {
         this.filterConfig = null;
     }
 
+    // config has to be overridable for testing
+    public void setConfig(Config configuration) { 
+        this.config = configuration;
+    }
+    
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
@@ -109,7 +116,7 @@ public class BasicAuthViaDbFilter implements Filter {
     private void doBasicAuth(String username, String password)
         throws InstantiationException, IllegalAccessException,
         ClassNotFoundException, SQLException {
-        Properties properties = new Config().dbBasicAuthConfiguration();
+        Properties properties = config.dbBasicAuthConfiguration();
 
         String query = properties.getProperty("database.query");
         String dbUrl = properties.getProperty("database.connection.url");
