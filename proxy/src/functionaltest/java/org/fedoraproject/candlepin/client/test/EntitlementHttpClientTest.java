@@ -86,7 +86,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         for (int i = 0; i < entitlementPool.getMaxMembers(); i++) {
             Consumer c = TestUtil.createConsumer(consumerType, owner);
             consumerCurator.create(c);
-            entitler.entitle(owner, c, product);
+            entitler.entitle(c, product);
         }
 
         WebResource r = resource().path("/entitlement/");
@@ -102,7 +102,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void getSingleEntitlement() {
         Consumer c = TestUtil.createConsumer(consumerType, owner);
         consumerCurator.create(c);
-        Entitlement entitlement = entitler.entitle(owner, c, product);
+        Entitlement entitlement = entitler.entitle(c, product);
 
         WebResource r = resource().path("/entitlement/" + entitlement.getId());
         Entitlement returned = r.accept("application/json").type(
@@ -221,7 +221,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Test
     public void hasEntitlementWithEntitledProductShouldReturnTrue() {
-        Entitlement entitlement = entitler.entitle(owner, consumer, product);
+        Entitlement entitlement = entitler.entitle(consumer, product);
         assertNotNull(entitlementCurator.find(entitlement.getId()));
 
         WebResource r = resource().path(
@@ -251,7 +251,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void deleteEntitlementWithValidIdShouldPass() {
         unitOfWork.beginWork();
-        Entitlement entitlement = entitler.entitle(owner, consumer, product);
+        Entitlement entitlement = entitler.entitle(consumer, product);
         assertNotNull(entitlementCurator.find(entitlement.getId()));
         unitOfWork.endWork();
 
@@ -282,10 +282,6 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertEquals(new Long(1), new Long(entitlementCurator.findAll().size()));
         assertEquals(new Long(1), poolCurator.listByOwnerAndProduct(
                 owner, product).get(0).getCurrentMembers());
-        assertEquals(1, consumerCurator.find(consumer.getId())
-                .getConsumedProducts().size());
-        assertEquals(product.getId(), consumerCurator.find(consumer.getId())
-                .getConsumedProducts().iterator().next().getProductId());
         assertEquals(1, consumerCurator.find(consumer.getId())
                 .getEntitlements().size());
     }
