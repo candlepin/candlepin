@@ -63,7 +63,8 @@ public class OwnerResource {
     public List<Owner> list() {
         List<Owner> owners = ownerCurator.findAll();
         for (Owner owner : owners) {
-            System.out.println(UriBuilder.fromResource(this.getClass()).build(owner.getId()));
+            System.out.println(UriBuilder.fromResource(this.getClass()).build(
+                owner.getId()));
         }
         return ownerCurator.findAll();
     }

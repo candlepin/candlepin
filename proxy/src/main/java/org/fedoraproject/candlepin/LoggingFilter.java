@@ -55,10 +55,9 @@ public class LoggingFilter implements Filter {
                     lRequest.getRequestURL(),
                     lRequest.getQueryString()));
             } 
-            else 
-            {
-                log.debug(String.format("Request: '%s %s'", lRequest.getMethod(), 
-                    lRequest.getRequestURL()));
+            else {
+                log.debug(String.format("Request: '%s %s'", lRequest
+                    .getMethod(), lRequest.getRequestURL()));
             }
             log.debug("Request Body: " + lRequest.getBody());
             chain.doFilter(lRequest, response);
