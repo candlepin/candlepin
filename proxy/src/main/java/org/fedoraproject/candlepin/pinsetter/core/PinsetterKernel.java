@@ -244,6 +244,7 @@ public class PinsetterKernel implements SchedulerService {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public void scheduleJob(Class job, String jobName, String crontab)
         throws PinsetterException {
         
@@ -262,6 +263,7 @@ public class PinsetterKernel implements SchedulerService {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public void scheduleJob(Class job, String jobName, Trigger trigger)
         throws PinsetterException {
         try {

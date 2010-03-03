@@ -42,6 +42,7 @@ public class MethodUtil {
      * and the class only has (Integer, Map, Map), you won't find the method.
      * This method uses Class.isAssignableFrom to solve this problem.
      */
+    @SuppressWarnings("unchecked")
     private static boolean isCompatible(Class[] declaredParams, Object[] params) {
         if (params.length != declaredParams.length) {
             return false;
@@ -76,6 +77,7 @@ public class MethodUtil {
      * @param params a Collection of the parameters to methodCalled
      * @return the results of the method of the subclass
      */
+    @SuppressWarnings("unchecked")
     public static Object callMethod(Object o, String methodCalled, 
                                     Object... params) {
         /* This whole method is currently an ugly mess that needs to be 
@@ -190,6 +192,7 @@ public class MethodUtil {
      * @param args arguments to the ctor of the given className
      * @return instance of class passed in.
      */
+    @SuppressWarnings("unchecked")
     public static Object callNewMethod(String className, Object... args) {
         Object retval = null;
         

@@ -35,6 +35,7 @@ public class PropertyUtil {
      * as a String. Returns null if the field is not static.
      * @throws NoSuchFieldException thrown if field is not found.
      */
+    @SuppressWarnings("unchecked")
     public static String getStaticPropertyAsString(Class clazz, String field)
         throws NoSuchFieldException {
         
@@ -60,6 +61,17 @@ public class PropertyUtil {
         return value;
     }
     
+    /**
+     * Returns the value of the static property named field of the given Class
+     * as a String. Returns null if the field is not static.
+     * @param cname class name to interrogate.
+     * @param field name of field.
+     * @return the value of the static property named field of the given Class
+     * as a String. Returns null if the field is not static.
+     * @throws NoSuchFieldException thrown if field is not found.
+     * @throws ClassNotFoundException thrown if the class cname is not found.
+     */
+    @SuppressWarnings("unchecked")
     public static String getStaticPropertyAsString(String cname, String field)
         throws NoSuchFieldException, ClassNotFoundException {
         
