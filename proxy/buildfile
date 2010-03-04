@@ -97,8 +97,8 @@ define "candlepin" do
 
   package(:war).libs << HSQLDB
   
-  # to use: buildr candlepin:schema_gen
-  task :schema_gen do  
+  # to use: buildr candlepin:genschema
+  task :genschema do
     begin
       ant('gen-schema') do |ant|
         rm_rf 'target/schemagen'
