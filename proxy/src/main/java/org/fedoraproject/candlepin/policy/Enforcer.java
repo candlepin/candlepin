@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.policy;
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
@@ -58,10 +60,11 @@ public interface Enforcer {
      * is returned from the rule.
      *
      * @param productId Product ID
+     * @param pools List of pools to select from.
      * @return best pool as determined by the rules.
      * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
      * pool is returned.
      */
-    Pool selectBestPool(Consumer consumer, String productId)
+    Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools)
         throws RuleExecutionException;
 }

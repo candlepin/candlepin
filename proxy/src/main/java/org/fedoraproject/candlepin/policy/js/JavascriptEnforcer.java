@@ -19,7 +19,6 @@ import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
@@ -50,7 +49,6 @@ public class JavascriptEnforcer implements Enforcer {
     private ProductServiceAdapter prodAdapter;
     private PreEntHelper preHelper;
     private PostEntHelper postHelper;
-    private PoolCurator epCurator;
 
     private ScriptEngine jsEngine;
 
@@ -64,14 +62,12 @@ public class JavascriptEnforcer implements Enforcer {
     @Inject
     public JavascriptEnforcer(DateSource dateSource,
             RulesCurator rulesCurator, PreEntHelper preHelper,
-            PostEntHelper postHelper, ProductServiceAdapter prodAdapter,
-            PoolCurator epCurator) {
+            PostEntHelper postHelper, ProductServiceAdapter prodAdapter) {
         this.dateSource = dateSource;
         this.rulesCurator = rulesCurator;
         this.preHelper = preHelper;
         this.postHelper = postHelper;
         this.prodAdapter = prodAdapter;
-        this.epCurator = epCurator;
 
         ScriptEngineManager mgr = new ScriptEngineManager();
         jsEngine = mgr.getEngineByName("JavaScript");
@@ -114,17 +110,22 @@ public class JavascriptEnforcer implements Enforcer {
         jsEngine.put("pool", new ReadOnlyEntitlementPool(pool));
         jsEngine.put("pre", preHelper);
 
+        log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
+            " product: " + pool.getProductId());
         try {
             inv.invokeFunction(PRE_PREFIX + productId);
+            log.debug("Ran rule: " + PRE_PREFIX + productId);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if
             // neither exists this is ok and we'll just carry on.
             try {
                 inv.invokeFunction(GLOBAL_PRE_FUNCTION);
+                log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
             }
             catch (NoSuchMethodException ex) {
-                // This is fine.
+                // This is fine, I hope...
+                log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
             }
             catch (ScriptException ex) {
                 throw new RuleExecutionException(ex);
@@ -154,8 +155,12 @@ public class JavascriptEnforcer implements Enforcer {
         jsEngine.put("post", postHelper);
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
 
+        log.debug("Running post-entitlement rules for: " + c.getUuid() + " product: " +
+            pool.getProductId());
+
         try {
             inv.invokeFunction(POST_PREFIX + productId);
+            log.debug("Ran rule: " + POST_PREFIX + productId);
         }
         catch (NoSuchMethodException e) {
             // No method for this product, try to find a global function, if
@@ -164,7 +169,8 @@ public class JavascriptEnforcer implements Enforcer {
                 inv.invokeFunction(GLOBAL_POST_FUNCTION);
             }
             catch (NoSuchMethodException ex) {
-                // This is fine.
+                // This is fine, I hope...
+                log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
             }
             catch (ScriptException ex) {
                 throw new RuleExecutionException(ex);
@@ -176,10 +182,7 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
-    public Pool selectBestPool(Consumer consumer, String productId) {
-        // Fetch all entitlement pools for this product:
-        List<Pool> pools = epCurator.listByOwnerAndProductId(
-            consumer.getOwner(), productId);
+    public Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools) {
 
         Invocable inv = (Invocable) jsEngine;
 
