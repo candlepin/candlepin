@@ -17,7 +17,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.List;
 
-import javax.security.auth.x500.X500Principal;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.DEREncodable;

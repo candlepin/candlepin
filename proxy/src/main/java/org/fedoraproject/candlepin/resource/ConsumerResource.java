@@ -163,6 +163,8 @@ public class ConsumerResource {
             return consumer;
         }
         catch (RuntimeException e) {
+            log.error("Problem creating consumer!", e);
+
             throw new BadRequestException(e.getMessage());
         }
     }

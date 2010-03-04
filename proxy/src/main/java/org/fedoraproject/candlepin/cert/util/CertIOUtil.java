@@ -25,7 +25,7 @@ public class CertIOUtil {
     }
 
     public X509Certificate getCACert() throws IOException, GeneralSecurityException {
-        String caCertFile = config.getString("org.candlepin.ca_cert");
+        String caCertFile = config.getString("candlepin.ca_cert");
 
         if (caCertFile != null) {
             InputStream inStream = new FileInputStream(caCertFile);
@@ -40,15 +40,17 @@ public class CertIOUtil {
     }
     
     public PrivateKey getCaKey() throws IOException, GeneralSecurityException {
-        String caKeyFile = config.getString("org.candlepin.ca_key");
-        String caKeyPasswordFile = config.getString("org.candlepin.ca_key_password");
+        String caKeyFile = config.getString("candlepin.ca_key");
+        String caKeyPassword = config.getString("candlepin.ca_key_password");
 
-        if (caKeyFile != null && caKeyPasswordFile != null) {
-            final char[] password = caKeyPasswordFile.toCharArray();
+        if (caKeyFile != null && caKeyPassword != null) {
+            final char[] password = caKeyPassword.toCharArray();
             InputStreamReader inStream = new InputStreamReader(new FileInputStream(caKeyFile));
+
             // PEMreader requires a password finder to decrypt the password
             PasswordFinder pfinder = new PasswordFinder() {public char[] getPassword() { return password; }};
             PEMReader reader = new PEMReader(inStream, pfinder);
+            //PEMReader reader = new PEMReader(inStream);
 
             KeyPair keyPair = (KeyPair) reader.readObject();
             reader.close();
