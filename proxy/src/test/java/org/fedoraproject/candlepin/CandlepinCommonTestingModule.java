@@ -34,6 +34,9 @@ import org.fedoraproject.candlepin.test.DateSourceForTesting;
 
 import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 
 public class CandlepinCommonTestingModule extends AbstractModule {
 
@@ -54,6 +57,8 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
         bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);
+        bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
+        bind(Config.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
     }
 }

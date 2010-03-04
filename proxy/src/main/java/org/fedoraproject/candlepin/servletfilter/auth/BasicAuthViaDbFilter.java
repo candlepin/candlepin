@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.servletfilter.auth;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -48,9 +49,10 @@ public class BasicAuthViaDbFilter implements Filter {
 
     private FilterConfig filterConfig = null;
     private Config config = null;
-    
-    public BasicAuthViaDbFilter() {
-        config = new Config();
+
+    @Inject
+    public BasicAuthViaDbFilter(Config config) {
+        this.config = config;
     }
 
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -59,11 +61,6 @@ public class BasicAuthViaDbFilter implements Filter {
 
     public void destroy() {
         this.filterConfig = null;
-    }
-
-    // config has to be overridable for testing
-    public void setConfig(Config configuration) { 
-        this.config = configuration;
     }
     
     public void doFilter(ServletRequest request, ServletResponse response,

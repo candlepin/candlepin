@@ -1,5 +1,6 @@
 package org.fedoraproject.candlepin.cert.util;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -24,13 +25,35 @@ import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
-public class BouncyCastlePKIUtil {
-    // TODO : configurable
+public class BouncyCastlePKI {
+
+    // TODO : configurable?
     private static final int RSA_KEY_SIZE = 2048;
     private static final String SIGNATURE_ALGO = "SHA1WITHRSA";
-    
+
+    private X509Certificate caCert;
+    private PrivateKey caPrivateKey;
+
+    @Inject
+    public BouncyCastlePKI(CertIOUtil certIOUtil) throws Exception {
+        this.caCert = certIOUtil.getCACert();
+        this.caPrivateKey = certIOUtil.getCaKey();
+    }
+
+    public X509Certificate createX509Certificate(
+            String commonName,
+            List<X509ExtensionWrapper> extensions,
+            Date startDate,
+            Date endDate,
+            BigInteger serialNumber) throws GeneralSecurityException, IOException {
+
+        return createX509Certificate(commonName, extensions, startDate, endDate,
+                generateNewKeyPair(), serialNumber);
+    }
+
     /**
      * 
      * @param cert
@@ -43,31 +66,31 @@ public class BouncyCastlePKIUtil {
      *     an X509 certificate ready for consumption
      * @throws GeneralSecurityException
      */
-    public static X509Certificate createX509Certificate(
+    public X509Certificate createX509Certificate(
+            String commonName,
             List<X509ExtensionWrapper> extensions,
             Date startDate,
             Date endDate,
             KeyPair clientKeyPair,
-            X509Certificate caCert,
-            PrivateKey caPrivateKey,
             BigInteger serialNumber) throws GeneralSecurityException, IOException {
 
-        X500Principal serverDNName = caCert.getSubjectX500Principal();
         X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
 
         // set cert fields
         certGen.setSerialNumber(serialNumber);
-        // TODO get CA cert
         certGen.setIssuerDN(caCert.getSubjectX500Principal());
         certGen.setNotBefore(startDate);
         certGen.setNotAfter(endDate);
-        certGen.setSubjectDN(serverDNName); // note: same as issuer
+
+        X509Principal subjectPrincipal = new X509Principal("CN=" + commonName);
+        certGen.setSubjectDN(subjectPrincipal);
         certGen.setPublicKey(clientKeyPair.getPublic());
         certGen.setSignatureAlgorithm(SIGNATURE_ALGO);
 
         // set key usage
         KeyUsage keyUsage = new KeyUsage(KeyUsage.digitalSignature
                 | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment);
+
         // add SSL extensions
         certGen.addExtension(MiscObjectIdentifiers.netscapeCertType.toString(), false, (ASN1Encodable)new NetscapeCertType(NetscapeCertType.sslServer | NetscapeCertType.smime));
         certGen.addExtension(X509Extensions.KeyUsage.toString(), false,
@@ -85,7 +108,7 @@ public class BouncyCastlePKIUtil {
     }
     
     /**
-     * Read the byte streams from the DB to get the public & private keys
+     * Read the byte streams to get the public & private keys
      * 
      * @param privKeyBits
      *            DER encoded private key byte array
@@ -95,7 +118,7 @@ public class BouncyCastlePKIUtil {
      *    new KeyPair object with the public & private keys from the db
      * @throws Exception
      */
-    public static KeyPair decodeKeys(byte[] privKeyBits, byte[] pubKeyBits)
+    public KeyPair decodeKeys(byte[] privKeyBits, byte[] pubKeyBits)
             throws InvalidKeySpecException, NoSuchAlgorithmException {
 
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -113,7 +136,7 @@ public class BouncyCastlePKIUtil {
      * @return KeyPair
      * @throws NoSuchAlgorithmException
      */
-    public static KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
+    private KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(RSA_KEY_SIZE);
         return generator.generateKeyPair();

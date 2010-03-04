@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 Red Hat, Inc.
+ * Copyright (c) 2010 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -24,13 +24,13 @@ import org.fedoraproject.candlepin.model.Subscription;
 /**
  * Interface to the Certificate Service.
  */
-public interface CertificateServiceAdapter {
-    
+public interface EntitlementCertServiceAdapter {
+
     /**
      * Generate an entitlement certificate, used to grant access to some content.
-     * 
+     *
      * End date specified explicitly to allow for flexible termination policies.
-     * 
+     *
      * @param consumer Consumer certificate is for.
      * @param sub Subscription being used.
      * @param product Product being consumed.
@@ -39,12 +39,4 @@ public interface CertificateServiceAdapter {
      */
     ClientCertificateStatus generateEntitlementCert(Consumer consumer,
         Subscription sub, Product product, Date endDate);
-
-    /**
-     * Generate an identity certificate, used to verify the identity of the consumer during
-     * all future communication between Candlepin and the consumer. 
-     * @param consumer Consumer.
-     * @return Client identity certificate.
-     */
-    ClientCertificateStatus generateIdentityCert(Consumer consumer);
 }

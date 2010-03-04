@@ -42,8 +42,6 @@ import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -51,6 +49,8 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 /**
  * API Gateway for Consumers
@@ -66,7 +66,7 @@ public class ConsumerResource {
     private Owner owner;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ConsumerIdentityCertificateCurator consumerIdCertCurator;
+    private IdentityCertServiceAdapter identityCertService;
 
     private String username;
 
@@ -81,13 +81,13 @@ public class ConsumerResource {
     public ConsumerResource(OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ConsumerIdentityCertificateCurator consumerIdCertCurator,
+        IdentityCertServiceAdapter identityCertService,
         @Context HttpServletRequest request) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.consumerIdCertCurator = consumerIdCertCurator;
+        this.identityCertService = identityCertService;
         this.username = (String) request.getAttribute("username");
         if (username != null) {
             this.owner = ownerCurator.lookupByName(username);
@@ -156,11 +156,11 @@ public class ConsumerResource {
 
         try {
             consumer = consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
-            
-            ConsumerIdentityCertificate idCert = consumerIdCertCurator.getCert();
+
+            ConsumerIdentityCertificate idCert = identityCertService.generateIdentityCert(consumer);
             consumer.setIdCert(idCert);
+
             return consumer;
-            
         }
         catch (RuntimeException e) {
             throw new BadRequestException(e.getMessage());

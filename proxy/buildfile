@@ -8,8 +8,6 @@ COPYRIGHT = ""
 #############################################################################
 # DEPENDENCIES
 #############################################################################
-REDHAT_IT = ['com.redhat.candlepin:candlepin-util:jar:1.0',                  
-             'com.redhat.candlepin:service-adapters:jar:1.0']
 
 JERSEY = [group('jersey-core', 'jersey-json', 'jersey-server', 'jersey-client', :under=>'com.sun.jersey', :version=>'1.1.2-ea'),
         'javax.persistence:persistence-api:jar:1.0.2' ,
@@ -84,7 +82,7 @@ define "candlepin" do
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.options.target = '1.6'
 
-  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE, JACKSON, QUARTZ, REDHAT_IT
+  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE, JACKSON, QUARTZ
     
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 

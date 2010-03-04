@@ -30,10 +30,8 @@ import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.TestResource;
-import org.fedoraproject.candlepin.service.CertificateServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.DefaultCertificateServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -42,6 +40,10 @@ import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 
 import java.util.Properties;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 
 /**
  * CandlepinProductionConfiguration
@@ -59,7 +61,8 @@ public class CandlepinModule extends AbstractModule {
         // We default to test persistence unit (HSQL), /etc/candlepin/candlepin.conf
         // will override:
         bindConstant().annotatedWith(JpaUnit.class).to("test");
-        
+
+        bind(Config.class);
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
         bind(PoolResource.class);
@@ -76,6 +79,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PreEntHelper.class);
         bind(StatusResource.class);
         bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);
-        bind(CertificateServiceAdapter.class).to(DefaultCertificateServiceAdapter.class);
+        bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
+        bind(EntitlementCertServiceAdapter.class).to(DefaultEntitlementCertServiceAdapter.class);
     }
 }
