@@ -9,17 +9,8 @@ class EntitlementTests(CandlepinTests):
 
     def setUp(self):
         CandlepinTests.setUp(self)
-        self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
 
         self.debug = False
-
-        facts_metadata = {
-                "a": "1",
-                "b": "2",
-                "c": "3"}
-        response = self.cp.registerConsumer("fakeuser", "fakepw",
-                "consumername", hardware=facts_metadata)
-        self.uuid = response['uuid']
 
     def test_uuid(self):
         self.assertTrue(self.uuid != None)

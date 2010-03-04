@@ -19,6 +19,7 @@ package org.fedoraproject.candlepin.model;
  */
 public class Bundle {
 
+    private String serialNumber;
     private byte[] privateKey;
     private byte[] entitlementCert;
 
@@ -33,5 +34,11 @@ public class Bundle {
     }
     public void setEntitlementCert(byte[] entitlementCert) {
         this.entitlementCert = entitlementCert;
+    }
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
     }
 }

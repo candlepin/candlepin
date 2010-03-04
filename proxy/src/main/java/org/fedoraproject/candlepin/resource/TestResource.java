@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.List;
-import java.util.LinkedList;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -25,8 +22,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.ClientCertificate;
-import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
@@ -107,44 +102,6 @@ public class TestResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public ClientCertificate getCertificate() {
         return new  ClientCertificate();
-    }
-
-    /**
-     * Returns a serial number.
-     * @return a serial number.
-     */
-    @GET @Path("/client_certificate_serial_numbers")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public List<ClientCertificateSerialNumber> getCertificateSerialNumber() {
-        List<ClientCertificateSerialNumber> snList =
-            new LinkedList<ClientCertificateSerialNumber>();
-
-        snList.add(new ClientCertificateSerialNumber("SerialNumbersAreAwesome-1234"));
-        snList.add(new ClientCertificateSerialNumber("A different serial Number"));
-        return snList;
-    }
-
-    /**
-     * Returns a specific test CertificateStatus.
-     * @return a specific test CertificateStatus.
-     */
-    @GET @Path("/certificate_status")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public ClientCertificateStatus getCertificateStatus() {
-        return new  ClientCertificateStatus("123456", "AWESOME", new ClientCertificate());
-    }
-
-    /**
-     * Returns list of CertificateStatuses.
-     * @return list of CertificateStatuses.
-     */
-    @GET @Path("/certificate_status_list")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public List<ClientCertificateStatus> getCertificateStatusList() {
-        List<ClientCertificateStatus> certList = new LinkedList<ClientCertificateStatus>();
-        certList.add(
-            new ClientCertificateStatus("blargh", "supertype", new ClientCertificate()));
-        return certList;
     }
 
     /**

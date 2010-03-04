@@ -37,7 +37,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Bundle;
 import org.fedoraproject.candlepin.model.ClientCertificate;
-import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
 import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -252,14 +251,15 @@ public class ConsumerResource {
 
     /**
      * Return the client certificate for the given consumer.
+     * 
      * @param consumerUuid uuid of the consumer whose client certificate is
      * sought.
      * @return list of the client certificates for the given consumer.
      */
-    @GET
-    @Path("{consumer_uuid}/certificates")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public List<ClientCertificate> getClientCertificates(
+//    @GET
+//    @Path("{consumer_uuid}/certificates")
+//    @Produces({ MediaType.APPLICATION_JSON })
+    private List<ClientCertificate> getClientCertificates(
         @PathParam("consumer_uuid") String consumerUuid) {
 
         log.debug("Getting client certificates for consumer: " + consumerUuid);
@@ -297,7 +297,6 @@ public class ConsumerResource {
     /**
      * Retrieve the client certificate and it's status for the given Consumer.
      * @param consumerUuid uuid for the consumer whose certificates are sought.
-     * @param clientCertificateSerialNumbers list of the serial numbers.
      * @return list of client certificate status.
      */
     @POST
@@ -305,18 +304,11 @@ public class ConsumerResource {
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<ClientCertificateStatus> getClientCertificateStatus(
-        @PathParam("consumer_uuid") String consumerUuid, 
-        List<ClientCertificateSerialNumber> clientCertificateSerialNumbers) {
+        @PathParam("consumer_uuid") String consumerUuid) {
         
         List<ClientCertificateStatus> updatedCertificateStatus =
             new LinkedList<ClientCertificateStatus>();
        
-        for (ClientCertificateSerialNumber serialNumber : clientCertificateSerialNumbers) {
-            log.debug("got a serial number: " + serialNumber.getSerialNumber()); 
-            //FIXME: lookup the certs by serialNumber
-           
-        }
-        
         List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
 
         for (ClientCertificate clientCert : clientCerts) {
