@@ -5,10 +5,9 @@ import base64
 import os
 
 from urllib import urlopen
-
+from candlepinapi import Rest
 from certs import SPACEWALK_PUBLIC_CERT
 
-CANDLEPIN_SERVER = "http://localhost:8080/candlepin"
 CERTS_UPLOADED = False
 
 class CandlepinTests(unittest.TestCase):
@@ -17,8 +16,9 @@ class CandlepinTests(unittest.TestCase):
 
         # Upload the test cert to populate Candlepin db. Only do this
         # once per test suite run.
-        rsp = urlopen("%s/certificate" % CANDLEPIN_SERVER).read()
-        if rsp.strip() == "":
+        rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./cert_chain.crt", key_file="./cert_chain_private_pem.key")
+        rsp = rest.get("/certificate")
+        if not rsp:
             print("Cert upload required.")
 
             cert = self.__read_cert()
@@ -27,15 +27,9 @@ class CandlepinTests(unittest.TestCase):
             headers = {"Content-type": "application/json",
                     "Accept": "application/json"}
 
-            conn = httplib.HTTPConnection("localhost", 8080)
-            conn.request("POST", '/candlepin/certificate/', json.dumps(encoded_cert), headers)
-            response = conn.getresponse()
-            print("Status: %s Reason: %s" % (response.status, response.reason))
-            rsp = response.read()
-            conn.close()
+            rest.post("/certificate", json.dumps(encoded_cert))
 
-
-            rsp = urlopen("%s/certificate" % CANDLEPIN_SERVER).read()
+            rsp = rest.get("/certificate")
             self.assertTrue(rsp.strip() != "")
 
     def assertResponse(self, expected_status, response):
