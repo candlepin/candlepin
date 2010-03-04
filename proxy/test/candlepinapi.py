@@ -144,9 +144,10 @@ class CandlePinApi:
         blob = self.rest.delete(path)
         return blob
 
-    def syncCertificates(self, consumer_uuid, certificate_list):
+    # TODO: This is going away.
+    def getCertificates(self, consumer_uuid):
         path = "/consumer/%s/certificates" % consumer_uuid
-        return self.rest.post(path,data=certificate_list)
+        return self.rest.get(path)
 
     def getPools(self, consumer_uuid):
         path = "/pool/consumer/%s" % consumer_uuid

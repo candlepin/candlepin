@@ -253,10 +253,10 @@ public class ConsumerResource {
      * sought.
      * @return list of the client certificates for the given consumer.
      */
-//    @GET
-//    @Path("{consumer_uuid}/certificates")
-//    @Produces({ MediaType.APPLICATION_JSON })
-    private List<ClientCertificate> getClientCertificates(
+    @GET
+    @Path("{consumer_uuid}/certificates")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public List<ClientCertificate> getClientCertificates(
         @PathParam("consumer_uuid") String consumerUuid) {
 
         log.debug("Getting client certificates for consumer: " + consumerUuid);
@@ -279,11 +279,18 @@ public class ConsumerResource {
             // entire PKCS12 bundle and cramming it into just the cert portion,
             // no key is set.
             ClientCertificate cert = new ClientCertificate();
-            cert.setEntitlementCert(baos.toByteArray());
+            cert.setSerial("SERIAL001");
+            cert.setKey(baos.toByteArray());
+            cert.setCert(baos.toByteArray());
 
             allCerts.add(cert);
+
+            ClientCertificate cert2 = new ClientCertificate();
+            cert2.setSerial("SERIAL002");
+            cert2.setKey(baos.toByteArray());
+            cert2.setCert(baos.toByteArray());
             // Add it again just so we can see multiple return values:
-            allCerts.add(cert);
+            allCerts.add(cert2);
             
             return allCerts;
         }
@@ -292,21 +299,21 @@ public class ConsumerResource {
         }
     }
    
-    /**
-     * Retrieve the client certificate and it's status for the given Consumer.
-     * @param consumerUuid uuid for the consumer whose certificates are sought.
-     * @return list of client certificate status.
-     */
-    @POST
-    @Path("{consumer_uuid}/certificates")
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public List<ClientCertificate> getClientCertificateStatus(
-        @PathParam("consumer_uuid") String consumerUuid) {
-        
-        List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
-
-        log.debug("clientCerts: " + clientCerts);
-        return clientCerts;
-    }
+//    /**
+//     * Retrieve the client certificate and it's status for the given Consumer.
+//     * @param consumerUuid uuid for the consumer whose certificates are sought.
+//     * @return list of client certificate status.
+//     */
+//    @POST
+//    @Path("{consumer_uuid}/certificates")
+//    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    public List<ClientCertificate> getClientCertificateStatus(
+//        @PathParam("consumer_uuid") String consumerUuid) {
+//        
+//        List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
+//
+//        log.debug("clientCerts: " + clientCerts);
+//        return clientCerts;
+//    }
 }
