@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -25,6 +28,7 @@ import org.hibernate.criterion.Restrictions;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,12 +39,15 @@ import java.util.Map.Entry;
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private SubscriptionServiceAdapter subAdapter;
+    private Enforcer enforcer;
+    private static Logger log = Logger.getLogger(PoolCurator.class);
     
 
     @Inject
-    protected PoolCurator(SubscriptionServiceAdapter subAdapter) {
+    protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer) {
         super(Pool.class);
         this.subAdapter = subAdapter;
+        this.enforcer = enforcer;
     }
 
     /**
@@ -89,14 +96,31 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         crit.add(Restrictions.lt("startDate", new Date())); // TODO: is this right?
         crit.add(Restrictions.gt("endDate", new Date())); // TODO: is this right?
         // FIXME: sort by enddate?
-        // FIXME: currentmembers < maxmembers
-        // FIXME: do we need to run through rules for each of these? (expensive!)        
         results = (List<Pool>) crit.list();
         
         if (results == null) {
             results = new ArrayList<Pool>();
         }
         
+        // If querying for pools available to a specific consumer, we need
+        // to do a rules pass to verify the entitlement will be granted.
+        // Note that something could change between the time we list a pool as
+        // available, and the consumer requests the actual entitlement, and the
+        // request still could fail.
+        if (c != null) {
+            List<Pool> finalResults = new LinkedList<Pool>();
+            for (Pool p : results) {
+                PreEntHelper helper = enforcer.pre(c, p);
+                if (helper.getResult().isSuccessful()) {
+                    finalResults.add(p);
+                }
+                else {
+                    log.info("Omitting pool due to failed rule check: " + p.getId());
+                }
+            }
+            return finalResults;
+        }
+
         return results;
     }
     

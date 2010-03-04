@@ -56,10 +56,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
 
         PreEntHelper preHelper = new PreEntHelper();
-        PostEntHelper postHelper = new PostEntHelper(poolCurator,
-                productAdapter);
+        PostEntHelper postHelper = new PostEntHelper(productAdapter);
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
-                rulesCurator, preHelper, postHelper, productAdapter, poolCurator);
+                rulesCurator, preHelper, postHelper, productAdapter);
     }
 
     // grrr. have to test two conditions atm: sufficient number of entitlements
@@ -134,7 +133,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         poolCurator.create(pool3);
 
         Pool result = enforcer.selectBestPool(consumer,
-            LONGEST_EXPIRY_PRODUCT);
+            LONGEST_EXPIRY_PRODUCT, poolCurator.listAvailableEntitlementPools(consumer));
         assertEquals(desired.getId(), result.getId());
     }
 
@@ -154,7 +153,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         poolCurator.create(desired);
 
         Pool result = enforcer.selectBestPool(consumer,
-            HIGHEST_QUANTITY_PRODUCT);
+            HIGHEST_QUANTITY_PRODUCT, poolCurator.listAvailableEntitlementPools(consumer));
         assertEquals(desired.getId(), result.getId());
     }
 
@@ -162,7 +161,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void testSelectBestPoolNoPools() {
         // There are no pools for the product in this case:
         Pool result = enforcer.selectBestPool(consumer,
-            HIGHEST_QUANTITY_PRODUCT);
+            HIGHEST_QUANTITY_PRODUCT, poolCurator.listAvailableEntitlementPools(consumer));
         assertNull(result);
     }
 
@@ -173,7 +172,8 @@ public class EnforcerTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 02, 26));
         poolCurator.create(pool1);
 
-        enforcer.selectBestPool(consumer, BAD_RULE_PRODUCT);
+        enforcer.selectBestPool(consumer, BAD_RULE_PRODUCT,
+            poolCurator.listAvailableEntitlementPools(consumer));
     }
 
     @Test
@@ -188,7 +188,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         Pool result = enforcer.selectBestPool(consumer,
-            NO_RULE_PRODUCT);
+            NO_RULE_PRODUCT, poolCurator.listAvailableEntitlementPools(consumer));
         assertEquals(pool1.getId(), result.getId());
     }
 }
