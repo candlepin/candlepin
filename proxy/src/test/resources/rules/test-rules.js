@@ -30,6 +30,13 @@ function post_virtualization_host_platform() {
 	post_global();
 }
 
+function pre_CPULIMITED001() {
+	pre.checkQuantity(pool);
+	if (parseInt(consumer.getFact("cpu_cores")) > 2) {
+		pre.addError("rulefailed.too.many.cpu.cores");
+	}
+}
+
 // Select pool for mythical product, based on which has the farthest expiry date:
 function select_pool_LONGEST001() {
 	var furthest = null;
