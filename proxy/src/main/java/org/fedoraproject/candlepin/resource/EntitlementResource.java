@@ -18,7 +18,6 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementBindResult;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -114,7 +113,7 @@ public class EntitlementResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/product/{product_id}")
-    public EntitlementBindResult entitleByProduct(
+    public Entitlement entitleByProduct(
         @PathParam("consumer_uuid") String consumerUuid,
         @PathParam("product_id") String productId) {
         
@@ -135,8 +134,8 @@ public class EntitlementResource {
         if (e == null) {
             throw new BadRequestException("Entitlement refused.");
         }
-        
-        return new EntitlementBindResult(true);
+        log.debug("Entitlement: " + e);
+        return e;
     }
 
     /**
@@ -150,7 +149,7 @@ public class EntitlementResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/pool/{pool_id}")
-    public EntitlementBindResult entitleByPool(
+    public Entitlement entitleByPool(
             @PathParam("consumer_uuid") String consumerUuid,
             @PathParam("pool_id") Long poolId) {
 
@@ -172,7 +171,7 @@ public class EntitlementResource {
             throw new BadRequestException("Entitlement refused.");
         }
 
-        return new EntitlementBindResult(true);
+        return e;
     }
 
     /**
@@ -185,7 +184,7 @@ public class EntitlementResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}/token/{registration_token}")
-    public EntitlementBindResult entitleToken(
+    public Entitlement entitleToken(
             @PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("registration_token") String registrationToken) {
         
@@ -206,12 +205,9 @@ public class EntitlementResource {
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
-        
-        // FIXME: just stubbed out, we need to return the cert associated with
-        // entitlement
-        return new EntitlementBindResult(true);
+
+        return e;
     }
-    
     /**
      * Check to see if a given Consumer is entitled to given Product
      * @param consumerUuid consumerUuid to check if entitled or not
