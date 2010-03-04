@@ -126,6 +126,21 @@ public class Config {
     }
 
     /**
+     * Get the configuration entry for the given string name.  If the value
+     * is null, then return the given defValue.  defValue can be null as well.
+     * @param name name of property
+     * @param defValue default value for property if it is null.
+     * @return the value of the property with the given name, or defValue.
+     */
+    public String getString(String name, String defValue) {
+        String ret = getString(name);
+        if (ret == null) {
+            ret = defValue;
+        }
+        return ret;
+    }
+    
+    /**
      * get the config entry for string s
      *
      * @param s string to get the value of

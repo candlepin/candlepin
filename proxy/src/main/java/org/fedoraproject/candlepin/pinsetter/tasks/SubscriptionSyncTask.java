@@ -24,6 +24,8 @@ import java.util.Date;
  * SubscriptionSyncTask
  */
 public class SubscriptionSyncTask implements Job {
+    
+    public static final String DEFAULT_SCHEDULE = "0 * * * * ?";
 
     @Override
     public void execute(final JobExecutionContext ctx)

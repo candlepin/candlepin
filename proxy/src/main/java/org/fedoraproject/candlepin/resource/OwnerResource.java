@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,6 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -61,6 +61,11 @@ public class OwnerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Owner> list() {
+        List<Owner> owners = ownerCurator.findAll();
+        for (Owner owner : owners) {
+            System.out.println(UriBuilder.fromResource(this.getClass()).build(
+                owner.getId()));
+        }
         return ownerCurator.findAll();
     }
 

@@ -133,7 +133,7 @@ class CandlePinApi:
         return blob
 
     def bindPool(self, consumer_uuid, pool_id):
-        path = "/entitlement/consumer/%s/entitlementpool/%s" % (consumer_uuid, pool_id)
+        path = "/entitlement/consumer/%s/pool/%s" % (consumer_uuid, pool_id)
         blob = self.rest.post(path)
         return blob
 
@@ -156,7 +156,7 @@ class CandlePinApi:
         path = "/consumer/%s/certificates" % consumer_uuid
         return self.rest.post(path,data=certificate_list)
 
-    def getEntitlementPools(self, consumer_uuid):
+    def getPools(self, consumer_uuid):
         path = "/pool/consumer/%s" % consumer_uuid
         return self.rest.get(path)
 

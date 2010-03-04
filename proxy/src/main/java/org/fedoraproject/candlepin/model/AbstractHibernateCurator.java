@@ -63,7 +63,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @SuppressWarnings("unchecked")
     @Transactional
     public List<E> findAll() {
-        return (List<E>) currentSession().createCriteria(entityType).list();
+        return currentSession().createCriteria(entityType).list();
     }
     
     /**

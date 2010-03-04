@@ -48,7 +48,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param o Owner to filter
      * @return pools owned by the given Owner.
      */
-    @SuppressWarnings("unchecked")
     public List<Pool> listByOwner(Owner o) {
         return listAvailableEntitlementPools(null, o, (String) null, true);
     }
@@ -60,7 +59,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param c Consumer to filter
      * @return pools owned by the given Owner.
      */
-    @SuppressWarnings("unchecked")
     public List<Pool> listAvailableEntitlementPools(Consumer c) {
         return listAvailableEntitlementPools(c, null, (String) null, true);
     }
@@ -203,7 +201,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listByOwnerAndProductNoRefresh(owner, productId);
     }
     
-    @SuppressWarnings("unchecked")
     private List<Pool> listByOwnerAndProductNoRefresh(Owner owner,
         String productId) {
         return listAvailableEntitlementPools(null, owner, productId, false);

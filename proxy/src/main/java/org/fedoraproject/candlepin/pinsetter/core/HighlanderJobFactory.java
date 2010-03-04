@@ -34,6 +34,7 @@ public class HighlanderJobFactory implements JobFactory {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     public synchronized Job newJob(TriggerFiredBundle trigger)
         throws SchedulerException {
 
