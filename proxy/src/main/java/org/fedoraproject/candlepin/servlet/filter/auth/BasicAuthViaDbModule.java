@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servletfilter.auth;
+package org.fedoraproject.candlepin.servlet.filter.auth;
 
 import static com.google.inject.name.Names.*;
 
@@ -21,14 +21,14 @@ import javax.servlet.Filter;
 import com.google.inject.AbstractModule;
 
 /**
- * Configuration Module for SSLAuthFilter
+ * BasicAuthViaDbModule
  */
-public class SSLAuthModule extends AbstractModule {
+public class BasicAuthViaDbModule extends AbstractModule {
     @Override
     public void configure() {
         bind(Filter.class)
-            .annotatedWith(named(FilterConstants.SSL_AUTH))
-            .to(SSLAuthFilter.class)
+            .annotatedWith(named(FilterConstants.BASIC_AUTH))
+            .to(BasicAuthViaDbFilter.class)
             .asEagerSingleton();
     }
 }
