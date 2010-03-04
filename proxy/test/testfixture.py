@@ -39,6 +39,7 @@ class CandlepinTests(unittest.TestCase):
             rest.post("/certificates", json.dumps(encoded_cert))
 
             rsp = rest.get("/certificates")
+
             self.assertTrue(rsp.strip() != "")
 
         global CONSUMER_UUID
