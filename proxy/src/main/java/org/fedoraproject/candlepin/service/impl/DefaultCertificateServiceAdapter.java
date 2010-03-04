@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
+import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -29,16 +29,16 @@ public class DefaultCertificateServiceAdapter implements
     CertificateServiceAdapter {
     
     @Override
-    public ClientCertificateStatus generateEntitlementCert(Consumer consumer,
+    public ClientCertificate generateEntitlementCert(Consumer consumer,
         Subscription sub, Product product, Date endDate) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public ClientCertificateStatus generateIdentityCert(Consumer consumer) {
+    public ClientCertificate generateIdentityCert(Consumer consumer) {
         // TODO Auto-generated method stub
-        ClientCertificateStatus certStatus =  new ClientCertificateStatus();
+        ClientCertificate certStatus =  new ClientCertificate();
         return certStatus;
     }
 

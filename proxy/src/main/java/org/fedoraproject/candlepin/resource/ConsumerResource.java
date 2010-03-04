@@ -35,7 +35,6 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ClientCertificate;
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -275,6 +274,10 @@ public class ConsumerResource {
             stream.close();
 
             // FIXME : these won't be a pkcs12 bundle
+            
+            // FIXME: This isn't quite right even for demo purposes, we're taking an
+            // entire PKCS12 bundle and cramming it into just the cert portion,
+            // no key is set.
             ClientCertificate cert = new ClientCertificate();
             cert.setEntitlementCert(baos.toByteArray());
 
@@ -298,24 +301,12 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates")
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public List<ClientCertificateStatus> getClientCertificateStatus(
+    public List<ClientCertificate> getClientCertificateStatus(
         @PathParam("consumer_uuid") String consumerUuid) {
         
-        List<ClientCertificateStatus> updatedCertificateStatus =
-            new LinkedList<ClientCertificateStatus>();
-       
         List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
 
-        for (ClientCertificate clientCert : clientCerts) {
-            log.debug("found client cert:" + clientCert);
-            ClientCertificateStatus clientCertficiateStatus =
-                new ClientCertificateStatus("somenumber-111", "", clientCert);
-            updatedCertificateStatus.add(clientCertficiateStatus);
-        }
-
         log.debug("clientCerts: " + clientCerts);
-        //return clientCerts;
-        //       return foo;
-        return updatedCertificateStatus;
+        return clientCerts;
     }
 }

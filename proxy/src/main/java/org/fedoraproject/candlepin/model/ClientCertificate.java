@@ -21,12 +21,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Represents a client X509 certificate, used to obtain access to some content.
  */
-@XmlRootElement(name = "certs")
+@XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class ClientCertificate {
-    
-    // This must be Base64 encoded:
-    private Long id;
     
     private String serialNumber;
     
