@@ -23,42 +23,35 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "certs")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ClientCertificate implements Persisted {
+public class ClientCertificate {
     
     // This must be Base64 encoded:
-    private Bundle bundle;
     private Long id;
     
-    /**
-     * default ctor
-     */
-    public ClientCertificate() {
-        
-    }
+    private String serialNumber;
     
-    /**
-     * @param certBundle pkcs12 bundle
-     */
-    public ClientCertificate(Bundle certBundle) {
-        this.bundle = certBundle;
-    }
+    
+    // NOTE: These should be Base64 encoded:
+    private byte[] privateKey;
+    private byte[] entitlementCert;
 
-    public Bundle getBundle() {
-        return bundle;
+    public byte[] getPrivateKey() {
+        return privateKey;
     }
-
-    public void setBundle(Bundle certBundle) {
-        this.bundle = certBundle;
+    public void setPrivateKey(byte[] privateKey) {
+        this.privateKey = privateKey;
     }
-    
-    public void setId(Long id) {
-        this.id = id;
+    public byte[] getEntitlementCert() {
+        return entitlementCert;
     }
-    
-    @Override
-    public Long getId() {
-        // TODO Auto-generated method stub
-        return this.id;
+    public void setEntitlementCert(byte[] entitlementCert) {
+        this.entitlementCert = entitlementCert;
+    }
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
 }

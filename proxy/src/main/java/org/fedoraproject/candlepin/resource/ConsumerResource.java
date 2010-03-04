@@ -32,10 +32,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Bundle;
 import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.ClientCertificateStatus;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -276,12 +274,9 @@ public class ConsumerResource {
             stream.flush();
             stream.close();
 
-            Base64 encoder = new Base64();
             // FIXME : these won't be a pkcs12 bundle
             ClientCertificate cert = new ClientCertificate();
-            Bundle b = new Bundle();
-            b.setEntitlementCert(baos.toByteArray());
-            cert.setBundle(b);
+            cert.setEntitlementCert(baos.toByteArray());
 
             allCerts.add(cert);
             // Add it again just so we can see multiple return values:
