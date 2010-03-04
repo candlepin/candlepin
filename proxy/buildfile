@@ -58,7 +58,7 @@ GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-s
 JERSEY_FOR_TEST = [group('jersey-test-framework', 'jersey-guice', :under=>'com.sun.jersey', :version=>'1.1.4.1'),
            'com.sun.grizzly:grizzly-servlet-webserver:jar:1.9.8']
 
-QUARTZ = 'quartz:quartz:jar:1.5.2'
+QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
 
 #############################################################################
 # REPOSITORIES
