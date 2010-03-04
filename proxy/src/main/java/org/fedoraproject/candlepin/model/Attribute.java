@@ -149,8 +149,8 @@ public class Attribute  implements Persisted {
         this.childAttributes.add(newChild);
     }
 
-    public void addChildAttribute(String key, String value) {
-        addChildAttribute(new Attribute(key, value));
+    public void addChildAttribute(String key, String val) {
+        addChildAttribute(new Attribute(key, val));
     }
 
     public Attribute getChildAttribute(String key) {

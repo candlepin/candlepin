@@ -56,8 +56,8 @@ public class Translator extends Translations {
      * @param i The integer to add to the list
      * @return Returns a list containing i
      */
-    public static List int2List(Integer i) {
-        List list = new ArrayList();
+    public static List<Integer> int2List(Integer i) {
+        List<Integer> list = new ArrayList<Integer>();
         if (i != null) {
             list.add(i);
         }
@@ -188,7 +188,7 @@ public class Translator extends Translations {
      * @param l list to be converted
      * @return List.toString()
      */
-    public static String list2String(List l) {
+    public static String list2String(List<Object> l) {
         return (l == null) ? "" : l.toString();
     }
     
@@ -197,7 +197,7 @@ public class Translator extends Translations {
      * @param m map to be converted
      * @return map.toString()
      */
-    public static String map2String(Map m) {
+    public static String map2String(Map<Object, Object> m) {
         return (m == null) ? "" : m.toString();
     }
 

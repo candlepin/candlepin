@@ -137,7 +137,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         WebResource r = resource().path(
                 "/entitlement/consumer/" + consumer.getUuid() + "/product/" +
                         product.getLabel());
-        String s = r.accept("application/json").type("application/json").post(
+        r.accept("application/json").type("application/json").post(
                 String.class);
         unitOfWork.endWork();
 
@@ -150,7 +150,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
             WebResource r = resource().path(
                     "/entitlement/consumer/1234-5678/product/" +
                             product.getLabel());
-            String s = r.accept("application/json").type("application/json")
+            r.accept("application/json").type("application/json")
                     .post(String.class);
             fail();
         }
@@ -180,7 +180,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
             WebResource r = resource().path(
                     "/entitlement/consumer/" + consumer.getUuid() +
                             "/product/nonexistent-product");
-            String s = r.accept("application/json").type("application/json")
+            r.accept("application/json").type("application/json")
                     .post(String.class);
             fail();
         }
@@ -195,7 +195,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
             WebResource r = resource().path(
                     "/entitlement/consumer/" + consumer.getUuid() +
                             "/token/1234567");
-            String s = r.accept("application/json").type("application/json")
+            r.accept("application/json").type("application/json")
                     .post(String.class);
             fail();
         }
@@ -210,8 +210,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
             WebResource r = resource().path(
                     "/entitlement/consumer/" + consumer.getUuid() +
                             "/token/1234567");
-            String s = r.accept("application/json").type("application/json")
-                    .post(String.class);
+            r.accept("application/json").type("application/json").post(String.class);
             fail();
         }
         catch (UniformInterfaceException e) {
