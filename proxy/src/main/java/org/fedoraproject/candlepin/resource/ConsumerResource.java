@@ -203,6 +203,7 @@ public class ConsumerResource {
                 throw new RuntimeException(
                     "Error generating identity certificate.");
             }
+            ConsumerIdentityCertificate idCert = consumerIdCertCurator.getCert(consumer);
             consumer.setIdCert(idCert);
 
             return consumer;
