@@ -33,7 +33,7 @@ import com.google.inject.Inject;
  * 
  * @version $Rev$
  */
-@Path("/product")
+@Path("/products")
 public class ProductResource {
 
     private static Logger log = Logger.getLogger(ProductResource.class);

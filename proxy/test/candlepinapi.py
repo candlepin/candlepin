@@ -93,7 +93,7 @@ class CandlePinApi:
         self.rest = Rest(hostname=hostname, port=port, api_url=api_url, cert_file=cert_file, key_file=key_file, debug=debug)
 
     def registerConsumer(self, userid, password, name, hardware=None, products=None):
-        path = "/consumer"
+        path = "/consumers"
 
 
         entrys = []
@@ -124,53 +124,53 @@ class CandlePinApi:
         return blob
 
     def unRegisterConsumer(self, username, password, consumer_uuid):
-        path = "/consumer/%s" % consumer_uuid
+        path = "/consumers/%s" % consumer_uuid
         blob = self.rest.delete(path)
         return blob
 
     def bindProduct(self, consumer_uuid, product_label):
-        path = "/entitlement/consumer/%s/product/%s" % (consumer_uuid, product_label)
+        path = "/entitlements/consumer/%s/product/%s" % (consumer_uuid, product_label)
         blob = self.rest.post(path)
         return blob
 
     def bindPool(self, consumer_uuid, pool_id):
-        path = "/entitlement/consumer/%s/pool/%s" % (consumer_uuid, pool_id)
+        path = "/entitlements/consumer/%s/pool/%s" % (consumer_uuid, pool_id)
         blob = self.rest.post(path)
         return blob
 
     def bindRegToken(self, consumer_uuid, regtoken):
-        path = "/entitlement/consumer/%s/token/%s" % (consumer_uuid, regtoken)
+        path = "/entitlements/consumer/%s/token/%s" % (consumer_uuid, regtoken)
         blob = self.rest.post(path)
         return blob
 
     def unBindAll(self, consumer_uuid):
-        path = "/entitlement/consumer/%s" % consumer_uuid
+        path = "/entitlements/consumer/%s" % consumer_uuid
         blob = self.rest.delete(path)
         return blob
 
     def unBindBySerialNumbers(self, consumer_uuid, serial_number_list):
-        path = "/entitlement/consumer/%s/%s" % (consumer_uuid, ','.join(serial_number_list))
+        path = "/entitlements/consumer/%s/%s" % (consumer_uuid, ','.join(serial_number_list))
         blob = self.rest.delete(path)
         return blob
 
     def getCertificates(self, consumer_uuid):
-        path = "/consumer/%s/certificates?serials=1,2,3,4,5" % consumer_uuid
+        path = "/consumers/%s/certificates?serials=1,2,3,4,5" % consumer_uuid
         return self.rest.get(path)
 
     def getCertificateSerials(self, consumer_uuid):
-        path = "/consumer/%s/certificates/serials" % consumer_uuid
+        path = "/consumers/%s/certificates/serials" % consumer_uuid
         return self.rest.get(path)
 
     def getPools(self, consumer_uuid):
-        path = "/pool/consumer/%s" % consumer_uuid
+        path = "/pools/consumer/%s" % consumer_uuid
         return self.rest.get(path)
 
     def getEntitlements(self, consumer_uuid):
-        path = "/entitlement/consumer/%s" % consumer_uuid
+        path = "/entitlements/consumer/%s" % consumer_uuid
         return self.rest.get(path)
 
     def getProducts(self):
-        path = "/product/"
+        path = "/products/"
         return self.rest.get(path)
 
 

@@ -89,7 +89,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
             entitler.entitle(c, product);
         }
 
-        WebResource r = resource().path("/entitlement/");
+        WebResource r = resource().path("/entitlements/");
         List<Entitlement> returned = r.accept("application/json").type(
                 "application/json").get(new GenericType<List<Entitlement>>() {
                 });
@@ -104,7 +104,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         consumerCurator.create(c);
         Entitlement entitlement = entitler.entitle(c, product);
 
-        WebResource r = resource().path("/entitlement/" + entitlement.getId());
+        WebResource r = resource().path("/entitlements/" + entitlement.getId());
         Entitlement returned = r.accept("application/json").type(
                 "application/json").get(Entitlement.class);
 
@@ -115,7 +115,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void getSingleEntitlementWithInvalidIdShouldFail() {
         try {
-            WebResource r = resource().path("/entitlement/1234");
+            WebResource r = resource().path("/entitlements/1234");
             Entitlement returned = r.accept("application/json").type(
                     "application/json").get(Entitlement.class);
         }
@@ -135,7 +135,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
         unitOfWork.beginWork();
         WebResource r = resource().path(
-                "/entitlement/consumer/" + consumer.getUuid() + "/product/" +
+                "/entitlements/consumer/" + consumer.getUuid() + "/product/" +
                         product.getLabel());
         r.accept("application/json").type("application/json").post(
                 String.class);
@@ -148,7 +148,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementWithInvalidConsumerShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlement/consumer/1234-5678/product/" +
+                    "/entitlements/consumer/1234-5678/product/" +
                             product.getLabel());
             r.accept("application/json").type("application/json")
                     .post(String.class);
@@ -163,7 +163,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementWithInvalidProductShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlement/consumer/" + consumer.getUuid() + "/product/" +
+                    "/entitlements/consumer/" + consumer.getUuid() + "/product/" +
                             exhaustedPoolProduct.getLabel());
             r.accept("application/json").type("application/json")
                     .post(String.class);
@@ -178,7 +178,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementForExhaustedPoolShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlement/consumer/" + consumer.getUuid() +
+                    "/entitlements/consumer/" + consumer.getUuid() +
                             "/product/nonexistent-product");
             r.accept("application/json").type("application/json")
                     .post(String.class);
@@ -193,7 +193,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementForConsumerNoProductShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlement/consumer/" + consumer.getUuid() +
+                    "/entitlements/consumer/" + consumer.getUuid() +
                             "/token/1234567");
             r.accept("application/json").type("application/json")
                     .post(String.class);
@@ -208,7 +208,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementForRegNumberShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlement/consumer/" + consumer.getUuid() +
+                    "/entitlements/consumer/" + consumer.getUuid() +
                             "/token/1234567");
             r.accept("application/json").type("application/json").post(String.class);
             fail();
@@ -224,7 +224,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         assertNotNull(entitlementCurator.find(entitlement.getId()));
 
         WebResource r = resource().path(
-                "/entitlement/consumer/" + consumer.getUuid() + "/product/" +
+                "/entitlements/consumer/" + consumer.getUuid() + "/product/" +
                         product.getId());
         Entitlement returned = r.accept("application/json").type(
                 "application/json").get(Entitlement.class);
@@ -236,7 +236,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void hasEntitlementWithoutEntitledProductShouldReturnFalse() {
         try {
             WebResource r = resource().path(
-                    "/entitlement/consumer/" + consumer.getUuid() + "/product/" +
+                    "/entitlements/consumer/" + consumer.getUuid() + "/product/" +
                             product.getLabel());
             r.accept("application/json").type("application/json").get(
                     Entitlement.class);
@@ -255,7 +255,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         unitOfWork.endWork();
 
         unitOfWork.beginWork();
-        WebResource r = resource().path("/entitlement/" + entitlement.getId());
+        WebResource r = resource().path("/entitlements/" + entitlement.getId());
         r.accept("application/json").type("application/json").delete();
         unitOfWork.endWork();
 
@@ -265,7 +265,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void deleteEntitlementWithInvalidIdShouldFail() {
         try {
-            WebResource r = resource().path("/entitlement/1234");
+            WebResource r = resource().path("/entitlements/1234");
             r.accept("application/json").type("application/json").delete();
         }
         catch (UniformInterfaceException e) {

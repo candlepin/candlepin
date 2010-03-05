@@ -61,7 +61,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
                     standardSystemType));
         }
 
-        WebResource r = resource().path("/consumer");
+        WebResource r = resource().path("/consumers");
         List<Consumer> returned = r.accept("application/json").type(
                 "application/json").get(new GenericType<List<Consumer>>() {
                 });
@@ -72,7 +72,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Test
     public void getSingleConsumer() {
-        WebResource r = resource().path("/consumer/" + consumer.getUuid());
+        WebResource r = resource().path("/consumers/" + consumer.getUuid());
         Consumer returned = r.accept("application/json").type(
                 "application/json").get(Consumer.class);
 
@@ -82,7 +82,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void getSingleConsumerWithInvalidUuidShouldFail() {
         try {
-            WebResource r = resource().path("/consumer/1234-5678");
+            WebResource r = resource().path("/consumers/1234-5678");
             r.accept("application/json").type("application/json").get(
                     Consumer.class);
             fail();
@@ -103,7 +103,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
             }
         });
 
-        WebResource r = resource().path("/consumer");
+        WebResource r = resource().path("/consumers");
         Consumer returned = r.accept("application/json").type(
                 "application/json").post(Consumer.class, submitted);
 
@@ -118,7 +118,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
                 new ConsumerType("non-existent"));
 
         try {
-            WebResource r = resource().path("/consumer");
+            WebResource r = resource().path("/consumers");
             r.accept("application/json").type("application/json").post(
                     Consumer.class, submitted);
         }
@@ -132,7 +132,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
         Consumer submitted = new Consumer(null, null, standardSystemType);
 
         try {
-            WebResource r = resource().path("/consumer");
+            WebResource r = resource().path("/consumers");
             r.accept("application/json").type("application/json").post(
                     Consumer.class, submitted);
         }
@@ -145,7 +145,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void deleteConsumer() {
         unitOfWork.beginWork();
 
-        WebResource r = resource().path("/consumer/" + consumer.getUuid());
+        WebResource r = resource().path("/consumers/" + consumer.getUuid());
         r.accept("application/json").type("application/json").delete();
 
         unitOfWork.endWork();
@@ -160,7 +160,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void deleteConsumerWithInvalidUuidShouldFail() {
         try {
-            WebResource r = resource().path("/consumer/1234-5678");
+            WebResource r = resource().path("/consumers/1234-5678");
             r.accept("application/json").type("application/json").delete();
         }
         catch (UniformInterfaceException e) {

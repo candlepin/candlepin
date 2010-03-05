@@ -42,7 +42,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * CertificateResource
  */
-@Path("/certificate")
+@Path("/certificates")
 public class CertificateResource  {
     private static String encodedCert = ""; //FIXME bad bad bad
 

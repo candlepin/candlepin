@@ -89,7 +89,7 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
         }
 
         WebResource r = resource().path(
-                "/owner/" + owner.getId() + "/entitlement");
+                "/owners/" + owner.getId() + "/entitlements");
         List<Entitlement> returned = r.accept("application/json").type(
                 "application/json").get(new GenericType<List<Entitlement>>() {
                 });
@@ -100,7 +100,7 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void listEntitlementsForNonExistantOwnerShouldFail() {
         try {
-            WebResource r = resource().path("/owner/1234/entitlement");
+            WebResource r = resource().path("/owners/1234/entitlements");
             r.accept("application/json").type("application/json").get(
                     new GenericType<List<Entitlement>>() {
                     });

@@ -49,7 +49,7 @@ public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void uploadAValidCertificateShouldPass() {
         
-        WebResource r = resource().path("/certificate");
+        WebResource r = resource().path("/certificates");
         String returned = r.accept("application/json")
              .type("application/json")
              .post(String.class, TestUtil.xmlToBase64String(sampleCertXml));
@@ -61,7 +61,7 @@ public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void uploadOfEmptyCertificateShouldFailWithBadRequest() {
         try {
-            WebResource r = resource().path("/certificate");
+            WebResource r = resource().path("/certificates");
             r.accept("application/json")
                  .type("application/json")
                  .post(String.class, "");
@@ -75,7 +75,7 @@ public class CertificateHttpClientTest extends AbstractGuiceGrizzlyTest {
     @Test
     public void uploadOfInvalidCertificateShouldFailWithBadRequest() {
         try {
-            WebResource r = resource().path("/certificate");
+            WebResource r = resource().path("/certificates");
             r.accept("application/json")
                  .type("application/json")
                  .post(String.class,

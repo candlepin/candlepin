@@ -20,8 +20,9 @@ class CandlepinTests(unittest.TestCase):
         # TODO: Use CandlePinAPI?
         # Upload the test cert to populate Candlepin db. Only do this
         # once per test suite run.
-        rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./cert_chain.crt", key_file="./cert_chain_private_pem.key")
-        rsp = rest.get("/certificate")
+        rest = Rest(hostname="localhost", port="8080", api_url="/candlepin")
+        #rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./cert_chain.crt", key_file="./cert_chain_private_pem.key")
+        rsp = rest.get("/certificates")
         if not rsp:
             print("Cert upload required.")
 
@@ -31,9 +32,9 @@ class CandlepinTests(unittest.TestCase):
             headers = {"Content-type": "application/json",
                     "Accept": "application/json"}
 
-            rest.post("/certificate", json.dumps(encoded_cert))
+            rest.post("/certificates", json.dumps(encoded_cert))
 
-            rsp = rest.get("/certificate")
+            rsp = rest.get("/certificates")
             self.assertTrue(rsp.strip() != "")
 
         self.uuid = self.create_consumer()

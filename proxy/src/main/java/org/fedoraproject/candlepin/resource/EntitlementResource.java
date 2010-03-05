@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * REST api gateway for the User object.
  */
-@Path("/entitlement")
+@Path("/entitlements")
 public class EntitlementResource {
     
     private PoolCurator epCurator;
@@ -294,6 +294,7 @@ public class EntitlementResource {
         return entitlementCurator.findAll();
     }
    
+    // TODO: Change to query param
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("consumer/{consumer_uuid}")

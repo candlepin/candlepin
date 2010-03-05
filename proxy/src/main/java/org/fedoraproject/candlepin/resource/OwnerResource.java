@@ -38,7 +38,7 @@ import com.google.inject.Inject;
 /**
  * Owner Resource
  */
-@Path("/owner")
+@Path("/owners")
 public class OwnerResource {
 
     private static Logger log = Logger.getLogger(OwnerResource.class);
@@ -132,7 +132,7 @@ public class OwnerResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("{owner_id}/entitlement")
+    @Path("{owner_id}/entitlements")
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
@@ -158,7 +158,7 @@ public class OwnerResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("{owner_id}/pool")
+    @Path("{owner_id}/pools")
     public List<Pool> ownerEntitlementPools(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);

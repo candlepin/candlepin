@@ -53,7 +53,7 @@ import com.google.inject.Inject;
 /**
  * API Gateway for Consumers
  */
-@Path("/consumer")
+@Path("/consumers")
 public class ConsumerResource {
     
     @Context 

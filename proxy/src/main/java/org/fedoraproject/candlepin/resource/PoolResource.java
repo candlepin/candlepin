@@ -38,7 +38,7 @@ import com.google.inject.Inject;
 /**
  * API gateway for the EntitlementPool
  */
-@Path("/pool")
+@Path("/pools")
 public class PoolResource {
 
     private static Logger log = Logger.getLogger(PoolResource.class);
