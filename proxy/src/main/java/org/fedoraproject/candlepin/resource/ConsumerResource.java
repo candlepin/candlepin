@@ -28,17 +28,15 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Bundle;
 import org.fedoraproject.candlepin.model.ClientCertificate;
-import org.fedoraproject.candlepin.model.ClientCertificateSerialNumber;
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
+import org.fedoraproject.candlepin.model.ClientCertificateMetadata;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -252,17 +250,26 @@ public class ConsumerResource {
 
     /**
      * Return the client certificate for the given consumer.
-     * @param consumerUuid uuid of the consumer whose client certificate is
-     * sought.
+     * 
+     * @param consumerUuid UUID of the consumer
      * @return list of the client certificates for the given consumer.
      */
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
     public List<ClientCertificate> getClientCertificates(
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid") String consumerUuid, 
+        @QueryParam("serials") String serials) {
+        
 
         log.debug("Getting client certificates for consumer: " + consumerUuid);
+        
+        if (serials != null) {
+            log.debug("Requested serials: " + serials);
+            for (String s : serials.split(",")) {
+                log.debug("   " + s);
+            }
+        }
 
         List<ClientCertificate> allCerts = new LinkedList<ClientCertificate>();
         
@@ -276,16 +283,23 @@ public class ConsumerResource {
             stream.flush();
             stream.close();
 
-            Base64 encoder = new Base64();
             // FIXME : these won't be a pkcs12 bundle
+            
+            // FIXME: This isn't quite right even for demo purposes, we're taking an
+            // entire PKCS12 bundle and cramming it into just the cert portion,
+            // no key is set.
             ClientCertificate cert = new ClientCertificate();
-            Bundle b = new Bundle();
-            b.setEntitlementCert(baos.toByteArray());
-            cert.setBundle(b);
+            cert.setSerial("SERIAL001");
+            cert.setKey(baos.toByteArray());
+            cert.setCert(baos.toByteArray());
 
             allCerts.add(cert);
-            // Add it again just so we can see multiple return values:
-            allCerts.add(cert);
+
+            ClientCertificate cert2 = new ClientCertificate();
+            cert2.setSerial("SERIAL002");
+            cert2.setKey(baos.toByteArray());
+            cert2.setCert(baos.toByteArray());
+            allCerts.add(cert2);
             
             return allCerts;
         }
@@ -295,40 +309,46 @@ public class ConsumerResource {
     }
    
     /**
-     * Retrieve the client certificate and it's status for the given Consumer.
-     * @param consumerUuid uuid for the consumer whose certificates are sought.
-     * @param clientCertificateSerialNumbers list of the serial numbers.
-     * @return list of client certificate status.
+     * Return the client certificate metadata for the given consumer.
+     * 
+     * This is a small subset of data clients can use to determine which certificates
+     * they need to update/fetch.
+     * 
+     * @param consumerUuid UUID of the consumer
+     * @return list of the client certificate metadata for the given consumer.
      */
-    @POST
-    @Path("{consumer_uuid}/certificates")
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public List<ClientCertificateStatus> getClientCertificateStatus(
-        @PathParam("consumer_uuid") String consumerUuid, 
-        List<ClientCertificateSerialNumber> clientCertificateSerialNumbers) {
-        
-        List<ClientCertificateStatus> updatedCertificateStatus =
-            new LinkedList<ClientCertificateStatus>();
-       
-        for (ClientCertificateSerialNumber serialNumber : clientCertificateSerialNumbers) {
-            log.debug("got a serial number: " + serialNumber.getSerialNumber()); 
-            //FIXME: lookup the certs by serialNumber
-           
-        }
-        
-        List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
+    @GET
+    @Path("{consumer_uuid}/certificates/metadata")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public List<ClientCertificateMetadata> getClientCertificatesMetadata(
+        @PathParam("consumer_uuid") String consumerUuid) {
 
-        for (ClientCertificate clientCert : clientCerts) {
-            log.debug("found client cert:" + clientCert);
-            ClientCertificateStatus clientCertficiateStatus =
-                new ClientCertificateStatus("somenumber-111", "", clientCert);
-            updatedCertificateStatus.add(clientCertficiateStatus);
-        }
+        log.debug("Getting client certificate metadata for consumer: " + consumerUuid);
 
-        log.debug("clientCerts: " + clientCerts);
-        //return clientCerts;
-        //       return foo;
-        return updatedCertificateStatus;
+        List<ClientCertificateMetadata> allCerts = 
+            new LinkedList<ClientCertificateMetadata>();
+        
+        //FIXME: make this look the cert from the cert service or whatever
+        // Using a static (and unusable) cert for now for demo purposes:
+        try {
+            ClientCertificateMetadata cert = new ClientCertificateMetadata();
+            cert.setSerial("SERIAL001");
+
+            allCerts.add(cert);
+
+            ClientCertificateMetadata cert2 = new ClientCertificateMetadata();
+            cert2.setSerial("SERIAL002");
+            allCerts.add(cert2);
+            log.debug("Returning metadata: " + allCerts.size());
+            for (ClientCertificateMetadata md : allCerts) {
+                log.debug("   " + md.getSerial());
+            }
+            
+            return allCerts;
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
+   
 }

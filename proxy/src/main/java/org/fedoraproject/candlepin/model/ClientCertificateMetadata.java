@@ -12,35 +12,24 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.fedoraproject.candlepin.model;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
 /**
- * EntitlementBindResult
+ * ClientCertificateMetadata
  */
-@XmlRootElement(name = "entitlement_bind_result")
+@XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntitlementBindResult {
-
-    private Boolean result;
-    
-    public EntitlementBindResult() {
+public class ClientCertificateMetadata {
+    private String serial;
+    public String getSerial() {
+        return serial;
     }
-    
-    public EntitlementBindResult(Boolean result) {
-        this.result = result;
-        
-    }
-    
-    public Boolean getResult() {
-        return result;
-    }
-
-    public void setResult(Boolean result) {
-        this.result = result;
+    public void setSerial(String serial) {
+        this.serial = serial;
     }
 
 }

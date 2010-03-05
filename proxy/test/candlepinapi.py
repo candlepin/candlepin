@@ -45,6 +45,7 @@ class Rest(object):
         full_url = "%s:%s%s" % (self.hostname, self.port, self.api_url)
         if self.debug:
             print "url: %s" % full_url
+
         conn.request(http_type, url_path, body=self.marshal(data, content_type), headers=self.headers[content_type])
         response = conn.getresponse()
         if response.status not in  [200, 204]:
@@ -152,9 +153,13 @@ class CandlePinApi:
         blob = self.rest.delete(path)
         return blob
 
-    def syncCertificates(self, consumer_uuid, certificate_list):
-        path = "/consumer/%s/certificates" % consumer_uuid
-        return self.rest.post(path,data=certificate_list)
+    def getCertificates(self, consumer_uuid):
+        path = "/consumer/%s/certificates?serials=1,2,3,4,5" % consumer_uuid
+        return self.rest.get(path)
+
+    def getCertificatesMetadata(self, consumer_uuid):
+        path = "/consumer/%s/certificates/metadata" % consumer_uuid
+        return self.rest.get(path)
 
     def getPools(self, consumer_uuid):
         path = "/pool/consumer/%s" % consumer_uuid
