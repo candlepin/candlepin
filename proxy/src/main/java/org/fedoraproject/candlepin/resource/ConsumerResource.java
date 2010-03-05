@@ -28,6 +28,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -257,9 +258,18 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
     public List<ClientCertificate> getClientCertificates(
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid") String consumerUuid, 
+        @QueryParam("serials") String serials) {
+        
 
         log.debug("Getting client certificates for consumer: " + consumerUuid);
+        
+        if (serials != null) {
+            log.debug("Requested serials: " + serials);
+            for (String s : serials.split(",")) {
+                log.debug("   " + s);
+            }
+        }
 
         List<ClientCertificate> allCerts = new LinkedList<ClientCertificate>();
         
@@ -341,21 +351,4 @@ public class ConsumerResource {
         }
     }
    
-//    /**
-//     * Retrieve the client certificate and it's status for the given Consumer.
-//     * @param consumerUuid uuid for the consumer whose certificates are sought.
-//     * @return list of client certificate status.
-//     */
-//    @POST
-//    @Path("{consumer_uuid}/certificates")
-//    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    public List<ClientCertificate> getClientCertificateStatus(
-//        @PathParam("consumer_uuid") String consumerUuid) {
-//        
-//        List<ClientCertificate> clientCerts = getClientCertificates(consumerUuid);
-//
-//        log.debug("clientCerts: " + clientCerts);
-//        return clientCerts;
-//    }
 }

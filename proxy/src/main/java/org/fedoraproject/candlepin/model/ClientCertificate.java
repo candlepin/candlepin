@@ -23,14 +23,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 
  * Used for both entitlement certificates as well as identity certificates. Theoretically
  * could be used for non-X509 certificates as well.
- * 
- * Key and cert both should be Base64 encoded.
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class ClientCertificate extends ClientCertificateMetadata {
     
-    // NOTE: These should be Base64 encoded:
     private byte[] key;
     private byte[] cert;
 

@@ -29,7 +29,6 @@ class ConsumerTests(CandlepinTests):
         # TODO: once cert generation is live, need to request entitlements
         # that will get us certs.
         result = self.cp.getCertificatesMetadata(self.uuid) 
-        print result
 
         # Verify the JSON structure:
         self.assertTrue("cert" in result)

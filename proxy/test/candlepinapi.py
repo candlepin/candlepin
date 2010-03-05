@@ -43,8 +43,6 @@ class Rest(object):
         if response.status not in  [200, 204]:
             raise Exception("%s - %s" % (response.status, response.reason))
         rsp = response.read()
-        print "headers:"
-        print response.getheaders()
         
         if self.debug:
             print "response status: %s" % response.status
@@ -148,7 +146,7 @@ class CandlePinApi:
         return blob
 
     def getCertificates(self, consumer_uuid):
-        path = "/consumer/%s/certificates" % consumer_uuid
+        path = "/consumer/%s/certificates?serials=1,2,3,4,5" % consumer_uuid
         return self.rest.get(path)
 
     def getCertificatesMetadata(self, consumer_uuid):
