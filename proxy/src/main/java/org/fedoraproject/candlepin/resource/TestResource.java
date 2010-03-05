@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -23,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.Owner;
@@ -90,7 +94,13 @@ public class TestResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer getConsumer() {
         Consumer consumer  = new Consumer();
-        Product product = new Product("test product", "SuperAwesomeEnterpriseHyperLinux");
+        ConsumerFacts facts = new ConsumerFacts();
+        
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("this_is_a_key", "this_is_a_value");
+        metadata.put("this is a different key", "this is a different value");
+        facts.setMetadata(metadata);
+        consumer.setFacts(facts);
         return consumer;
     }
 

@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.EntitlementBindResult;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -82,7 +82,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testEntitle() throws Exception {
-        EntitlementBindResult result = eapi.entitleByProduct(
+        Entitlement result = eapi.entitleByProduct(
             consumer.getUuid(), product.getLabel());
         
         consumer = consumerCurator.lookupByUuid(consumer.getUuid());
