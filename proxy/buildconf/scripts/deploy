@@ -7,6 +7,10 @@ function evalrc ()
     fi
 }
 
+if [ -f $HOME/.candlepinrc ] ; then
+    source $HOME/.candlepinrc
+fi
+
 TC=tomcat6
 if [ -z $TC_HOME ]; then
    TC_HOME=/var/lib/$TC
