@@ -19,32 +19,17 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents a client certificate.
- * 
- * Used for both entitlement certificates as well as identity certificates. Theoretically
- * could be used for non-X509 certificates as well.
- * 
- * Key and cert both should be Base64 encoded.
+ * ClientCertificateMetadata
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ClientCertificate extends ClientCertificateMetadata {
-    
-    // NOTE: These should be Base64 encoded:
-    private byte[] key;
-    private byte[] cert;
-
-    public byte[] getKey() {
-        return key;
+public class ClientCertificateMetadata {
+    private String serial;
+    public String getSerial() {
+        return serial;
     }
-    public void setKey(byte[] key) {
-        this.key = key;
-    }
-    public byte[] getCert() {
-        return cert;
-    }
-    public void setCert(byte[] cert) {
-        this.cert = cert;
+    public void setSerial(String serial) {
+        this.serial = serial;
     }
 
 }

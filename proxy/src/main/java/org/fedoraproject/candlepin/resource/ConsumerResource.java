@@ -35,6 +35,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ClientCertificate;
+import org.fedoraproject.candlepin.model.ClientCertificateMetadata;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -249,8 +250,7 @@ public class ConsumerResource {
     /**
      * Return the client certificate for the given consumer.
      * 
-     * @param consumerUuid uuid of the consumer whose client certificate is
-     * sought.
+     * @param consumerUuid UUID of the consumer
      * @return list of the client certificates for the given consumer.
      */
     @GET
@@ -289,8 +289,50 @@ public class ConsumerResource {
             cert2.setSerial("SERIAL002");
             cert2.setKey(baos.toByteArray());
             cert2.setCert(baos.toByteArray());
-            // Add it again just so we can see multiple return values:
             allCerts.add(cert2);
+            
+            return allCerts;
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+   
+    /**
+     * Return the client certificate metadata for the given consumer.
+     * 
+     * This is a small subset of data clients can use to determine which certificates
+     * they need to update/fetch.
+     * 
+     * @param consumerUuid UUID of the consumer
+     * @return list of the client certificate metadata for the given consumer.
+     */
+    @GET
+    @Path("{consumer_uuid}/certificates/metadata")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public List<ClientCertificateMetadata> getClientCertificatesMetadata(
+        @PathParam("consumer_uuid") String consumerUuid) {
+
+        log.debug("Getting client certificate metadata for consumer: " + consumerUuid);
+
+        List<ClientCertificateMetadata> allCerts = 
+            new LinkedList<ClientCertificateMetadata>();
+        
+        //FIXME: make this look the cert from the cert service or whatever
+        // Using a static (and unusable) cert for now for demo purposes:
+        try {
+            ClientCertificateMetadata cert = new ClientCertificateMetadata();
+            cert.setSerial("SERIAL001");
+
+            allCerts.add(cert);
+
+            ClientCertificateMetadata cert2 = new ClientCertificateMetadata();
+            cert2.setSerial("SERIAL002");
+            allCerts.add(cert2);
+            log.debug("Returning metadata: " + allCerts.size());
+            for (ClientCertificateMetadata md : allCerts) {
+                log.debug("   " + md.getSerial());
+            }
             
             return allCerts;
         }
