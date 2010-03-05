@@ -1,0 +1,43 @@
+This is a submodule that is used together with JAASRealm in tomcat to map client identities (based on client certificate) to user roles. See web.xml for the list of currently defined roles and access control based on those roles.
+
+INSTALLATION.
+Build candlepin-jaas module and copy it into tomcat's lib directory (JAAS module must be on *container's* classpath). Copy jaas.config located in conf directory into a directory you deemed appropriate. 
+
+CONFIGURATION.
+
+
+SSL Certificates
+Follow steps at http://www.herongyang.com/Cryptography/OpenSSL-as-CA-Sign-CSR-Generated-by-keytool.html
+
+
+Tomcat Configuration
+Define a connector that is going to be used for https connections in server.xml (in tomcat's conf directory):
+
+<Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true"
+           maxThreads="150" scheme="https" secure="true"
+           clientAuth="want" sslProtocol="TLS" 
+           keystoreFile="conf/keystore"
+           truststoreFile="conf/keystore" 
+           keystorePass="password"
+           truststorePass="password" />
+
+keystore is java keystore created by keytool in the previous step; should contain CA certificate so server can verify client certificate.
+
+
+Servlet Configuration
+Add auth-constraint line in security-constraint section for candlepin web-resource: 
+
+<auth-constraint>
+  <role-name>client</role-name>
+</auth-constraint>
+ 
+
+JAAS Module Configuration
+Define java.security.auth.login.config system property (ex.: export JAVA_OPTS=-Djava.security.auth.login.config="/opt/apache-tomcat-6.0.20/conf/jaas.config")
+
+
+
+that's it folks!
+
+
+
