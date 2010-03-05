@@ -21,9 +21,14 @@ import static org.junit.Assert.assertNull;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestDateUtil;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,6 +43,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private static final String CONSUMER_NAME = "consumer name";
     
     private ConsumerType standardSystemType;
+    private Consumer consumer;
+    private Product product;
+    private Pool ep;
     
     private ConsumerResource consumerResource;
     private Owner owner;
@@ -49,6 +57,21 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
+        ownerCurator.create(owner);
+        
+        ConsumerType type = new ConsumerType("some-consumer-type");
+        consumerTypeCurator.create(type);
+        
+        consumer = TestUtil.createConsumer(type, owner);
+        consumerCurator.create(consumer);
+        
+        product = TestUtil.createProduct();
+        productCurator.create(product);
+        
+        ep = new Pool(owner, product.getId(), new Long(10), 
+            TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+        poolCurator.create(ep);
+
     }
     
     // TODO: Test no such consumer type.
@@ -90,4 +113,39 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         assertNull(consumerCurator.find(created.getId()));
     }
+    
+    @Test
+    public void testEntitle() throws Exception {
+        Entitlement result = consumerResource.entitleByProduct(
+            consumer.getUuid(), product.getLabel());
+        
+        consumer = consumerCurator.lookupByUuid(consumer.getUuid());
+        assertEquals(1, consumer.getEntitlements().size());
+        
+        ep = poolCurator.find(ep.getId());
+        assertEquals(new Long(1), ep.getCurrentMembers());
+    }
+    
+    @Test(expected = RuntimeException.class)
+    public void testMaxMembership() {
+        // 10 entitlements available, lets try to entitle 11 consumers.
+        for (int i = 0; i < ep.getMaxMembers(); i++) {
+            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+            consumerCurator.create(c);
+            consumerResource.entitleByPool(c.getUuid(), null, null, product.getLabel());
+        }
+        
+        // Now for the 11th:
+        Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+        consumerCurator.create(c);
+        consumerResource.entitleByProduct(c.getUuid(), product.getLabel());
+    }
+    
+    @Test(expected = RuntimeException.class)
+    public void testEntitlementsHaveExpired() {
+        dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
+        consumerResource.entitleByProduct(consumer.getUuid(), product.getLabel());
+    }
+    
+
 }

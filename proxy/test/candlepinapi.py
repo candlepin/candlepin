@@ -129,17 +129,17 @@ class CandlePinApi:
         return blob
 
     def bindProduct(self, consumer_uuid, product_label):
-        path = "/entitlements/consumer/%s/product/%s" % (consumer_uuid, product_label)
+        path = "/consumers/%s/entitlements?product=%s" % (consumer_uuid, product_label)
         blob = self.rest.post(path)
         return blob
 
     def bindPool(self, consumer_uuid, pool_id):
-        path = "/entitlements/consumer/%s/pool/%s" % (consumer_uuid, pool_id)
+        path = "/consumers/%s/entitlements?pool=%s" % (consumer_uuid, pool_id)
         blob = self.rest.post(path)
         return blob
 
     def bindRegToken(self, consumer_uuid, regtoken):
-        path = "/entitlements/consumer/%s/token/%s" % (consumer_uuid, regtoken)
+        path = "/consumers/%s/entitlements?token=%s" % (consumer_uuid, regtoken)
         blob = self.rest.post(path)
         return blob
 
@@ -166,7 +166,7 @@ class CandlePinApi:
         return self.rest.get(path)
 
     def getEntitlements(self, consumer_uuid):
-        path = "/entitlements/consumer/%s" % consumer_uuid
+        path = "/consumers/%s/entitlements" % consumer_uuid
         return self.rest.get(path)
 
     def getProducts(self):

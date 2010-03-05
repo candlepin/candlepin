@@ -14,12 +14,9 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -81,39 +78,6 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void testEntitle() throws Exception {
-        Entitlement result = eapi.entitleByProduct(
-            consumer.getUuid(), product.getLabel());
-        
-        consumer = consumerCurator.lookupByUuid(consumer.getUuid());
-        assertEquals(1, consumer.getEntitlements().size());
-        
-        ep = poolCurator.find(ep.getId());
-        assertEquals(new Long(1), ep.getCurrentMembers());
-    }
-    
-    @Test(expected = RuntimeException.class)
-    public void testMaxMembership() {
-        // 10 entitlements available, lets try to entitle 11 consumers.
-        for (int i = 0; i < ep.getMaxMembers(); i++) {
-            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
-            consumerCurator.create(c);
-            eapi.entitleByProduct(c.getUuid(), product.getLabel());
-        }
-        
-        // Now for the 11th:
-        Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
-        consumerCurator.create(c);
-        eapi.entitleByProduct(c.getUuid(), product.getLabel());
-    }
-    
-    @Test(expected = RuntimeException.class)
-    public void testEntitlementsHaveExpired() {
-        dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
-        eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
-    }
-    
-    @Test
     public void testEntitleOwnerHasNoEntitlements() {
         // TODO
     }
@@ -128,15 +92,15 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         // TODO
     }
     
-    @Ignore
-    public void testHasEntitlement() {
-        
-        eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
-
-        // TODO: Disabling this test, boils into ObjectFactory things that need
-        // to be fixed before we can do this check! Sorry! :) - dgoodwin
-//        assertTrue(eapi.hasEntitlement(consumer.getUuid(), product.getUuid()));
-    }
+//    @Ignore
+//    public void testHasEntitlement() {
+//        
+//        eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
+//
+//        // TODO: Disabling this test, boils into ObjectFactory things that need
+//        // to be fixed before we can do this check! Sorry! :) - dgoodwin
+////        assertTrue(eapi.hasEntitlement(consumer.getUuid(), product.getUuid()));
+//    }
 
     @Test
     @Ignore

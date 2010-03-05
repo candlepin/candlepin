@@ -35,6 +35,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.ClientCertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -44,9 +45,16 @@ import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -65,6 +73,12 @@ public class ConsumerResource {
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerIdentityCertificateCurator consumerIdCertCurator;
+    private ProductServiceAdapter productAdapter;
+    private PoolCurator epCurator;
+    private Entitler entitler;
+    private SubscriptionServiceAdapter subAdapter; 
+    private EntitlementCurator entitlementCurator;
+
 
     private String username;
 
@@ -80,12 +94,23 @@ public class ConsumerResource {
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         ConsumerIdentityCertificateCurator consumerIdCertCurator,
+        ProductServiceAdapter productAdapter,
+        Entitler entitler,
+        SubscriptionServiceAdapter subAdapter,
+        PoolCurator epCurator,
+        EntitlementCurator entitlementCurator,
         @Context HttpServletRequest request) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerIdCertCurator = consumerIdCertCurator;
+        this.productAdapter = productAdapter;
+        this.subAdapter = subAdapter;
+        this.entitler = entitler;
+        this.epCurator = epCurator;
+        this.entitlementCurator = entitlementCurator;
+
         this.username = (String) request.getAttribute("username");
         if (username != null) {
             this.owner = ownerCurator.lookupByName(username);
@@ -351,4 +376,136 @@ public class ConsumerResource {
         }
     }
    
+    /**
+     * Entitles the given Consumer with the given Product.
+     * @param consumerUuid Consumer identifier to be entitled
+     * @param productId Product identifying label.
+     * @return Entitled object
+     */
+//    @POST
+//    @Consumes({ MediaType.APPLICATION_JSON })
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    @Path("/{consumer_uuid}/entitlements")
+    public Entitlement entitleByProduct(
+        @PathParam("consumer_uuid") String consumerUuid,
+        @QueryParam("product") String productId) {
+        
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new BadRequestException("No such consumer: " + consumerUuid);
+        }
+        
+        Product p = productAdapter.getProductById(productId);
+        if (p == null) {
+            throw new BadRequestException("No such product: " + productId);
+        }
+        
+        // Attempt to create an entitlement:
+        Entitlement e = entitler.entitle(consumer, p);
+        // TODO: Probably need to get the validation result out somehow.
+        // TODO: return 409?
+        if (e == null) {
+            throw new BadRequestException("Entitlement refused.");
+        }
+        log.debug("Entitlement: " + e);
+        return e;
+    }
+
+    /**
+     * Grants entitlements based on a registration token.
+     * 
+     * @param consumerUuid Consumer identifier.
+     * @param registrationToken registration token.
+     * @return token
+     */
+//    @POST
+//    @Consumes({ MediaType.APPLICATION_JSON })
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    @Path("consumer/{consumer_uuid}/entitlements")
+    public Entitlement entitleToken(
+            @PathParam("consumer_uuid") String consumerUuid, 
+            @QueryParam("token") String registrationToken) {
+        
+        //FIXME: this is just a stub, need SubscriptionService to look it up
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        
+        //FIXME: getSubscriptionForToken is a stub, always "works"
+        Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
+        if (s == null) {
+            throw new BadRequestException("No such token: " + registrationToken);
+        }
+
+        Product p = productAdapter.getProductById(s.getProductId());
+
+        Entitlement e = entitler.entitle(consumer, p);
+        // return it
+        
+        if (consumer == null) {
+            throw new BadRequestException("No such consumer: " + consumerUuid);
+        }
+
+        return e;
+    }
+
+    /**
+     * Request an entitlement from a specific pool.
+     *
+     * @param consumerUuid Consumer identifier to be entitled
+     * @param poolId Entitlement pool id.
+     * @return boolean
+     */
+    @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("/{consumer_uuid}/entitlements")
+    public Entitlement entitleByPool(
+            @PathParam("consumer_uuid") String consumerUuid,
+            @QueryParam("pool") Long poolId, 
+            @QueryParam("token") String token, 
+            @QueryParam("product") String productId) {
+        
+        // TODO: Check that only one query param was set:
+        
+        if (token != null) {
+            return entitleToken(consumerUuid, token);
+        }
+        if (productId != null) {
+            return entitleByProduct(consumerUuid, productId);
+        }
+
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new BadRequestException("No such consumer: " + consumerUuid);
+        }
+
+        Pool pool = epCurator.find(poolId);
+        if (pool == null) {
+            throw new BadRequestException("No such entitlement pool: " + poolId);
+        }
+
+        // Attempt to create an entitlement:
+        Entitlement e = entitler.entitle(consumer, pool);
+        // TODO: Probably need to get the validation result out somehow.
+        // TODO: return 409?
+        if (e == null) {
+            throw new BadRequestException("Entitlement refused.");
+        }
+
+        return e;
+    }
+    
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("/{consumer_uuid}/entitlements")
+    public List<Entitlement> listEntitlements(
+        @PathParam("consumer_uuid") String consumerUuid) {
+        
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new BadRequestException("No such consumer: " + consumerUuid);
+        }
+
+        return entitlementCurator.listByConsumer(consumer);
+    }
+
 }

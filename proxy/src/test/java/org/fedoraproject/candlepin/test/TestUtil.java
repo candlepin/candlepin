@@ -84,9 +84,7 @@ public class TestUtil {
         int random =  randomInt();
         Product rhel = new Product("test-product-" + random, 
                 "Test Product " + random);
-
-
-
+        rhel.setId("test-product-" + random);
         return rhel;
     }
     

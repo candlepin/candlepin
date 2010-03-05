@@ -135,8 +135,8 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 
         unitOfWork.beginWork();
         WebResource r = resource().path(
-                "/entitlements/consumer/" + consumer.getUuid() + "/product/" +
-                        product.getLabel());
+                "/consumers/" + consumer.getUuid() + "/entitlements").
+                        queryParam("product", product.getLabel());
         r.accept("application/json").type("application/json").post(
                 String.class);
         unitOfWork.endWork();
@@ -148,8 +148,8 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementWithInvalidConsumerShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlements/consumer/1234-5678/product/" +
-                            product.getLabel());
+                    "/consumers/1234-5678/entitlements").
+                    queryParam("product", product.getLabel());
             r.accept("application/json").type("application/json")
                     .post(String.class);
             fail();
@@ -163,8 +163,8 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementWithInvalidProductShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlements/consumer/" + consumer.getUuid() + "/product/" +
-                            exhaustedPoolProduct.getLabel());
+                    "/consumers/" + consumer.getUuid() + "/entitlements").
+                    queryParam("product", exhaustedPoolProduct.getLabel());
             r.accept("application/json").type("application/json")
                     .post(String.class);
             fail();
@@ -178,8 +178,9 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementForExhaustedPoolShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlements/consumer/" + consumer.getUuid() +
-                            "/product/nonexistent-product");
+                    "/consumers/" + consumer.getUuid() +
+                            "/entitlements").
+                            queryParam("product", "nonexistent-product");
             r.accept("application/json").type("application/json")
                     .post(String.class);
             fail();
@@ -193,8 +194,8 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementForConsumerNoProductShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlements/consumer/" + consumer.getUuid() +
-                            "/token/1234567");
+                    "/consumers/" + consumer.getUuid() +
+                            "/entitlements").queryParam("token", "1234567");
             r.accept("application/json").type("application/json")
                     .post(String.class);
             fail();
@@ -208,8 +209,8 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void entitlementForRegNumberShouldFail() {
         try {
             WebResource r = resource().path(
-                    "/entitlements/consumer/" + consumer.getUuid() +
-                            "/token/1234567");
+                    "/consumers/" + consumer.getUuid() +
+                            "/entitlements").queryParam("token", "1234567");
             r.accept("application/json").type("application/json").post(String.class);
             fail();
         }
@@ -218,34 +219,34 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         }
     }
 
-    @Test
-    public void hasEntitlementWithEntitledProductShouldReturnTrue() {
-        Entitlement entitlement = entitler.entitle(consumer, product);
-        assertNotNull(entitlementCurator.find(entitlement.getId()));
-
-        WebResource r = resource().path(
-                "/entitlements/consumer/" + consumer.getUuid() + "/product/" +
-                        product.getId());
-        Entitlement returned = r.accept("application/json").type(
-                "application/json").get(Entitlement.class);
-
-        assertEntitlementsAreSame(entitlement, returned);
-    }
-
-    @Test
-    public void hasEntitlementWithoutEntitledProductShouldReturnFalse() {
-        try {
-            WebResource r = resource().path(
-                    "/entitlements/consumer/" + consumer.getUuid() + "/product/" +
-                            product.getLabel());
-            r.accept("application/json").type("application/json").get(
-                    Entitlement.class);
-            fail();
-        }
-        catch (UniformInterfaceException e) {
-            assertHttpResponse(404, e.getResponse());
-        }
-    }
+//    @Test
+//    public void hasEntitlementWithEntitledProductShouldReturnTrue() {
+//        Entitlement entitlement = entitler.entitle(consumer, product);
+//        assertNotNull(entitlementCurator.find(entitlement.getId()));
+//
+//        WebResource r = resource().path(
+//                "/consumers/" + consumer.getUuid() + "/entitlements").
+//                queryParam("product", product.getId());
+//        Entitlement returned = r.accept("application/json").type(
+//                "application/json").get(Entitlement.class);
+//
+//        assertEntitlementsAreSame(entitlement, returned);
+//    }
+//
+//    @Test
+//    public void hasEntitlementWithoutEntitledProductShouldReturnFalse() {
+//        try {
+//            WebResource r = resource().path(
+//                    "/consumers/" + consumer.getUuid() + "/entitlements").
+//                    queryParam("product", product.getLabel());
+//            r.accept("application/json").type("application/json").get(
+//                    Entitlement.class);
+//            fail();
+//        }
+//        catch (UniformInterfaceException e) {
+//            assertHttpResponse(404, e.getResponse());
+//        }
+//    }
 
     @Test
     public void deleteEntitlementWithValidIdShouldPass() {

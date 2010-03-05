@@ -19,10 +19,8 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -103,111 +101,6 @@ public class EntitlementResource {
         return CertGenerator.genCert().toString(); 
     }
 
-    /**
-     * Entitles the given Consumer with the given Product.
-     * @param consumerUuid Consumer identifier to be entitled
-     * @param productId Product identifying label.
-     * @return Entitled object
-     */
-    @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/product/{product_id}")
-    public Entitlement entitleByProduct(
-        @PathParam("consumer_uuid") String consumerUuid,
-        @PathParam("product_id") String productId) {
-        
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
-        }
-        
-        Product p = prodAdapter.getProductById(productId);
-        if (p == null) {
-            throw new BadRequestException("No such product: " + productId);
-        }
-        
-        // Attempt to create an entitlement:
-        Entitlement e = entitler.entitle(consumer, p);
-        // TODO: Probably need to get the validation result out somehow.
-        // TODO: return 409?
-        if (e == null) {
-            throw new BadRequestException("Entitlement refused.");
-        }
-        log.debug("Entitlement: " + e);
-        return e;
-    }
-
-    /**
-     * Request an entitlement from a specific pool.
-     *
-     * @param consumerUuid Consumer identifier to be entitled
-     * @param poolId Entitlement pool id.
-     * @return boolean
-     */
-    @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/pool/{pool_id}")
-    public Entitlement entitleByPool(
-            @PathParam("consumer_uuid") String consumerUuid,
-            @PathParam("pool_id") Long poolId) {
-
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
-        }
-
-        Pool pool = epCurator.find(poolId);
-        if (pool == null) {
-            throw new BadRequestException("No such entitlement pool: " + poolId);
-        }
-
-        // Attempt to create an entitlement:
-        Entitlement e = entitler.entitle(consumer, pool);
-        // TODO: Probably need to get the validation result out somehow.
-        // TODO: return 409?
-        if (e == null) {
-            throw new BadRequestException("Entitlement refused.");
-        }
-
-        return e;
-    }
-
-    /**
-     * Entitles the given consumer, and returns the token.
-     * @param consumerUuid Consumer identifier.
-     * @param registrationToken registration token.
-     * @return token
-     */
-    @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/token/{registration_token}")
-    public Entitlement entitleToken(
-            @PathParam("consumer_uuid") String consumerUuid, 
-            @PathParam("registration_token") String registrationToken) {
-        
-        //FIXME: this is just a stub, need SubscriptionService to look it up
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        
-        //FIXME: getSubscriptionForToken is a stub, always "works"
-        Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
-        if (s == null) {
-            throw new BadRequestException("No such token: " + registrationToken);
-        }
-
-        Product p = prodAdapter.getProductById(s.getProductId());
-
-        Entitlement e = entitler.entitle(consumer, p);
-        // return it
-        
-        if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
-        }
-
-        return e;
-    }
     /**
      * Check to see if a given Consumer is entitled to given Product
      * @param consumerUuid consumerUuid to check if entitled or not
