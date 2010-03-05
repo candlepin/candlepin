@@ -9,32 +9,17 @@ class EntitlementTests(CandlepinTests):
 
     def setUp(self):
         CandlepinTests.setUp(self)
-        self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
 
         self.debug = False
-
-        facts_metadata = {
-                "a": "1",
-                "b": "2",
-                "c": "3"}
-        response = self.cp.registerConsumer("fakeuser", "fakepw",
-                "consumername", hardware=facts_metadata)
-        self.uuid = response['uuid']
 
     def test_uuid(self):
         self.assertTrue(self.uuid != None)
    
-    def test_certificates(self):
-        # Assumes consumer has an entitlement granted to a product:
-        result = self.cp.syncCertificates(self.uuid, [])
-        certs = result['clientCertStatus']
-        self.assertTrue(certs != None)
-
     def test_bind_by_entitlement_pool(self):
         # First we list all entitlement pools available to this consumer:
         virt_host = 'virtualization_host'
         results = self.cp.getPools(self.uuid)
-	print results
+        print results
         pools = {}
         for pool in results['pool']:
             pools[pool['productId']] = pool

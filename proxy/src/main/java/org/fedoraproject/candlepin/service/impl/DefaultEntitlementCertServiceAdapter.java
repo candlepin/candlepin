@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010 Red Hat, Inc.
+ * Copyright (c) 2009 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,17 +15,23 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.util.Date;
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
+import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 
-public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
+/**
+ * DefaultEntitlementCertServiceAdapter
+ */
+public class DefaultEntitlementCertServiceAdapter implements 
+    EntitlementCertServiceAdapter {
 
     @Override
-    public ClientCertificateStatus generateEntitlementCert(Consumer consumer, Subscription sub, Product product, Date endDate) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public ClientCertificate generateEntitlementCert(Consumer consumer,
+        Subscription sub, Product product, Date endDate) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

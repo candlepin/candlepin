@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.service;
 
 import java.util.Date;
 
-import org.fedoraproject.candlepin.model.ClientCertificateStatus;
+import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -37,6 +37,6 @@ public interface EntitlementCertServiceAdapter {
      * @param endDate End date. (usually subscription end date, but not always)
      * @return Client entitlement certificate.
      */
-    ClientCertificateStatus generateEntitlementCert(Consumer consumer,
+    ClientCertificate generateEntitlementCert(Consumer consumer,
         Subscription sub, Product product, Date endDate);
 }

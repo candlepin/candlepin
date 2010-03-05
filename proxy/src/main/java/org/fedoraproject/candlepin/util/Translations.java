@@ -32,6 +32,7 @@ public class Translations {
     // This is a HACK!  Basically, we can't get to the Class object from
     // within a static method.  So, we pass the Class object in from
     // a sub-class.
+    @SuppressWarnings("unchecked")
     protected static Object convert(Class thisClass, Object have, Class want) {
 
         // Don't worry about classes that are assignable; i.e., HashMap -> Map
@@ -57,6 +58,7 @@ public class Translations {
         return rc;
     }
     
+    @SuppressWarnings("unchecked")
     private static Object findMatch(Method[] methods, Object have,
         Class want, boolean bestMatch) throws TranslationException {
         

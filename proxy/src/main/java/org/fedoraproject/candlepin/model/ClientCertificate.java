@@ -19,46 +19,29 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents a client X509 certificate, used to obtain access to some content.
+ * Represents a client certificate.
+ * 
+ * Used for both entitlement certificates as well as identity certificates. Theoretically
+ * could be used for non-X509 certificates as well.
  */
-@XmlRootElement(name = "certs")
+@XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ClientCertificate implements Persisted {
+public class ClientCertificate extends ClientCertificateMetadata {
     
-    // This must be Base64 encoded:
-    private Bundle bundle;
-    private Long id;
-    
-    /**
-     * default ctor
-     */
-    public ClientCertificate() {
-        
-    }
-    
-    /**
-     * @param certBundle pkcs12 bundle
-     */
-    public ClientCertificate(Bundle certBundle) {
-        this.bundle = certBundle;
-    }
+    private byte[] key;
+    private byte[] cert;
 
-    public Bundle getBundle() {
-        return bundle;
+    public byte[] getKey() {
+        return key;
     }
-
-    public void setBundle(Bundle certBundle) {
-        this.bundle = certBundle;
+    public void setKey(byte[] key) {
+        this.key = key;
     }
-    
-    public void setId(Long id) {
-        this.id = id;
+    public byte[] getCert() {
+        return cert;
     }
-    
-    @Override
-    public Long getId() {
-        // TODO Auto-generated method stub
-        return this.id;
+    public void setCert(byte[] cert) {
+        this.cert = cert;
     }
 
 }

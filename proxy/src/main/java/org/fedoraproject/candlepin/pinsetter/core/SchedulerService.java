@@ -22,9 +22,11 @@ import org.quartz.Trigger;
  */
 public interface SchedulerService {
 
+    @SuppressWarnings("unchecked")
     void scheduleJob(Class job, String name, String schedule)
         throws PinsetterException;
-    
+
+    @SuppressWarnings("unchecked")    
     void scheduleJob(Class job, String name, Trigger trigger)
         throws PinsetterException;
 }
