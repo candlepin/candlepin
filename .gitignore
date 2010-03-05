@@ -22,4 +22,5 @@ proxy/*.out
 proxy/target
 proxy/target-eclipse
 proxy/reports
+.DS_Store
 *~
