@@ -157,8 +157,8 @@ class CandlePinApi:
         path = "/consumer/%s/certificates?serials=1,2,3,4,5" % consumer_uuid
         return self.rest.get(path)
 
-    def getCertificatesMetadata(self, consumer_uuid):
-        path = "/consumer/%s/certificates/metadata" % consumer_uuid
+    def getCertificateSerials(self, consumer_uuid):
+        path = "/consumer/%s/certificates/serials" % consumer_uuid
         return self.rest.get(path)
 
     def getPools(self, consumer_uuid):

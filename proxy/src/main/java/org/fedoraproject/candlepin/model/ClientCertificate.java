@@ -26,11 +26,18 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ClientCertificate extends ClientCertificateMetadata {
+public class ClientCertificate {
     
+    private String serial;
     private byte[] key;
     private byte[] cert;
 
+    public String getSerial() {
+        return serial;
+    }
+    public void setSerial(String serial) {
+        this.serial = serial;
+    }
     public byte[] getKey() {
         return key;
     }

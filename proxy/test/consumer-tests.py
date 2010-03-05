@@ -28,13 +28,12 @@ class ConsumerTests(CandlepinTests):
     def test_get_certificates_metadata(self):
         # TODO: once cert generation is live, need to request entitlements
         # that will get us certs.
-        result = self.cp.getCertificatesMetadata(self.uuid) 
+        result = self.cp.getCertificateSerials(self.uuid)
 
         # Verify the JSON structure:
-        self.assertTrue("cert" in result)
-        cert_list = result['cert']
-        self.assertEquals(2, len(cert_list))
-        cert1 = cert_list[1]
-        self.assertTrue("serial" in cert1)
-        self.assertEquals(1, len(cert1.keys()))
+        self.assertTrue("serial" in result)
+        serial_list = result['serial']
+        self.assertEquals(2, len(serial_list))
+        for serial in serial_list:
+            self.assertTrue("serial" in serial)
 

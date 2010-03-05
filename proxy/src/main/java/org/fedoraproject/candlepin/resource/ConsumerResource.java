@@ -36,7 +36,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ClientCertificate;
-import org.fedoraproject.candlepin.model.ClientCertificateMetadata;
+import org.fedoraproject.candlepin.model.ClientCertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -318,29 +318,29 @@ public class ConsumerResource {
      * @return list of the client certificate metadata for the given consumer.
      */
     @GET
-    @Path("{consumer_uuid}/certificates/metadata")
+    @Path("{consumer_uuid}/certificates/serials")
     @Produces({ MediaType.APPLICATION_JSON })
-    public List<ClientCertificateMetadata> getClientCertificatesMetadata(
+    public List<ClientCertificateSerial> getClientCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
-        log.debug("Getting client certificate metadata for consumer: " + consumerUuid);
+        log.debug("Getting client certificate serials for consumer: " + consumerUuid);
 
-        List<ClientCertificateMetadata> allCerts = 
-            new LinkedList<ClientCertificateMetadata>();
+        List<ClientCertificateSerial> allCerts =
+            new LinkedList<ClientCertificateSerial>();
         
         //FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
         try {
-            ClientCertificateMetadata cert = new ClientCertificateMetadata();
+            ClientCertificateSerial cert = new ClientCertificateSerial();
             cert.setSerial("SERIAL001");
 
             allCerts.add(cert);
 
-            ClientCertificateMetadata cert2 = new ClientCertificateMetadata();
+            ClientCertificateSerial cert2 = new ClientCertificateSerial();
             cert2.setSerial("SERIAL002");
             allCerts.add(cert2);
             log.debug("Returning metadata: " + allCerts.size());
-            for (ClientCertificateMetadata md : allCerts) {
+            for (ClientCertificateSerial md : allCerts) {
                 log.debug("   " + md.getSerial());
             }
             
