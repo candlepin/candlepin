@@ -28,4 +28,5 @@ proxy/target-eclipse
 proxy/reports
 jaas/bin
 .DS_Store
+.DS_Store
 *~
