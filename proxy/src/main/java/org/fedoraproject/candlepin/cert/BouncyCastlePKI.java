@@ -1,4 +1,4 @@
-package org.fedoraproject.candlepin.cert.util;
+package org.fedoraproject.candlepin.cert;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -10,6 +10,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -18,13 +19,12 @@ import java.util.Date;
 import java.util.List;
 
 
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.DEREncodable;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.jce.X509Principal;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 public class BouncyCastlePKI {
@@ -37,9 +37,11 @@ public class BouncyCastlePKI {
     private PrivateKey caPrivateKey;
 
     @Inject
-    public BouncyCastlePKI(CertIOUtil certIOUtil) throws Exception {
-        this.caCert = certIOUtil.getCACert();
-        this.caPrivateKey = certIOUtil.getCaKey();
+    public BouncyCastlePKI(CertificateReader certReader) throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+
+        this.caCert = certReader.getCACert();
+        this.caPrivateKey = certReader.getCaKey();
     }
 
     public X509Certificate createX509Certificate(
@@ -91,19 +93,19 @@ public class BouncyCastlePKI {
                 | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment);
 
         // add SSL extensions
-        certGen.addExtension(MiscObjectIdentifiers.netscapeCertType.toString(), false, (ASN1Encodable)new NetscapeCertType(NetscapeCertType.sslServer | NetscapeCertType.smime));
-        certGen.addExtension(X509Extensions.KeyUsage.toString(), false,
-                (DEREncodable) keyUsage);
+        NetscapeCertType certType = new NetscapeCertType(
+                NetscapeCertType.sslServer | NetscapeCertType.smime);
+        certGen.addExtension(MiscObjectIdentifiers.netscapeCertType.toString(), 
+                false, certType);
+        certGen.addExtension(X509Extensions.KeyUsage.toString(), false, keyUsage);
+        
         for (X509ExtensionWrapper wrapper : extensions) {
-            certGen.addExtension(
-                    wrapper.getOid(), 
-                    wrapper.isCritical(),
-                    (DEREncodable) wrapper.getAsn1Encodable());
+            certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
+                    wrapper.getAsn1Encodable());
         }
 
         // Generate the certificate
-        X509Certificate x509cert = certGen.generate(caPrivateKey);
-        return x509cert;
+        return certGen.generate(this.caPrivateKey);
     }
     
     /**
@@ -122,9 +124,11 @@ public class BouncyCastlePKI {
 
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         // build the private key
-        PrivateKey privKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privKeyBits));
+        PrivateKey privKey = keyFactory.generatePrivate(
+                new PKCS8EncodedKeySpec(privKeyBits));
         // build the public key
-        PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(pubKeyBits));
+        PublicKey pubKey = keyFactory.generatePublic(
+                new X509EncodedKeySpec(pubKeyBits));
         // make them a key pair
         KeyPair keyPair = new KeyPair(pubKey, privKey);
         return keyPair;

@@ -19,7 +19,7 @@ import java.math.BigInteger;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
-import org.fedoraproject.candlepin.cert.util.BouncyCastlePKI;
+import org.fedoraproject.candlepin.cert.BouncyCastlePKI;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
