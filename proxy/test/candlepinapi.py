@@ -162,7 +162,7 @@ class CandlePinApi:
         return self.rest.get(path)
 
     def getPools(self, consumer_uuid):
-        path = "/pools/consumer/%s" % consumer_uuid
+        path = "/pools?consumer=%s" % consumer_uuid
         return self.rest.get(path)
 
     def getEntitlements(self, consumer_uuid):

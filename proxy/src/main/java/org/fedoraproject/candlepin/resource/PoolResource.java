@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.List;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -84,10 +82,10 @@ public class PoolResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Pools list(@QueryParam("owner") Long ownerId,
-        @QueryParam("consumer") Long consumerId,
+        @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId) {
         Pools returnValue = new Pools();
-        if ((ownerId == null) && (productId == null) && (consumerId == null)) {
+        if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {
             returnValue.setPool(poolCurator.findAll());
         }
         else {
@@ -99,8 +97,10 @@ public class PoolResource {
                 }
             }
             Consumer c = null;
-            if (consumerId != null) {
-                c = consumerCurator.find(consumerId);
+            if (consumerUuid != null) {
+                c = consumerCurator.lookupByUuid(consumerUuid);
+                // TODO: doesn't look right, if we were given a consumer id,
+                // but that consumer doesn't exist, we should be throwing an error?
                 if (c == null) {
                     return returnValue;
                 }                
@@ -137,24 +137,6 @@ public class PoolResource {
 
         throw new NotFoundException("Entitlement Pool with ID '" + id +
             "' could not be found");
-    }
-
-    /**
-     * Returns all the entitlement pools available to a consumer.
-     * 
-     * @param consumerUuid
-     *            Consumer requesting available entitlement pools.
-     * @return all the entitlement pools for the consumer with the given uuid.
-     */
-    @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/consumer/{consumer_uuid}")
-    public List<Pool> listByConsumer(
-        @PathParam("consumer_uuid") String consumerUuid) {
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        List<Pool> eps = poolCurator
-            .listAvailableEntitlementPools(consumer);
-        return eps;
     }
 
 }
