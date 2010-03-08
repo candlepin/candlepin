@@ -9,7 +9,7 @@ cert = open('spacewalk-public.cert', 'rb').read()
 encoded_cert = base64.b64encode(cert)
 
 # GET see if there's a certificate
-response = urllib.urlopen('http://localhost:8080/candlepin/certificate')
+response = urllib.urlopen('http://localhost:8080/candlepin/certificates')
 rsp = response.read()
 print("get: %s" % rsp)
 
@@ -23,7 +23,7 @@ headers = {"Content-type": "application/json",
 
 conn = httplib.HTTPConnection("localhost", 8080)
 print("encoded cert: %s" % encoded_cert)
-conn.request("POST", '/candlepin/certificate/', json.dumps(encoded_cert), headers)
+conn.request("POST", '/candlepin/certificates/', json.dumps(encoded_cert), headers)
 response = conn.getresponse()
 print("Status: %d Response: %s" % (response.status, response.reason))
 rsp = response.read()
@@ -31,7 +31,7 @@ print("uploaded certificate: %s" % rsp)
 conn.close()
 #"""
 # GET see if there's a certificate
-response = urllib.urlopen('http://localhost:8080/candlepin/certificate')
+response = urllib.urlopen('http://localhost:8080/candlepin/certificates')
 rsp = response.read()
 print("------------")
 #print(rsp)
