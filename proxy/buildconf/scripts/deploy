@@ -48,6 +48,8 @@ fi
 
 buildr clean package test=no
 
+`dirname $0`/gen-certs
+
 sudo rm -rf $TC_HOME/webapps/candlepin*
 sudo cp target/candlepin-1.0.0.war $TC_HOME/webapps/candlepin.war
 $TC_CMD start
