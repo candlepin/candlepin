@@ -98,10 +98,12 @@ public class BouncyCastlePKI {
         certGen.addExtension(MiscObjectIdentifiers.netscapeCertType.toString(), 
                 false, certType);
         certGen.addExtension(X509Extensions.KeyUsage.toString(), false, keyUsage);
-        
-        for (X509ExtensionWrapper wrapper : extensions) {
-            certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
-                    wrapper.getAsn1Encodable());
+
+        if (extensions != null) {
+            for (X509ExtensionWrapper wrapper : extensions) {
+                certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
+                        wrapper.getAsn1Encodable());
+            }
         }
 
         // Generate the certificate
