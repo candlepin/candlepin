@@ -21,16 +21,21 @@ import java.util.Calendar;
 import java.util.Date;
 import org.fedoraproject.candlepin.cert.util.BouncyCastlePKI;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
 
     private BouncyCastlePKI pki;
-
+    private ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator;
+    
+    
     @Inject
-    public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki) {
+    public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki, ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator) {
         this.pki = pki;
+        this.consumerIdentityCertificateCurator = consumerIdentityCertificateCurator;
     }
 
     @Override
@@ -39,8 +44,12 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
             Date startDate = new Date();
             Date endDate = getFutureDate(1);
 
-            // TODO:  Come up with a scheme for generating these!
-            //        Just an arbitrary static number atm
+
+            ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator.find(consumer.getId());
+            
+            if (certificate != null) return certificate;
+            
+            
             BigInteger serialNumber = BigInteger.valueOf(36208234);
             X509Certificate x509cert = this.pki.createX509Certificate(consumer.getUuid(), null, startDate, endDate, serialNumber);
 
@@ -48,6 +57,8 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
             identityCert.setPem(x509cert.getEncoded());
             identityCert.setKey(x509cert.getPublicKey().getEncoded());
 
+            identityCert = consumerIdentityCertificateCurator.create(identityCert);
+            
             return identityCert;
         } catch (Exception e) {
             return null;

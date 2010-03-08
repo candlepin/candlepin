@@ -62,4 +62,9 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.id = id;
     }
 
+    
+    public void update(ConsumerIdentityCertificate other){
+        this.setKey(other.getKey());
+        this.setPem(other.getPem());
+    }
 }
