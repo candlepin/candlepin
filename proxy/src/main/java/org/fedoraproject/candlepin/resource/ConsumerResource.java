@@ -156,6 +156,10 @@ public class ConsumerResource {
             consumer = consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
 
             ConsumerIdentityCertificate idCert = identityCertService.generateIdentityCert(consumer);
+            log.debug("Generated identity cert: " + idCert);
+            if (idCert == null) {
+                throw new RuntimeException("Error generating identity certificate.");
+            }
             consumer.setIdCert(idCert);
 
             return consumer;

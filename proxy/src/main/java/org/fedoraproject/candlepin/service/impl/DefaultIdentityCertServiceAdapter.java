@@ -19,6 +19,8 @@ import java.math.BigInteger;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.cert.BouncyCastlePKI;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
@@ -27,6 +29,7 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
 
     private BouncyCastlePKI pki;
+    private static Logger log = Logger.getLogger(DefaultIdentityCertServiceAdapter.class);
 
     @Inject
     public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki) {
@@ -36,13 +39,15 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
     @Override
     public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer) {
         try {
+            log.debug("Generating identity cert for consumer: " + consumer.getUuid());
             Date startDate = new Date();
             Date endDate = getFutureDate(1);
 
             // TODO:  Come up with a scheme for generating these!
             //        Just an arbitrary static number atm
             BigInteger serialNumber = BigInteger.valueOf(36208234);
-            X509Certificate x509cert = this.pki.createX509Certificate(consumer.getUuid(), null, startDate, endDate, serialNumber);
+            X509Certificate x509cert = this.pki.createX509Certificate(consumer.getUuid(), 
+                null, startDate, endDate, serialNumber);
 
             ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
             identityCert.setPem(x509cert.getEncoded());
@@ -50,7 +55,7 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
 
             return identityCert;
         } catch (Exception e) {
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
