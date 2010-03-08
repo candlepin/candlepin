@@ -144,7 +144,7 @@ class CandlePinApi:
         return blob
 
     def unBindAll(self, consumer_uuid):
-        path = "/entitlements/consumer/%s" % consumer_uuid
+        path = "/consumers/%s/entitlements" % consumer_uuid
         blob = self.rest.delete(path)
         return blob
 

@@ -382,13 +382,7 @@ public class ConsumerResource {
      * @param productId Product identifying label.
      * @return Entitled object
      */
-//    @POST
-//    @Consumes({ MediaType.APPLICATION_JSON })
-//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    @Path("/{consumer_uuid}/entitlements")
-    public Entitlement entitleByProduct(
-        @PathParam("consumer_uuid") String consumerUuid,
-        @QueryParam("product") String productId) {
+    private Entitlement entitleByProduct(String consumerUuid, String productId) {
         
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
@@ -418,13 +412,7 @@ public class ConsumerResource {
      * @param registrationToken registration token.
      * @return token
      */
-//    @POST
-//    @Consumes({ MediaType.APPLICATION_JSON })
-//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    @Path("consumer/{consumer_uuid}/entitlements")
-    public Entitlement entitleToken(
-            @PathParam("consumer_uuid") String consumerUuid, 
-            @QueryParam("token") String registrationToken) {
+    private Entitlement entitleToken(String consumerUuid, String registrationToken) {
         
         //FIXME: this is just a stub, need SubscriptionService to look it up
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
@@ -507,5 +495,66 @@ public class ConsumerResource {
 
         return entitlementCurator.listByConsumer(consumer);
     }
+
+    /**
+     * Unbind entitlements by serial number, or unbind all.
+     *
+     * @param consumerUuid Unique id for the Consumer.
+     * @param serials comma seperated list of subscription
+     * numbers.
+     */
+    @DELETE
+    @Path("/{consumer_uuid}/entitlements")
+    public void unbindAllOrBySerialNumber(
+            @PathParam("consumer_uuid") String consumerUuid,
+            @QueryParam("serial") String serials) {
+
+        if (serials == null) {
+            //FIXME: just a stub, needs CertifcateService (and/or a
+            //CertificateCurator) to lookup by serialNumber
+            Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+
+            if (consumer == null) {
+                throw new NotFoundException(
+                        "Consumer with ID " + consumerUuid + " could not be found.");
+            }
+
+            for (Entitlement entitlement : entitlementCurator.listByConsumer(consumer)) {
+                entitler.revokeEntitlement(entitlement);
+            }
+
+            // Need to parse off the value of subscriptionNumberArgs, probably
+            // use comma separated see IntergerList in sparklines example in
+            // jersey examples find all entitlements for this consumer and
+            // subscription numbers delete all of those (and/or return them to
+            // entitlement pool)
+        }
+        else {
+            throw new RuntimeException("Unbind by serial number not yet supported.");
+        }
+
+    }
+
+    /**
+     * Remove an entitlement by ID.
+     *
+     * @param dbid the entitlement to delete.
+     */
+    @DELETE
+    @Path("/{consumer_uuid}/entitlements/{dbid}")
+    public void unbind(@PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("dbid") Long dbid) {
+
+        // TODO: Verify this consumer.
+
+        Entitlement toDelete = entitlementCurator.find(dbid);
+        if (toDelete != null) {
+            entitlementCurator.delete(toDelete);
+            return;
+        }
+        throw new NotFoundException(
+            "Entitlement with ID '" + dbid + "' could not be found");
+    }
+
 
 }

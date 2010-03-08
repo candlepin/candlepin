@@ -21,7 +21,6 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.cert.CertGenerator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
@@ -31,10 +30,8 @@ import org.apache.log4j.Logger;
 
 import java.util.List;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -81,26 +78,28 @@ public class EntitlementResource {
         }
     }
     
-    /**
-     *  Entitles the given Consumer with best fit Product.
-     *
-     *  @param consumerUuid Consumer identifier to be entitled
-     *  @return Entitlend object
-     */
-    @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}/")
-    public String entitle(@PathParam("consumer_uuid") String consumerUuid) {
-     
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        
-        // TODO: this is doing a NO-OP. Can we determine what products a consumer has
-        // installed or should this be the client tools responsibility?
-
-        // FIXME: this is just a hardcoded cert...
-        return CertGenerator.genCert().toString(); 
-    }
+    // Commenting this out, unused, questionable if this is even possible, more likely
+    // client tools would determine what product is installed. -- dgoodwin
+//    /**
+//     *  Entitles the given Consumer with best fit Product.
+//     *
+//     *  @param consumerUuid Consumer identifier to be entitled
+//     *  @return Entitlend object
+//     */
+//    @POST
+//    @Consumes({ MediaType.APPLICATION_JSON })
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    @Path("consumer/{consumer_uuid}/")
+//    public String entitle(@PathParam("consumer_uuid") String consumerUuid) {
+//
+//        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+//
+//        // TODO: this is doing a NO-OP. Can we determine what products a consumer has
+//        // installed or should this be the client tools responsibility?
+//
+//        // FIXME: this is just a hardcoded cert...
+//        return CertGenerator.genCert().toString();
+//    }
 
     /**
      * Check to see if a given Consumer is entitled to given Product
@@ -215,57 +214,14 @@ public class EntitlementResource {
     }
 
     /**
-     * Deletes all entitlements for the consumer whose id matches the given
-     * uuid.
-     * @param consumerUuid id of the consumer whose entitlements are to be
-     * deleted.
-     */
-    @DELETE
-    @Path("consumer/{consumer_uuid}")
-    public void deleteAllEntitlements(@PathParam("consumer_uuid") String consumerUuid) {
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-
-        if (consumer == null) {
-            throw new NotFoundException(
-                    "Consumer with ID " + consumerUuid + " could not be found.");
-        }
-
-        for (Entitlement entitlement : entitlementCurator.listByConsumer(consumer)) {
-            entitler.revokeEntitlement(entitlement);
-        }
-    }
-   
-    /**
-     * Removes the entitlements associated with the given serial number.
-     * @param consumerUuid Unique id for the Consumer.
-     * @param subscriptionNumberArgs comma seperated list of subscription
-     * numbers.
-     */
-    @DELETE
-    @Path("consumer/{consumer_uuid}/{subscription_numbers}")
-    public void deleteEntitlementsBySerialNumber(
-            @PathParam("consumer_uuid") String consumerUuid,
-            @PathParam("subscription_numbers") String subscriptionNumberArgs) {
-
-        //FIXME: just a stub, needs CertifcateService (and/or a
-        //CertificateCurator) to lookup by serialNumber
-        
-        
-        // Need to parse off the value of subscriptionNumberArgs, probably
-        // use comma seperated see IntergerList in sparklines example in
-        // jersey examples find all entitlements for this consumer and
-        // subscription numbers delete all of those (and/or return them to
-        // entitlement pool)
-        
-    }
-   
-    /**
-     * Removes the entitlement identified by the given dbid.
+     * Remove an entitlement by ID.
+     *
      * @param dbid the entitlement to delete.
      */
     @DELETE
-    @Path("{dbid}")
-    public void deleteEntitlement(@PathParam("dbid") Long dbid) {
+    @Path("/{dbid}")
+    public void unbind(@PathParam("dbid") Long dbid) {
+
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
             entitlementCurator.delete(toDelete);
@@ -274,5 +230,7 @@ public class EntitlementResource {
         throw new NotFoundException(
             "Entitlement with ID '" + dbid + "' could not be found");
     }
+
+
 
 }
