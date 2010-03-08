@@ -15,6 +15,7 @@ import java.security.cert.X509Certificate;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PasswordFinder;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 
 /**
  *  Responsible for reading SSL certificates from the file system.
@@ -39,7 +40,7 @@ public class CertificateReader {
      * @throws CertificateException
      */
     public X509Certificate getCACert() throws IOException, CertificateException {
-        String caCertFile = config.getString("candlepin.ca_cert");
+        String caCertFile = config.getString(ConfigProperties.CA_CERT);
 
         if (caCertFile != null) {
             InputStream inStream = new FileInputStream(caCertFile);
@@ -78,7 +79,7 @@ public class CertificateReader {
      * @return
      */
     private KeyPair getKeyPair() throws GeneralSecurityException {
-        String caKeyFile = config.getString("candlepin.ca_key");
+        String caKeyFile = config.getString(ConfigProperties.CA_KEY);
 
         if (caKeyFile != null) {
             try {
@@ -110,7 +111,7 @@ public class CertificateReader {
         private char[] caKeyPassword;
 
         private ConfigPasswordFinder() {
-            String password = config.getString("candlepin.ca_key_password");
+            String password = config.getString(ConfigProperties.CA_KEY_PASSWORD);
 
             if (password != null) {
                 caKeyPassword = password.toCharArray();

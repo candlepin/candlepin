@@ -28,7 +28,6 @@ public class Config {
     protected File CONFIG_FILE = new File(CONFIG_DIR, "candlepin.conf");
     protected static TreeMap<String, String> configuration = null;
 
-
     /**
      * Return configuration entry for the given prefix.
      * @param prefix prefix for the entry sought.
@@ -105,7 +104,11 @@ public class Config {
     }
 
     protected void initializeMap() {
-        configuration = new TreeMap<String, String>(loadProperties());
+        // start with the default values
+        configuration = new TreeMap<String, String>(ConfigProperties.defaultProperties);
+
+        // override with user-specified values
+        configuration.putAll(loadProperties());
     }
 
     protected Map<String, String> loadProperties() {
