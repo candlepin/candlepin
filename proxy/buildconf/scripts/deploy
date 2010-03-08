@@ -7,54 +7,97 @@ function evalrc ()
     fi
 }
 
+function gendb ()
+{
+    if [ "$GENDB" != "" ]; then
+        buildr candlepin:genschema
+        evalrc $? "schema generation failed"
+
+        dropdb -U candlepin candlepin
+        evalrc $? "dropdb failed"
+
+        createdb -U candlepin candlepin
+        evalrc $? "createdb failed"
+
+        psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
+        evalrc $? "schema creation failed"
+
+        psql -U candlepin < code/schema/quartz/tables_postgres.sql
+        evalrc $? "quartz schema failed"
+    fi
+}
+
+function deploy ()
+{
+    $SUDO cp target/candlepin-1.0.0.war $DEPLOY
+}
+
+function stopappserver ()
+{
+    # tc rpm /sbin/service tomcat6 stop
+    # tc opt $TC_HOME/bin/catalina.sh stop
+    # jboss opt $JBOSS_HOME/bin/shutdown.sh
+    $STOP
+}
+
+function isrpm ()
+{
+    echo $1 | grep "var/lib" > /dev/null
+    return $?
+}
+
+# Read in user defined variables
 if [ -f $HOME/.candlepinrc ] ; then
     source $HOME/.candlepinrc
 fi
 
-TC=tomcat6
-if [ -z $TC_HOME ]; then
-   TC_HOME=/var/lib/$TC
-fi
+if [ "$JBOSS_HOME" != "" ]; then
+    # we're using JBOSS AS
+    isrpm $JBOSS_HOME
 
-if [ -z $TC_CMD ]; then
-   TC_CMD="sudo /sbin/service $TC"
-fi
-
-rpm -q $TC > /dev/null
-if [ "$?" -ne 0 ]; then
-    TC=tomcat5
-    rpm -q $TC > /dev/null
     if [ "$?" -ne 0 ]; then
-       echo "DEPLOYMENT FAILED: you don't have tomcat installed"
-       exit 1
+        START="$JBOSS_HOME/bin/run.sh 2>&1 > console.log &"
+        STOP="$JBOSS_HOME/bin/shutdown.sh --shutdown"
+        DEPLOY="$JBOSS_HOME/server/default/deploy/"
+    else
+        SUDO="sudo"
+        START="sudo /sbin/service jbossas start"
+        STOP="sudo /sbin/service jbossas stop"
+        DEPLOY="$JBOSS_HOME/server/default/deploy/"
+    fi
+else
+    # use tomcat 6, if not specified
+    TC=tomcat6
+    if [ -z $TC_HOME ]; then
+        TC_HOME=/var/lib/$TC
+    fi
+
+    isrpm $TC_HOME
+
+    if [ "$?" -ne 0 ]; then
+        START="$TC_HOME/bin/catalina.sh start"
+        STOP="$TC_HOME/bin/catalina.sh stop"
+        DEPLOY="$TC_HOME/webapps/candlepin.war"
+    else
+        SUDO="sudo"
+        START="sudo /sbin/service $TC start"
+        STOP="sudo /sbin/service $TC stop"
+        DEPLOY="$TC_HOME/webapps/candlepin.war"
     fi
 fi
 
-$TC_CMD stop
+# stop the appserver
+eval $STOP
 
 # generate the postgresql DB
-if [ "$GENDB" != "" ]; then
-    buildr candlepin:genschema
-    evalrc $? "schema generation failed"
-
-    dropdb -U candlepin candlepin
-    evalrc $? "dropdb failed"
-
-    createdb -U candlepin candlepin
-    evalrc $? "createdb failed"
-
-    psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
-    evalrc $? "schema creation failed"
-
-    psql -U candlepin < code/schema/quartz/tables_postgres.sql
-    evalrc $? "quartz schema failed"
-fi
+gendb
 
 buildr clean package test=no
 
-sudo rm -rf $TC_HOME/webapps/candlepin*
-sudo cp target/candlepin-1.0.0.war $TC_HOME/webapps/candlepin.war
-$TC_CMD start
+# deploy the webapp
+deploy
+
+eval $START
 
 sleep 10
 echo "Initializing Candlepin..."
