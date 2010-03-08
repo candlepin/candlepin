@@ -177,7 +177,6 @@ public class EntitlementResource {
     // EntitlementLib.UnentitleProduct(Consumer, Entitlement) 
     
    
-    // TODO: Change to query param
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Entitlement> listAllForConsumer(
