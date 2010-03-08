@@ -38,6 +38,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 
@@ -177,28 +178,23 @@ public class EntitlementResource {
     // EntitlementLib.UnentitleProduct(Consumer, Entitlement) 
     
    
-    /**
-     * Return list of Entitlements
-     * @return list of Entitlements
-     */
-    @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public List<Entitlement> list() {
-        return entitlementCurator.findAll();
-    }
-   
     // TODO: Change to query param
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("consumer/{consumer_uuid}")
     public List<Entitlement> listAllForConsumer(
-        @PathParam("consumer_uuid") String consumerUuid) {
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
+        @QueryParam("consumer") String consumerUuid) {
+
+        if (consumerUuid != null) {
+
+            Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+            if (consumer == null) {
+                throw new BadRequestException("No such consumer: " + consumerUuid);
+            }
+
+            return entitlementCurator.listByConsumer(consumer);
         }
 
-        return entitlementCurator.listByConsumer(consumer);
+        return entitlementCurator.findAll();
     }
 
     /**
