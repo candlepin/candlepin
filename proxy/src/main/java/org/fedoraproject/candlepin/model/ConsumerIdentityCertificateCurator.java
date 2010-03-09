@@ -82,12 +82,11 @@ public class ConsumerIdentityCertificateCurator extends
     }
  
     public ConsumerIdentityCertificate getCert(Consumer consumer) {
-        ClientCertificateStatus clientCertificateStatus = certServiceAdapter.generateIdentityCert(consumer);
-        Bundle bundle = clientCertificateStatus.getClientCertificate().getBundle();
+        ClientCertificate clientCertificate = certServiceAdapter.generateIdentityCert(consumer);
         ConsumerIdentityCertificate consumerIdentityCert = new ConsumerIdentityCertificate();
-        consumerIdentityCert.setPem(bundle.getEntitlementCert());
-        consumerIdentityCert.setKey(bundle.getPrivateKey());
-        consumerIdentityCert.setId(clientCertificateStatus.getClientCertificate().getId());
+        consumerIdentityCert.setPem(clientCertificate.getCert());
+        consumerIdentityCert.setKey(clientCertificate.getKey());
+        consumerIdentityCert.setId(Long.valueOf(0));
         return consumerIdentityCert;
     }
 }

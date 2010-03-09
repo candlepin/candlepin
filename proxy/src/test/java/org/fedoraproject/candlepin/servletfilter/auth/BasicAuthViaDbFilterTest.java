@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 
 import org.fedoraproject.candlepin.config.TestingConfiguration;
+import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaDbFilter;
 import org.junit.After;
 import org.junit.Before;
 
