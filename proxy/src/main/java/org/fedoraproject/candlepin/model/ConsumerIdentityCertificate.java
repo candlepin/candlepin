@@ -17,7 +17,11 @@ package org.fedoraproject.candlepin.model;
 
 import java.math.BigInteger;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -32,14 +36,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_identity_certificate")
-@SequenceGenerator(name = "seq_consumer_identity_certificate", sequenceName = "seq_consumer_identity_certificate", allocationSize = 1)
+@Table(name = "cp_consumer_idcertificate")
+@SequenceGenerator(name = "seq_consumer_idcert", sequenceName = "seq_consumer_idcert", allocationSize = 1)
 public class ConsumerIdentityCertificate implements Persisted {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_idcert")
     private Long id;
     
+    @Column(nullable = false)
     private byte[] key;
+
+    @Column(nullable = false)
     private byte[] pem;
+    
+    @Column(nullable = false)
     private BigInteger serialNumber;
     
     public BigInteger getSerialNumber() {

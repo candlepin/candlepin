@@ -59,10 +59,9 @@ public class DefaultIdentityCertServiceAdapter implements
 
             if (certificate != null)
                 return certificate;
-            final List<X509ExtensionWrapper> extensions = Collections
-                .emptyList();
+            final List<X509ExtensionWrapper> extensions = null;//Collections                .emptyList();
 
-            BigInteger serialNumber = BigInteger.valueOf(random.nextLong());
+            BigInteger serialNumber = BigInteger.valueOf(random.nextInt());
             while (consumerIdentityCertificateCurator
                 .lookupBySerialNumber(serialNumber) != null) {
                 serialNumber = BigInteger.valueOf(random.nextLong());
