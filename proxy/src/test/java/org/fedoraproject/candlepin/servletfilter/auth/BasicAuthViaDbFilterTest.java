@@ -2,6 +2,7 @@ package org.fedoraproject.candlepin.servletfilter.auth;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -14,9 +15,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.fedoraproject.candlepin.config.TestingConfiguration;
-import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaDbFilter;
 import org.junit.After;
 import org.junit.Before;
+
+import com.sun.jersey.core.util.Base64;
+import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaDbFilter;
+import org.junit.Test;
 
 public class BasicAuthViaDbFilterTest {
 
@@ -60,20 +64,18 @@ public class BasicAuthViaDbFilterTest {
                 stmnt.close();
         }
     }
-/*    
+
     private String encodeUserPass(String username, String password) {
         String decoded = username + ":" + password;
         byte[] encoded = Base64.encode(decoded);
         
         return new String(encoded);
     }
-  */
     
     /**
      * Clean use case. Should not throw an exception
      * @throws Exception
      */
-/*
     @Test
     public void testValidUser() throws Exception {
         // return the correct kind of auth
@@ -125,6 +127,5 @@ public class BasicAuthViaDbFilterTest {
         // regular exceptions should return a 503
         verify(defaultResponse).setStatus(HttpServletResponse.SC_BAD_GATEWAY);
     }
- */
     
 }
