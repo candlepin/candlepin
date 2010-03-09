@@ -34,6 +34,9 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 import com.google.inject.Inject;
 
+/**
+ * DefaultIdentityCertServiceAdapter
+ */
 public class DefaultIdentityCertServiceAdapter implements
     IdentityCertServiceAdapter {
     private BouncyCastlePKI pki;
@@ -41,7 +44,7 @@ public class DefaultIdentityCertServiceAdapter implements
         .getLogger(DefaultIdentityCertServiceAdapter.class);
     private ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator;
     // Seeded with this(System.currentTimeMillis()
-    Random random = new Random();
+    private Random random = new Random();
 
     @Inject
     public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki,
@@ -51,37 +54,37 @@ public class DefaultIdentityCertServiceAdapter implements
     }
 
     @Override
-    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer) throws GeneralSecurityException, IOException {
-            log.debug("Generating identity cert for consumer: " +
-                consumer.getUuid());
-            Date startDate = new Date();
-            Date endDate = getFutureDate(1);
+    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer)
+        throws GeneralSecurityException, IOException {
+        log.debug("Generating identity cert for consumer: " +
+            consumer.getUuid());
+        Date startDate = new Date();
+        Date endDate = getFutureDate(1);
 
-            ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator
-                .find(consumer.getId());
+        ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator
+            .find(consumer.getId());
 
-            if (certificate != null)
-                return certificate;
-            final List<X509ExtensionWrapper> extensions = Collections
-                .emptyList();
-            BigInteger serialNumber = BigInteger.valueOf(random.nextInt(1000000));
-            while (consumerIdentityCertificateCurator
-                .lookupBySerialNumber(serialNumber) != null) {
-                serialNumber = BigInteger.valueOf(random.nextLong());
-            }
+        if (certificate != null) {
+            return certificate;
+        }
+        final List<X509ExtensionWrapper> extensions = Collections.emptyList();
+        BigInteger serialNumber = BigInteger.valueOf(random.nextInt(1000000));
+        while (consumerIdentityCertificateCurator
+            .lookupBySerialNumber(serialNumber) != null) {
+            serialNumber = BigInteger.valueOf(random.nextLong());
+        }
 
-            X509Certificate x509cert = this.pki.createX509Certificate(consumer
-                .getUuid(), extensions, startDate, endDate, serialNumber);
+        X509Certificate x509cert = this.pki.createX509Certificate(consumer
+            .getUuid(), extensions, startDate, endDate, serialNumber);
 
-            ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
-            identityCert.setPem(x509cert.getEncoded());
-            identityCert.setKey(x509cert.getPublicKey().getEncoded());
-            identityCert.setSerialNumber(serialNumber);
+        ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
+        identityCert.setPem(x509cert.getEncoded());
+        identityCert.setKey(x509cert.getPublicKey().getEncoded());
+        identityCert.setSerialNumber(serialNumber);
 
-            identityCert = consumerIdentityCertificateCurator
-                .create(identityCert);
+        identityCert = consumerIdentityCertificateCurator.create(identityCert);
 
-            return identityCert;
+        return identityCert;
     }
 
     private Date getFutureDate(int years) {

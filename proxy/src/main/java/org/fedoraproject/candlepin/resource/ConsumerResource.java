@@ -81,12 +81,19 @@ public class ConsumerResource {
     private String username;
 
     /**
+     * 
      * @param ownerCurator interact with owner
      * @param consumerCurator interact with consumer
-     * @param consumerTypeCurator interact wtih consumerType
-     * @param consumerIdCertCurator interact wtih consumerIdCert
+     * @param consumerTypeCurator interact with consumerType
+     * @param productAdapter
+     * @param entitler
+     * @param subAdapter
+     * @param epCurator
+     * @param entitlementCurator
+     * @param identityCertService
      * @param request servlet request
      */
+     
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
@@ -150,7 +157,7 @@ public class ConsumerResource {
      * Create a Consumer
      * @param in Consumer metadata encapsulated in a ConsumerInfo.
      * @return newly created Consumer
-     * 
+     * @throws BadRequestException generic exception type for web services
      *  We are calling this "registerConsumer" in the api discussions
      */
     @POST

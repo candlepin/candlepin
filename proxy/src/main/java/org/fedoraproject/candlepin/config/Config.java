@@ -105,7 +105,7 @@ public class Config {
 
     protected void initializeMap() {
         // start with the default values
-        configuration = new TreeMap<String, String>(ConfigProperties.defaultProperties);
+        configuration = new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
 
         // override with user-specified values
         configuration.putAll(loadProperties());

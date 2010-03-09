@@ -36,9 +36,9 @@ public class ConsumerIdentityCertificateCurator extends
     }
 
     /**
-     * @param updatedConsumer
+     * @param updated
      *            updated Consumer values.
-     * @return Updated consumers
+     * @return ConsumerIdentityCertificate that has been updated
      */
     @Transactional
     public ConsumerIdentityCertificate update(
@@ -53,14 +53,14 @@ public class ConsumerIdentityCertificateCurator extends
     }
 
     /**
-     * @param consumers
-     *            consumers to update
-     * @return updated consumers
+     * @param consumerIdentityCertificates
+     * @return updated certs
      */
     @Transactional
     public Set<ConsumerIdentityCertificate> bulkUpdate(
         Set<ConsumerIdentityCertificate> consumerIdentityCertificates) {
-        Set<ConsumerIdentityCertificate> toReturn = new HashSet<ConsumerIdentityCertificate>();
+        Set<ConsumerIdentityCertificate> toReturn = 
+            new HashSet<ConsumerIdentityCertificate>();
         for (ConsumerIdentityCertificate toUpdate : consumerIdentityCertificates) {
             toReturn.add(update(toUpdate));
         }

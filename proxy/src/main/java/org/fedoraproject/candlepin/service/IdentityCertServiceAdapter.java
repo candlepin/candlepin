@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.service;
 
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
@@ -27,12 +26,18 @@ import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 public interface IdentityCertServiceAdapter {
 
     /**
-     * Generate an identity certificate, used to verify the identity of the consumer during
-     * all future communication between Candlepin and the consumer.
-     * @param consumer Consumer.
+     * Generate an identity certificate, used to verify the identity of the
+     * consumer during all future communication between Candlepin and the
+     * consumer.
+     * 
+     * @param consumer
+     *            Consumer.
      * @return consumer's identity certificate.
-     * @throws IOException 
-     * @throws GeneralSecurityException 
+     * @throws IOException
+     *             if there is a file system problem
+     * @throws GeneralSecurityException
+     *             if there is a violation of policy
      */
-    ConsumerIdentityCertificate generateIdentityCert(Consumer consumer) throws GeneralSecurityException, IOException;
+    ConsumerIdentityCertificate generateIdentityCert(Consumer consumer)
+        throws GeneralSecurityException, IOException;
 }

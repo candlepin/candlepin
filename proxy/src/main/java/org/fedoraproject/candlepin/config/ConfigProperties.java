@@ -12,6 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.fedoraproject.candlepin.config;
 
 import java.util.HashMap;
@@ -22,18 +23,19 @@ import java.util.Map;
  * Also holds static keys for config lookup.
  */
 public class ConfigProperties {
+    private ConfigProperties() {
+    }
 
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
-    static Map<String, String> defaultProperties;
-
-    static {
-        defaultProperties = new HashMap<String, String>();
-        
-        defaultProperties.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
-        defaultProperties.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
-    }
+    public static final Map<String, String> DEFAULT_PROPERTIES = 
+        new HashMap<String, String>() {
+            private static final long serialVersionUID = 1L;
+            {
+                this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
+                this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
+            };
+        };
 }
-

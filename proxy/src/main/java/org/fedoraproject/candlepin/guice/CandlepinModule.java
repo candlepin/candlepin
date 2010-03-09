@@ -51,14 +51,14 @@ import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapte
 public class CandlepinModule extends AbstractModule {
 
     @Override
-    public void configure() {        
+    public void configure() {
         bind(JPAInitializer.class).asEagerSingleton();
-        
-        bind(Properties.class)
-            .annotatedWith(JpaUnit.class)
-            .toInstance(new Config().jpaConfiguration()); 
 
-        // We default to test persistence unit (HSQL), /etc/candlepin/candlepin.conf
+        bind(Properties.class).annotatedWith(JpaUnit.class).toInstance(
+            new Config().jpaConfiguration());
+
+        // We default to test persistence unit (HSQL),
+        // /etc/candlepin/candlepin.conf
         // will override:
         bindConstant().annotatedWith(JpaUnit.class).to("test");
 
@@ -68,7 +68,8 @@ public class CandlepinModule extends AbstractModule {
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
-        bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);         
+        bind(ProductServiceAdapter.class)
+            .to(DefaultProductServiceAdapter.class);
         bind(ProductResource.class);
         bind(TestResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
@@ -78,8 +79,11 @@ public class CandlepinModule extends AbstractModule {
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
         bind(StatusResource.class);
-        bind(SubscriptionServiceAdapter.class).to(DefaultSubscriptionServiceAdapter.class);
-        bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
-        bind(EntitlementCertServiceAdapter.class).to(DefaultEntitlementCertServiceAdapter.class);
+        bind(SubscriptionServiceAdapter.class).to(
+            DefaultSubscriptionServiceAdapter.class);
+        bind(IdentityCertServiceAdapter.class).to(
+            DefaultIdentityCertServiceAdapter.class);
+        bind(EntitlementCertServiceAdapter.class).to(
+            DefaultEntitlementCertServiceAdapter.class);
     }
 }

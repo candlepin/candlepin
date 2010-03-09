@@ -37,7 +37,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_idcertificate")
-@SequenceGenerator(name = "seq_consumer_idcert", sequenceName = "seq_consumer_idcert", allocationSize = 1)
+@SequenceGenerator(name = "seq_consumer_idcert", 
+    sequenceName = "seq_consumer_idcert", allocationSize = 1)
 public class ConsumerIdentityCertificate implements Persisted {
 
     @Id
@@ -90,7 +91,7 @@ public class ConsumerIdentityCertificate implements Persisted {
     }
 
     
-    public void update(ConsumerIdentityCertificate other){
+    public void update(ConsumerIdentityCertificate other) {
         this.setKey(other.getKey());
         this.setPem(other.getPem());
         this.setSerialNumber(other.getSerialNumber());
