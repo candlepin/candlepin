@@ -19,14 +19,12 @@ import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.cert.BouncyCastlePKI;
 import java.util.List;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.cert.util.BouncyCastlePKI;
-import org.fedoraproject.candlepin.cert.util.X509ExtensionWrapper;
+import org.fedoraproject.candlepin.cert.BouncyCastlePKI;
+import org.fedoraproject.candlepin.cert.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
@@ -36,10 +34,9 @@ import com.google.inject.Inject;
 
 public class DefaultIdentityCertServiceAdapter implements
     IdentityCertServiceAdapter {
+    private BouncyCastlePKI pki;
     private static Logger log = Logger
         .getLogger(DefaultIdentityCertServiceAdapter.class);
-    private BouncyCastlePKI pki;
-    private static Logger log = Logger.getLogger(DefaultIdentityCertServiceAdapter.class);
     private ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator;
     // Seeded with this(System.currentTimeMillis()
     Random random = new Random();
@@ -54,7 +51,8 @@ public class DefaultIdentityCertServiceAdapter implements
     @Override
     public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer) {
         try {
-            log.debug("Generating identity cert for consumer: " + consumer.getUuid());
+            log.debug("Generating identity cert for consumer: " +
+                consumer.getUuid());
             Date startDate = new Date();
             Date endDate = getFutureDate(1);
 
@@ -63,9 +61,9 @@ public class DefaultIdentityCertServiceAdapter implements
 
             if (certificate != null)
                 return certificate;
-            final List<X509ExtensionWrapper> extensions = null;//Collections                .emptyList();
-
-            BigInteger serialNumber = BigInteger.valueOf(random.nextInt());
+            final List<X509ExtensionWrapper> extensions = Collections
+                .emptyList();
+            BigInteger serialNumber = BigInteger.valueOf(random.nextInt(1000000));
             while (consumerIdentityCertificateCurator
                 .lookupBySerialNumber(serialNumber) != null) {
                 serialNumber = BigInteger.valueOf(random.nextLong());
@@ -83,7 +81,8 @@ public class DefaultIdentityCertServiceAdapter implements
                 .create(identityCert);
 
             return identityCert;
-        }catch (Exception e) {
+        }
+        catch (Exception e) {
             String msg = e.getMessage();
             log.error(msg, e);
             return null;
