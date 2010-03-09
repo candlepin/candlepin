@@ -15,6 +15,15 @@
 
 package org.fedoraproject.candlepin.model;
 
+import java.math.BigInteger;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -26,14 +35,32 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
+@Entity
+@Table(name = "cp_consumer_idcertificate")
+@SequenceGenerator(name = "seq_consumer_idcert", sequenceName = "seq_consumer_idcert", allocationSize = 1)
 public class ConsumerIdentityCertificate implements Persisted {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_idcert")
     private Long id;
     
+    @Column(nullable = false)
     private byte[] key;
-//    private String pem;
+
+    @Column(nullable = false)
     private byte[] pem;
     
+    @Column(nullable = false)
+    private BigInteger serialNumber;
+    
+    public BigInteger getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(BigInteger serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
     public byte[] getKey() {
         return key;
     }
@@ -62,4 +89,10 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.id = id;
     }
 
+    
+    public void update(ConsumerIdentityCertificate other){
+        this.setKey(other.getKey());
+        this.setPem(other.getPem());
+        this.setSerialNumber(other.getSerialNumber());
+    }
 }

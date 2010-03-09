@@ -14,26 +14,41 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import com.google.inject.Inject;
 import java.math.BigInteger;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
-
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.cert.BouncyCastlePKI;
+import java.util.List;
+import java.util.Random;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.cert.util.BouncyCastlePKI;
+import org.fedoraproject.candlepin.cert.util.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
-public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
+import com.google.inject.Inject;
 
+public class DefaultIdentityCertServiceAdapter implements
+    IdentityCertServiceAdapter {
+    private static Logger log = Logger
+        .getLogger(DefaultIdentityCertServiceAdapter.class);
     private BouncyCastlePKI pki;
     private static Logger log = Logger.getLogger(DefaultIdentityCertServiceAdapter.class);
+    private ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator;
+    // Seeded with this(System.currentTimeMillis()
+    Random random = new Random();
 
     @Inject
-    public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki) {
+    public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki,
+        ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator) {
         this.pki = pki;
+        this.consumerIdentityCertificateCurator = consumerIdentityCertificateCurator;
     }
 
     @Override
@@ -43,19 +58,35 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
             Date startDate = new Date();
             Date endDate = getFutureDate(1);
 
-            // TODO:  Come up with a scheme for generating these!
-            //        Just an arbitrary static number atm
-            BigInteger serialNumber = BigInteger.valueOf(36208234);
-            X509Certificate x509cert = this.pki.createX509Certificate(consumer.getUuid(), 
-                null, startDate, endDate, serialNumber);
+            ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator
+                .find(consumer.getId());
+
+            if (certificate != null)
+                return certificate;
+            final List<X509ExtensionWrapper> extensions = null;//Collections                .emptyList();
+
+            BigInteger serialNumber = BigInteger.valueOf(random.nextInt());
+            while (consumerIdentityCertificateCurator
+                .lookupBySerialNumber(serialNumber) != null) {
+                serialNumber = BigInteger.valueOf(random.nextLong());
+            }
+
+            X509Certificate x509cert = this.pki.createX509Certificate(consumer
+                .getUuid(), extensions, startDate, endDate, serialNumber);
 
             ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
             identityCert.setPem(x509cert.getEncoded());
             identityCert.setKey(x509cert.getPublicKey().getEncoded());
+            identityCert.setSerialNumber(serialNumber);
+
+            identityCert = consumerIdentityCertificateCurator
+                .create(identityCert);
 
             return identityCert;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        }catch (Exception e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            return null;
         }
     }
 
