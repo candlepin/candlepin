@@ -59,7 +59,6 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void ownerCreated() {
         certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
         Owner owner = ownerCurator.lookupByName("Spacewalk Public Cert");
-//        certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
         assertNotNull(owner);
     }
     
