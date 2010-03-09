@@ -29,6 +29,20 @@ class EntitlementTests(CandlepinTests):
 
         # Request a virtualization_host entitlement:
         result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+        print result
+        self.assertTrue('id' in result)
+        self.assertEquals(virt_host, result['pool']['productId'])
+
+        # Now list consumer's entitlements:
+        result = self.cp.getEntitlements(self.uuid)
+        print result
+
+    def test_bind_by_product(self):
+        # Request a monitoring entitlement:
+        result = self.cp.bindProduct(self.uuid, 'monitoring')
+        print result
+        self.assertTrue('id' in result)
+        self.assertEquals('monitoring', result['pool']['productId'])
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(self.uuid)
