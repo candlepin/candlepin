@@ -15,6 +15,11 @@
 
 package org.fedoraproject.candlepin.model;
 
+import java.math.BigInteger;
+
+import javax.persistence.Entity;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -26,14 +31,25 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
+@Entity
+@Table(name = "cp_consumer_identity_certificate")
+@SequenceGenerator(name = "seq_consumer_identity_certificate", sequenceName = "seq_consumer_identity_certificate", allocationSize = 1)
 public class ConsumerIdentityCertificate implements Persisted {
 
     private Long id;
     
     private byte[] key;
-//    private String pem;
     private byte[] pem;
+    private BigInteger serialNumber;
     
+    public BigInteger getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(BigInteger serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
     public byte[] getKey() {
         return key;
     }
@@ -66,5 +82,6 @@ public class ConsumerIdentityCertificate implements Persisted {
     public void update(ConsumerIdentityCertificate other){
         this.setKey(other.getKey());
         this.setPem(other.getPem());
+        this.setSerialNumber(other.getSerialNumber());
     }
 }

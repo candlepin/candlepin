@@ -20,6 +20,7 @@ import com.wideplay.warp.persist.Transactional;
 import org.apache.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
 
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,13 +30,12 @@ import java.util.Set;
 public class ConsumerIdentityCertificateCurator extends
     AbstractHibernateCurator<ConsumerIdentityCertificate> {
 
-//    private static Logger log = Logger
-//        .getLogger(ConsumerIdentityCertificateCurator.class);
+    // private static Logger log = Logger
+    // .getLogger(ConsumerIdentityCertificateCurator.class);
 
     protected ConsumerIdentityCertificateCurator() {
         super(ConsumerIdentityCertificate.class);
     }
-
 
     /**
      * @param updatedConsumer
@@ -45,16 +45,12 @@ public class ConsumerIdentityCertificateCurator extends
     @Transactional
     public ConsumerIdentityCertificate update(
         ConsumerIdentityCertificate updated) {
-        ConsumerIdentityCertificate existing = find(updated
-            .getId());
+        ConsumerIdentityCertificate existing = find(updated.getId());
         if (existing == null) {
             return create(updated);
         }
-
         existing.update(updated);
-               
         save(existing);
-
         return existing;
     }
 
@@ -73,4 +69,10 @@ public class ConsumerIdentityCertificateCurator extends
         return toReturn;
     }
 
+    public ConsumerIdentityCertificate lookupBySerialNumber(
+        BigInteger serialNumber) {
+        return (ConsumerIdentityCertificate) currentSession().createCriteria(
+            ConsumerIdentityCertificate.class).add(
+            Restrictions.eq("serialNumber", serialNumber)).uniqueResult();
+    }
 }

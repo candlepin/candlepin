@@ -14,26 +14,36 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import com.google.inject.Inject;
 import java.math.BigInteger;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Random;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.cert.util.BouncyCastlePKI;
+import org.fedoraproject.candlepin.cert.util.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
-public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
+import com.google.inject.Inject;
 
+public class DefaultIdentityCertServiceAdapter implements
+    IdentityCertServiceAdapter {
+    private static Logger log = Logger
+        .getLogger(DefaultIdentityCertServiceAdapter.class);
     private BouncyCastlePKI pki;
     private ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator;
-    
-    
+    // Seeded with this(System.currentTimeMillis()
+    Random random = new Random();
+
     @Inject
-    public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki, ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator) {
+    public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki,
+        ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator) {
         this.pki = pki;
         this.consumerIdentityCertificateCurator = consumerIdentityCertificateCurator;
     }
@@ -44,23 +54,36 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
             Date startDate = new Date();
             Date endDate = getFutureDate(1);
 
+            ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator
+                .find(consumer.getId());
 
-            ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator.find(consumer.getId());
-            
-            if (certificate != null) return certificate;
-            
-            
-            BigInteger serialNumber = BigInteger.valueOf(36208234);
-            X509Certificate x509cert = this.pki.createX509Certificate(consumer.getUuid(), null, startDate, endDate, serialNumber);
+            if (certificate != null)
+                return certificate;
+            final List<X509ExtensionWrapper> extensions = Collections
+                .emptyList();
+
+            BigInteger serialNumber = BigInteger.valueOf(random.nextLong());
+            while (consumerIdentityCertificateCurator
+                .lookupBySerialNumber(serialNumber) != null) {
+                serialNumber = BigInteger.valueOf(random.nextLong());
+            }
+
+            X509Certificate x509cert = this.pki.createX509Certificate(consumer
+                .getUuid(), extensions, startDate, endDate, serialNumber);
 
             ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
             identityCert.setPem(x509cert.getEncoded());
             identityCert.setKey(x509cert.getPublicKey().getEncoded());
+            identityCert.setSerialNumber(serialNumber);
 
-            identityCert = consumerIdentityCertificateCurator.create(identityCert);
-            
+            identityCert = consumerIdentityCertificateCurator
+                .create(identityCert);
+
             return identityCert;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
             return null;
         }
     }
