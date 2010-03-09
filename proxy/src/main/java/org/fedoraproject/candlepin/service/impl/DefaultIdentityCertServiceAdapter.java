@@ -14,7 +14,9 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Collections;
@@ -49,8 +51,7 @@ public class DefaultIdentityCertServiceAdapter implements
     }
 
     @Override
-    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer) {
-        try {
+    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer) throws GeneralSecurityException, IOException {
             log.debug("Generating identity cert for consumer: " +
                 consumer.getUuid());
             Date startDate = new Date();
@@ -81,12 +82,6 @@ public class DefaultIdentityCertServiceAdapter implements
                 .create(identityCert);
 
             return identityCert;
-        }
-        catch (Exception e) {
-            String msg = e.getMessage();
-            log.error(msg, e);
-            return null;
-        }
     }
 
     private Date getFutureDate(int years) {

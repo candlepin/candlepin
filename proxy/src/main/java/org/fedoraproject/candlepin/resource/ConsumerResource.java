@@ -157,7 +157,7 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(Consumer in) {
+    public Consumer create(Consumer in) throws BadRequestException {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
         Consumer consumer = new Consumer();
@@ -187,9 +187,8 @@ public class ConsumerResource {
 
             return consumer;
         }
-        catch (RuntimeException e) {
-            log.error("Problem creating consumer!", e);
-
+        catch (Exception e) {
+            log.error("Problem creating consumer:", e);
             throw new BadRequestException(e.getMessage());
         }
     }
