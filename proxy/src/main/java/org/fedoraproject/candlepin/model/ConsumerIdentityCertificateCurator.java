@@ -17,9 +17,12 @@ package org.fedoraproject.candlepin.model;
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
-import org.fedoraproject.candlepin.service.CertificateServiceAdapter;
+
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
+import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
 
@@ -31,15 +34,14 @@ import com.wideplay.warp.persist.Transactional;
 public class ConsumerIdentityCertificateCurator extends
     AbstractHibernateCurator<ConsumerIdentityCertificate> {
 
-    protected CertificateServiceAdapter certServiceAdapter;
+    protected IdentityCertServiceAdapter certServiceAdapter;
     
     /**
      * default constructor
      */
     @Inject
-    public ConsumerIdentityCertificateCurator(CertificateServiceAdapter certServiceAdapter) {
+    public ConsumerIdentityCertificateCurator() {
         super(ConsumerIdentityCertificate.class);
-        this.certServiceAdapter = certServiceAdapter;
     }
 
     /**
@@ -79,14 +81,5 @@ public class ConsumerIdentityCertificateCurator extends
         return (ConsumerIdentityCertificate) currentSession().createCriteria(
             ConsumerIdentityCertificate.class).add(
             Restrictions.eq("serialNumber", serialNumber)).uniqueResult();
-    }
- 
-    public ConsumerIdentityCertificate getCert(Consumer consumer) {
-        ClientCertificate clientCertificate = certServiceAdapter.generateIdentityCert(consumer);
-        ConsumerIdentityCertificate consumerIdentityCert = new ConsumerIdentityCertificate();
-        consumerIdentityCert.setPem(clientCertificate.getCert());
-        consumerIdentityCert.setKey(clientCertificate.getKey());
-        consumerIdentityCert.setId(Long.valueOf(0));
-        return consumerIdentityCert;
     }
 }

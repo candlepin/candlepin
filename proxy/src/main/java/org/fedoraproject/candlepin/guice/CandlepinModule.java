@@ -48,6 +48,7 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 
 /**
  * CandlepinProductionConfiguration

@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import com.google.inject.Inject;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -36,6 +35,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.resource.ForbiddenException;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.codec.binary.Base64;
 
@@ -53,6 +53,7 @@ public class BasicAuthViaDbFilter implements Filter {
     @Inject
     public BasicAuthViaDbFilter(Config config) {
         this.config = config;
+    }
     
     public BasicAuthViaDbFilter() {
         config = new Config();

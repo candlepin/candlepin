@@ -36,9 +36,11 @@ import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.CertificateServiceAdapter;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.DefaultCertificateServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubIdentityCertServiceAdapter;
@@ -75,7 +77,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(IdentityCertServiceAdapter.class).to(
             StubIdentityCertServiceAdapter.class);
         bind(Config.class);
-        bind(CertificateServiceAdapter.class).to(DefaultCertificateServiceAdapter.class);
+        bind(EntitlementCertServiceAdapter.class).to(DefaultEntitlementCertServiceAdapter.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
