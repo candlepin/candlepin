@@ -94,9 +94,10 @@ define "candlepin" do
   # javadoc projects
   javadoc
 
-  package(:jar)
-
-  package(:war).libs << HSQLDB
+  package(:jar, :id=>'candlepin-model').clean.include 'target/classes/org/fedoraproject/candlepin/model', :path=>"org/fedoraproject/candlepin/"
+  package(:war, :id=>"candlepin-basic").path("WEB-INF/classes").exclude(_(:target, :classes, "org/fedoraproject/candlepin/model"))
+  package(:war, :id=>"candlepin-basic").libs << HSQLDB
+  package(:war, :id=>"candlepin").libs << HSQLDB
   
   # to use: buildr candlepin:genschema
   task :genschema do
