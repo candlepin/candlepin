@@ -94,6 +94,9 @@ gendb
 
 buildr clean package test=no
 
+# generate SSL certs if they are needed
+`dirname $0`/gen-certs
+
 # deploy the webapp
 deploy
 

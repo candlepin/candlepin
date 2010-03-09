@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -47,8 +48,11 @@ public class BasicAuthViaDbFilter implements Filter {
     private Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
 
     private FilterConfig filterConfig = null;
+    private Config config = null;
 
-    public BasicAuthViaDbFilter() {
+    @Inject
+    public BasicAuthViaDbFilter(Config config) {
+        this.config = config;
     }
 
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -58,7 +62,7 @@ public class BasicAuthViaDbFilter implements Filter {
     public void destroy() {
         this.filterConfig = null;
     }
-
+    
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
@@ -109,7 +113,7 @@ public class BasicAuthViaDbFilter implements Filter {
     private void doBasicAuth(String username, String password)
         throws InstantiationException, IllegalAccessException,
         ClassNotFoundException, SQLException {
-        Properties properties = new Config().dbBasicAuthConfiguration();
+        Properties properties = config.dbBasicAuthConfiguration();
 
         String query = properties.getProperty("database.query");
         String dbUrl = properties.getProperty("database.connection.url");

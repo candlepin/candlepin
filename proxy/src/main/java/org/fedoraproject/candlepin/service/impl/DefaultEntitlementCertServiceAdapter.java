@@ -14,32 +14,24 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import java.util.Date;
 import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.service.CertificateServiceAdapter;
-
-import java.util.Date;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 
 /**
- * DefaultCertificateServiceAdapter
+ * DefaultEntitlementCertServiceAdapter
  */
-public class DefaultCertificateServiceAdapter implements
-    CertificateServiceAdapter {
-    
+public class DefaultEntitlementCertServiceAdapter implements 
+    EntitlementCertServiceAdapter {
+
     @Override
     public ClientCertificate generateEntitlementCert(Consumer consumer,
         Subscription sub, Product product, Date endDate) {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public ClientCertificate generateIdentityCert(Consumer consumer) {
-        // TODO Auto-generated method stub
-        ClientCertificate certStatus =  new ClientCertificate();
-        return certStatus;
     }
 
 }

@@ -8,6 +8,7 @@ COPYRIGHT = ""
 #############################################################################
 # DEPENDENCIES
 #############################################################################
+
 JERSEY = [group('jersey-core', 'jersey-json', 'jersey-server', 'jersey-client', :under=>'com.sun.jersey', :version=>'1.1.2-ea'),
         'javax.persistence:persistence-api:jar:1.0.2' ,
         'org.codehaus:jettison:jar:1.1',

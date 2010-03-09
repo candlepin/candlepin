@@ -41,8 +41,6 @@ import org.fedoraproject.candlepin.model.ClientCertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -57,6 +55,8 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 /**
  * API Gateway for Consumers
@@ -72,13 +72,12 @@ public class ConsumerResource {
     private Owner owner;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ConsumerIdentityCertificateCurator consumerIdCertCurator;
     private ProductServiceAdapter productAdapter;
     private PoolCurator epCurator;
     private Entitler entitler;
     private SubscriptionServiceAdapter subAdapter; 
     private EntitlementCurator entitlementCurator;
-
+    private IdentityCertServiceAdapter identityCertService;
 
     private String username;
 
@@ -93,24 +92,23 @@ public class ConsumerResource {
     public ConsumerResource(OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ConsumerIdentityCertificateCurator consumerIdCertCurator,
         ProductServiceAdapter productAdapter,
         Entitler entitler,
         SubscriptionServiceAdapter subAdapter,
         PoolCurator epCurator,
         EntitlementCurator entitlementCurator,
+        IdentityCertServiceAdapter identityCertService,
         @Context HttpServletRequest request) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.consumerIdCertCurator = consumerIdCertCurator;
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
         this.entitler = entitler;
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
-
+        this.identityCertService = identityCertService;
         this.username = (String) request.getAttribute("username");
         if (username != null) {
             this.owner = ownerCurator.lookupByName(username);
@@ -179,13 +177,19 @@ public class ConsumerResource {
 
         try {
             consumer = consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
-            
-            ConsumerIdentityCertificate idCert = consumerIdCertCurator.getCert();
+
+            ConsumerIdentityCertificate idCert = identityCertService.generateIdentityCert(consumer);
+            log.debug("Generated identity cert: " + idCert);
+            if (idCert == null) {
+                throw new RuntimeException("Error generating identity certificate.");
+            }
             consumer.setIdCert(idCert);
+
             return consumer;
-            
         }
         catch (RuntimeException e) {
+            log.error("Problem creating consumer!", e);
+
             throw new BadRequestException(e.getMessage());
         }
     }
