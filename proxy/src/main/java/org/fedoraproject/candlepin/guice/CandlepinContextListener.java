@@ -45,6 +45,7 @@ public class CandlepinContextListener extends GuiceServletContextListener {
     
     private static final String CANDLEPIN_SERVLET = "CANDLEPIN";
 
+    @SuppressWarnings("serial")
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(new LinkedList<Module>() {

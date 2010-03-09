@@ -59,8 +59,8 @@ public class Owner implements Persisted {
     //@ForeignKey(name = "fk_user_owner_id")
     private Set<Pool> entitlementPools;
         
-    @OneToMany(mappedBy = "owner", targetEntity = Certificate.class)
-    private Set<Certificate> certificates;
+    //@OneToMany(mappedBy = "owner", targetEntity = Certificate.class)
+    //private Set<Certificate> certificates;
     
     
     /**
@@ -69,7 +69,7 @@ public class Owner implements Persisted {
     public Owner() {
         consumers = new HashSet<Consumer>();
         entitlementPools = new HashSet<Pool>();
-        certificates = new HashSet<Certificate>();
+        //certificates = new HashSet<Certificate>();
     }
     
     /**
@@ -82,7 +82,7 @@ public class Owner implements Persisted {
         
         consumers = new HashSet<Consumer>();
         entitlementPools = new HashSet<Pool>();
-        certificates = new HashSet<Certificate>();
+        //certificates = new HashSet<Certificate>();
     }
     
     /**

@@ -310,6 +310,7 @@ public class PinsetterKernel implements SchedulerService {
      * Returns the default configuration if no config file is present.
      * @return the default configuration if no config file is present.
      */
+    @SuppressWarnings("serial")
     private Map<String, String> defaultConfig() {
         return new HashMap<String, String>() {
             {

@@ -33,6 +33,11 @@ public class CandlepinConfigurationTest {
         Config config = new CandlepinConfigurationForTesting(
                 new HashMap<String, String>() {
 
+                    /**
+                     * 
+                     */
+                    private static final long serialVersionUID = 1L;
+
                     {
                         put("a.b.a.b", "value");
                         put("a.b.c.d", "value");
@@ -48,6 +53,7 @@ public class CandlepinConfigurationTest {
         assertTrue(withPrefix.containsKey("a.b.e.f"));
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void returnAllKeysWithAPrefixInTheMiddle() {
         Config config = new CandlepinConfigurationForTesting(
@@ -70,6 +76,7 @@ public class CandlepinConfigurationTest {
         assertTrue(withPrefix.containsKey("a.c.e.f"));
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void returnAllKeysWithAPrefixFromTail() {
         Config config = new CandlepinConfigurationForTesting(
@@ -91,10 +98,11 @@ public class CandlepinConfigurationTest {
         assertTrue(withPrefix.containsKey("a.c.e.f"));
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void returnStringArray() {
         Config config = new CandlepinConfigurationForTesting(
-                new HashMap<String, String>() {
+            new HashMap<String, String>() {
 
                     {
                         put("a.b.a.b", "1,2,3,4");
@@ -109,6 +117,7 @@ public class CandlepinConfigurationTest {
         assertEquals("4", value[3]);
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void returnNamespaceProperties() {
         Config config = new CandlepinConfigurationForTesting(
@@ -130,6 +139,7 @@ public class CandlepinConfigurationTest {
         assertTrue(withPrefix.containsKey("a.c.e.f"));
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void returnNamespacePropsWithDefaults() {
         Map<String, String> defaults = new HashMap<String, String>();
@@ -160,6 +170,7 @@ public class CandlepinConfigurationTest {
         assertFalse(withPrefix.containsKey("not.here"));
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void namespaceWithNull() {
         Map<String, String> defaults = new HashMap<String, String>();

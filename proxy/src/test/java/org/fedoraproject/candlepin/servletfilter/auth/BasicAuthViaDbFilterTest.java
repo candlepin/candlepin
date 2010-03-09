@@ -14,11 +14,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.fedoraproject.candlepin.config.TestingConfiguration;
+import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaDbFilter;
 import org.junit.After;
 import org.junit.Before;
-
-import com.sun.jersey.core.util.Base64;
-import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaDbFilter;
 
 public class BasicAuthViaDbFilterTest {
 
@@ -62,13 +60,14 @@ public class BasicAuthViaDbFilterTest {
                 stmnt.close();
         }
     }
-    
+/*    
     private String encodeUserPass(String username, String password) {
         String decoded = username + ":" + password;
         byte[] encoded = Base64.encode(decoded);
         
         return new String(encoded);
     }
+  */
     
     /**
      * Clean use case. Should not throw an exception

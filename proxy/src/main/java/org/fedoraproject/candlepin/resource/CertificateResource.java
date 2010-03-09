@@ -14,20 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.CertificateCurator;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
-
-import com.redhat.rhn.common.cert.Certificate;
-import com.redhat.rhn.common.cert.CertificateFactory;
-
-import com.google.inject.Inject;
-import com.sun.jersey.core.util.Base64;
-
-import org.apache.log4j.Logger;
-import org.jdom.JDOMException;
-
 import java.io.IOException;
 import java.text.ParseException;
 
@@ -37,6 +23,17 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.fedoraproject.candlepin.model.CertificateCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
+import org.jdom.JDOMException;
+
+import com.google.inject.Inject;
+import com.redhat.rhn.common.cert.Certificate;
+import com.redhat.rhn.common.cert.CertificateFactory;
+import com.sun.jersey.core.util.Base64;
 
 
 /**
@@ -51,7 +48,7 @@ public class CertificateResource  {
     private CertificateCurator certificateCurator;
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
 
-    private static Logger log = Logger.getLogger(CertificateResource.class);
+    //private static Logger log = Logger.getLogger(CertificateResource.class);
    
     /**
      * default ctor

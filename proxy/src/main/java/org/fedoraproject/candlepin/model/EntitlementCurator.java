@@ -53,6 +53,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return toReturn;
     }
 
+    @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumer(Consumer consumer) {
         List<Entitlement> results = (List<Entitlement>) currentSession()
             .createCriteria(Entitlement.class)

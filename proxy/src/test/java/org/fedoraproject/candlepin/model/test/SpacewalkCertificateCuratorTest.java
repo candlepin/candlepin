@@ -48,6 +48,7 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
         ownerCurator.create(owner);
     }
     
+    @SuppressWarnings("serial")
     @Test
     public void parseChannelFamily() throws Exception {
         

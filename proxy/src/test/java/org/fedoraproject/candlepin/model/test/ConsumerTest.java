@@ -151,7 +151,8 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testLookupByUuidNonExistent() {
-        Consumer lookedUp = consumerCurator.lookupByUuid("this is not a uuid!");
+        //Consumer lookedUp = 
+            consumerCurator.lookupByUuid("this is not a uuid!");
     }
 
     @Test

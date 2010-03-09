@@ -14,28 +14,25 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import org.fedoraproject.candlepin.controller.Entitler;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -47,8 +44,8 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     private Product product;
     private Pool ep;
     private Owner owner;    
-    private EntitlementResource eapi;
-    private Entitler entitler;
+    //private EntitlementResource eapi;
+    //private Entitler entitler;
     
     @Before
     public void createTestObjects() {
@@ -68,11 +65,11 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
                 TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(ep);
 
-        entitler = injector.getInstance(Entitler.class);
+        //entitler = injector.getInstance(Entitler.class);
 
-        eapi = new EntitlementResource(
-                poolCurator, entitlementCurator,
-                consumerCurator, productAdapter, subAdapter, entitler);
+        //eapi = new EntitlementResource(
+        //        poolCurator, entitlementCurator,
+        //        consumerCurator, productAdapter, subAdapter, entitler);
         
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }
@@ -114,7 +111,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         Object[] params = new Object[2];
         params[0] = consumer;
         params[1] = product;
-        List aparams = new ArrayList();
+        List<Object> aparams = new ArrayList<Object>();
         aparams.add(consumer);
         aparams.add(product);
         

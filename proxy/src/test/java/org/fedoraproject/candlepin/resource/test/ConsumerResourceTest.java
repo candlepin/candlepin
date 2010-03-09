@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNull;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -116,7 +115,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testEntitle() throws Exception {
-        Entitlement result = consumerResource.entitleByPool(
+        //Entitlement result = 
+            consumerResource.entitleByPool(
             consumer.getUuid(), null, null, product.getLabel());
         
         consumer = consumerCurator.lookupByUuid(consumer.getUuid());

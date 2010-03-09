@@ -14,15 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
-
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.criterion.Restrictions;
+
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * ConsumerCurator

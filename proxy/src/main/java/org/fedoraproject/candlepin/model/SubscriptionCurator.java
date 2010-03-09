@@ -35,6 +35,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      * @param productId Product Id to filter the subscription for.
      * @return a list of subscriptions filtered by owner and product.
      */
+    @SuppressWarnings("unchecked")
     public List<Subscription> listByOwnerAndProduct(Owner o, String productId) {
         List<Subscription> subs = (List<Subscription>) currentSession()
             .createCriteria(Subscription.class)
@@ -63,6 +64,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      * @param sinceDate date since modified.
      * @return a list of subscriptions filtered by owner, product, since date.
      */
+    @SuppressWarnings("unchecked")
     public List<Subscription> listByOwnerAndProductSince(Owner o, Date sinceDate) {
         List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
                 Subscription.class)
@@ -79,6 +81,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      * @param sinceDate Date used in searches.
      * @return list of subscriptions from added since the given date.
      */
+    @SuppressWarnings("unchecked")
     public List<Subscription> listSince(Date sinceDate) {
         List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
                 Subscription.class)

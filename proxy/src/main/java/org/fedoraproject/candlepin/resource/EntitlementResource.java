@@ -14,6 +14,16 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.List;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -26,18 +36,6 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
-
-import java.util.List;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 
 /**
  * REST api gateway for the User object.
@@ -45,14 +43,14 @@ import javax.ws.rs.core.MediaType;
 @Path("/entitlements")
 public class EntitlementResource {
     
-    private PoolCurator epCurator;
-    private ConsumerCurator consumerCurator;
-    private ProductServiceAdapter prodAdapter;
-    private SubscriptionServiceAdapter subAdapter; 
-    private Entitler entitler;
-    private EntitlementCurator entitlementCurator;
+    //private PoolCurator epCurator;
+    private final ConsumerCurator consumerCurator;
+    private final ProductServiceAdapter prodAdapter;
+    //private SubscriptionServiceAdapter subAdapter; 
+    //private Entitler entitler;
+    private final EntitlementCurator entitlementCurator;
     
-    private static Logger log = Logger.getLogger(EntitlementResource.class);
+    //private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     @Inject
     public EntitlementResource(PoolCurator epCurator, 
@@ -61,16 +59,17 @@ public class EntitlementResource {
             ProductServiceAdapter prodAdapter, SubscriptionServiceAdapter subAdapter, 
             Entitler entitler) {
         
-        this.epCurator = epCurator;
+        //this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.prodAdapter = prodAdapter;
-        this.subAdapter = subAdapter;
-        this.entitler = entitler;
+        //this.subAdapter = subAdapter;
+        //this.entitler = entitler;
     }
     
     
 
+    @SuppressWarnings("null")
     private void verifyExistence(Object o, String id) {
         if (o == null) {
             throw new RuntimeException(o.getClass().getName() + " with ID: [" + 

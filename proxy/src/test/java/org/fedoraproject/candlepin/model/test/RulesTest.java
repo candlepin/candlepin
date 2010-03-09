@@ -26,12 +26,13 @@ public class RulesTest extends DatabaseTestFixture {
 
     @Before
     public void setupTestObjects() {
-        String rulesBlob = "document.write(\"Hello World!\");";
+        //String rulesBlob = "document.write(\"Hello World!\");";
     }
     
     @Test
     public void testCreateRules() {
-        Rules newRules = new Rules();
+        //Rules newRules = 
+            new Rules();
         
     }
 }

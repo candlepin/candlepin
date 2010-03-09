@@ -24,6 +24,11 @@ import javax.ws.rs.core.Response;
  */
 public class ForbiddenException extends WebApplicationException {
     /**
+     * 
+     */
+    private static final long serialVersionUID = 8452977854606374666L;
+
+    /**
      * ctor
      * @param message Exception message string.
      */

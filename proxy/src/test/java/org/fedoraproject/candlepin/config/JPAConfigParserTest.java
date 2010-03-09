@@ -24,6 +24,7 @@ import org.junit.Test;
 
 public class JPAConfigParserTest {
 
+    @SuppressWarnings("serial")
     @Test
     public void shouldStripJPAConfigKeyPrefixes() {
         final String key1 = "key1";

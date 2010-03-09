@@ -76,6 +76,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listAvailableEntitlementPools(c, o, productId, activeOnly);
     }
     
+    @SuppressWarnings("unchecked")
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
         List<Pool> results = null;

@@ -22,7 +22,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
@@ -36,7 +35,7 @@ import com.google.inject.Inject;
 @Path("/products")
 public class ProductResource {
 
-    private static Logger log = Logger.getLogger(ProductResource.class);
+    //private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
 
     /**

@@ -24,6 +24,11 @@ import javax.ws.rs.core.Response;
  */
 public class BadRequestException extends WebApplicationException {
     /**
+     * 
+     */
+    private static final long serialVersionUID = -3430329252623764984L;
+
+    /**
      * default ctor
      * @param message Exception message
      */

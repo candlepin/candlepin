@@ -24,6 +24,11 @@ import javax.ws.rs.core.Response;
  */
 public class NotFoundException extends WebApplicationException {
     /**
+     * 
+     */
+    private static final long serialVersionUID = 5766371025014420584L;
+
+    /**
      * ctor
      * @param message Exception message string.
      */

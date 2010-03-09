@@ -33,14 +33,14 @@ public class LoggingFilter implements Filter {
     
     private static Logger log = Logger.getLogger(LoggingFilter.class);
     
-    private FilterConfig filterConfig = null;
+    //private FilterConfig filterConfig = null;
     
     public void init(FilterConfig filterConfig) throws ServletException {
-        this.filterConfig = filterConfig;
+        //this.filterConfig = filterConfig;
     }
     
     public void destroy() {
-        this.filterConfig = null;
+        //this.filterConfig = null;
     }
 
     public void doFilter(ServletRequest request, ServletResponse response,

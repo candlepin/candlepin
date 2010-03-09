@@ -47,7 +47,7 @@ public class BasicAuthViaDbFilter implements Filter {
 
     private Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
 
-    private FilterConfig filterConfig = null;
+    //private FilterConfig filterConfig = null;
     private Config config = null;
 
     @Inject
@@ -56,11 +56,11 @@ public class BasicAuthViaDbFilter implements Filter {
     }
 
     public void init(FilterConfig filterConfig) throws ServletException {
-        this.filterConfig = filterConfig;
+        //this.filterConfig = filterConfig;
     }
 
     public void destroy() {
-        this.filterConfig = null;
+        //this.filterConfig = null;
     }
     
     public void doFilter(ServletRequest request, ServletResponse response,

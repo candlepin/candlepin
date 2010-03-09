@@ -14,14 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.criterion.Restrictions;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * ConsumerCurator
@@ -30,7 +29,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private ConsumerFactCurator consumerInfoCurator;
     @Inject private EntitlementCurator entitlementCurator;    
-    private static Logger log = Logger.getLogger(ConsumerCurator.class);
+    //private static Logger log = Logger.getLogger(ConsumerCurator.class);
     
     protected ConsumerCurator() {
         super(Consumer.class);

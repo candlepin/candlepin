@@ -14,14 +14,13 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
 import java.security.cert.CertPathValidatorException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXCertPathValidatorResult;
 import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
@@ -32,13 +31,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * some useful sources of certificate-related information: 
- * http://www.herongyang.com/Cryptography/index.html
- * (in particular: http://bit.ly/a2sX1d )
- * http://bit.ly/aOqTAV
+ * some useful sources of certificate-related information:
+ * http://www.herongyang.com/Cryptography/index.html (in particular:
+ * http://bit.ly/a2sX1d ) http://bit.ly/aOqTAV
  */
 public class SSLAuthFilterTest {
-    
+
     private X509Certificate certificatePath;
     private X509Certificate selfSignedCertificate;
     private X509Certificate caCertificate;
@@ -48,21 +46,25 @@ public class SSLAuthFilterTest {
     @Before
     public void setUp() throws Exception {
         certificateFactory = CertificateFactory.getInstance("X.509");
-        
+
         certificatePath = (X509Certificate) certificateFactory
-            .generateCertificate(getClass().getResourceAsStream("certchain.crt"));
-        
+            .generateCertificate(getClass()
+                .getResourceAsStream("certchain.crt"));
+
         selfSignedCertificate = (X509Certificate) certificateFactory
-            .generateCertificate(getClass().getResourceAsStream("selfsigned.crt"));
-        
+            .generateCertificate(getClass().getResourceAsStream(
+                "selfsigned.crt"));
+
         caCertificate = (X509Certificate) certificateFactory
             .generateCertificate(getClass().getResourceAsStream("ca.crt"));
-        
-        TrustAnchor anchor = new TrustAnchor((X509Certificate) caCertificate, null);
+
+        TrustAnchor anchor = new TrustAnchor((X509Certificate) caCertificate,
+            null);
         PKIXparams = new PKIXParameters(Collections.singleton(anchor));
         PKIXparams.setRevocationEnabled(false);
     }
-    
+
+    @SuppressWarnings("serial")
     @Test
     public void validCertificateShouldPassVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
@@ -72,15 +74,15 @@ public class SSLAuthFilterTest {
                     add(certificatePath);
                 }
             });
-        PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) cpv
-            .validate(cp, PKIXparams);
-        
+        // PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult)
+        cpv.validate(cp, PKIXparams);
+
         assertEquals(
-            "CN=Robert Paulson, OU=org unit, O=org, L=Halifax, ST=NS, C=CA", 
-            certificatePath.getSubjectDN().getName()
-        );
+            "CN=Robert Paulson, OU=org unit, O=org, L=Halifax, ST=NS, C=CA",
+            certificatePath.getSubjectDN().getName());
     }
-    
+
+    @SuppressWarnings("serial")
     @Test(expected = CertPathValidatorException.class)
     public void invalidCertificateShouldFailVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
@@ -90,7 +92,7 @@ public class SSLAuthFilterTest {
                     add(selfSignedCertificate);
                 }
             });
-        PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) cpv
-            .validate(cp, PKIXparams);
-    }    
+        //PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) 
+        cpv.validate(cp, PKIXparams);
+    }
 }

@@ -18,28 +18,28 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.CandlepinConfigurationTest.CandlepinConfigurationForTesting;
-
 import org.junit.Test;
-import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-
 /**
  * PinsetterKernelTest
+ * 
  * @version $Rev$
  */
 public class PinsetterKernelTest {
     private PinsetterKernel pk = null;
 
+    @SuppressWarnings("serial")
     @Test
     public void configure() throws InstantiationException {
         Config config = new CandlepinConfigurationForTesting(
@@ -52,23 +52,23 @@ public class PinsetterKernelTest {
                     put("org.quartz.threadPool.threadPriority", "5");
 
                     // clustering
-//                    put("org.quartz.scheduler.instanceName",
-//                        "MyClusteredScheduler");
-//                    put("org.quartz.scheduler.instanceId", "AUTO");
-//                    put("org.quartz.jobStore.class",
-//                        "org.quartz.impl.jdbcjobstore.JobStoreTX");
-//                    put("org.quartz.jobStore.driverDelegateClass",
-//                        "org.quartz.impl.jdbcjobstore.HSQLDBDelegate");
-//                    put("org.quartz.jobStore.tablePrefix", "QRTZ_");
-//                    put("org.quartz.jobStore.isClustered", "true");
-//
-//                    put("org.quartz.dataSource.myDS.driver",
-//                        "org.hsqldb.jdbcDriver");
-//                    put("org.quartz.dataSource.myDS.URL",
-//                        "jdbc:hsqldb:mem:unit-testing-jpa");
-//                    put("org.quartz.dataSource.myDS.user", "sa");
-//                    put("org.quartz.dataSource.myDS.password", "");
-//                    put("org.quartz.jobStore.dataSource", "myDS");
+                    // put("org.quartz.scheduler.instanceName",
+                    // "MyClusteredScheduler");
+                    // put("org.quartz.scheduler.instanceId", "AUTO");
+                    // put("org.quartz.jobStore.class",
+                    // "org.quartz.impl.jdbcjobstore.JobStoreTX");
+                    // put("org.quartz.jobStore.driverDelegateClass",
+                    // "org.quartz.impl.jdbcjobstore.HSQLDBDelegate");
+                    // put("org.quartz.jobStore.tablePrefix", "QRTZ_");
+                    // put("org.quartz.jobStore.isClustered", "true");
+                    //
+                    // put("org.quartz.dataSource.myDS.driver",
+                    // "org.hsqldb.jdbcDriver");
+                    // put("org.quartz.dataSource.myDS.URL",
+                    // "jdbc:hsqldb:mem:unit-testing-jpa");
+                    // put("org.quartz.dataSource.myDS.user", "sa");
+                    // put("org.quartz.dataSource.myDS.password", "");
+                    // put("org.quartz.jobStore.dataSource", "myDS");
                 }
             });
 
@@ -84,6 +84,7 @@ public class PinsetterKernelTest {
         }
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void testScheduleJobString() throws InstantiationException,
         PinsetterException, SchedulerException {
@@ -104,14 +105,14 @@ public class PinsetterKernelTest {
 
         pk.startup();
 
-
         Scheduler s = pk.getScheduler();
         String[] groups = s.getJobGroupNames();
         for (String grp : groups) {
             String[] jobs = s.getJobNames(grp);
             for (String job : jobs) {
                 System.out.println(job);
-                JobDetail d = s.getJobDetail(job, grp);
+                // JobDetail d =
+                s.getJobDetail(job, grp);
                 s.addJobListener(new ListenerJob());
             }
         }

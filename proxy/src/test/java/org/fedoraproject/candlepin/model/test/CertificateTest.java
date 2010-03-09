@@ -48,7 +48,8 @@ public class CertificateTest extends DatabaseTestFixture {
     
     @Ignore
     public void testGetCertificate() {
-        Certificate newCertificate = new Certificate();
+        //Certificate newCertificate = 
+            new Certificate();
     }
     
     @Test

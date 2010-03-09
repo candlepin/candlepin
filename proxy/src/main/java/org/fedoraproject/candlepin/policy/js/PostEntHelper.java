@@ -26,8 +26,8 @@ import com.google.inject.Inject;
  */
 public class PostEntHelper {
 
-    private ProductServiceAdapter prodAdapter;
-    private Entitlement ent;
+    //private ProductServiceAdapter prodAdapter;
+    //private Entitlement ent;
 
     /**
      * ctor
@@ -35,7 +35,7 @@ public class PostEntHelper {
      */
     @Inject
     public PostEntHelper(ProductServiceAdapter prodAdapter) {
-        this.prodAdapter = prodAdapter;
+        //this.prodAdapter = prodAdapter;
     }
 
     /**
@@ -46,7 +46,7 @@ public class PostEntHelper {
      * @param ent Entitlement just created.
      */
     public void init(Entitlement ent) {
-        this.ent = ent;
+        //this.ent = ent;
     }
 
 }

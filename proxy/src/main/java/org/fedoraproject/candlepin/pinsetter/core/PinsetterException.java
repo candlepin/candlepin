@@ -20,6 +20,11 @@ package org.fedoraproject.candlepin.pinsetter.core;
 public class PinsetterException extends Exception {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 6869383124721674885L;
+
+    /**
      * Constructor
      * @param message exception message
      */

@@ -14,10 +14,6 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import org.fedoraproject.candlepin.config.Config;
-
-import org.apache.log4j.Logger;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,7 +27,6 @@ import java.security.cert.CertPathValidatorException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXCertPathValidatorResult;
 import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
@@ -47,6 +42,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.config.Config;
+
 /**
  * SSLAuthFilter
  */
@@ -56,7 +54,7 @@ public class SSLAuthFilter implements Filter {
     
     private static Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
     
-    private FilterConfig filterConfig = null;
+    //private FilterConfig filterConfig = null;
     private CertificateFactory certificateFactory;
     private PKIXParameters pKIXparams;
     
@@ -74,13 +72,14 @@ public class SSLAuthFilter implements Filter {
     }
     
     public void init(FilterConfig filterConfig) throws ServletException {
-        this.filterConfig = filterConfig;
+        //this.filterConfig = filterConfig;
     }
     
     public void destroy() {
-        this.filterConfig = null;
+        //this.filterConfig = null;
     }
     
+    @SuppressWarnings("serial")
     public void doFilter(ServletRequest request, ServletResponse response, 
            FilterChain chain) throws IOException, ServletException {
         
@@ -105,8 +104,8 @@ public class SSLAuthFilter implements Filter {
                 );
                 
                 try {
-                    PKIXCertPathValidatorResult result = 
-                        (PKIXCertPathValidatorResult) cpv.validate(cp, pKIXparams);
+                    //PKIXCertPathValidatorResult result =(PKIXCertPathValidatorResult) 
+                        cpv.validate(cp, pKIXparams);
     
                     debugMessage("validated cert with subject DN: " +
                         cert.getSubjectDN() + "and issuer DN: " + cert.getIssuerDN());

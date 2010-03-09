@@ -29,7 +29,12 @@ package org.fedoraproject.candlepin.util;
 public class TranslationException extends RuntimeException  {
 
 
-    /////////////////////////
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 7649201010519883166L;
+
+        /////////////////////////
     // Constructors
     /////////////////////////
         /**

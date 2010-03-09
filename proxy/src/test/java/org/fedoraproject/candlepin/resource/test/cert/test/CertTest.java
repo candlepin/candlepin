@@ -14,6 +14,16 @@
  */
 package org.fedoraproject.candlepin.resource.test.cert.test;
 
+import java.math.BigInteger;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.cert.X509Certificate;
+import java.security.spec.RSAPrivateCrtKeySpec;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.Date;
+
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.GeneralName;
@@ -26,17 +36,6 @@ import org.bouncycastle.x509.X509V2AttributeCertificateGenerator;
 import org.bouncycastle.x509.examples.AttrCertExample;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.math.BigInteger;
-import java.security.KeyFactory;
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Security;
-import java.security.cert.X509Certificate;
-import java.security.spec.RSAPrivateCrtKeySpec;
-import java.security.spec.RSAPublicKeySpec;
-import java.util.Date;
 
 /**
  * CertTest
@@ -139,7 +138,8 @@ public class CertTest {
         KeyFactory fact = KeyFactory.getInstance("RSA", "BC");
         PrivateKey caPrivKey = fact.generatePrivate(caPrivKeySpec);
         PublicKey caPubKey = fact.generatePublic(caPubKeySpec);
-        PrivateKey privKey = fact.generatePrivate(privKeySpec);
+        //PrivateKey privKey = 
+            fact.generatePrivate(privKeySpec);
         PublicKey pubKey = fact.generatePublic(pubKeySpec);
 
         //
@@ -204,10 +204,10 @@ public class CertTest {
 
         
 
-        String encoded = new String(att.getEncoded());
+        //String encoded = new String(att.getEncoded());
         //System.out.println("CERT CERT: " + encoded);
-        KeyStore store = KeyStore.getInstance("PKCS12");
-        String pass = "redhat";
+        //KeyStore store = KeyStore.getInstance("PKCS12");
+        //String pass = "redhat";
         
         
         /*FileOutputStream fout = new FileOutputStream("/tmp/foo.file");

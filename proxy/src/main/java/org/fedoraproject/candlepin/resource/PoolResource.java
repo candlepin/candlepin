@@ -21,13 +21,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
@@ -39,7 +38,7 @@ import com.google.inject.Inject;
 @Path("/pools")
 public class PoolResource {
 
-    private static Logger log = Logger.getLogger(PoolResource.class);
+    //private static Logger log = Logger.getLogger(PoolResource.class);
 
     private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;

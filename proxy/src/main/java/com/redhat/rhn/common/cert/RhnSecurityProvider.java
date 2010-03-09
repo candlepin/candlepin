@@ -32,6 +32,10 @@ import java.security.Provider;
 final class RhnSecurityProvider extends Provider {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 7999953349412756610L;
+    /**
      * The name under which this provider registers
      */
     public static final String NAME = "RHNSP";
