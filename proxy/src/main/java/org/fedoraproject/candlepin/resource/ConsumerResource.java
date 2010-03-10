@@ -182,7 +182,7 @@ public class ConsumerResource {
         }
 
         try {
-            consumer = consumerCurator.create(Consumer.createFromConsumer(in, owner, type));
+            consumer = consumerCurator.create(new Consumer(in, owner, type));
 
             ConsumerIdentityCertificate idCert =
                 identityCertService.generateIdentityCert(consumer);

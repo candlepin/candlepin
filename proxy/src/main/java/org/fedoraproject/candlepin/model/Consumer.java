@@ -119,18 +119,12 @@ public class Consumer implements Persisted {
      * @param copyFrom consumer to copy
      * @param owner owner of the consumer.
      * @param type the type
-     * @return copied consumer.
      */
-    public static Consumer createFromConsumer(
-            Consumer copyFrom, Owner owner, ConsumerType type) {
-        
-        Consumer toReturn = new Consumer(copyFrom.name, owner, type);
-        toReturn.getFacts().setMetadata(copyFrom.getFacts().getMetadata());
-        
-        toReturn.childConsumers = copyFrom.childConsumers;
-        toReturn.entitlements = copyFrom.entitlements;
-        
-        return toReturn;
+    public Consumer(Consumer copyFrom, Owner owner, ConsumerType type) {
+        this(copyFrom.name, owner, type);
+        getFacts().setMetadata(copyFrom.getFacts().getMetadata());
+        childConsumers = copyFrom.childConsumers;
+        entitlements = copyFrom.entitlements;
     }
 
     /**

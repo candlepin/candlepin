@@ -129,7 +129,7 @@ public class ConsumerHttpClientTest extends AbstractGuiceGrizzlyTest {
 
     @Test
     public void createConsumerWithMissingRequiredFieldsShouldFail() {
-        Consumer submitted = new Consumer(null, null, standardSystemType);
+        Consumer submitted = new Consumer((String) null, null, standardSystemType);
 
         try {
             WebResource r = resource().path("/consumers");
