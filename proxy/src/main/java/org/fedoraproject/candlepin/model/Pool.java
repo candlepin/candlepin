@@ -44,17 +44,17 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_entitlement_pool")
-@SequenceGenerator(name = "seq_entitlement_pool",
-        sequenceName = "seq_entitlement_pool", allocationSize = 1)
+@Table(name = "cp_pool")
+@SequenceGenerator(name = "seq_pool",
+        sequenceName = "seq_pool", allocationSize = 1)
 public class Pool implements Persisted {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_entitlement_pool")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_pool")
     private Long id;
     
     @ManyToOne
-    @ForeignKey(name = "fk_entitlement_pool_owner")
+    @ForeignKey(name = "fk_pool_owner")
     @JoinColumn(nullable = false)
     private Owner owner;
     
@@ -70,7 +70,7 @@ public class Pool implements Persisted {
      * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
     @ManyToOne
-    @ForeignKey(name = "fk_entitlement_pool_source_entitlement")
+    @ForeignKey(name = "fk_pool_source_entitlement")
     @JoinColumn(nullable = true)
     private Entitlement sourceEntitlement;
 
@@ -90,7 +90,7 @@ public class Pool implements Persisted {
     private String productId;    
 
     @CollectionOfElements
-    @JoinTable(name = "ENTITLEMENT_POOL_ATTRIBUTE")
+    @JoinTable(name = "POOL_ATTRIBUTE")
     private Set<Attribute> attributes;
 
     /**
@@ -180,7 +180,7 @@ public class Pool implements Persisted {
     }
 
     /**
-     * @return number of active members (uses).
+     * @return quantity currently consumed.
      */
     public Long getConsumed() {
         return consumed;
@@ -210,7 +210,7 @@ public class Pool implements Persisted {
     }
 
     /**
-     * Add 1 to the current members.
+     * Increment consumed quantity by one.
      */
     public void bumpConsumed() {
         this.consumed++;
@@ -246,8 +246,8 @@ public class Pool implements Persisted {
 
     /**
      * Returns true if there are entitlements available in this pool, basically
-     * if the current members is less than the max members.
-     * @return true if current members is less than max members.
+     * if 'consumed' is less than the 'quantity'.
+     * @return true if entitlements are available.
      */
     public boolean entitlementsAvailable() {
         if (isUnlimited()) {
