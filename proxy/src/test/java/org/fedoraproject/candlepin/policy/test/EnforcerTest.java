@@ -108,7 +108,7 @@ public class EnforcerTest extends DatabaseTestFixture {
                 .getId(), new Long(maxMembers), new Date(), expiry) {
 
             {
-                setCurrentMembers(currentMembers);
+                setConsumed(new Long(currentMembers));
             }
         };
     }

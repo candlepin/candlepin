@@ -19,7 +19,6 @@ class EntitlementTests(CandlepinTests):
         # First we list all entitlement pools available to this consumer:
         virt_host = 'virtualization_host'
         results = self.cp.getPools(self.uuid)
-        print results
         pools = {}
         for pool in results['pool']:
             pools[pool['productId']] = pool

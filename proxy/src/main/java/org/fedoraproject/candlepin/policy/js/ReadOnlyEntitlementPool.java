@@ -45,11 +45,11 @@ public class ReadOnlyEntitlementPool {
     }
 
     public Long getMaxMembers() {
-        return entPool.getMaxMembers();
+        return entPool.getQuantity();
     }
 
     public Long getCurrentMembers() {
-        return entPool.getCurrentMembers();
+        return entPool.getConsumed();
     }
     public Date getStartDate() {
         return entPool.getStartDate();

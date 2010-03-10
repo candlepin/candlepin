@@ -75,10 +75,10 @@ public class Pool implements Persisted {
     private Entitlement sourceEntitlement;
 
     @Column(nullable = false)
-    private Long maxMembers;
+    private Long quantity;
 
     @Column(nullable = false)
-    private Long currentMembers;
+    private Long consumed;
 
     @Column(nullable = false)
     private Date startDate;
@@ -99,24 +99,16 @@ public class Pool implements Persisted {
     public Pool() {
     }
 
-    /**
-     * ctor
-     * @param ownerIn owner of the pool
-     * @param productIdIn product id associated with the pool.
-     * @param maxMembersIn maximum members of the pool.
-     * @param startDateIn when the pool started.
-     * @param endDateIn when the pool expires.
-     */
-    public Pool(Owner ownerIn, String productIdIn, Long maxMembersIn, 
+    public Pool(Owner ownerIn, String productIdIn, Long quantityIn,
             Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
         this.productId = productIdIn;
-        this.maxMembers = maxMembersIn;
+        this.quantity = quantityIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
         
-        // Always assume no current members if creating a new pool.
-        this.currentMembers = new Long(0);
+        // Always assume none consumed if creating a new pool.
+        this.consumed = new Long(0);
     }
     
     /** {@inheritDoc} */
@@ -176,30 +168,30 @@ public class Pool implements Persisted {
     /**
      * @return quantity
      */
-    public Long getMaxMembers() {
-        return maxMembers;
+    public Long getQuantity() {
+        return quantity;
     }
 
     /**
-     * @param maxMembers quantity
+     * @param quantity quantity
      */
-    public void setMaxMembers(Long maxMembers) {
-        this.maxMembers = maxMembers;
+    public void setQuantity(Long quantity) {
+        this.quantity = quantity;
     }
 
     /**
      * @return number of active members (uses).
      */
-    public Long getCurrentMembers() {
-        return currentMembers;
+    public Long getConsumed() {
+        return consumed;
     }
 
     /**
-     * @param currentMembers set the activate uses.
+     * @param consumed set the activate uses.
      * TODO: is this really needed?
      */
-    public void setCurrentMembers(long currentMembers) {
-        this.currentMembers = currentMembers;
+    public void setConsumed(Long consumed) {
+        this.consumed = consumed;
     }
     
     /**
@@ -220,12 +212,12 @@ public class Pool implements Persisted {
     /**
      * Add 1 to the current members.
      */
-    public void bumpCurrentMembers() {
-        this.currentMembers++;
+    public void bumpConsumed() {
+        this.consumed++;
     }
 
-    public void dockCurrentMembers() {
-        this.currentMembers--;
+    public void dockConsumed() {
+        this.consumed--;
     }
 
     /**
@@ -262,7 +254,7 @@ public class Pool implements Persisted {
             return true;
         }
 
-        if (getCurrentMembers() < getMaxMembers()) {
+        if (getConsumed() < getQuantity()) {
             return true;
         }
         return false;
@@ -271,7 +263,7 @@ public class Pool implements Persisted {
      * @return True if entitlement pool is unlimited.
      */
     public boolean isUnlimited() {
-        if (this.getMaxMembers() < 0) {
+        if (this.getQuantity() < 0) {
             return true;
         }
         return false;
@@ -328,6 +320,6 @@ public class Pool implements Persisted {
 
     public String toString() {
         return "EntitlementPool [id = " + getId() + ", product = " + getProductId() +
-            ", quantity = " + getMaxMembers() + ", expires = " + getEndDate() + "]";
+            ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
 }

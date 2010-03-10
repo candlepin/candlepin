@@ -187,7 +187,7 @@ public class PoolTest extends DatabaseTestFixture {
         Pool newPool = pools.get(0);
 
         assertEquals(sub.getId(), newPool.getSubscriptionId());
-        assertEquals(sub.getQuantity(), newPool.getMaxMembers());
+        assertEquals(sub.getQuantity(), newPool.getQuantity());
         assertEquals(sub.getStartDate(), newPool.getStartDate());
         assertEquals(sub.getEndDate(), newPool.getEndDate());
     }
@@ -199,7 +199,7 @@ public class PoolTest extends DatabaseTestFixture {
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
-        assertTrue(pool.getMaxMembers() < sub.getQuantity());
+        assertTrue(pool.getQuantity() < sub.getQuantity());
         assertTrue(pool.getStartDate() != sub.getStartDate());
         assertTrue(pool.getEndDate() != sub.getEndDate());
 
@@ -210,7 +210,7 @@ public class PoolTest extends DatabaseTestFixture {
 
         pool = poolCurator.find(pool.getId());
         assertEquals(sub.getId(), pool.getSubscriptionId());
-        assertEquals(sub.getQuantity(), pool.getMaxMembers());
+        assertEquals(sub.getQuantity(), pool.getQuantity());
         assertEquals(sub.getStartDate(), pool.getStartDate());
         assertEquals(sub.getEndDate(), pool.getEndDate());
     }

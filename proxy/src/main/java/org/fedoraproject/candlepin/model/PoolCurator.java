@@ -165,7 +165,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 // TODO: We're just updating the pool always now, would be much
                 // better if we could check some kind of last modified date to
                 // determine if a change has taken place:
-                existingPool.setMaxMembers(sub.getQuantity());
+                existingPool.setQuantity(sub.getQuantity());
                 existingPool.setStartDate(sub.getStartDate());
                 existingPool.setEndDate(sub.getEndDate());
                 merge(existingPool);

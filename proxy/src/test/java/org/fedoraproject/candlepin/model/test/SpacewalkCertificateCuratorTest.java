@@ -105,8 +105,8 @@ public class SpacewalkCertificateCuratorTest extends DatabaseTestFixture {
                 .listByOwnerAndProduct(owner, 
                     product).get(0);
         assertNotNull(entitlementPool);
-        assertEquals(quantity, entitlementPool.getMaxMembers());
-        assertEquals(new Long(0), entitlementPool.getCurrentMembers());
+        assertEquals(quantity, entitlementPool.getQuantity());
+        assertEquals(new Long(0), entitlementPool.getConsumed());
     }
 
     public static String readCertificate(String path) throws Exception {

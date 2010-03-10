@@ -123,13 +123,13 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(1, consumer.getEntitlements().size());
         
         ep = poolCurator.find(ep.getId());
-        assertEquals(new Long(1), ep.getCurrentMembers());
+        assertEquals(new Long(1), ep.getConsumed());
     }
     
     @Test(expected = RuntimeException.class)
     public void testMaxMembership() {
         // 10 entitlements available, lets try to entitle 11 consumers.
-        for (int i = 0; i < ep.getMaxMembers(); i++) {
+        for (int i = 0; i < ep.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
             consumerCurator.create(c);
             consumerResource.entitleByPool(c.getUuid(), null, null, product.getLabel());

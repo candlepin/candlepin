@@ -152,14 +152,14 @@ public class EntitlerTest extends DatabaseTestFixture {
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
                 provisioning).get(0);
         
-        Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
+        Long provisioningCount = new Long(provisioningPool.getConsumed());
         assertEquals(new Long(1), provisioningCount);
         
         // Now guest requests monitoring, and should get it for "free":
         e = entitler.entitle(childVirtSystem, provisioning);
         assertNotNull(e);
         assertTrue(e.isFree());
-        assertEquals(new Long(1), provisioningPool.getCurrentMembers());
+        assertEquals(new Long(1), provisioningPool.getConsumed());
     }
     
     @Test
@@ -171,7 +171,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
                 provisioning).get(0);
         
-        Long provisioningCount = new Long(provisioningPool.getCurrentMembers());
+        Long provisioningCount = new Long(provisioningPool.getConsumed());
         assertEquals(new Long(0), provisioningCount);
         
         e = entitler.entitle(childVirtSystem, provisioning);
@@ -179,14 +179,14 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertFalse(e.isFree());
         // Should have resorted to consuming a physical entitlement, because the guest's
         // parent does not have this.
-        assertEquals(new Long(1), provisioningPool.getCurrentMembers());
+        assertEquals(new Long(1), provisioningPool.getConsumed());
     }
     
     @Test
     public void testQuantityCheck() {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, 
                 monitoring).get(0);
-        assertEquals(new Long(5), monitoringPool.getMaxMembers());
+        assertEquals(new Long(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
             Entitlement e = entitler.entitle(parentSystem, monitoring);
             assertNotNull(e);
@@ -195,7 +195,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         Entitlement e = entitler.entitle(parentSystem, monitoring);
         assertNull(e);
-        assertEquals(new Long(5), monitoringPool.getCurrentMembers());
+        assertEquals(new Long(5), monitoringPool.getConsumed());
     }
 
     @Test
