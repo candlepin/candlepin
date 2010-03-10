@@ -12,6 +12,7 @@ RPMBUILD	= rpmbuild
 INSTALL         = /usr/bin/install
 INSTALL_DIR     = $(INSTALL) --verbose -d -m 755
 ARCHIVE         = $(NAME)-bin.tar.gz
+EXPLODED_NAME   = $(NAME)-$(VERSION).war
 
 RPM_TOPDIR	= /tmp/$(NAME)-$(VERSION)-$(RELEASE)-build
 _RPM_OPTS	= --define "_topdir	    $(RPM_TOPDIR)" \
@@ -29,10 +30,10 @@ rpm: clean $(RPM_TOPDIR) $(SPECFILE) $(ARCHIVE)
 	$(RPMBUILD) --clean $(RPM_OPTS) -bb $(SPECFILE)
 
 clean:
-	@rm -rfv *~ *.rpm $(RPM_TOPDIR) $(ARCHIVE)
+	@rm -rfv *~ *.rpm $(RPM_TOPDIR) $(ARCHIVE); rm -rf target/$(NAME)
 
 $(ARCHIVE):
-	cd target; tar cvzf ../$(ARCHIVE) ./*.war; cd ..
+	buildr clean package test=no; cd target; mkdir $(NAME); mv ./*.war $(NAME); cd $(NAME); jar -xvf ./*.war; rm ./*.war; cd ..; mv $(NAME) $(EXPLODED_NAME); tar cvzf ../$(ARCHIVE) $(EXPLODED_NAME); cd ..
 
 $(RPM_TOPDIR):
 	@$(INSTALL_DIR) $@

@@ -16,6 +16,8 @@ BuildArch: noarch
 %global _binary_payload w9.gzdio
 %global _source_payload w9.gzdio
 
+%define __jar_repack %{nil}
+
 %description
 Candlepin Entitlement Management
 
