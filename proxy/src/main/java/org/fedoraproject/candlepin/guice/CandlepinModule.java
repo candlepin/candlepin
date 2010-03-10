@@ -29,12 +29,12 @@ import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
+import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
@@ -42,13 +42,6 @@ import org.fedoraproject.candlepin.util.DateSourceImpl;
 
 import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-
-import java.util.Properties;
-import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 
 /**
  * CandlepinProductionConfiguration
