@@ -69,12 +69,26 @@ class CandlepinTests(unittest.TestCase):
             print("Consumer created: %s" % response)
             self.assertTrue("uuid" in response)
             self.assertTrue("idCert" in response)
+            self.assert_consumer_struct(response)
             CONSUMER_UUID = response['uuid']
             return response['uuid']
         else:
             print("Reusing consumer: %s" % CONSUMER_UUID)
             return CONSUMER_UUID
 
+    def assert_consumer_struct(self, consumer):
+        """ Verify the given dict represents a consumer struct. """
+        keys = ['uuid', 'name', 'facts', 'idCert', 'type', 'id']
+        self.assertEquals(len(keys), len(consumer.keys()))
+        for key in keys:
+            self.assertTrue(key in consumer)
+
+    def assert_cert_struct(self, cert):
+        """ Verify the given dict represents a consumer struct. """
+        keys = ['serial', 'key', 'cert']
+        self.assertEquals(len(keys), len(cert.keys()))
+        for key in keys:
+            self.assertTrue(key in cert)
 
 ## GET see if there's a certificate
 #response = urllib.urlopen('http://localhost:8080/candlepin/certificate')

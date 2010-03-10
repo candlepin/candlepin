@@ -20,11 +20,12 @@ class ConsumerTests(CandlepinTests):
         # are actually being generated.
 
     def test_list_certs(self):
-        result = self.cp.getCertificateSerials(self.uuid)
-        self.assertTrue('serial' in result)
-        serials = result['serial']
-        for serial in serials:
-            self.assertTrue('serial' in serial)
+        result = self.cp.getCertificates(self.uuid)
+        print result
+        self.assertTrue('cert' in result)
+        cert_list = result['cert']
+        for cert in cert_list:
+            self.assert_cert_struct(cert)
         # TODO: Could use some more testing here once entitlement certs
         # are actually being generated.
 
