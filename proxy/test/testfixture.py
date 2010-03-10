@@ -11,6 +11,10 @@ from candlepinapi import Rest, CandlePinApi
 
 CERTS_UPLOADED = False
 
+# Used to create one consumer for entire test run, as the operation
+# can be quite expensive. (cert generation)
+CONSUMER_UUID = None
+
 class CandlepinTests(unittest.TestCase):
 
     def setUp(self):
@@ -48,17 +52,28 @@ class CandlepinTests(unittest.TestCase):
         return open(cert_file, 'rb').read()
 
     def create_consumer(self):
-        facts_metadata = {
-                "a": "1",
-                "b": "2",
-                "c": "3"}
-        response = self.cp.registerConsumer("fakeuser", "fakepw",
-                "consumername", hardware=facts_metadata)
-        print("Consumer created:")
-        print(response)
-        self.assertTrue("uuid" in response)
-        self.assertTrue("idCert" in response)
-        return response['uuid']
+        """ 
+        Create a consumer.
+
+        NOTE: This call is relatively expensive, as consumer creation also 
+        generates an identity certificate.
+        """
+        global CONSUMER_UUID
+        if not CONSUMER_UUID:
+            facts_metadata = {
+                    "a": "1",
+                    "b": "2",
+                    "c": "3"}
+            response = self.cp.registerConsumer("fakeuser", "fakepw",
+                    "consumername", hardware=facts_metadata)
+            print("Consumer created: %s" % response)
+            self.assertTrue("uuid" in response)
+            self.assertTrue("idCert" in response)
+            CONSUMER_UUID = response['uuid']
+            return response['uuid']
+        else:
+            print("Reusing consumer: %s" % CONSUMER_UUID)
+            return CONSUMER_UUID
 
 
 ## GET see if there's a certificate

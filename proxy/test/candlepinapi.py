@@ -35,7 +35,7 @@ class Rest(object):
             content_type = self.content_type
 
         if self.cert_file:
-	        conn = httplib.HTTPSConnection(self.hostname, self.port, key_file = self.key_file, cert_file = self.cert_file)
+            conn = httplib.HTTPSConnection(self.hostname, self.port, key_file = self.key_file, cert_file = self.cert_file)
         else:
             conn = httplib.HTTPConnection(self.hostname, self.port)
 
@@ -97,7 +97,6 @@ class CandlePinApi:
 
 
         entrys = []
-        print hardware
         for key in hardware:
             entrys.append({'key': key,
                           'value': hardware[key]})

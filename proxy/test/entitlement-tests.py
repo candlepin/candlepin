@@ -74,3 +74,22 @@ class EntitlementTests(CandlepinTests):
             # Unbind them all
             self.cp.unBindAll(self.uuid)
             self.assertEqual(None, self.cp.getEntitlements(self.uuid))
+
+    def test_list_cert_serials(self):
+        result = self.cp.getCertificateSerials(self.uuid)
+        self.assertTrue('serial' in result)
+        serials = result['serial']
+        for serial in serials:
+            self.assertTrue('serial' in serial)
+        # TODO: Could use some more testing here once entitlement certs
+        # are actually being generated.
+
+    def test_list_certs(self):
+        result = self.cp.getCertificateSerials(self.uuid)
+        self.assertTrue('serial' in result)
+        serials = result['serial']
+        for serial in serials:
+            self.assertTrue('serial' in serial)
+        # TODO: Could use some more testing here once entitlement certs
+        # are actually being generated.
+
