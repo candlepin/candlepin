@@ -18,9 +18,9 @@ import static com.google.inject.name.Names.*;
 
 import javax.servlet.Filter;
 
-import org.fedoraproject.candlepin.LoggingFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthenticationFilter;
+import org.fedoraproject.candlepin.util.LoggingFilter;
 
 import com.google.inject.AbstractModule;
 

@@ -62,7 +62,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.UriBuilder;
 
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
-import org.fedoraproject.candlepin.DateSource;
 import org.fedoraproject.candlepin.model.AttributeCurator;
 import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -79,6 +78,8 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
+import org.fedoraproject.candlepin.util.DateSource;
+
 import org.junit.After;
 
 import com.google.inject.Guice;

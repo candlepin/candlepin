@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.util;
 
-import org.fedoraproject.candlepin.DateSource;
 
 import java.util.Date;
 

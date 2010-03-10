@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.DateSource;
+import org.fedoraproject.candlepin.util.DateSource;
 
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;

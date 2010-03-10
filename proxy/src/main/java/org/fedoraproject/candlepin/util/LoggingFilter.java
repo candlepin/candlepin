@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin;
+package org.fedoraproject.candlepin.util;
 
 import java.io.IOException;
 
@@ -30,15 +30,15 @@ import org.apache.log4j.Logger;
  * LoggingFilter
  */
 public class LoggingFilter implements Filter {
-    
+
     private static Logger log = Logger.getLogger(LoggingFilter.class);
-    
+
     //private FilterConfig filterConfig = null;
-    
+
     public void init(FilterConfig filterConfig) throws ServletException {
         //this.filterConfig = filterConfig;
     }
-    
+
     public void destroy() {
         //this.filterConfig = null;
     }
@@ -46,15 +46,15 @@ public class LoggingFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
                          FilterChain chain)
         throws IOException, ServletException {
-        
+
         if (log.isDebugEnabled()) {
             LoggingRequestWrapper lRequest = new LoggingRequestWrapper(
                 (HttpServletRequest) request);
             if (lRequest.getQueryString() != null) {
-                log.debug(String.format("Request: '%s %s?%s'", lRequest.getMethod(), 
+                log.debug(String.format("Request: '%s %s?%s'", lRequest.getMethod(),
                     lRequest.getRequestURL(),
                     lRequest.getQueryString()));
-            } 
+            }
             else {
                 log.debug(String.format("Request: '%s %s'", lRequest
                     .getMethod(), lRequest.getRequestURL()));

@@ -22,8 +22,8 @@ import java.util.LinkedList;
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
 
-import org.fedoraproject.candlepin.LoggingFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
+import org.fedoraproject.candlepin.util.LoggingFilter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
