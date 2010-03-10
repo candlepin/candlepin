@@ -32,7 +32,7 @@ public class RulesTest extends DatabaseTestFixture {
     @Test
     public void testCreateRules() {
         //Rules newRules = 
-            new Rules();
+        new Rules();
         
     }
 }

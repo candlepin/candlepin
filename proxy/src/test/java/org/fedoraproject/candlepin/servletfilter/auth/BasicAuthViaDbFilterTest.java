@@ -1,3 +1,17 @@
+/**
+ * Copyright (c) 2009 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
 package org.fedoraproject.candlepin.servletfilter.auth;
 
 import static org.mockito.Mockito.mock;
@@ -24,11 +38,11 @@ import org.junit.Test;
 
 public class BasicAuthViaDbFilterTest {
 
-    FilterChain defaultChain;
-    HttpServletResponse defaultResponse;
-    HttpServletRequest request;
-    BasicAuthViaDbFilter filter;
-    Connection conn;
+    private FilterChain defaultChain;
+    private HttpServletResponse defaultResponse;
+    private HttpServletRequest request;
+    private BasicAuthViaDbFilter filter;
+    private Connection conn;
     
     @Before
     public void setUp() throws Exception {
@@ -53,15 +67,16 @@ public class BasicAuthViaDbFilterTest {
     }
     
     protected void loadSQLFile(String filename) throws Exception {
-        BufferedReader inputStream = new BufferedReader(new FileReader( "src/test/resources/sql/" + filename));
+        BufferedReader inputStream = new BufferedReader(new FileReader(
+            "src/test/resources/sql/" + filename));
         String line;
         Class.forName("org.hsqldb.jdbcDriver").newInstance();
         conn = DriverManager.getConnection("jdbc:hsqldb:mem:unit-testing-jpa", "sa", "");
         
-        while((line = inputStream.readLine()) != null ) { 
-                PreparedStatement stmnt = conn.prepareStatement(line);
-                stmnt.executeUpdate();
-                stmnt.close();
+        while ((line = inputStream.readLine()) != null) {
+            PreparedStatement stmnt = conn.prepareStatement(line);
+            stmnt.executeUpdate();
+            stmnt.close();
         }
     }
 
@@ -79,7 +94,8 @@ public class BasicAuthViaDbFilterTest {
     @Test
     public void testValidUser() throws Exception {
         // return the correct kind of auth
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USER", "REDHAT"));
+        when(request.getHeader("Authorization")).thenReturn(
+            "BASIC " + encodeUserPass("USER", "REDHAT"));
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // successful authentication puts the username attribute on the request
@@ -89,7 +105,8 @@ public class BasicAuthViaDbFilterTest {
     @Test
     public void testInvalidPass() throws Exception { 
         // return valid user, invalid pass
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USER", "REDHA"));
+        when(request.getHeader("Authorization")).thenReturn(
+            "BASIC " + encodeUserPass("USER", "REDHA"));
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // unsuccessful authentication returns a 403
@@ -99,7 +116,8 @@ public class BasicAuthViaDbFilterTest {
     @Test
     public void testInvalidUser() throws Exception { 
         // return an invalid username
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USE", "REDHAT"));
+        when(request.getHeader("Authorization")).thenReturn(
+            "BASIC " + encodeUserPass("USE", "REDHAT"));
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // unsuccessful authentication returns a 403
@@ -110,19 +128,22 @@ public class BasicAuthViaDbFilterTest {
     public void testGet() throws Exception { 
         when(request.getMethod()).thenReturn("GET");
         // invalid user; shouldnt matter
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USE", "PASSWORD"));
+        when(request.getHeader("Authorization")).thenReturn(
+            "BASIC " + encodeUserPass("USE", "PASSWORD"));
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // this should just pass on to the chain
-        verify(defaultChain).doFilter(request,defaultResponse);
+        verify(defaultChain).doFilter(request, defaultResponse);
     }
     
     @Test
     public void testInvalidDb() throws Exception { 
         // return an invalid username
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("USER", "REDHAT"));
+        when(request.getHeader("Authorization")).thenReturn(
+            "BASIC " + encodeUserPass("USER", "REDHAT"));
 
-        filter = new BasicAuthViaDbFilter(new TestingConfiguration("candlepin-baddb.properties"));
+        filter = new BasicAuthViaDbFilter(new TestingConfiguration(
+            "candlepin-baddb.properties"));
         filter.doFilter(request, defaultResponse, defaultChain);
         // regular exceptions should return a 503
         verify(defaultResponse).setStatus(HttpServletResponse.SC_BAD_GATEWAY);

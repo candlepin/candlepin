@@ -47,7 +47,7 @@ public class AttributeTest extends DatabaseTestFixture {
         attributeCurator.create(parent);
 
         //Attribute foundAttr = 
-            attributeCurator.find(parent.getId());
+        attributeCurator.find(parent.getId());
         assertEquals(2, parent.getChildAttributes().size());
         assertEquals(1, parent.getChildAttribute(child1.getName())
             .getChildAttributes().size());

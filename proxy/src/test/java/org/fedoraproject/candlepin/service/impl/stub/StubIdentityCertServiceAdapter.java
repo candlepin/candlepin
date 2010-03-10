@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010 Red Hat, Inc.
+ * Copyright (c) 2009 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -25,7 +25,7 @@ public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapte
         ConsumerIdentityCertificate idCert = new ConsumerIdentityCertificate();
 
         // totally arbitrary
-        idCert.setId(43l);
+        idCert.setId(43L);
         idCert.setKey("uh0876puhapodifbvj094".getBytes());
         idCert.setPem("hpj-08ha-w4gpoknpon*)&^%#".getBytes());
 

@@ -116,7 +116,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void testEntitle() throws Exception {
         //Entitlement result = 
-            consumerResource.entitleByPool(
+        consumerResource.entitleByPool(
             consumer.getUuid(), null, null, product.getLabel());
         
         consumer = consumerCurator.lookupByUuid(consumer.getUuid());

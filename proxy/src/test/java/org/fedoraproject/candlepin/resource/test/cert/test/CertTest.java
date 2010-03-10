@@ -139,7 +139,7 @@ public class CertTest {
         PrivateKey caPrivKey = fact.generatePrivate(caPrivKeySpec);
         PublicKey caPubKey = fact.generatePublic(caPubKeySpec);
         //PrivateKey privKey = 
-            fact.generatePrivate(privKeySpec);
+        fact.generatePrivate(privKeySpec);
         PublicKey pubKey = fact.generatePublic(pubKeySpec);
 
         //

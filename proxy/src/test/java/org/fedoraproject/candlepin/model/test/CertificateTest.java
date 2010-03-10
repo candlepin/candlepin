@@ -49,7 +49,7 @@ public class CertificateTest extends DatabaseTestFixture {
     @Ignore
     public void testGetCertificate() {
         //Certificate newCertificate = 
-            new Certificate();
+        new Certificate();
     }
     
     @Test
