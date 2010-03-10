@@ -29,6 +29,11 @@ function gendb ()
 
 function deploy ()
 {
+    if [ -z $CLEAN ] ; then
+        $SUDO rm -rf $DEPLOY
+    else
+        $SUDO rm -rf $CLEAN
+    fi
     $SUDO cp target/candlepin-1.0.0.war $DEPLOY
 }
 
@@ -77,13 +82,14 @@ else
     if [ "$?" -ne 0 ]; then
         START="$TC_HOME/bin/catalina.sh start"
         STOP="$TC_HOME/bin/catalina.sh stop"
-        DEPLOY="$TC_HOME/webapps/candlepin.war"
     else
         SUDO="sudo"
         START="sudo /sbin/service $TC start"
         STOP="sudo /sbin/service $TC stop"
-        DEPLOY="$TC_HOME/webapps/candlepin.war"
     fi
+
+    DEPLOY="$TC_HOME/webapps/candlepin.war"
+    CLEAN="$TC_HOME/webapps/candlepin/"
 fi
 
 # stop the appserver
