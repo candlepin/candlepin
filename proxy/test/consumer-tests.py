@@ -10,30 +10,78 @@ class ConsumerTests(CandlepinTests):
     def setUp(self):
         CandlepinTests.setUp(self)
 
-    def test_get_certificates(self):
-        # TODO: once cert generation is live, need to request entitlements
-        # that will get us certs.
-        result = self.cp.getCertificates(self.uuid) 
-
-        # Verify the JSON structure:
-        self.assertTrue("cert" in result)
-        cert_list = result['cert']
-        self.assertEquals(2, len(cert_list))
-        cert1 = cert_list[1]
-        self.assertTrue("key" in cert1)
-        self.assertTrue("cert" in cert1)
-        self.assertTrue("serial" in cert1)
-        self.assertEquals(3, len(cert1.keys()))
-
-    def test_get_certificates_metadata(self):
-        # TODO: once cert generation is live, need to request entitlements
-        # that will get us certs.
+    def test_list_cert_serials(self):
         result = self.cp.getCertificateSerials(self.uuid)
+        self.assertTrue('serial' in result)
+        serials = result['serial']
+        for serial in serials:
+            self.assertTrue('serial' in serial)
+        # TODO: Could use some more testing here once entitlement certs
+        # are actually being generated.
 
-        # Verify the JSON structure:
-        self.assertTrue("serial" in result)
-        serial_list = result['serial']
-        self.assertEquals(2, len(serial_list))
-        for serial in serial_list:
-            self.assertTrue("serial" in serial)
+    def test_list_certs(self):
+        result = self.cp.getCertificateSerials(self.uuid)
+        self.assertTrue('serial' in result)
+        serials = result['serial']
+        for serial in serials:
+            self.assertTrue('serial' in serial)
+        # TODO: Could use some more testing here once entitlement certs
+        # are actually being generated.
+
+    def test_uuid(self):
+        self.assertTrue(self.uuid != None)
+
+    def test_bind_by_entitlement_pool(self):
+        # First we list all entitlement pools available to this consumer:
+        virt_host = 'virtualization_host'
+        results = self.cp.getPools(self.uuid)
+        pools = {}
+        for pool in results['pool']:
+            pools[pool['productId']] = pool
+            print pool
+            print
+        self.assertTrue(virt_host in pools)
+
+        # Request a virtualization_host entitlement:
+        result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+        print result
+        self.assertTrue('id' in result)
+        self.assertEquals(virt_host, result['pool']['productId'])
+
+        # Now list consumer's entitlements:
+        result = self.cp.getEntitlements(self.uuid)
+        print result
+
+    def test_bind_by_product(self):
+        # Request a monitoring entitlement:
+        result = self.cp.bindProduct(self.uuid, 'monitoring')
+        print result
+        self.assertTrue('id' in result)
+        self.assertEquals('monitoring', result['pool']['productId'])
+
+        # Now list consumer's entitlements:
+        result = self.cp.getEntitlements(self.uuid)
+        print result
+
+    def test_unbind_all_single(self):
+        pools = self.cp.getPools(self.uuid)
+        pool = pools['pool'][0]
+
+        self.cp.bindPool(self.uuid, pool['id'])
+
+        # Now unbind it
+        self.cp.unBindAll(self.uuid)
+
+        self.assertEqual(None, self.cp.getEntitlements(self.uuid))
+
+    def test_unbind_all_multi(self):
+        pools = self.cp.getPools(self.uuid)['pool']
+
+        if len(pools) > 1:
+            for pool in pools:
+                self.cp.bindPool(self.uuid, pool['id'])
+
+            # Unbind them all
+            self.cp.unBindAll(self.uuid)
+            self.assertEqual(None, self.cp.getEntitlements(self.uuid))
 
