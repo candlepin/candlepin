@@ -137,7 +137,7 @@ define "candlepin" do
 
         # check the main src
         ant.checkstyle :config=>"buildconf/checkstyle.xml",
-                       :classpath=>Buildr.artifacts(CHECKSTYLE, JDOM).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR) do
+                       :classpath=>Buildr.artifacts(CHECKSTYLE, JDOM, JERSEY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR) do
 
 
           ant.classpath :path=>_('target/classes')
