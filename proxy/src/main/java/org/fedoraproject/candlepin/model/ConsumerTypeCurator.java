@@ -24,15 +24,17 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
     protected ConsumerTypeCurator() {
         super(ConsumerType.class);
     }
-    
+
     /**
      * lookup the ConsumerType by its label.
-     * @param label type to lookup
+     * 
+     * @param label
+     *            type to lookup
      * @return ConsumerType whose label matches the given label.
      */
     public ConsumerType lookupByLabel(String label) {
-        return (ConsumerType) currentSession().createCriteria(ConsumerType.class)
-            .add(Restrictions.eq("label", label))
+        return (ConsumerType) currentSession().createCriteria(
+            ConsumerType.class).add(Restrictions.eq("label", label))
             .uniqueResult();
     }
 }

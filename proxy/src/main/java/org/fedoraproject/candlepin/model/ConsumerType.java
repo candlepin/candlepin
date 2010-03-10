@@ -30,12 +30,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 
  * See ProductFactory for some examples.
  */
-@XmlRootElement
+@XmlRootElement(name = "consumertype")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_type")
-@SequenceGenerator(name = "seq_consumer_type",
-        sequenceName = "seq_consumer_type", allocationSize = 1)
+@SequenceGenerator(name = "seq_consumer_type", sequenceName = "seq_consumer_type", allocationSize = 1)
 public class ConsumerType implements Persisted {
 
     @Id
@@ -44,11 +43,11 @@ public class ConsumerType implements Persisted {
 
     @Column(nullable = false, unique = true)
     private String label;
-    
+
     // Constants
     public static final String SYSTEM = "system"; // physical system
-    public static final String VIRT_SYSTEM = "virt_system"; 
-    
+    public static final String VIRT_SYSTEM = "virt_system";
+
     /**
      * default ctor
      */
@@ -57,33 +56,37 @@ public class ConsumerType implements Persisted {
 
     /**
      * ConsumerType constructor with label
-     * @param labelIn to set
+     * 
+     * @param labelIn
+     *            to set
      */
     public ConsumerType(String labelIn) {
         this.label = labelIn;
     }
-    
+
     /** {@inheritDoc} */
     public Long getId() {
         return id;
     }
-    
+
     /**
-     * @param id type id
+     * @param id
+     *            type id
      */
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     /**
      * @return Returns the label.
      */
     public String getLabel() {
         return label;
     }
-    
+
     /**
-     * @param labelIn The label to set.
+     * @param labelIn
+     *            The label to set.
      */
     public void setLabel(String labelIn) {
         label = labelIn;
@@ -105,12 +108,12 @@ public class ConsumerType implements Persisted {
         if (!(anObject instanceof ConsumerType)) {
             return false;
         }
-        
+
         ConsumerType another = (ConsumerType) anObject;
-        
+
         return label.equals(another.getLabel());
     }
-    
+
     @Override
     public int hashCode() {
         return label.hashCode();
