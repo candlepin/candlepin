@@ -27,7 +27,6 @@ import com.wideplay.warp.persist.Transactional;
  */
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
-    @Inject private ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator;
     @Inject private ConsumerFactCurator consumerInfoCurator;
     @Inject private EntitlementCurator entitlementCurator;    
     //private static Logger log = Logger.getLogger(ConsumerCurator.class);
@@ -98,16 +97,5 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         return toReturn;
     }
-
-    @Override
-    @Transactional
-    public void delete(Consumer entity) {
-        ConsumerIdentityCertificate cert = consumerIdentityCertificateCurator
-            .find(entity.getId());
-        if (cert != null) {
-            consumerIdentityCertificateCurator.delete(cert);
-        }
-        super.delete(entity);
-    }
-
+    
 }
