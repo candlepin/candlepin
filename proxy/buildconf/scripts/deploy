@@ -10,6 +10,8 @@ function evalrc ()
 function gendb ()
 {
     if [ "$GENDB" != "" ]; then
+
+	echo "============ generating a new db =============="
         buildr candlepin:genschema
         evalrc $? "schema generation failed"
 
@@ -49,6 +51,12 @@ function isrpm ()
 {
     echo $1 | grep "var/lib" > /dev/null
     return $?
+}
+
+function upload_sat_cert ()
+{
+     echo "========= uploading sat cert =========="
+     curl -d "@code/scripts/spacewalk-public.cert.json" --header "Content-type: application/json"  --header "Accept: application/json" http://localhost:8080/candlepin/certificates
 }
 
 # Read in user defined variables
@@ -96,7 +104,10 @@ fi
 eval $STOP
 
 # generate the postgresql DB
-gendb
+
+if [ -n $GENDB ]; then
+	gendb	
+fi
 
 buildr clean package test=no
 
@@ -111,3 +122,7 @@ eval $START
 sleep 10
 echo "Initializing Candlepin..."
 wget -qO- http://localhost:8080/candlepin/admin/init
+
+if [ -n $GENDB ]; then
+	upload_sat_cert
+fi
