@@ -209,7 +209,7 @@ Running @{banner} ...
         <sysproperty key="java.awt.headless" value="true" />
         <sysproperty key="log4j.threshold" value="${log4j.threshold}" />
 
-        <sysproperty key="persistenceUnit" value="test" />
+        <sysproperty key="persistenceUnit" value="default" />
 
         <jvmarg value="-ea" />
         <jvmarg line="@{debug}" />

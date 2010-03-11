@@ -47,6 +47,13 @@ class ConfigurationFileLoader {
     protected Map<String, String> loadConfiguration(InputStream input) throws IOException {
         Properties loaded = new Properties();
         loaded.load(input);
-        return new HashMap(loaded);
+        HashMap result = new HashMap(loaded);
+        // If we're reading a config file, and it doesn't specify a setting for
+        // auto populating the db, set it to blank to prevent the "default"
+        // persistence unit value from unintentionally clearing the database.
+        if (!result.containsKey("jpa.config.hibernate.hbm2ddl.auto")) {
+            result.put("jpa.config.hibernate.hbm2ddl.auto", "");
+        }
+        return result;
     }
 }

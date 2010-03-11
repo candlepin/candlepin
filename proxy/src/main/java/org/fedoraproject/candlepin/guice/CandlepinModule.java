@@ -60,7 +60,7 @@ public class CandlepinModule extends AbstractModule {
         // We default to test persistence unit (HSQL),
         // /etc/candlepin/candlepin.conf
         // will override:
-        bindConstant().annotatedWith(JpaUnit.class).to("test");
+        bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(Config.class);
         bind(CertificateResource.class);
