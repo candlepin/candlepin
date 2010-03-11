@@ -53,6 +53,14 @@ public class DefaultIdentityCertServiceAdapter implements
         this.consumerIdentityCertificateCurator = consumerIdentityCertificateCurator;
     }
 
+    public void deleteIdentityCert(Consumer consumer) {
+        ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator
+            .find(consumer.getId());
+        if (certificate != null) {
+            consumerIdentityCertificateCurator.delete(certificate);
+        }
+    }
+
     @Override
     public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer)
         throws GeneralSecurityException, IOException {

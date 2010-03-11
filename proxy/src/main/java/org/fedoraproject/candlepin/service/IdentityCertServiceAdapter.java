@@ -40,4 +40,12 @@ public interface IdentityCertServiceAdapter {
      */
     ConsumerIdentityCertificate generateIdentityCert(Consumer consumer)
         throws GeneralSecurityException, IOException;
+
+    /**
+     * Deletes the certificate assocaited with the consumer
+     * @param consumer
+     */
+    public void deleteIdentityCert(Consumer consumer) ;
+
+
 }

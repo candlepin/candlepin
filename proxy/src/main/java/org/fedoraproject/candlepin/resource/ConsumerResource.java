@@ -41,6 +41,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -62,10 +63,10 @@ import com.google.inject.Inject;
  */
 @Path("/consumers")
 public class ConsumerResource {
-    
-    //@Context 
-    //private UriInfo uriInfo;
-    
+
+    // @Context
+    // private UriInfo uriInfo;
+
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private OwnerCurator ownerCurator;
     private Owner owner;
@@ -74,7 +75,7 @@ public class ConsumerResource {
     private ProductServiceAdapter productAdapter;
     private PoolCurator epCurator;
     private Entitler entitler;
-    private SubscriptionServiceAdapter subAdapter; 
+    private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
 
@@ -82,26 +83,28 @@ public class ConsumerResource {
 
     /**
      * 
-     * @param ownerCurator interact with owner
-     * @param consumerCurator interact with consumer
-     * @param consumerTypeCurator interact with consumerType
+     * @param ownerCurator
+     *            interact with owner
+     * @param consumerCurator
+     *            interact with consumer
+     * @param consumerTypeCurator
+     *            interact with consumerType
      * @param productAdapter
      * @param entitler
      * @param subAdapter
      * @param epCurator
      * @param entitlementCurator
      * @param identityCertService
-     * @param request servlet request
+     * @param request
+     *            servlet request
      */
-     
+
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductServiceAdapter productAdapter,
-        Entitler entitler,
-        SubscriptionServiceAdapter subAdapter,
-        PoolCurator epCurator,
+        ProductServiceAdapter productAdapter, Entitler entitler,
+        SubscriptionServiceAdapter subAdapter, PoolCurator epCurator,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         @Context HttpServletRequest request) {
@@ -123,9 +126,10 @@ public class ConsumerResource {
             }
         }
     }
-   
+
     /**
      * List available Consumers
+     * 
      * @return list of available consumers.
      */
     @GET
@@ -133,10 +137,12 @@ public class ConsumerResource {
     public List<Consumer> list() {
         return consumerCurator.findAll();
     }
-   
+
     /**
      * Return the consumer identified by the given uuid.
-     * @param uuid uuid of the consumer sought.
+     * 
+     * @param uuid
+     *            uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
      */
     @GET
@@ -144,51 +150,57 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
         Consumer toReturn = consumerCurator.lookupByUuid(uuid);
-        
+
         if (toReturn != null) {
             return toReturn;
         }
 
-        throw new NotFoundException(
-            "Consumer with UUID '" + uuid + "' could not be found"); 
+        throw new NotFoundException("Consumer with UUID '" + uuid +
+            "' could not be found");
     }
-    
+
     /**
      * Create a Consumer
-     * @param in Consumer metadata encapsulated in a ConsumerInfo.
+     * 
+     * @param in
+     *            Consumer metadata encapsulated in a ConsumerInfo.
      * @return newly created Consumer
-     * @throws BadRequestException generic exception type for web services
-     *  We are calling this "registerConsumer" in the api discussions
+     * @throws BadRequestException
+     *             generic exception type for web services We are calling this
+     *             "registerConsumer" in the api discussions
      */
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer create(Consumer in) throws BadRequestException {
         // API:registerConsumer
-        Owner owner = ownerCurator.findAll().get(0); // TODO: actually get current owner
+        Owner owner = ownerCurator.findAll().get(0); // TODO: actually get
+                                                     // current owner
         Consumer consumer = new Consumer();
-        
+
         log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
-        ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType().getLabel());
+        ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType()
+            .getLabel());
         log.debug("got metadata: ");
         log.debug(in.getFacts().getMetadata());
         for (String key : in.getFacts().getMetadata().keySet()) {
             log.debug("   " + key + " = " + in.getFact(key));
         }
-        
+
         if (type == null) {
-            throw new BadRequestException(
-                "No such consumer type: " + in.getType().getLabel());
+            throw new BadRequestException("No such consumer type: " +
+                in.getType().getLabel());
         }
 
         try {
             consumer = consumerCurator.create(new Consumer(in, owner, type));
 
-            ConsumerIdentityCertificate idCert =
-                identityCertService.generateIdentityCert(consumer);
+            ConsumerIdentityCertificate idCert = identityCertService
+                .generateIdentityCert(consumer);
             log.debug("Generated identity cert: " + idCert);
             if (idCert == null) {
-                throw new RuntimeException("Error generating identity certificate.");
+                throw new RuntimeException(
+                    "Error generating identity certificate.");
             }
             consumer.setIdCert(idCert);
 
@@ -199,10 +211,12 @@ public class ConsumerResource {
             throw new BadRequestException(e.getMessage());
         }
     }
-   
+
     /**
      * delete the consumer.
-     * @param uuid uuid of the consumer to delete.
+     * 
+     * @param uuid
+     *            uuid of the consumer to delete.
      */
     @DELETE
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -210,70 +224,88 @@ public class ConsumerResource {
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         try {
-            consumerCurator.delete(consumerCurator.lookupByUuid(uuid));
+            Consumer toDelete = consumerCurator.lookupByUuid(uuid);
+            if (toDelete == null)
+                return;
+            identityCertService.deleteIdentityCert(toDelete);
+            
+            consumerCurator.delete(toDelete);
         }
         catch (RuntimeException e) {
             throw new NotFoundException(e.getMessage());
         }
     }
-    
+
     /**
      * Returns the ConsumerInfo for the given Consumer.
+     * 
      * @return the ConsumerInfo for the given Consumer.
      */
-    @GET @Path("/info")
+    @GET
+    @Path("/info")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     // TODO: What consumer?
     public ConsumerFacts getInfo() {
         ConsumerFacts ci = new ConsumerFacts();
-//        ci.setType(new ConsumerType("system"));
+        // ci.setType(new ConsumerType("system"));
         ci.setConsumer(null);
-//        Map<String,String> m = new HashMap<String,String>();
-//        m.put("cpu", "i386");
-//        m.put("hey", "biteme");
-//        ci.setMetadata(m);
+        // Map<String,String> m = new HashMap<String,String>();
+        // m.put("cpu", "i386");
+        // m.put("hey", "biteme");
+        // ci.setMetadata(m);
         ci.setFact("cpu", "i386");
         ci.setFact("hey", "foobar");
         return ci;
     }
-    
+
     /**
      * removes the product whose id matches pid, from the consumer, cid.
-     * @param cid Consumer ID to affect
-     * @param pid Product ID to remove from Consumer.
+     * 
+     * @param cid
+     *            Consumer ID to affect
+     * @param pid
+     *            Product ID to remove from Consumer.
      */
-//    @DELETE @Path("{cid}/products/{pid}")
-//    public void delete(@PathParam("cid") String cid,
-//                       @PathParam("pid") String pid) {
-//        System.out.println("cid " + cid + " pid = " + pid);
-//        Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class, cid);
-//        if (!c.getConsumedProducts().remove(pid)) {
-//            log.error("no product " + pid + " found.");
-//        }
-//    }
+    // @DELETE @Path("{cid}/products/{pid}")
+    // public void delete(@PathParam("cid") String cid,
+    // @PathParam("pid") String pid) {
+    // System.out.println("cid " + cid + " pid = " + pid);
+    // Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class,
+    // cid);
+    // if (!c.getConsumedProducts().remove(pid)) {
+    // log.error("no product " + pid + " found.");
+    // }
+    // }
 
     /**
      * Returns the product whose id matches pid, from the consumer, cid.
-     * @param cid Consumer ID to affect
-     * @param pid Product ID to remove from Consumer.
+     * 
+     * @param cid
+     *            Consumer ID to affect
+     * @param pid
+     *            Product ID to remove from Consumer.
      * @return the product whose id matches pid, from the consumer, cid.
      */
-    @GET @Path("{cid}/products/{pid}")
+    @GET
+    @Path("{cid}/products/{pid}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Product getProduct(@PathParam("cid") String cid,
-                       @PathParam("pid") String pid) {
+        @PathParam("pid") String pid) {
         return null;
     }
 
     /**
      * Return the content of the file identified by the given filename.
-     * @param path filename path.
+     * 
+     * @param path
+     *            filename path.
      * @return the content of the file identified by the given filename.
-     * @throws Exception if there's a problem loading the file.
+     * @throws Exception
+     *             if there's a problem loading the file.
      */
     public byte[] getBytesFromFile(String path) throws Exception {
         InputStream is = this.getClass().getResource(path).openStream();
-        byte [] bytes = null;
+        byte[] bytes = null;
         try {
             bytes = IOUtils.toByteArray(is);
         }
@@ -286,19 +318,19 @@ public class ConsumerResource {
     /**
      * Return the client certificate for the given consumer.
      * 
-     * @param consumerUuid UUID of the consumer
+     * @param consumerUuid
+     *            UUID of the consumer
      * @return list of the client certificates for the given consumer.
      */
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
     public List<ClientCertificate> getClientCertificates(
-        @PathParam("consumer_uuid") String consumerUuid, 
+        @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
-        
 
         log.debug("Getting client certificates for consumer: " + consumerUuid);
-        
+
         if (serials != null) {
             log.debug("Requested serials: " + serials);
             for (String s : serials.split(",")) {
@@ -307,8 +339,8 @@ public class ConsumerResource {
         }
 
         List<ClientCertificate> allCerts = new LinkedList<ClientCertificate>();
-        
-        //FIXME: make this look the cert from the cert service or whatever
+
+        // FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
         try {
             byte[] bytes = getBytesFromFile("/testcert-cert.p12");
@@ -319,8 +351,9 @@ public class ConsumerResource {
             stream.close();
 
             // FIXME : these won't be a pkcs12 bundle
-            
-            // FIXME: This isn't quite right even for demo purposes, we're taking an
+
+            // FIXME: This isn't quite right even for demo purposes, we're
+            // taking an
             // entire PKCS12 bundle and cramming it into just the cert portion,
             // no key is set.
             ClientCertificate cert = new ClientCertificate();
@@ -335,21 +368,22 @@ public class ConsumerResource {
             cert2.setKey(baos.toByteArray());
             cert2.setCert(baos.toByteArray());
             allCerts.add(cert2);
-            
+
             return allCerts;
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
-   
+
     /**
      * Return the client certificate metadata for the given consumer.
      * 
-     * This is a small subset of data clients can use to determine which certificates
-     * they need to update/fetch.
+     * This is a small subset of data clients can use to determine which
+     * certificates they need to update/fetch.
      * 
-     * @param consumerUuid UUID of the consumer
+     * @param consumerUuid
+     *            UUID of the consumer
      * @return list of the client certificate metadata for the given consumer.
      */
     @GET
@@ -358,12 +392,12 @@ public class ConsumerResource {
     public List<ClientCertificateSerial> getClientCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
-        log.debug("Getting client certificate serials for consumer: " + consumerUuid);
+        log.debug("Getting client certificate serials for consumer: " +
+            consumerUuid);
 
-        List<ClientCertificateSerial> allCerts =
-            new LinkedList<ClientCertificateSerial>();
-        
-        //FIXME: make this look the cert from the cert service or whatever
+        List<ClientCertificateSerial> allCerts = new LinkedList<ClientCertificateSerial>();
+
+        // FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
         try {
             ClientCertificateSerial cert = new ClientCertificateSerial();
@@ -378,32 +412,35 @@ public class ConsumerResource {
             for (ClientCertificateSerial md : allCerts) {
                 log.debug("   " + md.getSerial());
             }
-            
+
             return allCerts;
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
-   
+
     /**
      * Entitles the given Consumer with the given Product.
-     * @param consumerUuid Consumer identifier to be entitled
-     * @param productId Product identifying label.
+     * 
+     * @param consumerUuid
+     *            Consumer identifier to be entitled
+     * @param productId
+     *            Product identifying label.
      * @return Entitled object
      */
     private Entitlement entitleByProduct(String consumerUuid, String productId) {
-        
+
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
-        
+
         Product p = productAdapter.getProductById(productId);
         if (p == null) {
             throw new BadRequestException("No such product: " + productId);
         }
-        
+
         // Attempt to create an entitlement:
         Entitlement e = entitler.entitle(consumer, p);
         // TODO: Probably need to get the validation result out somehow.
@@ -418,16 +455,19 @@ public class ConsumerResource {
     /**
      * Grants entitlements based on a registration token.
      * 
-     * @param consumerUuid Consumer identifier.
-     * @param registrationToken registration token.
+     * @param consumerUuid
+     *            Consumer identifier.
+     * @param registrationToken
+     *            registration token.
      * @return token
      */
-    private Entitlement entitleToken(String consumerUuid, String registrationToken) {
-        
-        //FIXME: this is just a stub, need SubscriptionService to look it up
+    private Entitlement entitleToken(String consumerUuid,
+        String registrationToken) {
+
+        // FIXME: this is just a stub, need SubscriptionService to look it up
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        
-        //FIXME: getSubscriptionForToken is a stub, always "works"
+
+        // FIXME: getSubscriptionForToken is a stub, always "works"
         Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
         if (s == null) {
             throw new BadRequestException("No such token: " + registrationToken);
@@ -437,7 +477,7 @@ public class ConsumerResource {
 
         Entitlement e = entitler.entitle(consumer, p);
         // return it
-        
+
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
         }
@@ -447,9 +487,11 @@ public class ConsumerResource {
 
     /**
      * Request an entitlement from a specific pool.
-     *
-     * @param consumerUuid Consumer identifier to be entitled
-     * @param poolId Entitlement pool id.
+     * 
+     * @param consumerUuid
+     *            Consumer identifier to be entitled
+     * @param poolId
+     *            Entitlement pool id.
      * @return boolean
      */
     @POST
@@ -457,13 +499,12 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
     public Entitlement entitleByPool(
-            @PathParam("consumer_uuid") String consumerUuid,
-            @QueryParam("pool") Long poolId, 
-            @QueryParam("token") String token, 
-            @QueryParam("product") String productId) {
-        
+        @PathParam("consumer_uuid") String consumerUuid,
+        @QueryParam("pool") Long poolId, @QueryParam("token") String token,
+        @QueryParam("product") String productId) {
+
         // TODO: Check that only one query param was set:
-        
+
         if (token != null) {
             return entitleToken(consumerUuid, token);
         }
@@ -491,13 +532,13 @@ public class ConsumerResource {
 
         return e;
     }
-    
+
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") String consumerUuid) {
-        
+
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
@@ -508,28 +549,30 @@ public class ConsumerResource {
 
     /**
      * Unbind entitlements by serial number, or unbind all.
-     *
-     * @param consumerUuid Unique id for the Consumer.
-     * @param serials comma seperated list of subscription
-     * numbers.
+     * 
+     * @param consumerUuid
+     *            Unique id for the Consumer.
+     * @param serials
+     *            comma seperated list of subscription numbers.
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
     public void unbindAllOrBySerialNumber(
-            @PathParam("consumer_uuid") String consumerUuid,
-            @QueryParam("serial") String serials) {
+        @PathParam("consumer_uuid") String consumerUuid,
+        @QueryParam("serial") String serials) {
 
         if (serials == null) {
-            //FIXME: just a stub, needs CertifcateService (and/or a
-            //CertificateCurator) to lookup by serialNumber
+            // FIXME: just a stub, needs CertifcateService (and/or a
+            // CertificateCurator) to lookup by serialNumber
             Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
 
             if (consumer == null) {
-                throw new NotFoundException(
-                        "Consumer with ID " + consumerUuid + " could not be found.");
+                throw new NotFoundException("Consumer with ID " + consumerUuid +
+                    " could not be found.");
             }
 
-            for (Entitlement entitlement : entitlementCurator.listByConsumer(consumer)) {
+            for (Entitlement entitlement : entitlementCurator
+                .listByConsumer(consumer)) {
                 entitler.revokeEntitlement(entitlement);
             }
 
@@ -540,15 +583,17 @@ public class ConsumerResource {
             // entitlement pool)
         }
         else {
-            throw new RuntimeException("Unbind by serial number not yet supported.");
+            throw new RuntimeException(
+                "Unbind by serial number not yet supported.");
         }
 
     }
 
     /**
      * Remove an entitlement by ID.
-     *
-     * @param dbid the entitlement to delete.
+     * 
+     * @param dbid
+     *            the entitlement to delete.
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
@@ -562,9 +607,8 @@ public class ConsumerResource {
             entitlementCurator.delete(toDelete);
             return;
         }
-        throw new NotFoundException(
-            "Entitlement with ID '" + dbid + "' could not be found");
+        throw new NotFoundException("Entitlement with ID '" + dbid +
+            "' could not be found");
     }
-
 
 }

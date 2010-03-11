@@ -32,5 +32,13 @@ public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapte
         return idCert;
     }
 
+    /* (non-Javadoc)
+     * @see org.fedoraproject.candlepin.service.IdentityCertServiceAdapter#deleteIdentityCert(org.fedoraproject.candlepin.model.Consumer)
+     */
+    @Override
+    public void deleteIdentityCert(Consumer consumer) {
+        //No Op.  Pretend to delete the cert
+    }
+
 }
 
