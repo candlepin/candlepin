@@ -1,13 +1,10 @@
-#!/usr/bin/python
-
 import httplib
 import urllib
 import urllib2
 import sys
 import simplejson as json
 import os
-
-
+import base64
 
 class Rest(object):
     def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", cert_file=None, key_file=None, debug=None):
@@ -171,6 +168,11 @@ class CandlePinApi:
     def getProducts(self):
         path = "/products/"
         return self.rest.get(path)
+
+    def uploadRules(self, rules_text):
+        path = "/rules/"
+        encoded = base64.b64encode(rules_text)
+        return self.rest.post(path, data=encoded)
 
 
 

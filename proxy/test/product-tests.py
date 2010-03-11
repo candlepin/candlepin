@@ -1,9 +1,4 @@
-import unittest
-import httplib, urllib
-import simplejson as json
-
 from testfixture import CandlepinTests
-from candlepinapi import Rest, CandlePinApi
 
 class ProductTests(CandlepinTests):
 
