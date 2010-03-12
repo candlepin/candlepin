@@ -45,7 +45,7 @@ public interface IdentityCertServiceAdapter {
      * Deletes the certificate assocaited with the consumer
      * @param consumer
      */
-    public void deleteIdentityCert(Consumer consumer) ;
+    void deleteIdentityCert(Consumer consumer);
 
 
 }

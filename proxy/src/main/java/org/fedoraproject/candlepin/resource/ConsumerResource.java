@@ -41,7 +41,6 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -225,8 +224,9 @@ public class ConsumerResource {
         log.debug("deleteing  consumer_uuid" + uuid);
         try {
             Consumer toDelete = consumerCurator.lookupByUuid(uuid);
-            if (toDelete == null)
+            if (toDelete == null) {
                 return;
+            }
             identityCertService.deleteIdentityCert(toDelete);
             
             consumerCurator.delete(toDelete);
