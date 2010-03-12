@@ -33,7 +33,7 @@ class ConsumerTests(CandlepinTests):
         self.assertTrue(self.uuid != None)
 
     def test_bind_by_entitlement_pool(self):
-        # First we list all entitlement pools available to this consumer:
+        # First we list all pools available to this consumer:
         virt_host = 'virtualization_host'
         results = self.cp.getPools(self.uuid)
         pools = {}

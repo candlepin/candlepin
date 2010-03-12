@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -45,19 +48,6 @@ public class PoolResource {
     private OwnerCurator ownerCurator;
     private ProductServiceAdapter productServiceAdapter;
 
-    /**
-     * default ctor
-     * 
-     * @param poolCurator
-     *            interact with the entitlement pools.
-     * @param consumerCurator
-     *            interact with the consumers.
-     * @param ownerCurator
-     *            interact with owners
-     * @param productServiceAdapter
-     *            interact with products                
-     *            
-     */
     @Inject
     public PoolResource(
         PoolCurator poolCurator,
@@ -75,17 +65,17 @@ public class PoolResource {
      * @param ownerId
      *            optional parameter to limit the search by owner
      * @param productId
-     *            optional parameter to limit the search by product            
+     *            optional parameter to limit the search by product      
      * @return the list of available entitlement pools.
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Pools list(@QueryParam("owner") Long ownerId,
+    public List<Pool> list(@QueryParam("owner") Long ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId) {
-        Pools returnValue = new Pools();
+        List<Pool> returnValue = new LinkedList<Pool>();
         if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {
-            returnValue.setPool(poolCurator.findAll());
+            return poolCurator.findAll();
         }
         else {
             Product p = null;
@@ -113,10 +103,8 @@ public class PoolResource {
                     return returnValue;
                 }                
             }                   
-            returnValue.setPool(poolCurator.listAvailableEntitlementPools(c, o, p, true));
+            return poolCurator.listAvailableEntitlementPools(c, o, p, true);
         }
-
-        return returnValue;
     }
 
     /**
