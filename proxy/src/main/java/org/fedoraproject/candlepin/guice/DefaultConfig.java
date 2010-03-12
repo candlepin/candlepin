@@ -21,10 +21,6 @@ import java.io.Reader;
 import javax.script.ScriptEngine;
 import javax.servlet.Filter;
 
-import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
-import org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthenticationFilter;
-import org.fedoraproject.candlepin.util.LoggingFilter;
-import org.fedoraproject.candlepin.LoggingFilter;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -33,6 +29,7 @@ import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapte
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthenticationFilter;
+import org.fedoraproject.candlepin.util.LoggingFilter;
 
 import com.google.inject.AbstractModule;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
