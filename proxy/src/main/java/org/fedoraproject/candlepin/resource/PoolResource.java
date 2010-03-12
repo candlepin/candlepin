@@ -98,7 +98,7 @@ public class PoolResource {
             Consumer c = null;
             if (consumerUuid != null) {
                 c = consumerCurator.lookupByUuid(consumerUuid);
-                // TODO: doesn't look right, if we were given a consumer id,
+                // FIXME: doesn't look right, if we were given a consumer id,
                 // but that consumer doesn't exist, we should be throwing an error?
                 if (c == null) {
                     return returnValue;
@@ -107,6 +107,8 @@ public class PoolResource {
             Owner o = null;
             if (ownerId != null) {
                 o = ownerCurator.find(ownerId);
+                // FIXME: doesn't look right, if we were given an owner id,
+                // but that owner doesn't exist, we should be throwing an error?
                 if (o == null) {
                     return returnValue;
                 }                

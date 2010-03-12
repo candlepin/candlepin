@@ -429,8 +429,8 @@ public class ConsumerResource {
      *            Product identifying label.
      * @return Entitled object
      */
-    private Entitlement entitleByProduct(String consumerUuid, String productId) {
-
+    private Entitlement bindByProduct(String consumerUuid, String productId) {
+        
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
@@ -461,10 +461,9 @@ public class ConsumerResource {
      *            registration token.
      * @return token
      */
-    private Entitlement entitleToken(String consumerUuid,
-        String registrationToken) {
-
-        // FIXME: this is just a stub, need SubscriptionService to look it up
+    private Entitlement bindByToken(String consumerUuid, String registrationToken) {
+        
+        //FIXME: this is just a stub, need SubscriptionService to look it up
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
 
         // FIXME: getSubscriptionForToken is a stub, always "works"
@@ -485,33 +484,7 @@ public class ConsumerResource {
         return e;
     }
 
-    /**
-     * Request an entitlement from a specific pool.
-     * 
-     * @param consumerUuid
-     *            Consumer identifier to be entitled
-     * @param poolId
-     *            Entitlement pool id.
-     * @return boolean
-     */
-    @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("/{consumer_uuid}/entitlements")
-    public Entitlement entitleByPool(
-        @PathParam("consumer_uuid") String consumerUuid,
-        @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productId) {
-
-        // TODO: Check that only one query param was set:
-
-        if (token != null) {
-            return entitleToken(consumerUuid, token);
-        }
-        if (productId != null) {
-            return entitleByProduct(consumerUuid, productId);
-        }
-
+    private Entitlement bindByPool(String consumerUuid, Long poolId) {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
             throw new BadRequestException("No such consumer: " + consumerUuid);
@@ -531,6 +504,37 @@ public class ConsumerResource {
         }
 
         return e;
+    }
+
+    /**
+     * Request an entitlement from a specific pool.
+     * 
+     * @param consumerUuid
+     *            Consumer identifier to be entitled
+     * @param poolId
+     *            Entitlement pool id.
+     * @return boolean
+     */
+    @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("/{consumer_uuid}/entitlements")
+    public Entitlement bind(
+            @PathParam("consumer_uuid") String consumerUuid,
+            @QueryParam("pool") Long poolId, 
+            @QueryParam("token") String token, 
+            @QueryParam("product") String productId) {
+        
+        // TODO: Check that only one query param was set:
+
+        if (token != null) {
+            return bindByToken(consumerUuid, token);
+        }
+        if (productId != null) {
+            return bindByProduct(consumerUuid, productId);
+        }
+
+        return bindByPool(consumerUuid, poolId);
     }
 
     @GET

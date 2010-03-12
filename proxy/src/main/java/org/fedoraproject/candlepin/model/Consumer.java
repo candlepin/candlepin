@@ -66,6 +66,7 @@ public class Consumer implements Persisted {
     private String name;
     
     @Transient
+    @XmlTransient // this should definitely not be getting serialized
     private ConsumerIdentityCertificate idCert;
     
     @ManyToOne
