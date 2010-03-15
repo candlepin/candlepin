@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -79,7 +78,6 @@ public class PoolResource {
             throw new BadRequestException("Cannot filter on both owner and consumer");
         }
         
-        List<Pool> returnValue = new LinkedList<Pool>();
         if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {
             return poolCurator.findAll();
         }
@@ -88,25 +86,21 @@ public class PoolResource {
             if (productId != null) {
                 p = productServiceAdapter.getProductById(productId);
                 if (p == null) {
-                    return returnValue;
+                    throw new NotFoundException("product: " + productId);
                 }
             }
             Consumer c = null;
             if (consumerUuid != null) {
                 c = consumerCurator.lookupByUuid(consumerUuid);
-                // FIXME: doesn't look right, if we were given a consumer id,
-                // but that consumer doesn't exist, we should be throwing an error?
                 if (c == null) {
-                    return returnValue;
+                    throw new NotFoundException("consumer: " + consumerUuid);
                 }                
             }        
             Owner o = null;
             if (ownerId != null) {
                 o = ownerCurator.find(ownerId);
-                // FIXME: doesn't look right, if we were given an owner id,
-                // but that owner doesn't exist, we should be throwing an error?
                 if (o == null) {
-                    return returnValue;
+                    throw new NotFoundException("owner: " + ownerId);
                 }                
             }                   
             return poolCurator.listAvailableEntitlementPools(c, o, p, true);

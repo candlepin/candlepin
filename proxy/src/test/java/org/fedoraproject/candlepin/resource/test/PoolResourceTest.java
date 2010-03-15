@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.BadRequestException;
+import org.fedoraproject.candlepin.resource.NotFoundException;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -141,19 +142,18 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
     }
     
-    @Test
+    @Test(expected = NotFoundException.class)
     public void testListNoSuchOwner() {
-        List<Pool> pools = poolResource.list(new Long(-1), null, null);
-        assertEquals(0, pools.size());
+        poolResource.list(new Long(-1), null, null);
     }
     
-    @Test
+    @Test(expected = NotFoundException.class)
     public void testListNoSuchConsumer() {
-        
+        poolResource.list(null, "blah", null);
     }
     
-    @Test
+    @Test(expected = NotFoundException.class)
     public void testListNoSuchProduct() {
-        
+        poolResource.list(null, null, "boogity");
     }
 }
