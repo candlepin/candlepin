@@ -37,17 +37,17 @@ import java.util.Date;
  * Entitler
  */
 public class Entitler {
-    
+
     private PoolCurator epCurator;
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
     private Enforcer enforcer;
     private static Logger log = Logger.getLogger(Entitler.class);
-    
+
     @Inject
     protected Entitler(PoolCurator epCurator,
-            EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
-            Enforcer enforcer) {
+        EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
+        Enforcer enforcer) {
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
@@ -60,39 +60,47 @@ public class Entitler {
      * If the entitlement cannot be granted, null will be returned.
      * 
      * TODO: Throw exception if entitlement not granted. Report why.
-     *
-     * @param consumer consumer requesting to be entitled
-     * @param product product to be entitled.
+     * 
+     * @param consumer
+     *            consumer requesting to be entitled
+     * @param product
+     *            product to be entitled.
      * @return Entitlement
      */
     //
-    // NOTE: after calling this method both entitlement pool and consumer parameters
-    //       will most certainly be stale. beware!
+    // NOTE: after calling this method both entitlement pool and consumer
+    // parameters
+    // will most certainly be stale. beware!
     //
     @Transactional
     public Entitlement entitle(Consumer consumer, Product product) {
         Owner owner = consumer.getOwner();
-        
-        // TODO: Don't assume we use the first pool here, once rules have support for 
-        // specifying the pool to use. 
 
-        Pool pool = epCurator.listByOwnerAndProduct(owner, product).get(0);
+        // TODO: Don't assume we use the first pool here, once rules have
+        // support for
+        // specifying the pool to use.
+
+        Pool pool = enforcer.selectBestPool(consumer, product.getId(),
+            epCurator.listByOwnerAndProduct(owner, product));
         if (pool == null) {
-            throw new RuntimeException("No entitlements for product: " + product.getName());
+            throw new RuntimeException("No entitlements for product: " +
+                product.getName());
         }
-        
+
         return addEntitlement(consumer, pool);
     }
 
     /**
      * Request an entitlement by pool..
-     *
+     * 
      * If the entitlement cannot be granted, null will be returned.
-     *
+     * 
      * TODO: Throw exception if entitlement not granted. Report why.
-     *
-     * @param consumer consumer requesting to be entitled
-     * @param pool entitlement pool to consume from
+     * 
+     * @param consumer
+     *            consumer requesting to be entitled
+     * @param pool
+     *            entitlement pool to consume from
      * @return Entitlement
      */
     @Transactional
@@ -100,13 +108,13 @@ public class Entitler {
         return addEntitlement(consumer, pool);
     }
 
-
     private Entitlement addEntitlement(Consumer consumer, Pool pool) {
         PreEntHelper preHelper = enforcer.pre(consumer, pool);
         ValidationResult result = preHelper.getResult();
-        
+
         if (!result.isSuccessful()) {
-            log.warn("Entitlement not granted: " + result.getErrors().toString());
+            log.warn("Entitlement not granted: " +
+                result.getErrors().toString());
             return null;
         }
 
@@ -122,7 +130,7 @@ public class Entitler {
         }
 
         enforcer.post(e);
-        
+
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
         epCurator.merge(pool);
@@ -130,7 +138,7 @@ public class Entitler {
         return e;
     }
 
-    // TODO:  Does the enforcer have any rules around removing entitlements?
+    // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional
     public void revokeEntitlement(Entitlement entitlement) {
         if (!entitlement.isFree()) {

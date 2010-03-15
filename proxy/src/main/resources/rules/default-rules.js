@@ -36,16 +36,16 @@ function post_virtualization_host_platform() {
 
 function pre_global() {
 
-	// Support free entitlements for guests, if their parent has virt host or platform,
+	// Support free entitlements for guests, if their parent has virt host or
+	// platform,
 	// and is entitled to the product the guest is requesting:
 	if (consumer.getType() == "virt_system" && consumer.getParent() != null) {
-		if ((consumer.getParent().hasEntitlement("virtualization_host") ||
-				consumer.getParent().hasEntitlement("virtualization_host_platform")) &&
-				consumer.getParent().hasEntitlement(product.getLabel())) {
+		if ((consumer.getParent().hasEntitlement("virtualization_host") || consumer
+				.getParent().hasEntitlement("virtualization_host_platform"))
+				&& consumer.getParent().hasEntitlement(product.getLabel())) {
 			pre.grantFreeEntitlement();
 		}
-	}
-	else {
+	} else {
 		pre.checkQuantity(pool);
 	}
 }
@@ -53,3 +53,8 @@ function pre_global() {
 function post_global() {
 
 }
+
+function select_pool_global() {
+	return pools.getFirst();
+}
+
