@@ -101,12 +101,12 @@ public class BasicAuthViaDbFilterTest {
         // return the correct kind of auth
         when(request.getHeader("Authorization")).thenReturn(
             "BASIC " + encodeUserPass("USER", "REDHAT"));
-        when(request.getHeader("Authorization")).thenReturn("BASIC " + encodeUserPass("CANADA", "REDHAT"));
+       
         when(request.getMethod()).thenReturn("POST");
         
         filter.doFilter(request, defaultResponse, defaultChain);
         // successful authentication puts the username attribute on the request
-        verify(request).setAttribute("username", "CANADA");
+        verify(request).setAttribute("username", "USER");
     }
     
     @Test

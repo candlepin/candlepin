@@ -44,10 +44,14 @@ abstract class ConfigurationParser {
         Properties toReturn = new Properties();
         
         for (String key : inputConfiguration.keySet()) {
-            toReturn.put(key.substring(prefixLength() + 1), inputConfiguration.get(key));
+            if(key.startsWith(getPrefix())){
+                toReturn.put(key.substring(getPrefix().length() + 1), inputConfiguration.get(key));
+            }else{
+                toReturn.put(key, inputConfiguration.get(key));
+            }
         }
         return toReturn;
     }    
 
-    public abstract int prefixLength();
+    public abstract String getPrefix();
 }

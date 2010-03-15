@@ -22,8 +22,6 @@ package org.fedoraproject.candlepin.config;
 class JPAConfigParser extends ConfigurationParser {
     /** JPA configuration prefix */
     public static final String JPA_CONFIG_PREFIX = "jpa.config";
-    /** Length of the <code>JPA_CONFIG_PREFIX</code> */
-    public static final int PREFIX_LENGTH = JPA_CONFIG_PREFIX.length();
     
     /** hibernate connection url */
     public static final String URL_CONFIG = "hibernate.connection.url";
@@ -32,7 +30,7 @@ class JPAConfigParser extends ConfigurationParser {
     /** Comment for <code>PASSWORD_CONFIG</code> */
     public static final String PASSWORD_CONFIG = "hibernate.connection.password";
     
-    public int prefixLength() {
-        return PREFIX_LENGTH;
+    public String getPrefix() {
+        return JPA_CONFIG_PREFIX;
     }
 }
