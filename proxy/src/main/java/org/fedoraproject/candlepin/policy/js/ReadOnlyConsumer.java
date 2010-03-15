@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.policy.MissingFactException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -85,7 +86,11 @@ public class ReadOnlyConsumer {
      * @return Fact value assigned to the given key.
      */
     public String getFact(String factKey) {
-        return consumer.getFact(factKey);
+        String result = consumer.getFact(factKey);
+        if (result == null) {
+            throw new MissingFactException(consumer.getUuid(), factKey);
+        }
+        return result;
     }
 
     /**

@@ -23,8 +23,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
-import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
@@ -45,6 +43,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
     private static final String BAD_RULE_PRODUCT = "BADRULE001";
     private static final String NO_RULE_PRODUCT = "NORULE001";
+    private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
     @Before
     public void createEnforcer() {
@@ -55,10 +54,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
 
-        PreEntHelper preHelper = new PreEntHelper();
-        PostEntHelper postHelper = new PostEntHelper(productAdapter);
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
-                rulesCurator, preHelper, postHelper, productAdapter);
+                rulesCurator, productAdapter);
     }
 
     // grrr. have to test two conditions atm: sufficient number of entitlements
@@ -111,6 +108,19 @@ public class EnforcerTest extends DatabaseTestFixture {
                 setConsumed(new Long(currentMembers));
             }
         };
+    }
+    
+    // This exception should mention wrapping a MissingFactException
+    @Test(expected = RuleExecutionException.class)
+    public void testRuleFailsWhenConsumerDoesntHaveFact() {
+        ValidationResult result = enforcer.pre(
+            TestUtil.createConsumer(), new Pool(owner, 
+                PRODUCT_CPULIMITED, new Long(10), 
+                TestUtil.createDate(2010, 2, 28), 
+                TestUtil.createDate(2018, 2, 28))).getResult();
+        assertFalse(result.isSuccessful());
+        assertTrue(result.hasErrors());
+        assertFalse(result.hasWarnings());
     }
 
     @Test

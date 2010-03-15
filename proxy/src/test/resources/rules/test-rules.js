@@ -32,7 +32,8 @@ function post_virtualization_host_platform() {
 
 function pre_CPULIMITED001() {
 	pre.checkQuantity(pool);
-	if (parseInt(consumer.getFact("cpu_cores")) > 2) {
+	cpus = parseInt(consumer.getFact("cpu_cores"));
+	if (cpus > 2) {
 		pre.addError("rulefailed.too.many.cpu.cores");
 	}
 }
@@ -77,6 +78,7 @@ function pre_global() {
 				consumer.getParent().hasEntitlement(product.getLabel())) {
 			pre.grantFreeEntitlement();
 		}
+
 	}
 	else {
 		pre.checkQuantity(pool);

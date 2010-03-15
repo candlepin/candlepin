@@ -117,6 +117,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 }
                 else {
                     log.info("Omitting pool due to failed rule check: " + p.getId());
+                    log.info(helper.getResult().getErrors());
                 }
             }
             return finalResults;

@@ -47,8 +47,6 @@ public class JavascriptEnforcer implements Enforcer {
     private DateSource dateSource;
     private RulesCurator rulesCurator;
     private ProductServiceAdapter prodAdapter;
-    private PreEntHelper preHelper;
-    private PostEntHelper postHelper;
 
     private ScriptEngine jsEngine;
 
@@ -61,12 +59,9 @@ public class JavascriptEnforcer implements Enforcer {
 
     @Inject
     public JavascriptEnforcer(DateSource dateSource,
-            RulesCurator rulesCurator, PreEntHelper preHelper,
-            PostEntHelper postHelper, ProductServiceAdapter prodAdapter) {
+            RulesCurator rulesCurator, ProductServiceAdapter prodAdapter) {
         this.dateSource = dateSource;
         this.rulesCurator = rulesCurator;
-        this.preHelper = preHelper;
-        this.postHelper = postHelper;
         this.prodAdapter = prodAdapter;
 
         ScriptEngineManager mgr = new ScriptEngineManager();
@@ -87,7 +82,7 @@ public class JavascriptEnforcer implements Enforcer {
     @Override
     public PreEntHelper pre(Consumer consumer, Pool entitlementPool) {
 
-        runPre(preHelper, consumer, entitlementPool);
+        PreEntHelper preHelper = runPre(consumer, entitlementPool);
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(new ValidationError("Entitlements for " +
@@ -99,10 +94,10 @@ public class JavascriptEnforcer implements Enforcer {
         return preHelper;
     }
 
-    private void runPre(PreEntHelper preHelper, Consumer consumer,
-            Pool pool) {
+    private PreEntHelper runPre(Consumer consumer, Pool pool) {
         Invocable inv = (Invocable) jsEngine;
         String productId = pool.getProductId();
+        PreEntHelper preHelper = new PreEntHelper();
 
         // Provide objects for the script:
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
@@ -134,10 +129,12 @@ public class JavascriptEnforcer implements Enforcer {
         catch (ScriptException e) {
             throw new RuleExecutionException(e);
         }
+        return preHelper;
     }
 
     @Override
     public PostEntHelper post(Entitlement ent) {
+        PostEntHelper postHelper = new PostEntHelper();
         postHelper.init(ent);
         runPost(postHelper, ent);
         return postHelper;

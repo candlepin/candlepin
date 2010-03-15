@@ -16,9 +16,11 @@ package org.fedoraproject.candlepin.resource.test;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.resource.BadRequestException;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -40,6 +42,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private Product product1;
     private Product product2;
     private PoolResource poolResource;
+    private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
+    private Consumer failConsumer;
+    private Consumer passConsumer;
     
     @Before
     public void setUp() {
@@ -48,7 +53,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);
         
-        product1 = TestUtil.createProduct();
+        product1 = new Product(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED);
         product2 = TestUtil.createProduct();
         productCurator.create(product1);
         productCurator.create(product2);
@@ -66,16 +71,28 @@ public class PoolResourceTest extends DatabaseTestFixture {
         
         poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator, 
             productAdapter);
+        
+        // Consumer system with too many cpu cores:
+        failConsumer = TestUtil.createConsumer(owner1);
+        failConsumer.setMetadataField("cpu_cores", "4");
+        consumerTypeCurator.create(failConsumer.getType());
+        consumerCurator.create(failConsumer);
+
+        // Consumer system with appropriate number of cpu cores:
+        passConsumer = TestUtil.createConsumer(owner1);
+        passConsumer.setMetadataField("cpu_cores", "2");
+        consumerTypeCurator.create(passConsumer.getType());
+        consumerCurator.create(passConsumer);
     }
     
     @Test
-    public void testLookupAll() {
+    public void testListAll() {
         List<Pool> pools = poolResource.list(null, null, null);
         assertEquals(3, pools.size());
     }
    
     @Test
-    public void testLookupForOrg() {
+    public void testListForOrg() {
         List<Pool> pools = poolResource.list(owner1.getId(), null, null);
         assertEquals(2, pools.size());
         pools = poolResource.list(owner2.getId(), null, null);
@@ -83,7 +100,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupForProduct() {
+    public void testListForProduct() {
         List<Pool> pools = poolResource.list(null, null, product1.getId());
         assertEquals(2, pools.size());
         pools = poolResource.list(null, null, product2.getId());
@@ -91,14 +108,52 @@ public class PoolResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupForOrgAndProduct() {
+    public void testListForOrgAndProduct() {
         List<Pool> pools = poolResource.list(owner1.getId(), null, product1.getId());
         assertEquals(1, pools.size());
         pools = poolResource.list(owner2.getId(), null, product2.getId());
         assertEquals(0, pools.size());
     }
 
-    // test consumer filtering
+    @Test
+    public void testListConsumerAndProductFiltering() {
+        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), 
+            product1.getId());
+        assertEquals(1, pools.size());
+        pools = poolResource.list(null, failConsumer.getUuid(), 
+            product1.getId());
+        assertEquals(0, pools.size());
+    }
     
-    // test query param data
+    // Filtering by both a consumer and an owner makes no sense (we should use the 
+    // owner of that consumer), so make sure we error if someone tries.
+    @Test(expected = BadRequestException.class)
+    public void testListBlocksConsumerOwnerFiltering() {
+        List<Pool> pools = poolResource.list(owner1.getId(), passConsumer.getUuid(), 
+            product1.getId());
+    }
+    
+    @Test
+    public void testListConsumerFiltering() {
+        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null);
+        assertEquals(2, pools.size());
+        pools = poolResource.list(null, failConsumer.getUuid(), null);
+        assertEquals(1, pools.size());
+    }
+    
+    @Test
+    public void testListNoSuchOwner() {
+        List<Pool> pools = poolResource.list(new Long(-1), null, null);
+        assertEquals(0, pools.size());
+    }
+    
+    @Test
+    public void testListNoSuchConsumer() {
+        
+    }
+    
+    @Test
+    public void testListNoSuchProduct() {
+        
+    }
 }

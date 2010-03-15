@@ -15,28 +15,16 @@
 package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-
-import com.google.inject.Inject;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
  * post entitlement javascript functions allowing them to perform a specific set
  * of operations we support.
+ * 
+ * NOTE: Currently unused, keeping it around and wired up in case we do once rule
+ * execution becomes better understood.
  */
 public class PostEntHelper {
-
-    //private ProductServiceAdapter prodAdapter;
-    //private Entitlement ent;
-
-    /**
-     * ctor
-     * @param prodAdapter interact with Product service
-     */
-    @Inject
-    public PostEntHelper(ProductServiceAdapter prodAdapter) {
-        //this.prodAdapter = prodAdapter;
-    }
 
     /**
      * Separated from constructor because these objects are not something Guice

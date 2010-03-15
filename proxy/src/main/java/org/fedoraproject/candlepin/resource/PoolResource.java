@@ -73,6 +73,12 @@ public class PoolResource {
     public List<Pool> list(@QueryParam("owner") Long ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId) {
+        
+        // Make sure we were given sane query parameters:
+        if (consumerUuid != null && ownerId != null) {
+            throw new BadRequestException("Cannot filter on both owner and consumer");
+        }
+        
         List<Pool> returnValue = new LinkedList<Pool>();
         if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {
             return poolCurator.findAll();

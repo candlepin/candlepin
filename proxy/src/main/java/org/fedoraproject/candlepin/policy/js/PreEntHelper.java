@@ -27,9 +27,6 @@ public class PreEntHelper {
     private Boolean grantFreeEntitlement = Boolean.FALSE;
     private ValidationResult result;
    
-    /**
-     * default ctor
-     */
     public PreEntHelper() {
         result = new ValidationResult();
     }
