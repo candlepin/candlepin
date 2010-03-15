@@ -130,7 +130,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     // owner of that consumer), so make sure we error if someone tries.
     @Test(expected = BadRequestException.class)
     public void testListBlocksConsumerOwnerFiltering() {
-        List<Pool> pools = poolResource.list(owner1.getId(), passConsumer.getUuid(), 
+        poolResource.list(owner1.getId(), passConsumer.getUuid(), 
             product1.getId());
     }
     

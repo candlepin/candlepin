@@ -35,7 +35,7 @@ class ConsumerTests(CandlepinTests):
     def test_bind_by_entitlement_pool(self):
         # First we list all pools available to this consumer:
         virt_host = 'virtualization_host'
-        results = self.cp.getPools(self.uuid)
+        results = self.cp.getPools(consumer=self.uuid)
         pools = {}
         for pool in results['pool']:
             pools[pool['productId']] = pool
@@ -65,7 +65,7 @@ class ConsumerTests(CandlepinTests):
         print result
 
     def test_unbind_all_single(self):
-        pools = self.cp.getPools(self.uuid)
+        pools = self.cp.getPools(consumer=self.uuid)
         pool = pools['pool'][0]
 
         self.cp.bindPool(self.uuid, pool['id'])
@@ -76,7 +76,7 @@ class ConsumerTests(CandlepinTests):
         self.assertEqual(None, self.cp.getEntitlements(self.uuid))
 
     def test_unbind_all_multi(self):
-        pools = self.cp.getPools(self.uuid)['pool']
+        pools = self.cp.getPools(consumer=self.uuid)['pool']
 
         if len(pools) > 1:
             for pool in pools:
@@ -85,4 +85,16 @@ class ConsumerTests(CandlepinTests):
             # Unbind them all
             self.cp.unBindAll(self.uuid)
             self.assertEqual(None, self.cp.getEntitlements(self.uuid))
+
+    def test_list_pools(self):
+        pools = self.cp.getPools(consumer=self.uuid, product="monitoring")
+        self.assertEquals(1, len(pools))
+
+    def test_list_pools_for_bad_objects(self):
+        self.assertRaises(Exception, self.cp.getPools, consumer='blah')
+        self.assertRaises(Exception, self.cp.getPools, owner='-1')
+
+    def test_list_pools_for_bad_query_combo(self):
+        # This isn't allowed, should give bad request.
+        self.assertRaises(Exception, self.cp.getPools, consumer=self.uuid, owner=1)
 

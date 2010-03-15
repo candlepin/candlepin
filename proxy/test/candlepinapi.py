@@ -157,8 +157,20 @@ class CandlePinApi:
         path = "/consumers/%s/certificates/serials" % consumer_uuid
         return self.rest.get(path)
 
-    def getPools(self, consumer_uuid):
-        path = "/pools?consumer=%s" % consumer_uuid
+    def getPools(self, consumer=None, owner=None, product=None):
+        """
+        Limit available entitlement pools.
+          consumer - Limit to pools available to given UUID.
+          owner - Limit pools to the given owner ID.
+          product - Limit pools to the given product ID.
+        """
+        path = "/pools?"
+        if consumer:
+            path = "%sconsumer=%s&" % (path, consumer)
+        if owner:
+            path = "%sowner=%s&" % (path, owner)
+        if product:
+            path = "%sproduct=%s&" % (path, product)
         return self.rest.get(path)
 
     def getEntitlements(self, consumer_uuid):
