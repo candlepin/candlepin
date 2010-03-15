@@ -11,6 +11,8 @@ proxy/*.log
 proxy/*.log.*
 proxy/buildconf/builder/config/local
 proxy/.classpath
+proxy/.project
+proxy/.pydevproject
 proxy/.externalToolBuilders
 proxy/conf/eclipse/bin
 proxy/conf/eclipse/.project

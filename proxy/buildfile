@@ -77,13 +77,32 @@ repositories.remote << "http://repo2.maven.org/maven2/org/mockito/mockito-all"
 desc "The Proxy project"
 define "candlepin" do
 
+  #
+  # project info
+  #
   project.version = VERSION_NUMBER
   project.group = GROUP
   manifest["Implementation-Vendor"] = COPYRIGHT
+
+  #
+  # eclipse settings
+  # http://buildr.apache.org/more_stuff.html#eclipse
+  #
+  eclipse.natures 'org.eclipse.jdt.core.javanature'
+  eclipse.natures 'net.sf.eclipsecs.core.CheckstyleNature'
+  eclipse.builders 'org.eclipse.jdt.core.javabuilder'
+  eclipse.builders 'net.sf.eclipsecs.core.CheckstyleBuilder'
+
+  #
+  # building
+  #
   compile.options.target = '1.6'
 
   compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE, JACKSON, QUARTZ
-    
+ 
+  #
+  # testing
+  #
   test.setup do |task|
     filter('src/test/java').exclude('*.java').into('target/test/classes').run 
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
@@ -91,15 +110,22 @@ define "candlepin" do
   test.teardown { rm_rf 'target/classes/META-INF' }
   test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, JERSEY_FOR_TEST, QUARTZ
 
+  #
   # javadoc projects
+  #
   javadoc
 
+  #
+  # packaging
+  #
   package(:jar, :id=>'candlepin-model').clean.include 'target/classes/org/fedoraproject/candlepin/model', :path=>"org/fedoraproject/candlepin/"
   package(:war, :id=>"candlepin-basic").path("WEB-INF/classes").exclude(_(:target, :classes, "org/fedoraproject/candlepin/model"))
   package(:war, :id=>"candlepin-basic").libs << HSQLDB
   package(:war, :id=>"candlepin").libs << HSQLDB
   
+  #
   # to use: buildr candlepin:genschema
+  #
   task :genschema do
     begin
       ant('gen-schema') do |ant|
