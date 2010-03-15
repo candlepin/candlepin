@@ -92,6 +92,19 @@ public class ReadOnlyConsumer {
         }
         return result;
     }
+    
+    /**
+     * Check if the consumer has the given fact specified.
+     * @param factKey Fact to look up.
+     * @return true if consumer has this fact set, false otherwise.
+     */
+    public boolean hasFact(String factKey) {
+        String result = consumer.getFact(factKey);
+        if (result == null) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * Return true if this Consumer has any entitlements for the given product
