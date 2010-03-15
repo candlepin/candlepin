@@ -32,13 +32,14 @@ public interface IdentityCertServiceAdapter {
      * 
      * @param consumer
      *            Consumer.
+     * @param username
      * @return consumer's identity certificate.
      * @throws IOException
      *             if there is a file system problem
      * @throws GeneralSecurityException
      *             if there is a violation of policy
      */
-    ConsumerIdentityCertificate generateIdentityCert(Consumer consumer)
+    ConsumerIdentityCertificate generateIdentityCert(Consumer consumer, String username)
         throws GeneralSecurityException, IOException;
 
     /**

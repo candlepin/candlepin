@@ -61,18 +61,18 @@ public class BouncyCastlePKI {
         this.caPrivateKey = certReader.getCaKey();
     }
 
-    public X509Certificate createX509Certificate(String commonName,
+    public X509Certificate createX509Certificate(String dn,
         List<X509ExtensionWrapper> extensions, Date startDate, Date endDate,
         BigInteger serialNumber) throws GeneralSecurityException, IOException {
 
-        return createX509Certificate(commonName, extensions, startDate,
+        return createX509Certificate(dn, extensions, startDate,
             endDate, generateNewKeyPair(), serialNumber);
     }
 
     /**
      * 
-     * @param commonName
-     *            human readable name of the cert
+     * @param dn
+     *            full x509 distinguished name
      * @param extensions
      *            should be none for now
      * @param startDate
@@ -89,7 +89,7 @@ public class BouncyCastlePKI {
      * @throws IOException
      *             If the ca cert file is unreadable or missing
      */
-    public X509Certificate createX509Certificate(String commonName,
+    public X509Certificate createX509Certificate(String dn,
         List<X509ExtensionWrapper> extensions, Date startDate, Date endDate,
         KeyPair clientKeyPair, BigInteger serialNumber)
         throws GeneralSecurityException, IOException {
@@ -102,7 +102,7 @@ public class BouncyCastlePKI {
         certGen.setNotBefore(startDate);
         certGen.setNotAfter(endDate);
 
-        X509Principal subjectPrincipal = new X509Principal("CN=" + commonName);
+        X509Principal subjectPrincipal = new X509Principal(dn);
         certGen.setSubjectDN(subjectPrincipal);
         certGen.setPublicKey(clientKeyPair.getPublic());
         certGen.setSignatureAlgorithm(SIGNATURE_ALGO);

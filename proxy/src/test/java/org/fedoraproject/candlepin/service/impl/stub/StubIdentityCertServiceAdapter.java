@@ -21,7 +21,8 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
 
     @Override
-    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer) {
+    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer,
+            String username) {
         ConsumerIdentityCertificate idCert = new ConsumerIdentityCertificate();
 
         // totally arbitrary

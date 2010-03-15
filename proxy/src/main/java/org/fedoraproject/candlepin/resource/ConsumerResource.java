@@ -171,7 +171,8 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(Consumer in) throws BadRequestException {
+    public Consumer create(Consumer in)
+            throws BadRequestException {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get
                                                      // current owner
@@ -195,7 +196,7 @@ public class ConsumerResource {
             consumer = consumerCurator.create(new Consumer(in, owner, type));
 
             ConsumerIdentityCertificate idCert = identityCertService
-                .generateIdentityCert(consumer);
+                .generateIdentityCert(consumer, this.username);
             log.debug("Generated identity cert: " + idCert);
             if (idCert == null) {
                 throw new RuntimeException(
