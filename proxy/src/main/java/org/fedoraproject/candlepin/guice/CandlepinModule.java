@@ -81,12 +81,6 @@ public class CandlepinModule extends AbstractModule {
         bind(AdminResource.class);
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
-        bind(StatusResource.class);
-        bind(SubscriptionServiceAdapter.class).to(
-            DefaultSubscriptionServiceAdapter.class);
-        bind(IdentityCertServiceAdapter.class).to(
-            DefaultIdentityCertServiceAdapter.class);
-        bind(EntitlementCertServiceAdapter.class).to(
-            DefaultEntitlementCertServiceAdapter.class);
+        bind(StatusResource.class);      
     }
 }
