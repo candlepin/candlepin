@@ -124,12 +124,7 @@ define "candlepin" do
   #
   javadoc
 
-  #
-  # packaging
-  #
-  package(:jar, :id=>'candlepin-model').clean.include 'target/classes/org/fedoraproject/candlepin/model', :path=>"org/fedoraproject/candlepin/"
-  package(:war, :id=>"candlepin-basic").path("WEB-INF/classes").exclude(_(:target, :classes, "org/fedoraproject/candlepin/model"))
-  package(:war, :id=>"candlepin-basic").libs << HSQLDB
+  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model', :path=>"org/fedoraproject/candlepin/"
   package(:war, :id=>"candlepin").libs << HSQLDB
   
   #
