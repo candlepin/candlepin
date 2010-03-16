@@ -21,9 +21,11 @@ import static org.junit.Assert.assertNull;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.resource.BadRequestException;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -44,7 +46,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private ConsumerType standardSystemType;
     private Consumer consumer;
     private Product product;
-    private Pool ep;
+    private Pool pool;
     
     private ConsumerResource consumerResource;
     private Owner owner;
@@ -67,9 +69,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        ep = new Pool(owner, product.getId(), new Long(10), 
+        pool = new Pool(owner, product.getId(), new Long(10),
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
-        poolCurator.create(ep);
+        poolCurator.create(pool);
 
     }
     
@@ -122,14 +124,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         consumer = consumerCurator.lookupByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
         
-        ep = poolCurator.find(ep.getId());
-        assertEquals(new Long(1), ep.getConsumed());
+        pool = poolCurator.find(pool.getId());
+        assertEquals(new Long(1), pool.getConsumed());
     }
     
     @Test(expected = RuntimeException.class)
     public void testMaxMembership() {
         // 10 entitlements available, lets try to entitle 11 consumers.
-        for (int i = 0; i < ep.getQuantity(); i++) {
+        for (int i = 0; i < pool.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
             consumerCurator.create(c);
             consumerResource.bind(c.getUuid(), null, null, product.getLabel());
@@ -148,5 +150,29 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             product.getLabel());
     }
     
+    @Test
+    public void testBindByPool() throws Exception {
+        Entitlement result =
+            consumerResource.bind(
+                consumer.getUuid(), pool.getId(), null, null);
 
+        consumer = consumerCurator.lookupByUuid(consumer.getUuid());
+        assertEquals(1, consumer.getEntitlements().size());
+
+        pool = poolCurator.find(pool.getId());
+        assertEquals(new Long(1), pool.getConsumed());
+        assertEquals(pool.getId(), result.getPool().getId());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testBindMultipleParams() throws Exception {
+        consumerResource.bind(
+            consumer.getUuid(), pool.getId(), null, product.getId());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testBindByPoolBadConsumerUuid() throws Exception {
+        consumerResource.bind(
+            "notarealuuid", pool.getId(), null, null);
+    }
 }

@@ -39,7 +39,6 @@ import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.ClientCertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
@@ -224,7 +223,7 @@ public class ConsumerResource {
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         try {
-            Consumer toDelete = consumerCurator.lookupByUuid(uuid);
+            Consumer toDelete = verifyAndLookupConsumer(uuid);
             if (toDelete == null) {
                 return;
             }
@@ -237,27 +236,27 @@ public class ConsumerResource {
         }
     }
 
-    /**
-     * Returns the ConsumerInfo for the given Consumer.
-     * 
-     * @return the ConsumerInfo for the given Consumer.
-     */
-    @GET
-    @Path("/info")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    // TODO: What consumer?
-    public ConsumerFacts getInfo() {
-        ConsumerFacts ci = new ConsumerFacts();
-        // ci.setType(new ConsumerType("system"));
-        ci.setConsumer(null);
-        // Map<String,String> m = new HashMap<String,String>();
-        // m.put("cpu", "i386");
-        // m.put("hey", "biteme");
-        // ci.setMetadata(m);
-        ci.setFact("cpu", "i386");
-        ci.setFact("hey", "foobar");
-        return ci;
-    }
+//    /**
+//     * Returns the ConsumerInfo for the given Consumer.
+//     *
+//     * @return the ConsumerInfo for the given Consumer.
+//     */
+//    @GET
+//    @Path("/info")
+//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//    // TODO: What consumer?
+//    public ConsumerFacts getInfo() {
+//        ConsumerFacts ci = new ConsumerFacts();
+//        // ci.setType(new ConsumerType("system"));
+//        ci.setConsumer(null);
+//        // Map<String,String> m = new HashMap<String,String>();
+//        // m.put("cpu", "i386");
+//        // m.put("hey", "biteme");
+//        // ci.setMetadata(m);
+//        ci.setFact("cpu", "i386");
+//        ci.setFact("hey", "foobar");
+//        return ci;
+//    }
 
     /**
      * removes the product whose id matches pid, from the consumer, cid.
@@ -430,13 +429,9 @@ public class ConsumerResource {
      *            Product identifying label.
      * @return Entitled object
      */
-    private Entitlement bindByProduct(String consumerUuid, String productId) {
+    private Entitlement bindByProduct(String consumerUuid, String productId,
+        Consumer consumer) {
         
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
-        }
-
         Product p = productAdapter.getProductById(productId);
         if (p == null) {
             throw new BadRequestException("No such product: " + productId);
@@ -462,10 +457,10 @@ public class ConsumerResource {
      *            registration token.
      * @return token
      */
-    private Entitlement bindByToken(String consumerUuid, String registrationToken) {
+    private Entitlement bindByToken(String registrationToken,
+        Consumer consumer) {
         
         //FIXME: this is just a stub, need SubscriptionService to look it up
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
 
         // FIXME: getSubscriptionForToken is a stub, always "works"
         Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
@@ -478,19 +473,10 @@ public class ConsumerResource {
         Entitlement e = entitler.entitle(consumer, p);
         // return it
 
-        if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
-        }
-
         return e;
     }
 
-    private Entitlement bindByPool(String consumerUuid, Long poolId) {
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
-        }
-
+    private Entitlement bindByPool(Long poolId, Consumer consumer) {
         Pool pool = epCurator.find(poolId);
         if (pool == null) {
             throw new BadRequestException("No such entitlement pool: " + poolId);
@@ -508,13 +494,13 @@ public class ConsumerResource {
     }
 
     /**
-     * Request an entitlement from a specific pool.
+     * Request an entitlement.
      * 
      * @param consumerUuid
      *            Consumer identifier to be entitled
      * @param poolId
      *            Entitlement pool id.
-     * @return boolean
+     * @return Entitlement.
      */
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -526,16 +512,33 @@ public class ConsumerResource {
             @QueryParam("token") String token, 
             @QueryParam("product") String productId) {
         
-        // TODO: Check that only one query param was set:
+        // Check that only one query param was set:
+        if (
+            (poolId != null && token != null) ||
+                (poolId != null && productId != null) ||
+                (token != null && productId != null)) {
+            throw new BadRequestException("Cannot bind by multiple parameters.");
+        }
+
+        // Verify consumer exists:
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         if (token != null) {
-            return bindByToken(consumerUuid, token);
+            return bindByToken(token, consumer);
         }
         if (productId != null) {
-            return bindByProduct(consumerUuid, productId);
+            return bindByProduct(consumerUuid, productId, consumer);
         }
 
-        return bindByPool(consumerUuid, poolId);
+        return bindByPool(poolId, consumer);
+    }
+
+    private Consumer verifyAndLookupConsumer(String consumerUuid) {
+        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new BadRequestException("No such consumer: " + consumerUuid);
+        }
+        return consumer;
     }
 
     @GET
@@ -544,10 +547,7 @@ public class ConsumerResource {
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") String consumerUuid) {
 
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-        if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
-        }
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         return entitlementCurator.listByConsumer(consumer);
     }
@@ -569,7 +569,7 @@ public class ConsumerResource {
         if (serials == null) {
             // FIXME: just a stub, needs CertifcateService (and/or a
             // CertificateCurator) to lookup by serialNumber
-            Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+            Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
             if (consumer == null) {
                 throw new NotFoundException("Consumer with ID " + consumerUuid +
@@ -605,7 +605,7 @@ public class ConsumerResource {
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("dbid") Long dbid) {
 
-        // TODO: Verify this consumer.
+        verifyAndLookupConsumer(consumerUuid);
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
