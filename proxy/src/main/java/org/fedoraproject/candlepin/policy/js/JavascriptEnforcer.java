@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.apache.log4j.Logger;
 
@@ -57,8 +58,10 @@ public class JavascriptEnforcer implements Enforcer {
     private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
 
+
     @Inject
-    public JavascriptEnforcer(DateSource dateSource, Reader rulesReader,
+    public JavascriptEnforcer(DateSource dateSource, @Named("RulesReader") Reader rulesReader,
+        PreEntHelper preHelper, PostEntHelper postHelper,
         ProductServiceAdapter prodAdapter, ScriptEngine jsEngine) {
         this.dateSource = dateSource;
 

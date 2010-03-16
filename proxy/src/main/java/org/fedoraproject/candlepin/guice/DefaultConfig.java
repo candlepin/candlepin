@@ -14,8 +14,11 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import static com.google.inject.name.Names.*;
+import static com.google.inject.name.Names.named;
 
+import java.io.Reader;
+
+import javax.script.ScriptEngine;
 import javax.servlet.Filter;
 
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
@@ -23,6 +26,7 @@ import org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthentication
 import org.fedoraproject.candlepin.util.LoggingFilter;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 /**
  * DefaultConfig
@@ -36,5 +40,9 @@ class DefaultConfig extends AbstractModule {
             .to(PassThroughAuthenticationFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH))
             .to(PassThroughAuthenticationFilter.class).asEagerSingleton();
+        bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
+        bind(Reader.class).annotatedWith(Names.named("RulesReader")).toProvider(RulesReaderProvider.class);
+        
+        
     }
 }
