@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
@@ -66,6 +67,7 @@ public class Entitler {
      * @param product
      *            product to be entitled.
      * @return Entitlement
+     * @throws EntitlementRefusedException if entitlement is refused
      */
     //
     // NOTE: after calling this method both entitlement pool and consumer
@@ -73,7 +75,8 @@ public class Entitler {
     // will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitle(Consumer consumer, Product product) {
+    public Entitlement entitle(Consumer consumer, Product product)
+        throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
 
         // TODO: Don't assume we use the first pool here, once rules have
@@ -102,20 +105,25 @@ public class Entitler {
      * @param pool
      *            entitlement pool to consume from
      * @return Entitlement
+     *
+     * @throws EntitlementRefusedException if entitlement is refused
      */
     @Transactional
-    public Entitlement entitle(Consumer consumer, Pool pool) {
+    public Entitlement entitle(Consumer consumer, Pool pool)
+        throws EntitlementRefusedException {
+
         return addEntitlement(consumer, pool);
     }
 
-    private Entitlement addEntitlement(Consumer consumer, Pool pool) {
+    private Entitlement addEntitlement(Consumer consumer, Pool pool)
+        throws EntitlementRefusedException {
         PreEntHelper preHelper = enforcer.pre(consumer, pool);
         ValidationResult result = preHelper.getResult();
 
         if (!result.isSuccessful()) {
             log.warn("Entitlement not granted: " +
                 result.getErrors().toString());
-            return null;
+            throw new EntitlementRefusedException(result);
         }
 
         Entitlement e = new Entitlement(pool, consumer, new Date());

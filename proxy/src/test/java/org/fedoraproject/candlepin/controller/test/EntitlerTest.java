@@ -14,11 +14,7 @@
  */
 package org.fedoraproject.candlepin.controller.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -29,6 +25,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.test.SpacewalkCertificateCuratorTest;
+import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 
@@ -118,29 +115,49 @@ public class EntitlerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testVirtEntitleFailsIfAlreadyHasGuests() {
+    public void testVirtEntitleFailsIfAlreadyHasGuests() throws Exception {
         parentSystem.getFacts().setFact("total_guests", "10");
         consumerCurator.update(parentSystem);
-        Entitlement e = entitler.entitle(parentSystem, virtHost);
-        assertNull(e);
-        
-        e = entitler.entitle(parentSystem, virtHostPlatform);
-        assertNull(e);
+        try {
+            entitler.entitle(parentSystem, virtHost);
+            fail();
+        }
+        catch (EntitlementRefusedException e) {
+            //expected
+        }
+
+        try {
+            entitler.entitle(parentSystem, virtHostPlatform);
+            fail();
+        }
+        catch (EntitlementRefusedException e) {
+            //expected
+        }
     }
     
     @Test
-    public void testVirtEntitleFailsForVirtSystem() {
+    public void testVirtEntitleFailsForVirtSystem() throws Exception {
         parentSystem.setType(guestType);
         consumerCurator.update(parentSystem);
-        Entitlement e = entitler.entitle(parentSystem, virtHost);
-        assertNull(e);
-        
-        e = entitler.entitle(parentSystem, virtHostPlatform);
-        assertNull(e);
+        try {
+            entitler.entitle(parentSystem, virtHost);
+            fail();
+        }
+        catch (EntitlementRefusedException e) {
+            //expected
+        }
+
+        try {
+            entitler.entitle(parentSystem, virtHostPlatform);
+            fail();
+        }
+        catch (EntitlementRefusedException e) {
+            //expected
+        }
     }
     
     @Test
-    public void testVirtSystemGetsWhatParentHasForFree() {
+    public void testVirtSystemGetsWhatParentHasForFree() throws Exception {
         // Give parent virt host ent:
         Entitlement e = entitler.entitle(parentSystem, virtHost);
         assertNotNull(e);
@@ -163,7 +180,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void testVirtSystemPhysicalEntitlement() {
+    public void testVirtSystemPhysicalEntitlement() throws Exception {
         // Give parent virt host ent:
         Entitlement e = entitler.entitle(parentSystem, virtHost);
         assertNotNull(e);
@@ -183,7 +200,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void testQuantityCheck() {
+    public void testQuantityCheck() throws Exception {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, 
                 monitoring).get(0);
         assertEquals(new Long(5), monitoringPool.getQuantity());
@@ -193,13 +210,18 @@ public class EntitlerTest extends DatabaseTestFixture {
         }
         
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
-        Entitlement e = entitler.entitle(parentSystem, monitoring);
-        assertNull(e);
+        try {
+            entitler.entitle(parentSystem, monitoring);
+            fail();
+        }
+        catch (EntitlementRefusedException e) {
+            //expected
+        }
         assertEquals(new Long(5), monitoringPool.getConsumed());
     }
 
     @Test
-    public void testRevocation() {
+    public void testRevocation() throws Exception {
         Entitlement e = entitler.entitle(parentSystem, monitoring);
         entitler.revokeEntitlement(e);
 

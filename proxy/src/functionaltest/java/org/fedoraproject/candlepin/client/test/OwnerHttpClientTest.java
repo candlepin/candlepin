@@ -75,7 +75,7 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
     }
 
     @Test
-    public void listEntitlementsForExistingOwnerShouldPass() {
+    public void listEntitlementsForExistingOwnerShouldPass() throws Exception {
         for (int i = 0; i < MAX_POOL_MEMBERS.longValue() / 2; i++) {
             Consumer c = TestUtil.createConsumer(type, owner);
             consumerCurator.create(c);

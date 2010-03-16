@@ -14,11 +14,7 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -27,6 +23,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 
@@ -93,7 +90,7 @@ public class PoolTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void createEntitlementShouldIncreaseNumberOfMembers() {
+    public void createEntitlementShouldIncreaseNumberOfMembers() throws Exception {
         Long numAvailEntitlements = new Long(1);
         Product newProduct = TestUtil.createProduct();
 
@@ -110,7 +107,7 @@ public class PoolTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void createEntitlementShouldUpdateConsumer() {
+    public void createEntitlementShouldUpdateConsumer() throws Exception {
         Long numAvailEntitlements = new Long(1);
 
         Product newProduct = TestUtil.createProduct();
@@ -129,7 +126,8 @@ public class PoolTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void concurrentCreationOfEntitlementsShouldWorkIfUnderMaxMemberLimit() {
+    public void concurrentCreationOfEntitlementsShouldWorkIfUnderMaxMemberLimit()
+        throws Exception {
         Long numAvailEntitlements = new Long(2);
 
         Product newProduct = TestUtil.createProduct();
@@ -150,7 +148,8 @@ public class PoolTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit() {
+    public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit()
+        throws Exception {
         Long numAvailEntitlements = new Long(1);
 
         Product newProduct = TestUtil.createProduct();
@@ -164,9 +163,14 @@ public class PoolTest extends DatabaseTestFixture {
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
 
         Entitlement e1 = entitler.entitle(consumer, newProduct);
-        Entitlement e2 = anotherEntitler.entitle(consumer, newProduct);
         assertNotNull(e1);
-        assertNull(e2);
+        try {
+            Entitlement e2 = anotherEntitler.entitle(consumer, newProduct);
+            fail();
+        }
+        catch (EntitlementRefusedException e) {
+            // expected
+        }
     }
 
     @Test

@@ -82,7 +82,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     }
 
     @Test
-    public void listEntitlements() {
+    public void listEntitlements() throws Exception {
         for (int i = 0; i < entitlementPool.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(consumerType, owner);
             consumerCurator.create(c);
@@ -99,7 +99,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
     }
 
     @Test
-    public void getSingleEntitlement() {
+    public void getSingleEntitlement() throws Exception {
         Consumer c = TestUtil.createConsumer(consumerType, owner);
         consumerCurator.create(c);
         Entitlement entitlement = entitler.entitle(c, product);
@@ -249,7 +249,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
 //    }
 
     @Test
-    public void deleteEntitlementWithValidIdShouldPass() {
+    public void deleteEntitlementWithValidIdShouldPass() throws Exception {
         unitOfWork.beginWork();
         Entitlement entitlement = entitler.entitle(consumer, product);
         assertNotNull(entitlementCurator.find(entitlement.getId()));

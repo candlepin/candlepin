@@ -50,6 +50,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -436,15 +437,36 @@ public class ConsumerResource {
             throw new BadRequestException("No such product: " + productId);
         }
 
+        return createEntitlement(consumer, p);
+    }
+
+    // TODO: Bleh, very duplicated methods here:
+    private Entitlement createEntitlement(Consumer consumer, Product p) {
         // Attempt to create an entitlement:
-        Entitlement e = entitler.entitle(consumer, p);
-        // TODO: Probably need to get the validation result out somehow.
-        // TODO: return 409?
-        if (e == null) {
-            throw new BadRequestException("Entitlement refused.");
+        try {
+            Entitlement e = entitler.entitle(consumer, p);
+            log.debug("Created entitlement: " + e);
+            return e;
         }
-        log.debug("Entitlement: " + e);
-        return e;
+        catch (EntitlementRefusedException e) {
+            // Could be multiple errors, but we'll just report the first one for now:
+            // TODO: Convert resource key to user friendly string?
+            throw new ForbiddenException(e.getResult().getErrors().get(0).getResourceKey());
+        }
+    }
+
+    private Entitlement createEntitlement(Consumer consumer, Pool pool) {
+        // Attempt to create an entitlement:
+        try {
+            Entitlement e = entitler.entitle(consumer, pool);
+            log.debug("Created entitlement: " + e);
+            return e;
+        }
+        catch (EntitlementRefusedException e) {
+            // Could be multiple errors, but we'll just report the first one for now:
+            // TODO: Convert resource key to user friendly string?
+            throw new ForbiddenException(e.getResult().getErrors().get(0).getResourceKey());
+        }
     }
 
     /**
@@ -468,10 +490,7 @@ public class ConsumerResource {
 
         Product p = productAdapter.getProductById(s.getProductId());
 
-        Entitlement e = entitler.entitle(consumer, p);
-        // return it
-
-        return e;
+        return createEntitlement(consumer, p);
     }
 
     private Entitlement bindByPool(Long poolId, Consumer consumer) {
@@ -481,13 +500,7 @@ public class ConsumerResource {
         }
 
         // Attempt to create an entitlement:
-        Entitlement e = entitler.entitle(consumer, pool);
-        // TODO: Probably need to get the validation result out somehow.
-        if (e == null) {
-            throw new ForbiddenException("Entitlement refused.");
-        }
-
-        return e;
+        return createEntitlement(consumer, pool);
     }
 
     /**
