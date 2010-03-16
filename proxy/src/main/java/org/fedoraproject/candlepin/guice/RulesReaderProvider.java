@@ -26,9 +26,8 @@ import com.google.inject.Provider;
  * ScriptEngineProvider
  */
 public class RulesReaderProvider implements Provider<Reader> {
-
-    private RulesCurator rulesCurator;
     
+    private RulesCurator rulesCurator;
     @Inject 
     public RulesReaderProvider(RulesCurator rulesCurator) {
         super();

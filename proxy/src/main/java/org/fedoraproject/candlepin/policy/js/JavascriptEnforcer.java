@@ -14,10 +14,18 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import java.io.Reader;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -25,18 +33,6 @@ import org.fedoraproject.candlepin.util.DateSource;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-
-import org.apache.log4j.Logger;
-
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
 /**
  * Enforces the Javascript Rules definition.

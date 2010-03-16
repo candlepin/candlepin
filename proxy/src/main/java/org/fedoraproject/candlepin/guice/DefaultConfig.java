@@ -43,6 +43,5 @@ class DefaultConfig extends AbstractModule {
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader")).toProvider(RulesReaderProvider.class);
         
-        
     }
 }
