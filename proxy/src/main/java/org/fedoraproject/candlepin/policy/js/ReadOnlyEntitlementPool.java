@@ -24,16 +24,18 @@ import org.fedoraproject.candlepin.model.Pool;
 public class ReadOnlyEntitlementPool {
 
     private Pool entPool;
-  
+
     /**
-     * @param entPool the read-write version of the EntitlementPool to copy.
+     * @param entPool
+     *            the read-write version of the EntitlementPool to copy.
      */
     public ReadOnlyEntitlementPool(Pool entPool) {
         this.entPool = entPool;
     }
-   
+
     /**
      * Returns true if there are available entitlements remaining.
+     * 
      * @return true if there are available entitlements remaining.
      */
     public Boolean entitlementsAvailable() {
@@ -51,13 +53,16 @@ public class ReadOnlyEntitlementPool {
     public Long getCurrentMembers() {
         return entPool.getConsumed();
     }
+
     public Date getStartDate() {
         return entPool.getStartDate();
     }
+
     public Date getEndDate() {
         return entPool.getEndDate();
     }
-    public String getProductId(){
+
+    public String getProductId() {
         return entPool.getProductId();
     }
 }

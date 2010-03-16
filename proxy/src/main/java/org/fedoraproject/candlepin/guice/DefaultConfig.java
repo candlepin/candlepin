@@ -36,12 +36,12 @@ class DefaultConfig extends AbstractModule {
     @Override
     public void configure() {
         bind(LoggingFilter.class).asEagerSingleton();
-        bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH))
-            .to(PassThroughAuthenticationFilter.class).asEagerSingleton();
-        bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH))
-            .to(PassThroughAuthenticationFilter.class).asEagerSingleton();
+        bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(
+            PassThroughAuthenticationFilter.class).asEagerSingleton();
+        bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH)).to(
+            PassThroughAuthenticationFilter.class).asEagerSingleton();
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
-        bind(Reader.class).annotatedWith(Names.named("RulesReader")).toProvider(RulesReaderProvider.class);
-        
+        bind(Reader.class).annotatedWith(Names.named("RulesReader"))
+            .toProvider(RulesReaderProvider.class);
     }
 }

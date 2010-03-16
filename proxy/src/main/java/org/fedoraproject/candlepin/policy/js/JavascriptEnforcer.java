@@ -54,16 +54,16 @@ public class JavascriptEnforcer implements Enforcer {
     private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
 
-
     @Inject
-    public JavascriptEnforcer(DateSource dateSource, @Named("RulesReader") Reader rulesReader,
-        PreEntHelper preHelper, PostEntHelper postHelper,
-        ProductServiceAdapter prodAdapter, ScriptEngine jsEngine) {
+    public JavascriptEnforcer(DateSource dateSource,
+        @Named("RulesReader") Reader rulesReader, PreEntHelper preHelper,
+        PostEntHelper postHelper, ProductServiceAdapter prodAdapter,
+        ScriptEngine jsEngine) {
         this.dateSource = dateSource;
 
         this.prodAdapter = prodAdapter;
         this.jsEngine = jsEngine;
-        
+
         if (jsEngine == null) {
             throw new RuntimeException("No Javascript engine");
         }
@@ -185,7 +185,8 @@ public class JavascriptEnforcer implements Enforcer {
         Invocable inv = (Invocable) jsEngine;
 
         log.info("Selecting best entitlement pool for product: " + productId);
-        List<ReadOnlyEntitlementPool> readOnlyPools = new LinkedList<ReadOnlyEntitlementPool>();
+        List<ReadOnlyEntitlementPool> readOnlyPools =
+            new LinkedList<ReadOnlyEntitlementPool>();
         for (Pool p : pools) {
             log.info("   " + p);
             readOnlyPools.add(new ReadOnlyEntitlementPool(p));

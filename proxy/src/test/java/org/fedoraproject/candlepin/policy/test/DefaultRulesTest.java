@@ -44,13 +44,14 @@ public class DefaultRulesTest {
     private PreEntHelper preHelper;
     private PostEntHelper postHelper;
     private ProductServiceAdapter prodAdapter;
-    private Consumer consumer ;
+    private Consumer consumer;
     List<Pool> pools;
-    
+
     @Before
     public void createEnforcer() throws IOException {
         // InputStream inStream = this
-        URL url =  this.getClass().getClassLoader().getResource("rules/default-rules.js");
+        URL url = this.getClass().getClassLoader().getResource(
+            "rules/default-rules.js");
 
         InputStreamReader inputStreamReader = new InputStreamReader(url
             .openStream());
@@ -65,7 +66,7 @@ public class DefaultRulesTest {
 
         pools = new ArrayList<Pool>();
         consumer = new Consumer();
-        
+
         Pool pool = new Pool();
         pool.setId(new Long(0));
         pool.setProductId("default");
@@ -76,20 +77,20 @@ public class DefaultRulesTest {
         pool.setProductId("monitoring");
         pools.add(pool);
     }
-    
+
     @Test
     public void runDefaultRules() {
         Pool selected = enforcer.selectBestPool(consumer, "Shampoo", pools);
         Assert.assertNotNull(selected);
-        Assert.assertEquals("default",selected.getProductId());
+        Assert.assertEquals("default", selected.getProductId());
     }
-  
-    //@Test
+
+    // @Test
     public void runMonitoringRules() {
-       final String productId = "monitoring";
+        final String productId = "monitoring";
         Pool selected = enforcer.selectBestPool(consumer, productId, pools);
         Assert.assertNotNull(selected);
-        Assert.assertEquals(productId,selected.getProductId());
+        Assert.assertEquals(productId, selected.getProductId());
     }
-    
+
 }

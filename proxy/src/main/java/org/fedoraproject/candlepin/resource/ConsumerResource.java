@@ -170,11 +170,10 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(Consumer in)
-            throws BadRequestException {
+    public Consumer create(Consumer in) throws BadRequestException {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get
-                                                     // current owner
+        // current owner
         Consumer consumer = new Consumer();
 
         log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
@@ -228,7 +227,7 @@ public class ConsumerResource {
                 return;
             }
             identityCertService.deleteIdentityCert(toDelete);
-            
+
             consumerCurator.delete(toDelete);
         }
         catch (RuntimeException e) {
@@ -236,27 +235,27 @@ public class ConsumerResource {
         }
     }
 
-//    /**
-//     * Returns the ConsumerInfo for the given Consumer.
-//     *
-//     * @return the ConsumerInfo for the given Consumer.
-//     */
-//    @GET
-//    @Path("/info")
-//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    // TODO: What consumer?
-//    public ConsumerFacts getInfo() {
-//        ConsumerFacts ci = new ConsumerFacts();
-//        // ci.setType(new ConsumerType("system"));
-//        ci.setConsumer(null);
-//        // Map<String,String> m = new HashMap<String,String>();
-//        // m.put("cpu", "i386");
-//        // m.put("hey", "biteme");
-//        // ci.setMetadata(m);
-//        ci.setFact("cpu", "i386");
-//        ci.setFact("hey", "foobar");
-//        return ci;
-//    }
+    // /**
+    // * Returns the ConsumerInfo for the given Consumer.
+    // *
+    // * @return the ConsumerInfo for the given Consumer.
+    // */
+    // @GET
+    // @Path("/info")
+    // @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    // // TODO: What consumer?
+    // public ConsumerFacts getInfo() {
+    // ConsumerFacts ci = new ConsumerFacts();
+    // // ci.setType(new ConsumerType("system"));
+    // ci.setConsumer(null);
+    // // Map<String,String> m = new HashMap<String,String>();
+    // // m.put("cpu", "i386");
+    // // m.put("hey", "biteme");
+    // // ci.setMetadata(m);
+    // ci.setFact("cpu", "i386");
+    // ci.setFact("hey", "foobar");
+    // return ci;
+    // }
 
     /**
      * removes the product whose id matches pid, from the consumer, cid.
@@ -431,7 +430,7 @@ public class ConsumerResource {
      */
     private Entitlement bindByProduct(String consumerUuid, String productId,
         Consumer consumer) {
-        
+
         Product p = productAdapter.getProductById(productId);
         if (p == null) {
             throw new BadRequestException("No such product: " + productId);
@@ -457,10 +456,9 @@ public class ConsumerResource {
      *            registration token.
      * @return token
      */
-    private Entitlement bindByToken(String registrationToken,
-        Consumer consumer) {
-        
-        //FIXME: this is just a stub, need SubscriptionService to look it up
+    private Entitlement bindByToken(String registrationToken, Consumer consumer) {
+
+        // FIXME: this is just a stub, need SubscriptionService to look it up
 
         // FIXME: getSubscriptionForToken is a stub, always "works"
         Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
@@ -506,17 +504,14 @@ public class ConsumerResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
-    public Entitlement bind(
-            @PathParam("consumer_uuid") String consumerUuid,
-            @QueryParam("pool") Long poolId, 
-            @QueryParam("token") String token, 
-            @QueryParam("product") String productId) {
-        
+    public Entitlement bind(@PathParam("consumer_uuid") String consumerUuid,
+        @QueryParam("pool") Long poolId, @QueryParam("token") String token,
+        @QueryParam("product") String productId) {
+
         // Check that only one query param was set:
-        if (
-            (poolId != null && token != null) ||
-                (poolId != null && productId != null) ||
-                (token != null && productId != null)) {
+        if ((poolId != null && token != null) ||
+            (poolId != null && productId != null) ||
+            (token != null && productId != null)) {
             throw new BadRequestException("Cannot bind by multiple parameters.");
         }
 
