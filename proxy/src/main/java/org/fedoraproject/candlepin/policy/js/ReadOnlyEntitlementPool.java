@@ -57,4 +57,7 @@ public class ReadOnlyEntitlementPool {
     public Date getEndDate() {
         return entPool.getEndDate();
     }
+    public String getProductId(){
+        return entPool.getProductId();
+    }
 }

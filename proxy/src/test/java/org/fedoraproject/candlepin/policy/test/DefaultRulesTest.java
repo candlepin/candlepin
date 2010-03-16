@@ -14,16 +14,10 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.script.ScriptEngineManager;
@@ -32,7 +26,6 @@ import junit.framework.Assert;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
@@ -41,8 +34,6 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.sun.jersey.spi.StringReader;
 
 /**
  * DefaultRulesTest
@@ -53,7 +44,9 @@ public class DefaultRulesTest {
     private PreEntHelper preHelper;
     private PostEntHelper postHelper;
     private ProductServiceAdapter prodAdapter;
-
+    private Consumer consumer ;
+    List<Pool> pools;
+    
     @Before
     public void createEnforcer() throws IOException {
         // InputStream inStream = this
@@ -67,17 +60,36 @@ public class DefaultRulesTest {
                 .getEngineByName("JavaScript"));
     }
 
-    @Test
-    public void runDefaultRuels() {
-        Consumer consumer = new Consumer();
-        String productId = "Shampoo";
+    @Before
+    public void createPools() {
+
+        pools = new ArrayList<Pool>();
+        consumer = new Consumer();
+        
         Pool pool = new Pool();
         pool.setId(new Long(0));
         pool.setProductId("default");
-        List<Pool> pools = new ArrayList<Pool>();
         pools.add(pool);
+
+        pool = new Pool();
+        pool.setId(new Long(1));
+        pool.setProductId("monitoring");
+        pools.add(pool);
+    }
+    
+    @Test
+    public void runDefaultRules() {
+        Pool selected = enforcer.selectBestPool(consumer, "Shampoo", pools);
+        Assert.assertNotNull(selected);
+        Assert.assertEquals("default",selected.getProductId());
+    }
+  
+    @Test
+    public void runMonitoringRules() {
+       final String productId = "monitoring";
         Pool selected = enforcer.selectBestPool(consumer, productId, pools);
         Assert.assertNotNull(selected);
+        Assert.assertEquals(productId,selected.getProductId());
     }
-
+    
 }
