@@ -483,9 +483,8 @@ public class ConsumerResource {
         // Attempt to create an entitlement:
         Entitlement e = entitler.entitle(consumer, pool);
         // TODO: Probably need to get the validation result out somehow.
-        // TODO: return 409?
         if (e == null) {
-            throw new BadRequestException("Entitlement refused.");
+            throw new ForbiddenException("Entitlement refused.");
         }
 
         return e;

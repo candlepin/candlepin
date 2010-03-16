@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.BadRequestException;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
+import org.fedoraproject.candlepin.resource.ForbiddenException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -47,6 +48,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private Consumer consumer;
     private Product product;
     private Pool pool;
+    private Pool fullPool;
     
     private ConsumerResource consumerResource;
     private Owner owner;
@@ -73,6 +75,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(pool);
 
+        fullPool = new Pool(owner, product.getId(), new Long(10),
+            TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+        fullPool.setConsumed(new Long(10));
+        poolCurator.create(fullPool);
     }
     
     // TODO: Test no such consumer type.
@@ -162,6 +168,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         pool = poolCurator.find(pool.getId());
         assertEquals(new Long(1), pool.getConsumed());
         assertEquals(pool.getId(), result.getPool().getId());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testBindByPoolNoFreeEntitlements() throws Exception {
+        consumerResource.bind(
+            consumer.getUuid(), fullPool.getId(), null, null);
     }
 
     @Test(expected = BadRequestException.class)
