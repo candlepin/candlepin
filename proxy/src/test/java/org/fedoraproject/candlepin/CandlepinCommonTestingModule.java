@@ -14,7 +14,13 @@
  */
 package org.fedoraproject.candlepin;
 
+import java.io.Reader;
+
+import javax.script.ScriptEngine;
+
 import org.fedoraproject.candlepin.guice.JPAInitializer;
+import org.fedoraproject.candlepin.guice.RulesReaderProvider;
+import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.test.TestRulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
@@ -34,6 +40,7 @@ import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 import org.fedoraproject.candlepin.cert.BouncyCastlePKI;
 import org.fedoraproject.candlepin.config.Config;
@@ -63,5 +70,8 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(IdentityCertServiceAdapter.class).to(StubIdentityCertServiceAdapter.class);
         bind(Config.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
+        bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
+        bind(Reader.class).annotatedWith(Names.named("RulesReader")).toProvider(RulesReaderProvider.class);
+
     }
 }
