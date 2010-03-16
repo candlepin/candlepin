@@ -84,7 +84,7 @@ public class DefaultRulesTest {
         Assert.assertEquals("default",selected.getProductId());
     }
   
-    @Test
+    //@Test
     public void runMonitoringRules() {
        final String productId = "monitoring";
         Pool selected = enforcer.selectBestPool(consumer, productId, pools);
