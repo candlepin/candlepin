@@ -6,6 +6,11 @@ import simplejson as json
 import os
 import base64
 
+class CandlepinException(Exception):
+    def __init__(self, message, response):
+        Exception.__init__(self, message)
+        self.response = response
+
 class Rest(object):
     def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", cert_file=None, key_file=None, debug=None):
         self.hostname = hostname
@@ -43,10 +48,13 @@ class Rest(object):
         if self.debug:
             print "url: %s" % full_url
 
-        conn.request(http_type, url_path, body=self.marshal(data, content_type), headers=self.headers[content_type])
+        conn.request(http_type, url_path, body=self.marshal(data, content_type),
+                headers=self.headers[content_type])
         response = conn.getresponse()
         if response.status not in  [200, 204]:
-            raise Exception("%s - %s" % (response.status, response.reason))
+            raise CandlepinException("%s - %s" % (response.status, response.reason),
+                    response)
+
         rsp = response.read()
         
         if self.debug:
