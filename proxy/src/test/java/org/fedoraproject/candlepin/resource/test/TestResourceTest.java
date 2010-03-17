@@ -17,22 +17,21 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.fedoraproject.candlepin.model.JsonTestObject;
-import org.fedoraproject.candlepin.resource.TestResource;
-
-import org.junit.Ignore;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.JsonTestObject;
+import org.fedoraproject.candlepin.resource.TestResource;
+import org.junit.Ignore;
 
 /**
  * TestResourceTest
+ * 
  * @version $Rev$
  */
 @Ignore
 public class TestResourceTest {
-    
+
     private JsonTestObject createTestObject() {
         JsonTestObject jto = new JsonTestObject();
         jto.setName("testname");
@@ -42,49 +41,53 @@ public class TestResourceTest {
         jto.setStringList(l);
         return jto;
     }
-    
-//    @Test
+
+    // @Test
     @Ignore
     public void testJson() {
-//        ClientConfig cc = new DefaultClientConfig();
-//        Client c = Client.create(cc);
-//
-//
-//        JsonTestObject jto = createTestObject();
-//
-//        WebResource postresource = c.resource("http://localhost:8080/candlepin/test/");
-//        postresource.accept("application/json").type("application/json").post(jto);
-//
-//        WebResource getresource = c.resource("http://localhost:8080/candlepin/test/");
-//        System.out.println(jto.getName());
-//        jto = getresource.accept("application/json").get(JsonTestObject.class);
-//        assertEquals("testname", jto.getName());
-//        assertNotNull(jto.getStringList());
-//        assertEquals(2, jto.getStringList().size());
-//        assertNull(jto.getParent());
-//        System.out.println(jto.getStringList());
+        // ClientConfig cc = new DefaultClientConfig();
+        // Client c = Client.create(cc);
+        //
+        //
+        // JsonTestObject jto = createTestObject();
+        //
+        // WebResource postresource =
+        // c.resource("http://localhost:8080/candlepin/test/");
+        // postresource.accept("application/json").type("application/json").post(jto);
+        //
+        // WebResource getresource =
+        // c.resource("http://localhost:8080/candlepin/test/");
+        // System.out.println(jto.getName());
+        // jto =
+        // getresource.accept("application/json").get(JsonTestObject.class);
+        // assertEquals("testname", jto.getName());
+        // assertNotNull(jto.getStringList());
+        // assertEquals(2, jto.getStringList().size());
+        // assertNull(jto.getParent());
+        // System.out.println(jto.getStringList());
     }
-    
- //   @Test
+
+    // @Test
     @Ignore
     public void testGet() {
         TestResource tr = new TestResource();
         assertNull(tr.get());
-        
+
         JsonTestObject jto = createTestObject();
         tr.create(jto);
         assertEquals(jto, tr.get());
     }
-    
-  //  @Test
+
+    // @Test
     public void testConsumerType() {
-//        ClientConfig cc = new DefaultClientConfig();
-//        Client c = Client.create(cc);
-//
-//        WebResource getresource =
-//            c.resource("http://localhost:8080/candlepin/test/consumertype");
-//        ConsumerType ct = getresource.accept("application/json").get(ConsumerType.class);
-//        assertNotNull(ct);
-//        assertEquals("testtype", ct.getLabel());
+        // ClientConfig cc = new DefaultClientConfig();
+        // Client c = Client.create(cc);
+        //
+        // WebResource getresource =
+        // c.resource("http://localhost:8080/candlepin/test/consumertype");
+        // ConsumerType ct =
+        // getresource.accept("application/json").get(ConsumerType.class);
+        // assertNotNull(ct);
+        // assertEquals("testtype", ct.getLabel());
     }
 }

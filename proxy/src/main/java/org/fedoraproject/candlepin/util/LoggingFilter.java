@@ -63,7 +63,7 @@ public class LoggingFilter implements Filter {
             log.debug("Request Body: " + lRequest.getBody());
 
 
-            Enumeration headerNames = lRequest.getHeaderNames();
+            Enumeration<?> headerNames = lRequest.getHeaderNames();
 
             log.debug("====Headers====");
             while (headerNames.hasMoreElements()) {

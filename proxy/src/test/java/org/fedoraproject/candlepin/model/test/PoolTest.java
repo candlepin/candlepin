@@ -14,23 +14,26 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.List;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
 
 public class PoolTest extends DatabaseTestFixture {
 
@@ -165,6 +168,7 @@ public class PoolTest extends DatabaseTestFixture {
         Entitlement e1 = entitler.entitle(consumer, newProduct);
         assertNotNull(e1);
         try {
+            @SuppressWarnings("unused")
             Entitlement e2 = anotherEntitler.entitle(consumer, newProduct);
             fail();
         }
