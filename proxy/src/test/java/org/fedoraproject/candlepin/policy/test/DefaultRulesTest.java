@@ -45,7 +45,7 @@ public class DefaultRulesTest {
     private PostEntHelper postHelper;
     private ProductServiceAdapter prodAdapter;
     private Consumer consumer;
-    List<Pool> pools;
+    private List<Pool> pools;
 
     @Before
     public void createEnforcer() throws IOException {
