@@ -1,174 +1,137 @@
-create table cp_entitlement_pool_attribute (
-	cp_entitlement_pool_id number(19,0) not null, 
-	attributes_id number(19,0) not null, 
-	unique (attributes_id),
-	constraint "CANDLEPIN_ENT_ATTR_PK" primary key (cp_entitlement_pool_id, attributes_id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+create table cp_attribute (
+	id number(19,0) not null, 
+	name varchar2(255 char) not null, 
+	value varchar2(255 char), 
+	primary key (id));
 
-create table cp_product_attribute (
-	cp_product_id varchar2(255) not null, 
-	attributes_id number(19,0) not null, 
-	unique (attributes_id),
-	constraint "CANDLEPIN_PROD_ATTR_PK" primary key (cp_product_id, attributes_id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
-
-create table cp_subscription_attribute (
-	cp_subscription_id number(19,0) not null,
-	attributes_id number(19,0) not null, 
-	unique (attributes_id),
-	constraint "CANDLEPIN_SUB_ATTR_PK" primary key (cp_subscription_id, attributes_id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
-
-create table cp_attribute (id number(19,0) not null,
-	name varchar2(255) not null, 
-	quantity number(19,0), 
-	primary key (id)
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+create table cp_attribute_hierarchy (
+	PARENT_ATTRIBUTE_ID number(19,0) not null, 
+	CHILD_ATTRIBUTE_ID number(19,0) not null, 
+	primary key (PARENT_ATTRIBUTE_ID, 
+	CHILD_ATTRIBUTE_ID), unique (CHILD_ATTRIBUTE_ID));
 
 create table cp_certificate (
 	id number(19,0) not null, 
 	certificate_blob clob, 
-	owner_id number(19,0) not null,
-	constraint "CANDLEPIN_CP_CERT_PK" primary key (id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	owner_id number(19,0) not null, 
+	primary key (id));
 
 create table cp_consumer (
 	id number(19,0) not null, 
-	name varchar2(255) not null, 
-	uuid varchar2(255) not null unique, 
+	name varchar2(255 char) not null, 
+	uuid varchar2(255 char) not null unique, 
 	consumer_fact_id number(19,0), 
 	owner_id number(19,0) not null, 
 	parent_consumer_id number(19,0), 
-	type_id number(19,0) not null,
-	constraint "CANDLEPIN_CP_CONS_PK" primary key (id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	type_id number(19,0) not null, 
+	primary key (id));
+
+create table cp_consumer_ent_certificate (
+	id number(19,0) not null, 
+	key raw(255) not null, 
+	pem raw(255) not null, 
+	serialNumber number(19,2) not null, 
+	entitlement_id number(19,0) not null, 
+	primary key (id));
 
 create table cp_consumer_entitlements (
 	consumer_id number(19,0), 
-	entitlement_id number(19,0) not null,
-	constraint "CANDLEPIN_CP_CONS_ENT_PK1" primary key (entitlement_id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	entitlement_id number(19,0) not null, 
+	primary key (entitlement_id));
 
 create table cp_consumer_facts (
 	id number(19,0) not null, 
-	primary key (id)
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	primary key (id));
 
 create table cp_consumer_facts_metadata (
 	cp_consumer_facts_id number(19,0) not null, 
-	element varchar2(255), 
-	mapkey varchar2(255),
-	constraint "CANDLEPIN_CP_CONS_META_PK" primary key (cp_consumer_facts_id, mapkey)  USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
-
-create table cp_consumer_products (
+	element varchar2(255 char), 
+	mapkey varchar2(255 char), 
+	primary key (cp_consumer_facts_id, mapkey));
+	
+create table cp_consumer_idcertificate (
 	id number(19,0) not null, 
-	productId varchar2(255) not null, 
-	consumer_id number(19,0), 
-	constraint "CANDLEPIN_CP_CONS_PROD_PK" primary key (id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	key raw(255) not null, 
+	pem raw(255) not null, 
+	serialNumber number(19,2) not null, 
+	primary key (id));
 
 create table cp_consumer_type (
 	id number(19,0) not null, 
-	label varchar2(255) not null unique, 
-	primary key (id)
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	label varchar2(255 char) not null unique, 
+	primary key (id));
 
 create table cp_entitlement (
 	id number(19,0) not null, 
 	isFree number(1,0), 
-	startDate date, 
-	owner_id number(19,0) not null,
-	pool_id number(19,0) not null,
-	constraint "CANDLEPIN_CP_ENT_PK" primary key (id)
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
-
-create table cp_entitlement_pool (
-	id number(19,0) not null, 
-	activeSubscription number(1,0), 
-	currentMembers number(19,0) not null, 
-	endDate date not null, 
-	maxMembers number(19,0) not null, 
-	productId varchar2(255), 
-	startDate date not null, 
-	subscriptionId number(19,0), 
-	consumer_id number(19,0),
+	startDate timestamp, 
 	owner_id number(19,0) not null, 
-	sourceEntitlement_id number(19,0),
-	constraint "CANDLEPIN_ENT_POOL_PK" primary key (id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	pool_id number(19,0) not null, 
+	primary key (id));
+
+create table cp_entitlement_pool_attribute (
+	cp_pool_id number(19,0) not null, 
+	attributes_id number(19,0) not null, 
+	primary key (cp_pool_id, attributes_id), 
+	unique (attributes_id));
 
 create table cp_owner (
 	id number(19,0) not null, 
-	name varchar2(255) not null unique, 
-	primary key (id)
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	name varchar2(255 char) not null unique, 
+	primary key (id));
+
+create table cp_pool (
+	id number(19,0) not null, 
+	activeSubscription number(1,0), 
+	consumed number(19,0) not null, 
+	endDate timestamp not null, 
+	productId varchar2(255 char), 
+	quantity number(19,0) not null, 
+	startDate timestamp not null, 
+	subscriptionId number(19,0), 
+	owner_id number(19,0) not null, 
+	sourceEntitlement_id number(19,0), 
+	primary key (id));
 
 create table cp_product (
-	id varchar2(255) not null, 
-	label varchar2(255) not null unique, 
-	name varchar2(255) not null unique, 
-	primary key (id)
-)INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	id varchar2(255 char) not null, 
+	label varchar2(255 char) not null unique, 
+	name varchar2(255 char) not null unique, 
+	primary key (id));
+
+create table cp_product_attribute (
+	cp_product_id varchar2(255 char) not null, 
+	attributes_id number(19,0) not null, 
+	primary key (cp_product_id, attributes_id), 
+	unique (attributes_id));
 
 create table cp_product_hierarchy (
-	PARENT_PRODUCT_ID varchar2(255) not null, 
-	CHILD_PRODUCT_ID varchar2(255) not null, 
-	unique (CHILD_PRODUCT_ID),
-	constraint "CANDLEPIN_CP_PROD_HIER" primary key (PARENT_PRODUCT_ID, CHILD_PRODUCT_ID) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	parent_product_id varchar2(255 char) not null, 
+	child_product_id varchar2(255 char) not null, 
+	primary key (parent_product_id, 
+	child_product_id), 
+	unique (child_product_id));
 
 create table cp_rules (
 	id number(19,0) not null, 
 	rules_blob clob, 
-	primary key (id)
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	primary key (id));
 
 create table cp_subscription (
 	id number(19,0) not null, 
-	endDate date not null, 
-	modified date, 
-	productId varchar2(255), 
+	endDate timestamp not null, 
+	modified timestamp, 
+	productId varchar2(255 char), 
 	quantity number(19,0) not null, 
-	startDate date not null, 
+	startDate timestamp not null, 
 	owner_id number(19,0) not null, 
-	constraint "CANDLEPIN_CP_SUBS_PK" primary key (id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+	primary key (id));
 
-create table cp_consumer_idcertificate (
-        id number(19,0) not null,
-        key BLOB not null,
-        pem BLOB not null,
-        serialNumber number(19,2) not null,
-        constraint "CANDLEPIN_CP_CONS_IDCERT_PK" primary key (id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
-
-create table cp_consumer_ent_certificate (
-        id number(19,0) not null,
-        key BLOB not null,
-        pem BLOB not null,
-        serialNumber number(19,2) not null,
-        constraint "CANDLEPIN_CP_CONS_ENT_CERT_PK" primary key (id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
-)
-INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+create table cp_subscription_attribute (
+	cp_subscription_id number(19,0) not null, 
+	attributes_id number(19,0) not null, 
+	primary key (cp_subscription_id, attributes_id), 
+	unique (attributes_id));
 
 create sequence seq_attribute
 	Minvalue 1 Maxvalue 1.00000000000000E+27
@@ -215,7 +178,7 @@ create sequence seq_owner
 	Increment By 1 Start With 1
 	Nocache  Noorder  Nocycle;
 
-create sequence seq_rulesi
+create sequence seq_rules
 	Minvalue 1 Maxvalue 1.00000000000000E+27
 	Increment By 1 Start With 1
 	Nocache  Noorder  Nocycle;
@@ -235,25 +198,27 @@ create sequence seq_consumer_ent_cert
         Increment By 1 Start With 1
         Nocache  Noorder  Nocycle;
 
-alter table cp_entitlement_pool_attribute add constraint "CANDLEPIN_ENT_ATTR_FK1" foreign key (cp_entitlement_pool_id) references "cp_entitlement_pool";
-alter table cp_entitlement_pool_attribute add constraint "CANDLEPIN_ENT_ATTR_FK2" foreign key (attributes_id) references "cp_attribute";
-alter table cp_product_attribute constraint "CANDLEPIN_PROD_ATTR_FK1" foreign key (cp_product_id) references "cp_product";
-alter table cp_product_attribute constraint "CANDLEPIN_PROD_ATTR_FK2" foreign key (attributes_id) references "cp_attribute";
-alter table cp_subscription_attribute constraint "CANDLEPIN_SUB_ATTR_FK1" foreign key (cp_subscription_id) references "cp_subscription";
-alter table cp_subscription_attribute constraint "CANDLEPIN_SUB_ATTR_FK2" foreign key (attributes_id) references "cp_attribute";
-alter table cp_certificate constraint "fk_certificate_owner" foreign key (owner_id) references "cp_owner";
-alter table cp_consumer constraint "CANDLEPIN_CP_CONS_FK1" foreign key (consumer_fact_id) references "cp_consumer_facts";
-alter table cp_consumer constraint "fk_consumer_consumer_type" foreign key (type_id) references "cp_consumer_type";
-alter table cp_consumer constraint "fk_consumer_owner" foreign key (owner_id) references "cp_owner";
-alter table cp_consumer constraint "CANDLEPIN_CP_CONS_FK4" foreign key (parent_consumer_id) references "cp_consumer";
-alter table cp_consumer_entitlements constraint "fk_consumer_id" foreign key (consumer_id) references "cp_consumer";
-alter table cp_consumer_entitlements constraint "CANDLEPIN_CP_CONS_ENT_FK1" foreign key (entitlement_id) references "cp_entitlement";
-alter table cp_consumer_facts_metadata constraint "CANDLEPIN_CP_CONS_META_FK1" foreign key (cp_consumer_facts_id) references "cp_consumer_facts";
-alter table cp_consumer_products constraint "fk_consumer_product_owner" foreign key (consumer_id) references "cp_consumer";
-alter table constraint "fk_entitlement_entitlement_pool" foreign key (pool_id) references "cp_entitlement_pool";
-alter table constraint "fk_entitlement_owner" foreign key (owner_id) references "cp_owner";
-alter table cp_entitlement_pool constraint "fk_entitlement_pool_source_entitlement" foreign key (sourceEntitlement_id) references "cp_entitlement";
-alter table cp_entitlement_pool constraint "fk_entitlement_pool_consumer" foreign key (consumer_id) references "cp_consumer";
-alter table constraint "fk_user_owner_id" foreign key (owner_id) references "cp_owner";
-alter table constraint "fk_product_child_product_id" foreign key (CHILD_PRODUCT_ID) references "cp_product";
-alter table constraint "fk_product_product_id" foreign key (PARENT_PRODUCT_ID) references "cp_product";
+alter table CP_ATTRIBUTE_HIERARCHY add constraint fk_attribute_parent_id foreign key (PARENT_ATTRIBUTE_ID) references CP_ATTRIBUTE;
+alter table CP_ATTRIBUTE_HIERARCHY add constraint fk_attribute_child_id foreign key (CHILD_ATTRIBUTE_ID) references CP_ATTRIBUTE;
+alter table CP_CERTIFICATE add constraint fk_certificate_owner foreign key (owner_id) references CP_OWNER;
+alter table CP_CONSUMER add constraint FK58205388A53FD653 foreign key (consumer_fact_id) references CP_CONSUMER_FACTS;
+alter table CP_CONSUMER add constraint fk_consumer_consumer_type foreign key (type_id) references CP_CONSUMER_TYPE;
+alter table CP_CONSUMER add constraint fk_consumer_owner foreign key (owner_id) references CP_OWNER;
+alter table CP_CONSUMER add constraint FK58205388F6CFEF28 foreign key (parent_consumer_id) references CP_CONSUMER;
+alter table CP_CONSUMER_ENT_CERTIFICATE add constraint fk_cert_entitlement foreign key (entitlement_id) references CP_ENTITLEMENT;
+alter table CP_CONSUMER_ENTITLEMENTS add constraint fk_consumer_id foreign key (consumer_id) references CP_CONSUMER;
+alter table CP_CONSUMER_ENTITLEMENTS add constraint FKDF174C3D42FFCA77 foreign key (entitlement_id) references CP_ENTITLEMENT;
+alter table CP_CONSUMER_FACTS_METADATA add constraint FK53A1D67E2B7FDD78 foreign key (cp_consumer_facts_id) references CP_CONSUMER_FACTS;
+alter table CP_ENTITLEMENT add constraint fk_entitlement_ent_pool foreign key (pool_id) references CP_POOL;
+alter table CP_ENTITLEMENT add constraint fk_entitlement_owner foreign key (owner_id) references CP_OWNER;
+alter table CP_ENTITLEMENT_POOL_ATTRIBUTE add constraint FKC9F1FA9D3EDB0D2B foreign key (cp_pool_id) references CP_POOL;
+alter table CP_ENTITLEMENT_POOL_ATTRIBUTE add constraint FKC9F1FA9D16CB6BC foreign key (attributes_id) references CP_ATTRIBUTE;
+alter table CP_POOL add constraint fk_pool_source_entitlement foreign key (sourceEntitlement_id) references CP_ENTITLEMENT;
+alter table CP_POOL add constraint fk_pool_owner foreign key (owner_id) references CP_OWNER;
+alter table CP_PRODUCT_ATTRIBUTE add constraint FK898DE7FAD53844C9 foreign key (cp_product_id) references CP_PRODUCT;
+alter table CP_PRODUCT_ATTRIBUTE add constraint FK898DE7FA16CB6BC foreign key (attributes_id) references CP_ATTRIBUTE;
+alter table CP_PRODUCT_HIERARCHY add constraint fk_product_child_product_id foreign key (child_product_id) references CP_PRODUCT;
+alter table CP_PRODUCT_HIERARCHY add constraint fk_product_product_id foreign key (parent_product_id) references CP_PRODUCT;
+alter table CP_SUBSCRIPTION add constraint fk_subscription_owner foreign key (owner_id) references CP_OWNER;
+alter table CP_SUBSCRIPTION_ATTRIBUTE add constraint FK10B0260CA984608B foreign key (cp_subscription_id) references CP_SUBSCRIPTION;
+
