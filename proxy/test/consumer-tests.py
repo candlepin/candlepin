@@ -12,9 +12,10 @@ class ConsumerTests(CandlepinTests):
 
     def test_list_cert_serials(self):
         result = self.cp.getCertificateSerials(self.uuid)
-        self.assertTrue('serial' in result)
-        serials = result['serial']
-        for serial in serials:
+        print result
+        #self.assertTrue('serial' in result)
+        #serials = result['serial']
+        for serial in result:
             self.assertTrue('serial' in serial)
         # TODO: Could use some more testing here once entitlement certs
         # are actually being generated.
@@ -22,9 +23,11 @@ class ConsumerTests(CandlepinTests):
     def test_list_certs(self):
         result = self.cp.getCertificates(self.uuid)
         print result
-        self.assertTrue('cert' in result)
-        cert_list = result['cert']
+        #self.assertTrue('cert' in result)
+        cert_list = result
         for cert in cert_list:
+            print "cert from cert_list"
+            print cert
             self.assert_cert_struct(cert)
         # TODO: Could use some more testing here once entitlement certs
         # are actually being generated.
@@ -37,12 +40,13 @@ class ConsumerTests(CandlepinTests):
         virt_host = 'virtualization_host'
         results = self.cp.getPools(consumer=self.uuid)
         pools = {}
-        for pool in results['pool']:
+        for pool in results:
             pools[pool['productId']] = pool
         self.assertTrue(virt_host in pools)
 
         # Request a virtualization_host entitlement:
         result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+        print "virt host"
         print result
         self.assertTrue('id' in result)
         self.assertEquals(virt_host, result['pool']['productId'])
@@ -90,17 +94,17 @@ class ConsumerTests(CandlepinTests):
 
     def test_unbind_all_single(self):
         pools = self.cp.getPools(consumer=self.uuid)
-        pool = pools['pool'][0]
+        pool = pools[0]
 
         self.cp.bindPool(self.uuid, pool['id'])
 
         # Now unbind it
         self.cp.unBindAll(self.uuid)
 
-        self.assertEqual(None, self.cp.getEntitlements(self.uuid))
+        self.assertEqual([], self.cp.getEntitlements(self.uuid))
 
     def test_unbind_all_multi(self):
-        pools = self.cp.getPools(consumer=self.uuid)['pool']
+        pools = self.cp.getPools(consumer=self.uuid)
 
         if len(pools) > 1:
             for pool in pools:
@@ -108,7 +112,7 @@ class ConsumerTests(CandlepinTests):
 
             # Unbind them all
             self.cp.unBindAll(self.uuid)
-            self.assertEqual(None, self.cp.getEntitlements(self.uuid))
+            self.assertEqual([], self.cp.getEntitlements(self.uuid))
 
     def test_list_pools(self):
         pools = self.cp.getPools(consumer=self.uuid, product="monitoring")

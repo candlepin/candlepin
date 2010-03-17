@@ -29,11 +29,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-
 
 /**
  * ConsumerResourceTest
@@ -102,22 +97,22 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
     @Test
     @Ignore
     public void testJson() {
-        ClientConfig cc = new DefaultClientConfig();
-        Client c = Client.create(cc);
-        
-        // WebResource getresource = c.resource("http://localhost:8080/candlepin/entitle/");
-        
-
-        Object[] params = new Object[2];
-        params[0] = consumer;
-        params[1] = product;
-        List<Object> aparams = new ArrayList<Object>();
-        aparams.add(consumer);
-        aparams.add(product);
-        
-        WebResource postresource = 
-            c.resource("http://localhost:8080/candlepin/entitlement/foo/");
-        postresource.accept("application/json").type("application/json").post(consumer);
+//        ClientConfig cc = new DefaultClientConfig();
+//        Client c = Client.create(cc);
+//
+//        // WebResource getresource = c.resource("http://localhost:8080/candlepin/entitle/");
+//
+//
+//        Object[] params = new Object[2];
+//        params[0] = consumer;
+//        params[1] = product;
+//        List<Object> aparams = new ArrayList<Object>();
+//        aparams.add(consumer);
+//        aparams.add(product);
+//
+//        WebResource postresource =
+//            c.resource("http://localhost:8080/candlepin/entitlement/foo/");
+//        postresource.accept("application/json").type("application/json").post(consumer);
         
         // System.out.println(jto.getName());
         // jto = getresource.accept("application/json").get(JsonTestObject.class);

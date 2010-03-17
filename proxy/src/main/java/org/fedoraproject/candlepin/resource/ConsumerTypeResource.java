@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -27,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 
 import com.google.inject.Inject;
 
@@ -50,10 +53,9 @@ public class ConsumerTypeResource {
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public ConsumerTypes list() {
-        ConsumerTypes types = new ConsumerTypes();
-        types.setConsumertype(consumerTypeCurator.findAll());
-        return types;
+    @Wrapped(element = "consumertypes")    
+    public List<ConsumerType> list() {
+        return consumerTypeCurator.findAll();
     }
 
     /**

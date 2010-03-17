@@ -27,12 +27,12 @@ import java.sql.PreparedStatement;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.codec.binary.Base64;
 
 import org.fedoraproject.candlepin.config.TestingConfiguration;
 import org.junit.After;
 import org.junit.Before;
 
-import com.sun.jersey.core.util.Base64;
 import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaDbFilter;
 import org.junit.Test;
 
@@ -82,7 +82,7 @@ public class BasicAuthViaDbFilterTest {
 
     private String encodeUserPass(String username, String password) {
         String decoded = username + ":" + password;
-        byte[] encoded = Base64.encode(decoded);
+        byte[] encoded = Base64.encodeBase64(decoded.getBytes());
         
         return new String(encoded);
     }

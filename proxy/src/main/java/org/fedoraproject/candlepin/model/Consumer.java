@@ -73,7 +73,7 @@ public class Consumer implements Persisted {
     @JoinColumn(nullable = false)
     @ForeignKey(name = "fk_consumer_consumer_type")
     private ConsumerType type;
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_consumer_owner")
     @JoinColumn(nullable = false)

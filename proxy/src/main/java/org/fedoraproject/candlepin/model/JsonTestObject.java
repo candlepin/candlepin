@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * JsonTestObject
  * @version $Rev$
  */
-@XmlRootElement
+@XmlRootElement(name = "jsontest")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class JsonTestObject {
 

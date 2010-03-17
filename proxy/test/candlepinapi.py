@@ -101,11 +101,6 @@ class CandlePinApi:
             products=None, consumer_type="system"):
         path = "/consumers"
 
-        entrys = []
-        for key in hardware:
-            entrys.append({'key': key,
-                          'value': hardware[key]})
-
         # Don't think this is used yet, and definitely shouldn't
         # be going into the entrys map:
         #if products is not None:
@@ -113,19 +108,18 @@ class CandlePinApi:
         #        entrys.append({'key':key,
         #                       'value':products[key]})
                               
-        consumer = {
-            "type": {'label': consumer_type},
-            "name": name,
-            "facts":{
-                "metadata": {
-                    "entry": entrys
-                    },
-                }
+        consumer = {"consumer": {
+                    "type": {'label': consumer_type},
+                    "name": name,
+                    "facts": {
+                       "metadata": hardware
+                    }
             }
+        }
 
 
         blob = self.rest.post(path, data=consumer)
-        return blob
+        return blob['consumer']
 
     def unRegisterConsumer(self, username, password, consumer_uuid):
         path = "/consumers/%s" % consumer_uuid
@@ -134,17 +128,17 @@ class CandlePinApi:
 
     def bindProduct(self, consumer_uuid, product_label):
         path = "/consumers/%s/entitlements?product=%s" % (consumer_uuid, product_label)
-        blob = self.rest.post(path)
+        blob = self.rest.post(path)['entitlement']
         return blob
 
     def bindPool(self, consumer_uuid, pool_id):
         path = "/consumers/%s/entitlements?pool=%s" % (consumer_uuid, pool_id)
-        blob = self.rest.post(path)
+        blob = self.rest.post(path)['entitlement']
         return blob
 
     def bindRegToken(self, consumer_uuid, regtoken):
         path = "/consumers/%s/entitlements?token=%s" % (consumer_uuid, regtoken)
-        blob = self.rest.post(path)
+        blob = self.rest.post(path)['entitlement']
         return blob
 
     def unBindAll(self, consumer_uuid):
@@ -159,11 +153,14 @@ class CandlePinApi:
 
     def getCertificates(self, consumer_uuid):
         path = "/consumers/%s/certificates?serials=1,2,3,4,5" % consumer_uuid
-        return self.rest.get(path)
+        print "getCertifcates"
+        print self.rest.get(path)
+        print [c['cert'] for c in self.rest.get(path)]
+        return [c['cert'] for c in self.rest.get(path)]
 
     def getCertificateSerials(self, consumer_uuid):
         path = "/consumers/%s/certificates/serials" % consumer_uuid
-        return self.rest.get(path)
+        return [s['serial'] for s in self.rest.get(path)]
 
     def getPools(self, consumer=None, owner=None, product=None):
         """
@@ -179,7 +176,7 @@ class CandlePinApi:
             path = "%sowner=%s&" % (path, owner)
         if product:
             path = "%sproduct=%s&" % (path, product)
-        return self.rest.get(path)
+        return [p['pool'] for p in self.rest.get(path)]
 
     def getEntitlements(self, consumer_uuid):
         path = "/consumers/%s/entitlements" % consumer_uuid
@@ -187,7 +184,7 @@ class CandlePinApi:
 
     def getProducts(self):
         path = "/products/"
-        return self.rest.get(path)
+        return [p['product'] for p in self.rest.get(path)]
 
     def uploadRules(self, rules_text):
         path = "/rules/"

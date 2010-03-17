@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.util;
 
 import java.io.IOException;
 
+import java.util.Enumeration;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -60,6 +61,16 @@ public class LoggingFilter implements Filter {
                     .getMethod(), lRequest.getRequestURL()));
             }
             log.debug("Request Body: " + lRequest.getBody());
+
+
+            Enumeration headerNames = lRequest.getHeaderNames();
+
+            log.debug("====Headers====");
+            while (headerNames.hasMoreElements()) {
+                String headerName = (String) headerNames.nextElement();
+                log.debug(headerName + ":  " + lRequest.getHeader(headerName));
+            }
+
             chain.doFilter(lRequest, response);
         }
         else {
