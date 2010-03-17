@@ -94,13 +94,15 @@ public class BasicAuthViaUserServiceFilter implements Filter {
             String[] userpass = new String(Base64.decodeBase64(userpassEncoded)).split(":");
 
             try {
-                if(doAuth(userpass[0], userpass[1])){
+                if (doAuth(userpass[0], userpass[1])) {
                     request.setAttribute("username", userpass[0]);
                     chain.doFilter(request, response);
-                }else{
+                }
+                else {
                     httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 }
-            }catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 log.error(ex.getMessage());
                 httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
             }
