@@ -66,7 +66,8 @@ class ConsumerTests(CandlepinTests):
         virt_host = 'virtualization_host'
         results = self.cp.getPools(product=virt_host)
         print("Virt host pool: %s" % results)
-        pool_id = results['pool']['id']
+        self.assertEquals(1, len(results))
+        pool_id = results[0]['id']
 
         # Request a virtualization_host entitlement:
         try:
@@ -79,7 +80,8 @@ class ConsumerTests(CandlepinTests):
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(virt_uuid)
-        self.assertTrue(result is None)
+        self.assertEquals(type([]), type(result))
+        self.assertEquals(0, len(result))
 
     def test_bind_by_product(self):
         # Request a monitoring entitlement:
