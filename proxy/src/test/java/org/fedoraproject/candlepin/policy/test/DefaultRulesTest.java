@@ -15,8 +15,7 @@
 package org.fedoraproject.candlepin.policy.test;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,14 +46,30 @@ public class DefaultRulesTest {
     private Consumer consumer;
     private List<Pool> pools;
 
+    private static final String RULES_JS = "" + 
+        "function select_pool_global() { return pools.getFirst();} \n"        + 
+        "function select_pool_monitoring() {                       \n"        + 
+        "    var poolItr; var pool;                                \n"        + 
+        "    for (poolItr = pools.iterator(); poolItr.hasNext();){ \n"        + 
+        "        pool = poolItr.next();                            \n"        + 
+        "        if (pool.getProductId() == \"monitoring\"){       \n"        + 
+        "            return pool;                                  \n"        + 
+        "       }                                                  \n"        + 
+        "    }                                                     \n"        + 
+        "    return pools.getFirst();                              \n"        + 
+        "}                                                         \n";
+
     @Before
     public void createEnforcer() throws IOException {
-        // InputStream inStream = this
-        URL url = this.getClass().getClassLoader().getResource(
-            "rules/default-rules.js");
 
-        InputStreamReader inputStreamReader = new InputStreamReader(url
-            .openStream());
+        // If you wish to test against the default rules file,
+        // use the following code to load it in from the classpath
+        /*
+         * URL url = this.getClass().getClassLoader().getResource(
+         * "rules/default-rules.js"); InputStreamReader inputStreamReader = new
+         * InputStreamReader(url .openStream());
+         */
+        StringReader inputStreamReader = new StringReader(RULES_JS);
 
         enforcer = new JavascriptEnforcer(dateSource, inputStreamReader,
             preHelper, postHelper, prodAdapter, new ScriptEngineManager()
@@ -85,7 +100,7 @@ public class DefaultRulesTest {
         Assert.assertEquals("default", selected.getProductId());
     }
 
-    // @Test
+    @Test
     public void runMonitoringRules() {
         final String productId = "monitoring";
         Pool selected = enforcer.selectBestPool(consumer, productId, pools);
