@@ -79,7 +79,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(RulesCurator.class).to(TestRulesCurator.class);
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
-            .toProvider(RulesReaderProvider.class);
+                          .toProvider(RulesReaderProvider.class);
 
     }
 }

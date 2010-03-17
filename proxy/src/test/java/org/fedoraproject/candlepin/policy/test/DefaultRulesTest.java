@@ -45,7 +45,6 @@ public class DefaultRulesTest {
     private ProductServiceAdapter prodAdapter;
     private Consumer consumer;
     private List<Pool> pools;
-
     private static final String RULES_JS = "" + 
         "function select_pool_global() { return pools.getFirst();} \n"        + 
         "function select_pool_monitoring() {                       \n"        + 

@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
@@ -100,7 +97,6 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
 //        ClientConfig cc = new DefaultClientConfig();
 //        Client c = Client.create(cc);
 //
-//        // WebResource getresource = c.resource("http://localhost:8080/candlepin/entitle/");
 //
 //
 //        Object[] params = new Object[2];
