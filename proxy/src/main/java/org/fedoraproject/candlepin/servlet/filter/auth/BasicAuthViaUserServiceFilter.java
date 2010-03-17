@@ -40,34 +40,22 @@ public class BasicAuthViaUserServiceFilter implements Filter {
 
     private Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
 
-    private Config config = null;
     private UserServiceAdapter userServiceAdapter;
     
     @Inject
     public BasicAuthViaUserServiceFilter(Config config,
         UserServiceAdapter userServiceAdapter) {
 
-        this.config = config;
         this.userServiceAdapter = userServiceAdapter;
     }
-    
-    public BasicAuthViaUserServiceFilter() {
-        config = new Config();
-    }
 
-    public void init(FilterConfig filterConfig) throws ServletException {
-        //this.filterConfig = filterConfig;
-    }
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {}
 
-    public void destroy() {
-        //this.filterConfig = null;
-    }
+    @Override
+    public void destroy() {}
 
-    // config has to be overridable for testing
-    public void setConfig(Config configuration) { 
-        this.config = configuration;
-    }
-    
+    @Override
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
@@ -77,8 +65,7 @@ public class BasicAuthViaUserServiceFilter implements Filter {
         
         if (httpRequest.getMethod().equals("POST")) {
             processPost(request, response, chain, httpRequest, httpResponse);
-        }
-        else {
+        } else {
             // Anything that is not a POST is passed through
             chain.doFilter(request, response);
         }
@@ -87,32 +74,23 @@ public class BasicAuthViaUserServiceFilter implements Filter {
 
     private void processPost(ServletRequest request, ServletResponse response,
         FilterChain chain, HttpServletRequest httpRequest,
-        HttpServletResponse httpResponse) {
+        HttpServletResponse httpResponse) throws IOException, ServletException {
         String auth = httpRequest.getHeader("Authorization");
        
         if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
 
             String userpassEncoded = auth.substring(6);
-            String[] userpass = new String(Base64.decodeBase64(userpassEncoded)).split(":");
+            String[] userpass = new String(Base64.decodeBase64(userpassEncoded))
+                    .split(":");
 
-            try {
-                if (doAuth(userpass[0], userpass[1])) {
-                    request.setAttribute("username", userpass[0]);
-                    chain.doFilter(request, response);
-                }
-                else {
-                    httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                }
+            if (doAuth(userpass[0], userpass[1])) {
+                request.setAttribute("username", userpass[0]);
+                chain.doFilter(request, response);
+            } else{
+                httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
             }
-            catch (Exception ex) {
-                log.error(ex.getMessage());
-                httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
-            }
-        }
-        else {
-            // Anything that is a POST that is not using BASIC auth, then it's
-            // forbidden
-            httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        } else {
+            chain.doFilter(request, response);
         }
     }
     
