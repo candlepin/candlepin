@@ -26,70 +26,71 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-
 /**
  * ConsumerResourceTest
  */
 public class EntitlementResourceTest extends DatabaseTestFixture {
-    
+
     private Consumer consumer;
     private Product product;
     private Pool ep;
-    private Owner owner;    
-    //private EntitlementResource eapi;
-    //private Entitler entitler;
-    
+    private Owner owner;
+
+    // private EntitlementResource eapi;
+    // private Entitler entitler;
+
     @Before
     public void createTestObjects() {
         owner = TestUtil.createOwner();
         ownerCurator.create(owner);
-        
+
         ConsumerType type = new ConsumerType("some-consumer-type");
         consumerTypeCurator.create(type);
-        
+
         consumer = TestUtil.createConsumer(type, owner);
         consumerCurator.create(consumer);
-        
+
         product = TestUtil.createProduct();
         productCurator.create(product);
-        
-        ep = new Pool(owner, product.getId(), new Long(10), 
-                TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+
+        ep = new Pool(owner, product.getId(), new Long(10), TestDateUtil.date(
+            2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(ep);
 
-        //entitler = injector.getInstance(Entitler.class);
+        // entitler = injector.getInstance(Entitler.class);
 
-        //eapi = new EntitlementResource(
-        //        poolCurator, entitlementCurator,
-        //        consumerCurator, productAdapter, subAdapter, entitler);
-        
+        // eapi = new EntitlementResource(
+        // poolCurator, entitlementCurator,
+        // consumerCurator, productAdapter, subAdapter, entitler);
+
         dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
     }
-    
+
     @Test
     public void testEntitleOwnerHasNoEntitlements() {
         // TODO
     }
-    
+
     @Test
     public void testEntitleOwnerHasNoAviailableEntitlements() {
         // TODO
     }
-    
+
     @Test
     public void testEntitleConsumerAlreadyEntitledForProduct() {
         // TODO
     }
-    
-//    @Ignore
-//    public void testHasEntitlement() {
-//        
-//        eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
-//
-//        // TODO: Disabling this test, boils into ObjectFactory things that need
-//        // to be fixed before we can do this check! Sorry! :) - dgoodwin
-////        assertTrue(eapi.hasEntitlement(consumer.getUuid(), product.getUuid()));
-//    }
+
+    // @Ignore
+    // public void testHasEntitlement() {
+    //        
+    // eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
+    //
+    // // TODO: Disabling this test, boils into ObjectFactory things that need
+    // // to be fixed before we can do this check! Sorry! :) - dgoodwin
+    // // assertTrue(eapi.hasEntitlement(consumer.getUuid(),
+    // product.getUuid()));
+    // }
 
     @Test
     @Ignore
@@ -110,11 +111,12 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
 //            c.resource("http://localhost:8080/candlepin/entitlement/foo/");
 //        postresource.accept("application/json").type("application/json").post(consumer);
         
+
         // System.out.println(jto.getName());
-        // jto = getresource.accept("application/json").get(JsonTestObject.class);
+        // jto =
+        // getresource.accept("application/json").get(JsonTestObject.class);
         // assertEquals("testname", jto.getName());
         // assertEquals("AEF", jto.getUuid());
     }
 
-    
 }
