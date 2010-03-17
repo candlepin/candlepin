@@ -21,9 +21,6 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
  */
 public class DefaultUserServiceAdapter implements UserServiceAdapter{
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.service.UserServiceAdapter#validateUser(java.lang.String, java.lang.String)
-     */
     @Override
     public boolean validateUser(String username, String password) {
         return true;

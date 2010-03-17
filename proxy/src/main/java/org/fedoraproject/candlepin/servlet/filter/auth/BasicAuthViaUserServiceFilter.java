@@ -44,7 +44,9 @@ public class BasicAuthViaUserServiceFilter implements Filter {
     private UserServiceAdapter userServiceAdapter;
     
     @Inject
-    public BasicAuthViaUserServiceFilter(Config config, UserServiceAdapter userServiceAdapter) {
+    public BasicAuthViaUserServiceFilter(Config config,
+        UserServiceAdapter userServiceAdapter) {
+
         this.config = config;
         this.userServiceAdapter = userServiceAdapter;
     }

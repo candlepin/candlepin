@@ -75,7 +75,8 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(IdentityCertServiceAdapter.class).to(
             StubIdentityCertServiceAdapter.class);
         bind(Config.class);
-        bind(EntitlementCertServiceAdapter.class).to(DefaultEntitlementCertServiceAdapter.class);
+        bind(EntitlementCertServiceAdapter.class).to(
+            DefaultEntitlementCertServiceAdapter.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
