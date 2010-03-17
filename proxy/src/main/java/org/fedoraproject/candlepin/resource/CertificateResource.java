@@ -33,7 +33,7 @@ import org.jdom.JDOMException;
 import com.google.inject.Inject;
 import com.redhat.rhn.common.cert.Certificate;
 import com.redhat.rhn.common.cert.CertificateFactory;
-import com.sun.jersey.core.util.Base64;
+import org.apache.commons.codec.binary.Base64;
 
 
 /**
@@ -82,7 +82,7 @@ public class CertificateResource  {
             }
             
             encodedCert = base64cert;
-            String decoded = Base64.base64Decode(base64cert);
+            String decoded = new String(Base64.decodeBase64(base64cert));
             Certificate cert = CertificateFactory.read(decoded);
             
             Owner owner = addOwner(cert);

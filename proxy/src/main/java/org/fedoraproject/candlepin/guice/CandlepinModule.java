@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
+import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
@@ -65,6 +66,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Config.class);
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
+        bind(ConsumerTypeResource.class);        
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);

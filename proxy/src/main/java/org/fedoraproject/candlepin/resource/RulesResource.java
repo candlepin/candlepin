@@ -18,8 +18,6 @@ import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
 
 import com.google.inject.Inject;
-import com.sun.jersey.core.util.Base64;
-
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.Consumes;
@@ -30,6 +28,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * Rules API entry path
@@ -66,7 +65,7 @@ public class RulesResource {
 
         Rules rules = null;
         try {
-            String decoded = Base64.base64Decode(rulesBuffer);
+            String decoded = new String(Base64.decodeBase64(rulesBuffer));
             rules = new Rules(decoded);
         }
         catch (Throwable t) {
@@ -89,7 +88,7 @@ public class RulesResource {
         String rules = rulesCurator.getRules().getRules();
         if ((rules != null) && (rules.length() > 0)) {
             System.out.println(rules);
-            return new String(Base64.encode(rules));
+            return Base64.encodeBase64String(rules.getBytes());
         }
         else {
             return "";

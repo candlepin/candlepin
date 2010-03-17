@@ -14,86 +14,67 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import static com.google.inject.name.Names.*;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-
-import javax.servlet.Filter;
-import javax.servlet.http.HttpServlet;
-
-import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
-import org.fedoraproject.candlepin.util.LoggingFilter;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.servlet.GuiceServletContextListener;
-import com.google.inject.servlet.ServletModule;
 import com.google.inject.util.Modules;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
+import java.util.LinkedList;
+import java.util.List;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
+import org.jboss.resteasy.plugins.guice.ModuleProcessor;
+import org.jboss.resteasy.spi.Registry;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 
 /**
- * configure Guice with the resource classes.
+ * Customized Candlepin version of {@link GuiceResteasyBootstrapServletContextListener}.
+ *
+ * The base version pulls in Guice modules by class name from web.xml and instanciates
+ * them - however we have a need to add in modules programmatically for, e.g., servlet
+ * filters and the wideplay JPA module.  This context listener overrides some of the
+ * module initialization code to allow for module specification beyond simply listing
+ * class names.
  */
-public class CandlepinContextListener extends GuiceServletContextListener {
-    
-    private static final String CANDLEPIN_SERVLET = "CANDLEPIN";
+public class CandlepinContextListener extends
+        GuiceResteasyBootstrapServletContextListener {
 
-    @SuppressWarnings("serial")
     @Override
-    protected Injector getInjector() {
-        return Guice.createInjector(new LinkedList<Module>() {
+    public void contextInitialized(final ServletContextEvent event) {
+        super.contextInitialized(event);
 
-            {
-                add(PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
-                    .buildModule());
+        // this is pulled almost verbatim from the superclass - if only they
+        // had made their internal getModules() method protected, then this
+        // would not be necessary.
+        final ServletContext context = event.getServletContext();
+        final Registry registry = (Registry) context.getAttribute(
+                Registry.class.getName());
+        final ResteasyProviderFactory providerFactory =
+                (ResteasyProviderFactory) context.getAttribute(
+                    ResteasyProviderFactory.class.getName());
+        final ModuleProcessor processor = new ModuleProcessor(registry, providerFactory);
 
-                add(new CandlepinModule());
-
-                add(new ServletModule() {
-                    {
-                        filter("/*").through(LoggingFilter.class);
-                        filter("/*").through(
-                            Key.get(Filter.class, 
-                                    named(FilterConstants.BASIC_AUTH)
-                            )
-                        );
-                        filter("/*").through(
-                            Key.get(Filter.class, 
-                                    named(FilterConstants.SSL_AUTH)
-                            )
-                        );
-                        serve("/*").with(GuiceContainer.class,
-                            new HashMap<String, String>() {
-                                {
-                                    put(
-                                        "com.sun.jersey.config.property.packages",
-                                        "org.fedoraproject.candlepin.resource");
-                                }
-                            });
-                    }
-                });
-
-                add(Modules.override(new DefaultConfig()).with(
-                    new CustomizableModules().load()));
-            }
-        });
+        processor.process(getModules());
     }
-    
+
     /**
-     * ServletConfig
+     * Returns a list of Guice modules to initialize.
+     *
+     * @return
      */
-    protected class ServletConfig extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(HttpServlet.class).annotatedWith(named(CANDLEPIN_SERVLET)).to(
-                GuiceContainer.class);
-        }
+    protected List<Module> getModules() {
+        List<Module> modules = new LinkedList<Module>();
+
+        modules.add(PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
+                .buildModule());
+
+        modules.add(Modules.override(new DefaultConfig()).with(
+                new CustomizableModules().load()));
+
+        modules.add(new CandlepinModule());
+        modules.add(new CandlepinFilterModule());
+
+        return modules;
     }
 }

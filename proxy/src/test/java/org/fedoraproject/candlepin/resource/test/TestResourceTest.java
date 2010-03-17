@@ -22,11 +22,6 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.resource.TestResource;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-
 import org.junit.Ignore;
 
 import java.util.ArrayList;
@@ -53,23 +48,23 @@ public class TestResourceTest {
 //    @Test
     @Ignore
     public void testJson() {
-        ClientConfig cc = new DefaultClientConfig();
-        Client c = Client.create(cc);
-        
-
-        JsonTestObject jto = createTestObject();
-
-        WebResource postresource = c.resource("http://localhost:8080/candlepin/test/");
-        postresource.accept("application/json").type("application/json").post(jto);
-        
-        WebResource getresource = c.resource("http://localhost:8080/candlepin/test/");
-        System.out.println(jto.getName());
-        jto = getresource.accept("application/json").get(JsonTestObject.class);
-        assertEquals("testname", jto.getName());
-        assertNotNull(jto.getStringList());
-        assertEquals(2, jto.getStringList().size());
-        assertNull(jto.getParent());
-        System.out.println(jto.getStringList());
+//        ClientConfig cc = new DefaultClientConfig();
+//        Client c = Client.create(cc);
+//
+//
+//        JsonTestObject jto = createTestObject();
+//
+//        WebResource postresource = c.resource("http://localhost:8080/candlepin/test/");
+//        postresource.accept("application/json").type("application/json").post(jto);
+//
+//        WebResource getresource = c.resource("http://localhost:8080/candlepin/test/");
+//        System.out.println(jto.getName());
+//        jto = getresource.accept("application/json").get(JsonTestObject.class);
+//        assertEquals("testname", jto.getName());
+//        assertNotNull(jto.getStringList());
+//        assertEquals(2, jto.getStringList().size());
+//        assertNull(jto.getParent());
+//        System.out.println(jto.getStringList());
     }
     
  //   @Test
@@ -85,13 +80,13 @@ public class TestResourceTest {
     
   //  @Test
     public void testConsumerType() {
-        ClientConfig cc = new DefaultClientConfig();
-        Client c = Client.create(cc);
-
-        WebResource getresource =
-            c.resource("http://localhost:8080/candlepin/test/consumertype");
-        ConsumerType ct = getresource.accept("application/json").get(ConsumerType.class);
-        assertNotNull(ct);
-        assertEquals("testtype", ct.getLabel());
+//        ClientConfig cc = new DefaultClientConfig();
+//        Client c = Client.create(cc);
+//
+//        WebResource getresource =
+//            c.resource("http://localhost:8080/candlepin/test/consumertype");
+//        ConsumerType ct = getresource.accept("application/json").get(ConsumerType.class);
+//        assertNotNull(ct);
+//        assertEquals("testtype", ct.getLabel());
     }
 }

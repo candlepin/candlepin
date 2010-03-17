@@ -37,7 +37,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.resource.ForbiddenException;
 
 import com.google.inject.Singleton;
-import com.sun.jersey.core.util.Base64;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * BasicAuthViaDbFilter
@@ -88,7 +88,7 @@ public class BasicAuthViaDbFilter implements Filter {
         if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
 
             String userpassEncoded = auth.substring(6);
-            String[] userpass = Base64.base64Decode(userpassEncoded).split(":");
+            String[] userpass = new String(Base64.decodeBase64(userpassEncoded)).split(":");
 
             try {
                 doBasicAuth(userpass[0], userpass[1]);

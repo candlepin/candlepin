@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.resource;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -47,6 +49,34 @@ public class TestResource {
      */
     public TestResource() {
         System.out.println("hello from TestResource ctor");
+    }
+
+    @GET
+    @Path("/gettest")
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public JsonTestObject gettest() {
+
+        JsonTestObject parent1 = new JsonTestObject();
+        parent1.setName("parent1");
+        parent1.setStringList(new ArrayList<String>());
+        parent1.setParent(null);
+
+        List<String> stringlist = new ArrayList<String>();
+        stringlist.add("string2");
+        stringlist.add("string3");
+        JsonTestObject parent = new JsonTestObject();
+        parent.setName("parentname");
+        parent.setParent(parent1);
+        parent.setStringList(stringlist);
+
+        stringlist.add("child");
+        JsonTestObject jto1 = new JsonTestObject();
+        jto1.setName("myname");
+        jto1.setParent(parent);
+        jto1.setStringList(stringlist);
+
+        
+        return jto1; 
     }
 
     /**

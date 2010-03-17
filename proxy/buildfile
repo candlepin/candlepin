@@ -9,12 +9,23 @@ COPYRIGHT = ""
 # DEPENDENCIES
 #############################################################################
 
-JERSEY = [group('jersey-core', 'jersey-json', 'jersey-server', 'jersey-client', :under=>'com.sun.jersey', :version=>'1.1.2-ea'),
-        'javax.persistence:persistence-api:jar:1.0.2' ,
-        'org.codehaus:jettison:jar:1.1',
-        'org.apache:xalan-j2:jar:2.6.0',
-        'javax.ws:jsr311-api:jar:1.1' ]
-JACKSON = ['org.codehaus.jackson:jackson-core-lgpl:jar:1.4.1', 'org.codehaus.jackson:jackson-mapper-lgpl:jar:1.4.1']
+RESTEASY = [group('jaxrs-api', 
+                  'resteasy-jaxrs',
+                  'resteasy-jaxb-provider', 
+                  'resteasy-jettison-provider', 
+                  'resteasy-guice', 
+                  :under => 'org.jboss.resteasy',
+                  :version => '1.2.1.GA'), 
+            'javax.persistence:persistence-api:jar:1.0.2',
+            'org.apache:xalan-j2:jar:2.6.0',
+            'org.scannotation:scannotation:jar:1.0.2',
+            'org.codehaus.jettison:jettison:jar:1.1']
+
+JACKSON = [group('jackson-core-lgpl', 
+                 'jackson-mapper-lgpl', 
+                 'jackson-jaxrs',
+                 :under => 'org.codehaus.jackson',
+                 :version => '1.4.1')]
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
 LOG4J = 'log4j:log4j:jar:1.2.14'
 HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
@@ -55,9 +66,6 @@ GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-s
            'com.sun.jersey:jersey-guice:jar:1.1.4.1',
            'aopalliance:aopalliance:jar:1.0',
            'javax.servlet:servlet-api:jar:2.5']
-           
-JERSEY_FOR_TEST = [group('jersey-test-framework', 'jersey-guice', :under=>'com.sun.jersey', :version=>'1.1.4.1'),
-           'com.sun.grizzly:grizzly-servlet-webserver:jar:1.9.8']
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
 
@@ -70,6 +78,7 @@ repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin"
 repositories.remote << "http://www.ibiblio.org/maven2/"
 repositories.remote << "http://download.java.net/maven/2/"
 repositories.remote << "http://repo2.maven.org/maven2/org/mockito/mockito-all"
+repositories.remote << "http://repository.jboss.com/maven2/"
 
 #############################################################################
 # PROJECT BUILD
@@ -98,7 +107,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
 
-  compile.with COMMONS, DB, JERSEY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE, JACKSON, QUARTZ
+  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE, JACKSON, QUARTZ
  
   #
   # testing
@@ -108,7 +117,7 @@ define "candlepin" do
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
   test.teardown { rm_rf 'target/classes/META-INF' }
-  test.with COMMONS, DB, JERSEY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, JERSEY_FOR_TEST, QUARTZ
+  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ
 
   #
   # javadoc projects
@@ -135,7 +144,7 @@ define "candlepin" do
   
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
-          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, JERSEY]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, RESTEASY]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
       
         ant.schema :destdir=>'target/schemagen' do
           ant.classpath :path=>_('target/classes')
@@ -163,7 +172,7 @@ define "candlepin" do
 
         # check the main src
         ant.checkstyle :config=>"buildconf/checkstyle.xml",
-                       :classpath=>Buildr.artifacts(CHECKSTYLE, JDOM, JERSEY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR) do
+                       :classpath=>Buildr.artifacts(CHECKSTYLE, JDOM, RESTEASY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR) do
 
 
           ant.classpath :path=>_('target/classes')
@@ -205,4 +214,16 @@ define "candlepin" do
 
 end
 
+#==========================================================================
+# Cucumber testing
+#==========================================================================
+require 'cucumber/rake/task'
+
+Cucumber::Rake::Task.new do |task|
+  task.cucumber_opts = %w{--format pretty}
+end
+
+Cucumber::Rake::Task.new(:cucumber_html) do |task|
+  task.cucumber_opts = %w{--format html}
+end
 

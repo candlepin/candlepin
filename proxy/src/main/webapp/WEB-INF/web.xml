@@ -2,80 +2,28 @@
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
      xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
      version="2.4">
-  <!--
-   =======================================================================
-                             FILTERS
-   =======================================================================
-   -->
-  <filter>
-    <filter-name>Guice Filter</filter-name>
-    <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
-<!--    <filter-class>com.wideplay.warp.servlet.WebFilter</filter-class>-->
-  </filter>
 
-  <!--
-   =======================================================================
-                             FILTER MAPPINGS
-   =======================================================================
-   -->
-  <filter-mapping>
-    <filter-name>Guice Filter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
-  <!--
-   =======================================================================
-                             LISTENERS
-   =======================================================================
-   -->
-  <listener>
-    <listener-class>org.fedoraproject.candlepin.guice.CandlepinContextListener</listener-class>
-  </listener>
-  <listener>
-      <listener-class>org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener</listener-class>
-  </listener>
-  <!--
-   =======================================================================
-                             SERVLETS
-   =======================================================================
-   -->
-<!--  <servlet>-->
-<!--    <servlet-name>Jersey Web Application</servlet-name>-->
-<!--    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>-->
-<!--    <init-param>-->
-       this is a semi-colon separated list of package names 
-<!--      <param-name>com.sun.jersey.config.property.packages</param-name>-->
-<!--      <param-value>org.fedoraproject.candlepin.resource</param-value>-->
-<!--    </init-param>-->
-<!---->
-<!---->
-<!--    <init-param>-->
-<!--    <param-name>com.sun.jersey.config.property.WadlGeneratorConfig</param-name>-->
-<!--        <param-value>com.sun.jersey.samples.extendedwadl.SampleWadlGeneratorConfig</param-value>-->
-<!--    </init-param>-->
-<!---->
-<!---->
-<!--    <init-param>-->
-<!--     <param-name>com.sun.jersey.config.feature.Trace</param-name>-->
-<!--     <param-value>true</param-value>-->
-<!--    </init-param>-->
-<!---->
-<!---->
-<!---->
-<!---->
-<!--    <load-on-startup>1</load-on-startup>-->
-<!--  </servlet>-->
-<!--  <servlet-mapping>-->
-<!--    <servlet-name>Jersey Web Application</servlet-name>-->
-<!--    <url-pattern>/*</url-pattern>-->
-<!--  </servlet-mapping>-->
-  
+    <display-name>Candlepin</display-name>
+    <filter>
+        <filter-name>Guice Filter</filter-name>
+        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+    </filter>
 
-  <!--
-   =======================================================================
-                             SERVLET MAPPINGS
-   =======================================================================
-   -->
+    <filter-mapping>
+        <filter-name>Guice Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
+    <listener>
+      <listener-class>
+        org.fedoraproject.candlepin.guice.CandlepinContextListener
+      </listener-class>
+    </listener>
+    <listener>
+      <listener-class>
+        org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener
+      </listener-class>
+    </listener>
 
   <security-constraint>
     <web-resource-collection>

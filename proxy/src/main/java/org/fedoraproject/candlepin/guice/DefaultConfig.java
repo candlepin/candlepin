@@ -26,7 +26,7 @@ import org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthentication
 import org.fedoraproject.candlepin.util.LoggingFilter;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 /**
  * DefaultConfig
@@ -35,13 +35,14 @@ class DefaultConfig extends AbstractModule {
 
     @Override
     public void configure() {
+        bind(HttpServletDispatcher.class).asEagerSingleton();
         bind(LoggingFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(
             PassThroughAuthenticationFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH)).to(
             PassThroughAuthenticationFilter.class).asEagerSingleton();
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
-        bind(Reader.class).annotatedWith(Names.named("RulesReader"))
+        bind(Reader.class).annotatedWith(named("RulesReader"))
             .toProvider(RulesReaderProvider.class);
     }
 }
