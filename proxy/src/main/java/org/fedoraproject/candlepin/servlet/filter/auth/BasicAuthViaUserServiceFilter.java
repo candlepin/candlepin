@@ -50,10 +50,10 @@ public class BasicAuthViaUserServiceFilter implements Filter {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {}
+    public void init(FilterConfig filterConfig) throws ServletException { }
 
     @Override
-    public void destroy() {}
+    public void destroy() { }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
@@ -65,7 +65,8 @@ public class BasicAuthViaUserServiceFilter implements Filter {
         
         if (httpRequest.getMethod().equals("POST")) {
             processPost(request, response, chain, httpRequest, httpResponse);
-        } else {
+        }
+        else {
             // Anything that is not a POST is passed through
             chain.doFilter(request, response);
         }
@@ -86,10 +87,12 @@ public class BasicAuthViaUserServiceFilter implements Filter {
             if (doAuth(userpass[0], userpass[1])) {
                 request.setAttribute("username", userpass[0]);
                 chain.doFilter(request, response);
-            } else{
+            }
+            else {
                 httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
             }
-        } else {
+        }
+        else {
             chain.doFilter(request, response);
         }
     }
