@@ -21,11 +21,15 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents certificate used to entitle a consumer
@@ -52,6 +56,11 @@ public class ConsumerEntitlementCertificate implements Persisted {
     @Column(nullable = false)
     private BigInteger serialNumber;
 
+    @ManyToOne
+    @ForeignKey(name = "fk_cert_entitlement")
+    @JoinColumn(nullable = false)
+    private Entitlement entitlement;
+    
     public BigInteger getSerialNumber() {
         return serialNumber;
     }
