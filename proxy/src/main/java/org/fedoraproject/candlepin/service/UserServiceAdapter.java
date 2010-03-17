@@ -23,7 +23,7 @@ public interface UserServiceAdapter {
      * Validates the credentials of a given user
      * @param username
      * @param password
-     * @return
+     * @return true if username and password combination are valid.
      */
     boolean validateUser(String username, String password);
 
