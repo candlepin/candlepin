@@ -209,3 +209,16 @@ define "candlepin" do
 
 end
 
+#==========================================================================
+# Cucumber testing
+#==========================================================================
+#require 'cucumber/rake/task'
+#
+#Cucumber::Rake::Task.new do |task|
+#  task.cucumber_opts = %w{--format pretty}
+#end
+#
+#Cucumber::Rake::Task.new(:cucumber_html) do |task|
+#  task.cucumber_opts = %w{--format html}
+#end
+

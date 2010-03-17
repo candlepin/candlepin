@@ -24,15 +24,18 @@ import javax.servlet.Filter;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
+import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthenticationFilter;
 import org.fedoraproject.candlepin.util.LoggingFilter;
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import com.google.inject.AbstractModule;
-import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 /**
  * DefaultConfig
@@ -44,11 +47,18 @@ class DefaultConfig extends AbstractModule {
         bind(HttpServletDispatcher.class).asEagerSingleton();
         bind(LoggingFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(
-            PassThroughAuthenticationFilter.class).asEagerSingleton();
+            BasicAuthViaUserServiceFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH)).to(
             PassThroughAuthenticationFilter.class).asEagerSingleton();
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
-        bind(Reader.class).annotatedWith(named("RulesReader"))
-            .toProvider(RulesReaderProvider.class);
+        bind(Reader.class).annotatedWith(named("RulesReader")).toProvider(
+            RulesReaderProvider.class);
+        bind(SubscriptionServiceAdapter.class).to(
+            DefaultSubscriptionServiceAdapter.class);
+        bind(IdentityCertServiceAdapter.class).to(
+            DefaultIdentityCertServiceAdapter.class);
+        bind(EntitlementCertServiceAdapter.class).to(
+            DefaultEntitlementCertServiceAdapter.class);
+        bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
     }
 }
