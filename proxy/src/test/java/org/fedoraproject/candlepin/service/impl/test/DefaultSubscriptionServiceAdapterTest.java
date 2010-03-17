@@ -80,8 +80,9 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     @Test
     public void testGetSubscriptionByBadToken() {
         List<Subscription> s = adapter.getSubscriptionForToken("NotARealToken");
-        
     }
+    
+    
     @Test
     public void testGetAllSubscriptionsSince() {
         List<Subscription> subs = adapter.getSubscriptionsSince(
