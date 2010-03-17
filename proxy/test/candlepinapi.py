@@ -97,9 +97,9 @@ class CandlePinApi:
     def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", cert_file=None, key_file=None, debug=None):
         self.rest = Rest(hostname=hostname, port=port, api_url=api_url, cert_file=cert_file, key_file=key_file, debug=debug)
 
-    def registerConsumer(self, userid, password, name, hardware=None, products=None):
+    def registerConsumer(self, userid, password, name, hardware=None, 
+            products=None, consumer_type="system"):
         path = "/consumers"
-
 
         entrys = []
         for key in hardware:
@@ -114,7 +114,7 @@ class CandlePinApi:
         #                       'value':products[key]})
                               
         consumer = {
-            "type": {'label':"system"},
+            "type": {'label': consumer_type},
             "name": name,
             "facts":{
                 "metadata": {

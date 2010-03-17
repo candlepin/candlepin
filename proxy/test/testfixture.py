@@ -41,7 +41,13 @@ class CandlepinTests(unittest.TestCase):
             rsp = rest.get("/certificates")
             self.assertTrue(rsp.strip() != "")
 
-        self.uuid = self.create_consumer()
+        global CONSUMER_UUID
+        if not CONSUMER_UUID:
+            self.uuid = self.create_consumer()
+            CONSUMER_UUID = self.uuid
+        else:
+            print("Reusing consumer: %s" % CONSUMER_UUID)
+            self.uuid = CONSUMER_UUID
 
     def assertResponse(self, expected_status, response):
         if response.status != expected_status:
@@ -51,30 +57,27 @@ class CandlepinTests(unittest.TestCase):
         cert_file = os.path.abspath(os.path.join(__file__, '../..', cert_file))
         return open(cert_file, 'rb').read()
 
-    def create_consumer(self):
+    def create_consumer(self, consumer_type="system"):
         """ 
         Create a consumer.
 
         NOTE: This call is relatively expensive, as consumer creation also 
         generates an identity certificate.
         """
-        global CONSUMER_UUID
-        if not CONSUMER_UUID:
-            facts_metadata = {
-                    "a": "1",
-                    "b": "2",
-                    "c": "3"}
-            response = self.cp.registerConsumer("fakeuser", "fakepw",
-                    "consumername", hardware=facts_metadata)
-            print("Consumer created: %s" % response)
-            self.assertTrue("uuid" in response)
-            self.assertTrue("idCert" in response)
-            self.assert_consumer_struct(response)
-            CONSUMER_UUID = response['uuid']
-            return response['uuid']
-        else:
-            print("Reusing consumer: %s" % CONSUMER_UUID)
-            return CONSUMER_UUID
+        facts_metadata = {
+                "a": "1",
+                "b": "2",
+                "c": "3"}
+
+        response = self.cp.registerConsumer("fakeuser", "fakepw",
+                "consumername", hardware=facts_metadata, 
+                consumer_type=consumer_type)
+        print("Consumer created: %s" % response)
+        self.assertTrue("uuid" in response)
+        self.assertTrue("idCert" in response)
+        self.assert_consumer_struct(response)
+        CONSUMER_UUID = response['uuid']
+        return response['uuid']
 
     def assert_consumer_struct(self, consumer):
         """ Verify the given dict represents a consumer struct. """

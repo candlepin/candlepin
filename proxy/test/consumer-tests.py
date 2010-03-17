@@ -3,7 +3,7 @@ import httplib, urllib
 import simplejson as json
 
 from testfixture import CandlepinTests
-from candlepinapi import Rest, CandlePinApi
+from candlepinapi import *
 
 class ConsumerTests(CandlepinTests):
 
@@ -39,8 +39,6 @@ class ConsumerTests(CandlepinTests):
         pools = {}
         for pool in results['pool']:
             pools[pool['productId']] = pool
-            print pool
-            print
         self.assertTrue(virt_host in pools)
 
         # Request a virtualization_host entitlement:
@@ -51,7 +49,33 @@ class ConsumerTests(CandlepinTests):
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(self.uuid)
+        print "Consumer's entitlements:"
         print result
+
+    # Just need to request a product that will fail, for now creating a virt
+    # system and trying to give it virtualization_host:
+    def test_failed_bind_by_entitlement_pool(self):
+        # Create a virt system:
+        virt_uuid = self.create_consumer(consumer_type="virt_system")
+
+        # Get pool ID for virtualization_host:
+        virt_host = 'virtualization_host'
+        results = self.cp.getPools(product=virt_host)
+        print("Virt host pool: %s" % results)
+        pool_id = results['pool']['id']
+
+        # Request a virtualization_host entitlement:
+        try:
+            self.cp.bindPool(virt_uuid, pool_id)
+            self.fail("Shouldn't have made it here.")
+        except CandlepinException, e:
+            self.assertEquals('rulefailed.virt.ents.only.for.physical.systems',
+                    e.response.read())
+            self.assertEquals(403, e.response.status)
+
+        # Now list consumer's entitlements:
+        result = self.cp.getEntitlements(virt_uuid)
+        self.assertTrue(result is None)
 
     def test_bind_by_product(self):
         # Request a monitoring entitlement:
