@@ -56,17 +56,14 @@ public class TestResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public JsonTestObject gettest() {
 
-        JsonTestObject parent1 = new JsonTestObject();
-        parent1.setName("parent1");
-        parent1.setStringList(new ArrayList<String>());
-        parent1.setParent(null);
-
         List<String> stringlist = new ArrayList<String>();
         stringlist.add("string2");
         stringlist.add("string3");
+
+
         JsonTestObject parent = new JsonTestObject();
         parent.setName("parentname");
-        parent.setParent(parent1);
+        parent.setParent(null);
         parent.setStringList(stringlist);
 
         stringlist.add("child");
@@ -75,7 +72,6 @@ public class TestResource {
         jto1.setParent(parent);
         jto1.setStringList(stringlist);
 
-        
         return jto1; 
     }
 
