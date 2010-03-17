@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import java.util.Properties;
-
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
@@ -39,6 +37,8 @@ import org.fedoraproject.candlepin.util.DateSourceImpl;
 
 import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+
+import java.util.Properties;
 
 /**
  * CandlepinProductionConfiguration
