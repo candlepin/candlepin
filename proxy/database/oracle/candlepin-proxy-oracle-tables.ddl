@@ -161,6 +161,15 @@ create table cp_consumer_idcertificate (
 )
 INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
 
+create table cp_consumer_ent_certificate (
+        id number(19,0) not null,
+        key BLOB not null,
+        pem BLOB not null,
+        serialNumber number(19,2) not null,
+        constraint "CANDLEPIN_CP_CONS_ENT_CERT_PK" primary key (id) USING INDEX PCTFREE 10 INITRANS 32 TABLESPACE "CANDLEPIN_IND"
+)
+INITRANS 32 TABLESPACE "CANDLEPIN_DATA";
+
 create sequence seq_attribute
 	Minvalue 1 Maxvalue 1.00000000000000E+27
     	Increment By 1 Start With 1
@@ -217,6 +226,11 @@ create sequence seq_subscription
 	Nocache  Noorder  Nocycle;
 
 create sequence seq_consumer_idcert
+        Minvalue 1 Maxvalue 1.00000000000000E+27
+        Increment By 1 Start With 1
+        Nocache  Noorder  Nocycle;
+
+create sequence seq_consumer_ent_cert
         Minvalue 1 Maxvalue 1.00000000000000E+27
         Increment By 1 Start With 1
         Nocache  Noorder  Nocycle;
