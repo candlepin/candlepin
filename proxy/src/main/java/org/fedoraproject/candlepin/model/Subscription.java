@@ -59,9 +59,14 @@ public class Subscription implements Persisted {
 
     @Column(nullable = false)
     private Date endDate;
+   
+    @ManyToOne
+    @JoinColumn
+    private SubscriptionToken token;
 
     @CollectionOfElements
-    @JoinTable(name = "cp_subscription_attribute")
+    @ForeignKey(name = "fk_subscription_token")
+    @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
     private Set<Attribute> attributes;
     
     private Date modified;
@@ -201,4 +206,20 @@ public class Subscription implements Persisted {
     public void setModified(Date modified) {
         this.modified = modified;
     }
+
+    /**
+     * @param token the token to set
+     */
+    public void setToken(SubscriptionToken token) {
+        this.token = token;
+    }
+
+    /**
+     * @return the token
+     */
+    public SubscriptionToken getToken() {
+        return token;
+    }
 }
+
+

@@ -450,17 +450,24 @@ public class ConsumerResource {
      *            registration token.
      * @return token
      */
-    private Entitlement bindByToken(String registrationToken, Consumer consumer) {
-
-        // FIXME: this is just a stub, need SubscriptionService to look it up
-
+    private Entitlement bindByToken(String registrationToken,
+        Consumer consumer) {
+        
+        log.debug("fffffffffffffffffffff");
+        //FIXME: this is just a stub, need SubscriptionService to look it up
         // FIXME: getSubscriptionForToken is a stub, always "works"
-        Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
+        log.debug("foooooooooooooo");
+        List<Subscription> s = subAdapter.getSubscriptionForToken(registrationToken);
+        log.debug("s " + s);
         if (s == null) {
+            log.debug("token: " + registrationToken);
+//            Entitlement e = new Entitlement();
+//            return e;
             throw new BadRequestException("No such token: " + registrationToken);
         }
 
-        Product p = productAdapter.getProductById(s.getProductId());
+        log.debug("bbbbbbbbbbbbar" + s + "  " + s.toString());
+        Product p = productAdapter.getProductById(s.get(0).getProductId());
 
         return createEntitlement(consumer, p);
     }

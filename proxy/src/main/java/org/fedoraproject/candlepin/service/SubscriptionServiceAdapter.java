@@ -61,7 +61,7 @@ public interface SubscriptionServiceAdapter {
      * @param token token for subscription.
      * @return a subscription for the given token.
      */
-    Subscription getSubscriptionForToken(String token);
+    List<Subscription> getSubscriptionForToken(String token);
     
     /**
      * Lookup a specific subscription.
