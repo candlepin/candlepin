@@ -19,7 +19,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.TestingConfiguration;
-import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaDbFilter;
 
 import org.apache.commons.codec.binary.Base64;
 import org.junit.After;
@@ -35,13 +34,16 @@ import java.sql.PreparedStatement;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.fedoraproject.candlepin.service.impl.DatabaseUserServiceAdapter;
+import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
 
-public class BasicAuthViaDbFilterTest {
+public class BasicAuthViaDbTest {
 
     private FilterChain defaultChain;
     private HttpServletResponse defaultResponse;
     private HttpServletRequest request;
-    private BasicAuthViaDbFilter filter;
+    private BasicAuthViaUserServiceFilter filter;
+    private DatabaseUserServiceAdapter userService;
     private Connection conn;
 
     @Before
@@ -53,14 +55,14 @@ public class BasicAuthViaDbFilterTest {
         defaultChain = mock(FilterChain.class);
         defaultResponse = mock(HttpServletResponse.class);
         request = mock(HttpServletRequest.class);
+
         // default config values for hypersonic db
-        filter = new BasicAuthViaDbFilter(new TestingConfiguration(
-            "candlepin.properties"));
+        userService = new DatabaseUserServiceAdapter(
+                new TestingConfiguration("candlepin.properties"));
+        filter = new BasicAuthViaUserServiceFilter(userService);
+        
         // default requests are POST
         when(request.getMethod()).thenReturn("POST");
-
-        filter = new BasicAuthViaDbFilter();
-        filter.setConfig(new TestingConfiguration("candlepin.properties"));
     }
 
     @After
@@ -140,13 +142,12 @@ public class BasicAuthViaDbFilterTest {
     @Test
     public void testGet() throws Exception {
         when(request.getMethod()).thenReturn("GET");
-        // invalid user; shouldnt matter
         when(request.getHeader("Authorization")).thenReturn(
-            "BASIC " + encodeUserPass("USE", "PASSWORD"));
+            "BASIC " + encodeUserPass("USER", "REDHAT"));
 
         filter.doFilter(request, defaultResponse, defaultChain);
-        // this should just pass on to the chain
-        verify(defaultChain).doFilter(request, defaultResponse);
+        
+        verify(request).setAttribute("username", "USER");
     }
 
     @Test
@@ -155,8 +156,10 @@ public class BasicAuthViaDbFilterTest {
         when(request.getHeader("Authorization")).thenReturn(
             "BASIC " + encodeUserPass("USER", "REDHAT"));
 
-        filter = new BasicAuthViaDbFilter(new TestingConfiguration(
-            "candlepin-baddb.properties"));
+        userService = new DatabaseUserServiceAdapter(
+                new TestingConfiguration("candlepin-baddb.properties"));
+        filter = new BasicAuthViaUserServiceFilter(userService);
+
         filter.doFilter(request, defaultResponse, defaultChain);
         // regular exceptions should return a 503
         verify(defaultResponse).setStatus(HttpServletResponse.SC_BAD_GATEWAY);

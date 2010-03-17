@@ -24,7 +24,8 @@ public interface UserServiceAdapter {
      * @param username
      * @param password
      * @return true if username and password combination are valid.
+     * @throws Exception if there was an error validating the user
      */
-    boolean validateUser(String username, String password);
+    boolean validateUser(String username, String password) throws Exception;
 
 }

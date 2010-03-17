@@ -52,7 +52,7 @@ public class SSLAuthFilter implements Filter {
     private static final String CA_CERTIFICATE = "ca.crt";
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
 
-    private static Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
+    private static Logger log = Logger.getLogger(SSLAuthFilter.class);
 
     // private FilterConfig filterConfig = null;
     private CertificateFactory certificateFactory;

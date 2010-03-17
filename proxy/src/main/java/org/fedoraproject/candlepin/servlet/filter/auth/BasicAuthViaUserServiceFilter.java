@@ -27,8 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.resource.ForbiddenException;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
@@ -38,13 +36,12 @@ import com.google.inject.Inject;
  */
 public class BasicAuthViaUserServiceFilter implements Filter {
 
-    private Logger log = Logger.getLogger(BasicAuthViaDbFilter.class);
+    private Logger log = Logger.getLogger(BasicAuthViaUserServiceFilter.class);
 
     private UserServiceAdapter userServiceAdapter;
     
     @Inject
-    public BasicAuthViaUserServiceFilter(Config config,
-        UserServiceAdapter userServiceAdapter) {
+    public BasicAuthViaUserServiceFilter(UserServiceAdapter userServiceAdapter) {
 
         this.userServiceAdapter = userServiceAdapter;
     }
@@ -62,34 +59,25 @@ public class BasicAuthViaUserServiceFilter implements Filter {
         log.debug("in basic auth filter");
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        
-        if (httpRequest.getMethod().equals("POST")) {
-            processPost(request, response, chain, httpRequest, httpResponse);
-        }
-        else {
-            // Anything that is not a POST is passed through
-            chain.doFilter(request, response);
-        }
-        log.debug("leaving basic auth filter");
-    }
 
-    private void processPost(ServletRequest request, ServletResponse response,
-        FilterChain chain, HttpServletRequest httpRequest,
-        HttpServletResponse httpResponse) throws IOException, ServletException {
         String auth = httpRequest.getHeader("Authorization");
-       
-        if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
 
+        if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
             String userpassEncoded = auth.substring(6);
             String[] userpass = new String(Base64.decodeBase64(userpassEncoded))
                     .split(":");
 
-            if (doAuth(userpass[0], userpass[1])) {
-                request.setAttribute("username", userpass[0]);
-                chain.doFilter(request, response);
+            try {
+                if (doAuth(userpass[0], userpass[1])) {
+                    request.setAttribute("username", userpass[0]);
+                    chain.doFilter(request, response);
+                }
+                else {
+                    httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                }
             }
-            else {
-                httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            catch (Exception e) {
+                httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
             }
         }
         else {
@@ -97,7 +85,7 @@ public class BasicAuthViaUserServiceFilter implements Filter {
         }
     }
     
-    private boolean doAuth(String username, String password) throws ForbiddenException {
+    private boolean doAuth(String username, String password) throws Exception {
         return userServiceAdapter.validateUser(username, password);
     }
 }
