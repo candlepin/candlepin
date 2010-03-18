@@ -385,9 +385,8 @@ public class ConsumerResource {
 
         // FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
-        allCerts.addSerial("SERIAL001");
-        allCerts.addSerial("SERIAL002");
-        allCerts.addSerial("SERIAL003");
+        allCerts.addSerial(1);
+        allCerts.addSerial(2);
 
         return allCerts;
     }

@@ -32,21 +32,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class CertificateSerialCollection {
 
     @XmlElement(name="serial")
-    private Collection<String> serials;
+    private Collection<Integer> serials;
 
     public CertificateSerialCollection() {
-        this.serials = new LinkedList<String>();
+        this.serials = new LinkedList<Integer>();
     }
 
-    public Collection<String> getSerials() {
+    public Collection<Integer> getSerials() {
         return serials;
     }
 
-    public void setSerials(Collection<String> serials) {
+    public void setSerials(Collection<Integer> serials) {
         this.serials = serials;
     }
 
-    public void addSerial(String serial) {
+    public void addSerial(Integer serial) {
         this.serials.add(serial);
     }
 }
