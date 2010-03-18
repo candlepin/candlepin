@@ -97,10 +97,7 @@ public class TestUtil {
     public static SubscriptionToken createSubscriptionToken() {
         
         SubscriptionToken st = new SubscriptionToken();
-        Subscription sub = createSubscription();
-        
         st.setToken("this_is_a_test_token");
-        st.setSubscription(sub);
         
         return st;
         

@@ -89,14 +89,15 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     @Test
     public void TestGetSubscriptionByRegnum() {
         
-//        Subscription sub = TestUtil.createSubscription();
+        Subscription sub = TestUtil.createSubscription();
         SubscriptionToken st = TestUtil.createSubscriptionToken();
+
+        st.setSubscription(s1);
+//        s1.
+//        s1.getToken();
         
         
-        s1.getToken();
-        
-        s1.getToken().getToken();
-        List<Subscription> s = adapter.getSubscriptionForToken(s1.getToken().getToken());
+        List<Subscription> s = adapter.getSubscriptionForToken("this_is_a_test_token");
         
         
         assertEquals(s.get(0).getProductId(), s1.getProductId());
