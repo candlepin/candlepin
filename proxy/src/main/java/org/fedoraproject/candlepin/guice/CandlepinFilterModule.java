@@ -16,12 +16,15 @@ package org.fedoraproject.candlepin.guice;
 
 import static com.google.inject.name.Names.*;
 
-import com.google.inject.Key;
-import com.google.inject.servlet.ServletModule;
 import javax.servlet.Filter;
+
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
+import org.fedoraproject.candlepin.servlet.filter.auth.NoAuthRequiredFilter;
 import org.fedoraproject.candlepin.util.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
+
+import com.google.inject.Key;
+import com.google.inject.servlet.ServletModule;
 
 /**
  * Candlepin-specific {@link ServletModule} that configures servlet filters.
@@ -31,6 +34,7 @@ public class CandlepinFilterModule extends ServletModule {
     @Override
     protected void configureServlets() {
         filter("/*").through(LoggingFilter.class);
+        filter("/admin/init").through(NoAuthRequiredFilter.class);
         filter("/*").through(
             Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)));
         filter("/*").through(

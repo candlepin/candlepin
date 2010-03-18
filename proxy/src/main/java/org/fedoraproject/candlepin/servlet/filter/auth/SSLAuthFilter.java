@@ -14,24 +14,8 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.cert.CertPath;
-import java.security.cert.CertPathValidator;
-import java.security.cert.CertPathValidatorException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXParameters;
-import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
-import java.util.LinkedList;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -43,33 +27,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.config.Config;
 
 /**
  * SSLAuthFilter
  */
 public class SSLAuthFilter implements Filter {
-    private static final String CA_CERTIFICATE = "ca.crt";
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
-
+    private static final String CURRENT_USERNAME = "username";
+    
     private static Logger log = Logger.getLogger(SSLAuthFilter.class);
-
     // private FilterConfig filterConfig = null;
-    private CertificateFactory certificateFactory;
-    private PKIXParameters pKIXparams;
-
-    public SSLAuthFilter() throws CertificateException, FileNotFoundException,
-        InvalidAlgorithmParameterException {
-        certificateFactory = CertificateFactory.getInstance("X.509");
-
-        X509Certificate caCertificate = (X509Certificate) certificateFactory
-            .generateCertificate(caCertificate());
-
-        TrustAnchor anchor = new TrustAnchor((X509Certificate) caCertificate,
-            null);
-        pKIXparams = new PKIXParameters(Collections.singleton(anchor));
-        pKIXparams.setRevocationEnabled(false);
-    }
 
     public void init(FilterConfig filterConfig) throws ServletException {
         // this.filterConfig = filterConfig;
@@ -87,65 +54,32 @@ public class SSLAuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        try {
-            X509Certificate[] certs = (X509Certificate[]) httpRequest
-                .getAttribute(CERTIFICATES_ATTR);
+        X509Certificate[] certs = (X509Certificate[]) httpRequest
+            .getAttribute(CERTIFICATES_ATTR);
 
-            if (certs == null || certs.length < 1) {
-                debugMessage("no certificate was present to authenticate the client");
-                httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
-
-            CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
-            for (final X509Certificate cert : certs) {
-                CertPath cp = certificateFactory
-                    .generateCertPath(new LinkedList<Certificate>() {
-                        {
-                            add(cert);
-                        }
-                    });
-                try {
-                    // PKIXCertPathValidatorResult result
-                    // =(PKIXCertPathValidatorResult)
-                    cpv.validate(cp, pKIXparams);
-
-                    debugMessage("validated cert with subject DN: " +
-                        cert.getSubjectDN() + "and issuer DN: " +
-                        cert.getIssuerDN());
-
-                    chain.doFilter(request, response);
-
-                    debugMessage("leaving ssl auth filter");
-                    return;
-                }
-                catch (CertPathValidatorException e) {
-                    debugMessage("validation exception for a cert with subject DN: " +
-                        cert.getSubjectDN() +
-                        "and issuer DN: " +
-                        cert.getIssuerDN());
-                }
-            }
-
+        if (null != request.getAttribute(CURRENT_USERNAME)) {
+            debugMessage("leaving ssl auth filter: user has been already authenticated");
+            chain.doFilter(request, response);
+            return;
+        }
+            
+        if (certs == null || certs.length < 1) {
+            debugMessage("no certificate was present to authenticate the client");
             httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            debugMessage("leaving ssl auth filter; 403 returned");
+            return;
+        }
 
-        }
-        catch (Exception e) {
-            log.error(e.getMessage());
-            // TODO: not sure about 503 return code.
-            httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
-        }
+        // certs is an array of certificates presented by the client
+        // with the first one in the array being the certificate of the client itself.
+        request.setAttribute(CURRENT_USERNAME, certs[0].getSubjectDN().getName());
+        
+        chain.doFilter(request, response);
+        debugMessage("leaving ssl auth filter");
     }
 
     private void debugMessage(String msg) {
         if (log.isDebugEnabled()) {
             log.debug(msg);
         }
-    }
-
-    protected InputStream caCertificate() throws FileNotFoundException {
-        return new BufferedInputStream(new FileInputStream(new File(
-            Config.CONFIG_DIR, CA_CERTIFICATE)));
     }
 }
