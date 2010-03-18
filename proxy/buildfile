@@ -115,7 +115,6 @@ define "candlepin" do
   # testing
   #
   test.setup do |task|
-    filter('src/test/java').exclude('*.java').into('target/test/classes').run 
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
   test.teardown { rm_rf 'target/classes/META-INF' }
