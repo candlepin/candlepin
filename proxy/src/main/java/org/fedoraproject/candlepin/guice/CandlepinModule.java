@@ -39,6 +39,7 @@ import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 
 import java.util.Properties;
+import org.fedoraproject.candlepin.cert.BouncyCastlePKI;
 
 /**
  * CandlepinProductionConfiguration
@@ -58,6 +59,7 @@ public class CandlepinModule extends AbstractModule {
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(Config.class);
+        bind(BouncyCastlePKI.class).asEagerSingleton();
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);        

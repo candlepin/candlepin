@@ -50,8 +50,9 @@ public class BouncyCastlePKI {
     private static final int RSA_KEY_SIZE = 2048;
     private static final String SIGNATURE_ALGO = "SHA1WITHRSA";
 
-    private X509Certificate caCert;
-    private PrivateKey caPrivateKey;
+    private final X509Certificate caCert;
+    private final PrivateKey caPrivateKey;
+    private final KeyPair keyPair;
 
     @Inject
     public BouncyCastlePKI(CertificateReader certReader) throws Exception {
@@ -59,6 +60,7 @@ public class BouncyCastlePKI {
 
         this.caCert = certReader.getCACert();
         this.caPrivateKey = certReader.getCaKey();
+        this.keyPair = generateNewKeyPair();
     }
 
     public X509Certificate createX509Certificate(String dn,
@@ -66,7 +68,7 @@ public class BouncyCastlePKI {
         BigInteger serialNumber) throws GeneralSecurityException, IOException {
 
         return createX509Certificate(dn, extensions, startDate,
-            endDate, generateNewKeyPair(), serialNumber);
+            endDate, this.keyPair, serialNumber);
     }
 
     /**
