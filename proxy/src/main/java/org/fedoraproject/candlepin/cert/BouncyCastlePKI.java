@@ -40,6 +40,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import com.google.inject.Inject;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import org.bouncycastle.openssl.PEMWriter;
 
 /**
  * 
@@ -134,6 +137,26 @@ public class BouncyCastlePKI {
     }
 
     /**
+     * Take an X509Certificate object and return a byte[] of the certificate,
+     * PEM encoded
+     * @param cert
+     * @return PEM-encoded bytes of the certificate
+     * @throws GeneralSecurityException if there is a security issue
+     * @throws IOException if there is i/o problem
+     */
+    public byte[] getPemEncoded(X509Certificate cert) throws
+            GeneralSecurityException, IOException {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        PEMWriter w =  new PEMWriter(new OutputStreamWriter(stream));
+
+        w.writeObject(cert);
+        byte[] pemEncoded = stream.toByteArray();
+        w.close();
+
+        return pemEncoded;
+    }
+
+    /**
      * Read the byte streams to get the public & private keys
      * 
      * @param privKeyBits
@@ -155,8 +178,7 @@ public class BouncyCastlePKI {
         PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(
             pubKeyBits));
         // make them a key pair
-        KeyPair keyPair = new KeyPair(pubKey, privKey);
-        return keyPair;
+        return new KeyPair(pubKey, privKey);
     }
 
     /**

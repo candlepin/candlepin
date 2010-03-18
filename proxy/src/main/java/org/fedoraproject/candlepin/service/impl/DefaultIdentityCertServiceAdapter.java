@@ -89,10 +89,10 @@ public class DefaultIdentityCertServiceAdapter implements
     }
 
     private ConsumerIdentityCertificate createIdentityCert(X509Certificate x509cert)
-        throws CertificateEncodingException {
-        
+        throws CertificateEncodingException, GeneralSecurityException, IOException {
+
         ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
-        identityCert.setPem(x509cert.getEncoded());
+        identityCert.setPem(this.pki.getPemEncoded(x509cert));
         identityCert.setKey(x509cert.getPublicKey().getEncoded());
         identityCert.setSerialNumber(x509cert.getSerialNumber());
 
