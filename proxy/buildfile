@@ -223,6 +223,17 @@ define "candlepin" do
 
 end
 
+task :fixeclipse do
+  puts "Fixing eclipse .classpath"
+  text = File.read(".classpath")
+  tmp = File.new("tmp", "w")
+  tmp.write(text.gsub(/output="target\/resources"/, ""))
+  tmp.close()
+  FileUtils.copy("tmp", ".classpath")
+  File.delete("tmp")
+end
+
+
 #==========================================================================
 # Cucumber testing
 #==========================================================================
