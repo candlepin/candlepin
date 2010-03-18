@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import static com.google.inject.name.Names.*;
+import static com.google.inject.name.Names.named;
 
 import java.io.Reader;
 

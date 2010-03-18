@@ -14,18 +14,17 @@
  */
 package org.fedoraproject.candlepin.test;
 
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Product;
-
-import org.apache.commons.codec.binary.Base64;
-
 import java.sql.Date;
 import java.util.Calendar;
 import java.util.Random;
+
+import org.apache.commons.codec.binary.Base64;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
 
 /**
  * TestUtil for creating various testing objects.

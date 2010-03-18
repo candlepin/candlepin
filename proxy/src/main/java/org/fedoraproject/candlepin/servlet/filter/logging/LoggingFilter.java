@@ -15,8 +15,8 @@
 package org.fedoraproject.candlepin.servlet.filter.logging;
 
 import java.io.IOException;
-
 import java.util.Enumeration;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;

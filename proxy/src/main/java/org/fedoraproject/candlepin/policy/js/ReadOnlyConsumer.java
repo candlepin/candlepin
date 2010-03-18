@@ -14,12 +14,12 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.policy.MissingFactException;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Read-only copy of a Consumer.

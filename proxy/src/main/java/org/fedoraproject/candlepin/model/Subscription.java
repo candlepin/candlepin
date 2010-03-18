@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.ForeignKey;
-
 import java.util.Date;
 import java.util.Set;
 
@@ -30,6 +27,9 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a Subscription

@@ -14,16 +14,15 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.hibernate.criterion.Restrictions;
-
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
+import org.hibernate.criterion.Restrictions;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * ConsumerCurator

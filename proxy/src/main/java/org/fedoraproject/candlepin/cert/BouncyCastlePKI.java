@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.cert;
 
-import com.google.inject.Inject;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -39,6 +38,8 @@ import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
+
+import com.google.inject.Inject;
 
 /**
  * 

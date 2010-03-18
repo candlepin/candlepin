@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

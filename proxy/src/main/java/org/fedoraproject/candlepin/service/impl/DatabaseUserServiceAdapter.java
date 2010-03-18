@@ -14,14 +14,16 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import com.google.inject.Inject;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Properties;
+
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+
+import com.google.inject.Inject;
 
 /**
  *

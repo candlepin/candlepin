@@ -14,10 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.util.Util;
-
-import org.hibernate.annotations.ForeignKey;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -39,6 +35,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.fedoraproject.candlepin.util.Util;
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,

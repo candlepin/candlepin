@@ -14,11 +14,11 @@
  */
 package org.fedoraproject.candlepin.service;
 
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Subscription;
-
 import java.util.Date;
 import java.util.List;
+
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Subscription;
 
 /**
  * Subscription data may originate from a separate service outside Candlepin

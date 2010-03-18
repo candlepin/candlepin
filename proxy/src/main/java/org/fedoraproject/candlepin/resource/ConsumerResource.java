@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.model.CertificateSerialCollection;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
@@ -53,7 +54,6 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 
 import com.google.inject.Inject;
-import org.fedoraproject.candlepin.model.CertificateSerialCollection;
 import com.redhat.rhn.common.dto.EntitlementCertificateDto;
 
 /**

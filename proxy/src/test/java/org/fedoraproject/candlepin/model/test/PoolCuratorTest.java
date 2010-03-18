@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 
-import static org.junit.Assert.*;
-
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;

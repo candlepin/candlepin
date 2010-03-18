@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.service.impl;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
@@ -30,7 +31,6 @@ import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 import com.google.inject.Inject;
-import java.security.cert.CertificateEncodingException;
 
 /**
  * DefaultIdentityCertServiceAdapter

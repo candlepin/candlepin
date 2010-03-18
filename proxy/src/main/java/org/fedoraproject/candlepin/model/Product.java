@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,6 +30,8 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a Product that can be consumed and entitled. Products define

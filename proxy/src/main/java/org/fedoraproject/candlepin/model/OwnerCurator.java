@@ -14,10 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
-
 import java.util.LinkedList;
 import java.util.List;
+
+import org.hibernate.criterion.Restrictions;
 
 /**
  * OwnerCurator

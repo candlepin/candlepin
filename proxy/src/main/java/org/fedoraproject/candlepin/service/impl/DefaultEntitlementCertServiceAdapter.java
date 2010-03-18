@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.util.Date;
+
 import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Product;

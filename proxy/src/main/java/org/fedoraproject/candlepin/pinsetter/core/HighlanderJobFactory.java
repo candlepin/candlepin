@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.quartz.Job;
 import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * HighlanderJobFactory is a custom Quartz JobFactory implementation which

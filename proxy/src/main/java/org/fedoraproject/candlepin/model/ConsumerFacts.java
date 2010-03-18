@@ -14,10 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.MapKeyManyToMany;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +28,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.MapKeyManyToMany;
 
 /**
  * ConsumerFacts contains the metadata about a given Consumer (parent). It is 

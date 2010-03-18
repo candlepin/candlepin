@@ -60,7 +60,7 @@ CHECKSTYLE = ['com.puppycrawl:checkstyle:jar:5.0',
               'google-collect:google-collect:jar:snapshot-20090211',
               COMMONS]
 
-BOUNCYCASTLE = group('bcprov', 'bcpg', :under=>'org.bouncycastle', :version=>'1.43')
+BOUNCYCASTLE = group('bcprov-jdk16', 'bcpg-jdk16', :under=>'org.bouncycastle', :version=>'1.44')
 GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-servlet', 'guice-throwingproviders', :under=>'com.google.guice', :version=>'2.0'),
            'com.wideplay.warp:warp-persist:jar:2.0-20090214',
            'com.sun.jersey:jersey-guice:jar:1.1.4.1',

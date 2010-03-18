@@ -14,17 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.js.PreEntHelper;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -32,6 +21,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.js.PreEntHelper;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * EntitlementPoolCurator

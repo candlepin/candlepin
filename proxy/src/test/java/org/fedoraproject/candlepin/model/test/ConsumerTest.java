@@ -16,26 +16,25 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Map;
+
+import javax.persistence.PersistenceException;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Map;
-
-import javax.persistence.PersistenceException;
 
 public class ConsumerTest extends DatabaseTestFixture {
 

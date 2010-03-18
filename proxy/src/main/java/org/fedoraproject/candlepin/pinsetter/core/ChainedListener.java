@@ -14,12 +14,12 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.TriggerListener;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Propagates Quartz trigger events to an internal chain

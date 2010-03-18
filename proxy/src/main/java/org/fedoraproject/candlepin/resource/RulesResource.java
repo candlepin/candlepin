@@ -14,12 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.Rules;
-import org.fedoraproject.candlepin.model.RulesCurator;
-
-import com.google.inject.Inject;
-import org.apache.log4j.Logger;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -28,7 +22,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Rules;
+import org.fedoraproject.candlepin.model.RulesCurator;
+
+import com.google.inject.Inject;
 
 /**
  * Rules API entry path

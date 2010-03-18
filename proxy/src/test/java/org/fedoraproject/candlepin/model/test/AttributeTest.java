@@ -14,11 +14,10 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-
 import org.junit.Test;
 
 public class AttributeTest extends DatabaseTestFixture {

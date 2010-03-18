@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
@@ -27,8 +29,6 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * PoolResourceTest

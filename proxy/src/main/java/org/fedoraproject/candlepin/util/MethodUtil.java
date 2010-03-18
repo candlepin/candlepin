@@ -15,11 +15,11 @@
 
 package org.fedoraproject.candlepin.util;
 
-import org.apache.log4j.Logger;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
+import org.apache.log4j.Logger;
 
 /**
  * A simple class that assists with method invocation.  We should just use 

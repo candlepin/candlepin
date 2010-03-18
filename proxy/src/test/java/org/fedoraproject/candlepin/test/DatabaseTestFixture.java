@@ -34,7 +34,6 @@ import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
-
 import org.junit.Before;
 
 import com.google.inject.Guice;

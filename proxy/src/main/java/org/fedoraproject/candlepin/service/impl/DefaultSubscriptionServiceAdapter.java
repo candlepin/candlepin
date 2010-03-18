@@ -14,15 +14,15 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import java.util.Date;
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * default SubscriptionAdapter implementation

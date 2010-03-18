@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.cert;
 
-import com.google.inject.Inject;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +29,8 @@ import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PasswordFinder;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
+
+import com.google.inject.Inject;
 
 /**
  * Responsible for reading SSL certificates from the file system.

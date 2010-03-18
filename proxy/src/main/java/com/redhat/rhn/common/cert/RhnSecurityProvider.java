@@ -14,12 +14,12 @@
  */
 package com.redhat.rhn.common.cert;
 
+import java.security.Provider;
+
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 import org.bouncycastle.crypto.signers.DSASigner;
 import org.bouncycastle.jce.provider.JDKDSASigner;
 import org.bouncycastle.jce.provider.JDKKeyFactory;
-
-import java.security.Provider;
 
 /**
  * This JCE provider exists solely to hack around the fact that the bouncycastle

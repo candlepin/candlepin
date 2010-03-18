@@ -14,25 +14,24 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.util.Date;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
-
-import java.util.Date;
 
 /**
  * Entitler

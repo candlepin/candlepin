@@ -18,14 +18,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.inject.Module;
+import java.io.File;
+import java.net.URISyntaxException;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.junit.Test;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.util.Set;
+import com.google.inject.Module;
 
 public class CustomizableModulesTest {
 

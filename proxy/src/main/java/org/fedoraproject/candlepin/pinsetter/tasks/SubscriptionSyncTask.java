@@ -14,11 +14,11 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
+import java.util.Date;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-
-import java.util.Date;
 
 /**
  * SubscriptionSyncTask

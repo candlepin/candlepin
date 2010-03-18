@@ -14,13 +14,18 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.pinsetter.tasks.SubscriptionSyncTask;
 import org.fedoraproject.candlepin.util.PropertyUtil;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -29,13 +34,7 @@ import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import com.google.inject.Inject;
 
 /**
  * Pinsetter Kernel.

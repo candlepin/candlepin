@@ -14,11 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.util.DateSource;
-
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.ForeignKey;
-
 import java.util.Date;
 import java.util.Set;
 
@@ -36,6 +31,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.fedoraproject.candlepin.util.DateSource;
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).

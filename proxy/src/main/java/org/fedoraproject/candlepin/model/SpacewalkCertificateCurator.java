@@ -14,13 +14,12 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import com.redhat.rhn.common.cert.Certificate;
-import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
-
-import com.google.inject.Inject;
-
 import java.text.ParseException;
 import java.util.Date;
+
+import com.google.inject.Inject;
+import com.redhat.rhn.common.cert.Certificate;
+import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
 
 /**
  * SpacewalkCertificateCurator

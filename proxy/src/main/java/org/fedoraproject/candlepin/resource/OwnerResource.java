@@ -14,16 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
-
-import com.google.inject.Inject;
-
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,6 +24,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+
+import com.google.inject.Inject;
 
 /**
  * Owner Resource

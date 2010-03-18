@@ -19,6 +19,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.text.ParseException;
+
 import org.junit.Test;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
@@ -26,8 +28,6 @@ import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.spi.TriggerFiredBundle;
-
-import java.text.ParseException;
 
 /**
  * HighlanderFactoryTest

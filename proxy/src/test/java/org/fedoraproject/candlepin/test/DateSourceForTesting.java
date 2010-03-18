@@ -14,10 +14,10 @@
  */
 package org.fedoraproject.candlepin.test;
 
-import org.fedoraproject.candlepin.util.DateSource;
-
 import java.util.Calendar;
 import java.util.Date;
+
+import org.fedoraproject.candlepin.util.DateSource;
 
 public class DateSourceForTesting implements DateSource {
     private Date currentDate;

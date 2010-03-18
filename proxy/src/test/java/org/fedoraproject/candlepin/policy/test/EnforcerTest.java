@@ -14,11 +14,20 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Date;
+
+import javax.script.ScriptEngineManager;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -30,15 +39,8 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Date;
-
-import javax.script.ScriptEngineManager;
 
 public class EnforcerTest extends DatabaseTestFixture {
 

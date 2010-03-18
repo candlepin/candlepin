@@ -14,16 +14,16 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.wideplay.warp.persist.Transactional;
-
-import org.hibernate.Session;
-
 import java.io.Serializable;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+
+import org.hibernate.Session;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * AbstractHibernateCurator

@@ -24,6 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -33,7 +34,6 @@ import org.jdom.JDOMException;
 import com.google.inject.Inject;
 import com.redhat.rhn.common.cert.Certificate;
 import com.redhat.rhn.common.cert.CertificateFactory;
-import org.apache.commons.codec.binary.Base64;
 
 
 /**
