@@ -66,5 +66,26 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> listByConsumerAndProduct(Consumer consumer, 
+        String productId) {
+        List<Entitlement> results = (List<Entitlement>) currentSession()
+            .createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer)).list();
+        if (results == null) {
+            return new LinkedList<Entitlement>();
+        }
+        else {
+            // TODO: Possible to do this via hibernate query? No luck on first attempt
+            // with criteria query.
+            List<Entitlement> filtered = new LinkedList<Entitlement>();
+            for (Entitlement e : results) {
+                if (e.getProductId().equals(productId)) {
+                    filtered.add(e);
+                }
+            }
+            return filtered;
+        }
+    }
 
 }

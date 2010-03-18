@@ -50,6 +50,11 @@ class CandlepinTests(unittest.TestCase):
             print("Reusing consumer: %s" % CONSUMER_UUID)
             self.uuid = CONSUMER_UUID
 
+    def tearDown(self):
+        # Unentitle the consumer here, but don't delete him. (creating consumer
+        # is expensive as a result of the ID cert generation)
+        self.cp.unBindAll(self.uuid)
+
     def assertResponse(self, expected_status, response):
         if response.status != expected_status:
             self.fail("Status: %s Reason: %s" % (response.status, response.reason))

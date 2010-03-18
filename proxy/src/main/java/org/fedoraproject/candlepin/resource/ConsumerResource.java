@@ -523,11 +523,20 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
     public List<Entitlement> listEntitlements(
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid") String consumerUuid,
+        @QueryParam("product") String productId) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        if (productId != null) {
+            Product p = productAdapter.getProductById(productId);
+            if (p == null) {
+                throw new BadRequestException("No such product: " + productId);
+            }
+            return entitlementCurator.listByConsumerAndProduct(consumer, productId);
+        }
 
         return entitlementCurator.listByConsumer(consumer);
+        
     }
 
     /**

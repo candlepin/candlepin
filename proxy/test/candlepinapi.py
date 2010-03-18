@@ -178,8 +178,10 @@ class CandlePinApi:
             path = "%sproduct=%s&" % (path, product)
         return [p['pool'] for p in self.rest.get(path)]
 
-    def getEntitlements(self, consumer_uuid):
+    def getEntitlements(self, consumer_uuid, product_id=None):
         path = "/consumers/%s/entitlements" % consumer_uuid
+        if product_id:
+            path = "%s?product=%s" % (path, product_id)
         return self.rest.get(path)
 
     def getProducts(self):
