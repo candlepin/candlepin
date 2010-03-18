@@ -123,6 +123,9 @@ public class Consumer implements Persisted {
      */
     public Consumer(Consumer copyFrom, Owner owner, ConsumerType type) {
         this(copyFrom.name, owner, type);
+        if (copyFrom.uuid != null && copyFrom.uuid.length() > 0) {
+            this.uuid = copyFrom.uuid;
+        }
         getFacts().setMetadata(copyFrom.getFacts().getMetadata());
         childConsumers = copyFrom.childConsumers;
         entitlements = copyFrom.entitlements;

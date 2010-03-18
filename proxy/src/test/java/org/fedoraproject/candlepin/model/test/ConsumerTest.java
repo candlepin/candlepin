@@ -17,6 +17,8 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -243,5 +245,23 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(3, lookedUp.getEntitlements().size());
     }
+    
+    @Test
+    public void testCreateWithAKnownUUID() {
+        Consumer con1 = new Consumer();
+        con1.setUuid("Jar Jar Binks");
+        Consumer con2 = new Consumer(con1, owner, consumerType);
+        assertEquals("The UUIDs should be equal", con1.getUuid(), con2.getUuid());
+    }
+    
+    @Test
+    public void testCreateWithABlankUUID() {
+        Consumer con1 = new Consumer();
+        con1.setUuid("");
+        Consumer con2 = new Consumer(con1, owner, consumerType);
+        assertNotSame("The UUIDs should not be equal", con1.getUuid(), con2.getUuid());
+        assertTrue("The should be big", con2.getUuid().length() > 0);        
+    }
+
 
 }
