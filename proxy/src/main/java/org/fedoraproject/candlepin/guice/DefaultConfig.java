@@ -32,7 +32,7 @@ import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.fedoraproject.candlepin.servlet.filter.auth.NoAuthRequiredFilter;
-import org.fedoraproject.candlepin.servlet.filter.auth.SSLAuthFilter;
+import org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthenticationFilter;
 import org.fedoraproject.candlepin.util.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
@@ -51,7 +51,7 @@ class DefaultConfig extends AbstractModule {
         bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(
             BasicAuthViaUserServiceFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH)).to(
-            SSLAuthFilter.class).asEagerSingleton();
+            PassThroughAuthenticationFilter.class).asEagerSingleton();
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(named("RulesReader")).toProvider(
             RulesReaderProvider.class);
