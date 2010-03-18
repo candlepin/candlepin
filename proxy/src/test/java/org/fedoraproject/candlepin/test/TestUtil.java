@@ -25,6 +25,8 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionToken;
 
 /**
  * TestUtil for creating various testing objects.
@@ -80,6 +82,35 @@ public class TestUtil {
                 "Test Product " + random);
         rhel.setId("test-product-" + random);
         return rhel;
+    }
+    
+    public static Subscription createSubscription() {
+        Subscription sub = new Subscription(createOwner(), createProduct().getId(),
+                                            new Long(1000), createDate(2000,1,1),
+                                            createDate(2010,1,1), 
+                                            createDate(2000,1,1));
+        return sub;
+        
+    }
+    
+    
+    public static SubscriptionToken createSubscriptionToken() {
+        
+        SubscriptionToken st = new SubscriptionToken();
+        Subscription sub = createSubscription();
+        
+        st.setToken("this_is_a_test_token");
+        st.setSubscription(sub);
+        
+        return st;
+        
+    }
+    
+    public static Pool createEntitlementPool(Product product) {
+        Pool pool = new Pool(createOwner(), product.getId(), 
+                new Long(1000),
+                TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
+        return pool;
     }
     
     public static Entitlement createEntitlement(Pool pool, Consumer c) {

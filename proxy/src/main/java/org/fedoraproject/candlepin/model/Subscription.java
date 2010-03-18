@@ -60,9 +60,9 @@ public class Subscription implements Persisted {
     @Column(nullable = false)
     private Date endDate;
    
-    @ManyToOne
-    @JoinColumn
-    private SubscriptionToken token;
+//    @ManyToOne
+//    @JoinColumn
+//    private SubscriptionToken token;
 
     @CollectionOfElements
     @ForeignKey(name = "fk_subscription_token")
@@ -207,19 +207,19 @@ public class Subscription implements Persisted {
         this.modified = modified;
     }
 
-    /**
-     * @param token the token to set
-     */
-    public void setToken(SubscriptionToken token) {
-        this.token = token;
-    }
-
-    /**
-     * @return the token
-     */
-    public SubscriptionToken getToken() {
-        return token;
-    }
+//    /**
+//     * @param token the token to set
+//     */
+//    public void setToken(SubscriptionToken token) {
+//        this.token = token;
+//    }
+//
+//    /**
+//     * @return the token
+//     */
+//    public SubscriptionToken getToken() {
+//        return token;
+//    }
 }
 
 

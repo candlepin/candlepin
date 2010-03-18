@@ -23,6 +23,7 @@ import java.util.List;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -80,6 +81,25 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     @Test
     public void testGetSubscriptionByBadToken() {
         List<Subscription> s = adapter.getSubscriptionForToken("NotARealToken");
+        
+        //assertNull(s);
+        assertEquals(s.size(), 0);
+    }
+    
+    @Test
+    public void TestGetSubscriptionByRegnum() {
+        
+//        Subscription sub = TestUtil.createSubscription();
+        SubscriptionToken st = TestUtil.createSubscriptionToken();
+        
+        
+        s1.getToken();
+        
+        s1.getToken().getToken();
+        List<Subscription> s = adapter.getSubscriptionForToken(s1.getToken().getToken());
+        
+        
+        assertEquals(s.get(0).getProductId(), s1.getProductId());
     }
     
     
