@@ -36,7 +36,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.ClientCertificate;
-import org.fedoraproject.candlepin.model.ClientCertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
@@ -57,6 +56,7 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.model.CertificateSerialCollection;
 
 /**
  * API Gateway for Consumers
@@ -390,36 +390,23 @@ public class ConsumerResource {
      */
     @GET
     @Path("{consumer_uuid}/certificates/serials")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public List<ClientCertificateSerial> getClientCertificateSerials(
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Wrapped(element="serials")
+    public CertificateSerialCollection getClientCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
         log.debug("Getting client certificate serials for consumer: " +
             consumerUuid);
 
-        List<ClientCertificateSerial> allCerts = new LinkedList<ClientCertificateSerial>();
+        CertificateSerialCollection allCerts = new CertificateSerialCollection();
 
         // FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
-        try {
-            ClientCertificateSerial cert = new ClientCertificateSerial();
-            cert.setSerial("SERIAL001");
+        allCerts.addSerial("SERIAL001");
+        allCerts.addSerial("SERIAL002");
+        allCerts.addSerial("SERIAL003");
 
-            allCerts.add(cert);
-
-            ClientCertificateSerial cert2 = new ClientCertificateSerial();
-            cert2.setSerial("SERIAL002");
-            allCerts.add(cert2);
-            log.debug("Returning metadata: " + allCerts.size());
-            for (ClientCertificateSerial md : allCerts) {
-                log.debug("   " + md.getSerial());
-            }
-
-            return allCerts;
-        }
-        catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        return allCerts;
     }
 
     /**

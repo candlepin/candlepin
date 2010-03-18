@@ -160,7 +160,7 @@ class CandlePinApi:
 
     def getCertificateSerials(self, consumer_uuid):
         path = "/consumers/%s/certificates/serials" % consumer_uuid
-        return [s['serial'] for s in self.rest.get(path)]
+        return self.rest.get(path)
 
     def getPools(self, consumer=None, owner=None, product=None):
         """

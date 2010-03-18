@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
@@ -111,6 +112,39 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
     }
+    
+    @Test
+    public void testCreateConsumerWithUUID() {
+        String uuid = "Jar Jar Binks";
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        toSubmit.setUuid(uuid);
+        toSubmit.setFacts(new ConsumerFacts() {
+
+            {
+                setFact(METADATA_NAME, METADATA_VALUE);
+            }
+        });
+
+        Consumer submitted  = consumerResource.create(toSubmit);
+        
+        assertNotNull(submitted);
+        assertNotNull(submitted);
+        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertNotNull(consumerCurator.lookupByUuid(uuid));
+        assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
+        assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));   
+        assertEquals("The Uuids do not match", uuid, submitted.getUuid());
+        
+        //The second post should fail because of constraint failures
+        try {
+            consumerResource.create(toSubmit);
+        } 
+        catch (BadRequestException e) {
+            // Good
+            return;
+        }
+        fail("No exception was thrown");
+    }    
     
     @Ignore // TODO: implement 'delete' functionality
     public void testDeleteResource() {
