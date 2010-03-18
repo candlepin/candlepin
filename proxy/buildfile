@@ -115,7 +115,6 @@ define "candlepin" do
   # testing
   #
   test.setup do |task|
-    filter('src/test/java').exclude('*.java').into('target/test/classes').run 
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
   test.teardown { rm_rf 'target/classes/META-INF' }
@@ -223,6 +222,17 @@ define "candlepin" do
   end
 
 end
+
+task :fixeclipse do
+  puts "Fixing eclipse .classpath"
+  text = File.read(".classpath")
+  tmp = File.new("tmp", "w")
+  tmp.write(text.gsub(/output="target\/resources"/, ""))
+  tmp.close()
+  FileUtils.copy("tmp", ".classpath")
+  File.delete("tmp")
+end
+
 
 #==========================================================================
 # Cucumber testing
