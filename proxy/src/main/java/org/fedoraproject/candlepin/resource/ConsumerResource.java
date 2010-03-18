@@ -14,9 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,10 +30,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
@@ -57,6 +54,7 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 
 import com.google.inject.Inject;
 import org.fedoraproject.candlepin.model.CertificateSerialCollection;
+import com.redhat.rhn.common.dto.EntitlementCertificateDto;
 
 /**
  * API Gateway for Consumers
@@ -305,16 +303,11 @@ public class ConsumerResource {
      * @throws Exception
      *             if there's a problem loading the file.
      */
-    public byte[] getBytesFromFile(String path) throws Exception {
-        InputStream is = this.getClass().getResource(path).openStream();
-        byte[] bytes = null;
-        try {
-            bytes = IOUtils.toByteArray(is);
-        }
-        finally {
-            IOUtils.closeQuietly(is);
-        }
-        return bytes;
+    public String getBytesFromFile(String path) throws Exception {
+        String fileContents = FileUtils.readFileToString(
+            new File(this.getClass().getResource(path).getPath()));
+        log.debug(fileContents);
+        return fileContents;
     }
 
     /**
@@ -327,7 +320,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
-    public List<ClientCertificate> getClientCertificates(
+    public List<EntitlementCertificateDto> getClientCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
 
@@ -340,35 +333,25 @@ public class ConsumerResource {
             }
         }
 
-        List<ClientCertificate> allCerts = new LinkedList<ClientCertificate>();
+        List<EntitlementCertificateDto> allCerts =
+            new LinkedList<EntitlementCertificateDto>();
 
         // FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
         try {
-            byte[] bytes = getBytesFromFile("/testcert-cert.p12");
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream stream = new ObjectOutputStream(baos);
-            stream.write(bytes);
-            stream.flush();
-            stream.close();
+            String keyBytes = getBytesFromFile("/key.pem");
+            String certBytes = getBytesFromFile("/rhel-ap.pem");
 
-            // FIXME : these won't be a pkcs12 bundle
-
-            // FIXME: This isn't quite right even for demo purposes, we're
-            // taking an
-            // entire PKCS12 bundle and cramming it into just the cert portion,
-            // no key is set.
-            ClientCertificate cert = new ClientCertificate();
-            cert.setSerial("SERIAL001");
-            cert.setKey(baos.toByteArray());
-            cert.setCert(baos.toByteArray());
-
+            EntitlementCertificateDto cert = new EntitlementCertificateDto();
+            cert.setSerial(1);
+            cert.setKey(keyBytes);
+            cert.setCert(certBytes);
             allCerts.add(cert);
 
-            ClientCertificate cert2 = new ClientCertificate();
-            cert2.setSerial("SERIAL002");
-            cert2.setKey(baos.toByteArray());
-            cert2.setCert(baos.toByteArray());
+            EntitlementCertificateDto cert2 = new EntitlementCertificateDto();
+            cert2.setSerial(2);
+            cert2.setKey(keyBytes);
+            cert2.setCert(certBytes);
             allCerts.add(cert2);
 
             return allCerts;
