@@ -14,25 +14,39 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * ClientCertificateSerial: Represents the serial number of a certificate.
+ * ClientCertificateSerials: Represents a collection of certificate serial numbers.
  * 
  * Class only exists because it doesn't seem possible to just serialize a list 
  * of strings to JSON.
  */
-@XmlRootElement(name = "serial")
-@XmlAccessorType(XmlAccessType.PROPERTY)
-public class ClientCertificateSerial {
-    private String serial;
-    public String getSerial() {
-        return serial;
-    }
-    public void setSerial(String serial) {
-        this.serial = serial;
+@XmlRootElement(name = "serials")
+@XmlAccessorType(XmlAccessType.NONE)
+public class CertificateSerialCollection {
+
+    @XmlElement(name="serial")
+    private Collection<String> serials;
+
+    public CertificateSerialCollection() {
+        this.serials = new LinkedList<String>();
     }
 
+    public Collection<String> getSerials() {
+        return serials;
+    }
+
+    public void setSerials(Collection<String> serials) {
+        this.serials = serials;
+    }
+
+    public void addSerial(String serial) {
+        this.serials.add(serial);
+    }
 }
