@@ -20,7 +20,7 @@ import javax.servlet.Filter;
 
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.fedoraproject.candlepin.servlet.filter.auth.NoAuthRequiredFilter;
-import org.fedoraproject.candlepin.util.LoggingFilter;
+import org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import com.google.inject.Key;
