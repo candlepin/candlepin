@@ -202,6 +202,7 @@ public class ConsumerResource {
                     "Error generating identity certificate.");
             }
             consumer.setIdCert(idCert);
+            consumerCurator.merge(consumer);
 
             return consumer;
         }
