@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin.service.impl;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.cert.CertificateEncodingException;
+import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
@@ -61,8 +61,8 @@ public class DefaultIdentityCertServiceAdapter implements
     }
 
     @Override
-    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer, 
-            String username) throws GeneralSecurityException, IOException {
+    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer,
+        String username) throws GeneralSecurityException, IOException {
         log.debug("Generating identity cert for consumer: " +
             consumer.getUuid());
         Date startDate = new Date();
@@ -75,28 +75,26 @@ public class DefaultIdentityCertServiceAdapter implements
             return certificate;
         }
 
+        BigInteger serialNumber = nextSerialNumber();
+        String dn = createDN(consumer, username);
+        ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
+        KeyPair keyPair = this.pki.generateNewKeyPair();
+        X509Certificate x509cert = this.pki.createX509Certificate(dn, null,
+            startDate, endDate, keyPair, serialNumber);
+        identityCert.setPem(BouncyCastlePKI.toPem(x509cert.getPublicKey()));
+        identityCert.setKey(BouncyCastlePKI.toPem(keyPair.getPrivate()));
+        identityCert.setSerialNumber(x509cert.getSerialNumber());
+
+        return consumerIdentityCertificateCurator.create(identityCert);
+    }
+
+    private BigInteger nextSerialNumber() {
         BigInteger serialNumber = BigInteger.valueOf(random.nextInt(1000000));
         while (consumerIdentityCertificateCurator
             .lookupBySerialNumber(serialNumber) != null) {
             serialNumber = BigInteger.valueOf(random.nextLong());
         }
-
-        String dn = createDN(consumer, username);
-        X509Certificate x509cert = this.pki.createX509Certificate(dn,
-                null, startDate, endDate, serialNumber);
-
-        return createIdentityCert(x509cert);
-    }
-
-    private ConsumerIdentityCertificate createIdentityCert(X509Certificate x509cert)
-        throws CertificateEncodingException, GeneralSecurityException, IOException {
-
-        ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
-        identityCert.setPem(this.pki.getPemEncoded(x509cert));
-        identityCert.setKey(x509cert.getPublicKey().getEncoded());
-        identityCert.setSerialNumber(x509cert.getSerialNumber());
-
-        return consumerIdentityCertificateCurator.create(identityCert);
+        return serialNumber;
     }
 
     private String createDN(Consumer consumer, String username) {

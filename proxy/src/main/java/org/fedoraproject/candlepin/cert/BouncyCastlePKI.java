@@ -14,9 +14,12 @@
  */
 package org.fedoraproject.candlepin.cert;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -37,12 +40,10 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import com.google.inject.Inject;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-import org.bouncycastle.openssl.PEMWriter;
 
 /**
  * 
@@ -187,9 +188,21 @@ public class BouncyCastlePKI {
      * @return KeyPair
      * @throws NoSuchAlgorithmException
      */
-    private KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
+    public KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(RSA_KEY_SIZE);
         return generator.generateKeyPair();
+    }
+
+    public static String toPem(Key key) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        OutputStreamWriter oswriter = new OutputStreamWriter(
+            byteArrayOutputStream);
+    
+        PEMWriter writer = new PEMWriter(oswriter, "BC");
+        writer.writeObject(key);
+        writer.close();
+        byte[] ary = byteArrayOutputStream.toByteArray();
+        return new String(ary);
     }
 }
