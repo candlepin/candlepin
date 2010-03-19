@@ -32,7 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.NONE)
 public class CertificateSerialCollection {
 
-    @XmlElement(name="serial")
+    @XmlElement(name = "serial")
     private Collection<Integer> serials;
 
     public CertificateSerialCollection() {

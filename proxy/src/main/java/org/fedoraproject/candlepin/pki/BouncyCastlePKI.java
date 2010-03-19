@@ -12,11 +12,14 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.cert;
+package org.fedoraproject.candlepin.pki;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -37,12 +40,10 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import com.google.inject.Inject;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-import org.bouncycastle.openssl.PEMWriter;
 
 /**
  * 
@@ -59,7 +60,7 @@ public class BouncyCastlePKI {
     private final KeyPair keyPair;
 
     @Inject
-    public BouncyCastlePKI(CertificateReader certReader) throws Exception {
+    public BouncyCastlePKI(PKIReader certReader) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
 
         this.caCert = certReader.getCACert();
@@ -137,26 +138,6 @@ public class BouncyCastlePKI {
     }
 
     /**
-     * Take an X509Certificate object and return a byte[] of the certificate,
-     * PEM encoded
-     * @param cert
-     * @return PEM-encoded bytes of the certificate
-     * @throws GeneralSecurityException if there is a security issue
-     * @throws IOException if there is i/o problem
-     */
-    public byte[] getPemEncoded(X509Certificate cert) throws
-            GeneralSecurityException, IOException {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        PEMWriter w =  new PEMWriter(new OutputStreamWriter(stream));
-
-        w.writeObject(cert);
-        byte[] pemEncoded = stream.toByteArray();
-        w.close();
-
-        return pemEncoded;
-    }
-
-    /**
      * Read the byte streams to get the public & private keys
      * 
      * @param privKeyBits
@@ -185,11 +166,38 @@ public class BouncyCastlePKI {
      * create a new key pair
      * 
      * @return KeyPair
-     * @throws NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException if RSA is not avaialble
      */
-    private KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
+    public KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(RSA_KEY_SIZE);
         return generator.generateKeyPair();
+    }
+    
+    /**
+     * Take an X509Certificate object and return a byte[] of the certificate,
+     * PEM encoded
+     * @param cert
+     * @return PEM-encoded bytes of the certificate
+     * @throws GeneralSecurityException if there is a security issue
+     * @throws IOException if there is i/o problem
+     */
+    public byte[] getPemEncoded(X509Certificate cert) throws GeneralSecurityException, IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+        PEMWriter w =  new PEMWriter(oswriter);
+        w.writeObject(cert);
+        w.close();
+        byte[] pemEncoded = byteArrayOutputStream.toByteArray();
+        return pemEncoded;
+    }
+        
+    public byte[] toPem(Key key) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+        PEMWriter writer = new PEMWriter(oswriter);
+        writer.writeObject(key);
+        writer.close();
+        return byteArrayOutputStream.toByteArray();
     }
 }

@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.cert;
+package org.fedoraproject.candlepin.pki;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -35,13 +35,13 @@ import com.google.inject.Inject;
 /**
  * Responsible for reading SSL certificates from the file system.
  */
-public class CertificateReader {
+public class PKIReader {
 
     private CertificateFactory certFactory;
     private Config config;
 
     @Inject
-    public CertificateReader(Config config) throws CertificateException {
+    public PKIReader(Config config) throws CertificateException {
         this.config = config;
         this.certFactory = CertificateFactory.getInstance("X.509");
     }
@@ -141,4 +141,5 @@ public class CertificateReader {
             return this.caKeyPassword;
         }
     }
+    
 }

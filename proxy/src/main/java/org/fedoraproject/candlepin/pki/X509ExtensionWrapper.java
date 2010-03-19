@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.cert;
+package org.fedoraproject.candlepin.pki;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 

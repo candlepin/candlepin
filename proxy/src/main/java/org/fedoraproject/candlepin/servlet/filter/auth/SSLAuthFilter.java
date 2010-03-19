@@ -46,7 +46,7 @@ public class SSLAuthFilter implements Filter {
         // this.filterConfig = null;
     }
 
-    @SuppressWarnings("serial")
+    
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
