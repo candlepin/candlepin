@@ -122,15 +122,16 @@ else
     if [ "$?" -ne 0 ]; then
         START="$TC_HOME/bin/catalina.sh start"
         STOP="$TC_HOME/bin/catalina.sh stop"
+        CONTAINER_CONF_DIR="$TC_HOME/conf"
     else
         SUDO="sudo"
         START="sudo /sbin/service $TC start"
         STOP="sudo /sbin/service $TC stop"
+        CONTAINER_CONF_DIR="/etc/$TC"
     fi
 
     DEPLOY="$TC_HOME/webapps/candlepin.war"
     CLEAN="$TC_HOME/webapps/candlepin/"
-    CONTAINER_CONF_DIR="$TC_HOME/conf"
 fi
 
 # stop the appserver
