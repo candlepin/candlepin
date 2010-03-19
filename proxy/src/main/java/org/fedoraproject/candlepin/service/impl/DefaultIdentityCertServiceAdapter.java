@@ -24,10 +24,10 @@ import java.util.Date;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.cert.BouncyCastlePKI;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
+import org.fedoraproject.candlepin.pki.BouncyCastlePKI;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 import com.google.inject.Inject;
