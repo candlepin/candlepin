@@ -187,6 +187,7 @@ public class BouncyCastlePKI {
         PEMWriter w =  new PEMWriter(new OutputStreamWriter(stream));
 
         w.writeObject(cert);
+        w.flush();
         byte[] pemEncoded = stream.toByteArray();
         w.close();
 
