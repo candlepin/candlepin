@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.service;
 
+import java.math.BigInteger;
+import java.security.KeyPair;
 import java.util.Date;
 
 import org.fedoraproject.candlepin.model.ClientCertificate;
@@ -35,8 +37,10 @@ public interface EntitlementCertServiceAdapter {
      * @param sub Subscription being used.
      * @param product Product being consumed.
      * @param endDate End date. (usually subscription end date, but not always)
+     * @param keyPair the key pair used in the certificate creation
+     * @param serialNumber the serial number to put in the certificate
      * @return Client entitlement certificate.
      */
     ClientCertificate generateEntitlementCert(Consumer consumer,
-        Subscription sub, Product product, Date endDate);
+        Subscription sub, Product product, Date endDate, KeyPair keyPair, BigInteger serialNumber);
 }

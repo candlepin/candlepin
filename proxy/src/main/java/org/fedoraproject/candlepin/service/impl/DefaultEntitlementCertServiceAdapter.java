@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import java.math.BigInteger;
+import java.security.KeyPair;
 import java.util.Date;
 
 import org.fedoraproject.candlepin.model.ClientCertificate;
@@ -30,7 +32,7 @@ public class DefaultEntitlementCertServiceAdapter implements
 
     @Override
     public ClientCertificate generateEntitlementCert(Consumer consumer,
-        Subscription sub, Product product, Date endDate) {
+        Subscription sub, Product product, Date endDate, KeyPair keypair, BigInteger serialNumber) {
         // TODO Auto-generated method stub
         return null;
     }
