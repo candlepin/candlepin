@@ -59,6 +59,37 @@ function upload_sat_cert ()
      curl -d "@code/scripts/spacewalk-public.cert.json" --header "Content-type: application/json"  --header "Accept: application/json" http://localhost:8080/candlepin/certificates
 }
 
+function import_ca_cert_into_keystore
+{
+	echo "importing ca certificate"
+	echo y | sudo keytool -importcert -alias ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+}
+
+function update_keystore
+{
+	import_ca_cert_into_keystore
+	if [ "$?" -ne "0" ]; then
+		echo "ca_crt alias already exists. deleting..."
+		sudo keytool -delete -alias ca_crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+		if [ "$?" -ne "0" ]; then
+			echo "couldn't delete ca_crt alias, bailing."
+			exit 1
+		else
+			echo "deleted ca_crt."
+		fi
+		import_ca_cert_into_keystore
+		if [ "$?" -ne "0" ]; then
+			echo "failed to import ca cert. bailing."
+			exit 1
+		fi
+	fi
+}
+
+function update_tomcat_conf
+{
+	ruby -ne 'File.open($CONF_DIR/server.xml).readlines.gsub()'
+}
+
 # Read in user defined variables
 if [ -f $HOME/.candlepinrc ] ; then
     source $HOME/.candlepinrc
@@ -78,6 +109,7 @@ if [ "$JBOSS_HOME" != "" ]; then
         STOP="sudo /sbin/service jbossas stop"
         DEPLOY="$JBOSS_HOME/server/default/deploy/"
     fi
+    CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
 else
     # use tomcat 6, if not specified
     TC=tomcat6
@@ -98,6 +130,7 @@ else
 
     DEPLOY="$TC_HOME/webapps/candlepin.war"
     CLEAN="$TC_HOME/webapps/candlepin/"
+    CONTAINER_CONF_DIR="$TC_HOME/conf"
 fi
 
 # stop the appserver
@@ -113,6 +146,9 @@ buildr clean package test=no
 
 # generate SSL certs if they are needed
 `dirname $0`/gen-certs
+
+# update keystore file and put it into tomcat's conf directory
+update_keystore
 
 # deploy the webapp
 deploy
