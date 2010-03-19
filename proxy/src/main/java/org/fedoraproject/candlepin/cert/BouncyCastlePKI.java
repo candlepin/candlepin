@@ -186,7 +186,7 @@ public class BouncyCastlePKI {
      * create a new key pair
      * 
      * @return KeyPair
-     * @throws NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException if RSA is not avaialble
      */
     public KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");

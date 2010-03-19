@@ -28,32 +28,31 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-
 /**
  * Represents certificate used to identify a consumer
- * 
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_idcertificate")
 @SequenceGenerator(name = "seq_consumer_idcert", 
-    sequenceName = "seq_consumer_idcert", allocationSize = 1)
+                   sequenceName = "seq_consumer_idcert", allocationSize = 1)
 public class ConsumerIdentityCertificate implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_idcert")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, 
+                    generator = "seq_consumer_idcert")
     private Long id;
-    
+
     @Column(nullable = false)
     private byte[] key;
 
     @Column(nullable = false)
     private byte[] pem;
-    
+
     @Column(nullable = false)
     private BigInteger serialNumber;
-    
+
     public BigInteger getSerialNumber() {
         return serialNumber;
     }
@@ -70,27 +69,23 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.key = key.getBytes();
     }
 
-
     public String getPem() {
         return new String(pem);
     }
-
 
     public void setPem(String pem) {
         this.pem = pem.getBytes();
     }
 
-
     public Long getId() {
         // TODO Auto-generated method stub
         return id;
     }
-    
+
     public void setId(Long id) {
         this.id = id;
     }
 
-    
     public void update(ConsumerIdentityCertificate other) {
         this.setKey(other.getKey());
         this.setPem(other.getPem());
