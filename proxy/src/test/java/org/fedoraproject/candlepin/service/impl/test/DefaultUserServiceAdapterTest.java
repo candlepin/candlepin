@@ -27,70 +27,68 @@ import org.junit.Test;
  */
 public class DefaultUserServiceAdapterTest {
 
-    private DefaultUserServiceAdapter userService;
     private UserPasswordConfig config;
 
     @Before
     public void init() {
         this.config = new UserPasswordConfig();
-        this.userService = new DefaultUserServiceAdapter(this.config);
     }
 
     @Test
     public void noPasswordsDefined() {
-        Assert.assertTrue(this.userService.validateUser("foo", "bar"));
+        Assert.assertTrue(validate("foo", "bar"));
     }
 
     @Test
     public void noPasswordsNullPassword() {
-        Assert.assertTrue(this.userService.validateUser("foo", null));
+        Assert.assertTrue(validate("foo", null));
     }
 
     @Test
     public void noPasswordsNullEverything() {
-        Assert.assertTrue(this.userService.validateUser(null, null));
+        Assert.assertTrue(validate(null, null));
     }
 
     @Test
     public void singleMatch() {
         this.config.addUserPassword("red", "hat");
 
-        Assert.assertTrue(this.userService.validateUser("red", "hat"));
+        Assert.assertTrue(validate("red", "hat"));
     }
 
     @Test
     public void singleBadPassword() {
         this.config.addUserPassword("red", "hat");
 
-        Assert.assertFalse(this.userService.validateUser("red", "fedora"));
+        Assert.assertFalse(validate("red", "fedora"));
     }
 
     @Test
     public void singleInvalidUsername() {
         this.config.addUserPassword("red", "hat");
 
-        Assert.assertFalse(this.userService.validateUser("blue", "hat"));
+        Assert.assertFalse(validate("blue", "hat"));
     }
 
     @Test
     public void singleNullUsername() {
         this.config.addUserPassword("red", "hat");
 
-        Assert.assertFalse(this.userService.validateUser(null, "hat"));
+        Assert.assertFalse(validate(null, "hat"));
     }
 
     @Test
     public void singleNullPasswordValidUser() {
         this.config.addUserPassword("user", "pass");
 
-        Assert.assertFalse(this.userService.validateUser("user", null));
+        Assert.assertFalse(validate("user", null));
     }
 
     @Test
     public void singleNullPasswordInvalidUser() {
         this.config.addUserPassword("user", "pass");
 
-        Assert.assertFalse(this.userService.validateUser("red", null));
+        Assert.assertFalse(validate("red", null));
     }
 
     @Test
@@ -99,7 +97,13 @@ public class DefaultUserServiceAdapterTest {
         this.config.addUserPassword("red", "hat");
         this.config.addUserPassword("great", "curve");
 
-        Assert.assertTrue(this.userService.validateUser("red", "hat"));
+        Assert.assertTrue(validate("red", "hat"));
+    }
+
+    private boolean validate(String username, String password) {
+        DefaultUserServiceAdapter userService = new DefaultUserServiceAdapter(this.config);
+
+        return userService.validateUser(username, password);
     }
 
     private class UserPasswordConfig extends Config {
@@ -111,12 +115,12 @@ public class DefaultUserServiceAdapterTest {
         }
 
         public void addUserPassword(String username, String password) {
-            userPasswords.put(username, password);
+            userPasswords.put("auth.user." + username, password);
         }
 
         @Override
         public Map<String, String> configurationWithPrefix(String prefix) {
-            if ("auth.user".equals(prefix)) {
+            if ("auth.user.".equals(prefix)) {
                 return userPasswords;
             }
 

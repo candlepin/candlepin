@@ -15,7 +15,9 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import com.google.inject.Inject;
+import java.util.HashMap;
 import java.util.Map;
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
@@ -40,7 +42,7 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
  */
 public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
-    private static final String USER_PASS_PRFIX = "auth.user";
+    private static final String USER_PASS_PREFIX = "auth.user.";
 
     private Map<String, String> passwords;
 
@@ -52,7 +54,15 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
      */
     @Inject
     public DefaultUserServiceAdapter(Config config) {
-        this.passwords = config.configurationWithPrefix(USER_PASS_PRFIX);
+        this.passwords = new HashMap<String, String>();
+        Map<String, String> authConfig = config.configurationWithPrefix(USER_PASS_PREFIX);
+
+        // strip off the prefix 
+        for (String prefix : authConfig.keySet()) {
+            String user = prefix.substring(USER_PASS_PREFIX.length());
+
+            this.passwords.put(user, authConfig.get(prefix));
+        }
     }
 
     /**
