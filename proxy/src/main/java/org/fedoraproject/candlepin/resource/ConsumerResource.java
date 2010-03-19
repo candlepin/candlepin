@@ -202,6 +202,7 @@ public class ConsumerResource {
                     "Error generating identity certificate.");
             }
             consumer.setIdCert(idCert);
+            consumerCurator.merge(consumer);
 
             return consumer;
         }
@@ -374,7 +375,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates/serials")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Wrapped(element="serials")
+    @Wrapped(element = "serials")
     public CertificateSerialCollection getClientCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
