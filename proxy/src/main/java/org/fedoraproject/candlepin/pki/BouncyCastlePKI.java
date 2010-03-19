@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -165,7 +166,7 @@ public class BouncyCastlePKI {
      * create a new key pair
      * 
      * @return KeyPair
-     * @throws NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException if RSA is not avaialble
      */
     public KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
@@ -181,16 +182,23 @@ public class BouncyCastlePKI {
      * @throws GeneralSecurityException if there is a security issue
      * @throws IOException if there is i/o problem
      */
-    public byte[] getPemEncoded(X509Certificate cert) throws
-            GeneralSecurityException, IOException {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        PEMWriter w =  new PEMWriter(new OutputStreamWriter(stream));
-
+    public byte[] getPemEncoded(X509Certificate cert) throws GeneralSecurityException, IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+        PEMWriter w =  new PEMWriter(oswriter);
         w.writeObject(cert);
-        w.flush();
-        byte[] pemEncoded = stream.toByteArray();
         w.close();
-
+        byte[] pemEncoded = byteArrayOutputStream.toByteArray();
         return pemEncoded;
+    }
+        
+    public static String toPem(Key key) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+        PEMWriter writer = new PEMWriter(oswriter);
+        writer.writeObject(key);
+        writer.close();
+        byte[] ary = byteArrayOutputStream.toByteArray();
+        return new String(ary);
     }
 }

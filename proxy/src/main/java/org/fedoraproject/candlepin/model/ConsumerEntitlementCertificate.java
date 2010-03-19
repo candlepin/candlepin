@@ -33,34 +33,35 @@ import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents certificate used to entitle a consumer
- * 
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_ent_certificate")
-@SequenceGenerator(name = "seq_consumer_ent_cert",
-    sequenceName = "seq_consumer_ent_cert", allocationSize = 1)
+@SequenceGenerator(name = "seq_consumer_ent_cert", 
+                   sequenceName = "seq_consumer_ent_cert", allocationSize = 1)
 public class ConsumerEntitlementCertificate implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_ent_cert")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, 
+                    generator = "seq_consumer_ent_cert")
     private Long id;
 
     @Column(nullable = false)
     private byte[] key;
 
     @Column(nullable = false)
-    private byte[] pem;
+    private String pem;
 
     @Column(nullable = false)
     private BigInteger serialNumber;
 
+    @SuppressWarnings("unused")
     @ManyToOne
     @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
     private Entitlement entitlement;
-    
+
     public BigInteger getSerialNumber() {
         return serialNumber;
     }
@@ -69,19 +70,19 @@ public class ConsumerEntitlementCertificate implements Persisted {
         this.serialNumber = serialNumber;
     }
 
-    public byte[] getKey() {
-        return key;
+    public String getKey() {
+        return new String(key);
     }
 
-    public void setKey(byte[] key) {
-        this.key = key;
+    public void setKey(String key) {
+        this.key = key.getBytes();
     }
 
-    public byte[] getPem() {
+    public String getPem() {
         return pem;
     }
 
-    public void setPem(byte[] pem) {
+    public void setPem(String pem) {
         this.pem = pem;
     }
 
