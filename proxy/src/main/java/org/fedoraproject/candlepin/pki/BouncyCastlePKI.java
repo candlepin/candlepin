@@ -182,7 +182,9 @@ public class BouncyCastlePKI {
      * @throws GeneralSecurityException if there is a security issue
      * @throws IOException if there is i/o problem
      */
-    public byte[] getPemEncoded(X509Certificate cert) throws GeneralSecurityException, IOException {
+    public byte[] getPemEncoded(X509Certificate cert) throws 
+        GeneralSecurityException, IOException {
+        
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
         PEMWriter w =  new PEMWriter(oswriter);

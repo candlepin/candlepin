@@ -26,7 +26,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.model.ClientCertificate;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -128,16 +127,6 @@ public class TestResource {
         facts.setMetadata(metadata);
         consumer.setFacts(facts);
         return consumer;
-    }
-
-    /**
-     * Return a client certificate.
-     * @return a client certificate.
-     */
-    @GET @Path("/client_certificate")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public ClientCertificate getCertificate() {
-        return new  ClientCertificate();
     }
 
     /**
