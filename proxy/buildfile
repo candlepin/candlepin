@@ -16,8 +16,8 @@ RESTEASY = [group('jaxrs-api',
                   'resteasy-guice', 
                   :under => 'org.jboss.resteasy',
                   :version => '1.2.1.GA'), 
-            'javax.persistence:persistence-api:jar:1.0.2',
-            'org.apache:xalan-j2:jar:2.6.0',
+            'javax.persistence:persistence-api:jar:1.0',
+            'xalan:xalan:jar:2.6.0',
             'org.scannotation:scannotation:jar:1.0.2',
             'org.codehaus.jettison:jettison:jar:1.1']
 
@@ -28,43 +28,45 @@ JACKSON = [group('jackson-core-lgpl',
                  :version => '1.4.1')]
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
 LOG4J = 'log4j:log4j:jar:1.2.14'
-HIBERNATE = ['org.hibernate:hibernate3:jar:3.3.2',
-             'org.hibernate:hibernate-annotations:jar:3.4.0',
-             'org.hibernate:hibernate-commons-annotations:jar:3.4.0',
-             'org.hibernate:hibernate-entitymanager:jar:3.4.0',
-             'org.hibernate:hibernate-tools:jar:3.2.4',
+HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
+             'org.hibernate:hibernate-annotations:jar:3.4.0.GA',
+             'org.hibernate:hibernate-commons-annotations:jar:3.3.0.ga',
+             'org.hibernate:hibernate-entitymanager:jar:3.4.0.GA',
+             'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:3.1.0.GA',
              'antlr:antlr:jar:2.7.6',
-             'org.objectweb.asm:asm:jar:3.1',
-             'net.sf.cglib:cglib:jar:2.2',
+             'asm:asm:jar:3.0',
+             'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.9.0.GA',
              'javax.transaction:jta:jar:1.1',
              'org.slf4j:slf4j-api:jar:1.5.8',
              'org.slf4j:slf4j-simple:jar:1.5.8',
              'org.freemarker:freemarker:jar:2.3.15' ]
-DB = 'org.postgresql:postgresql:jar:8.4-701'
-COMMONS = ['org.apache.commons:commons-beanutils:jar:1.7.0',
-           'org.apache.commons:commons-codec:jar:1.4',
+DB = 'postgresql:postgresql:jar:8.4-701.jdbc4'
+COMMONS = ['commons-beanutils:commons-beanutils:jar:1.7.0',
+           'commons-codec:commons-codec:jar:1.4',
            'commons-cli:commons-cli:jar:1.2',
            'commons-pool:commons-pool:jar:1.2',
            'commons-dbcp:commons-dbcp:jar:1.2.1',
-           'org.apache.commons:commons-collections:jar:3.1',
-           'org.apache.commons:commons-io:jar:1.3.2',
-           'org.apache.commons:commons-logging:jar:1.1.1']
-JDOM = 'org.jdom:jdom:jar:1.0'
+           'commons-collections:commons-collections:jar:3.1',
+           'commons-io:commons-io:jar:1.3.2',
+           'commons-logging:commons-logging:jar:1.1.1']
+JDOM = 'jdom:jdom:jar:1.0'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 
 CHECKSTYLE = ['com.puppycrawl:checkstyle:jar:5.0',
               'antlr:antlr:jar:2.7.6',
-              'google-collect:google-collect:jar:snapshot-20090211',
+              'google-collect:google-collect:jar:snapshot-200920211',
               COMMONS]
 
+
 BOUNCYCASTLE = group('bcprov-jdk16', 'bcpg-jdk16', :under=>'org.bouncycastle', :version=>'1.44')
-GUICE =  [group('guice', 'guice-assistedinject', 'guice-multibindings', 'guice-servlet', 'guice-throwingproviders', :under=>'com.google.guice', :version=>'2.0'),
-           'com.wideplay.warp:warp-persist:jar:2.0-20090214',
-           'com.sun.jersey:jersey-guice:jar:1.1.4.1',
+
+GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet', 'guice-throwing-providers', :under=>'com.google.inject.extensions', :version=>'2.0'),
+           'com.google.inject:guice:jar:2.0',
            'aopalliance:aopalliance:jar:1.0',
+           'com.wideplay.warp:warp-persist:jar:2.0-20090214',
            'javax.servlet:servlet-api:jar:2.5']
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
@@ -75,11 +77,7 @@ SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 # REPOSITORIES
 #
 # Specify Maven 2.0 remote repositories here, like this:
-#############################################################################
-repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin"
 repositories.remote << "http://www.ibiblio.org/maven2/"
-repositories.remote << "http://download.java.net/maven/2/"
-repositories.remote << "http://repo2.maven.org/maven2/org/mockito/mockito-all"
 repositories.remote << "http://repository.jboss.com/maven2/"
 
 #############################################################################
@@ -104,12 +102,18 @@ define "candlepin" do
   eclipse.builders 'org.eclipse.jdt.core.javabuilder'
   eclipse.builders 'net.sf.eclipsecs.core.CheckstyleBuilder'
 
+  # download the stuff we do not have in the repositories
+  download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
+  download artifact('com.wideplay.warp:warp-persist:jar:2.0-20090214') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/wideplay/warp/warp-persist/2.0-20090214/warp-persist-2.0-20090214.jar'
+  download artifact('com.puppycrawl:checkstyle:jar:5.0') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/puppycrawl/checkstyle/5.0/checkstyle-5.0.jar'
+  download artifact('google-collect:google-collect:jar:snapshot-200920211') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/google-collect/google-collect/snapshot-20090211/google-collect-snapshot-20090211.jar'
+
   #
   # building
   #
   compile.options.target = '1.6'
 
-  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, CHECKSTYLE, JACKSON, QUARTZ
+  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, JACKSON, QUARTZ
  
   #
   # testing
@@ -208,9 +212,7 @@ define "candlepin" do
     end
   end
   
-  get_schemaspy = download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
-  
-  task :schemaspy =>  get_schemaspy do
+  task :schemaspy do
 	 cp = Buildr.artifacts(DB, SCHEMASPY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
 	 puts cp
 	 command = "-t pgsql -db candlepin -s public -host localhost -u candlepin -p candlepin -o target/schemaspy"
