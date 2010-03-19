@@ -192,13 +192,12 @@ public class BouncyCastlePKI {
         return pemEncoded;
     }
         
-    public static String toPem(Key key) throws IOException {
+    public byte[] toPem(Key key) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
         PEMWriter writer = new PEMWriter(oswriter);
         writer.writeObject(key);
         writer.close();
-        byte[] ary = byteArrayOutputStream.toByteArray();
-        return new String(ary);
+        return byteArrayOutputStream.toByteArray();
     }
 }

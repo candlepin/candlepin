@@ -27,8 +27,8 @@ public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapte
 
         // totally arbitrary
         idCert.setId(43L);
-        idCert.setKey("uh0876puhapodifbvj094");
-        idCert.setPem("hpj-08ha-w4gpoknpon*)&^%#");
+        idCert.setKey("uh0876puhapodifbvj094".getBytes());
+        idCert.setPem("hpj-08ha-w4gpoknpon*)&^%#".getBytes());
 
         return idCert;
     }

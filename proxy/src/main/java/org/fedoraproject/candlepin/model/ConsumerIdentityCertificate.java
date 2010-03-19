@@ -61,20 +61,20 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.serialNumber = serialNumber;
     }
 
-    public String getKey() {
-        return new String(key);
+    public byte[] getKey() {
+        return key;
     }
 
-    public void setKey(String key) {
-        this.key = key.getBytes();
+    public void setKey(byte[] key) {
+        this.key = key;
     }
 
-    public String getPem() {
-        return new String(pem);
+    public byte[] getPem() {
+        return pem;
     }
 
-    public void setPem(String pem) {
-        this.pem = pem.getBytes();
+    public void setPem(byte[] pem) {
+        this.pem = pem;
     }
 
     public Long getId() {

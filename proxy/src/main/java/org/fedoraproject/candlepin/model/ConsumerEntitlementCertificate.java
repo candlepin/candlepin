@@ -51,7 +51,7 @@ public class ConsumerEntitlementCertificate implements Persisted {
     private byte[] key;
 
     @Column(nullable = false)
-    private String pem;
+    private byte[] pem;
 
     @Column(nullable = false)
     private BigInteger serialNumber;
@@ -70,19 +70,19 @@ public class ConsumerEntitlementCertificate implements Persisted {
         this.serialNumber = serialNumber;
     }
 
-    public String getKey() {
-        return new String(key);
+    public byte[] getKey() {
+        return key;
     }
 
-    public void setKey(String key) {
-        this.key = key.getBytes();
+    public void setKey(byte[] key) {
+        this.key = key;
     }
 
-    public String getPem() {
+    public byte[] getPem() {
         return pem;
     }
 
-    public void setPem(String pem) {
+    public void setPem(byte[] pem) {
         this.pem = pem;
     }
 

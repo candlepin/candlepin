@@ -78,11 +78,12 @@ public class DefaultIdentityCertServiceAdapter implements
         BigInteger serialNumber = nextSerialNumber();
         String dn = createDN(consumer, username);
         ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
-        KeyPair keyPair = this.pki.generateNewKeyPair();
-        X509Certificate x509cert = this.pki.createX509Certificate(dn, null,
+        KeyPair keyPair = pki.generateNewKeyPair();
+        X509Certificate x509cert = pki.createX509Certificate(dn, null,
             startDate, endDate, keyPair, serialNumber);
-        identityCert.setPem(BouncyCastlePKI.toPem(x509cert.getPublicKey()));
-        identityCert.setKey(BouncyCastlePKI.toPem(keyPair.getPrivate()));
+        
+        identityCert.setPem(pki.getPemEncoded(x509cert));
+        identityCert.setKey(pki.toPem(keyPair.getPrivate()));
         identityCert.setSerialNumber(x509cert.getSerialNumber());
 
         return consumerIdentityCertificateCurator.create(identityCert);
