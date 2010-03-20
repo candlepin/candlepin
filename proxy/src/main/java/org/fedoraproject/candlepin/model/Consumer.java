@@ -33,11 +33,14 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.fedoraproject.candlepin.dto.CertificateDto;
 import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.ForeignKey;
+
 
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
@@ -64,9 +67,22 @@ public class Consumer implements Persisted {
     @Column(nullable = false)
     private String name;
     
+    /* 
+     * Because this object is used both as a Hibernate object, as well as a DTO to be
+     * serialized and sent to callers, we do some magic with these two cert related 
+     * fields. The idCert is a database certificated that carries bytes, the identity
+     * field is a DTO for transmission to the client carrying PEM in plain text, and is
+     * not stored in the database.
+     */
+//    @OneToOne
+    // FIXME: shouldn't be transient...
     @Transient
-    @XmlTransient // this should definitely not be getting serialized
     private ConsumerIdentityCertificate idCert;
+    
+    // This is DTO'ish copy of the idCert so we can present PEM format strings.
+    // This never ends up in the DB.
+    @Transient
+    private CertificateDto identity;
     
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -168,6 +184,7 @@ public class Consumer implements Persisted {
         this.id = id;
     }
 
+    @XmlTransient
     public ConsumerIdentityCertificate getIdCert() {
         return idCert;
     }
@@ -356,6 +373,15 @@ public class Consumer implements Persisted {
     @Override
     public int hashCode() {
         return uuid.hashCode();
+    }
+
+    @XmlElement(name = "idCert")
+    public CertificateDto getIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(CertificateDto identity) {
+        this.identity = identity;
     }
     
 }

@@ -91,4 +91,5 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.setPem(other.getPem());
         this.setSerialNumber(other.getSerialNumber());
     }
+    
 }

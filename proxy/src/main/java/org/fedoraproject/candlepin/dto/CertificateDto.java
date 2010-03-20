@@ -12,7 +12,9 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package com.redhat.rhn.common.dto;
+package org.fedoraproject.candlepin.dto;
+
+import java.math.BigInteger;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -26,17 +28,17 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntitlementCertificateDto {
+public class CertificateDto {
 
-    private Integer serial;
+    private BigInteger serial;
     private String key;
     private String cert;
 
-    public Integer getSerial() {
+    public BigInteger getSerial() {
         return serial;
     }
 
-    public void setSerial(Integer serial) {
+    public void setSerial(BigInteger serial) {
         this.serial = serial;
     }
 

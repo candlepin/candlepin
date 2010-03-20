@@ -99,6 +99,8 @@ class CandlepinTests(unittest.TestCase):
         for key in keys:
             self.assertTrue(key in cert)
         self.assertEquals(type(1), type(cert['serial']))
+        self.assertEquals("-----", cert['key'][0:5])
+        self.assertEquals("-----", cert['cert'][0:5])
 
 ## GET see if there's a certificate
 #response = urllib.urlopen('http://localhost:8080/candlepin/certificate')
