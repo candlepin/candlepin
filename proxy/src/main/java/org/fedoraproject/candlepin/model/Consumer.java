@@ -33,11 +33,9 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.fedoraproject.candlepin.dto.CertificateDto;
 import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.ForeignKey;
 
@@ -78,11 +76,6 @@ public class Consumer implements Persisted {
     // FIXME: shouldn't be transient...
     @Transient
     private ConsumerIdentityCertificate idCert;
-    
-    // This is DTO'ish copy of the idCert so we can present PEM format strings.
-    // This never ends up in the DB.
-    @Transient
-    private CertificateDto identity;
     
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -184,7 +177,6 @@ public class Consumer implements Persisted {
         this.id = id;
     }
 
-    @XmlTransient
     public ConsumerIdentityCertificate getIdCert() {
         return idCert;
     }
@@ -375,13 +367,4 @@ public class Consumer implements Persisted {
         return uuid.hashCode();
     }
 
-    @XmlElement(name = "idCert")
-    public CertificateDto getIdentity() {
-        return identity;
-    }
-
-    public void setIdentity(CertificateDto identity) {
-        this.identity = identity;
-    }
-    
 }

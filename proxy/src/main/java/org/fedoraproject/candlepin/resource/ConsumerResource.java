@@ -206,12 +206,6 @@ public class ConsumerResource {
             consumer.setIdCert(idCert);
             consumerCurator.merge(consumer);
 
-            CertificateDto certDto = new CertificateDto();
-            certDto.setSerial(idCert.getSerialNumber());
-            certDto.setKey(new String(idCert.getKey()));
-            certDto.setCert(new String(idCert.getPem()));
-            consumer.setIdentity(certDto);
-            
             return consumer;
         }
         catch (Exception e) {

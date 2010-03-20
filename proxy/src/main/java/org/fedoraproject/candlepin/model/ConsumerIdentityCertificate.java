@@ -26,7 +26,9 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents certificate used to identify a consumer
@@ -61,6 +63,12 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.serialNumber = serialNumber;
     }
 
+    @XmlElement(name = "key")
+    public String getKeyAsString() {
+        return new String(key);
+    }
+
+    @XmlTransient
     public byte[] getKey() {
         return key;
     }
@@ -69,6 +77,12 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.key = key;
     }
 
+    @XmlElement(name = "pem")
+    public String getPemAsString() {
+        return new String(pem);
+    }
+
+    @XmlTransient
     public byte[] getPem() {
         return pem;
     }
@@ -77,6 +91,7 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.pem = pem;
     }
 
+    @XmlTransient
     public Long getId() {
         // TODO Auto-generated method stub
         return id;
