@@ -55,8 +55,10 @@ function isrpm ()
 
 function upload_sat_cert ()
 {
+     echo ""
      echo "========= uploading sat cert =========="
      curl -d "@code/scripts/spacewalk-public.cert.json" --header "Content-type: application/json"  --header "Accept: application/json" http://localhost:8080/candlepin/certificates
+     echo""
 }
 
 function import_ca_cert_into_keystore
