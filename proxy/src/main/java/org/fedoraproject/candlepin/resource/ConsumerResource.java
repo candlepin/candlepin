@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.dto.CertificateDto;
 import org.fedoraproject.candlepin.model.CertificateSerialCollection;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -54,7 +56,6 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 
 import com.google.inject.Inject;
-import com.redhat.rhn.common.dto.EntitlementCertificateDto;
 
 /**
  * API Gateway for Consumers
@@ -194,6 +195,7 @@ public class ConsumerResource {
         try {
             consumer = consumerCurator.create(new Consumer(in, owner, type));
 
+            // TODO: Could use some cleanup.
             ConsumerIdentityCertificate idCert = identityCertService
                 .generateIdentityCert(consumer, this.username);
             log.debug("Generated identity cert: " + idCert);
@@ -321,7 +323,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
-    public List<EntitlementCertificateDto> getClientCertificates(
+    public List<CertificateDto> getClientCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
 
@@ -334,8 +336,8 @@ public class ConsumerResource {
             }
         }
 
-        List<EntitlementCertificateDto> allCerts =
-            new LinkedList<EntitlementCertificateDto>();
+        List<CertificateDto> allCerts =
+            new LinkedList<CertificateDto>();
 
         // FIXME: make this look the cert from the cert service or whatever
         // Using a static (and unusable) cert for now for demo purposes:
@@ -343,14 +345,14 @@ public class ConsumerResource {
             String keyBytes = getBytesFromFile("/key.pem");
             String certBytes = getBytesFromFile("/rhel-ap.pem");
 
-            EntitlementCertificateDto cert = new EntitlementCertificateDto();
-            cert.setSerial(1);
+            CertificateDto cert = new CertificateDto();
+            cert.setSerial(BigInteger.valueOf(1));
             cert.setKey(keyBytes);
             cert.setCert(certBytes);
             allCerts.add(cert);
 
-            EntitlementCertificateDto cert2 = new EntitlementCertificateDto();
-            cert2.setSerial(2);
+            CertificateDto cert2 = new CertificateDto();
+            cert2.setSerial(BigInteger.valueOf(2));
             cert2.setKey(keyBytes);
             cert2.setCert(certBytes);
             allCerts.add(cert2);

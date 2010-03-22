@@ -12,42 +12,49 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.dto;
+
+import java.math.BigInteger;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents a client certificate.
- * 
- * Used for both entitlement certificates as well as identity certificates. Theoretically
- * could be used for non-X509 certificates as well.
+ * EntitlementCertificate
+ *
+ * Used for converting ClientCertificates with byte array fields to strings for
+ * serialization.
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ClientCertificate {
-    
-    private String serial;
-    private byte[] key;
-    private byte[] cert;
+public class CertificateDto {
 
-    public String getSerial() {
+    private BigInteger serial;
+    private String key;
+    private String cert;
+
+    public BigInteger getSerial() {
         return serial;
     }
-    public void setSerial(String serial) {
+
+    public void setSerial(BigInteger serial) {
         this.serial = serial;
     }
-    public byte[] getKey() {
+
+    public String getKey() {
         return key;
     }
-    public void setKey(byte[] key) {
+
+    public void setKey(String key) {
         this.key = key;
     }
-    public byte[] getCert() {
+
+    public String getCert() {
         return cert;
     }
-    public void setCert(byte[] cert) {
+
+    public void setCert(String cert) {
         this.cert = cert;
     }
 

@@ -14,12 +14,17 @@
  */
 package org.fedoraproject.candlepin.service.impl.stub;
 
+import java.math.BigInteger;
+import java.util.Random;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
 
+    private Random random = new Random();
+    
     @Override
     public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer,
             String username) {
@@ -28,7 +33,8 @@ public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapte
         // totally arbitrary
         idCert.setId(43L);
         idCert.setKey("uh0876puhapodifbvj094".getBytes());
-        idCert.setPem("hpj-08ha-w4gpoknpon*)&^%#".getBytes());
+        idCert.setCert("hpj-08ha-w4gpoknpon*)&^%#".getBytes());
+        idCert.setSerialNumber(BigInteger.valueOf(random.nextInt(1000000)));
 
         return idCert;
     }

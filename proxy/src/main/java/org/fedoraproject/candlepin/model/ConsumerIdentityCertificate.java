@@ -26,7 +26,9 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents certificate used to identify a consumer
@@ -48,7 +50,7 @@ public class ConsumerIdentityCertificate implements Persisted {
     private byte[] key;
 
     @Column(nullable = false)
-    private byte[] pem;
+    private byte[] cert;
 
     @Column(nullable = false)
     private BigInteger serialNumber;
@@ -61,6 +63,12 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.serialNumber = serialNumber;
     }
 
+    @XmlElement(name = "key")
+    public String getKeyAsString() {
+        return new String(key);
+    }
+
+    @XmlTransient
     public byte[] getKey() {
         return key;
     }
@@ -69,14 +77,21 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.key = key;
     }
 
-    public byte[] getPem() {
-        return pem;
+    @XmlElement(name = "cert")
+    public String getCertAsString() {
+        return new String(cert);
     }
 
-    public void setPem(byte[] pem) {
-        this.pem = pem;
+    @XmlTransient
+    public byte[] getCert() {
+        return cert;
     }
 
+    public void setCert(byte[] cert) {
+        this.cert = cert;
+    }
+
+    @XmlTransient
     public Long getId() {
         // TODO Auto-generated method stub
         return id;
@@ -88,7 +103,8 @@ public class ConsumerIdentityCertificate implements Persisted {
 
     public void update(ConsumerIdentityCertificate other) {
         this.setKey(other.getKey());
-        this.setPem(other.getPem());
+        this.setCert(other.getCert());
         this.setSerialNumber(other.getSerialNumber());
     }
+    
 }

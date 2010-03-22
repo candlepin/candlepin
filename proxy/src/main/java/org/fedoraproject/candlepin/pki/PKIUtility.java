@@ -121,7 +121,17 @@ public class PKIUtility {
         return generator.generateKeyPair();
     }
     
-    public byte[] getPemEncoded(X509Certificate cert) throws GeneralSecurityException, IOException {
+    /**
+     * Take an X509Certificate object and return a byte[] of the certificate,
+     * PEM encoded
+     * @param cert
+     * @return PEM-encoded bytes of the certificate
+     * @throws GeneralSecurityException if there is a security issue
+     * @throws IOException if there is i/o problem
+     */
+    public byte[] getPemEncoded(X509Certificate cert) throws 
+        GeneralSecurityException, IOException {
+        
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
         PEMWriter w =  new PEMWriter(oswriter);

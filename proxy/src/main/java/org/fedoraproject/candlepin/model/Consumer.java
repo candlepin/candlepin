@@ -39,6 +39,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.ForeignKey;
 
+
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
  * system, or anything else we want to track as using the Entitlement.
@@ -64,8 +65,16 @@ public class Consumer implements Persisted {
     @Column(nullable = false)
     private String name;
     
+    /* 
+     * Because this object is used both as a Hibernate object, as well as a DTO to be
+     * serialized and sent to callers, we do some magic with these two cert related 
+     * fields. The idCert is a database certificated that carries bytes, the identity
+     * field is a DTO for transmission to the client carrying PEM in plain text, and is
+     * not stored in the database.
+     */
+//    @OneToOne
+    // FIXME: shouldn't be transient...
     @Transient
-    @XmlTransient // this should definitely not be getting serialized
     private ConsumerIdentityCertificate idCert;
     
     @ManyToOne
@@ -357,5 +366,5 @@ public class Consumer implements Persisted {
     public int hashCode() {
         return uuid.hashCode();
     }
-    
+
 }
