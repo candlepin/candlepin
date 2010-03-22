@@ -17,7 +17,10 @@ package org.fedoraproject.candlepin.guice;
 import java.util.Properties;
 
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.pki.BouncyCastlePKI;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
+import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
@@ -59,7 +62,8 @@ public class CandlepinModule extends AbstractModule {
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(Config.class);
-        bind(BouncyCastlePKI.class).asEagerSingleton();
+        bind(PKIUtility.class).to(CandlepinPKIUtility.class).asEagerSingleton();
+        bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);        

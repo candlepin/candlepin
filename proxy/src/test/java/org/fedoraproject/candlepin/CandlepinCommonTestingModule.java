@@ -24,7 +24,10 @@ import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.test.TestRulesCurator;
-import org.fedoraproject.candlepin.pki.BouncyCastlePKI;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
+import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.resource.CertificateResource;
@@ -69,7 +72,8 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(DateSource.class).to(DateSourceForTesting.class)
             .asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
-        bind(BouncyCastlePKI.class);
+        bind(PKIUtility.class).to(CandlepinPKIUtility.class);
+        bind(PKIReader.class).to(CandlepinPKIReader.class);
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
         bind(IdentityCertServiceAdapter.class).to(

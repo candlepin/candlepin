@@ -14,38 +14,14 @@
  */
 package org.fedoraproject.candlepin.pki;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
-import org.bouncycastle.openssl.PEMReader;
-import org.bouncycastle.openssl.PasswordFinder;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
-
-import com.google.inject.Inject;
-
-/**
- * Responsible for reading SSL certificates from the file system.
- */
-public class PKIReader {
-
-    private CertificateFactory certFactory;
-    private Config config;
-
-    @Inject
-    public PKIReader(Config config) throws CertificateException {
-        this.config = config;
-        this.certFactory = CertificateFactory.getInstance("X.509");
-    }
-
+public interface PKIReader {
+    
     /**
      * Reads the CA's {@link X509Certificate} from the file system. This file is
      * specified in the candlepin config.
@@ -54,21 +30,8 @@ public class PKIReader {
      * @throws IOException if a file can't be read or is not found
      * @throws CertificateException  if there is an error from the underlying cert factory
      */
-    public X509Certificate getCACert() throws IOException, CertificateException {
-        String caCertFile = config.getString(ConfigProperties.CA_CERT);
-
-        if (caCertFile != null) {
-            InputStream inStream = new FileInputStream(caCertFile);
-            X509Certificate cert = (X509Certificate) this.certFactory
-                .generateCertificate(inStream);
-            inStream.close();
-
-            return cert;
-        }
-
-        return null;
-    }
-
+    public X509Certificate getCACert() throws IOException, CertificateException;
+    
     /**
      * Reads the {@link PrivateKey} from the file system. This file is specified
      * in the candlepin config.
@@ -76,70 +39,7 @@ public class PKIReader {
      * @return a new PrivateKey
      * @throws GeneralSecurityException if something violated policy
      */
-    public PrivateKey getCaKey() throws GeneralSecurityException {
-        KeyPair keyPair = getKeyPair();
-
-        if (keyPair != null) {
-            return keyPair.getPrivate();
-        }
-
-        return null;
-    }
-
-    /**
-     * Reads the {@link KeyPair} from the CA's private key file specified in the
-     * candlepin config.
-     * 
-     * @return
-     */
-    private KeyPair getKeyPair() throws GeneralSecurityException {
-        String caKeyFile = config.getString(ConfigProperties.CA_KEY);
-
-        if (caKeyFile != null) {
-            try {
-                InputStreamReader inStream = new InputStreamReader(
-                    new FileInputStream(caKeyFile));
-
-                PEMReader reader = new PEMReader(inStream,
-                    new ConfigPasswordFinder());
-                KeyPair keyPair = (KeyPair) reader.readObject();
-
-                if (keyPair == null) {
-                    throw new GeneralSecurityException(
-                        "Reading CA private key failed");
-                }
-
-                return keyPair;
-            }
-            catch (IOException e) {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Custom {@link PasswordFinder} that reads the candlepin config file for a
-     * password in plain text.
-     */
-    private class ConfigPasswordFinder implements PasswordFinder {
-
-        private char[] caKeyPassword;
-
-        private ConfigPasswordFinder() {
-            String password = config
-                .getString(ConfigProperties.CA_KEY_PASSWORD);
-
-            if (password != null) {
-                caKeyPassword = password.toCharArray();
-            }
-        }
-
-        @Override
-        public char[] getPassword() {
-            return this.caKeyPassword;
-        }
-    }
+    public PrivateKey getCaKey() throws IOException, GeneralSecurityException;
     
+   
 }
