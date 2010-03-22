@@ -121,7 +121,7 @@ class CandlePinApi:
         blob = self.rest.post(path, data=consumer)
         return blob['consumer']
 
-    def unRegisterConsumer(self, username, password, consumer_uuid):
+    def unRegisterConsumer(self,consumer_uuid):
         path = "/consumers/%s" % consumer_uuid
         blob = self.rest.delete(path)
         return blob
@@ -143,6 +143,11 @@ class CandlePinApi:
 
     def unBindAll(self, consumer_uuid):
         path = "/consumers/%s/entitlements" % consumer_uuid
+        blob = self.rest.delete(path)
+        return blob
+
+    def unBindEntitlement(self,  entitlementId):
+        path = "/entitlements/%s" % (entitlementId)
         blob = self.rest.delete(path)
         return blob
 
