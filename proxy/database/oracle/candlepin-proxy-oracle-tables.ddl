@@ -28,8 +28,8 @@ create table cp_consumer (
 
 create table cp_consumer_ent_certificate (
 	id number(19,0) not null, 
-	key raw(255) not null, 
-	pem raw(255) not null, 
+	key BLOB not null, 
+	pem BLOB not null, 
 	serialNumber number(19,2) not null, 
 	entitlement_id number(19,0) not null, 
 	primary key (id));
@@ -51,8 +51,8 @@ create table cp_consumer_facts_metadata (
 	
 create table cp_consumer_idcertificate (
 	id number(19,0) not null, 
-	key raw(255) not null, 
-	pem raw(255) not null, 
+	key BLOB not null, 
+	pem BLOB not null, 
 	serialNumber number(19,2) not null, 
 	primary key (id));
 
