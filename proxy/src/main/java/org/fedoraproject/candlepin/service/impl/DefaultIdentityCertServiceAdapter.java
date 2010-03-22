@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
-import org.fedoraproject.candlepin.pki.BouncyCastlePKI;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 import com.google.inject.Inject;
@@ -37,7 +37,7 @@ import com.google.inject.Inject;
  */
 public class DefaultIdentityCertServiceAdapter implements
     IdentityCertServiceAdapter {
-    private BouncyCastlePKI pki;
+    private PKIUtility pki;
     private static Logger log = Logger
         .getLogger(DefaultIdentityCertServiceAdapter.class);
     private ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator;
@@ -45,7 +45,7 @@ public class DefaultIdentityCertServiceAdapter implements
     private Random random = new Random();
 
     @Inject
-    public DefaultIdentityCertServiceAdapter(BouncyCastlePKI pki,
+    public DefaultIdentityCertServiceAdapter(PKIUtility pki,
         ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator) {
         this.pki = pki;
         this.consumerIdentityCertificateCurator = consumerIdentityCertificateCurator;
@@ -83,8 +83,10 @@ public class DefaultIdentityCertServiceAdapter implements
             startDate, endDate, keyPair, serialNumber);
         
         identityCert.setCert(pki.getPemEncoded(x509cert));
-        identityCert.setKey(pki.toPem(keyPair.getPrivate()));
+        identityCert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
         identityCert.setSerialNumber(x509cert.getSerialNumber());
+        identityCert.setConsumer(consumer);
+        consumer.setIdCert(identityCert);
 
         return consumerIdentityCertificateCurator.create(identityCert);
     }

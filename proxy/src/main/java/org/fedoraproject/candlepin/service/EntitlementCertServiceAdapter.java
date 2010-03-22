@@ -42,10 +42,8 @@ public interface EntitlementCertServiceAdapter {
      * @param keyPair the key pair used in the certificate creation
      * @param serialNumber the serial number to put in the certificate
      * @return Client entitlement certificate.
-     * @throws IOException 
-     * @throws GeneralSecurityException 
-     * @throws IOException 
-     * @throws GeneralSecurityException 
+     * @throws IOException thrown if there's a problem reading the cert.
+     * @throws GeneralSecurityException thrown security problem
      */
     ConsumerEntitlementCertificate generateEntitlementCert(Consumer consumer,
         Subscription sub, Product product, Date endDate, KeyPair keyPair, 

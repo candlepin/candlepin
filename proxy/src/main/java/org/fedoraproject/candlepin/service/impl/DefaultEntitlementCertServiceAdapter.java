@@ -14,19 +14,19 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.math.BigInteger;
-import java.security.KeyPair;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.pki.BouncyCastlePKI;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 
 import com.google.inject.Inject;
@@ -36,12 +36,12 @@ import com.google.inject.Inject;
  */
 public class DefaultEntitlementCertServiceAdapter implements 
     EntitlementCertServiceAdapter {
-    private BouncyCastlePKI pki;
+    private PKIUtility pki;
     private static Logger log = Logger
         .getLogger(DefaultEntitlementCertServiceAdapter.class);
     
     @Inject
-    public DefaultEntitlementCertServiceAdapter(BouncyCastlePKI pki) {
+    public DefaultEntitlementCertServiceAdapter(PKIUtility pki) {
         this.pki = pki;
     }
 
@@ -54,8 +54,9 @@ public class DefaultEntitlementCertServiceAdapter implements
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + endDate);
         
+        KeyPair clientKeyPair = this.pki.generateNewKeyPair();
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
-            null, sub.getStartDate(), endDate, serialNumber);
+            null, sub.getStartDate(), endDate, clientKeyPair, serialNumber);
         
         ConsumerEntitlementCertificate cert = new ConsumerEntitlementCertificate();
         cert.setSerialNumber(serialNumber);
