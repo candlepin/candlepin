@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.service.impl;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 

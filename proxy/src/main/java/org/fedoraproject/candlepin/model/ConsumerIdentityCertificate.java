@@ -50,7 +50,7 @@ public class ConsumerIdentityCertificate implements Persisted {
     private byte[] key;
 
     @Column(nullable = false)
-    private byte[] pem;
+    private byte[] cert;
 
     @Column(nullable = false)
     private BigInteger serialNumber;
@@ -77,18 +77,18 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.key = key;
     }
 
-    @XmlElement(name = "pem")
-    public String getPemAsString() {
-        return new String(pem);
+    @XmlElement(name = "cert")
+    public String getCertAsString() {
+        return new String(cert);
     }
 
     @XmlTransient
-    public byte[] getPem() {
-        return pem;
+    public byte[] getCert() {
+        return cert;
     }
 
-    public void setPem(byte[] pem) {
-        this.pem = pem;
+    public void setCert(byte[] cert) {
+        this.cert = cert;
     }
 
     @XmlTransient
@@ -103,7 +103,7 @@ public class ConsumerIdentityCertificate implements Persisted {
 
     public void update(ConsumerIdentityCertificate other) {
         this.setKey(other.getKey());
-        this.setPem(other.getPem());
+        this.setCert(other.getCert());
         this.setSerialNumber(other.getSerialNumber());
     }
     
