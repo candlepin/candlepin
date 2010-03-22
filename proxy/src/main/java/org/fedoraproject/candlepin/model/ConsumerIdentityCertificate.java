@@ -22,6 +22,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -54,6 +55,9 @@ public class ConsumerIdentityCertificate implements Persisted {
 
     @Column(nullable = false)
     private BigInteger serialNumber;
+
+    @OneToOne(mappedBy = "idCert")
+    private Consumer consumer;
 
     public BigInteger getSerialNumber() {
         return serialNumber;
@@ -105,6 +109,15 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.setKey(other.getKey());
         this.setCert(other.getCert());
         this.setSerialNumber(other.getSerialNumber());
+    }
+
+    @XmlTransient
+    public Consumer getConsumer() {
+        return consumer;
+    }
+
+    public void setConsumer(Consumer consumer) {
+        this.consumer = consumer;
     }
     
 }
