@@ -64,20 +64,26 @@ function upload_sat_cert ()
 function import_ca_cert_into_keystore
 {
 	echo "importing ca certificate"
-	echo y | sudo keytool -importcert -alias ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+	echo y | sudo keytool -importcert -alias candlepin_ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+}
+
+function generate_tomcat_certificate
+{
+	keytool -genkey -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password > /dev/null
 }
 
 function update_keystore
 {
+	generate_tomcat_certificate
 	import_ca_cert_into_keystore
 	if [ "$?" -ne "0" ]; then
 		echo "ca_crt alias already exists. deleting..."
-		sudo keytool -delete -alias ca_crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+		sudo keytool -delete -alias candlepin_ca_crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
 		if [ "$?" -ne "0" ]; then
-			echo "couldn't delete ca_crt alias, bailing."
+			echo "couldn't delete candlepin_ca_crt alias, bailing."
 			exit 1
 		else
-			echo "deleted ca_crt."
+			echo "deleted candlepin_ca_crt."
 		fi
 		import_ca_cert_into_keystore
 		if [ "$?" -ne "0" ]; then
