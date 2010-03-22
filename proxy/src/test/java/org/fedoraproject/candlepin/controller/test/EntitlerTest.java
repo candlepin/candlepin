@@ -33,7 +33,6 @@ import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.test.SpacewalkCertificateCuratorTest;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,7 +55,7 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() throws Exception {
-        o = TestUtil.createOwner();
+        o = createOwner();
         ownerCurator.create(o);
         
         String certString = SpacewalkCertificateCuratorTest.readCertificate(

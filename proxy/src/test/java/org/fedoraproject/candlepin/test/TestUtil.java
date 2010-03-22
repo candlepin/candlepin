@@ -37,11 +37,6 @@ public class TestUtil {
     private TestUtil() {
     }
 
-    public static Owner createOwner() {
-        Owner o = new Owner("Test Owner " + randomInt());
-        return o;
-    }
-
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
         Consumer c = new Consumer("Test Consumer " + randomInt(), owner, type);
         return c;
@@ -52,7 +47,7 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer() {
-        return createConsumer(createConsumerType(), createOwner());
+        return createConsumer(createConsumerType(), new Owner("Test Owner " + randomInt()));
     }
     
     /**
@@ -85,13 +80,6 @@ public class TestUtil {
                 "Test Product " + random);
         rhel.setId("test-product-" + random);
         return rhel;
-    }
-    
-    public static Pool createEntitlementPool(Product product) {
-        Pool pool = new Pool(createOwner(), product.getId(), 
-                new Long(1000),
-                TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
-        return pool;
     }
     
     public static Entitlement createEntitlement(Pool pool, Consumer c) {

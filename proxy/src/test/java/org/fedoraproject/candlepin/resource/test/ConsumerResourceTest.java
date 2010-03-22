@@ -72,11 +72,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        pool = new Pool(owner, product.getId(), new Long(10),
+        pool = createPoolAndSub(owner, product.getId(), new Long(10),
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(pool);
 
-        fullPool = new Pool(owner, product.getId(), new Long(10),
+        fullPool = createPoolAndSub(owner, product.getId(), new Long(10),
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         fullPool.setConsumed(new Long(10));
         poolCurator.create(fullPool);

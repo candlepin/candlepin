@@ -49,7 +49,7 @@ public class OwnerHttpClientTest extends AbstractGuiceGrizzlyTest {
     public void setUp() throws Exception {
         super.setUp();
 
-        owner = TestUtil.createOwner();
+        owner = createOwner();
         ownerCurator.create(owner);
 
         type = new ConsumerType("some-consumer-type");

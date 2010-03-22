@@ -55,7 +55,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Before
     public void createEnforcer() {
-        owner = TestUtil.createOwner();
+        owner = createOwner();
         ownerCurator.create(owner);
 
         consumer = TestUtil.createConsumer(owner);
@@ -79,8 +79,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void passValidationEnoughNumberOfEntitlementsIsAvailableAndNotExpired() {
         ValidationResult result = enforcer.pre(
-            TestUtil.createConsumer(),
-            entitlementPoolWithMembersAndExpiration(1, 2, expiryDate(2010, 10,
+            createConsumer(owner),
+            entitlementPoolWithMembersAndExpiration(owner, 1, 2, expiryDate(2010, 10,
                 10))).getResult();
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
@@ -90,8 +90,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void shouldFailValidationWhenNoEntitlementsAreAvailable() {
         ValidationResult result = enforcer.pre(
-            TestUtil.createConsumer(),
-            entitlementPoolWithMembersAndExpiration(1, 1, expiryDate(2010, 10,
+            createConsumer(owner),
+            entitlementPoolWithMembersAndExpiration(owner, 1, 1, expiryDate(2010, 10,
                 10))).getResult();
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
@@ -101,8 +101,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void shouldFailWhenEntitlementsAreExpired() {
         ValidationResult result = enforcer.pre(
-            TestUtil.createConsumer(),
-            entitlementPoolWithMembersAndExpiration(1, 2,
+            createConsumer(owner),
+            entitlementPoolWithMembersAndExpiration(owner, 1, 2,
                 expiryDate(2000, 1, 1))).getResult();
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
@@ -113,22 +113,19 @@ public class EnforcerTest extends DatabaseTestFixture {
         return TestDateUtil.date(year, month, day);
     }
 
-    private Pool entitlementPoolWithMembersAndExpiration(
+    private Pool entitlementPoolWithMembersAndExpiration(Owner owner,
         final int currentMembers, final int maxMembers, Date expiry) {
-        return new Pool(new Owner(), new Product("label", "name").getId(),
-            new Long(maxMembers), new Date(), expiry) {
-
-            {
-                setConsumed(new Long(currentMembers));
-            }
-        };
+        Pool p = createPoolAndSub(owner, new Product("label", "name").getId(),
+            new Long(maxMembers), new Date(), expiry);
+        p.setConsumed(new Long(currentMembers));
+        return p;
     }
     
     // This exception should mention wrapping a MissingFactException
     @Test(expected = RuleExecutionException.class)
     public void testRuleFailsWhenConsumerDoesntHaveFact() {
         ValidationResult result = enforcer.pre(
-            TestUtil.createConsumer(), new Pool(owner, 
+            TestUtil.createConsumer(), createPoolAndSub(owner,
                 PRODUCT_CPULIMITED, new Long(10), 
                 TestUtil.createDate(2010, 2, 28), 
                 TestUtil.createDate(2018, 2, 28))).getResult();
@@ -139,16 +136,16 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolLongestExpiry() {
-        Pool pool1 = new Pool(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
+        Pool pool1 = createPoolAndSub(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2050, 02, 26));
-        Pool pool2 = new Pool(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
+        Pool pool2 = createPoolAndSub(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2051, 02, 26));
-        Pool desired = new Pool(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
+        Pool desired = createPoolAndSub(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2060, 02, 26));
-        Pool pool3 = new Pool(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
+        Pool pool3 = createPoolAndSub(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2055, 02, 26));
         poolCurator.create(pool1);
@@ -163,13 +160,13 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolMostAvailable() {
-        Pool pool1 = new Pool(owner, HIGHEST_QUANTITY_PRODUCT, new Long(5),
+        Pool pool1 = createPoolAndSub(owner, HIGHEST_QUANTITY_PRODUCT, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2050, 02, 26));
-        Pool desired = new Pool(owner, HIGHEST_QUANTITY_PRODUCT, new Long(500),
+        Pool desired = createPoolAndSub(owner, HIGHEST_QUANTITY_PRODUCT, new Long(500),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2051, 02, 26));
-        Pool pool2 = new Pool(owner, HIGHEST_QUANTITY_PRODUCT, new Long(5),
+        Pool pool2 = createPoolAndSub(owner, HIGHEST_QUANTITY_PRODUCT, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2060, 02, 26));
         poolCurator.create(pool1);
@@ -193,7 +190,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test(expected = RuleExecutionException.class)
     public void testSelectBestPoolBadRule() {
-        Pool pool1 = new Pool(owner, BAD_RULE_PRODUCT, new Long(5), TestUtil
+        Pool pool1 = createPoolAndSub(owner, BAD_RULE_PRODUCT, new Long(5), TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
         poolCurator.create(pool1);
 
@@ -203,9 +200,9 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolDefaultRule() {
-        Pool pool1 = new Pool(owner, NO_RULE_PRODUCT, new Long(5), TestUtil
+        Pool pool1 = createPoolAndSub(owner, NO_RULE_PRODUCT, new Long(5), TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-        Pool pool2 = new Pool(owner, NO_RULE_PRODUCT, new Long(5), TestUtil
+        Pool pool2 = createPoolAndSub(owner, NO_RULE_PRODUCT, new Long(5), TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2060, 02, 26));
         poolCurator.create(pool1);
         poolCurator.create(pool2);

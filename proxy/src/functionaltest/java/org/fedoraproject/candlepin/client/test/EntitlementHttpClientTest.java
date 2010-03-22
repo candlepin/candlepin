@@ -56,7 +56,7 @@ public class EntitlementHttpClientTest extends AbstractGuiceGrizzlyTest {
         consumerType = new ConsumerType("some-consumer-type");
         consumerTypeCurator.create(consumerType);
 
-        owner = TestUtil.createOwner();
+        owner = createOwner();
         ownerCurator.create(owner);
 
         consumer = new Consumer(CONSUMER_NAME, owner, consumerType);

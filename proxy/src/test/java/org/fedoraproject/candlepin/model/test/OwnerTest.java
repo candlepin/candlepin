@@ -82,7 +82,7 @@ public class OwnerTest extends DatabaseTestFixture {
     @Test
     public void bidirectionalConsumers() throws Exception {
         beginTransaction();
-        Owner o = TestUtil.createOwner();
+        Owner o = createOwner();
         ConsumerType consumerType = TestUtil.createConsumerType();
         Consumer c1 = TestUtil.createConsumer(consumerType, o);
         Consumer c2 = TestUtil.createConsumer(consumerType, o);
