@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -97,12 +96,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateConsumer() {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
-        toSubmit.setFacts(new ConsumerFacts() {
-
-            {
-                setFact(METADATA_NAME, METADATA_VALUE);
-            }
-        });
+        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted  = consumerResource.create(toSubmit);
         
@@ -118,12 +112,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         String uuid = "Jar Jar Binks";
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
         toSubmit.setUuid(uuid);
-        toSubmit.setFacts(new ConsumerFacts() {
-
-            {
-                setFact(METADATA_NAME, METADATA_VALUE);
-            }
-        });
+        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);        
 
         Consumer submitted  = consumerResource.create(toSubmit);
         

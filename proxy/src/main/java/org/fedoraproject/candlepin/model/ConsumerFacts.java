@@ -42,10 +42,10 @@ import org.hibernate.annotations.MapKeyManyToMany;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Entity
-@Table(name = "cp_consumer_facts")
-@SequenceGenerator(name = "seq_consumer_facts",
-        sequenceName = "seq_consumer_facts", allocationSize = 1)
+//@Entity
+//@Table(name = "cp_consumer_facts")
+//@SequenceGenerator(name = "seq_consumer_facts",
+//        sequenceName = "seq_consumer_facts", allocationSize = 1)
 public class ConsumerFacts implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
@@ -54,7 +54,7 @@ public class ConsumerFacts implements Persisted {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_facts")
     private Long id;
     
-    @OneToOne(mappedBy = "facts")
+    //@OneToOne(mappedBy = "facts")
     private Consumer consumer;
     
     // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem
