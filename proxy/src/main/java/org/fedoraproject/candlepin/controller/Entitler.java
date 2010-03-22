@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.math.BigInteger;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
@@ -25,10 +26,15 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -43,15 +49,27 @@ public class Entitler {
     private ConsumerCurator consumerCurator;
     private Enforcer enforcer;
     private static Logger log = Logger.getLogger(Entitler.class);
+    private EntitlementCertServiceAdapter entCertAdapter;
+    private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter productAdapter;
+    private PKIUtility pki;
 
     @Inject
     protected Entitler(PoolCurator epCurator,
         EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
-        Enforcer enforcer) {
+        Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
+        SubscriptionServiceAdapter subAdapter,
+        ProductServiceAdapter productAdapter,
+        PKIUtility pki) {
+        
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.enforcer = enforcer;
+        this.entCertAdapter = entCertAdapter;
+        this.productAdapter = productAdapter;
+        this.pki = pki;
+        this.subAdapter = subAdapter;
     }
 
     /**
@@ -141,6 +159,27 @@ public class Entitler {
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
         epCurator.merge(pool);
+        
+        Subscription sub = subAdapter.getSubscription(pool.getSubscriptionId());
+        if (sub == null) {
+            log.warn("Cannot generate entitlement certificate, no subscription for pool: " +
+                pool.getId());
+            
+        }
+        else {
+            Product prod = productAdapter.getProductById(sub.getProductId());
+        
+            // TODO: Save keypair and re-use for later ents?
+            // Generate a certificate for this entitlement, if needed:
+            try {
+                this.entCertAdapter.generateEntitlementCert(consumer, sub, prod, 
+                    sub.getEndDate(), pki.generateNewKeyPair(), 
+                    BigInteger.valueOf(e.getId()));
+            }
+            catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
 
         return e;
     }

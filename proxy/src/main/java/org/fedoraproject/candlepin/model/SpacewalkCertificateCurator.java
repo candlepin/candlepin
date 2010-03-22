@@ -30,6 +30,7 @@ public class SpacewalkCertificateCurator {
     //TODO Need to go through the service for this.
     private ProductCurator productCurator;
     private AttributeCurator attributeCurator;
+    private SubscriptionCurator subCurator;
 
     
     public static final String PRODUCT_MONITORING = "monitoring";
@@ -43,11 +44,13 @@ public class SpacewalkCertificateCurator {
 
     @Inject
     public SpacewalkCertificateCurator(PoolCurator poolCurator, 
-            ProductCurator productCurator, AttributeCurator attributeCurator) {
+            ProductCurator productCurator, AttributeCurator attributeCurator,
+            SubscriptionCurator subCurator) {
         
         this.poolCurator = poolCurator;
         this.productCurator = productCurator;
         this.attributeCurator = attributeCurator;
+        this.subCurator = subCurator;
     }
 
     /**
@@ -119,6 +122,10 @@ public class SpacewalkCertificateCurator {
             Date start, Date end) {
 
         Product p = createProductIfDoesNotExist(pname);
+
+        // Assume we'll create a subscription to back these entitlement pools:
+        Subscription sub = new Subscription(owner, p.getId(), maxmem, start, end, start);
+        subCurator.create(sub);
         
         Pool ep = new Pool();
         ep.setOwner(owner);
@@ -127,6 +134,7 @@ public class SpacewalkCertificateCurator {
         ep.setStartDate(start);
         ep.setEndDate(end);
         ep.setConsumed(new Long(0));
+        ep.setSubscriptionId(sub.getId());
         owner.addEntitlementPool(ep);
         poolCurator.create(ep);
     }

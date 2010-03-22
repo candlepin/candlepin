@@ -54,14 +54,18 @@ public class DefaultEntitlementCertServiceAdapter implements
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + endDate);
         
-        KeyPair clientKeyPair = this.pki.generateNewKeyPair();
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
-            null, sub.getStartDate(), endDate, clientKeyPair, serialNumber);
+            null, sub.getStartDate(), endDate, keypair, serialNumber);
         
         ConsumerEntitlementCertificate cert = new ConsumerEntitlementCertificate();
         cert.setSerialNumber(serialNumber);
-        cert.setKey(x509Cert.getPublicKey().getEncoded());
-        cert.setPem(this.pki.getPemEncoded(x509Cert));
+        cert.setKey(pki.getPemEncoded(keypair.getPrivate()));
+        cert.setCert(this.pki.getPemEncoded(x509Cert));
+        
+        // TODO: Save the cert here.
+        log.debug("Generated cert: " + serialNumber);
+        log.debug("Key: " + cert.getKeyAsString());
+        log.debug("Cert: " + cert.getCertAsString());
         
         return cert;
     }

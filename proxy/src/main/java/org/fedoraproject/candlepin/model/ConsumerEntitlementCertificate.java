@@ -27,7 +27,9 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 
@@ -51,7 +53,7 @@ public class ConsumerEntitlementCertificate implements Persisted {
     private byte[] key;
 
     @Column(nullable = false)
-    private byte[] pem;
+    private byte[] cert;
 
     @Column(nullable = false)
     private BigInteger serialNumber;
@@ -70,22 +72,34 @@ public class ConsumerEntitlementCertificate implements Persisted {
         this.serialNumber = serialNumber;
     }
 
-    public byte[] getKey() {
-        return key;
-    }
-
     public void setKey(byte[] key) {
         this.key = key;
     }
 
-    public byte[] getPem() {
-        return pem;
+    @XmlTransient
+    public byte[] getKey() {
+        return key;
+    }
+    
+    @XmlElement(name = "key")
+    public String getKeyAsString() {
+        return new String(key);
     }
 
-    public void setPem(byte[] pem) {
-        this.pem = pem;
+    public void setCert(byte[] cert) {
+        this.cert = cert;
     }
 
+    public byte[] getCert() {
+        return cert;
+    }
+    
+    @XmlElement(name = "cert")
+    public String getCertAsString() {
+        return new String(cert);
+    }
+
+    @XmlTransient
     public Long getId() {
         return id;
     }
@@ -93,5 +107,4 @@ public class ConsumerEntitlementCertificate implements Persisted {
     public void setId(Long id) {
         this.id = id;
     }
-
 }

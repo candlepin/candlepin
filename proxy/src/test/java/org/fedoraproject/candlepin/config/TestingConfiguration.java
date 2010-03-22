@@ -44,10 +44,6 @@ public class TestingConfiguration extends Config {
         }
     }
     
-    protected void initializeMap() {
-        configuration = new TreeMap<String, String>(loadProperties());
-    }
-    
     protected Map<String, String> loadProperties() {
         Map<String, String> propertyMap = new TreeMap<String, String>();
         try {
