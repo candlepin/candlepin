@@ -55,9 +55,9 @@ JDOM = 'jdom:jdom:jar:1.0'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 
-CHECKSTYLE = ['com.puppycrawl:checkstyle:jar:5.0',
+CHECKSTYLE = ['checkstyle:checkstyle:jar:5.0',
               'antlr:antlr:jar:2.7.6',
-              'google-collect:google-collect:jar:snapshot-200920211',
+              'com.google.collections:google-collections:jar:0.9',
               COMMONS]
 
 
@@ -105,8 +105,6 @@ define "candlepin" do
   # download the stuff we do not have in the repositories
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
   download artifact('com.wideplay.warp:warp-persist:jar:2.0-20090214') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/wideplay/warp/warp-persist/2.0-20090214/warp-persist-2.0-20090214.jar'
-  download artifact('com.puppycrawl:checkstyle:jar:5.0') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/puppycrawl/checkstyle/5.0/checkstyle-5.0.jar'
-  download artifact('google-collect:google-collect:jar:snapshot-200920211') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/google-collect/google-collect/snapshot-20090211/google-collect-snapshot-20090211.jar'
 
   #
   # building
