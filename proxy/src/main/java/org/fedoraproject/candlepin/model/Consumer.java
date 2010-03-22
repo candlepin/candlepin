@@ -30,7 +30,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -72,9 +71,8 @@ public class Consumer implements Persisted {
      * field is a DTO for transmission to the client carrying PEM in plain text, and is
      * not stored in the database.
      */
-//    @OneToOne
-    // FIXME: shouldn't be transient...
-    @Transient
+    @OneToOne
+    @JoinColumn(name = "consumer_idcert_id")
     private ConsumerIdentityCertificate idCert;
     
     @ManyToOne
