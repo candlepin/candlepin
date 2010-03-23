@@ -144,7 +144,7 @@ public class Consumer implements Persisted {
         if (copyFrom.uuid != null && copyFrom.uuid.length() > 0) {
             this.uuid = copyFrom.uuid;
         }
-        this.facts = new HashMap<String,String>(copyFrom.facts);
+        this.facts = new HashMap<String, String>(copyFrom.facts);
         childConsumers = copyFrom.childConsumers;
         entitlements = copyFrom.entitlements;
     }
