@@ -29,7 +29,9 @@ public class PinsetterContextListener implements ServletContextListener {
      */
     @Override
     public void contextDestroyed(ServletContextEvent sceIn) {
-        pk.shutdown();
+        if (pk != null) {
+            pk.shutdown();
+        }
     }
 
     /**
