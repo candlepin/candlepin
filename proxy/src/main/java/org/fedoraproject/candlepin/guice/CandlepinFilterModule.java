@@ -35,6 +35,7 @@ public class CandlepinFilterModule extends ServletModule {
     protected void configureServlets() {
         filter("/*").through(LoggingFilter.class);
         filter("/admin/init").through(NoAuthRequiredFilter.class);
+        filter("/certificates").through(NoAuthRequiredFilter.class);
         filter("/*").through(
             Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)));
         filter("/*").through(

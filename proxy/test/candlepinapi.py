@@ -32,11 +32,11 @@ class Rest(object):
         # default content type
         self.content_type = None
 
-    def _request(self, http_type, path, data=None, content_type=None):
+    def _request(self, http_type, path, data=None, content_type=None, username=None, password=None):
         if content_type is None and self.content_type:
             content_type = self.content_type
 
-        if self.cert_file:
+        if self.port.find("443") >= 0:
             conn = httplib.HTTPSConnection(self.hostname, self.port, key_file = self.key_file, cert_file = self.cert_file)
         else:
             conn = httplib.HTTPConnection(self.hostname, self.port)
@@ -47,9 +47,14 @@ class Rest(object):
         full_url = "%s:%s%s" % (self.hostname, self.port, self.api_url)
         if self.debug:
             print "url: %s" % full_url
+        
+        headers = self.headers[content_type]
+        #add Authorization header for basic auth
+        if username != None:
+            headers.update({"Authorization":"Basic %s" % base64.encodestring('%s:%s' % (username, password))[:-1]})
 
         conn.request(http_type, url_path, body=self.marshal(data, content_type),
-                headers=self.headers[content_type])
+                headers=headers)
         response = conn.getresponse()
         if response.status not in  [200, 204]:
             raise CandlepinException("%s - %s" % (response.status, response.reason),
@@ -74,8 +79,8 @@ class Rest(object):
     def head(self, path, content_type="json"):
         return self._request("HEAD", path, content_type=content_type)
 
-    def post(self, path, data="", content_type="json"):
-        return self._request("POST", path, data=data, content_type=content_type)
+    def post(self, path, data="", content_type="json", username=None, password=None):
+        return self._request("POST", path, data=data, content_type=content_type, username=username, password=password)
 
     def put(self, path, data="", content_type="json"):
         return self._request("PUT", path, data=data, content_type=content_type)
@@ -118,7 +123,7 @@ class CandlePinApi:
         }
 
 
-        blob = self.rest.post(path, data=consumer)
+        blob = self.rest.post(path, data=consumer, username=userid, password=password)
         return blob['consumer']
 
     def unRegisterConsumer(self,consumer_uuid):

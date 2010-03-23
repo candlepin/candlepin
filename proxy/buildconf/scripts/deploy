@@ -67,9 +67,21 @@ function import_ca_cert_into_keystore
 	echo y | sudo keytool -importcert -alias candlepin_ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
 }
 
+function answers_for_tomcat_cert
+{
+	echo XX
+    echo candlepin
+	echo Fedora
+	echo \n
+	echo \n
+	echo \n
+    echo y
+	echo \n
+}
+
 function generate_tomcat_certificate
 {
-	keytool -genkey -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password > /dev/null
+	answers_for_tomcat_cert | keytool -genkey -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password > /dev/null
 }
 
 function update_keystore
