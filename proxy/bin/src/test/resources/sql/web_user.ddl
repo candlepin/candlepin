@@ -1,0 +1,1 @@
+CREATE TABLE "WEB_USER" (LOGIN varchar, PASSWORD varchar)

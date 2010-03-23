@@ -1,0 +1,9 @@
+#Organize Import Order
+#Wed Feb 10 14:19:21 EST 2010
+6=tyrex
+5=javax
+4=java
+3=org
+2=com
+1=com.redhat.rhn
+0=org.fedoraproject.candlepin

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rhn-cert version="0.1">
+  <rhn-cert-field name="product">RHN-SATELLITE-001</rhn-cert-field>
+  <rhn-cert-field name="owner">Red Hat SatTeam</rhn-cert-field>
+  <rhn-cert-field name="issued">2009-09-14 00:00:00</rhn-cert-field>
+  <rhn-cert-field name="expires">2011-09-14 00:00:00</rhn-cert-field>
+  <rhn-cert-field name="slots">8000</rhn-cert-field>
+  <rhn-cert-field name="monitoring-slots">5</rhn-cert-field>
+  <rhn-cert-field name="provisioning-slots">4000</rhn-cert-field>
+  <rhn-cert-field name="nonlinux-slots">500</rhn-cert-field>
+  <rhn-cert-field name="virtualization_host">5000</rhn-cert-field>
+  <rhn-cert-field name="virtualization_host_platform">5000</rhn-cert-field>
+  <rhn-cert-field name="channel-families" quantity="2000" family="rhel-server"/>
+  <rhn-cert-field name="channel-families" quantity="4000" family="rhel-cluster"/>
+  <rhn-cert-field name="channel-families" quantity="4000" family="rhel-gfs"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-client-workstation"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-client-vt"/>
+  <rhn-cert-field name="channel-families" quantity="4000" family="rhel-devsuite"/>
+  <rhn-cert-field name="channel-families" quantity="2000" family="rhel-client-supplementary"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-s390x-server-supplementary"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-client-workstation-fastrack"/>
+  <rhn-cert-field name="channel-families" quantity="6000" family="rhn-tools"/>
+  <rhn-cert-field name="channel-families" quantity="2000" family="rhel-client"/>
+  <rhn-cert-field name="channel-families" quantity="2000" family="rhel-server-fastrack"/>
+  <rhn-cert-field name="channel-families" quantity="8000" family="rhel-server-hts"/>
+  <rhn-cert-field name="channel-families" quantity="2000" family="rhel-server-vt"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-cluster-storage"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-cluster"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-s390x-fastrack"/>
+  <rhn-cert-field name="channel-families" quantity="4000" family="rhel-rhaps"/>
+  <rhn-cert-field name="channel-families" quantity="2000" family="rhel-client-fastrack"/>
+  <rhn-cert-field name="channel-families" quantity="100" family="rhn-proxy"/>
+  <rhn-cert-field name="channel-families" quantity="2000" family="rhel-server-supplementary"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-s390x-server"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-productivity"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-cluster-storage-z"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-cluster-z"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-productivity-z"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-supplementary-z"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-vt-z"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-server-z"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="rhel-appstk"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="jb-appplatform"/>
+  <rhn-cert-field name="channel-families" quantity="1000" family="jb-middleware"/>
+  <rhn-cert-field name="satellite-version">5.3</rhn-cert-field>
+  <rhn-cert-field name="generation">2</rhn-cert-field>
+  <rhn-cert-signature>
+-----BEGIN PGP SIGNATURE-----
+Version: Crypt::OpenPGP 1.03
+
+iQBGBAARAwAGBQJKv17ZAAoJEJ5yna8GlHkyxQEAnid+6Qj5uoFBItiEVksRBkqm
+wWtWAJ9CzbKRcxv4U/xo0TS9VEsWdM23sQ==
+=gOQk
+-----END PGP SIGNATURE-----
+</rhn-cert-signature>
+</rhn-cert>
