@@ -219,9 +219,10 @@ public class EntitlementResource {
     @DELETE
     @Path("/{dbid}")
     public void unbind(@PathParam("dbid") Long dbid) {
-
+        
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
+            toDelete.getConsumer().getEntitlements().remove(toDelete);
             entitlementCurator.delete(toDelete);
             return;
         }

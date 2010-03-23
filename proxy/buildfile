@@ -106,6 +106,12 @@ define "candlepin" do
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
   download artifact('com.wideplay.warp:warp-persist:jar:2.0-20090214') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/wideplay/warp/warp-persist/2.0-20090214/warp-persist-2.0-20090214.jar'
 
+  # Resource Substitution
+  githash = Git.git 'rev-parse', 'HEAD'
+  resources.filter.using 'version'=>version,
+        'hash'=> githash
+
+  
   #
   # building
   #

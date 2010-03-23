@@ -15,8 +15,6 @@
 
 package org.fedoraproject.candlepin.model;
 
-import java.io.Serializable;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -26,23 +24,12 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "status")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Status implements Persisted {
-
-    private long id;
-    public Boolean getResult() {
-        return result;
-    }
-
-    public void setResult(Boolean result) {
-        this.result = result;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
+public class Status {
 
     private Boolean result;
-    
+    private String version;
+    private String hash;
+   
     /**
      * default ctor
      */
@@ -50,15 +37,33 @@ public class Status implements Persisted {
       
     }
     
-    public Status(Boolean result) {
+    public Status(Boolean result, String version, String hash) {
         this.result = result;
+        this.version = version;
+        this.hash = hash;
         
     }
     
-    @Override
-    public Serializable getId() {
-        // TODO Auto-generated method stub
-        return id;
+    public Boolean getResult() {
+        return result;
     }
 
+    public void setResult(Boolean result) {
+        this.result = result;
+    }
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
+    }
 }

@@ -41,7 +41,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
 
     @Before
     public void createTestObjects() {
-        owner = TestUtil.createOwner();
+        owner = createOwner();
         ownerCurator.create(owner);
 
         ConsumerType type = new ConsumerType("some-consumer-type");
@@ -53,7 +53,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
 
-        ep = new Pool(owner, product.getId(), new Long(10), TestDateUtil.date(
+        ep = createPoolAndSub(owner, product.getId(), new Long(10), TestDateUtil.date(
             2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(ep);
 

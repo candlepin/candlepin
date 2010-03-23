@@ -39,7 +39,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        owner = TestUtil.createOwner();
+        owner = createOwner();
         ownerCurator.create(owner);
         p = TestUtil.createProduct();
         productCurator.create(p);
@@ -61,7 +61,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
 
     @Test
     public void testGetSubscriptionsNoneExist() {
-        Owner owner2 = TestUtil.createOwner();
+        Owner owner2 = createOwner();
         ownerCurator.create(owner2);
         List<Subscription> subs = adapter.getSubscriptions(owner2, p.getId().toString());
         assertEquals(0, subs.size());

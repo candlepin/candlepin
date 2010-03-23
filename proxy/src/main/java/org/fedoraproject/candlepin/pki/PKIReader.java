@@ -20,26 +20,27 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+/**
+ * A generic mechanism for reading CA certificates from an underlying datastore.
+ */
 public interface PKIReader {
     
     /**
-     * Reads the CA's {@link X509Certificate} from the file system. This file is
-     * specified in the candlepin config.
+     * Supplies the CA's {@link X509Certificate}.
      * 
      * @return a new Cert
      * @throws IOException if a file can't be read or is not found
      * @throws CertificateException  if there is an error from the underlying cert factory
      */
-    public X509Certificate getCACert() throws IOException, CertificateException;
+    X509Certificate getCACert() throws IOException, CertificateException;
     
     /**
-     * Reads the {@link PrivateKey} from the file system. This file is specified
-     * in the candlepin config.
+     * Supplies the CA's {@link PrivateKey}.
      * 
      * @return a new PrivateKey
+     * @throws IOException if a file can't be read or is not found
      * @throws GeneralSecurityException if something violated policy
      */
-    public PrivateKey getCaKey() throws IOException, GeneralSecurityException;
-    
+    PrivateKey getCaKey() throws IOException, GeneralSecurityException;
    
 }

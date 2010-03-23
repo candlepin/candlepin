@@ -33,7 +33,6 @@ import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.test.SpacewalkCertificateCuratorTest;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,7 +55,7 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() throws Exception {
-        o = TestUtil.createOwner();
+        o = createOwner();
         ownerCurator.create(o);
         
         String certString = SpacewalkCertificateCuratorTest.readCertificate(
@@ -91,7 +90,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(guestType);
         
         parentSystem = new Consumer("system", o, system);
-        parentSystem.getFacts().setFact("total_guests", "0");
+        parentSystem.getFacts().put("total_guests", "0");
         consumerCurator.create(parentSystem);
         
         childVirtSystem = new Consumer("virt system", o, guestType);
@@ -119,7 +118,7 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Test
     public void testVirtEntitleFailsIfAlreadyHasGuests() throws Exception {
-        parentSystem.getFacts().setFact("total_guests", "10");
+        parentSystem.getFacts().put("total_guests", "10");
         consumerCurator.update(parentSystem);
         try {
             entitler.entitle(parentSystem, virtHost);

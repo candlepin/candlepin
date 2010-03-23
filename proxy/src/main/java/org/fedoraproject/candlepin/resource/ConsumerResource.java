@@ -182,8 +182,8 @@ public class ConsumerResource {
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType()
             .getLabel());
         log.debug("got metadata: ");
-        log.debug(in.getFacts().getMetadata());
-        for (String key : in.getFacts().getMetadata().keySet()) {
+        log.debug(in.getFacts());
+        for (String key : in.getFacts().keySet()) {
             log.debug("   " + key + " = " + in.getFact(key));
         }
 

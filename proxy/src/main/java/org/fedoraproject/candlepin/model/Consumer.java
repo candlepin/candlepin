@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -36,7 +37,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.util.Util;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.MapKeyManyToMany;
 
 
 /**
@@ -97,9 +101,17 @@ public class Consumer implements Persisted {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
     private Set<Entitlement> entitlements;
     
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "consumer_fact_id")
-    private ConsumerFacts facts;
+    //@OneToOne(cascade = CascadeType.ALL)
+    //@JoinColumn(name = "consumer_fact_id")
+    //private ConsumerFacts facts;
+    // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem
+    // possible to map strings without an unplesant hack:
+    // http://bit.ly/liststringjpa
+    @MapKeyManyToMany(targetEntity = String.class)
+    @CollectionOfElements(targetElement = String.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    private Map<String, String> facts;    
+    
     
     /**
      * ctor
@@ -116,7 +128,7 @@ public class Consumer implements Persisted {
         // generate a UUID at this point.
         this.uuid = Util.generateUUID();
 
-        this.facts = new ConsumerFacts(this);
+        this.facts = new HashMap<String, String>();
         this.childConsumers = new HashSet<Consumer>();
         this.entitlements = new HashSet<Entitlement>();
     }
@@ -132,7 +144,7 @@ public class Consumer implements Persisted {
         if (copyFrom.uuid != null && copyFrom.uuid.length() > 0) {
             this.uuid = copyFrom.uuid;
         }
-        getFacts().setMetadata(copyFrom.getFacts().getMetadata());
+        this.facts = new HashMap<String,String>(copyFrom.facts);
         childConsumers = copyFrom.childConsumers;
         entitlements = copyFrom.entitlements;
     }
@@ -142,7 +154,7 @@ public class Consumer implements Persisted {
      */
     public Consumer() {
         this.uuid = Util.generateUUID();
-        this.facts = new ConsumerFacts(this);
+        this.facts = new HashMap<String, String>();
         this.childConsumers = new HashSet<Consumer>();
         this.entitlements = new HashSet<Entitlement>();
     }
@@ -273,7 +285,7 @@ public class Consumer implements Persisted {
     /**
      * @return all facts about this consumer.
      */
-    public ConsumerFacts getFacts() {
+    public Map<String, String> getFacts() {
         return facts;
     }
     
@@ -283,14 +295,14 @@ public class Consumer implements Persisted {
      * @return the value of the fact with the given key.
      */
     public String getFact(String factKey) {
-        return facts.getFact(factKey);
+        return facts.get(factKey);
     }
 
     
     /**
      * @param factsIn facts about this consumer.
      */
-    public void setFacts(ConsumerFacts factsIn) {
+    public void setFacts(Map<String, String> factsIn) {
         facts = factsIn;
     }
     
@@ -300,10 +312,7 @@ public class Consumer implements Persisted {
      * @param value to set
      */
     public void setMetadataField(String name, String value) {
-        if (this.getFacts().getMetadata() ==  null) {
-            this.getFacts().setMetadata(new HashMap<String, String>());
-        }
-        this.getFacts().getMetadata().put(name, value);
+        this.facts.put(name, value);
     }
     
     /**
@@ -312,10 +321,7 @@ public class Consumer implements Persisted {
      * @return String field value.
      */
     public String getMetadataField(String nameIn) {
-        if (this.getFacts().getMetadata() != null) {
-            return getFacts().getMetadata().get(nameIn);
-        }
-        return null;
+        return facts.get(nameIn);
     }
 
     /**

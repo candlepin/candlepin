@@ -27,7 +27,6 @@ import com.wideplay.warp.persist.Transactional;
  */
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
-    @Inject private ConsumerFactCurator consumerInfoCurator;
     @Inject private EntitlementCurator entitlementCurator;    
     //private static Logger log = Logger.getLogger(ConsumerCurator.class);
     
@@ -74,7 +73,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
         existingConsumer.setEntitlements(
                 entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
-        existingConsumer.setFacts(consumerInfoCurator.update(updatedConsumer.getFacts()));
+        existingConsumer.setFacts(updatedConsumer.getFacts());
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
         existingConsumer.setParent(updatedConsumer.getParent());

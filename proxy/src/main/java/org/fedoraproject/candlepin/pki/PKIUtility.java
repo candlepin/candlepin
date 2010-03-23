@@ -43,6 +43,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
+/**
+ * PKIUtility
+ */
 public class PKIUtility {
     
     // TODO : configurable?
@@ -88,12 +91,14 @@ public class PKIUtility {
             NetscapeCertType.sslClient | 
             NetscapeCertType.smime);
         
-        certGen.addExtension(MiscObjectIdentifiers.netscapeCertType.toString(), false, certType);
+        certGen.addExtension(MiscObjectIdentifiers.netscapeCertType.toString(),
+                false, certType);
         certGen.addExtension(X509Extensions.KeyUsage.toString(), false, keyUsage);
 
         if (extensions != null) {
             for (X509ExtensionWrapper wrapper : extensions) {
-                certGen.addExtension(wrapper.getOid(), wrapper.isCritical(), wrapper.getAsn1Encodable());
+                certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
+                        wrapper.getAsn1Encodable());
             }
         }
 

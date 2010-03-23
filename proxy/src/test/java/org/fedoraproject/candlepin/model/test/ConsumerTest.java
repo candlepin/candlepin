@@ -91,12 +91,12 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testInfo() {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
-        Map<String, String> metadata = lookedUp.getFacts().getMetadata();
+        Map<String, String> metadata = lookedUp.getFacts();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
-        assertEquals("bar", lookedUp.getFacts().getFact("foo"));
+        assertEquals("bar", lookedUp.getFacts().get("foo"));
         assertEquals("bar1", metadata.get("foo1"));
-        assertEquals("bar1", lookedUp.getFacts().getFact("foo1"));
+        assertEquals("bar1", lookedUp.getFacts().get("foo1"));
     }
 
     @Test
@@ -106,17 +106,15 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer2);
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
-        Map<String, String> metadata = lookedUp.getFacts().getMetadata();
+        Map<String, String> metadata = lookedUp.getFacts();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
-        assertEquals("bar", lookedUp.getFacts().getFact("foo"));
+        assertEquals("bar", lookedUp.getFacts().get("foo"));
         assertEquals("bar1", metadata.get("foo1"));
-        assertEquals("bar1", lookedUp.getFacts().getFact("foo1"));
-        assertEquals(consumer.getId(), lookedUp.getFacts().getConsumer()
-                .getId());
+        assertEquals("bar1", lookedUp.getFacts().get("foo1"));
 
         Consumer lookedUp2 = consumerCurator.find(consumer2.getId());
-        metadata = lookedUp2.getFacts().getMetadata();
+        metadata = lookedUp2.getFacts();
         assertEquals(1, metadata.keySet().size());
         assertEquals("bar2", metadata.get("foo"));
     }
@@ -128,20 +126,6 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals("notbar", lookedUp.getMetadataField("foo"));
-    }
-
-    @Test
-    public void testMetadataDeleteCascading() {
-        Consumer attachedConsumer = consumerCurator.find(consumer.getId());
-        Long consumerInfoId = attachedConsumer.getFacts().getId();
-
-        assertNotNull((ConsumerFacts) entityManager().find(ConsumerFacts.class,
-                consumerInfoId));
-
-        consumerCurator.delete(attachedConsumer);
-
-        assertNull((ConsumerFacts) entityManager().find(ConsumerFacts.class,
-                consumerInfoId));
     }
 
     @Test
@@ -225,7 +209,9 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testAddEntitlements() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        Pool pool = TestUtil.createEntitlementPool(newProduct);
+        Pool pool = createPoolAndSub(createOwner(), newProduct.getId(),
+            new Long(1000), TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2015, 11, 30));
         entityManager().persist(pool.getOwner());
         entityManager().persist(pool);
 

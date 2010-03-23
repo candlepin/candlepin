@@ -49,7 +49,9 @@ public class PoolTest extends DatabaseTestFixture {
 
         prod = TestUtil.createProduct();
         productCurator.create(prod);
-        pool = TestUtil.createEntitlementPool(prod);
+        pool = createPoolAndSub(createOwner(), prod.getId(),
+            new Long(1000), TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2015, 11, 30));
         owner = pool.getOwner();
 
         consumer = TestUtil.createConsumer(owner);
@@ -74,7 +76,7 @@ public class PoolTest extends DatabaseTestFixture {
     }
 
     public void testMultiplePoolsForOwnerProductAllowed() {
-        Pool duplicatePool = new Pool(owner,
+        Pool duplicatePool = createPoolAndSub(owner,
                 prod.getId(), new Long(-1), TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         // Just need to see no exception is thrown.
@@ -85,7 +87,7 @@ public class PoolTest extends DatabaseTestFixture {
     public void testUnlimitedPool() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        Pool unlimitedPool = new Pool(owner, newProduct
+        Pool unlimitedPool = createPoolAndSub(owner, newProduct
                 .getId(), new Long(-1), TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         poolCurator.create(unlimitedPool);
@@ -98,7 +100,7 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
 
         productCurator.create(newProduct);
-        Pool consumerPool = new Pool(owner, newProduct
+        Pool consumerPool = createPoolAndSub(owner, newProduct
                 .getId(), numAvailEntitlements, TestUtil
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
@@ -116,7 +118,7 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        Pool consumerPool = new Pool(owner, newProduct
+        Pool consumerPool = createPoolAndSub(owner, newProduct
                 .getId(), numAvailEntitlements, TestUtil
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
@@ -136,7 +138,7 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        Pool consumerPool = new Pool(owner, newProduct
+        Pool consumerPool = createPoolAndSub(owner, newProduct
                 .getId(), numAvailEntitlements, TestUtil
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
@@ -158,7 +160,7 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        Pool consumerPool = new Pool(owner, newProduct
+        Pool consumerPool = createPoolAndSub(owner, newProduct
                 .getId(), numAvailEntitlements, TestUtil
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
