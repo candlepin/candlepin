@@ -169,7 +169,7 @@ buildr clean package test=no
 update_keystore
 
 # update server.xml
-python update-server-xml.py $CONTAINER_CONF_DIR
+sudo python buildconf/scripts/update-server-xml.py $CONTAINER_CONF_DIR
 
 # deploy the webapp
 deploy
