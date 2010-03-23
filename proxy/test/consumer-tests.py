@@ -162,12 +162,6 @@ class ConsumerTests(CandlepinTests):
 
         self.assertEqual([], self.cp.getEntitlements(self.uuid))
 
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> Added asserts to the test, removed printing.
     def test_unbind_all_multi(self):
         pools = self.cp.getPools(consumer=self.uuid)
 
