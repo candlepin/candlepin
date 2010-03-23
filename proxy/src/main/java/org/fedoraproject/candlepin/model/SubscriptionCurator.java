@@ -96,7 +96,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         log.debug("sub token in curator " + subToken.getToken() + "   " + subToken.getSubscription().getId() + "  "+ subToken.getSubscription());
         LinkedList<Subscription> list =  new LinkedList<Subscription>(); 
         list.add(subToken.getSubscription());
-       return list;
+        return list;
     }
     
     /**

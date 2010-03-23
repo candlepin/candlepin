@@ -457,7 +457,7 @@ public class ConsumerResource {
         Consumer consumer) {
         
         List<Subscription> s = subAdapter.getSubscriptionForToken(registrationToken);
-        if (s == null) {
+        if ((s == null) || (s.isEmpty())) {
             log.debug("token: " + registrationToken);
             throw new BadRequestException("No such token: " + registrationToken);
         }
