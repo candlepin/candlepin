@@ -78,7 +78,7 @@ function answers_for_tomcat_cert
 
 function generate_tomcat_certificate
 {
-	answers_for_tomcat_cert | keytool -genkey -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password > /dev/null
+	answers_for_tomcat_cert | sudo keytool -genkey -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password > /dev/null
 }
 
 function update_keystore
