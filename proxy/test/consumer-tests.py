@@ -25,11 +25,12 @@ class ConsumerTests(CandlepinTests):
         self.assertTrue(virt_host in pools)
 
         # Request a virtualization_host entitlement:
-        result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+        results = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
         #print "virt host"
         #print result
-        self.assertTrue('id' in result)
-        self.assertEquals(virt_host, result['pool']['productId'])
+        for result in results:
+            self.assertTrue('id' in result)
+            self.assertEquals(virt_host, result['pool']['productId'])
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(self.uuid)
@@ -78,11 +79,12 @@ class ConsumerTests(CandlepinTests):
         self.assertTrue(virt_host in pools)
 
         # Request a virtualization_host entitlement:
-        result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+        results = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
         print "virt host"
-        print result
-        self.assertTrue('id' in result)
-        self.assertEquals(virt_host, result['pool']['productId'])
+        print results
+        for result in results:
+            self.assertTrue('id' in result)
+            self.assertEquals(virt_host, result['pool']['productId'])
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(self.uuid)
@@ -131,10 +133,10 @@ class ConsumerTests(CandlepinTests):
 
     def test_bind_by_product(self):
         # Request a monitoring entitlement:
-        result = self.cp.bindProduct(self.uuid, 'monitoring')
-        print result
-        self.assertTrue('id' in result)
-        self.assertEquals('monitoring', result['pool']['productId'])
+        results = self.cp.bindProduct(self.uuid, 'monitoring')
+        for result in results:
+            self.assertTrue('id' in result)
+            self.assertEquals('monitoring', result['pool']['productId'])
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(self.uuid)
@@ -150,7 +152,6 @@ class ConsumerTests(CandlepinTests):
         self.cp.unBindAll(self.uuid)
 
         self.assertEqual([], self.cp.getEntitlements(self.uuid))
-
 
 
 
