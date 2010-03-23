@@ -101,6 +101,7 @@ public class DatabaseTestFixture {
         rulesCurator = injector.getInstance(RulesCurator.class);
         subCurator = injector.getInstance(SubscriptionCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
+        
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
        

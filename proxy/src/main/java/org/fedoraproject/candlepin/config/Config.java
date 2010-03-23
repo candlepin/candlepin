@@ -125,6 +125,9 @@ public class Config {
      * @return value associated with the given configuration key.
      */
     public String getString(String s) {
+        if (configuration == null) {
+            loadConfiguration();
+        }
         return configuration.get(s);
     }
 

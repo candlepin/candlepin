@@ -38,12 +38,6 @@ public class TestingConfiguration extends Config {
         return new DbBasicAuthConfigParser().parseConfig(configuration);
     }
     
-    protected synchronized void loadConfiguration() {
-        if (configuration == null) {
-            initializeMap();
-        }
-    }
-    
     protected Map<String, String> loadProperties() {
         Map<String, String> propertyMap = new TreeMap<String, String>();
         try {
