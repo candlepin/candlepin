@@ -85,7 +85,8 @@ public class TestUtil {
     }
     
     public static Subscription createSubscription() {
-        Subscription sub = new Subscription(createOwner(), createProduct().getId(),
+        Subscription sub = new Subscription(new Owner("Test Owner " + randomInt()), 
+                                            createProduct().getId(),
                                             new Long(1000), createDate(2000,1,1),
                                             createDate(2010,1,1), 
                                             createDate(2000,1,1));
@@ -104,7 +105,7 @@ public class TestUtil {
     }
     
     public static Pool createEntitlementPool(Product product) {
-        Pool pool = new Pool(createOwner(), product.getId(), 
+        Pool pool = new Pool(new Owner("Test Owner "+ randomInt()), product.getId(), 
                 new Long(1000),
                 TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
         return pool;

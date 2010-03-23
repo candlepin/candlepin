@@ -53,7 +53,6 @@ public class DefaultSubscriptionServiceAdapter implements
 
     @Override
     public List<Subscription> getSubscriptionForToken(String token) {
-        // Not implemented for default subscription adapter.
         return subCurator.ListBySubscriptionTokenID(token);
     }
 
