@@ -19,13 +19,14 @@ class CandlepinTests(unittest.TestCase):
 
     def setUp(self):
 
-        self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
+        self.cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
+        #self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
 
         # TODO: Use CandlePinAPI?
         # Upload the test cert to populate Candlepin db. Only do this
         # once per test suite run.
         rest = Rest(hostname="localhost", port="8080", api_url="/candlepin")
-        #rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./cert_chain.crt", key_file="./cert_chain_private_pem.key")
+        #rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
         rsp = rest.get("/certificates")
         if not rsp:
             print("Cert upload required.")
@@ -75,7 +76,8 @@ class CandlepinTests(unittest.TestCase):
                 "b": "2",
                 "c": "3"}
 
-        response = self.cp.registerConsumer("fakeuser", "fakepw",
+        cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin")
+        response = cp.registerConsumer("fakeuser", "fakepw",
                 "consumername", hardware=facts_metadata, 
                 consumer_type=consumer_type)
         print("Consumer created: %s" % response)
@@ -83,6 +85,15 @@ class CandlepinTests(unittest.TestCase):
         self.assertTrue("idCert" in response)
         self.assert_consumer_struct(response)
         CONSUMER_UUID = response['uuid']
+
+        cert = open("client.crt", "w")
+        cert.write(response['idCert']['cert'])
+        cert.close()
+
+        key = open("client.key", "w")
+        key.write(response['idCert']['key'])
+        key.close()
+
         return response['uuid']
 
     def assert_consumer_struct(self, consumer):

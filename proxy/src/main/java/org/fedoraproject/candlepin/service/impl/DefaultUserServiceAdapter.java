@@ -60,7 +60,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         for (String prefix : authConfig.keySet()) {
             String user = prefix.substring(USER_PASS_PREFIX.length());
 
-            this.passwords.put(user, authConfig.get(prefix));
+            this.passwords.put(user, authConfig.get(prefix).trim());
         }
     }
 

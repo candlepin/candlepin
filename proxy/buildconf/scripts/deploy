@@ -61,20 +61,38 @@ function upload_sat_cert ()
 function import_ca_cert_into_keystore
 {
 	echo "importing ca certificate"
-	echo y | sudo keytool -importcert -alias ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+	echo y | sudo keytool -importcert -alias candlepin_ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+}
+
+function answers_for_tomcat_cert
+{
+	echo XX
+    echo candlepin
+	echo Fedora
+	echo \n
+	echo \n
+	echo \n
+    echo y
+	echo \n
+}
+
+function generate_tomcat_certificate
+{
+	answers_for_tomcat_cert | keytool -genkey -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password > /dev/null
 }
 
 function update_keystore
 {
+	generate_tomcat_certificate
 	import_ca_cert_into_keystore
 	if [ "$?" -ne "0" ]; then
 		echo "ca_crt alias already exists. deleting..."
-		sudo keytool -delete -alias ca_crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+		sudo keytool -delete -alias candlepin_ca_crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
 		if [ "$?" -ne "0" ]; then
-			echo "couldn't delete ca_crt alias, bailing."
+			echo "couldn't delete candlepin_ca_crt alias, bailing."
 			exit 1
 		else
-			echo "deleted ca_crt."
+			echo "deleted candlepin_ca_crt."
 		fi
 		import_ca_cert_into_keystore
 		if [ "$?" -ne "0" ]; then
@@ -108,7 +126,7 @@ if [ "$JBOSS_HOME" != "" ]; then
         STOP="sudo /sbin/service jbossas stop"
         DEPLOY="$JBOSS_HOME/server/default/deploy/"
     fi
-    CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
+    CONTAINER_CONF_DIR="/etc/tomcat6/conf"
 else
     # use tomcat 6, if not specified
     TC=tomcat6
@@ -149,6 +167,9 @@ buildr clean package test=no
 
 # update keystore file and put it into tomcat's conf directory
 update_keystore
+
+# update server.xml
+python update-server-xml.py $CONTAINER_CONF_DIR
 
 # deploy the webapp
 deploy
