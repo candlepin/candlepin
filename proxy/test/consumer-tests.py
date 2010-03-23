@@ -10,7 +10,7 @@ class ConsumerTests(CandlepinTests):
     def setUp(self):
         CandlepinTests.setUp(self)
 
-    def test_aunbind_by_serial(self):
+    def test_unbind_by_serial(self):
         pools = self.cp.getPools(consumer=self.uuid)
         pool = pools[0]
 
