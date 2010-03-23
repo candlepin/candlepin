@@ -41,9 +41,9 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
@@ -80,7 +80,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             StubIdentityCertServiceAdapter.class);
         bind(Config.class);
         bind(EntitlementCertServiceAdapter.class).to(
-            DefaultEntitlementCertServiceAdapter.class);
+            StubEntitlementCertServiceAdapter.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))

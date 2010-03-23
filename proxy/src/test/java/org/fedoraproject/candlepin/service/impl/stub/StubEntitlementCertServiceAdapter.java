@@ -12,13 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.service.impl;
+package org.fedoraproject.candlepin.service.impl.stub;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
@@ -26,25 +24,18 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 
-import com.google.inject.Inject;
-
 /**
- * DefaultEntitlementCertServiceAdapter
+ * StubEntitlementCertServiceAdapter
+ * 
+ * Generating an entitlement cert is expensive, this class stubs the process out.
  */
-public class DefaultEntitlementCertServiceAdapter implements 
-    EntitlementCertServiceAdapter {
-    private PKIUtility pki;
-    private static Logger log = Logger
-        .getLogger(DefaultEntitlementCertServiceAdapter.class);
-    
-    @Inject
-    public DefaultEntitlementCertServiceAdapter(PKIUtility pki) {
-        this.pki = pki;
-    }
+public class StubEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
 
+    private static Logger log = Logger
+        .getLogger(StubEntitlementCertServiceAdapter.class);
+    
     @Override
     public ConsumerEntitlementCertificate generateEntitlementCert(Consumer consumer,
         Subscription sub, Product product, Date endDate, 
@@ -54,30 +45,18 @@ public class DefaultEntitlementCertServiceAdapter implements
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + endDate);
         
-        // TODO: re-use keypair for the owner?
-        KeyPair keyPair = pki.generateNewKeyPair();
-        X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
-            null, sub.getStartDate(), endDate, keyPair, serialNumber);
-        
         ConsumerEntitlementCertificate cert = new ConsumerEntitlementCertificate();
         cert.setSerialNumber(serialNumber);
-        cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCert(this.pki.getPemEncoded(x509Cert));
+        cert.setKey("---- STUB KEY -----".getBytes());
+        cert.setCert("---- STUB CERT -----".getBytes());
         
-        // TODO: Save the cert here.
         log.debug("Generated cert: " + serialNumber);
         log.debug("Key: " + cert.getKeyAsString());
         log.debug("Cert: " + cert.getCertAsString());
+        // TODO: Should we save stub certs to the database or just no-op?
         
         return cert;
     }
-    
-    private String createDN(Consumer consumer) {
-        StringBuilder sb = new StringBuilder("CN=");
-        sb.append(consumer.getName());
-        sb.append(", UID=");
-        sb.append(consumer.getUuid());
-        return sb.toString();
-    }
 
 }
+

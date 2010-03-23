@@ -27,7 +27,6 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -52,15 +51,13 @@ public class Entitler {
     private EntitlementCertServiceAdapter entCertAdapter;
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;
-    private PKIUtility pki;
 
     @Inject
     protected Entitler(PoolCurator epCurator,
         EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter productAdapter,
-        PKIUtility pki) {
+        ProductServiceAdapter productAdapter) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
@@ -68,7 +65,6 @@ public class Entitler {
         this.enforcer = enforcer;
         this.entCertAdapter = entCertAdapter;
         this.productAdapter = productAdapter;
-        this.pki = pki;
         this.subAdapter = subAdapter;
     }
 
@@ -173,8 +169,7 @@ public class Entitler {
             // Generate a certificate for this entitlement, if needed:
             try {
                 this.entCertAdapter.generateEntitlementCert(consumer, sub, prod, 
-                    sub.getEndDate(), pki.generateNewKeyPair(), 
-                    BigInteger.valueOf(e.getId()));
+                    sub.getEndDate(), BigInteger.valueOf(e.getId()));
             }
             catch (Exception ex) {
                 throw new RuntimeException(ex);
