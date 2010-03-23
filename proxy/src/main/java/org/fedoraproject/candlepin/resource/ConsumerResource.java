@@ -456,20 +456,12 @@ public class ConsumerResource {
     private List<Entitlement> bindByToken(String registrationToken,
         Consumer consumer) {
         
-        log.debug("fffffffffffffffffffff");
-        //FIXME: this is just a stub, need SubscriptionService to look it up
-        // FIXME: getSubscriptionForToken is a stub, always "works"
-        log.debug("foooooooooooooo");
         List<Subscription> s = subAdapter.getSubscriptionForToken(registrationToken);
-        log.debug("s " + s);
         if (s == null) {
             log.debug("token: " + registrationToken);
-//            Entitlement e = new Entitlement();
-//            return e;
             throw new BadRequestException("No such token: " + registrationToken);
         }
 
-        log.debug("bbbbbbbbbbbbar" + s + "  " + s.toString());
         List<Product> productList = new LinkedList<Product>();
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         for (Subscription subscription: s ) {
@@ -477,7 +469,6 @@ public class ConsumerResource {
             entitlementList.add(createEntitlement(consumer, p));
             
         }
-//        Product p = productAdapter.getProductById(s.getProductId());
         return entitlementList;
     }
 
