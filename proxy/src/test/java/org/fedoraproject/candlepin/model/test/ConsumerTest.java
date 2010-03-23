@@ -25,7 +25,6 @@ import java.util.Map;
 import javax.persistence.PersistenceException;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;

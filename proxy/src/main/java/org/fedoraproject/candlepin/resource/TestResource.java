@@ -27,7 +27,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.Owner;

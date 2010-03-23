@@ -38,6 +38,8 @@ import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.model.SubscriptionToken;
+import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
@@ -71,6 +73,7 @@ public class DatabaseTestFixture {
     protected AttributeCurator attributeCurator;
     protected RulesCurator rulesCurator;
     protected SubscriptionCurator subCurator;
+    protected SubscriptionTokenCurator subTokenCurator;
     protected WorkManager unitOfWork;
     protected HttpServletRequest httpServletRequest;
 
@@ -100,9 +103,11 @@ public class DatabaseTestFixture {
         attributeCurator = injector.getInstance(AttributeCurator.class);
         rulesCurator = injector.getInstance(RulesCurator.class);
         subCurator = injector.getInstance(SubscriptionCurator.class);
+        subTokenCurator = injector.getInstance(SubscriptionTokenCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
+
        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
@@ -156,5 +161,28 @@ public class DatabaseTestFixture {
         consumerCurator.create(c);
         return c;
     }
+    
+    protected Subscription createSubscription() {
+        Subscription sub = new Subscription(createOwner(), 
+                                            TestUtil.createProduct().getId(),        
+                                            new Long(1000), 
+                                            TestUtil.createDate(2000,1,1),
+                                            TestUtil.createDate(2010,1,1), 
+                                            TestUtil.createDate(2000,1,1));
+        subCurator.create(sub);
+        return sub;
 
+    }
+    
+    protected SubscriptionToken createSubscriptionToken(){
+        Subscription sub = createSubscription();
+       
+        SubscriptionToken st = new SubscriptionToken();
+        st.setToken("this_is_a_test_token");
+       
+        st.setSubscription(sub);
+        subTokenCurator.create(st);
+        return st;
+        
+    }
 }

@@ -401,15 +401,18 @@ public class ConsumerResource {
      *            Product identifying label.
      * @return Entitled object
      */
-    private Entitlement bindByProduct(String consumerUuid, String productId,
+    private List<Entitlement> bindByProduct(String consumerUuid, String productId,
         Consumer consumer) {
 
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         Product p = productAdapter.getProductById(productId);
         if (p == null) {
             throw new BadRequestException("No such product: " + productId);
         }
 
-        return createEntitlement(consumer, p);
+        entitlementList.add(createEntitlement(consumer, p));
+        return entitlementList;
+        
     }
 
     // TODO: Bleh, very duplicated methods here:
@@ -450,29 +453,35 @@ public class ConsumerResource {
      *            registration token.
      * @return token
      */
-    private Entitlement bindByToken(String registrationToken, Consumer consumer) {
-
-        // FIXME: this is just a stub, need SubscriptionService to look it up
-
-        // FIXME: getSubscriptionForToken is a stub, always "works"
-        Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
-        if (s == null) {
+    private List<Entitlement> bindByToken(String registrationToken,
+        Consumer consumer) {
+        
+        List<Subscription> s = subAdapter.getSubscriptionForToken(registrationToken);
+        if ((s == null) || (s.isEmpty())) {
+            log.debug("token: " + registrationToken);
             throw new BadRequestException("No such token: " + registrationToken);
         }
 
-        Product p = productAdapter.getProductById(s.getProductId());
-
-        return createEntitlement(consumer, p);
+        List<Product> productList = new LinkedList<Product>();
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
+        for (Subscription subscription: s ) {
+            Product p = productAdapter.getProductById(subscription.getProductId());
+            entitlementList.add(createEntitlement(consumer, p));
+            
+        }
+        return entitlementList;
     }
 
-    private Entitlement bindByPool(Long poolId, Consumer consumer) {
+    private List<Entitlement> bindByPool(Long poolId, Consumer consumer) {
         Pool pool = epCurator.find(poolId);
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
             throw new BadRequestException("No such entitlement pool: " + poolId);
         }
 
         // Attempt to create an entitlement:
-        return createEntitlement(consumer, pool);
+        entitlementList.add(createEntitlement(consumer, pool));
+        return entitlementList;
     }
 
     /**
@@ -488,7 +497,7 @@ public class ConsumerResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
-    public Entitlement bind(@PathParam("consumer_uuid") String consumerUuid,
+    public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
         @QueryParam("product") String productId) {
 

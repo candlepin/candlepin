@@ -9,8 +9,6 @@ function evalrc ()
 
 function gendb ()
 {
-    if [ "$GENDB" != "" ]; then
-
 	echo "============ generating a new db =============="
         buildr candlepin:genschema
         evalrc $? "schema generation failed"
@@ -26,7 +24,6 @@ function gendb ()
 
         psql -U candlepin < code/schema/quartz/tables_postgres.sql
         evalrc $? "quartz schema failed"
-    fi
 }
 
 function deploy ()
