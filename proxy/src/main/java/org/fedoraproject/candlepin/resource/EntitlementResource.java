@@ -222,7 +222,6 @@ public class EntitlementResource {
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            toDelete.getConsumer().getEntitlements().remove(toDelete);
             entitlementCurator.delete(toDelete);
             return;
         }
