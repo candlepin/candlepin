@@ -24,24 +24,23 @@ class ConsumerTests(CandlepinTests):
             pools[pool['productId']] = pool
         self.assertTrue(virt_host in pools)
 
+        result = self.cp.getEntitlements(self.uuid)
+        self.assertEquals(len(result ),0)
+
+
         # Request a virtualization_host entitlement:
-        results = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
-        #print "virt host"
-        #print result
-        for result in results:
-            self.assertTrue('id' in result)
-            self.assertEquals(virt_host, result['pool']['productId'])
+        result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+        self.assertTrue('id' in result)
+        self.assertEquals(virt_host, result['pool']['productId'])
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(self.uuid)
+        self.assertEquals(len(result),1)
         
-        print "Consumer's entitlements before unbin:",result
         for p in result:
-            print type(p)
-            print "ID is", p['entitlement']['id']
             self.cp.unBindEntitlement( p['entitlement']['id'])
         result = self.cp.getEntitlements(self.uuid)
-        print "Consumer's entitlements after unbind:",result
+        self.assertEquals(len(result),0)
 
 
     def test_list_cert_serials(self):
@@ -153,9 +152,12 @@ class ConsumerTests(CandlepinTests):
 
         self.assertEqual([], self.cp.getEntitlements(self.uuid))
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> Added asserts to the test, removed printing.
     def test_unbind_all_multi(self):
         pools = self.cp.getPools(consumer=self.uuid)
 
