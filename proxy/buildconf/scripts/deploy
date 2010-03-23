@@ -10,20 +10,20 @@ function evalrc ()
 function gendb ()
 {
 	echo "============ generating a new db =============="
-        buildr candlepin:genschema
-        evalrc $? "schema generation failed"
+    buildr candlepin:genschema
+    evalrc $? "schema generation failed"
 
-        dropdb -U candlepin candlepin
-        evalrc $? "dropdb failed"
+    dropdb -U candlepin candlepin
+    evalrc $? "dropdb failed"
 
-        createdb -U candlepin candlepin
-        evalrc $? "createdb failed"
+    createdb -U candlepin candlepin
+    evalrc $? "createdb failed"
 
-        psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
-        evalrc $? "schema creation failed"
+    psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
+    evalrc $? "schema creation failed"
 
-        psql -U candlepin < code/schema/quartz/tables_postgres.sql
-        evalrc $? "quartz schema failed"
+    psql -U candlepin < code/schema/quartz/tables_postgres.sql
+    evalrc $? "quartz schema failed"
 }
 
 function deploy ()
@@ -156,7 +156,7 @@ eval $STOP
 
 # generate the postgresql DB
 
-if [ -n $GENDB ]; then
+if [ "$GENDB" != "" ]; then
 	gendb	
 fi
 
