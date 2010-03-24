@@ -19,8 +19,8 @@ class CandlepinTests(unittest.TestCase):
 
     def setUp(self):
 
-        self.cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
-        #self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
+        #self.cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
+        self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
 
         # TODO: Use CandlePinAPI?
         # Upload the test cert to populate Candlepin db. Only do this
@@ -76,7 +76,8 @@ class CandlepinTests(unittest.TestCase):
                 "b": "2",
                 "c": "3"}
 
-        cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin")
+        cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
+        #cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin")
         response = cp.registerConsumer("fakeuser", "fakepw",
                 "consumername", hardware=facts_metadata, 
                 consumer_type=consumer_type)
