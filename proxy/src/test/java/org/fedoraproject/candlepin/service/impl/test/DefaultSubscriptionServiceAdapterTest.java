@@ -87,7 +87,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void TestGetSubscriptionByRegnum() {
+    public void testGetSubscriptionByRegnum() {
         
         
         SubscriptionToken st = createSubscriptionToken();

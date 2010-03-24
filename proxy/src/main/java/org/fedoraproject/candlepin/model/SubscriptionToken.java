@@ -14,10 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.io.Serializable;
+import org.hibernate.annotations.ForeignKey;
 
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -28,19 +27,19 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.annotations.ForeignKey;
-
 /**
  * SubscriptionToken
  */
 @XmlRootElement
 @Entity
 @Table(name = "cp_subscription_token")
-@SequenceGenerator(name = "seq_subscription_token", sequenceName = "seq_subscription_token", allocationSize = 1)
+@SequenceGenerator(name = "seq_subscription_token",
+    sequenceName = "seq_subscription_token", allocationSize = 1)
 public class SubscriptionToken implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_subscription_token")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE,
+        generator = "seq_subscription_token")
     private Long id;
     
     @Column(nullable = true, unique = true)

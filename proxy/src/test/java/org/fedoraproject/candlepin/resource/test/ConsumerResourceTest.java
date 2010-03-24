@@ -19,9 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -34,9 +31,12 @@ import org.fedoraproject.candlepin.resource.ForbiddenException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.List;
 
 /**
  * ConsumerResourceTest
@@ -193,7 +193,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         pool = poolCurator.find(pool.getId());
         assertEquals(new Long(1), pool.getConsumed());
-        for (Entitlement ent: resultList) {
+        for (Entitlement ent : resultList) {
             assertEquals(pool.getId(), ent.getPool().getId());
         }
     }

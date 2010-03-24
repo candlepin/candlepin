@@ -14,12 +14,12 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.Status;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +40,8 @@ public class StatusResourceTest extends DatabaseTestFixture  {
         Status status = statusResource.status();
         System.out.println("_____________________" + status.getVersion());        
         assertTrue("The vesrsion should be known", !"Unkown".equals(status.getVersion()));
-        assertTrue("The vesrsion should be filled in", !"${version}".equals(status.getVersion()));        
+        assertTrue("The vesrsion should be filled in", !"${version}"
+            .equals(status.getVersion()));        
     }
     
     @Test

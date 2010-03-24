@@ -15,14 +15,11 @@
 package org.fedoraproject.candlepin.model;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.hibernate.criterion.Restrictions;
 
 /**
  * Subscription manager.
@@ -83,7 +80,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     }
 
     @SuppressWarnings("unchecked")
-    public List<Subscription> ListBySubscriptionTokenID(String token){
+    public List<Subscription> listBySubscriptionTokenID(String token) {
         
         SubscriptionToken subToken =  (SubscriptionToken) currentSession().createCriteria(
             SubscriptionToken.class)
@@ -93,7 +90,9 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         }
         
         log.debug("sub token in curator " + subToken + "    " + token);
-        log.debug("sub token in curator " + subToken.getToken() + "   " + subToken.getSubscription().getId() + "  "+ subToken.getSubscription());
+        log.debug("sub token in curator " + subToken.getToken() + "   " +
+            subToken.getSubscription().getId() + "  " +
+            subToken.getSubscription());
         LinkedList<Subscription> list =  new LinkedList<Subscription>(); 
         list.add(subToken.getSubscription());
         return list;

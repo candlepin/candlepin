@@ -166,15 +166,15 @@ public class DatabaseTestFixture {
         Subscription sub = new Subscription(createOwner(), 
                                             TestUtil.createProduct().getId(),        
                                             new Long(1000), 
-                                            TestUtil.createDate(2000,1,1),
-                                            TestUtil.createDate(2010,1,1), 
-                                            TestUtil.createDate(2000,1,1));
+                                            TestUtil.createDate(2000, 1, 1),
+                                            TestUtil.createDate(2010, 1, 1), 
+                                            TestUtil.createDate(2000, 1, 1));
         subCurator.create(sub);
         return sub;
 
     }
     
-    protected SubscriptionToken createSubscriptionToken(){
+    protected SubscriptionToken createSubscriptionToken() {
         Subscription sub = createSubscription();
        
         SubscriptionToken st = new SubscriptionToken();

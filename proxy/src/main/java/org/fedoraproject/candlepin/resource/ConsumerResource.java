@@ -446,7 +446,7 @@ public class ConsumerResource {
 
         List<Product> productList = new LinkedList<Product>();
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        for (Subscription subscription: s ) {
+        for (Subscription subscription : s) {
             Product p = productAdapter.getProductById(subscription.getProductId());
             entitlementList.add(createEntitlement(consumer, p));
             
