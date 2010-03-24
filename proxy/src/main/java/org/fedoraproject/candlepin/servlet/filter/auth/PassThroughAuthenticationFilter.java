@@ -55,7 +55,12 @@ public class PassThroughAuthenticationFilter implements Filter {
             String[] userpass = new String(Base64.decodeBase64(userpassEncoded)).split(":");
 
             // don't check this against anything - just set the username
-            request.setAttribute("username", userpass[0]);
+            if (userpass.length > 0) {
+                request.setAttribute("username", userpass[0]);
+            } 
+            else {
+                request.setAttribute("username", "");
+            }
         }
 
         chain.doFilter(request, response);
