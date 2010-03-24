@@ -32,8 +32,8 @@ class ConsumerTests(CandlepinTests):
         
         # Request a virtualization_host entitlement:
         result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
-        self.assertTrue('id' in result)
-        self.assertEquals(virt_host, result['pool']['productId'])
+        self.assertTrue('id' in result[0])
+        self.assertEquals(virt_host, result[0]['pool']['productId'])
         expected_consumed += 1
 
         #make sure the number in the pool decreased by one
