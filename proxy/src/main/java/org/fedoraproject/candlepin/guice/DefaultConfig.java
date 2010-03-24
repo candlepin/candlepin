@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import static com.google.inject.name.Names.named;
+import static com.google.inject.name.Names.*;
 
 import java.io.Reader;
 
@@ -29,7 +29,6 @@ import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAda
 import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
-import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.fedoraproject.candlepin.servlet.filter.auth.NoAuthRequiredFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthenticationFilter;
@@ -49,7 +48,7 @@ class DefaultConfig extends AbstractModule {
         bind(LoggingFilter.class).asEagerSingleton();
         bind(NoAuthRequiredFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(
-            BasicAuthViaUserServiceFilter.class).asEagerSingleton();
+            PassThroughAuthenticationFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH)).to(
             PassThroughAuthenticationFilter.class).asEagerSingleton();
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);

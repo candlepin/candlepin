@@ -10,6 +10,40 @@ class ConsumerTests(CandlepinTests):
     def setUp(self):
         CandlepinTests.setUp(self)
 
+    def test_aunbind_by_serial(self):
+        pools = self.cp.getPools(consumer=self.uuid)
+        pool = pools[0]
+
+        self.assertEqual([], self.cp.getEntitlements(self.uuid))
+
+        # First we list all pools available to this consumer:
+        virt_host = 'virtualization_host'
+        results = self.cp.getPools(consumer=self.uuid)
+        pools = {}
+        for pool in results:
+            pools[pool['productId']] = pool
+        self.assertTrue(virt_host in pools)
+
+        # Request a virtualization_host entitlement:
+        results = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+        #print "virt host"
+        #print result
+        for result in results:
+            self.assertTrue('id' in result)
+            self.assertEquals(virt_host, result['pool']['productId'])
+
+        # Now list consumer's entitlements:
+        result = self.cp.getEntitlements(self.uuid)
+        
+        print "Consumer's entitlements before unbin:",result
+        for p in result:
+            print type(p)
+            print "ID is", p['entitlement']['id']
+            self.cp.unBindEntitlement( p['entitlement']['id'])
+        result = self.cp.getEntitlements(self.uuid)
+        print "Consumer's entitlements after unbind:",result
+
+
     def test_list_cert_serials(self):
         result = self.cp.getCertificateSerials(self.uuid)
         print result
@@ -45,11 +79,12 @@ class ConsumerTests(CandlepinTests):
         self.assertTrue(virt_host in pools)
 
         # Request a virtualization_host entitlement:
-        result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
+        results = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
         print "virt host"
-        print result
-        self.assertTrue('id' in result)
-        self.assertEquals(virt_host, result['pool']['productId'])
+        print results
+        for result in results:
+            self.assertTrue('id' in result)
+            self.assertEquals(virt_host, result['pool']['productId'])
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(self.uuid)
@@ -98,10 +133,10 @@ class ConsumerTests(CandlepinTests):
 
     def test_bind_by_product(self):
         # Request a monitoring entitlement:
-        result = self.cp.bindProduct(self.uuid, 'monitoring')
-        print result
-        self.assertTrue('id' in result)
-        self.assertEquals('monitoring', result['pool']['productId'])
+        results = self.cp.bindProduct(self.uuid, 'monitoring')
+        for result in results:
+            self.assertTrue('id' in result)
+            self.assertEquals('monitoring', result['pool']['productId'])
 
         # Now list consumer's entitlements:
         result = self.cp.getEntitlements(self.uuid)
@@ -117,6 +152,9 @@ class ConsumerTests(CandlepinTests):
         self.cp.unBindAll(self.uuid)
 
         self.assertEqual([], self.cp.getEntitlements(self.uuid))
+
+
+
 
     def test_unbind_all_multi(self):
         pools = self.cp.getPools(consumer=self.uuid)

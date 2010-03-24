@@ -14,17 +14,20 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.apache.log4j.Logger;
+import org.hibernate.criterion.Restrictions;
+
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.hibernate.criterion.Restrictions;
 
 /**
  * Subscription manager.
  */
 public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> {
 
+    private static Logger log = Logger.getLogger(SubscriptionCurator.class);
+    
     protected SubscriptionCurator() {
         super(Subscription.class);
     }
@@ -76,6 +79,25 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         return subs;
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Subscription> listBySubscriptionTokenID(String token) {
+        
+        SubscriptionToken subToken =  (SubscriptionToken) currentSession().createCriteria(
+            SubscriptionToken.class)
+            .add(Restrictions.eq("token", token)).uniqueResult();
+        if (subToken == null) {
+            return new LinkedList<Subscription>();
+        }
+        
+        log.debug("sub token in curator " + subToken + "    " + token);
+        log.debug("sub token in curator " + subToken.getToken() + "   " +
+            subToken.getSubscription().getId() + "  " +
+            subToken.getSubscription());
+        LinkedList<Subscription> list =  new LinkedList<Subscription>(); 
+        list.add(subToken.getSubscription());
+        return list;
+    }
+    
     /**
      * Return list of subscriptions from added since the given date.
      * @param sinceDate Date used in searches.

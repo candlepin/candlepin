@@ -9,24 +9,21 @@ function evalrc ()
 
 function gendb ()
 {
-    if [ "$GENDB" != "" ]; then
-
 	echo "============ generating a new db =============="
-        buildr candlepin:genschema
-        evalrc $? "schema generation failed"
+    buildr candlepin:genschema
+    evalrc $? "schema generation failed"
 
-        dropdb -U candlepin candlepin
-        evalrc $? "dropdb failed"
+    dropdb -U candlepin candlepin
+    evalrc $? "dropdb failed"
 
-        createdb -U candlepin candlepin
-        evalrc $? "createdb failed"
+    createdb -U candlepin candlepin
+    evalrc $? "createdb failed"
 
-        psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
-        evalrc $? "schema creation failed"
+    psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
+    evalrc $? "schema creation failed"
 
-        psql -U candlepin < code/schema/quartz/tables_postgres.sql
-        evalrc $? "quartz schema failed"
-    fi
+    psql -U candlepin < code/schema/quartz/tables_postgres.sql
+    evalrc $? "quartz schema failed"
 }
 
 function deploy ()
@@ -64,20 +61,38 @@ function upload_sat_cert ()
 function import_ca_cert_into_keystore
 {
 	echo "importing ca certificate"
-	echo y | sudo keytool -importcert -alias ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+	echo y | sudo keytool -importcert -alias candlepin_ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+}
+
+function answers_for_tomcat_cert
+{
+	echo XX
+    echo candlepin
+	echo Fedora
+	echo \n
+	echo \n
+	echo \n
+    echo y
+	echo \n
+}
+
+function generate_tomcat_certificate
+{
+	answers_for_tomcat_cert | sudo keytool -genkey -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password > /dev/null
 }
 
 function update_keystore
 {
+	generate_tomcat_certificate
 	import_ca_cert_into_keystore
 	if [ "$?" -ne "0" ]; then
 		echo "ca_crt alias already exists. deleting..."
-		sudo keytool -delete -alias ca_crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+		sudo keytool -delete -alias candlepin_ca_crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
 		if [ "$?" -ne "0" ]; then
-			echo "couldn't delete ca_crt alias, bailing."
+			echo "couldn't delete candlepin_ca_crt alias, bailing."
 			exit 1
 		else
-			echo "deleted ca_crt."
+			echo "deleted candlepin_ca_crt."
 		fi
 		import_ca_cert_into_keystore
 		if [ "$?" -ne "0" ]; then
@@ -111,7 +126,7 @@ if [ "$JBOSS_HOME" != "" ]; then
         STOP="sudo /sbin/service jbossas stop"
         DEPLOY="$JBOSS_HOME/server/default/deploy/"
     fi
-    CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
+    CONTAINER_CONF_DIR="/etc/tomcat6/conf"
 else
     # use tomcat 6, if not specified
     TC=tomcat6
@@ -141,7 +156,7 @@ eval $STOP
 
 # generate the postgresql DB
 
-if [ -n $GENDB ]; then
+if [ "$GENDB" != "" ]; then
 	gendb	
 fi
 
@@ -153,6 +168,9 @@ buildr clean package test=no
 # update keystore file and put it into tomcat's conf directory
 update_keystore
 
+# update server.xml
+sudo python buildconf/scripts/update-server-xml.py $CONTAINER_CONF_DIR
+
 # deploy the webapp
 deploy
 
@@ -162,6 +180,4 @@ sleep 10
 echo "Initializing Candlepin..."
 wget -qO- http://localhost:8080/candlepin/admin/init
 
-if [ -n $GENDB ]; then
-	upload_sat_cert
-fi
+upload_sat_cert

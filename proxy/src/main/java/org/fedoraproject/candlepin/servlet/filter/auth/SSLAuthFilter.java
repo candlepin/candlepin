@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.servlet.filter.auth;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -34,6 +36,7 @@ import org.apache.log4j.Logger;
 public class SSLAuthFilter implements Filter {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
     private static final String CURRENT_USERNAME = "username";
+    private static final String USER_DN_ATTRIBUTE = "OU";
     
     private static Logger log = Logger.getLogger(SSLAuthFilter.class);
     // private FilterConfig filterConfig = null;
@@ -71,10 +74,24 @@ public class SSLAuthFilter implements Filter {
 
         // certs is an array of certificates presented by the client
         // with the first one in the array being the certificate of the client itself.
-        request.setAttribute(CURRENT_USERNAME, certs[0].getSubjectDN().getName());
+        request.setAttribute(CURRENT_USERNAME, parseUserName(certs[0]));
         
         chain.doFilter(request, response);
         debugMessage("leaving ssl auth filter");
+    }
+
+    private String parseUserName(X509Certificate cert) {
+        String dn = cert.getSubjectDN().getName();
+        Map<String, String> dnAttributes = new HashMap<String, String>();
+
+        for (String attribute : dn.split(",")) {
+            attribute = attribute.trim();
+            String[] pair = attribute.split("=");
+
+            dnAttributes.put(pair[0], pair[1]);
+        }
+
+        return dnAttributes.get(USER_DN_ATTRIBUTE);
     }
 
     private void debugMessage(String msg) {

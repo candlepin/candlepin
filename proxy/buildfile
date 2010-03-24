@@ -106,6 +106,12 @@ define "candlepin" do
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
   download artifact('com.wideplay.warp:warp-persist:jar:2.0-20090214') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/wideplay/warp/warp-persist/2.0-20090214/warp-persist-2.0-20090214.jar'
 
+  # Resource Substitution
+  githash = Git.git 'rev-parse', 'HEAD'
+  resources.filter.using 'version'=>version,
+        'hash'=> githash
+
+  
   #
   # building
   #
@@ -116,10 +122,11 @@ define "candlepin" do
   #
   # testing
   #
+  test.resources.filter.using 'version'=>version,
+        'hash'=> githash          
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  test.teardown { rm_rf 'target/classes/META-INF' }
   test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ
 
   #
@@ -237,13 +244,15 @@ end
 #==========================================================================
 # Cucumber testing
 #==========================================================================
-#require 'cucumber/rake/task'
-#
-#Cucumber::Rake::Task.new do |task|
-#  task.cucumber_opts = %w{--format pretty}
-#end
-#
-#Cucumber::Rake::Task.new(:cucumber_html) do |task|
-#  task.cucumber_opts = %w{--format html}
-#end
+require 'cucumber/rake/task'
 
+Cucumber::Rake::Task.new do |task|
+  task.cucumber_opts = %w{--format pretty}
+
+  features = ENV['features']
+  task.cucumber_opts << " #{features}" if not features.nil?
+end
+
+Cucumber::Rake::Task.new(:cucumber_html) do |task|
+  task.cucumber_opts = %w{--format html}
+end

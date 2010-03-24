@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -32,9 +31,12 @@ import org.fedoraproject.candlepin.resource.ForbiddenException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.List;
 
 /**
  * ConsumerResourceTest
@@ -97,12 +99,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateConsumer() {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
-        toSubmit.setFacts(new ConsumerFacts() {
-
-            {
-                setFact(METADATA_NAME, METADATA_VALUE);
-            }
-        });
+        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted  = consumerResource.create(toSubmit);
         
@@ -118,12 +115,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         String uuid = "Jar Jar Binks";
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
         toSubmit.setUuid(uuid);
-        toSubmit.setFacts(new ConsumerFacts() {
-
-            {
-                setFact(METADATA_NAME, METADATA_VALUE);
-            }
-        });
+        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);        
 
         Consumer submitted  = consumerResource.create(toSubmit);
         
@@ -192,7 +184,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testBindByPool() throws Exception {
-        Entitlement result =
+        List<Entitlement> resultList =
             consumerResource.bind(
                 consumer.getUuid(), pool.getId(), null, null);
 
@@ -201,7 +193,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         pool = poolCurator.find(pool.getId());
         assertEquals(new Long(1), pool.getConsumed());
-        assertEquals(pool.getId(), result.getPool().getId());
+        for (Entitlement ent : resultList) {
+            assertEquals(pool.getId(), ent.getPool().getId());
+        }
     }
 
     @Test(expected = ForbiddenException.class)

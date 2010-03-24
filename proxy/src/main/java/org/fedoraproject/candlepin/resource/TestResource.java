@@ -27,7 +27,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerFacts;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.JsonTestObject;
 import org.fedoraproject.candlepin.model.Owner;
@@ -119,13 +118,11 @@ public class TestResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer getConsumer() {
         Consumer consumer  = new Consumer();
-        ConsumerFacts facts = new ConsumerFacts();
         
         Map<String, String> metadata = new HashMap<String, String>();
         metadata.put("this_is_a_key", "this_is_a_value");
         metadata.put("this is a different key", "this is a different value");
-        facts.setMetadata(metadata);
-        consumer.setFacts(facts);
+        consumer.setFacts(metadata);
         return consumer;
     }
 

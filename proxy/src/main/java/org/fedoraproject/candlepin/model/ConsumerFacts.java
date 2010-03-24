@@ -17,13 +17,9 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -42,10 +38,10 @@ import org.hibernate.annotations.MapKeyManyToMany;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Entity
-@Table(name = "cp_consumer_facts")
-@SequenceGenerator(name = "seq_consumer_facts",
-        sequenceName = "seq_consumer_facts", allocationSize = 1)
+//@Entity
+//@Table(name = "cp_consumer_facts")
+//@SequenceGenerator(name = "seq_consumer_facts",
+//        sequenceName = "seq_consumer_facts", allocationSize = 1)
 public class ConsumerFacts implements Persisted {
     
     // TODO: Don't know if this is a good idea, technically the consumer +
@@ -54,7 +50,7 @@ public class ConsumerFacts implements Persisted {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_facts")
     private Long id;
     
-    @OneToOne(mappedBy = "facts")
+    //@OneToOne(mappedBy = "facts")
     private Consumer consumer;
     
     // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem

@@ -54,13 +54,6 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
         this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return
-     * @throws IOException
-     * @throws CertificateException
-     */
     @Override
     public X509Certificate getCACert() throws IOException, CertificateException {
         if (this.caCertPath != null) {
@@ -81,7 +74,7 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
      * Reads the {@link KeyPair} from the CA's private key file specified in the
      * candlepin config.
      *
-     * @return
+     * @return private key for the cacert
      */
     @Override
     public PrivateKey getCaKey() throws IOException, GeneralSecurityException {

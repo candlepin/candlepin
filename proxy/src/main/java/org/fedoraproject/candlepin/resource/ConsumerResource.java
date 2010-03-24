@@ -81,21 +81,16 @@ public class ConsumerResource {
     private String username;
 
     /**
-     * 
-     * @param ownerCurator
-     *            interact with owner
-     * @param consumerCurator
-     *            interact with consumer
-     * @param consumerTypeCurator
-     *            interact with consumerType
+     * @param ownerCurator interact with owner
+     * @param consumerCurator interact with consumer
+     * @param consumerTypeCurator interact with consumerType
      * @param productAdapter
      * @param entitler
      * @param subAdapter
      * @param epCurator
      * @param entitlementCurator
      * @param identityCertService
-     * @param request
-     *            servlet request
+     * @param request servlet request
      */
 
     @Inject
@@ -141,8 +136,7 @@ public class ConsumerResource {
     /**
      * Return the consumer identified by the given uuid.
      * 
-     * @param uuid
-     *            uuid of the consumer sought.
+     * @param uuid uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
      */
     @GET
@@ -162,12 +156,10 @@ public class ConsumerResource {
     /**
      * Create a Consumer
      * 
-     * @param in
-     *            Consumer metadata encapsulated in a ConsumerInfo.
+     * @param in Consumer metadata encapsulated in a ConsumerInfo.
      * @return newly created Consumer
-     * @throws BadRequestException
-     *             generic exception type for web services We are calling this
-     *             "registerConsumer" in the api discussions
+     * @throws BadRequestException generic exception type for web services We
+     *         are calling this "registerConsumer" in the api discussions
      */
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -182,8 +174,8 @@ public class ConsumerResource {
         ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType()
             .getLabel());
         log.debug("got metadata: ");
-        log.debug(in.getFacts().getMetadata());
-        for (String key : in.getFacts().getMetadata().keySet()) {
+        log.debug(in.getFacts());
+        for (String key : in.getFacts().keySet()) {
             log.debug("   " + key + " = " + in.getFact(key));
         }
 
@@ -215,8 +207,7 @@ public class ConsumerResource {
     /**
      * delete the consumer.
      * 
-     * @param uuid
-     *            uuid of the consumer to delete.
+     * @param uuid uuid of the consumer to delete.
      */
     @DELETE
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -298,11 +289,9 @@ public class ConsumerResource {
     /**
      * Return the content of the file identified by the given filename.
      * 
-     * @param path
-     *            filename path.
+     * @param path filename path.
      * @return the content of the file identified by the given filename.
-     * @throws Exception
-     *             if there's a problem loading the file.
+     * @throws Exception if there's a problem loading the file.
      */
     public String getBytesFromFile(String path) throws Exception {
         String fileContents = FileUtils.readFileToString(
@@ -314,8 +303,7 @@ public class ConsumerResource {
     /**
      * Return the client certificate for the given consumer.
      * 
-     * @param consumerUuid
-     *            UUID of the consumer
+     * @param consumerUuid UUID of the consumer
      * @return list of the client certificates for the given consumer.
      */
     @GET
@@ -363,13 +351,11 @@ public class ConsumerResource {
     }
 
     /**
-     * Return the client certificate metadata for the given consumer.
+     * Return the client certificate metadata for the given consumer. This is a
+     * small subset of data clients can use to determine which certificates they
+     * need to update/fetch.
      * 
-     * This is a small subset of data clients can use to determine which
-     * certificates they need to update/fetch.
-     * 
-     * @param consumerUuid
-     *            UUID of the consumer
+     * @param consumerUuid UUID of the consumer
      * @return list of the client certificate metadata for the given consumer.
      */
     @GET
@@ -395,21 +381,22 @@ public class ConsumerResource {
     /**
      * Entitles the given Consumer with the given Product.
      * 
-     * @param consumerUuid
-     *            Consumer identifier to be entitled
-     * @param productId
-     *            Product identifying label.
+     * @param consumerUuid Consumer identifier to be entitled
+     * @param productId Product identifying label.
      * @return Entitled object
      */
-    private Entitlement bindByProduct(String consumerUuid, String productId,
+    private List<Entitlement> bindByProduct(String consumerUuid, String productId,
         Consumer consumer) {
 
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         Product p = productAdapter.getProductById(productId);
         if (p == null) {
             throw new BadRequestException("No such product: " + productId);
         }
 
-        return createEntitlement(consumer, p);
+        entitlementList.add(createEntitlement(consumer, p));
+        return entitlementList;
+        
     }
 
     // TODO: Bleh, very duplicated methods here:
@@ -444,51 +431,53 @@ public class ConsumerResource {
     /**
      * Grants entitlements based on a registration token.
      * 
-     * @param consumerUuid
-     *            Consumer identifier.
-     * @param registrationToken
-     *            registration token.
+     * @param consumerUuid Consumer identifier.
+     * @param registrationToken registration token.
      * @return token
      */
-    private Entitlement bindByToken(String registrationToken, Consumer consumer) {
-
-        // FIXME: this is just a stub, need SubscriptionService to look it up
-
-        // FIXME: getSubscriptionForToken is a stub, always "works"
-        Subscription s = subAdapter.getSubscriptionForToken(registrationToken);
-        if (s == null) {
+    private List<Entitlement> bindByToken(String registrationToken,
+        Consumer consumer) {
+        
+        List<Subscription> s = subAdapter.getSubscriptionForToken(registrationToken);
+        if ((s == null) || (s.isEmpty())) {
+            log.debug("token: " + registrationToken);
             throw new BadRequestException("No such token: " + registrationToken);
         }
 
-        Product p = productAdapter.getProductById(s.getProductId());
-
-        return createEntitlement(consumer, p);
+        List<Product> productList = new LinkedList<Product>();
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
+        for (Subscription subscription : s) {
+            Product p = productAdapter.getProductById(subscription.getProductId());
+            entitlementList.add(createEntitlement(consumer, p));
+            
+        }
+        return entitlementList;
     }
 
-    private Entitlement bindByPool(Long poolId, Consumer consumer) {
+    private List<Entitlement> bindByPool(Long poolId, Consumer consumer) {
         Pool pool = epCurator.find(poolId);
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
             throw new BadRequestException("No such entitlement pool: " + poolId);
         }
 
         // Attempt to create an entitlement:
-        return createEntitlement(consumer, pool);
+        entitlementList.add(createEntitlement(consumer, pool));
+        return entitlementList;
     }
 
     /**
      * Request an entitlement.
      * 
-     * @param consumerUuid
-     *            Consumer identifier to be entitled
-     * @param poolId
-     *            Entitlement pool id.
+     * @param consumerUuid Consumer identifier to be entitled
+     * @param poolId Entitlement pool id.
      * @return Entitlement.
      */
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
-    public Entitlement bind(@PathParam("consumer_uuid") String consumerUuid,
+    public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
         @QueryParam("product") String productId) {
 
@@ -543,10 +532,8 @@ public class ConsumerResource {
     /**
      * Unbind entitlements by serial number, or unbind all.
      * 
-     * @param consumerUuid
-     *            Unique id for the Consumer.
-     * @param serials
-     *            comma seperated list of subscription numbers.
+     * @param consumerUuid Unique id for the Consumer.
+     * @param serials comma seperated list of subscription numbers.
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
@@ -585,8 +572,7 @@ public class ConsumerResource {
     /**
      * Remove an entitlement by ID.
      * 
-     * @param dbid
-     *            the entitlement to delete.
+     * @param dbid the entitlement to delete.
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")

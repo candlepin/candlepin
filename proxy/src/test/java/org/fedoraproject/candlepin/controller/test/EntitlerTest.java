@@ -90,7 +90,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(guestType);
         
         parentSystem = new Consumer("system", o, system);
-        parentSystem.getFacts().setFact("total_guests", "0");
+        parentSystem.getFacts().put("total_guests", "0");
         consumerCurator.create(parentSystem);
         
         childVirtSystem = new Consumer("virt system", o, guestType);
@@ -118,7 +118,7 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Test
     public void testVirtEntitleFailsIfAlreadyHasGuests() throws Exception {
-        parentSystem.getFacts().setFact("total_guests", "10");
+        parentSystem.getFacts().put("total_guests", "10");
         consumerCurator.update(parentSystem);
         try {
             entitler.entitle(parentSystem, virtHost);

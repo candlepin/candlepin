@@ -63,8 +63,7 @@ public class CandlepinContextListener extends
 
     /**
      * Returns a list of Guice modules to initialize.
-     *
-     * @return
+     * @return a list of Guice modules to initialize.
      */
     protected List<Module> getModules() {
         List<Module> modules = new LinkedList<Module>();
