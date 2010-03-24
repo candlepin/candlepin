@@ -78,6 +78,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
+        log.debug("Listing available pools for:");
+        log.debug("   consumer: " + c);
+        log.debug("   owner: " + o);
+        log.debug("   product: " + productId);
         List<Pool> results = null;
         Criteria crit = currentSession().createCriteria(Pool.class);
         if (activeOnly) {
@@ -99,6 +103,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         results = (List<Pool>) crit.list();
         
         if (results == null) {
+            log.debug("no results");
             results = new ArrayList<Pool>();
         }
         
@@ -137,11 +142,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param productId Products to refresh.
      */
     private void refreshPools(Owner owner, String productId) {
+        log.debug("Refreshing pools");
         List<Subscription> subs = subAdapter.getSubscriptions(owner, 
                 productId);
         List<Pool> pools = listByOwnerAndProductNoRefresh(owner, productId);
         
-        // Map all entitlement pools for this owner/product that have a
+        // Map all  pools for this owner/product that have a
         // subscription ID associated with them.
         Map<Long, Pool> subToPoolMap = new HashMap<Long, Pool>();
         for (Pool p : pools) {
@@ -153,6 +159,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Subscription sub : subs) {
             // No pool exists for this subscription, create one:
             if (!subToPoolMap.containsKey(sub.getId())) {
+                log.debug("Creating new pool for new sub: " + sub.getId());
                 Pool newPool = new Pool(owner, productId,
                         sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
                 newPool.setSubscriptionId(sub.getId());
@@ -160,6 +167,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 subToPoolMap.remove(sub.getId());
             }
             else {
+                log.debug("Found existing pool for sub: " + sub.getId());
                 Pool existingPool = subToPoolMap.get(sub.getId());
                 
                 // TODO: We're just updating the pool always now, would be much
@@ -169,11 +177,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 existingPool.setStartDate(sub.getStartDate());
                 existingPool.setEndDate(sub.getEndDate());
                 merge(existingPool);
+                subToPoolMap.remove(sub.getId());
             }
         }
 
         // Iterate pools whose subscription disappeared:
         for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
+            log.debug("Subscription disappeared for pool: " + entry.getValue());
             entry.getValue().setActiveSubscription(Boolean.FALSE);
             merge(entry.getValue());
         }
