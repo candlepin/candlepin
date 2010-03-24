@@ -1,0 +1,72 @@
+require 'base64'
+require 'openssl'
+require 'rest_client'
+require 'json'
+
+HTTP_PORT = 8080
+HTTPS_PORT = 8443
+
+class Candlepin
+
+    attr_reader :identity_certificate, :consumer
+
+    def initialize(host='localhost')
+        @host = host
+    end
+
+    def register(consumer, username=nil, password=nil)
+        # TODO:  Maybe this should be created earlier?
+        create_basic_client(username, password)
+
+        @consumer = post('/consumers', consumer)['consumer']
+
+        identity_cert = @consumer['idCert']['cert']
+        identity_key = @consumer['idCert']['key']
+        @identity_certificate = OpenSSL::X509::Certificate.new(identity_cert)
+        @identity_key = OpenSSL::PKey::RSA.new(identity_key)
+
+        create_ssl_client
+    end
+
+    def revoke_all_entitlements()
+        delete("/consumers/#{@consumer['uuid']}/entitlements")
+    end
+
+    def consume_product(product)
+        post("/consumers/#{@consumer['uuid']}/entitlements?product=#{product}")
+    end
+
+    def list_entitlements()
+        get("/entitlements?consumer=#{@consumer['uuid']}")
+    end
+
+    private
+
+    def create_basic_client(username=nil, password=nil)
+        @client = RestClient::Resource.new("http://#{@host}:#{HTTP_PORT}/candlepin", 
+            username, password)
+    end
+
+    def create_ssl_client
+        @client = RestClient::Resource.new("https://#{@host}:#{HTTPS_PORT}/candlepin",
+            :ssl_client_cert => @identity_certificate, :ssl_client_key => @identity_key)
+    end
+
+    def get(uri)
+        response = @client[uri].get :accept => :json
+
+        return JSON.parse(response.body)
+    end
+
+    def post(uri, data=nil)
+        data = data.to_json if not data.nil?
+        response = @client[uri].post(data, :content_type => :json, :accept => :json)
+
+        return JSON.parse(response.body)
+    end
+
+    def delete(uri)
+        @client[uri].delete
+    end
+end
+

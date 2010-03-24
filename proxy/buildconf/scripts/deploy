@@ -180,6 +180,4 @@ sleep 10
 echo "Initializing Candlepin..."
 wget -qO- http://localhost:8080/candlepin/admin/init
 
-if [ "$GENDB" != "" ]; then
-	upload_sat_cert
-fi
+upload_sat_cert

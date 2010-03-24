@@ -244,13 +244,15 @@ end
 #==========================================================================
 # Cucumber testing
 #==========================================================================
-#require 'cucumber/rake/task'
-#
-#Cucumber::Rake::Task.new do |task|
-#  task.cucumber_opts = %w{--format pretty}
-#end
-#
-#Cucumber::Rake::Task.new(:cucumber_html) do |task|
-#  task.cucumber_opts = %w{--format html}
-#end
+require 'cucumber/rake/task'
 
+Cucumber::Rake::Task.new do |task|
+  task.cucumber_opts = %w{--format pretty}
+
+  features = ENV['features']
+  task.cucumber_opts << " #{features}" if not features.nil?
+end
+
+Cucumber::Rake::Task.new(:cucumber_html) do |task|
+  task.cucumber_opts = %w{--format html}
+end
