@@ -39,7 +39,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_ent_certificate")
+@Table(name = "cp_ent_certificate")
 @SequenceGenerator(name = "seq_consumer_ent_cert", 
                    sequenceName = "seq_consumer_ent_cert", allocationSize = 1)
 public class ConsumerEntitlementCertificate implements Persisted {
@@ -58,7 +58,6 @@ public class ConsumerEntitlementCertificate implements Persisted {
     @Column(nullable = false)
     private BigInteger serialNumber;
 
-    @SuppressWarnings("unused")
     @ManyToOne
     @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
@@ -106,5 +105,13 @@ public class ConsumerEntitlementCertificate implements Persisted {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Entitlement getEntitlement() {
+        return entitlement;
+    }
+
+    public void setEntitlement(Entitlement entitlement) {
+        this.entitlement = entitlement;
     }
 }

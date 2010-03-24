@@ -24,6 +24,8 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
+import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -39,15 +41,19 @@ public class DefaultEntitlementCertServiceAdapter implements
     private PKIUtility pki;
     private static Logger log = Logger
         .getLogger(DefaultEntitlementCertServiceAdapter.class);
+    private ConsumerEntitlementCertificateCurator entCertCurator;
     
     @Inject
-    public DefaultEntitlementCertServiceAdapter(PKIUtility pki) {
+    public DefaultEntitlementCertServiceAdapter(PKIUtility pki, 
+        ConsumerEntitlementCertificateCurator entCertCurator) {
+        
         this.pki = pki;
+        this.entCertCurator = entCertCurator;
     }
 
     @Override
     public ConsumerEntitlementCertificate generateEntitlementCert(Consumer consumer,
-        Subscription sub, Product product, Date endDate, 
+        Entitlement entitlement, Subscription sub, Product product, Date endDate, 
         BigInteger serialNumber) throws GeneralSecurityException, IOException {
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: " + consumer.getUuid());
@@ -63,11 +69,13 @@ public class DefaultEntitlementCertServiceAdapter implements
         cert.setSerialNumber(serialNumber);
         cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCert(this.pki.getPemEncoded(x509Cert));
+        cert.setEntitlement(entitlement);
+        entitlement.getCertificates().add(cert);
         
-        // TODO: Save the cert here.
         log.debug("Generated cert: " + serialNumber);
         log.debug("Key: " + cert.getKeyAsString());
         log.debug("Cert: " + cert.getCertAsString());
+        entCertCurator.create(cert);
         
         return cert;
     }

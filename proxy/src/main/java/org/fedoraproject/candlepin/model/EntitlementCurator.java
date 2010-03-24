@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
 
 import com.wideplay.warp.persist.Transactional;
@@ -27,6 +28,8 @@ import com.wideplay.warp.persist.Transactional;
  * EntitlementCurator
  */
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
+    private static Logger log = Logger.getLogger(EntitlementCurator.class);
+    
     /**
      * default ctor
      */
@@ -86,6 +89,21 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             }
             return filtered;
         }
+    }
+    
+    @Transactional
+    public void delete(Entitlement entity) {
+        Entitlement toDelete = find(entity.getId());
+        log.debug("Deleting entitlement: " + toDelete);
+        log.debug("certs.size = " + toDelete.getCertificates().size());
+        
+        for (ConsumerEntitlementCertificate cert : toDelete.getCertificates()) {
+            currentSession().delete(cert);
+        }
+        toDelete.getCertificates().clear();
+        
+        currentSession().delete(toDelete);
+        flush();
     }
 
 }

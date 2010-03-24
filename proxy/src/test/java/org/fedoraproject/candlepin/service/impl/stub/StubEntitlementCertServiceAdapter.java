@@ -22,6 +22,7 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
@@ -38,7 +39,7 @@ public class StubEntitlementCertServiceAdapter implements EntitlementCertService
     
     @Override
     public ConsumerEntitlementCertificate generateEntitlementCert(Consumer consumer,
-        Subscription sub, Product product, Date endDate, 
+        Entitlement entitlement, Subscription sub, Product product, Date endDate, 
         BigInteger serialNumber) throws GeneralSecurityException, IOException {
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: " + consumer.getUuid());

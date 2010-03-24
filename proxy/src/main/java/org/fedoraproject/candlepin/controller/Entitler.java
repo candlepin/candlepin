@@ -165,10 +165,8 @@ public class Entitler {
         else {
             Product prod = productAdapter.getProductById(sub.getProductId());
         
-            // TODO: Save keypair and re-use for later ents?
-            // Generate a certificate for this entitlement, if needed:
             try {
-                this.entCertAdapter.generateEntitlementCert(consumer, sub, prod, 
+                this.entCertAdapter.generateEntitlementCert(consumer, e, sub, prod, 
                     sub.getEndDate(), BigInteger.valueOf(e.getId()));
             }
             catch (Exception ex) {

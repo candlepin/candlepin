@@ -23,21 +23,21 @@ import com.google.inject.Inject;
 /**
  * ConsumerCurator
  */
-public class ConsumerIdentityCertificateCurator extends
-    AbstractHibernateCurator<ConsumerIdentityCertificate> {
+public class ConsumerEntitlementCertificateCurator extends
+    AbstractHibernateCurator<ConsumerEntitlementCertificate> {
 
     /**
      * default constructor
      */
     @Inject
-    public ConsumerIdentityCertificateCurator() {
-        super(ConsumerIdentityCertificate.class);
+    public ConsumerEntitlementCertificateCurator() {
+        super(ConsumerEntitlementCertificate.class);
     }
 
-    public ConsumerIdentityCertificate lookupBySerialNumber(
+    public ConsumerEntitlementCertificateCurator lookupBySerialNumber(
         BigInteger serialNumber) {
-        return (ConsumerIdentityCertificate) currentSession().createCriteria(
-            ConsumerIdentityCertificate.class).add(
+        return (ConsumerEntitlementCertificateCurator) currentSession().createCriteria(
+            ConsumerEntitlementCertificateCurator.class).add(
             Restrictions.eq("serialNumber", serialNumber)).uniqueResult();
     }
 }

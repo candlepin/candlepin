@@ -15,7 +15,10 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -23,6 +26,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -81,6 +85,12 @@ public class Entitlement implements Persisted {
     private Pool pool;
 
     private Date startDate;
+    
+    // Not positive this should be mapped here, not all entitlements will have
+    // certificates.
+    @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
+    private Set<ConsumerEntitlementCertificate> certificates = 
+        new HashSet<ConsumerEntitlementCertificate>();
     
     // Was this entitlement created for free, or did it consume a slot in it's pool:
     // TODO: Find a better way to represent this, we can't really clean it up properly 
@@ -206,5 +216,19 @@ public class Entitlement implements Persisted {
      */
     public void setIsFree(Boolean isFree) {
         this.isFree = isFree;
+    }
+
+    @XmlTransient
+    public Set<ConsumerEntitlementCertificate> getCertificates() {
+        return certificates;
+    }
+
+    public void setCertificates(Set<ConsumerEntitlementCertificate> certificates) {
+        this.certificates = certificates;
     } 
+    
+    public String toString() {
+        return "Entitlement[id=" + getId() + ", product=" + getProductId() + 
+            ", consumer= " + consumer.getUuid() + "]";
+    }
 }
