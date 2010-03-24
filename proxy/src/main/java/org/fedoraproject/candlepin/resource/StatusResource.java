@@ -49,7 +49,7 @@ public class StatusResource {
     public StatusResource() {
         try {
             InputStream in = this.getClass().getClassLoader().
-                getResourceAsStream("build.properties");
+                getResourceAsStream("candlepin_info.properties");
             Properties props = new Properties();
             props.load(in);
             version = props.getProperty("version");
@@ -57,7 +57,7 @@ public class StatusResource {
             in.close();
         } 
         catch (Exception e) {
-            log.error("Can not load build properties", e);
+            log.error("Can not load candlepin_info.properties", e);
         }
     }
 
