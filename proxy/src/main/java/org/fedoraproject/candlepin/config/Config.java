@@ -28,15 +28,16 @@ public class Config {
     protected File CONFIG_FILE = new File(CONFIG_DIR, "candlepin.conf");
     protected static TreeMap<String, String> configuration = null;
 
+    public Config() {
+        loadConfiguration();
+    }
+    
     /**
      * Return configuration entry for the given prefix.
      * @param prefix prefix for the entry sought.
      * @return configuration entry for the given prefix.
      */
     public Map<String, String> configurationWithPrefix(String prefix) {
-        if (configuration == null) {
-            loadConfiguration();
-        }
         return configuration.subMap(prefix, prefix + Character.MAX_VALUE);
     }
 
@@ -80,9 +81,6 @@ public class Config {
      * @return the JPA Configuration properties.
      */
     public Properties jpaConfiguration() {
-        if (configuration == null) {
-            loadConfiguration();
-        }
         return new JPAConfigParser().parseConfig(configuration);
     }
 
@@ -91,9 +89,6 @@ public class Config {
      * @return the Database Basic Authentication Configuration properties
      */
     public Properties dbBasicAuthConfiguration() {
-        if (configuration == null) {
-            loadConfiguration();
-        }
         return new DbBasicAuthConfigParser().parseConfig(configuration);
     }
 
@@ -125,9 +120,6 @@ public class Config {
      * @return value associated with the given configuration key.
      */
     public String getString(String s) {
-        if (configuration == null) {
-            loadConfiguration();
-        }
         return configuration.get(s);
     }
 
