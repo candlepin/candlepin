@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -27,7 +26,7 @@ import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -36,11 +35,10 @@ import com.google.inject.Inject;
  * 
  * Generating an entitlement cert is expensive, this class stubs the process out.
  */
-public class StubEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
+public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServiceAdapter {
 
     private static Logger log = Logger
         .getLogger(StubEntitlementCertServiceAdapter.class);
-    private ConsumerEntitlementCertificateCurator entCertCurator;
     
     @Inject
     public StubEntitlementCertServiceAdapter(
@@ -71,12 +69,6 @@ public class StubEntitlementCertServiceAdapter implements EntitlementCertService
         entCertCurator.create(cert);
         
         return cert;
-    }
-
-    @Override
-    public List<ConsumerEntitlementCertificate> listForConsumer(
-        Consumer consumer) {
-        return entCertCurator.listForConsumer(consumer);
     }
 
 }

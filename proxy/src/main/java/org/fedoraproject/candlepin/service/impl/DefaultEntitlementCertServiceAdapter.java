@@ -20,7 +20,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -30,19 +29,18 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
-import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
 
 import com.google.inject.Inject;
 
 /**
  * DefaultEntitlementCertServiceAdapter
  */
-public class DefaultEntitlementCertServiceAdapter implements 
-    EntitlementCertServiceAdapter {
+public class DefaultEntitlementCertServiceAdapter extends 
+    BaseEntitlementCertServiceAdapter {
     private PKIUtility pki;
     private static Logger log = Logger
         .getLogger(DefaultEntitlementCertServiceAdapter.class);
-    private ConsumerEntitlementCertificateCurator entCertCurator;
     
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki, 
@@ -87,12 +85,6 @@ public class DefaultEntitlementCertServiceAdapter implements
         sb.append(", UID=");
         sb.append(consumer.getUuid());
         return sb.toString();
-    }
-
-    @Override
-    public List<ConsumerEntitlementCertificate> listForConsumer(
-        Consumer consumer) {
-        return entCertCurator.listForConsumer(consumer);
     }
 
 }
