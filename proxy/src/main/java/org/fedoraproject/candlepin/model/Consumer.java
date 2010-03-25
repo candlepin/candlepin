@@ -77,7 +77,7 @@ public class Consumer implements Persisted {
      */
     @OneToOne
     @JoinColumn(name = "consumer_idcert_id")
-    private ConsumerIdentityCertificate idCert;
+    private IdentityCertificate idCert;
     
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -187,11 +187,11 @@ public class Consumer implements Persisted {
         this.id = id;
     }
 
-    public ConsumerIdentityCertificate getIdCert() {
+    public IdentityCertificate getIdCert() {
         return idCert;
     }
 
-    public void setIdCert(ConsumerIdentityCertificate idCert) {
+    public void setIdCert(IdentityCertificate idCert) {
         this.idCert = idCert;
     }
     

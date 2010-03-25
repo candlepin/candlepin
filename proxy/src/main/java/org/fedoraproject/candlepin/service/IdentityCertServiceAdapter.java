@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.model.IdentityCertificate;
 
 /**
  * Interface to the Certificate Service.
@@ -39,7 +39,7 @@ public interface IdentityCertServiceAdapter {
      * @throws GeneralSecurityException
      *             if there is a violation of policy
      */
-    ConsumerIdentityCertificate generateIdentityCert(Consumer consumer, String username)
+    IdentityCertificate generateIdentityCert(Consumer consumer, String username)
         throws GeneralSecurityException, IOException;
 
     /**

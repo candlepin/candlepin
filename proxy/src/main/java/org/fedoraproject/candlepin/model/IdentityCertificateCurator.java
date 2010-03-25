@@ -21,23 +21,20 @@ import org.hibernate.criterion.Restrictions;
 import com.google.inject.Inject;
 
 /**
- * ConsumerCurator
+ * IdentityCertificateCurator
  */
-public class ConsumerIdentityCertificateCurator extends
-    AbstractHibernateCurator<ConsumerIdentityCertificate> {
+public class IdentityCertificateCurator extends
+    AbstractHibernateCurator<IdentityCertificate> {
 
-    /**
-     * default constructor
-     */
     @Inject
-    public ConsumerIdentityCertificateCurator() {
-        super(ConsumerIdentityCertificate.class);
+    public IdentityCertificateCurator() {
+        super(IdentityCertificate.class);
     }
 
-    public ConsumerIdentityCertificate lookupBySerialNumber(
+    public IdentityCertificate lookupBySerialNumber(
         BigInteger serialNumber) {
-        return (ConsumerIdentityCertificate) currentSession().createCriteria(
-            ConsumerIdentityCertificate.class).add(
+        return (IdentityCertificate) currentSession().createCriteria(
+            IdentityCertificate.class).add(
             Restrictions.eq("serial", serialNumber)).uniqueResult();
     }
 }

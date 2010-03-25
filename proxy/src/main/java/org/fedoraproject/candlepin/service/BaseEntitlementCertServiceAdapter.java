@@ -17,8 +17,8 @@ package org.fedoraproject.candlepin.service;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
-import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 
 /**
  * BaseEntitlementCertServiceAdapter
@@ -29,10 +29,10 @@ import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificateCurator;
 public abstract class BaseEntitlementCertServiceAdapter implements 
     EntitlementCertServiceAdapter {
     
-    protected ConsumerEntitlementCertificateCurator entCertCurator;
+    protected EntitlementCertificateCurator entCertCurator;
     
     @Override
-    public List<ConsumerEntitlementCertificate> listForConsumer(
+    public List<EntitlementCertificate> listForConsumer(
         Consumer consumer) {
         return entCertCurator.listForConsumer(consumer);
     }

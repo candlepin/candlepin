@@ -25,8 +25,8 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificateCurator;
+import org.fedoraproject.candlepin.model.IdentityCertificate;
+import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
@@ -40,20 +40,20 @@ public class DefaultIdentityCertServiceAdapter implements
     private PKIUtility pki;
     private static Logger log = Logger
         .getLogger(DefaultIdentityCertServiceAdapter.class);
-    private ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator;
+    private IdentityCertificateCurator consumerIdentityCertificateCurator;
     // Seeded with this(System.currentTimeMillis()
     private Random random = new Random();
 
     @Inject
     public DefaultIdentityCertServiceAdapter(PKIUtility pki,
-        ConsumerIdentityCertificateCurator consumerIdentityCertificateCurator) {
+        IdentityCertificateCurator consumerIdentityCertificateCurator) {
         this.pki = pki;
         this.consumerIdentityCertificateCurator = consumerIdentityCertificateCurator;
     }
 
     @Override
     public void deleteIdentityCert(Consumer consumer) {
-        ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator
+        IdentityCertificate certificate = consumerIdentityCertificateCurator
             .find(consumer.getId());
         if (certificate != null) {
             consumerIdentityCertificateCurator.delete(certificate);
@@ -61,14 +61,14 @@ public class DefaultIdentityCertServiceAdapter implements
     }
 
     @Override
-    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer,
+    public IdentityCertificate generateIdentityCert(Consumer consumer,
         String username) throws GeneralSecurityException, IOException {
         log.debug("Generating identity cert for consumer: " +
             consumer.getUuid());
         Date startDate = new Date();
         Date endDate = getFutureDate(1);
 
-        ConsumerIdentityCertificate certificate = consumerIdentityCertificateCurator
+        IdentityCertificate certificate = consumerIdentityCertificateCurator
             .find(consumer.getId());
 
         if (certificate != null) {
@@ -77,7 +77,7 @@ public class DefaultIdentityCertServiceAdapter implements
 
         BigInteger serialNumber = nextSerialNumber();
         String dn = createDN(consumer, username);
-        ConsumerIdentityCertificate identityCert = new ConsumerIdentityCertificate();
+        IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = pki.generateNewKeyPair();
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
             startDate, endDate, keyPair, serialNumber);

@@ -21,29 +21,26 @@ import org.hibernate.criterion.Restrictions;
 import com.google.inject.Inject;
 
 /**
- * ConsumerCurator
+ * EntitlementCertificateCurator
  */
-public class ConsumerEntitlementCertificateCurator extends
-    AbstractHibernateCurator<ConsumerEntitlementCertificate> {
+public class EntitlementCertificateCurator extends
+    AbstractHibernateCurator<EntitlementCertificate> {
 
-    /**
-     * default constructor
-     */
     @Inject
-    public ConsumerEntitlementCertificateCurator() {
-        super(ConsumerEntitlementCertificate.class);
+    public EntitlementCertificateCurator() {
+        super(EntitlementCertificate.class);
     }
 
-    public List<ConsumerEntitlementCertificate> listForEntitlement(Entitlement e) {
-        return (List<ConsumerEntitlementCertificate>) currentSession().createCriteria(
-            ConsumerEntitlementCertificate.class).add(
+    public List<EntitlementCertificate> listForEntitlement(Entitlement e) {
+        return (List<EntitlementCertificate>) currentSession().createCriteria(
+            EntitlementCertificate.class).add(
                 Restrictions.eq("entitlement", e)).list();
 
     }
 
-    public List<ConsumerEntitlementCertificate> listForConsumer(Consumer c) {
-        return (List<ConsumerEntitlementCertificate>) currentSession().createCriteria(
-            ConsumerEntitlementCertificate.class).
+    public List<EntitlementCertificate> listForConsumer(Consumer c) {
+        return (List<EntitlementCertificate>) currentSession().createCriteria(
+            EntitlementCertificate.class).
             createAlias("entitlement", "ent").
             add(Restrictions.eq("ent.consumer", c)).list();
     }

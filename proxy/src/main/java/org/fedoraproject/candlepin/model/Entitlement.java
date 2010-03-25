@@ -89,8 +89,8 @@ public class Entitlement implements Persisted {
     // Not positive this should be mapped here, not all entitlements will have
     // certificates.
     @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
-    private Set<ConsumerEntitlementCertificate> certificates = 
-        new HashSet<ConsumerEntitlementCertificate>();
+    private Set<EntitlementCertificate> certificates = 
+        new HashSet<EntitlementCertificate>();
     
     // Was this entitlement created for free, or did it consume a slot in it's pool:
     // TODO: Find a better way to represent this, we can't really clean it up properly 
@@ -219,11 +219,11 @@ public class Entitlement implements Persisted {
     }
 
     @XmlTransient
-    public Set<ConsumerEntitlementCertificate> getCertificates() {
+    public Set<EntitlementCertificate> getCertificates() {
         return certificates;
     }
 
-    public void setCertificates(Set<ConsumerEntitlementCertificate> certificates) {
+    public void setCertificates(Set<EntitlementCertificate> certificates) {
         this.certificates = certificates;
     } 
     

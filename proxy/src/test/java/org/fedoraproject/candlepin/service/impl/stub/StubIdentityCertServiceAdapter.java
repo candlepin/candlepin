@@ -18,7 +18,7 @@ import java.math.BigInteger;
 import java.util.Random;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
 public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
@@ -26,9 +26,9 @@ public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapte
     private Random random = new Random();
     
     @Override
-    public ConsumerIdentityCertificate generateIdentityCert(Consumer consumer,
+    public IdentityCertificate generateIdentityCert(Consumer consumer,
             String username) {
-        ConsumerIdentityCertificate idCert = new ConsumerIdentityCertificate();
+        IdentityCertificate idCert = new IdentityCertificate();
 
         // totally arbitrary
         idCert.setId(43L);

@@ -23,8 +23,8 @@ import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
-import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -44,14 +44,14 @@ public class DefaultEntitlementCertServiceAdapter extends
     
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki, 
-        ConsumerEntitlementCertificateCurator entCertCurator) {
+        EntitlementCertificateCurator entCertCurator) {
         
         this.pki = pki;
         this.entCertCurator = entCertCurator;
     }
 
     @Override
-    public ConsumerEntitlementCertificate generateEntitlementCert(Consumer consumer,
+    public EntitlementCertificate generateEntitlementCert(Consumer consumer,
         Entitlement entitlement, Subscription sub, Product product, Date endDate, 
         BigInteger serialNumber) throws GeneralSecurityException, IOException {
         log.debug("Generating entitlement cert for:");
@@ -64,7 +64,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
             null, sub.getStartDate(), endDate, keyPair, serialNumber);
         
-        ConsumerEntitlementCertificate cert = new ConsumerEntitlementCertificate();
+        EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serialNumber);
         cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCert(this.pki.getPemEncoded(x509Cert));

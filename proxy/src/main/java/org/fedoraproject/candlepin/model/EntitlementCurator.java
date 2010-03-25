@@ -97,7 +97,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         log.debug("Deleting entitlement: " + toDelete);
         log.debug("certs.size = " + toDelete.getCertificates().size());
         
-        for (ConsumerEntitlementCertificate cert : toDelete.getCertificates()) {
+        for (EntitlementCertificate cert : toDelete.getCertificates()) {
             currentSession().delete(cert);
         }
         toDelete.getCertificates().clear();

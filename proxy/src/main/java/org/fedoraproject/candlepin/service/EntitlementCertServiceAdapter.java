@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -46,7 +46,7 @@ public interface EntitlementCertServiceAdapter {
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
-    ConsumerEntitlementCertificate generateEntitlementCert(Consumer consumer,
+    EntitlementCertificate generateEntitlementCert(Consumer consumer,
         Entitlement entitlement, Subscription sub, Product product, Date endDate, 
         BigInteger serialNumber) throws GeneralSecurityException, IOException;
 
@@ -56,5 +56,5 @@ public interface EntitlementCertServiceAdapter {
      * @param consumer
      * @return All entitlement certs for this consumer.
      */
-    List<ConsumerEntitlementCertificate> listForConsumer(Consumer consumer);
+    List<EntitlementCertificate> listForConsumer(Consumer consumer);
 }

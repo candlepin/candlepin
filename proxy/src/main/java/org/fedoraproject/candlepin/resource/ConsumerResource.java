@@ -36,8 +36,8 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.CertificateSerialCollection;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
-import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -191,7 +191,7 @@ public class ConsumerResource {
             consumer = consumerCurator.create(new Consumer(in, owner, type));
 
             // TODO: Could use some cleanup.
-            ConsumerIdentityCertificate idCert = identityCertService
+            IdentityCertificate idCert = identityCertService
                 .generateIdentityCert(consumer, this.username);
             log.debug("Generated identity cert: " + idCert);
             if (idCert == null) {
@@ -312,7 +312,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
-    public List<ConsumerEntitlementCertificate> getEntitlementCertificates(
+    public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
 
@@ -328,9 +328,9 @@ public class ConsumerResource {
         //TODO hookup serial filtering
 
 
-        List<ConsumerEntitlementCertificate> allCerts =
-            new LinkedList<ConsumerEntitlementCertificate>();
-        for (ConsumerEntitlementCertificate cert :
+        List<EntitlementCertificate> allCerts =
+            new LinkedList<EntitlementCertificate>();
+        for (EntitlementCertificate cert :
             entCertService.listForConsumer(consumer)) {
             allCerts.add(cert);
         }
@@ -357,7 +357,7 @@ public class ConsumerResource {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         CertificateSerialCollection allCerts = new CertificateSerialCollection();
-        for (ConsumerEntitlementCertificate cert :
+        for (EntitlementCertificate cert :
             entCertService.listForConsumer(consumer)) {
             allCerts.addSerial(cert.getSerial());
         }

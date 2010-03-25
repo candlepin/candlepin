@@ -37,14 +37,14 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_idcertificate")
-@SequenceGenerator(name = "seq_consumer_idcert", 
-                   sequenceName = "seq_consumer_idcert", allocationSize = 1)
-public class ConsumerIdentityCertificate implements Persisted {
+@Table(name = "cp_id_cert")
+@SequenceGenerator(name = "seq_id_cert", 
+                   sequenceName = "seq_id_cert", allocationSize = 1)
+public class IdentityCertificate implements Persisted {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, 
-                    generator = "seq_consumer_idcert")
+                    generator = "seq_id_cert")
     private Long id;
 
     @Column(nullable = false)
@@ -97,7 +97,6 @@ public class ConsumerIdentityCertificate implements Persisted {
 
     @XmlTransient
     public Long getId() {
-        // TODO Auto-generated method stub
         return id;
     }
 
@@ -105,7 +104,7 @@ public class ConsumerIdentityCertificate implements Persisted {
         this.id = id;
     }
 
-    public void update(ConsumerIdentityCertificate other) {
+    public void update(IdentityCertificate other) {
         this.setKey(other.getKey());
         this.setCert(other.getCert());
         this.setSerial(other.getSerial());
