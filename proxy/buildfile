@@ -259,5 +259,12 @@ begin
   end
 rescue LoadError
   desc 'Cucumber buildr task not available'
-  abort 'Cucumber buildr task is not available.  Be sure to install the cucumber gem.'
+  task :cucumber do
+    abort 'Cucumber buildr task is not available.  Be sure to install the cucumber gem.'
+  end
+
+  desc 'Cucumber HTML buildr task not available'
+  task :cucumber_html do
+    abort 'Cucumber HTML buildr task is not available.  Be sure to install the cucumber gem.'
+  end
 end
