@@ -23,7 +23,9 @@ class ConsumerTests(CandlepinTests):
         for pool in results:
             pools[pool['productId']] = pool
         self.assertTrue(virt_host in pools)
-
+        #while in theory this could return a different pool object than
+        #is used to allocate the entitlement later on, 
+        #our default setup means that they should be the same.
         results = self.cp.getPools( consumer=self.uuid,product=virt_host  )
         expected_consumed = results[0]['consumed']
 
@@ -34,9 +36,12 @@ class ConsumerTests(CandlepinTests):
         result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
         self.assertTrue('id' in result[0])
         self.assertEquals(virt_host, result[0]['pool']['productId'])
-        expected_consumed += 1
+        entitlementId =  result[0]['id']
+        consumed = result[0]['pool']['consumed']
+        expected_consumed = expected_consumed + 1
+        self.assertEquals(expected_consumed,consumed)
 
-        #make sure the number in the pool decreased by one
+        #make sure the number consumed in the pool increased by one
         results = self.cp.getPools( consumer=self.uuid,product=virt_host  )
         self.assertEquals(expected_consumed, results[0]['consumed'])
 
@@ -44,9 +49,12 @@ class ConsumerTests(CandlepinTests):
         result = self.cp.getEntitlements(self.uuid)
         self.assertEquals(len(result),1)
         
-        for p in result:
-            self.cp.unBindEntitlement( p['entitlement']['id'])
-            expected_consumed -= 1
+        #for p in result:
+        #    self.cp.unBindEntitlement( p['entitlement']['id'])
+        #    expected_consumed -= 1
+
+        self.cp.unBindEntitlement( entitlementId )
+
         result = self.cp.getEntitlements(self.uuid)
         self.assertEquals(len(result),0)
         results = self.cp.getPools( consumer=self.uuid,product=virt_host  )
