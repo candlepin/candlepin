@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import org.fedoraproject.candlepin.model.CertificateSerialCollection;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -84,6 +85,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         poolCurator.create(fullPool);
     }
     
+    @Test
+    public void testGetCertSerials() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        CertificateSerialCollection serials = consumerResource.getClientCertificateSerials(
+            consumer.getUuid());
+        assertEquals(1, serials.getSerials().size());
+    }
+
     // TODO: Test no such consumer type.
     
 //    @Test
@@ -193,9 +202,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         pool = poolCurator.find(pool.getId());
         assertEquals(new Long(1), pool.getConsumed());
-        for (Entitlement ent : resultList) {
-            assertEquals(pool.getId(), ent.getPool().getId());
-        }
+        assertEquals(1, resultList.size());
+        assertEquals(pool.getId(), resultList.get(0).getPool().getId());
+        assertEquals(1, entCertCurator.listForEntitlement(resultList.get(0)).size());
     }
 
     @Test(expected = ForbiddenException.class)

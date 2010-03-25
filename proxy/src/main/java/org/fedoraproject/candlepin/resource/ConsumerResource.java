@@ -38,6 +38,7 @@ import org.fedoraproject.candlepin.dto.CertificateDto;
 import org.fedoraproject.candlepin.model.CertificateSerialCollection;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
 import org.fedoraproject.candlepin.model.ConsumerIdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
@@ -50,6 +51,7 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -77,6 +79,7 @@ public class ConsumerResource {
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
+    private EntitlementCertServiceAdapter entCertService;
 
     private String username;
 
@@ -101,6 +104,7 @@ public class ConsumerResource {
         SubscriptionServiceAdapter subAdapter, PoolCurator epCurator,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
+        EntitlementCertServiceAdapter entCertServiceAdapter,
         @Context HttpServletRequest request) {
 
         this.ownerCurator = ownerCurator;
@@ -112,6 +116,7 @@ public class ConsumerResource {
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
+        this.entCertService = entCertServiceAdapter;
         this.username = (String) request.getAttribute("username");
         if (username != null) {
             this.owner = ownerCurator.lookupByName(username);
@@ -367,13 +372,13 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: " +
             consumerUuid);
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         CertificateSerialCollection allCerts = new CertificateSerialCollection();
-
-        // FIXME: make this look the cert from the cert service or whatever
-        // Using a static (and unusable) cert for now for demo purposes:
-        allCerts.addSerial(1);
-        allCerts.addSerial(2);
+        for (ConsumerEntitlementCertificate cert :
+            entCertService.listForConsumer(consumer)) {
+            allCerts.addSerial(cert.getSerialNumber());
+        }
 
         return allCerts;
     }

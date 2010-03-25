@@ -165,7 +165,10 @@ public class Entitler {
         else {
             Product prod = productAdapter.getProductById(sub.getProductId());
         
+            // TODO: Assuming every entitlement = generate a cert, most likely we'll want
+            // to know if this product entails granting a cert someday.
             try {
+                // TODO: Fix serial here:
                 this.entCertAdapter.generateEntitlementCert(consumer, e, sub, prod, 
                     sub.getEndDate(), BigInteger.valueOf(e.getId()));
             }

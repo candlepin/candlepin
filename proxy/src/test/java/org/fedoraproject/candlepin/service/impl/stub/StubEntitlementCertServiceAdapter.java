@@ -18,14 +18,18 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificate;
+import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+
+import com.google.inject.Inject;
 
 /**
  * StubEntitlementCertServiceAdapter
@@ -36,7 +40,15 @@ public class StubEntitlementCertServiceAdapter implements EntitlementCertService
 
     private static Logger log = Logger
         .getLogger(StubEntitlementCertServiceAdapter.class);
+    private ConsumerEntitlementCertificateCurator entCertCurator;
     
+    @Inject
+    public StubEntitlementCertServiceAdapter(
+        ConsumerEntitlementCertificateCurator entCertCurator) {
+
+        this.entCertCurator = entCertCurator;
+    }
+
     @Override
     public ConsumerEntitlementCertificate generateEntitlementCert(Consumer consumer,
         Entitlement entitlement, Subscription sub, Product product, Date endDate, 
@@ -50,13 +62,21 @@ public class StubEntitlementCertServiceAdapter implements EntitlementCertService
         cert.setSerialNumber(serialNumber);
         cert.setKey("---- STUB KEY -----".getBytes());
         cert.setCert("---- STUB CERT -----".getBytes());
+        cert.setEntitlement(entitlement);
+        entitlement.getCertificates().add(cert);
         
         log.debug("Generated cert: " + serialNumber);
         log.debug("Key: " + cert.getKeyAsString());
         log.debug("Cert: " + cert.getCertAsString());
-        // TODO: Should we save stub certs to the database or just no-op?
+        entCertCurator.create(cert);
         
         return cert;
+    }
+
+    @Override
+    public List<ConsumerEntitlementCertificate> listForConsumer(
+        Consumer consumer) {
+        return entCertCurator.listForConsumer(consumer);
     }
 
 }

@@ -20,6 +20,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -86,6 +87,12 @@ public class DefaultEntitlementCertServiceAdapter implements
         sb.append(", UID=");
         sb.append(consumer.getUuid());
         return sb.toString();
+    }
+
+    @Override
+    public List<ConsumerEntitlementCertificate> listForConsumer(
+        Consumer consumer) {
+        return entCertCurator.listForConsumer(consumer);
     }
 
 }

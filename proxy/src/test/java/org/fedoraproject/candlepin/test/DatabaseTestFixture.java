@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.model.AttributeCurator;
 import org.fedoraproject.candlepin.model.CertificateCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerEntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
@@ -76,6 +77,7 @@ public class DatabaseTestFixture {
     protected SubscriptionTokenCurator subTokenCurator;
     protected WorkManager unitOfWork;
     protected HttpServletRequest httpServletRequest;
+    protected ConsumerEntitlementCertificateCurator entCertCurator;
 
     
     @Before
@@ -108,6 +110,7 @@ public class DatabaseTestFixture {
         
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
+        entCertCurator = injector.getInstance(ConsumerEntitlementCertificateCurator.class);
 
        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);

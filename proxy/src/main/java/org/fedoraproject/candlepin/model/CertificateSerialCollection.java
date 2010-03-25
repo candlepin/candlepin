@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -33,21 +34,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class CertificateSerialCollection {
 
     @XmlElement(name = "serial")
-    private Collection<Integer> serials;
+    private Collection<BigInteger> serials;
 
     public CertificateSerialCollection() {
-        this.serials = new LinkedList<Integer>();
+        this.serials = new LinkedList<BigInteger>();
     }
 
-    public Collection<Integer> getSerials() {
+    public Collection<BigInteger> getSerials() {
         return serials;
     }
 
-    public void setSerials(Collection<Integer> serials) {
+    public void setSerials(Collection<BigInteger> serials) {
         this.serials = serials;
     }
 
-    public void addSerial(Integer serial) {
+    public void addSerial(BigInteger serial) {
         this.serials.add(serial);
     }
 }

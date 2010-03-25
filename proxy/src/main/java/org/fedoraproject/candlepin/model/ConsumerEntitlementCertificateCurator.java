@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.math.BigInteger;
+import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
@@ -34,10 +34,17 @@ public class ConsumerEntitlementCertificateCurator extends
         super(ConsumerEntitlementCertificate.class);
     }
 
-    public ConsumerEntitlementCertificateCurator lookupBySerialNumber(
-        BigInteger serialNumber) {
-        return (ConsumerEntitlementCertificateCurator) currentSession().createCriteria(
-            ConsumerEntitlementCertificateCurator.class).add(
-            Restrictions.eq("serialNumber", serialNumber)).uniqueResult();
+    public List<ConsumerEntitlementCertificate> listForEntitlement(Entitlement e) {
+        return (List<ConsumerEntitlementCertificate>) currentSession().createCriteria(
+            ConsumerEntitlementCertificate.class).add(
+                Restrictions.eq("entitlement", e)).list();
+
+    }
+
+    public List<ConsumerEntitlementCertificate> listForConsumer(Consumer c) {
+        return (List<ConsumerEntitlementCertificate>) currentSession().createCriteria(
+            ConsumerEntitlementCertificate.class).
+            createAlias("entitlement", "ent").
+            add(Restrictions.eq("ent.consumer", c)).list();
     }
 }
