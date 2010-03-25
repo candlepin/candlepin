@@ -325,6 +325,8 @@ public class ConsumerResource {
                 log.debug("   " + s);
             }
         }
+        //TODO hookup serial filtering
+
 
         List<ConsumerEntitlementCertificate> allCerts =
             new LinkedList<ConsumerEntitlementCertificate>();

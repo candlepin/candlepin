@@ -54,17 +54,17 @@ public class ConsumerIdentityCertificate implements Persisted {
     private byte[] cert;
 
     @Column(nullable = false)
-    private BigInteger serialNumber;
+    private BigInteger serial;
 
     @OneToOne(mappedBy = "idCert")
     private Consumer consumer;
 
-    public BigInteger getSerialNumber() {
-        return serialNumber;
+    public BigInteger getSerial() {
+        return serial;
     }
 
-    public void setSerialNumber(BigInteger serialNumber) {
-        this.serialNumber = serialNumber;
+    public void setSerial(BigInteger serialNumber) {
+        this.serial = serialNumber;
     }
 
     @XmlElement(name = "key")
@@ -108,7 +108,7 @@ public class ConsumerIdentityCertificate implements Persisted {
     public void update(ConsumerIdentityCertificate other) {
         this.setKey(other.getKey());
         this.setCert(other.getCert());
-        this.setSerialNumber(other.getSerialNumber());
+        this.setSerial(other.getSerial());
     }
 
     @XmlTransient

@@ -72,7 +72,7 @@ class ConsumerTests(CandlepinTests):
         for cert in cert_list:
             print "cert from cert_list"
             print cert
-            self.assert_cert_struct(cert)
+            self.assert_ent_cert_struct(cert)
             print
         # TODO: Could use some more testing here once entitlement certs
         # are actually being generated.

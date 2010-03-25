@@ -38,6 +38,6 @@ public class ConsumerIdentityCertificateCurator extends
         BigInteger serialNumber) {
         return (ConsumerIdentityCertificate) currentSession().createCriteria(
             ConsumerIdentityCertificate.class).add(
-            Restrictions.eq("serialNumber", serialNumber)).uniqueResult();
+            Restrictions.eq("serial", serialNumber)).uniqueResult();
     }
 }
