@@ -74,7 +74,16 @@ public class SSLAuthFilter implements Filter {
 
         // certs is an array of certificates presented by the client
         // with the first one in the array being the certificate of the client itself.
-        request.setAttribute(CURRENT_USERNAME, parseUserName(certs[0]));
+        X509Certificate identityCert = certs[0];
+        String username = parseUserName(identityCert);
+
+        if (username != null) {
+            request.setAttribute(CURRENT_USERNAME, username);
+        }
+        else {
+            httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         
         chain.doFilter(request, response);
         debugMessage("leaving ssl auth filter");

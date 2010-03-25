@@ -35,7 +35,7 @@ import org.junit.Test;
  * http://www.herongyang.com/Cryptography/index.html (in particular:
  * http://bit.ly/a2sX1d ) http://bit.ly/aOqTAV
  */
-public class SSLAuthFilterTest {
+public class SSLCertTest {
 
     private X509Certificate certificatePath;
     private X509Certificate selfSignedCertificate;
