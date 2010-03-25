@@ -47,7 +47,7 @@ public class EntitlementResource {
     private final ConsumerCurator consumerCurator;
     private final ProductServiceAdapter prodAdapter;
     //private SubscriptionServiceAdapter subAdapter; 
-    //private Entitler entitler;
+    private Entitler entitler;
     private final EntitlementCurator entitlementCurator;
     
     //private static Logger log = Logger.getLogger(EntitlementResource.class);
@@ -64,7 +64,7 @@ public class EntitlementResource {
         this.consumerCurator = consumerCurator;
         this.prodAdapter = prodAdapter;
         //this.subAdapter = subAdapter;
-        //this.entitler = entitler;
+        this.entitler = entitler;
     }
     
     
@@ -219,16 +219,13 @@ public class EntitlementResource {
     @DELETE
     @Path("/{dbid}")
     public void unbind(@PathParam("dbid") Long dbid) {
-        
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            toDelete.getPool().dockConsumed();
-            toDelete.getConsumer().getEntitlements().remove(toDelete);
-            entitlementCurator.delete(toDelete);
+            entitler.revokeEntitlement(toDelete);
             return;
         }
-        throw new NotFoundException(
-            "Entitlement with ID '" + dbid + "' could not be found");
+        throw new NotFoundException("Entitlement with ID '" + dbid +
+            "' could not be found");
     }
 
 
