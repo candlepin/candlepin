@@ -92,10 +92,6 @@ public class Entitler {
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
 
-        // TODO: Don't assume we use the first pool here, once rules have
-        // support for
-        // specifying the pool to use.
-
         Pool pool = enforcer.selectBestPool(consumer, product.getId(),
             epCurator.listByOwnerAndProduct(owner, product));
         if (pool == null) {

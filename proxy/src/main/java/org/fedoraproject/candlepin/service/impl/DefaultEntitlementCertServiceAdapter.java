@@ -67,7 +67,7 @@ public class DefaultEntitlementCertServiceAdapter implements
             null, sub.getStartDate(), endDate, keyPair, serialNumber);
         
         ConsumerEntitlementCertificate cert = new ConsumerEntitlementCertificate();
-        cert.setSerialNumber(serialNumber);
+        cert.setSerial(serialNumber);
         cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCert(this.pki.getPemEncoded(x509Cert));
         cert.setEntitlement(entitlement);

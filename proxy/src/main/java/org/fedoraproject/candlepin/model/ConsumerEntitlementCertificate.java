@@ -36,7 +36,7 @@ import org.hibernate.annotations.ForeignKey;
 /**
  * Represents certificate used to entitle a consumer
  */
-@XmlRootElement
+@XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_ent_certificate")
@@ -56,19 +56,19 @@ public class ConsumerEntitlementCertificate implements Persisted {
     private byte[] cert;
 
     @Column(nullable = false)
-    private BigInteger serialNumber;
+    private BigInteger serial;
 
     @ManyToOne
     @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
     private Entitlement entitlement;
 
-    public BigInteger getSerialNumber() {
-        return serialNumber;
+    public BigInteger getSerial() {
+        return serial;
     }
 
-    public void setSerialNumber(BigInteger serialNumber) {
-        this.serialNumber = serialNumber;
+    public void setSerial(BigInteger serialNumber) {
+        this.serial = serialNumber;
     }
 
     public void setKey(byte[] key) {
@@ -89,6 +89,7 @@ public class ConsumerEntitlementCertificate implements Persisted {
         this.cert = cert;
     }
 
+    @XmlTransient
     public byte[] getCert() {
         return cert;
     }

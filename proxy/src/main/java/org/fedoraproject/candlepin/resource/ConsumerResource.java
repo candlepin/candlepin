@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,7 +33,6 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.dto.CertificateDto;
 import org.fedoraproject.candlepin.model.CertificateSerialCollection;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -306,7 +304,7 @@ public class ConsumerResource {
     }
 
     /**
-     * Return the client certificate for the given consumer.
+     * Return the entitlement certificate for the given consumer.
      * 
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificates for the given consumer.
@@ -314,11 +312,12 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
-    public List<CertificateDto> getClientCertificates(
+    public List<ConsumerEntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
 
         log.debug("Getting client certificates for consumer: " + consumerUuid);
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         if (serials != null) {
             log.debug("Requested serials: " + serials);
@@ -327,32 +326,13 @@ public class ConsumerResource {
             }
         }
 
-        List<CertificateDto> allCerts =
-            new LinkedList<CertificateDto>();
-
-        // FIXME: make this look the cert from the cert service or whatever
-        // Using a static (and unusable) cert for now for demo purposes:
-        try {
-            String keyBytes = getBytesFromFile("/key.pem");
-            String certBytes = getBytesFromFile("/rhel-ap.pem");
-
-            CertificateDto cert = new CertificateDto();
-            cert.setSerial(BigInteger.valueOf(1));
-            cert.setKey(keyBytes);
-            cert.setCert(certBytes);
+        List<ConsumerEntitlementCertificate> allCerts =
+            new LinkedList<ConsumerEntitlementCertificate>();
+        for (ConsumerEntitlementCertificate cert :
+            entCertService.listForConsumer(consumer)) {
             allCerts.add(cert);
-
-            CertificateDto cert2 = new CertificateDto();
-            cert2.setSerial(BigInteger.valueOf(2));
-            cert2.setKey(keyBytes);
-            cert2.setCert(certBytes);
-            allCerts.add(cert2);
-
-            return allCerts;
         }
-        catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        return allCerts;
     }
 
     /**
@@ -367,7 +347,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "serials")
-    public CertificateSerialCollection getClientCertificateSerials(
+    public CertificateSerialCollection getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
         log.debug("Getting client certificate serials for consumer: " +
@@ -377,7 +357,7 @@ public class ConsumerResource {
         CertificateSerialCollection allCerts = new CertificateSerialCollection();
         for (ConsumerEntitlementCertificate cert :
             entCertService.listForConsumer(consumer)) {
-            allCerts.addSerial(cert.getSerialNumber());
+            allCerts.addSerial(cert.getSerial());
         }
 
         return allCerts;

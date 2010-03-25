@@ -64,14 +64,16 @@ class ConsumerTests(CandlepinTests):
         # are actually being generated.
 
     def test_list_certs(self):
+        self.cp.bindProduct(self.uuid, 'monitoring')
         result = self.cp.getCertificates(self.uuid)
-        print result
+        self.assertEquals(1, len(result))
         #self.assertTrue('cert' in result)
         cert_list = result
         for cert in cert_list:
             print "cert from cert_list"
             print cert
             self.assert_cert_struct(cert)
+            print
         # TODO: Could use some more testing here once entitlement certs
         # are actually being generated.
 

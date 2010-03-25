@@ -106,10 +106,10 @@ class CandlepinTests(unittest.TestCase):
 
     def assert_cert_struct(self, cert):
         """ Verify the given dict represents a consumer struct. """
-        keys = ['serial', 'key', 'cert']
+        keys = ['serial', 'key', 'cert', 'entitlement']
         self.assertEquals(len(keys), len(cert.keys()))
         for key in keys:
-            self.assertTrue(key in cert)
+            self.assertTrue(key in cert, "missing %s" % key)
         self.assertEquals(type(1), type(cert['serial']))
         self.assertEquals("-----", cert['key'][0:5])
         self.assertEquals("-----", cert['cert'][0:5])

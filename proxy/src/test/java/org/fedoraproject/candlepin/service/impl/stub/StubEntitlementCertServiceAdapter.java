@@ -59,7 +59,7 @@ public class StubEntitlementCertServiceAdapter implements EntitlementCertService
         log.debug("   end date: " + endDate);
         
         ConsumerEntitlementCertificate cert = new ConsumerEntitlementCertificate();
-        cert.setSerialNumber(serialNumber);
+        cert.setSerial(serialNumber);
         cert.setKey("---- STUB KEY -----".getBytes());
         cert.setCert("---- STUB CERT -----".getBytes());
         cert.setEntitlement(entitlement);
