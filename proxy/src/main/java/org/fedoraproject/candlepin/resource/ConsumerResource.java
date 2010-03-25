@@ -33,7 +33,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.model.CertificateSerialCollection;
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -349,17 +349,17 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "serials")
-    public CertificateSerialCollection getEntitlementCertificateSerials(
+    public List<CertificateSerial> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
         log.debug("Getting client certificate serials for consumer: " +
             consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
-        CertificateSerialCollection allCerts = new CertificateSerialCollection();
+        List<CertificateSerial> allCerts = new LinkedList<CertificateSerial>();
         for (EntitlementCertificate cert :
             entCertService.listForConsumer(consumer)) {
-            allCerts.addSerial(cert.getSerial());
+            allCerts.add(new CertificateSerial(cert.getSerial()));
         }
 
         return allCerts;

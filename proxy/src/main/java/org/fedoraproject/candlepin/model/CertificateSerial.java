@@ -15,12 +15,9 @@
 package org.fedoraproject.candlepin.model;
 
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.LinkedList;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -30,25 +27,24 @@ import javax.xml.bind.annotation.XmlRootElement;
  * of strings to JSON.
  */
 @XmlRootElement(name = "serials")
-@XmlAccessorType(XmlAccessType.NONE)
-public class CertificateSerialCollection {
+@XmlAccessorType(XmlAccessType.PROPERTY)
+public class CertificateSerial {
 
-    @XmlElement(name = "serial")
-    private Collection<BigInteger> serials;
-
-    public CertificateSerialCollection() {
-        this.serials = new LinkedList<BigInteger>();
+    private BigInteger serial;
+    
+    public CertificateSerial() {
     }
 
-    public Collection<BigInteger> getSerials() {
-        return serials;
+    public CertificateSerial(BigInteger serial) {
+        this.serial = serial;
     }
 
-    public void setSerials(Collection<BigInteger> serials) {
-        this.serials = serials;
+    public BigInteger getSerial() {
+        return serial;
     }
 
-    public void addSerial(BigInteger serial) {
-        this.serials.add(serial);
+    public void setSerial(BigInteger serial) {
+        this.serial = serial;
     }
+
 }

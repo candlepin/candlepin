@@ -19,7 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import org.fedoraproject.candlepin.model.CertificateSerialCollection;
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -89,9 +89,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void testGetCertSerials() {
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
-        CertificateSerialCollection serials = consumerResource.
+        List<CertificateSerial> serials = consumerResource.
             getEntitlementCertificateSerials(consumer.getUuid());
-        assertEquals(1, serials.getSerials().size());
+        assertEquals(1, serials.size());
     }
 
     @Test
