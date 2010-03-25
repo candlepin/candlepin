@@ -132,19 +132,17 @@ public class Consumer implements Persisted {
         this.childConsumers = new HashSet<Consumer>();
         this.entitlements = new HashSet<Entitlement>();
     }
-    
+
     /**
-     * Utility method to construct a Consumer.
-     * @param copyFrom consumer to copy
-     * @param owner owner of the consumer.
-     * @param type the type
+     * Copy constructor which copies the given consumer object.
+     * @param copyFrom Consumer to copy from
      */
-    public Consumer(Consumer copyFrom, Owner owner, ConsumerType type) {
-        this(copyFrom.name, owner, type);
+    public Consumer(Consumer copyFrom) {
+        this(copyFrom.name, copyFrom.owner, copyFrom.type);
         if (copyFrom.uuid != null && copyFrom.uuid.length() > 0) {
-            this.uuid = copyFrom.uuid;
+            uuid = copyFrom.uuid;
         }
-        this.facts = new HashMap<String, String>(copyFrom.facts);
+        facts = new HashMap<String, String>(copyFrom.facts);
         childConsumers = copyFrom.childConsumers;
         entitlements = copyFrom.entitlements;
     }

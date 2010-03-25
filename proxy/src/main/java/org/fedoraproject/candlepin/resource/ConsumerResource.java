@@ -170,30 +170,42 @@ public class ConsumerResource {
     public Consumer create(Consumer in) throws BadRequestException {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get
-        // current owner
-        Consumer consumer = new Consumer();
 
-        log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
-        ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType()
-            .getLabel());
-        log.debug("got metadata: ");
-        log.debug(in.getFacts());
-        for (String key : in.getFacts().keySet()) {
-            log.debug("   " + key + " = " + in.getFact(key));
+        // copy the incoming consumer to avoid modifying the reference.
+        Consumer copy = new Consumer(in);
+        copy.setOwner(owner);
+
+        if (log.isDebugEnabled()) {
+            if (copy.getType() != null) {
+                log.debug("Got consumerTypeLabel of: " + copy.getType().getLabel());
+            }
+            log.debug("got metadata: ");
+            log.debug(copy.getFacts());
+
+            for (String key : copy.getFacts().keySet()) {
+                log.debug("   " + key + " = " + copy.getFact(key));
+            }
         }
+
+        ConsumerType type = consumerTypeCurator.lookupByLabel(
+            copy.getType().getLabel());
 
         if (type == null) {
             throw new BadRequestException("No such consumer type: " +
-                in.getType().getLabel());
+                copy.getType().getLabel());
         }
 
         try {
-            consumer = consumerCurator.create(new Consumer(in, owner, type));
+            Consumer consumer = consumerCurator.create(copy);
 
             // TODO: Could use some cleanup.
             IdentityCertificate idCert = identityCertService
                 .generateIdentityCert(consumer, this.username);
-            log.debug("Generated identity cert: " + idCert);
+
+            if (log.isDebugEnabled()) {
+                log.debug("Generated identity cert: " + idCert);
+            }
+
             if (idCert == null) {
                 throw new RuntimeException(
                     "Error generating identity certificate.");
@@ -431,7 +443,6 @@ public class ConsumerResource {
             throw new BadRequestException("No such token: " + registrationToken);
         }
 
-        List<Product> productList = new LinkedList<Product>();
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         for (Subscription subscription : s) {
             Product p = productAdapter.getProductById(subscription.getProductId());
