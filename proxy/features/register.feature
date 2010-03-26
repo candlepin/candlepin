@@ -18,8 +18,8 @@ Feature: Register a Consumer
     Scenario: Correct CN on Identity Certificate
         Given I have username Billy
         And I have password foo
-        When I Register a New Consumer kit_the_car
-        Then The CN on my Identity Certificate's Subject is kit_the_car
+        When I Register a New Consumer kitt_the_car
+        Then The CN on my Identity Certificate's Subject is kitt_the_car
 
     Scenario: Correct OU on Identity Certificate
         Given I have username candlepin_user
