@@ -248,5 +248,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNotNull(consumerCurator.find(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
+
+        // now pass in consumer type with null id just like the client would
+        ConsumerType type = new ConsumerType(standardSystemType.getLabel());
+        assertNull(type.getId());
+        Consumer nulltypeid = new Consumer(CONSUMER_NAME, null, type);
+        submitted = consumerResource.create(nulltypeid);
+        assertNotNull(submitted);
+        assertEquals(nulltypeid.getUuid(), submitted.getUuid());
+        assertNotNull(submitted.getType().getId());
     }
 }

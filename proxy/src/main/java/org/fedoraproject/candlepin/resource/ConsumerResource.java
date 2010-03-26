@@ -171,9 +171,18 @@ public class ConsumerResource {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get
 
+        ConsumerType type = consumerTypeCurator.lookupByLabel(
+            in.getType().getLabel());
+
+        if (type == null) {
+            throw new BadRequestException("No such consumer type: " +
+                in.getType().getLabel());
+        }
+
         // copy the incoming consumer to avoid modifying the reference.
         Consumer copy = new Consumer(in);
         copy.setOwner(owner);
+        copy.setType(type); // the type comes in without
 
         if (log.isDebugEnabled()) {
             if (copy.getType() != null) {
@@ -187,15 +196,10 @@ public class ConsumerResource {
             }
         }
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel(
-            copy.getType().getLabel());
 
-        if (type == null) {
-            throw new BadRequestException("No such consumer type: " +
-                copy.getType().getLabel());
-        }
 
         try {
+            System.out.println("my consumer: " + copy);
             Consumer consumer = consumerCurator.create(copy);
 
             // TODO: Could use some cleanup.
