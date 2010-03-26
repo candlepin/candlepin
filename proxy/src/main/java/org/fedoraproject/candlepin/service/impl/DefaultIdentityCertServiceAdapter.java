@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
+import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
@@ -40,23 +41,27 @@ public class DefaultIdentityCertServiceAdapter implements
     private PKIUtility pki;
     private static Logger log = Logger
         .getLogger(DefaultIdentityCertServiceAdapter.class);
-    private IdentityCertificateCurator consumerIdentityCertificateCurator;
+    private IdentityCertificateCurator identityCertCurator;
+    private KeyPairCurator keyPairCurator;
+
     // Seeded with this(System.currentTimeMillis()
     private Random random = new Random();
 
     @Inject
     public DefaultIdentityCertServiceAdapter(PKIUtility pki,
-        IdentityCertificateCurator consumerIdentityCertificateCurator) {
+        IdentityCertificateCurator identityCertCurator,
+        KeyPairCurator keyPairCurator) {
         this.pki = pki;
-        this.consumerIdentityCertificateCurator = consumerIdentityCertificateCurator;
+        this.identityCertCurator = identityCertCurator;
+        this.keyPairCurator = keyPairCurator;
     }
 
     @Override
     public void deleteIdentityCert(Consumer consumer) {
-        IdentityCertificate certificate = consumerIdentityCertificateCurator
+        IdentityCertificate certificate = identityCertCurator
             .find(consumer.getId());
         if (certificate != null) {
-            consumerIdentityCertificateCurator.delete(certificate);
+            identityCertCurator.delete(certificate);
         }
     }
 
@@ -68,7 +73,7 @@ public class DefaultIdentityCertServiceAdapter implements
         Date startDate = new Date();
         Date endDate = getFutureDate(1);
 
-        IdentityCertificate certificate = consumerIdentityCertificateCurator
+        IdentityCertificate certificate = identityCertCurator
             .find(consumer.getId());
 
         if (certificate != null) {
@@ -78,7 +83,7 @@ public class DefaultIdentityCertServiceAdapter implements
         BigInteger serialNumber = nextSerialNumber();
         String dn = createDN(consumer, username);
         IdentityCertificate identityCert = new IdentityCertificate();
-        KeyPair keyPair = pki.generateNewKeyPair();
+        KeyPair keyPair = keyPairCurator.getServerKeyPair();
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
             startDate, endDate, keyPair, serialNumber);
         
@@ -88,12 +93,12 @@ public class DefaultIdentityCertServiceAdapter implements
         identityCert.setConsumer(consumer);
         consumer.setIdCert(identityCert);
 
-        return consumerIdentityCertificateCurator.create(identityCert);
+        return identityCertCurator.create(identityCert);
     }
 
     private BigInteger nextSerialNumber() {
         BigInteger serialNumber = BigInteger.valueOf(random.nextInt(1000000));
-        while (consumerIdentityCertificateCurator
+        while (identityCertCurator
             .lookupBySerialNumber(serialNumber) != null) {
             serialNumber = BigInteger.valueOf(random.nextLong());
         }
