@@ -19,7 +19,8 @@ create table cp_certificate (
 create table cp_consumer (
 	id number(19,0) not null, 
 	name varchar2(255 char) not null, 
-	uuid varchar2(255 char) not null unique, 
+	uuid varchar2(255 char) not null unique,
+        consumer_idcert_id number(19,0), 
 	consumer_fact_id number(19,0), 
 	owner_id number(19,0) not null, 
 	parent_consumer_id number(19,0), 
@@ -40,8 +41,10 @@ create table cp_consumer_entitlements (
 	primary key (entitlement_id));
 
 create table cp_consumer_facts (
-	id number(19,0) not null, 
-	primary key (id));
+	cp_consumer_id number(19,0) not null, 
+	element varchar2(255 char), 
+	mapkey varchar2(255 char), 
+	primary key (cp_consumer_id, mapkey));
 
 create table cp_consumer_facts_metadata (
 	cp_consumer_facts_id number(19,0) not null, 
@@ -49,12 +52,12 @@ create table cp_consumer_facts_metadata (
 	mapkey varchar2(255 char), 
 	primary key (cp_consumer_facts_id, mapkey));
 	
-create table cp_consumer_idcertificate (
-	id number(19,0) not null, 
-	key BLOB not null, 
-	pem BLOB not null, 
-	serialNumber number(19,2) not null, 
-	primary key (id));
+create table cp_id_cert (
+       id number(19,0) not null, 
+       cert BLOB not null, 
+       key BLOB not null, 
+       serial number(19,2) not null, 
+       primary key (id));
 
 create table cp_consumer_type (
 	id number(19,0) not null, 
@@ -188,7 +191,7 @@ create sequence seq_subscription
     	Increment By 1 Start With 1
 	Nocache  Noorder  Nocycle;
 
-create sequence seq_consumer_idcert
+create sequence seq_id_cert
         Minvalue 1 Maxvalue 1.00000000000000E+27
         Increment By 1 Start With 1
         Nocache  Noorder  Nocycle;
@@ -201,6 +204,7 @@ create sequence seq_consumer_ent_cert
 alter table CP_ATTRIBUTE_HIERARCHY add constraint fk_attribute_parent_id foreign key (PARENT_ATTRIBUTE_ID) references CP_ATTRIBUTE;
 alter table CP_ATTRIBUTE_HIERARCHY add constraint fk_attribute_child_id foreign key (CHILD_ATTRIBUTE_ID) references CP_ATTRIBUTE;
 alter table CP_CERTIFICATE add constraint fk_certificate_owner foreign key (owner_id) references CP_OWNER;
+alter table CP_CONSUMER add constraint FK5820538899BCA368 foreign key (consumer_idcert_id) references CP_ID_CERT;
 alter table CP_CONSUMER add constraint FK58205388A53FD653 foreign key (consumer_fact_id) references CP_CONSUMER_FACTS;
 alter table CP_CONSUMER add constraint fk_consumer_consumer_type foreign key (type_id) references CP_CONSUMER_TYPE;
 alter table CP_CONSUMER add constraint fk_consumer_owner foreign key (owner_id) references CP_OWNER;
@@ -221,4 +225,4 @@ alter table CP_PRODUCT_HIERARCHY add constraint fk_product_child_product_id fore
 alter table CP_PRODUCT_HIERARCHY add constraint fk_product_product_id foreign key (parent_product_id) references CP_PRODUCT;
 alter table CP_SUBSCRIPTION add constraint fk_subscription_owner foreign key (owner_id) references CP_OWNER;
 alter table CP_SUBSCRIPTION_ATTRIBUTE add constraint FK10B0260CA984608B foreign key (cp_subscription_id) references CP_SUBSCRIPTION;
-
+alter table CP_CONSUMER_FACTS add constraint FK278CE8101186666B foreign key (cp_consumer_id) references CP_CONSUMER;
