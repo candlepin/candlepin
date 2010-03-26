@@ -247,47 +247,6 @@ public class ConsumerResource {
         }
     }
 
-    // /**
-    // * Returns the ConsumerInfo for the given Consumer.
-    // *
-    // * @return the ConsumerInfo for the given Consumer.
-    // */
-    // @GET
-    // @Path("/info")
-    // @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    // // TODO: What consumer?
-    // public ConsumerFacts getInfo() {
-    // ConsumerFacts ci = new ConsumerFacts();
-    // // ci.setType(new ConsumerType("system"));
-    // ci.setConsumer(null);
-    // // Map<String,String> m = new HashMap<String,String>();
-    // // m.put("cpu", "i386");
-    // // m.put("hey", "biteme");
-    // // ci.setMetadata(m);
-    // ci.setFact("cpu", "i386");
-    // ci.setFact("hey", "foobar");
-    // return ci;
-    // }
-
-    /**
-     * removes the product whose id matches pid, from the consumer, cid.
-     * 
-     * @param cid
-     *            Consumer ID to affect
-     * @param pid
-     *            Product ID to remove from Consumer.
-     */
-    // @DELETE @Path("{cid}/products/{pid}")
-    // public void delete(@PathParam("cid") String cid,
-    // @PathParam("pid") String pid) {
-    // System.out.println("cid " + cid + " pid = " + pid);
-    // Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class,
-    // cid);
-    // if (!c.getConsumedProducts().remove(pid)) {
-    // log.error("no product " + pid + " found.");
-    // }
-    // }
-
     /**
      * Returns the product whose id matches pid, from the consumer, cid.
      * 
