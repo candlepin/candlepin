@@ -25,6 +25,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import com.google.inject.Key;
 import com.google.inject.servlet.ServletModule;
+import com.wideplay.warp.persist.PersistenceFilter;
 
 /**
  * Candlepin-specific {@link ServletModule} that configures servlet filters.
@@ -33,6 +34,7 @@ public class CandlepinFilterModule extends ServletModule {
 
     @Override
     protected void configureServlets() {
+        filter("/*").through(PersistenceFilter.class);
         filter("/*").through(LoggingFilter.class);
         filter("/admin/init").through(NoAuthRequiredFilter.class);
         filter("/certificates").through(NoAuthRequiredFilter.class);

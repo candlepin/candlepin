@@ -76,6 +76,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
     
     @SuppressWarnings("unchecked")
+    @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
         log.debug("Listing available pools for:");

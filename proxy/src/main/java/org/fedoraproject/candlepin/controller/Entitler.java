@@ -150,9 +150,9 @@ public class Entitler {
 
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
-        epCurator.merge(pool);
+        Pool mergedPool = epCurator.merge(pool);
         
-        Subscription sub = subAdapter.getSubscription(pool.getSubscriptionId());
+        Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId());
         if (sub == null) {
             log.warn("Cannot generate entitlement certificate, no subscription for pool: " +
                 pool.getId());

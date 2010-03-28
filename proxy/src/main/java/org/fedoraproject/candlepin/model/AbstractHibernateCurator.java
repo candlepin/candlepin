@@ -85,6 +85,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return getEntityManager().merge(entity);
     }
 
+    @Transactional
     protected final <T> T get(Class<T> clazz, Serializable id) {
         return clazz.cast(currentSession().get(clazz, id));
     }

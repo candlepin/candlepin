@@ -54,6 +54,7 @@ class ConsumerTests(CandlepinTests):
         #    expected_consumed -= 1
 
         self.cp.unBindEntitlement( entitlementId )
+        expected_consumed -= 1
 
         result = self.cp.getEntitlements(self.uuid)
         self.assertEquals(len(result),0)
