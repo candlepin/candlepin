@@ -14,6 +14,7 @@ CERTS_UPLOADED = False
 # Used to create one consumer for entire test run, as the operation
 # can be quite expensive. (cert generation)
 CONSUMER_UUID = None
+CONSUMER_ID_CERT = None
 
 class CandlepinTests(unittest.TestCase):
 
@@ -44,12 +45,15 @@ class CandlepinTests(unittest.TestCase):
             self.assertTrue(rsp.strip() != "")
 
         global CONSUMER_UUID
+        global CONSUMER_ID_CERT
         if not CONSUMER_UUID:
-            self.uuid = self.create_consumer()
+            self.uuid, self.id_cert = self.create_consumer()
             CONSUMER_UUID = self.uuid
+            CONSUMER_ID_CERT = self.id_cert
         else:
             print("Reusing consumer: %s" % CONSUMER_UUID)
             self.uuid = CONSUMER_UUID
+            self.id_cert = CONSUMER_ID_CERT
 
     def tearDown(self):
         # Unentitle the consumer here, but don't delete him. (creating consumer
@@ -95,7 +99,7 @@ class CandlepinTests(unittest.TestCase):
         key.write(response['idCert']['key'])
         key.close()
 
-        return response['uuid']
+        return (response['uuid'], response['idCert'])
 
     def assert_consumer_struct(self, consumer):
         """ Verify the given dict represents a consumer struct. """

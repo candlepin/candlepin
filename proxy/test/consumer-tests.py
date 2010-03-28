@@ -74,17 +74,25 @@ class ConsumerTests(CandlepinTests):
 
     def test_list_certs(self):
         self.cp.bindProduct(self.uuid, 'monitoring')
-        result = self.cp.getCertificates(self.uuid)
-        self.assertEquals(1, len(result))
-        #self.assertTrue('cert' in result)
-        cert_list = result
+        self.cp.bindProduct(self.uuid, 'virtualization_host')
+
+        cert_list = self.cp.getCertificates(self.uuid)
+        self.assertEquals(2, len(cert_list))
+        last_key = None
+        last_cert = None
         for cert in cert_list:
+            print
             print "cert from cert_list"
             print cert
             self.assert_ent_cert_struct(cert)
             print
-        # TODO: Could use some more testing here once entitlement certs
-        # are actually being generated.
+
+            if last_key is not None:
+                self.assertEqual(last_key, cert['key'])
+                self.assertNotEqual(last_cert, cert['cert'])
+                self.assertEquals(last_key, self.id_cert['key'])
+            last_key = cert['key']
+            last_cert = cert['cert']
 
     def test_uuid(self):
         self.assertTrue(self.uuid != None)
@@ -115,7 +123,7 @@ class ConsumerTests(CandlepinTests):
     # system and trying to give it virtualization_host:
     def test_failed_bind_by_entitlement_pool(self):
         # Create a virt system:
-        virt_uuid = self.create_consumer(consumer_type="virt_system")
+        virt_uuid = self.create_consumer(consumer_type="virt_system")[0]
 
         # Get pool ID for virtualization_host:
         virt_host = 'virtualization_host'

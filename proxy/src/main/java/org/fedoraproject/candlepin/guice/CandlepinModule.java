@@ -80,6 +80,6 @@ public class CandlepinModule extends AbstractModule {
         bind(AdminResource.class);
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
-        bind(StatusResource.class);      
+        bind(StatusResource.class);
     }
 }

@@ -98,7 +98,7 @@ public class ConsumerType implements Persisted {
      */
     @Override
     public String toString() {
-        return "ConsumerType [label=" + label + "]";
+        return "ConsumerType [id=" + id + ", label=" + label + "]";
     }
 
     @Override

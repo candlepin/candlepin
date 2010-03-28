@@ -234,7 +234,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testCreateWithAKnownUUID() {
         Consumer con1 = new Consumer();
         con1.setUuid("Jar Jar Binks");
-        Consumer con2 = new Consumer(con1, owner, consumerType);
+        Consumer con2 = new Consumer(con1);
         assertEquals("The UUIDs should be equal", con1.getUuid(), con2.getUuid());
     }
     
@@ -242,9 +242,35 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testCreateWithABlankUUID() {
         Consumer con1 = new Consumer();
         con1.setUuid("");
-        Consumer con2 = new Consumer(con1, owner, consumerType);
+        Consumer con2 = new Consumer(con1);
         assertNotSame("The UUIDs should not be equal", con1.getUuid(), con2.getUuid());
         assertTrue("The should be big", con2.getUuid().length() > 0);        
+    }
+
+    @Test
+    public void testCopyConstructor() {
+        Consumer con1 = new Consumer("name", owner, consumerType);
+        Consumer con2 = new Consumer(con1);
+        assertNotNull(con2);
+        assertEquals(con1, con2);
+
+        // let's be thorough that we copied everything
+        assertEquals(con1.getChildConsumers(), con2.getChildConsumers());
+        assertEquals(con1.getEntitlements(), con2.getEntitlements());
+        assertEquals(con1.getFacts(), con2.getFacts());
+        assertEquals(con1.getId(), con2.getId());
+        assertEquals(con1.getIdCert(), con2.getIdCert());
+        assertEquals(con1.getName(), con2.getName());
+        assertEquals(con1.getOwner(), con2.getOwner());
+        assertEquals(con1.getType(), con2.getType());
+        assertEquals(con1.getParent(), con2.getParent());
+        assertEquals(con1.getUuid(), con2.getUuid());
+    }
+
+    @Test
+    public void testNullType() {
+        Consumer c = new Consumer("name", owner, null);
+        assertNotNull(c);
     }
 
 

@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -39,15 +40,17 @@ import com.google.inject.Inject;
 public class DefaultEntitlementCertServiceAdapter extends 
     BaseEntitlementCertServiceAdapter {
     private PKIUtility pki;
+    private KeyPairCurator keyPairCurator;
     private static Logger log = Logger
         .getLogger(DefaultEntitlementCertServiceAdapter.class);
     
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki, 
-        EntitlementCertificateCurator entCertCurator) {
+        EntitlementCertificateCurator entCertCurator, KeyPairCurator keyPairCurator) {
         
         this.pki = pki;
         this.entCertCurator = entCertCurator;
+        this.keyPairCurator = keyPairCurator;
     }
 
     @Override
@@ -59,8 +62,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + endDate);
         
-        // TODO: re-use keypair for the owner?
-        KeyPair keyPair = pki.generateNewKeyPair();
+        KeyPair keyPair = keyPairCurator.getServerKeyPair();
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
             null, sub.getStartDate(), endDate, keyPair, serialNumber);
         

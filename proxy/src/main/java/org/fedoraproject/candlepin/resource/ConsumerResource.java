@@ -170,30 +170,46 @@ public class ConsumerResource {
     public Consumer create(Consumer in) throws BadRequestException {
         // API:registerConsumer
         Owner owner = ownerCurator.findAll().get(0); // TODO: actually get
-        // current owner
-        Consumer consumer = new Consumer();
 
-        log.debug("Got consumerTypeLabel of: " + in.getType().getLabel());
-        ConsumerType type = consumerTypeCurator.lookupByLabel(in.getType()
-            .getLabel());
-        log.debug("got metadata: ");
-        log.debug(in.getFacts());
-        for (String key : in.getFacts().keySet()) {
-            log.debug("   " + key + " = " + in.getFact(key));
-        }
+        ConsumerType type = consumerTypeCurator.lookupByLabel(
+            in.getType().getLabel());
 
         if (type == null) {
             throw new BadRequestException("No such consumer type: " +
                 in.getType().getLabel());
         }
 
+        // copy the incoming consumer to avoid modifying the reference.
+        Consumer copy = new Consumer(in);
+        copy.setOwner(owner);
+        copy.setType(type); // the type comes in without
+
+        if (log.isDebugEnabled()) {
+            if (copy.getType() != null) {
+                log.debug("Got consumerTypeLabel of: " + copy.getType().getLabel());
+            }
+            log.debug("got metadata: ");
+            log.debug(copy.getFacts());
+
+            for (String key : copy.getFacts().keySet()) {
+                log.debug("   " + key + " = " + copy.getFact(key));
+            }
+        }
+
+
+
         try {
-            consumer = consumerCurator.create(new Consumer(in, owner, type));
+            System.out.println("my consumer: " + copy);
+            Consumer consumer = consumerCurator.create(copy);
 
             // TODO: Could use some cleanup.
             IdentityCertificate idCert = identityCertService
                 .generateIdentityCert(consumer, this.username);
-            log.debug("Generated identity cert: " + idCert);
+
+            if (log.isDebugEnabled()) {
+                log.debug("Generated identity cert: " + idCert);
+            }
+
             if (idCert == null) {
                 throw new RuntimeException(
                     "Error generating identity certificate.");
@@ -230,47 +246,6 @@ public class ConsumerResource {
             throw new NotFoundException(e.getMessage());
         }
     }
-
-    // /**
-    // * Returns the ConsumerInfo for the given Consumer.
-    // *
-    // * @return the ConsumerInfo for the given Consumer.
-    // */
-    // @GET
-    // @Path("/info")
-    // @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    // // TODO: What consumer?
-    // public ConsumerFacts getInfo() {
-    // ConsumerFacts ci = new ConsumerFacts();
-    // // ci.setType(new ConsumerType("system"));
-    // ci.setConsumer(null);
-    // // Map<String,String> m = new HashMap<String,String>();
-    // // m.put("cpu", "i386");
-    // // m.put("hey", "biteme");
-    // // ci.setMetadata(m);
-    // ci.setFact("cpu", "i386");
-    // ci.setFact("hey", "foobar");
-    // return ci;
-    // }
-
-    /**
-     * removes the product whose id matches pid, from the consumer, cid.
-     * 
-     * @param cid
-     *            Consumer ID to affect
-     * @param pid
-     *            Product ID to remove from Consumer.
-     */
-    // @DELETE @Path("{cid}/products/{pid}")
-    // public void delete(@PathParam("cid") String cid,
-    // @PathParam("pid") String pid) {
-    // System.out.println("cid " + cid + " pid = " + pid);
-    // Consumer c = (Consumer) ObjectFactory.get().lookupByUUID(Consumer.class,
-    // cid);
-    // if (!c.getConsumedProducts().remove(pid)) {
-    // log.error("no product " + pid + " found.");
-    // }
-    // }
 
     /**
      * Returns the product whose id matches pid, from the consumer, cid.
@@ -431,7 +406,6 @@ public class ConsumerResource {
             throw new BadRequestException("No such token: " + registrationToken);
         }
 
-        List<Product> productList = new LinkedList<Product>();
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         for (Subscription subscription : s) {
             Product p = productAdapter.getProductById(subscription.getProductId());

@@ -132,11 +132,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testCreateConsumerWithUUID() {
         String uuid = "Jar Jar Binks";
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        assertNull(toSubmit.getId());
         toSubmit.setUuid(uuid);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);        
 
         Consumer submitted  = consumerResource.create(toSubmit);
-        
+        assertNull(toSubmit.getId());
         assertNotNull(submitted);
         assertNotNull(submitted);
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -232,5 +233,29 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testBindByPoolBadConsumerUuid() throws Exception {
         consumerResource.bind(
             "notarealuuid", pool.getId(), null, null);
+    }
+
+    @Test
+    public void testRegisterWithConsumerId() {
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        toSubmit.setUuid("1023131");
+        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
+
+        Consumer submitted  = consumerResource.create(toSubmit);
+
+        assertNotNull(submitted);
+        assertEquals(toSubmit.getUuid(), submitted.getUuid());
+        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
+        assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
+
+        // now pass in consumer type with null id just like the client would
+        ConsumerType type = new ConsumerType(standardSystemType.getLabel());
+        assertNull(type.getId());
+        Consumer nulltypeid = new Consumer(CONSUMER_NAME, null, type);
+        submitted = consumerResource.create(nulltypeid);
+        assertNotNull(submitted);
+        assertEquals(nulltypeid.getUuid(), submitted.getUuid());
+        assertNotNull(submitted.getType().getId());
     }
 }
