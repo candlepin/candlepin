@@ -26,7 +26,7 @@ def replace_commented_out_https_connector(an_original):
 	return compiled_regex.sub(https_connector_configuration, an_original)
 	
 def update_tomcat_config(conf_dir):
-	print "Updating tomcat configuration ..."
+	print "Updating tomcat configuration in %s..."  % conf_dir
 	original_config = open(os.path.join(conf_dir, "server.xml"), "r").read()
 	
 	if re.search(commentedout_https_connector_pattern, original_config, re.DOTALL):

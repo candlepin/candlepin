@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
+import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
@@ -73,6 +74,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ProductServiceAdapter.class)
             .to(DefaultProductServiceAdapter.class);
         bind(ProductResource.class);
+        bind(SubscriptionResource.class);
         bind(TestResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
