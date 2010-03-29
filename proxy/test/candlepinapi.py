@@ -128,6 +128,7 @@ class CandlePinApi:
 
     def unRegisterConsumer(self,consumer_uuid):
         path = "/consumers/%s" % consumer_uuid
+        print path
         blob = self.rest.delete(path)
         return blob
 
@@ -217,6 +218,20 @@ class CandlePinApi:
     def getProducts(self):
         path = "/products/"
         return [p['product'] for p in self.rest.get(path)]
+
+    def getSubscriptions(self):
+        path = "/subscriptions/"
+        subs = self.rest.get(path);
+        return subs
+
+    def createSubscription(self, subData):
+        path = "/subscriptions/"
+        subs = self.rest.post(path, data=subData);
+        return subs
+
+    def deleteSubscription(self, subId):
+        path = "/subscriptions/%s" % subId
+        return self.rest.delete(path)
 
     def uploadRules(self, rules_text):
         path = "/rules/"

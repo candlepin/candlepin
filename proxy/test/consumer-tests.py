@@ -226,6 +226,11 @@ class ConsumerTests(CandlepinTests):
             self.assertEqual(preconsumed, postunbound)
             
 
+    def test_unregister(self):
+        result = self.cp.unRegisterConsumer(self.uuid)
+        print result
+        
+
     def test_list_pools(self):
         pools = self.cp.getPools(consumer=self.uuid, product="monitoring")
         self.assertEquals(1, len(pools))

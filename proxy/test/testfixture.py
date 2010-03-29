@@ -85,7 +85,7 @@ class CandlepinTests(unittest.TestCase):
         response = cp.registerConsumer("fakeuser", "fakepw",
                 "consumername", hardware=facts_metadata, 
                 consumer_type=consumer_type)
-        print("Consumer created: %s" % response)
+#        print("Consumer created: %s" % response)
         self.assertTrue("uuid" in response)
         self.assertTrue("idCert" in response)
         self.assert_consumer_struct(response)
