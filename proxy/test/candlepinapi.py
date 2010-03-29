@@ -168,11 +168,20 @@ class CandlePinApi:
         blob = self.rest.delete(path)
         return blob
 
-    def getCertificates(self, consumer_uuid):
-        path = "/consumers/%s/certificates?serials=1,2,3,4,5" % consumer_uuid
-        print "getCertifcates"
+    def getCertificates(self, consumer_uuid, serials = []):
+        """
+        Fetch a consumers entitlement certificates, with an optional list
+        of serial numbers to filter on.
+        """
+        serial_filter = ""
+        str_serials = []
+        for s in serials:
+            str_serials.append(str(s))
+        if len(str_serials) > 0:
+            serial_filter = "?serials=" + ",".join(str_serials)
+        path = "/consumers/%s/certificates%s" % (consumer_uuid, serial_filter)
+        print "getCertificates = %s" % path
         print self.rest.get(path)
-        print [c['cert'] for c in self.rest.get(path)]
         return [c['cert'] for c in self.rest.get(path)]
 
     def getCertificateSerials(self, consumer_uuid):

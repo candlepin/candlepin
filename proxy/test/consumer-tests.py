@@ -94,6 +94,24 @@ class ConsumerTests(CandlepinTests):
             last_key = cert['key']
             last_cert = cert['cert']
 
+    def test_list_certs_serial_filtering(self):
+        self.cp.bindProduct(self.uuid, 'monitoring')
+        self.cp.bindProduct(self.uuid, 'virtualization_host')
+        self.cp.bindProduct(self.uuid, 'provisioning')
+
+        cert_list = self.cp.getCertificates(self.uuid)
+        self.assertEquals(3, len(cert_list))
+        for cert in cert_list:
+            print
+            print "cert from cert_list"
+            print cert
+            self.assert_ent_cert_struct(cert)
+            print
+
+        serials = [cert_list[0]['serial'], cert_list[1]['serial']]
+        cert_list = self.cp.getCertificates(self.uuid, serials)
+        self.assertEquals(2, len(cert_list))
+
     def test_uuid(self):
         self.assertTrue(self.uuid != None)
 

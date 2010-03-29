@@ -38,6 +38,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -95,11 +96,33 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetCertss() {
+    public void testGetCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
         List<EntitlementCertificate> serials = consumerResource.
             getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
+    }
+
+    @Test
+    public void testGetSerialFiltering() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        List<EntitlementCertificate> serials = consumerResource.
+            getEntitlementCertificates(consumer.getUuid(), null);
+        assertEquals(4, serials.size());
+
+        BigInteger serial1 = serials.get(0).getSerial();
+        BigInteger serial2 = serials.get(3).getSerial();
+
+        String serialsToFilter =  serial1.toString() + "," + serial2.toString();
+
+        serials = consumerResource.getEntitlementCertificates(consumer.getUuid(),
+            serialsToFilter);
+        assertEquals(2, serials.size());
+        assertEquals(serial1, serials.get(0).getSerial());
+        assertEquals(serial2, serials.get(1).getSerial());
     }
 
     // TODO: Test no such consumer type.

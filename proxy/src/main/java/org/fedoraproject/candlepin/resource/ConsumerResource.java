@@ -15,8 +15,11 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.io.File;
+import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -294,20 +297,22 @@ public class ConsumerResource {
         log.debug("Getting client certificates for consumer: " + consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
+        Set<BigInteger> serialSet = new HashSet<BigInteger>();
         if (serials != null) {
             log.debug("Requested serials: " + serials);
             for (String s : serials.split(",")) {
                 log.debug("   " + s);
+                serialSet.add(BigInteger.valueOf(Long.parseLong(s)));
             }
         }
-        //TODO hookup serial filtering
-
 
         List<EntitlementCertificate> allCerts =
             new LinkedList<EntitlementCertificate>();
-        for (EntitlementCertificate cert :
-            entCertService.listForConsumer(consumer)) {
-            allCerts.add(cert);
+        for (EntitlementCertificate cert : entCertService.listForConsumer(consumer)) {
+
+            if (serialSet.size() == 0 || serialSet.contains(cert.getSerial())) {
+                allCerts.add(cert);
+            }
         }
         return allCerts;
     }
