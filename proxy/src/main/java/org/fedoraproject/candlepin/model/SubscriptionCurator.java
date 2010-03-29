@@ -79,7 +79,6 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         return subs;
     }
 
-    @SuppressWarnings("unchecked")
     public List<Subscription> listBySubscriptionTokenID(String token) {
         
         SubscriptionToken subToken =  (SubscriptionToken) currentSession().createCriteria(

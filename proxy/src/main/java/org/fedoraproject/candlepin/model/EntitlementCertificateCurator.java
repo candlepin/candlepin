@@ -31,6 +31,7 @@ public class EntitlementCertificateCurator extends
         super(EntitlementCertificate.class);
     }
 
+    @SuppressWarnings("unchecked")
     public List<EntitlementCertificate> listForEntitlement(Entitlement e) {
         return (List<EntitlementCertificate>) currentSession().createCriteria(
             EntitlementCertificate.class).add(
@@ -38,6 +39,7 @@ public class EntitlementCertificateCurator extends
 
     }
 
+    @SuppressWarnings("unchecked")
     public List<EntitlementCertificate> listForConsumer(Consumer c) {
         return (List<EntitlementCertificate>) currentSession().createCriteria(
             EntitlementCertificate.class).
