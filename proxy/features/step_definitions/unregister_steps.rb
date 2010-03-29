@@ -5,9 +5,9 @@ When /^I unregister$/ do
 end
 
 Then /^all my entitlements are unbound$/ do
-  @postconsumed=0
-  @candlepin.get_pools().each { |pool| @postconsumed += pool['pool']['consumed'] }
+  postconsumed=0
+  @candlepin.get_pools().each { |pool| postconsumed += pool['pool']['consumed'] }
   expected = @consumed - 2
-  @postconsumed.should == expected
+  postconsumed.should == expected
 
 end
