@@ -59,6 +59,7 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -235,6 +236,7 @@ public class ConsumerResource {
     @DELETE
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
+    @Transactional
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         try {
@@ -242,9 +244,9 @@ public class ConsumerResource {
             if (toDelete == null) {
                 return;
             }
-            identityCertService.deleteIdentityCert(toDelete);
-
+            this.unbindAllOrBySerialNumber(uuid, null);
             consumerCurator.delete(toDelete);
+            identityCertService.deleteIdentityCert(toDelete);
         }
         catch (RuntimeException e) {
             throw new NotFoundException(e.getMessage());

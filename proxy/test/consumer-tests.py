@@ -243,3 +243,30 @@ class ConsumerTests(CandlepinTests):
         # This isn't allowed, should give bad request.
         self.assertRaises(Exception, self.cp.getPools, consumer=self.uuid, owner=1)
 
+
+    def test_unregister_consumer(self):
+
+        ret = self.cp.registerConsumer("UnregMe", "samplepass", "some testsystem", {'arch':'i386', 'cpu':'intel'}, {'os':'linux', 'release':'6.0'})
+        print 'ret is'
+        uuid = ret['uuid']
+        pools = self.cp.getPools(consumer=uuid)
+
+
+        preconsumed=0
+        postconsumed=0
+
+        if len(pools) > 1:
+            for pool in self.cp.getPools():
+                preconsumed = preconsumed + pool['consumed']
+                self.cp.bindPool(uuid, pool['id'])
+
+            self.cp.unRegisterConsumer( ret['uuid'])
+
+            for pool in self.cp.getPools():
+                postconsumed = postconsumed + pool['consumed']
+
+            self.assertEquals(preconsumed, postconsumed)
+
+
+        #self.fail()
+        #self.cp.unRegisterConsumer(self.options.username, self.options.password, self.options.consumer)
