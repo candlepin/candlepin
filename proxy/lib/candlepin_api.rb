@@ -28,6 +28,19 @@ class Candlepin
         create_ssl_client
     end
 
+    def get_pool(poolid)
+      get("/pools/#{poolid}'")
+    end
+
+    def get_pools()
+      return get("/pools")
+    end
+
+    def unregister()
+        delete("/consumers/#{@consumer['uuid']}")
+    end
+
+
     def revoke_all_entitlements()
         delete("/consumers/#{@consumer['uuid']}/entitlements")
     end
