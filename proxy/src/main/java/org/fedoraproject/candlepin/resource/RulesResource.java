@@ -87,7 +87,6 @@ public class RulesResource {
     public String get() {
         String rules = rulesCurator.getRules().getRules();
         if ((rules != null) && (rules.length() > 0)) {
-            System.out.println(rules);
             return Base64.encodeBase64String(rules.getBytes());
         }
         else {
