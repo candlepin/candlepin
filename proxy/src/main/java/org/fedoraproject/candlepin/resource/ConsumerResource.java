@@ -119,6 +119,7 @@ public class ConsumerResource {
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
         this.username = (String) request.getAttribute("username");
+        // FIXME Why is this in here?
         if (username != null) {
             this.owner = ownerCurator.lookupByName(username);
             if (owner == null) {
