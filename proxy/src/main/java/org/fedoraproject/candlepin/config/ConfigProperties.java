@@ -36,6 +36,6 @@ public class ConfigProperties {
             {
                 this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
-            };
+            }
         };
 }

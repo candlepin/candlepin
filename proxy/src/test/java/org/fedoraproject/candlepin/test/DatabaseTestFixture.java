@@ -139,7 +139,7 @@ public class DatabaseTestFixture {
 
     /**
      * Create an entitlement pool and matching subscription.
-     * @return
+     * @return an entitlement pool and matching subscription.
      */
     protected Pool createPoolAndSub(Owner owner, String productId, Long quantity,
         Date startDate, Date endDate) {
