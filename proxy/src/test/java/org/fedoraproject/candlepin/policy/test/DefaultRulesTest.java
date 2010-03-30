@@ -14,15 +14,6 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.script.ScriptEngineManager;
-
-import junit.framework.Assert;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.Enforcer;
@@ -31,8 +22,17 @@ import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.script.ScriptEngineManager;
+
+import junit.framework.Assert;
 
 /**
  * DefaultRulesTest
@@ -59,7 +59,7 @@ public class DefaultRulesTest {
         "}                                                         \n";
 
     @Before
-    public void createEnforcer() throws IOException {
+    public void createEnforcer() {
 
         // If you wish to test against the default rules file,
         // use the following code to load it in from the classpath

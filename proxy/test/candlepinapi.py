@@ -103,7 +103,7 @@ class CandlePinApi:
         self.rest = Rest(hostname=hostname, port=port, api_url=api_url, cert_file=cert_file, key_file=key_file, debug=debug)
 
     def registerConsumer(self, userid, password, name, hardware=None, 
-            products=None, consumer_type="system"):
+            products=None, consumer_type="system", uuid=None):
         path = "/consumers"
 
         # Don't think this is used yet, and definitely shouldn't
@@ -122,6 +122,8 @@ class CandlePinApi:
             }
         }
 
+        if uuid:
+            consumer['consumer']['uuid'] = uuid
 
         blob = self.rest.post(path, data=consumer, username=userid, password=password)
         return blob['consumer']
