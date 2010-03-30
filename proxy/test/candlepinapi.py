@@ -225,26 +225,30 @@ class CandlePinApi:
         path = "/subscriptions/"
         subs = self.rest.get(path);
         return subs
-
-    def getSubscriptionTokens(self):
-        path = "/subscriptiontokens"
-        subs = self.rest.get(path)
-        return subs
-
+    
     def createSubscription(self, subData):
         path = "/subscriptions/"
         subs = self.rest.post(path, data=subData);
         return subs
-
+    
     def deleteSubscription(self, subId):
         path = "/subscriptions/%s" % subId
         return self.rest.delete(path)
 
+    def getSubscriptionTokens(self):
+       path = "/subscriptiontokens"
+       subs = self.rest.get(path)
+       return subs
+    
+    def deleteSubscriptionToken(self, subId):
+        path = "/subscriptiontokens/%s" % subId
+        return self.rest.delete(path)
+    
     def uploadRules(self, rules_text):
         path = "/rules/"
         encoded = base64.b64encode(rules_text)
         return self.rest.post(path, data=encoded)
-
+    
 
 
 if __name__ == "__main__":

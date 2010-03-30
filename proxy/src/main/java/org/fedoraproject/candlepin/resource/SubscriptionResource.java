@@ -52,6 +52,7 @@ public class SubscriptionResource {
         private static Logger log = Logger.getLogger(SubscriptionResource.class);   
         private SubscriptionCurator subCurator;
         private SubscriptionTokenCurator subTokenCurator;
+        private OwnerCurator ownerCurator;
         
         private String username;
         private Owner owner;
@@ -64,10 +65,15 @@ public class SubscriptionResource {
             this.subCurator = subCurator;
             this.subTokenCurator = subTokenCurator;
             this.username = (String) request.getAttribute("username");
-            if (username != null) {
-                this.owner = ownerCurator.lookupByName(username);
-                if (owner == null) {
-                    owner = ownerCurator.create(new Owner(username));
+            this.ownerCurator = ownerCurator;
+            log.debug("username: " + username);
+            log.debug(request.getAttributeNames().toString());
+            if (this.username != null) {
+                this.owner = ownerCurator.lookupByName(this.username);
+                log.debug("this.owner: " + this.owner);
+                if (this.owner == null) {
+                    this.owner = ownerCurator.create(new Owner(this.username));
+                    log.debug("owner: " + this.owner);
                 }
             }
         }
@@ -84,7 +90,7 @@ public class SubscriptionResource {
         @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
         public Subscription createSubscription(Subscription subscription) {
             subscription.setOwner(owner);
-            log.debug("" + owner + subscription.getOwner());
+            log.debug("owner: " + owner + subscription.getOwner());
             Subscription newSubscription = subCurator.create(subscription);
   
             return newSubscription;

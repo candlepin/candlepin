@@ -20,14 +20,14 @@ class CandlepinTests(unittest.TestCase):
 
     def setUp(self):
 
-        #self.cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
-        self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
+        self.cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
+        #self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
 
         # TODO: Use CandlePinAPI?
         # Upload the test cert to populate Candlepin db. Only do this
         # once per test suite run.
-        rest = Rest(hostname="localhost", port="8080", api_url="/candlepin")
-        #rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
+        #rest = Rest(hostname="localhost", port="8080", api_url="/candlepin")
+        rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
         rsp = rest.get("/certificates")
         if not rsp:
             print("Cert upload required.")
