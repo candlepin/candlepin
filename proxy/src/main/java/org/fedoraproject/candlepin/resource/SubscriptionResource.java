@@ -105,12 +105,6 @@ public class SubscriptionResource {
             
         }
  
-
-        //deleteSubscription
-        
-        //addToken
-        
-        
         // SubscriptionTokenResource
         //      createToken
         //      deleteToken

@@ -226,6 +226,11 @@ class CandlePinApi:
         subs = self.rest.get(path);
         return subs
 
+    def getSubscriptionTokens(self):
+        path = "/subscriptiontokens"
+        subs = self.rest.get(path)
+        return subs
+
     def createSubscription(self, subData):
         path = "/subscriptions/"
         subs = self.rest.post(path, data=subData);
