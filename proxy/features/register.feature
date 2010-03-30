@@ -26,3 +26,9 @@ Feature: Register a Consumer
         And I have password default
         When I Register a New Consumer foo
         Then The OU on my Identity Certificate's Subject is candlepin_user
+
+    Scenario: Register by UUID
+        Given I have username cucumber
+        And I have password biteme
+        When I Register a New Consumer them_apples with uuid how_bout
+        Then The UID on my Identity Certificate's Subject is My Consumer's uuid
