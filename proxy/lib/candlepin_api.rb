@@ -67,6 +67,10 @@ class Candlepin
         get("/entitlements?consumer=#{@consumer['uuid']}")
     end
 
+    def list_rules()
+	get("/rules")
+    end
+
     private
 
     def create_basic_client(username=nil, password=nil)
