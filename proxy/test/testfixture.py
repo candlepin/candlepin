@@ -20,7 +20,10 @@ class CandlepinTests(unittest.TestCase):
 
     def setUp(self):
 
-        self.cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
+        self.cp = CandlePinApi(hostname="localhost", port="8443",
+                               api_url="/candlepin", cert_file="./client.crt",
+                               key_file="./client.key", username="testuser",
+                               password="testuserpass")
         #self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
 
         # TODO: Use CandlePinAPI?

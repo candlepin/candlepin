@@ -12,7 +12,10 @@ class CandlepinException(Exception):
         self.response = response
 
 class Rest(object):
-    def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", cert_file=None, key_file=None, debug=None):
+    def __init__(self, hostname="localhost", port="8080",
+                 api_url="/candlepin", cert_file=None,
+                 key_file=None, debug=None,
+                 username=None, password=None):
         self.hostname = hostname
         self.port = port
         self.api_url = api_url
@@ -29,10 +32,13 @@ class Rest(object):
         self.key_file = key_file
         self.debug = debug
 
+        self.username = username
+        self.password = password
+
         # default content type
         self.content_type = None
 
-    def _request(self, http_type, path, data=None, content_type=None, username=None, password=None):
+    def _request(self, http_type, path, data=None, content_type=None):
         if content_type is None and self.content_type:
             content_type = self.content_type
 
@@ -50,8 +56,8 @@ class Rest(object):
         
         headers = self.headers[content_type]
         #add Authorization header for basic auth
-        if username != None:
-            headers.update({"Authorization":"Basic %s" % base64.encodestring('%s:%s' % (username, password))[:-1]})
+        if self.username != None and self.password != None:
+            headers.update({"Authorization":"Basic %s" % base64.encodestring('%s:%s' % (self.username, self.password))[:-1]})
 
         conn.request(http_type, url_path, body=self.marshal(data, content_type),
                 headers=headers)
@@ -73,14 +79,22 @@ class Rest(object):
             return self.demarshal(rsp, content_type)
         return None
 
+    def setAuth(self, username, password):
+        self.username = username
+        self.password = password
+
+    def resetAuth(self):
+        self.username = None
+        self.passwor = None
+
     def get(self, path, content_type="json"):
         return self._request("GET", path, content_type=content_type)
 
     def head(self, path, content_type="json"):
         return self._request("HEAD", path, content_type=content_type)
 
-    def post(self, path, data="", content_type="json", username=None, password=None):
-        return self._request("POST", path, data=data, content_type=content_type, username=username, password=password)
+    def post(self, path, data="", content_type="json", userid=None, password=None):
+        return self._request("POST", path, data=data, content_type=content_type)
 
     def put(self, path, data="", content_type="json"):
         return self._request("PUT", path, data=data, content_type=content_type)
@@ -99,8 +113,15 @@ class Rest(object):
         return data
 
 class CandlePinApi:
-    def __init__(self, hostname="localhost", port="8080", api_url="/candlepin", cert_file=None, key_file=None, debug=None):
-        self.rest = Rest(hostname=hostname, port=port, api_url=api_url, cert_file=cert_file, key_file=key_file, debug=debug)
+    def __init__(self, hostname="localhost",
+                 port="8080", api_url="/candlepin",
+                 cert_file=None, key_file=None,
+                 debug=None, username=None,
+                 password=None):
+        self.rest = Rest(hostname=hostname, port=port, 
+                         api_url=api_url, cert_file=cert_file, 
+                         key_file=key_file, debug=debug,
+                         username=username, password=password)
 
     def registerConsumer(self, userid, password, name, hardware=None, 
             products=None, consumer_type="system", uuid=None):
@@ -125,7 +146,11 @@ class CandlePinApi:
         if uuid:
             consumer['consumer']['uuid'] = uuid
 
-        blob = self.rest.post(path, data=consumer, username=userid, password=password)
+
+        
+        self.rest.setAuth(userid, password)
+        blob = self.rest.post(path, data=consumer)
+        self.rest.resetAuth()
         return blob['consumer']
 
     def unRegisterConsumer(self,consumer_uuid):
@@ -221,6 +246,14 @@ class CandlePinApi:
         path = "/products/"
         return [p['product'] for p in self.rest.get(path)]
 
+    def createOwner(self, owner):
+        path = "/owners"
+        return self.rest.post(path, owner)
+
+    def getOwner(self, ownerid):
+        path = "/owners/%s" % ownerid
+        return self.rest.get(path)
+
     def getSubscriptions(self):
         path = "/subscriptions/"
         subs = self.rest.get(path);
@@ -243,6 +276,10 @@ class CandlePinApi:
     def deleteSubscriptionToken(self, subId):
         path = "/subscriptiontokens/%s" % subId
         return self.rest.delete(path)
+
+    def createSubscriptionToken(self, subToken):
+        path = "/subscriptiontokens/"
+        return self.rest.post(path, data=subToken)
     
     def uploadRules(self, rules_text):
         path = "/rules/"

@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.sql.Date;
-import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,93 +26,81 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
-import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionToken;
 
 import com.google.inject.Inject;
 
+
+
 /**
- * SubscriptionResource
+ * SubscriptionTokenResource
  */
-
-@Path("/subscriptions")
-public class SubscriptionResource {
-
-    
-        private static Logger log = Logger.getLogger(SubscriptionResource.class);   
+@Path("/subscriptiontokens")
+public class SubscriptionTokenResource {
+        private static Logger log = Logger.getLogger(SubscriptionTokenResource.class);   
         private SubscriptionCurator subCurator;
         private SubscriptionTokenCurator subTokenCurator;
-        private OwnerCurator ownerCurator;
         
         private String username;
         private Owner owner;
         
         @Inject
-        public SubscriptionResource(SubscriptionCurator subCurator,
+        public SubscriptionTokenResource(SubscriptionCurator subCurator,
             SubscriptionTokenCurator subTokenCurator,
             OwnerCurator ownerCurator,
             @Context HttpServletRequest request) {    
             this.subCurator = subCurator;
             this.subTokenCurator = subTokenCurator;
             this.username = (String) request.getAttribute("username");
-            this.ownerCurator = ownerCurator;
-            log.debug("username: " + username);
-            log.debug(request.getAttributeNames().toString());
-            if (this.username != null) {
-                this.owner = ownerCurator.lookupByName(this.username);
-                log.debug("this.owner: " + this.owner);
-                if (this.owner == null) {
-                    this.owner = ownerCurator.create(new Owner(this.username));
-                    log.debug("owner: " + this.owner);
+            if (username != null) {
+                this.owner = ownerCurator.lookupByName(username);
+                if (owner == null) {
+                    owner = ownerCurator.create(new Owner(username));
                 }
             }
         }
         
-        @GET    
+        @GET
         @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-        public List<Subscription> getSubscriptions() {
-            List<Subscription> subList = new LinkedList<Subscription>();
-            subList = subCurator.findAll();
-            return subList;
+        public List<SubscriptionToken> getSubscriptionTokens() {
+            List<SubscriptionToken> subTokenList = new LinkedList<SubscriptionToken>();
+            subTokenList = subTokenCurator.findAll();
+            log.debug("sub token list" + subTokenList);
+            return subTokenList;
         }
         
         @POST
         @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-        public Subscription createSubscription(Subscription subscription) {
-//
-            subscription.setOwner(owner);
-            log.debug("owner: " + owner + subscription.getOwner());
-            Subscription newSubscription = subCurator.create(subscription);
-  
-            return newSubscription;
+        public SubscriptionToken createSubscription(SubscriptionToken subscriptionToken) {
+            log.debug("subscriptionToken" + subscriptionToken);
+            SubscriptionToken newSubscriptionToken = subTokenCurator.create(subscriptionToken);
+
+            return newSubscriptionToken;
         }
- 
+        
+        
         @DELETE
-        @Path("/{subscription_id}")
+        @Path("/{subscription_token_id}")
         @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-        public void deleteSubscription(@PathParam("subscription_id") Long subscriptionId)
+        public void deleteSubscription(@PathParam("subscription_token_id") Long subscriptionTokenId)
         {
-            Subscription subscription = subCurator.find(subscriptionId);
+            SubscriptionToken subscriptionToken = subTokenCurator.find(subscriptionTokenId);
             
-            if (subscription == null) {
-                throw new BadRequestException("Subscription with id " + subscriptionId + " could not be found");
+            if (subscriptionToken == null) {
+                throw new BadRequestException("SubscriptionToken with id " + subscriptionTokenId + " could not be found");
             }
             
-            subCurator.delete(subscription);
+            subTokenCurator.delete(subscriptionToken);
             
         }
- 
-        // SubscriptionTokenResource
-        //      createToken
-        //      deleteToken
-        //      get/set token string 
-                
+        
+
+        
+        
 }
