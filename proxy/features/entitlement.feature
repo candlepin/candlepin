@@ -42,6 +42,11 @@ Feature: Consume an Entitlement
         And I Revoke All My Entitlements
         Then I Have 0 Entitlements
 
+    Scenario: Entitlement generates a certificate.
+        Given I am a Consumer meow
+        When I Consume an Entitlement for the "virtualization_host" Product
+        Then I Have 1 Certificate
+
     Scenario: A Consumer has No Entitlements After Unregistering Multiple Products
         Given I am a Consumer foo
         When I Consume an Entitlement for the "monitoring" Product

@@ -9,6 +9,10 @@ Then /I Have (\d+) Entitlement[s]?/ do |entitlement_size|
     @candlepin.list_entitlements.length.should == entitlement_size.to_i
 end
 
+Then /I Have (\d+) Certificate[s]?/ do |certificates_size|
+    @candlepin.get_certificates.length.should == certificates_size.to_i
+end
+
 Then /^I Have an Entitlement for the "([^\"]*)" Product$/ do |product_id|
     product_ids = @candlepin.list_entitlements.collect do |entitlement|
         entitlement['entitlement']['pool']['productId']

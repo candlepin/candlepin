@@ -41,6 +41,11 @@ class Candlepin
       return get(path)
     end
 
+    def get_certificates()
+        path = "/consumers/#{@consumer['uuid']}/certificates"
+        return get(path)
+    end
+
     def unregister()
         delete("/consumers/#{@consumer['uuid']}")
     end
