@@ -68,7 +68,11 @@ class Candlepin
     end
 
     def list_rules()
-	get("/rules")
+	get_text("/rules")
+    end
+
+    def upload_rules(rule_set)
+        post_text("/rules/", rule_set)
     end
 
     private
@@ -89,11 +93,22 @@ class Candlepin
         return JSON.parse(response.body)
     end
 
+    def get_text(uri)
+      response = @client[uri].get
+      return (response.body)
+    end
+
     def post(uri, data=nil)
         data = data.to_json if not data.nil?
         response = @client[uri].post(data, :content_type => :json, :accept => :json)
 
         return JSON.parse(response.body)
+    end
+
+    
+    def post_text(uri, data=nil)
+        response = @client[uri].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
+        return response.body
     end
 
     def delete(uri)
