@@ -24,6 +24,11 @@ Feature: Consume an Entitlement
         When I Consume an Entitlement for the "monitoring" Product
         Then I Have an Entitlement for the "monitoring" Product
 
+    Scenario: Single Entitlement from a Pool has the correct productId 
+        Given I am a Consumer random_box
+        When I Consume an Entitlement for the "monitoring" Pool
+        Then I Have an Entitlement for the "monitoring" Product
+
     Scenario: Multiple Entitlements have correct productIds
         Given I am a Consumer michael_knight
         When I Consume an Entitlement for the "monitoring" Product
