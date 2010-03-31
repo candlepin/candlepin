@@ -53,3 +53,9 @@ Feature: Consume an Entitlement
         And I Consume an Entitlement for the "virtualization_host" Product
         And I Revoke All My Entitlements
         Then I Have 0 Entitlements
+
+    Scenario: A Consumer can filter Entitlements by Product ID
+        Given I am a Consumer consumer
+        And I Consume an Entitlement for the "monitoring" Product
+        And I Consume an Entitlement for the "virtualization_host" Product
+        Then I Get 1 Entitlement When I Filter by Product ID "monitoring"
