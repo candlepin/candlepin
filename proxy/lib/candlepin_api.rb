@@ -63,8 +63,10 @@ class Candlepin
         post("/consumers/#{@consumer['uuid']}/entitlements?pool=#{pool}")
     end
 
-    def list_entitlements()
-        get("/entitlements?consumer=#{@consumer['uuid']}")
+    def list_entitlements(product_id = nil)
+        path = "/consumers/#{@consumer['uuid']}/entitlements"
+        path << "?product=#{product_id}" if product_id
+        get(path)
     end
 
     def list_rules()
