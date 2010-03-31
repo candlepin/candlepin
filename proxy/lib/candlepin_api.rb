@@ -15,6 +15,7 @@ class Candlepin
     end
 
     def register(consumer, username=nil, password=nil)
+      
         # TODO:  Maybe this should be created earlier?
         create_basic_client(username, password)
 
@@ -32,8 +33,12 @@ class Candlepin
       get("/pools/#{poolid}'")
     end
 
-    def get_pools()
-      return get("/pools")
+    def get_pools(params = {})
+      path = "/pools?"
+      path << "consumer=#{params[:consumer]}&" if params[:consumer]
+      path << "owner=#{params[:owner]}&" if params[:owner]
+      path << "product=#{params[:product]}&" if params[:product]
+      return get(path)
     end
 
     def unregister()
@@ -47,6 +52,10 @@ class Candlepin
 
     def consume_product(product)
         post("/consumers/#{@consumer['uuid']}/entitlements?product=#{product}")
+    end
+    
+    def consume_pool(pool)
+        post("/consumers/#{@consumer['uuid']}/entitlements?pool=#{pool}")
     end
 
     def list_entitlements()

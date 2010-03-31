@@ -7,6 +7,11 @@ Feature: Consume an Entitlement
         Given I am a Consumer random_box
         When I Consume an Entitlement for the "virtualization_host" Product
         Then I Have 1 Entitlement
+        
+    Scenario: Entitlement from a Pool is Consumed 
+        Given I am a Consumer random_box
+        When I Consume an Entitlement for the "virtualization_host" Pool
+        Then I Have 1 Entitlement
 
     Scenario: Multiple Entitlements are Consumed
         Given I am a Consumer consumer
