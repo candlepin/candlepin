@@ -201,6 +201,11 @@ create sequence seq_consumer_ent_cert
         Increment By 1 Start With 1
         Nocache  Noorder  Nocycle;
 
+create sequence seq_pool
+        Minvalue 1 Maxvalue 1.00000000000000E+27
+        Increment By 1 Start With 1
+        Nocache  Noorder  Nocycle;
+
 alter table CP_ATTRIBUTE_HIERARCHY add constraint fk_attribute_parent_id foreign key (PARENT_ATTRIBUTE_ID) references CP_ATTRIBUTE;
 alter table CP_ATTRIBUTE_HIERARCHY add constraint fk_attribute_child_id foreign key (CHILD_ATTRIBUTE_ID) references CP_ATTRIBUTE;
 alter table CP_CERTIFICATE add constraint fk_certificate_owner foreign key (owner_id) references CP_OWNER;
