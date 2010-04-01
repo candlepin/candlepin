@@ -77,6 +77,11 @@ class Candlepin
         post_text("/rules/", rule_set)
     end
 
+    def get_consumer(cid)
+        create_basic_client("foo", "bar")
+        get("/consumers/#{cid}")
+    end
+
     private
 
     def create_basic_client(username=nil, password=nil)

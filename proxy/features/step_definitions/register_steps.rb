@@ -20,17 +20,20 @@ Given /I am a Consumer (\w+)/ do |consumer_name|
     When "I Register a New Consumer #{consumer_name}"
 end
 
-When /I Register a New Consumer (\w+) with uuid (\w+)$/ do |consumer_name, uuid|
-    consumer = {
-        :consumer => {
-            :type => {:label => :system},
-            :name => consumer_name,
-            :uuid => uuid
-        }
-    }
-
-    @candlepin.register(consumer, @username, @password)
-end
+#When /I Register a New Consumer (\w+) with uuid (\w+)$/ do |consumer_name, uuid|
+#    c = @candlepin.get_consumer(uuid)
+#    consumer = {
+#        :consumer => {
+#            :type => {:label => :system},
+#            :name => consumer_name,
+#            :uuid => uuid
+#        }
+#    }
+#
+#    if not c
+#        @candlepin.register(consumer, @username, @password)
+#    end
+#end
 
 When /I Register a New Consumer (\w+)$/ do |consumer_name|
     consumer = {
