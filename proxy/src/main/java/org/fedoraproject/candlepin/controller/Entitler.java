@@ -170,7 +170,8 @@ public class Entitler {
             // to know if this product entails granting a cert someday.
             try {
                 // TODO: Fix serial here:
-                EntitlementCertificate cert = this.entCertAdapter.generateEntitlementCert(consumer, e, sub, prod, 
+                EntitlementCertificate cert = this.entCertAdapter.
+                    generateEntitlementCert(consumer, e, sub, prod,
                     sub.getEndDate(), BigInteger.valueOf(e.getId()));
                 e.getCertificates().add(cert);
                 this.entCertCurator.create(cert);

@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,7 +23,8 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import com.google.inject.Inject;
 
 /**
- * BasicAuthViaUserServiceFilter
+ * An {@link AuthenticationFilter} which extracts BASIC authentication credentials
+ * and validates them via a {@link UserServiceAdapter}.
  */
 public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
 
@@ -36,10 +34,18 @@ public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
     public BasicAuthViaUserServiceFilter(UserServiceAdapter userServiceAdapter) {
         this.userServiceAdapter = userServiceAdapter;
     }
-    
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param request
+     * @param response
+     * @return
+     * @throws Exception
+     */
     @Override
     protected String getUserName(HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+        throws Exception {
 
         String auth = request.getHeader("Authorization");
 
@@ -51,15 +57,11 @@ public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
             String username = userpass[0];
             String password = userpass[1];
 
-            if (doAuth(username, password)) {
+            if (userServiceAdapter.validateUser(username, password)) {
                 return username;
             }
         }
 
         return null;
-    }
-
-    private boolean doAuth(String username, String password) throws Exception {
-        return userServiceAdapter.validateUser(username, password);
     }
 }

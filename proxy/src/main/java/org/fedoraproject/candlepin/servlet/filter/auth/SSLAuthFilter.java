@@ -26,7 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 
 /**
- * SSLAuthFilter
+ * An {@link AuthenticationFilter} that inspects the Identity {@link X509Certificate}
+ * on a given request in order to extract user information.
  */
 public class SSLAuthFilter extends AuthenticationFilter {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
@@ -36,7 +37,7 @@ public class SSLAuthFilter extends AuthenticationFilter {
 
     @Override
     protected String getUserName(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
+        throws IOException, ServletException {
 
         X509Certificate[] certs = (X509Certificate[]) request
             .getAttribute(CERTIFICATES_ATTR);
@@ -53,6 +54,7 @@ public class SSLAuthFilter extends AuthenticationFilter {
         return parseUserName(identityCert);
     }
 
+    // Pulls the user name off of the x509 cert.
     private String parseUserName(X509Certificate cert) {
         String dn = cert.getSubjectDN().getName();
         Map<String, String> dnAttributes = new HashMap<String, String>();
