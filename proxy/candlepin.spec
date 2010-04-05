@@ -17,6 +17,7 @@ BuildArch: noarch
 %global _source_payload w9.gzdio
 
 %define __jar_repack %{nil}
+%define _container /var/lib/tomcat5/webapps
 
 %description
 Candlepin Entitlement Management
