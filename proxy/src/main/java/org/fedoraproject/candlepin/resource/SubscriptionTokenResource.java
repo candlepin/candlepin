@@ -43,62 +43,65 @@ import com.google.inject.Inject;
  */
 @Path("/subscriptiontokens")
 public class SubscriptionTokenResource {
-        private static Logger log = Logger.getLogger(SubscriptionTokenResource.class);   
-        private SubscriptionCurator subCurator;
-        private SubscriptionTokenCurator subTokenCurator;
-        
-        private String username;
-        private Owner owner;
-        
-        @Inject
-        public SubscriptionTokenResource(SubscriptionCurator subCurator,
-            SubscriptionTokenCurator subTokenCurator,
-            OwnerCurator ownerCurator,
-            @Context HttpServletRequest request) {    
-            this.subCurator = subCurator;
-            this.subTokenCurator = subTokenCurator;
-            this.username = (String) request.getAttribute("username");
-            if (username != null) {
-                this.owner = ownerCurator.lookupByName(username);
-                if (owner == null) {
-                    owner = ownerCurator.create(new Owner(username));
-                }
-            }
-        }
-        
-        @GET
-        @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-        public List<SubscriptionToken> getSubscriptionTokens() {
-            List<SubscriptionToken> subTokenList = new LinkedList<SubscriptionToken>();
-            subTokenList = subTokenCurator.findAll();
-            log.debug("sub token list" + subTokenList);
-            return subTokenList;
-        }
-        
-        @POST
-        @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-        public SubscriptionToken createSubscription(SubscriptionToken subscriptionToken) {
-            log.debug("subscriptionToken" + subscriptionToken);
-            SubscriptionToken newSubscriptionToken = subTokenCurator.create(subscriptionToken);
+    private static Logger log = Logger
+        .getLogger(SubscriptionTokenResource.class);
+    private SubscriptionCurator subCurator;
+    private SubscriptionTokenCurator subTokenCurator;
 
-            return newSubscriptionToken;
-        }
-        
-        
-        @DELETE
-        @Path("/{subscription_token_id}")
-        @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-        public void deleteSubscription(@PathParam("subscription_token_id") Long subscriptionTokenId)
-        {
-            SubscriptionToken subscriptionToken = subTokenCurator.find(subscriptionTokenId);
-            
-            if (subscriptionToken == null) {
-                throw new BadRequestException("SubscriptionToken with id " + subscriptionTokenId + " could not be found");
+    private String username;
+    private Owner owner;
+
+    @Inject
+    public SubscriptionTokenResource(SubscriptionCurator subCurator,
+        SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
+        @Context HttpServletRequest request) {
+        this.subCurator = subCurator;
+        this.subTokenCurator = subTokenCurator;
+        this.username = (String) request.getAttribute("username");
+        if (username != null) {
+            this.owner = ownerCurator.lookupByName(username);
+            if (owner == null) {
+                owner = ownerCurator.create(new Owner(username));
             }
-            
-            subTokenCurator.delete(subscriptionToken);
-            
         }
+    }
+
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public List<SubscriptionToken> getSubscriptionTokens() {
+        List<SubscriptionToken> subTokenList = new LinkedList<SubscriptionToken>();
+        subTokenList = subTokenCurator.findAll();
+        log.debug("sub token list" + subTokenList);
+        return subTokenList;
+    }
+
+    @POST
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public SubscriptionToken createSubscription(
+        SubscriptionToken subscriptionToken) {
+        log.debug("subscriptionToken" + subscriptionToken);
+        SubscriptionToken newSubscriptionToken = subTokenCurator
+            .create(subscriptionToken);
+
+        return newSubscriptionToken;
+    }
+
+    @DELETE
+    @Path("/{subscription_token_id}")
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public void deleteSubscription(
+        @PathParam("subscription_token_id") Long subscriptionTokenId) {
+        SubscriptionToken subscriptionToken = subTokenCurator
+            .find(subscriptionTokenId);
+
+        if (subscriptionToken == null) {
+            throw new BadRequestException("SubscriptionToken with id " +
+                subscriptionTokenId + " could not be found");
+        }
+
+        subTokenCurator.delete(subscriptionToken);
+
+    }
         
 
         
