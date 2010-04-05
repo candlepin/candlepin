@@ -67,12 +67,8 @@ public class DefaultSubscriptionServiceAdapter implements
         return subCurator.listSince(sinceDate);
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.service.SubscriptionServiceAdapter#getSubscriptions(org.fedoraproject.candlepin.model.Owner)
-     */
     @Override
     public List<Subscription> getSubscriptions(Owner owner) {
-        // TODO Auto-generated method stub
         return subCurator.listByOwner(owner);
     }
 }
