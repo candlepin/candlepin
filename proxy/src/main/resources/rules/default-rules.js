@@ -55,6 +55,10 @@ function post_global() {
 }
 
 function select_pool_global() {
+    if (pools.size() > 0) {
 	return pools.getFirst();
+    }
+
+    return null;
 }
 

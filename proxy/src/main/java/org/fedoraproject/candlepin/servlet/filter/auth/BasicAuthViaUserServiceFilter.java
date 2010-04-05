@@ -16,17 +16,11 @@ package org.fedoraproject.candlepin.servlet.filter.auth;
 
 import java.io.IOException;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
@@ -34,57 +28,37 @@ import com.google.inject.Inject;
 /**
  * BasicAuthViaUserServiceFilter
  */
-public class BasicAuthViaUserServiceFilter implements Filter {
-
-    private Logger log = Logger.getLogger(BasicAuthViaUserServiceFilter.class);
+public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
 
     private UserServiceAdapter userServiceAdapter;
     
     @Inject
     public BasicAuthViaUserServiceFilter(UserServiceAdapter userServiceAdapter) {
-
         this.userServiceAdapter = userServiceAdapter;
     }
-
+    
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException { }
+    protected String getUserName(HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
 
-    @Override
-    public void destroy() { }
-
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response,
-        FilterChain chain) throws IOException, ServletException {
-
-        log.debug("in basic auth filter");
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-
-        String auth = httpRequest.getHeader("Authorization");
+        String auth = request.getHeader("Authorization");
 
         if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
             String userpassEncoded = auth.substring(6);
             String[] userpass = new String(Base64.decodeBase64(userpassEncoded))
                     .split(":");
 
-            try {
-                if (doAuth(userpass[0], userpass[1])) {
-                    request.setAttribute("username", userpass[0]);
-                    chain.doFilter(request, response);
-                }
-                else {
-                    httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                }
-            }
-            catch (Exception e) {
-                httpResponse.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
+            String username = userpass[0];
+            String password = userpass[1];
+
+            if (doAuth(username, password)) {
+                return username;
             }
         }
-        else {
-            chain.doFilter(request, response);
-        }
+
+        return null;
     }
-    
+
     private boolean doAuth(String username, String password) throws Exception {
         return userServiceAdapter.validateUser(username, password);
     }

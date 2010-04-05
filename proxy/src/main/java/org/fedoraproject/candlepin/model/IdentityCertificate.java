@@ -69,7 +69,11 @@ public class IdentityCertificate implements Persisted {
 
     @XmlElement(name = "key")
     public String getKeyAsString() {
-        return new String(key);
+        if (key != null) {
+            return new String(key);
+        }
+
+        return "";
     }
 
     @XmlTransient
@@ -83,7 +87,11 @@ public class IdentityCertificate implements Persisted {
 
     @XmlElement(name = "cert")
     public String getCertAsString() {
-        return new String(cert);
+        if (cert != null) {
+            return new String(cert);
+        }
+
+        return "";
     }
 
     @XmlTransient

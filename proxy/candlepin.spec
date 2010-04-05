@@ -8,7 +8,7 @@ Group: Internet/Applications
 Vendor: Red Hat, Inc
 URL: http://fedorahosted.org/candlepin
 License: GLPv2
-Requires: jbossas >= 4.3.0
+Requires: tomcat5 >= 5.5
 BuildArch: noarch
 
 %global _binary_filedigest_algorithm 1
@@ -32,16 +32,16 @@ Candlepin Entitlement Management
 rm -rf $RPM_BUILD_ROOT
 
 # Create the directory structure required to lay down our files
-mkdir -p $RPM_BUILD_ROOT/var/lib/jbossas/server/production/deploy
+mkdir -p $RPM_BUILD_ROOT/%{_container}
 
-# Copy the contents of the candlepin-bin.tar.gz to /var/lib/jbossas/server/production/deploy (setup -c explodes the tar.gz automatically)
-cp -R . $RPM_BUILD_ROOT/var/lib/jbossas/server/production/deploy
+# Copy the contents of the candlepin-bin.tar.gz to /var/lib/tomcat5/webapps (setup -c explodes the tar.gz automatically)
+cp -R . $RPM_BUILD_ROOT/%{_container}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,jboss,jboss,-)
-/var/lib/jbossas/server/production/deploy/candlepin-1.0.0.war
+/var/lib/tomcat5/webapps/candlepin-1.0.0.war
 
 %doc

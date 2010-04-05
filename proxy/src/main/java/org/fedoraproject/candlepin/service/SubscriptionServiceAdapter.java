@@ -30,6 +30,13 @@ import org.fedoraproject.candlepin.model.Subscription;
 public interface SubscriptionServiceAdapter {
 
     /**
+     * List all subscriptions for the given owner.
+     * @param owner Owner of the subscriptions.
+     * @return all subscriptions for the given owner.
+     */
+    List<Subscription> getSubscriptions(Owner owner);
+    
+    /**
      * List all subscriptions for the given owner and product, which have
      * changed or been created since the given date.
      * @param owner Owner of the subscriptions.

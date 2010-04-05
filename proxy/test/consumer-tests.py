@@ -10,6 +10,9 @@ class ConsumerTests(CandlepinTests):
     def setUp(self):
         CandlepinTests.setUp(self)
 
+    def tearDown(self):
+        CandlepinTests.tearDown(self)
+
     def test_unbind_by_entitlement(self):
         pools = self.cp.getPools(consumer=self.uuid)
         pool = pools[0]

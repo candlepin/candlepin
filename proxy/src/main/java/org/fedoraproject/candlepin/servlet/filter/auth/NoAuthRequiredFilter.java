@@ -14,14 +14,9 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import java.io.IOException;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * NoAuthRequiredFilter
@@ -29,24 +24,11 @@ import javax.servlet.ServletResponse;
  * use this filter to bypass authentication on urls that don't require it.
  * 
  */
-public class NoAuthRequiredFilter implements Filter {
+public class NoAuthRequiredFilter extends AuthenticationFilter {
     
     @Override
-    public void destroy() {        
-    }
-
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response,
-        FilterChain chain) throws IOException, ServletException {
-        fakeAuth(request);
-        chain.doFilter(request, response);
-    }
-
-    @Override
-    public void init(FilterConfig arg0) throws ServletException {
-    }
-    
-    protected void fakeAuth(ServletRequest request) {
-        request.setAttribute("username", "no_authentication_needed_user");
+    protected String getUserName(HttpServletRequest request, 
+            HttpServletResponse response) {
+        return "no_authentication_needed_user";
     }
 }
