@@ -1,7 +1,7 @@
 Summary: Candlepin
 Name: candlepin
 Source: candlepin-bin.tar.gz
-Version: 1.0.0
+Version: 1.0.1
 Release: 1
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Group: Internet/Applications
