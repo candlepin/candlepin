@@ -62,6 +62,22 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     }
 
     /**
+     * Return a list of subscriptions filtered by owner.
+     * @param o Owner of the subscription.
+     * @return a list of subscriptions filtered by owner.
+     */
+    @SuppressWarnings("unchecked")
+    public List<Subscription> listByOwner(Owner o) {
+        List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
+                Subscription.class)
+            .add(Restrictions.eq("owner", o)).list();
+        if (subs == null) {
+            return new LinkedList<Subscription>();
+        }
+        return subs;
+    }
+    
+    /**
      * Return a list of subscriptions filtered by owner, product, since date.
      * @param o Owner of the subscription.
      * @param sinceDate date since modified.

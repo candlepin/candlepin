@@ -26,6 +26,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import com.google.inject.Key;
 import com.google.inject.servlet.ServletModule;
 import com.wideplay.warp.persist.PersistenceFilter;
+import org.fedoraproject.candlepin.servlet.filter.auth.AuthValidationFilter;
 
 /**
  * Candlepin-specific {@link ServletModule} that configures servlet filters.
@@ -42,6 +43,7 @@ public class CandlepinFilterModule extends ServletModule {
             Key.get(Filter.class, named(FilterConstants.BASIC_AUTH)));
         filter("/*").through(
             Key.get(Filter.class, named(FilterConstants.SSL_AUTH)));
+        filter("/*").through(AuthValidationFilter.class);
 
         serve("/*").with(HttpServletDispatcher.class);
     }

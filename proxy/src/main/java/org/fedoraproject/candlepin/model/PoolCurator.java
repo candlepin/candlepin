@@ -37,10 +37,10 @@ import com.wideplay.warp.persist.Transactional;
  */
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
+    private static Logger log = Logger.getLogger(PoolCurator.class);
+
     private SubscriptionServiceAdapter subAdapter;
     private Enforcer enforcer;
-    private static Logger log = Logger.getLogger(PoolCurator.class);
-    
 
     @Inject
     protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer) {
@@ -79,6 +79,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
+
         log.debug("Listing available pools for:");
         log.debug("   consumer: " + c);
         log.debug("   owner: " + o);

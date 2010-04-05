@@ -14,55 +14,30 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import java.io.IOException;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 
 /**
  * PassThroughAuthenticationFilter
  */
-public class PassThroughAuthenticationFilter implements Filter {
-
-    public PassThroughAuthenticationFilter() {
-    }
+public class PassThroughAuthenticationFilter extends AuthenticationFilter {
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-    }
-
-    @Override
-    public void destroy() {
-    }
-
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response,
-        FilterChain chain) throws IOException, ServletException {
-
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String auth = httpRequest.getHeader("Authorization");
+    protected String getUserName(HttpServletRequest request,
+            HttpServletResponse response) {
+        String auth = request.getHeader("Authorization");
 
         if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
 
             String userpassEncoded = auth.substring(6);
             String[] userpass = new String(Base64.decodeBase64(userpassEncoded)).split(":");
 
-            // don't check this against anything - just set the username
-            if (userpass.length > 0) {
-                request.setAttribute("username", userpass[0]);
-            } 
-            else {
-                request.setAttribute("username", "");
-            }
+            return userpass[0];
         }
 
-        chain.doFilter(request, response);
+        return null;
     }
 }

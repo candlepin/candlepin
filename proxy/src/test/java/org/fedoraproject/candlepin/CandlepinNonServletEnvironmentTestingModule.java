@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,8 +24,11 @@ import com.google.inject.AbstractModule;
 public class CandlepinNonServletEnvironmentTestingModule extends AbstractModule {
 
     @Override
-    public void configure() {        
-        bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
+    public void configure() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getAttribute("username")).thenReturn("mock_user");
+
+        bind(HttpServletRequest.class).toInstance(request);
         bind(HttpServletResponse.class).toInstance(mock(HttpServletResponse.class));
     }
 }
