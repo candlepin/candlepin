@@ -14,9 +14,8 @@
  */
 package org.fedoraproject.candlepin.servletfilter.auth;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -114,14 +113,11 @@ public class BasicAuthViaDbTest {
     public void testInvalidPass() throws Exception {
         // return valid user, invalid pass
         when(request.getHeader("Authorization")).thenReturn(
-            "BASIC " + encodeUserPass("USER", "REDHA"));
-        when(request.getHeader("Authorization")).thenReturn(
             "BASIC " + encodeUserPass("CANADA", "MICRO$OFT"));
         when(request.getMethod()).thenReturn("POST");
 
         filter.doFilter(request, defaultResponse, defaultChain);
-        // unsuccessful authentication returns a 403
-        verify(defaultResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
+        verify(request, never()).setAttribute(eq("username"), anyString());
     }
 
     @Test
@@ -134,8 +130,7 @@ public class BasicAuthViaDbTest {
         when(request.getMethod()).thenReturn("POST");
 
         filter.doFilter(request, defaultResponse, defaultChain);
-        // unsuccessful authentication returns a 403
-        verify(defaultResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
+        verify(request, never()).setAttribute(eq("username"), anyString());
     }
 
     @Test

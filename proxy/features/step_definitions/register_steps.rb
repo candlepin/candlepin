@@ -15,7 +15,7 @@ Given /I am a Consumer (\w+)/ do |consumer_name|
     # Just hardcodes in username/password so that
     # all the features don't have to spell it out
 
-    @username = 'Dude'
+    @username = 'Spacewalk Public Cert'
     @password = 'password'
     When "I Register a New Consumer #{consumer_name}"
 end

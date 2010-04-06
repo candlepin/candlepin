@@ -42,6 +42,8 @@ import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
+import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
+import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
 
 /**
  * PKIUtility
@@ -94,6 +96,11 @@ public class PKIUtility {
         certGen.addExtension(MiscObjectIdentifiers.netscapeCertType.toString(),
                 false, certType);
         certGen.addExtension(X509Extensions.KeyUsage.toString(), false, keyUsage);
+        
+        certGen.addExtension(X509Extensions.AuthorityKeyIdentifier, false,
+            new AuthorityKeyIdentifierStructure(caCert));
+        certGen.addExtension(X509Extensions.SubjectKeyIdentifier, false,
+            new SubjectKeyIdentifierStructure(clientKeyPair.getPublic()));
 
         if (extensions != null) {
             for (X509ExtensionWrapper wrapper : extensions) {

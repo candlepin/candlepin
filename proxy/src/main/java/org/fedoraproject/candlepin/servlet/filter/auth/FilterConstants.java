@@ -20,6 +20,7 @@ package org.fedoraproject.candlepin.servlet.filter.auth;
 public class FilterConstants {
     public static final String BASIC_AUTH = "BASIC_AUTH_FILTER";
     public static final String SSL_AUTH = "SSL_AUTH_FILTER";
+    public static final String USERNAME_ATTR = "username";
     
     private FilterConstants() {
         // do nothing

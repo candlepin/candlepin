@@ -21,6 +21,8 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -51,10 +53,12 @@ public class Entitler {
     private EntitlementCertServiceAdapter entCertAdapter;
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;
-
+    private EntitlementCertificateCurator entCertCurator;
+    
     @Inject
     protected Entitler(PoolCurator epCurator,
-        EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
+        EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator, 
+        EntitlementCertificateCurator entCertCurator,
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter productAdapter) {
@@ -66,6 +70,7 @@ public class Entitler {
         this.entCertAdapter = entCertAdapter;
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
+        this.entCertCurator = entCertCurator;
     }
 
     /**
@@ -165,8 +170,11 @@ public class Entitler {
             // to know if this product entails granting a cert someday.
             try {
                 // TODO: Fix serial here:
-                this.entCertAdapter.generateEntitlementCert(consumer, e, sub, prod, 
+                EntitlementCertificate cert = this.entCertAdapter.
+                    generateEntitlementCert(consumer, e, sub, prod,
                     sub.getEndDate(), BigInteger.valueOf(e.getId()));
+                e.getCertificates().add(cert);
+                this.entCertCurator.create(cert);
             }
             catch (Exception ex) {
                 throw new RuntimeException(ex);

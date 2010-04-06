@@ -66,4 +66,9 @@ public class DefaultSubscriptionServiceAdapter implements
     public List<Subscription> getSubscriptionsSince(Date sinceDate) {
         return subCurator.listSince(sinceDate);
     }
+
+    @Override
+    public List<Subscription> getSubscriptions(Owner owner) {
+        return subCurator.listByOwner(owner);
+    }
 }

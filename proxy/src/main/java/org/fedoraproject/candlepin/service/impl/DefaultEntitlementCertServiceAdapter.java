@@ -71,12 +71,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCert(this.pki.getPemEncoded(x509Cert));
         cert.setEntitlement(entitlement);
-        entitlement.getCertificates().add(cert);
         
         log.debug("Generated cert: " + serialNumber);
         log.debug("Key: " + cert.getKeyAsString());
         log.debug("Cert: " + cert.getCertAsString());
-        entCertCurator.create(cert);
         
         return cert;
     }

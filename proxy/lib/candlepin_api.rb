@@ -3,15 +3,12 @@ require 'openssl'
 require 'rest_client'
 require 'json'
 
-HTTP_PORT = 8080
-HTTPS_PORT = 8443
-
 class Candlepin
 
     attr_reader :identity_certificate, :consumer
 
-    def initialize(host='localhost')
-        @host = host
+    def initialize(host='localhost', port=8443)
+        @base_url = "https://#{host}:#{port}/candlepin"
     end
 
     def register(consumer, username=nil, password=nil)
@@ -85,13 +82,14 @@ class Candlepin
     private
 
     def create_basic_client(username=nil, password=nil)
-        @client = RestClient::Resource.new("http://#{@host}:#{HTTP_PORT}/candlepin", 
+        @client = RestClient::Resource.new(@base_url, 
             username, password)
     end
 
     def create_ssl_client
-        @client = RestClient::Resource.new("https://#{@host}:#{HTTPS_PORT}/candlepin",
-            :ssl_client_cert => @identity_certificate, :ssl_client_key => @identity_key)
+        @client = RestClient::Resource.new(@base_url,
+            :ssl_client_cert => @identity_certificate, 
+            :ssl_client_key => @identity_key)
     end
 
     def get(uri)

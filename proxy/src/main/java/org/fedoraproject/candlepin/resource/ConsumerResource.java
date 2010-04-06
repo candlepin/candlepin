@@ -174,7 +174,6 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Consumer create(Consumer in) throws BadRequestException {
         // API:registerConsumer
-        Owner owner = ownerCurator.findAll().get(0); // TODO: actually get
 
         ConsumerType type = consumerTypeCurator.lookupByLabel(
             in.getType().getLabel());

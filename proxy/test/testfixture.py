@@ -22,15 +22,19 @@ class CandlepinTests(unittest.TestCase):
 
         self.cp = CandlePinApi(hostname="localhost", port="8443",
                                api_url="/candlepin", cert_file="./client.crt",
-                               key_file="./client.key", username="testuser",
+                               key_file="./client.key", username="Spacewalk Public Cert",
                                password="testuserpass")
         #self.cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
+        #self.cp = CandlePinApi(hostname="localhost", port="8443", 
+        #                       api_url="/candlepin", username="Spacewalk Public Cert",
+        #                       password="notchecked")
 
         # TODO: Use CandlePinAPI?
         # Upload the test cert to populate Candlepin db. Only do this
         # once per test suite run.
         #rest = Rest(hostname="localhost", port="8080", api_url="/candlepin")
-        rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
+        #rest = Rest(hostname="localhost", port="8443", api_url="/candlepin", cert_file="./client.crt", key_file="./client.key")
+        rest = Rest(hostname="localhost", port="8080", api_url="/candlepin")
         rsp = rest.get("/certificates")
         if not rsp:
             print("Cert upload required.")
@@ -85,7 +89,7 @@ class CandlepinTests(unittest.TestCase):
 
         cp = CandlePinApi(hostname="localhost", port="8080", api_url="/candlepin")
         #cp = CandlePinApi(hostname="localhost", port="8443", api_url="/candlepin")
-        response = cp.registerConsumer("fakeuser", "fakepw",
+        response = cp.registerConsumer("Spacewalk Public Cert", "fakepw",
                 "consumername", hardware=facts_metadata, 
                 consumer_type=consumer_type)
 #        print("Consumer created: %s" % response)

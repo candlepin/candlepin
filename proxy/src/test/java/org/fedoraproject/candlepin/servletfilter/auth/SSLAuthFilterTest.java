@@ -55,7 +55,7 @@ public class SSLAuthFilterTest {
     }
 
     /**
-     * 403 if no username and no cert
+     * No username and no cert
      *
      * @throws Exception
      */
@@ -63,7 +63,7 @@ public class SSLAuthFilterTest {
     public void noUserNoCert() throws Exception {
         this.filter.doFilter(request, response, chain);
 
-        verify(response).setStatus(HttpServletResponse.SC_FORBIDDEN);
+        verify(request, never()).setAttribute(eq("username"), anyString());
     }
 
     /**
@@ -89,7 +89,7 @@ public class SSLAuthFilterTest {
         mockCert("CN=something, UID=99-423-235");
         this.filter.doFilter(request, response, chain);
 
-        verify(response).setStatus(HttpServletResponse.SC_FORBIDDEN);
+        verify(request, never()).setAttribute(eq("username"), anyString());
     }
 
 
