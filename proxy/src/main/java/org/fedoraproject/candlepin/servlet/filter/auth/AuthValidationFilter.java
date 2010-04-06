@@ -24,7 +24,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- *
+ * This is assumed to be the final filter in the authentication chain, and is
+ * responsible for verifying that a user has been authenticated by some previous
+ * filter.
  */
 public class AuthValidationFilter implements Filter {
 
@@ -34,6 +36,18 @@ public class AuthValidationFilter implements Filter {
     @Override
     public void destroy() { }
 
+    /**
+     * {@inheritDoc}
+     *
+     * This filter checks the request for a "username" attribute and throws
+     * a 403 if none is found.
+     *
+     * @param request
+     * @param response
+     * @param chain
+     * @throws IOException
+     * @throws ServletException
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException {

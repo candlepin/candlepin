@@ -5,8 +5,6 @@ import base64
 import os
 
 from urllib import urlopen
-from candlepinapi import Rest
-from certs import SPACEWALK_PUBLIC_CERT
 from candlepinapi import Rest, CandlePinApi
 
 CERTS_UPLOADED = False

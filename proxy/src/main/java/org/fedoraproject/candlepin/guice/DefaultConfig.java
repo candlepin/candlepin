@@ -66,8 +66,6 @@ class DefaultConfig extends AbstractModule {
         bind(EntitlementCertServiceAdapter.class).to(
             DefaultEntitlementCertServiceAdapter.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
-        bind(ProductServiceAdapter.class)
-        .to(DefaultProductServiceAdapter.class);
-    
+        bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
     }
 }

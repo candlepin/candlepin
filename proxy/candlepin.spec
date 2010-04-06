@@ -78,5 +78,4 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,tomcat,tomcat,775)
 %{_localstatedir}/lib/tomcat6/webapps/candlepin*
 
-
 %doc

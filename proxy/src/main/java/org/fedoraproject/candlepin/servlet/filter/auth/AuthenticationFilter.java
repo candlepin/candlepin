@@ -25,7 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- *
+ * Base class for authentication filters.  Subclasses should only need to implement
+ * the {@link #getUserName(javax.servlet.http.HttpServletRequest,
+ * javax.servlet.http.HttpServletResponse)} method for a typical use case.
  */
 public abstract class AuthenticationFilter implements Filter {
 
@@ -35,6 +37,18 @@ public abstract class AuthenticationFilter implements Filter {
     @Override
     public void destroy() { }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Responsible for checking the <code>request</code> for an existing username
+     * and calling in to <code>getUserName</code> if none exists.
+     *
+     * @param request
+     * @param response
+     * @param chain
+     * @throws IOException
+     * @throws ServletException
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException {
@@ -67,6 +81,14 @@ public abstract class AuthenticationFilter implements Filter {
         chain.doFilter(request, response);
     }
 
+    /**
+     * Extracts the user name.
+     *
+     * @param request
+     * @param response
+     * @return the user's name, or <code>null</code> if the name is not present
+     * @throws Exception
+     */
     protected abstract String getUserName(HttpServletRequest request,
             HttpServletResponse response) throws Exception;
 

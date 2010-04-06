@@ -256,7 +256,7 @@ begin
     task.cucumber_opts << " #{features}" if not features.nil?
   end
 
-  Cucumber::Rake::Task.new(:cucumber_html) do |task|
+  Cucumber::Rake::Task.new('cucumber:html') do |task|
     task.cucumber_opts = %w{--format html}
   end
 rescue LoadError
@@ -266,7 +266,7 @@ rescue LoadError
   end
 
   desc 'Cucumber HTML buildr task not available'
-  task :cucumber_html do
+  task 'cucumber:html' do
     abort 'Cucumber HTML buildr task is not available.  Be sure to install the cucumber gem.'
   end
 end
