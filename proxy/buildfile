@@ -109,9 +109,9 @@ define "candlepin" do
   download artifact('com.wideplay.warp:warp-persist:jar:2.0-20090214') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/wideplay/warp/warp-persist/2.0-20090214/warp-persist-2.0-20090214.jar'
 
   # Resource Substitution
-  githash = Git.git 'rev-parse', 'HEAD'
-  resources.filter.using 'version'=>version,
-        'hash'=> githash
+#  githash = Git.git 'rev-parse', 'HEAD'
+#  resources.filter.using 'version'=>version,
+#        'hash'=> githash
 
   
   #
@@ -124,8 +124,8 @@ define "candlepin" do
   #
   # testing
   #
-  test.resources.filter.using 'version'=>version,
-        'hash'=> githash          
+#  test.resources.filter.using 'version'=>version,
+#        'hash'=> githash          
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
