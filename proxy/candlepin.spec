@@ -8,7 +8,7 @@ Group: Internet/Applications
 Vendor: Red Hat, Inc
 URL: http://fedorahosted.org/candlepin
 License: GLPv2
-Requires: tomcat5 >= 5.5
+Requires: jbossas >= 4.3
 BuildArch: noarch
 
 %global _binary_filedigest_algorithm 1
@@ -42,6 +42,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,jboss,jboss,-)
-/var/lib/tomcat5/webapps/candlepin-1.0.0.war
+/var/lib/jbossas/server/production/deploy/candlepin-1.0.0.war
 
 %doc
