@@ -62,7 +62,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + endDate);
         
-        KeyPair keyPair = keyPairCurator.getServerKeyPair();
+        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
             null, sub.getStartDate(), endDate, keyPair, serialNumber);
         
