@@ -13,7 +13,7 @@ INSTALL         = /usr/bin/install
 INSTALL_DIR     = $(INSTALL) --verbose -d -m 755
 ARCHIVE         = $(NAME)-bin.tar.gz
 EXPLODED_NAME   = $(NAME)-$(VERSION).war
-CONTAINER_PATH  = /var/lib/tomcat5/webapps
+CONTAINER_PATH  = /var/lib/jbossas/server/production/deploy
 
 RPM_TOPDIR	= /tmp/$(NAME)-$(VERSION)-$(RELEASE)-build
 _RPM_OPTS	= --define "_topdir	    $(RPM_TOPDIR)" \

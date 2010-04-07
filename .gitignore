@@ -16,6 +16,8 @@ proxy/.classpath
 proxy/.project
 proxy/.pydevproject
 proxy/.externalToolBuilders
+proxy/client.crt
+proxy/client.key
 proxy/conf/eclipse/bin
 proxy/conf/eclipse/.project
 proxy/rhnwebapp
