@@ -353,6 +353,7 @@ public class Consumer implements Persisted {
         this.entitlements.remove(entitlement);
     }
 
+    @XmlTransient
     public KeyPair getKeyPair() {
         return keyPair;
     }
