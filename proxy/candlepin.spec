@@ -35,12 +35,13 @@ Provides: candlepin-webapp
 %description tomcat6
 Candlepin web application for tomcat6
 
-#%package jboss
-#Summary: Candlepin web application for jboss
-#Provides: candlepin-webapp
+%package jboss
+Summary: Candlepin web application for jboss
+Requires: jbossas >= 4.3
+Provides: candlepin-webapp
 
-#%description jboss
-#Candlepin web application for jboss
+%description jboss
+Candlepin web application for jboss
 
 %prep
 %setup -q 
@@ -54,21 +55,23 @@ rm -rf $RPM_BUILD_ROOT
 # tomcat5
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/candlepin/
+unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/candlepin/
 
 # tomcat6
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/candlepin/
-
-# need to get rpm and war version in sync
-unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/candlepin/
 unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/candlepin/
+
+# jbossas
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
+cp target/%{name}-*.war $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-#%files
-#%defattr(-,jboss,jboss,-)
-#/var/lib/tomcat5/webapps/candlepin-1.0.0.war
+%files jboss
+%defattr(-,jboss,jboss,-)
+%{_localstatedir}/lib/jbossas/server/production/deploy/candlepin-*.war
 
 %files tomcat5
 %defattr(644,tomcat,tomcat,775)
