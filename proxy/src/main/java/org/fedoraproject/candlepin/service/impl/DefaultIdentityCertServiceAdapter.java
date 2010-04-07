@@ -83,7 +83,7 @@ public class DefaultIdentityCertServiceAdapter implements
         BigInteger serialNumber = nextSerialNumber();
         String dn = createDN(consumer, username);
         IdentityCertificate identityCert = new IdentityCertificate();
-        KeyPair keyPair = keyPairCurator.getServerKeyPair();
+        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
             startDate, endDate, keyPair, serialNumber);
         
