@@ -52,6 +52,10 @@ buildr clean test=no package
 %install
 rm -rf $RPM_BUILD_ROOT
 # Create the directory structure required to lay down our files
+# common
+install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
+touch $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
+
 # tomcat5
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/candlepin/
@@ -68,6 +72,9 @@ cp target/%{name}-*.war $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/pro
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%files
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 
 %files jboss
 %defattr(-,jboss,jboss,-)
