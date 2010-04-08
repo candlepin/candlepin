@@ -164,11 +164,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     private void refreshPools(Owner owner, String productId) {
         log.debug("Refreshing pools");
-        List<Subscription> subs = 
-            productId == null ? 
-            subAdapter.getSubscriptions(owner, productId) :
-            subAdapter.getSubscriptions(owner);
-                
+        
+        List<Subscription> subs = subAdapter.getSubscriptions(owner, productId);
         List<Pool> pools = listByOwnerAndProductNoRefresh(owner, productId);
         
         // Map all  pools for this owner/product that have a
@@ -182,7 +179,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         
         for (Subscription sub : subs) {
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                createPool(owner, subToPoolMap, sub);
+                createPool(subToPoolMap, sub);
             }
             else {
                 updatePool(subToPoolMap, sub);
@@ -215,9 +212,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         subToPoolMap.remove(sub.getId());
     }
 
-    private void createPool(Owner owner, Map<Long, Pool> subToPoolMap, Subscription sub) {
+    private void createPool(Map<Long, Pool> subToPoolMap, Subscription sub) {
         log.debug("Creating new pool for new sub: " + sub.getId());
-        Pool newPool = new Pool(owner, sub.getProductId(),
+        Pool newPool = new Pool(sub.getOwner(), sub.getProductId(),
                 sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
         newPool.setSubscriptionId(sub.getId());
         create(newPool);
