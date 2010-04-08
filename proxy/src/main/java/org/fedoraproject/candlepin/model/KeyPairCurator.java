@@ -35,20 +35,20 @@ public class KeyPairCurator extends
     }
 
     /**
-     * Lookup the keypair for this server. If none exists, a pair will be generated.
+     * Lookup the keypair for this consumer. If none exists, a pair will be generated.
      * Returns the java.security.KeyPair, not our internal KeyPair.
      * @return server-wide keypair.
      */
-    public java.security.KeyPair getServerKeyPair() {
+    public java.security.KeyPair getConsumerKeyPair(Consumer c) {
         // Lookup all key pairs, there should only ever be one, so raise exception
         // if multiple exist.
-        KeyPair cpKeyPair = (KeyPair) currentSession().createCriteria(KeyPair.class).
-            uniqueResult();
+        KeyPair cpKeyPair = c.getKeyPair();
         if (cpKeyPair == null) {
             try {
                 java.security.KeyPair newPair = pki.generateNewKeyPair();
                 cpKeyPair = new KeyPair(newPair.getPrivate(), newPair.getPublic());
                 create(cpKeyPair);
+                c.setKeyPair(cpKeyPair);
             }
             catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);

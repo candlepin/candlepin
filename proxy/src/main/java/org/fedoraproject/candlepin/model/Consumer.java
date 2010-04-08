@@ -112,6 +112,8 @@ public class Consumer implements Persisted {
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> facts;    
     
+    @OneToOne(cascade = CascadeType.ALL)
+    private KeyPair keyPair;
     
     /**
      * ctor
@@ -145,6 +147,7 @@ public class Consumer implements Persisted {
         facts = new HashMap<String, String>(copyFrom.facts);
         childConsumers = copyFrom.childConsumers;
         entitlements = copyFrom.entitlements;
+        keyPair = copyFrom.keyPair;
     }
 
     /**
@@ -348,6 +351,15 @@ public class Consumer implements Persisted {
 
     public void removeEntitlement(Entitlement entitlement) {
         this.entitlements.remove(entitlement);
+    }
+
+    @XmlTransient
+    public KeyPair getKeyPair() {
+        return keyPair;
+    }
+
+    public void setKeyPair(KeyPair keyPair) {
+        this.keyPair = keyPair;
     }
 
     @Override
