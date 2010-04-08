@@ -34,7 +34,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     public Owner lookupByName(String name) {
         return (Owner) currentSession().createCriteria(Owner.class)
-        .add(Restrictions.like("name", name))
+        .add(Restrictions.eq("name", name))
         .uniqueResult();
     }
 
