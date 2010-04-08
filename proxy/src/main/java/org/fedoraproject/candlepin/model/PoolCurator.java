@@ -55,6 +55,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     public List<Pool> listByOwner(Owner o) {
+        refreshPools(o, null);
         return listAvailableEntitlementPools(null, o, (String) null, true);
     }
     
@@ -66,24 +67,42 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     public List<Pool> listAvailableEntitlementPools(Consumer c) {
+        refreshPools(c.getOwner(), null);
         return listAvailableEntitlementPools(c, null, (String) null, true);
     }
     
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             Product p, boolean activeOnly) {
         String productId = (p == null) ? null : p.getId();
+        refreshPools(o, productId);
         return listAvailableEntitlementPools(c, o, productId, activeOnly);
     }
     
+    /**
+     * List all entitlement pools for the given owner and product.
+     * 
+     * @param owner owner of the entitlement pool
+     * @param product product filter.
+     * @return list of EntitlementPools
+     */
+    public List<Pool> listByOwnerAndProduct(Owner owner,
+            Product product) {  
+        refreshPools(owner, product.getId());        
+        return listAvailableEntitlementPools(null, owner, product, false);
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
 
-        log.debug("Listing available pools for:");
-        log.debug("   consumer: " + c);
-        log.debug("   owner: " + o);
-        log.debug("   product: " + productId);
+        if (log.isDebugEnabled()) {
+            log.debug("Listing available pools for:");
+            log.debug("   consumer: " + c);
+            log.debug("   owner: " + o);
+            log.debug("   product: " + productId);
+        }
+        
         List<Pool> results = null;
         Criteria crit = currentSession().createCriteria(Pool.class);
         if (activeOnly) {
@@ -145,8 +164,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     private void refreshPools(Owner owner, String productId) {
         log.debug("Refreshing pools");
-        List<Subscription> subs = subAdapter.getSubscriptions(owner, 
-                productId);
+        List<Subscription> subs = 
+            productId == null ? 
+            subAdapter.getSubscriptions(owner, productId) :
+            subAdapter.getSubscriptions(owner);
+                
         List<Pool> pools = listByOwnerAndProductNoRefresh(owner, productId);
         
         // Map all  pools for this owner/product that have a
@@ -159,85 +181,57 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         
         for (Subscription sub : subs) {
-            // No pool exists for this subscription, create one:
-            if (!subToPoolMap.containsKey(sub.getId())) {
-                log.debug("Creating new pool for new sub: " + sub.getId());
-                Pool newPool = new Pool(owner, productId,
-                        sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
-                newPool.setSubscriptionId(sub.getId());
-                create(newPool);
-                subToPoolMap.remove(sub.getId());
+            if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
+                createPool(owner, subToPoolMap, sub);
             }
             else {
-                log.debug("Found existing pool for sub: " + sub.getId());
-                Pool existingPool = subToPoolMap.get(sub.getId());
-                
-                // TODO: We're just updating the pool always now, would be much
-                // better if we could check some kind of last modified date to
-                // determine if a change has taken place:
-                existingPool.setQuantity(sub.getQuantity());
-                existingPool.setStartDate(sub.getStartDate());
-                existingPool.setEndDate(sub.getEndDate());
-                merge(existingPool);
-                subToPoolMap.remove(sub.getId());
+                updatePool(subToPoolMap, sub);
             }
         }
 
-        // Iterate pools whose subscription disappeared:
+        // de-activate pools whose subscription disappeared:
         for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
-            log.debug("Subscription disappeared for pool: " + entry.getValue());
-            entry.getValue().setActiveSubscription(Boolean.FALSE);
-            merge(entry.getValue());
+            deactivatePool(entry.getValue());
         }
 
     }
-    
-    /**
-     * List all entitlement pools for the given product.
-     * 
-     * @param product product filter.
-     * @return list of EntitlementPools
-     */
-    public List<Pool> listByProduct(Product product) {
-        return listAvailableEntitlementPools(null, null, product, true);        
+
+    private boolean poolExistsForSubscription(Map<Long, Pool> subToPoolMap,
+            Long id) {
+        return subToPoolMap.containsKey(id);
     }
 
-    /**
-     * List all entitlement pools for the given owner and product.
-     *
-     * @param productId product filter.
-     * @return list of EntitlementPools
-     */
-    public List<Pool> listByProductId(String productId) {
-        return listAvailableEntitlementPools(null, null, productId, true);
-    }    
-
-    /**
-     * List all entitlement pools for the given owner and product.
-     * 
-     * @param owner owner of the entitlement pool
-     * @param product product filter.
-     * @return list of EntitlementPools
-     */
-    public List<Pool> listByOwnerAndProduct(Owner owner,
-            Product product) {  
-        refreshPools(owner, product.getId());        
-        return listAvailableEntitlementPools(null, owner, product, false);
+    private void updatePool(Map<Long, Pool> subToPoolMap, Subscription sub) {
+        log.debug("Found existing pool for sub: " + sub.getId());
+        Pool existingPool = subToPoolMap.get(sub.getId());
+        
+        // TODO: We're just updating the pool always now, would be much
+        // better if we could check some kind of last modified date to
+        // determine if a change has taken place:
+        existingPool.setQuantity(sub.getQuantity());
+        existingPool.setStartDate(sub.getStartDate());
+        existingPool.setEndDate(sub.getEndDate());
+        merge(existingPool);
+        subToPoolMap.remove(sub.getId());
     }
 
-    /**
-     * List all entitlement pools for the given owner and product.
-     *
-     * @param owner owner of the entitlement pool
-     * @param productId product filter.
-     * @return list of EntitlementPools
-     */
-    public List<Pool> listByOwnerAndProductId(Owner owner,
-            String productId) {
-        refreshPools(owner, productId);
-        return listByOwnerAndProductNoRefresh(owner, productId);
+    private void createPool(Owner owner, Map<Long, Pool> subToPoolMap, Subscription sub) {
+        log.debug("Creating new pool for new sub: " + sub.getId());
+        Pool newPool = new Pool(owner, sub.getProductId(),
+                sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
+        newPool.setSubscriptionId(sub.getId());
+        create(newPool);
+        subToPoolMap.remove(sub.getId());
     }
-    
+
+    private void deactivatePool(Pool pool) {
+        if (log.isDebugEnabled()) {
+            log.debug("Subscription disappeared for pool: " + pool);
+        }
+        pool.setActiveSubscription(Boolean.FALSE);
+        merge(pool);
+    }
+
     private List<Pool> listByOwnerAndProductNoRefresh(Owner owner,
         String productId) {
         return listAvailableEntitlementPools(null, owner, productId, false);
