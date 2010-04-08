@@ -68,7 +68,7 @@ unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/weba
 
 # jbossas
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
-cp target/%{name}-*.war $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
+unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
