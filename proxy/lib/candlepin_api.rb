@@ -79,6 +79,10 @@ class Candlepin
         get("/consumers/#{cid}")
     end
 
+    def unbind_entitlement(eid)
+        delete("/consumers/#{@consumer['uuid']}/entitlements/#{eid}")
+    end
+
     private
 
     def create_basic_client(username=nil, password=nil)
