@@ -167,9 +167,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         log.debug("Refreshing pools");
         
         List<Subscription> subs = null;
-        if(productId == null){
+        if (productId == null) {
             subs = subAdapter.getSubscriptions(owner);
-        }else{
+        }
+        else {
             subs = subAdapter.getSubscriptions(owner, productId);
         }
         
