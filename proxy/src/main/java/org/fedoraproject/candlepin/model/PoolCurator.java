@@ -166,7 +166,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private void refreshPools(Owner owner, String productId) {
         log.debug("Refreshing pools");
         
-        List<Subscription> subs = subAdapter.getSubscriptions(owner, productId);
+        List<Subscription> subs = null;
+        if(productId == null){
+            subs = subAdapter.getSubscriptions(owner);
+        }else{
+            subs = subAdapter.getSubscriptions(owner, productId);
+        }
+        
         List<Pool> pools = listByOwnerAndProductNoRefresh(owner, productId);
         
         // Map all  pools for this owner/product that have a
