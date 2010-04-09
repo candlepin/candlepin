@@ -551,7 +551,7 @@ public class ConsumerResource {
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            entitlementCurator.delete(toDelete);
+            entitler.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException("Entitlement with ID '" + dbid +

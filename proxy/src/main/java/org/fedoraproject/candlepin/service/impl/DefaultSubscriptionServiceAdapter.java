@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Owner;
@@ -57,8 +58,7 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public List<Subscription> getSubscriptionsSince(Owner owner,
-            Date sinceDate) {
+    public List<Subscription> getSubscriptionsSince(Owner owner, Date sinceDate) {
         return subCurator.listByOwnerAndProductSince(owner, sinceDate);
     }
 
@@ -70,5 +70,11 @@ public class DefaultSubscriptionServiceAdapter implements
     @Override
     public List<Subscription> getSubscriptions(Owner owner) {
         return subCurator.listByOwner(owner);
+    }
+    
+    @Override
+    public List<Subscription> getSubscriptions() {
+        List<Subscription> toReturn = subCurator.findAll();
+        return toReturn == null ? new LinkedList<Subscription>() : toReturn;
     }
 }

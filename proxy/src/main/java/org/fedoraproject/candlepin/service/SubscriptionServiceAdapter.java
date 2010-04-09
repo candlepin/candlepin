@@ -76,4 +76,10 @@ public interface SubscriptionServiceAdapter {
      * @return Subscription whose id matches subscriptionId
      */
     Subscription getSubscription(Long subscriptionId);
+    
+    /**
+     * Return all subscriptions.
+     * @return all subscriptions.
+     */
+    List<Subscription> getSubscriptions();
 }
