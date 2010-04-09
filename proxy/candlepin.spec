@@ -13,7 +13,8 @@ BuildArch: noarch
 
 Requires: candlepin-webapp
 BuildRequires: java >= 0:1.6.0
-BuildRequires: rubygem-buildr
+#BuildRequires: rubygem-buildr
+BuildRequires: /usr/bin/buildr
 %define __jar_repack %{nil}
 
 %description
