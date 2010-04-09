@@ -3,6 +3,10 @@ Feature: Consume an Entitlement
     As a Consumer
     I want to be able to Consumer Entitlements and Get my Entitlement Certificates
 
+    Scenario: An Exception is thrown When Consumer filters Entitlement by Invalid Product ID
+        Given I am a Consumer consumer
+        Then I Get an Exception If I Filter by Product ID "non_existent"
+
     Scenario: Entitlement is Consumed
         Given I am a Consumer random_box
         When I Consume an Entitlement for the "virtualization_host" Product
@@ -59,3 +63,5 @@ Feature: Consume an Entitlement
         And I Consume an Entitlement for the "monitoring" Product
         And I Consume an Entitlement for the "virtualization_host" Product
         Then I Get 1 Entitlement When I Filter by Product ID "monitoring"
+        
+    

@@ -488,7 +488,11 @@ public class ConsumerResource {
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
-                throw new BadRequestException("No such product: " + productId);
+                throw new BadRequestException(
+                    new ExceptionMessage()
+                        .setLabel("Product Was Not Found.")
+                        .setDisplayMessage("No such product: " + productId)
+                );
             }
             return entitlementCurator.listByConsumerAndProduct(consumer, productId);
         }

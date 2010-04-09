@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -37,5 +38,12 @@ public class BadRequestException extends WebApplicationException {
                 .type("text/plain")
                 .build()
         );
+    }
+    
+    public BadRequestException(ExceptionMessage message) {
+        super(Response.status(Status.BAD_REQUEST)
+            .entity(message)
+            .type(MediaType.APPLICATION_JSON)
+            .build());
     }
 }
