@@ -74,7 +74,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             Product p, boolean activeOnly) {
         String productId = (p == null) ? null : p.getId();
-        refreshPools(o, productId);
+        Owner owner = o == null ? c.getOwner() : o;
+        refreshPools(owner, productId);
         return listAvailableEntitlementPools(c, o, productId, activeOnly);
     }
     
