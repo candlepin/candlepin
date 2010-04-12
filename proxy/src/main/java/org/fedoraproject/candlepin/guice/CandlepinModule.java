@@ -84,8 +84,6 @@ public class CandlepinModule extends AbstractModule {
         bind(PreEntHelper.class);
         bind(StatusResource.class);
         
-//        bind(new TypeLiteral<List<String>>() {}).toInstance(new ArrayList<String>());
-//        bind(new TypeLiteral<AbstractExceptionMapper<BadRequestException>>() {});
         bind(CandlepinExceptionMapper.class);
 
         bind(Principal.class).toProvider(PrincipalProvider.class);
