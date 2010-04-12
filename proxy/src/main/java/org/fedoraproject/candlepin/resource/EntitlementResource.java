@@ -185,7 +185,8 @@ public class EntitlementResource {
 
             Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
             if (consumer == null) {
-                throw new BadRequestException("No such consumer: " + consumerUuid);
+                throw new BadRequestException("Consumer couldn't be found",
+                    "No such consumer: " + consumerUuid);
             }
 
             return entitlementCurator.listByConsumer(consumer);

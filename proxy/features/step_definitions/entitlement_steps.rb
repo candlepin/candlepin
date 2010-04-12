@@ -33,3 +33,15 @@ end
 Then /^I Get (\d+) Entitlement When I Filter by Product ID "(\w+)"$/ do |entitlement_size, product_id|
   @candlepin.list_entitlements(product_id).length.should == entitlement_size.to_i
 end
+
+Then /^I Get an Exception If I Filter by Product ID "(\w+)"$/ do |product_id|
+  begin
+    @candlepin.list_entitlements(product_id)
+  rescue RestClient::Exception => e
+    response = JSON.parse(e.http_body)
+    response['exceptionMessage']['label'].should == "Product Was Not Found."
+    response['exceptionMessage']['displayMessage'].should == "No such product: non_existent"
+    e.message.should == "Bad Request"
+    e.http_code.should == 400
+  end
+end

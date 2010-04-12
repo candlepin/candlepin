@@ -14,19 +14,35 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import javax.ws.rs.core.Response.Status;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents a BAD_REQUEST (HTTP 400) error.
+ * ExceptionMessage
  */
-public class BadRequestException extends CandlepinException {
-    private static final Status HTTP_RETURN_CODE = Status.BAD_REQUEST; 
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+public class ExceptionMessage {
 
-    public BadRequestException(String label, String displayMessage) {
-        super(label, displayMessage);
+    private String label;
+    private String displayMessage;
+
+    public ExceptionMessage setLabel(String label) {
+        this.label = label;
+        return this;
     }
     
-    public Status httpReturnCode() {
-        return HTTP_RETURN_CODE;
+    public String getLabel() {
+        return label;
+    }
+    
+    public ExceptionMessage setDisplayMessage(String displayMessage) {
+        this.displayMessage = displayMessage;
+        return this;
+    }
+
+    public String getDisplayMessage() {
+        return displayMessage;
     }
 }

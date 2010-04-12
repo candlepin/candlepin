@@ -77,7 +77,8 @@ public class PoolResource {
         
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
-            throw new BadRequestException("Cannot filter on both owner and consumer");
+            throw new BadRequestException("Illegal filter parameters",
+                "Cannot filter on both owner and consumer");
         }
         
         if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {

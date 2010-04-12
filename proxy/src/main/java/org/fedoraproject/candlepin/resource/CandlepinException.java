@@ -17,16 +17,25 @@ package org.fedoraproject.candlepin.resource;
 import javax.ws.rs.core.Response.Status;
 
 /**
- * Represents a BAD_REQUEST (HTTP 400) error.
+ * Base class for runtime exceptions thrown by Resources.
  */
-public class BadRequestException extends CandlepinException {
-    private static final Status HTTP_RETURN_CODE = Status.BAD_REQUEST; 
+public abstract class CandlepinException extends RuntimeException {
+    private static final long serialVersionUID = -3430329252623764984L;
+    
+    private ExceptionMessage message;
+    
+    public CandlepinException(String label, String displayMessage) {
+        message = new ExceptionMessage()
+            .setLabel(label)
+            .setDisplayMessage(displayMessage);
+    }
 
-    public BadRequestException(String label, String displayMessage) {
-        super(label, displayMessage);
+    public ExceptionMessage message() {
+        return message;
     }
     
-    public Status httpReturnCode() {
-        return HTTP_RETURN_CODE;
-    }
+    public abstract Status httpReturnCode();
+    
+    
+    
 }

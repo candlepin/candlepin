@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.guice;
 
 import java.util.Properties;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -26,6 +27,7 @@ import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.resource.AdminResource;
+import org.fedoraproject.candlepin.resource.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
@@ -43,7 +45,6 @@ import org.fedoraproject.candlepin.util.DateSourceImpl;
 
 import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-import org.fedoraproject.candlepin.auth.Principal;
 
 /**
  * CandlepinProductionConfiguration
@@ -82,6 +83,8 @@ public class CandlepinModule extends AbstractModule {
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
         bind(StatusResource.class);
+        
+        bind(CandlepinExceptionMapper.class);
 
         bind(Principal.class).toProvider(PrincipalProvider.class);
     }
