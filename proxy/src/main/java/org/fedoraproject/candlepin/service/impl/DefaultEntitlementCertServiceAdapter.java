@@ -20,6 +20,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -30,7 +32,9 @@ import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
+
 
 import com.google.inject.Inject;
 
@@ -63,8 +67,11 @@ public class DefaultEntitlementCertServiceAdapter extends
         log.debug("   end date: " + endDate);
         
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
+        
+        OIDUtil OIDUtil;
+        List <X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
-            null, sub.getStartDate(), endDate, keyPair, serialNumber);
+            extensions, sub.getStartDate(), endDate, keyPair, serialNumber);
         
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serialNumber);
