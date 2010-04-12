@@ -16,7 +16,9 @@ package org.fedoraproject.candlepin.service.impl.test;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,73 +37,123 @@ public class DefaultUserServiceAdapterTest {
     }
 
     @Test
-    public void noPasswordsDefined() {
+    public void noPasswordsDefined() throws Exception {
         Assert.assertTrue(validate("foo", "bar"));
     }
 
     @Test
-    public void noPasswordsNullPassword() {
+    public void noPasswordsNullPassword() throws Exception {
         Assert.assertTrue(validate("foo", null));
     }
 
     @Test
-    public void noPasswordsNullEverything() {
+    public void noPasswordsNullEverything() throws Exception {
         Assert.assertTrue(validate(null, null));
     }
 
     @Test
-    public void singleMatch() {
-        this.config.addUserPassword("red", "hat");
+    public void invalidPasswordOrg() throws Exception {
+        // No org specified
+        this.config.addUserPassword("dude", "password");
+
+        // this should still work - the entire value is the password
+        Assert.assertTrue(validate("dude", "password"));
+    }
+
+    @Test
+    public void singleMatch() throws Exception {
+        this.config.addUser("red", "hat", "Red Hat");
 
         Assert.assertTrue(validate("red", "hat"));
     }
 
     @Test
-    public void singleBadPassword() {
-        this.config.addUserPassword("red", "hat");
+    public void singleBadPassword() throws Exception {
+        this.config.addUser("red", "hat", "Red Hat");
 
         Assert.assertFalse(validate("red", "fedora"));
     }
 
     @Test
-    public void singleInvalidUsername() {
-        this.config.addUserPassword("red", "hat");
+    public void singleInvalidUsername() throws Exception {
+        this.config.addUser("red", "hat", "Red Hat");
 
         Assert.assertFalse(validate("blue", "hat"));
     }
 
     @Test
-    public void singleNullUsername() {
-        this.config.addUserPassword("red", "hat");
+    public void singleNullUsername() throws Exception {
+        this.config.addUser("red", "hat", "Red Hat");
 
         Assert.assertFalse(validate(null, "hat"));
     }
 
     @Test
-    public void singleNullPasswordValidUser() {
-        this.config.addUserPassword("user", "pass");
+    public void singleNullPasswordValidUser() throws Exception {
+        this.config.addUser("user", "pass", "Green Mountain");
 
         Assert.assertFalse(validate("user", null));
     }
 
     @Test
-    public void singleNullPasswordInvalidUser() {
-        this.config.addUserPassword("user", "pass");
+    public void singleNullPasswordInvalidUser() throws Exception {
+        this.config.addUser("user", "pass", "Green Mountain");
 
         Assert.assertFalse(validate("red", null));
     }
 
     @Test
-    public void multipleMatch() {
-        this.config.addUserPassword("user", "pass");
-        this.config.addUserPassword("red", "hat");
-        this.config.addUserPassword("great", "curve");
+    public void multipleMatch() throws Exception {
+        this.config.addUser("user", "pass", "Green Mountain");
+        this.config.addUser("red", "hat", "Red Hat");
+        this.config.addUser("great", "curve", "Remain In Light");
 
         Assert.assertTrue(validate("red", "hat"));
     }
 
-    private boolean validate(String username, String password) {
-        DefaultUserServiceAdapter userService = new DefaultUserServiceAdapter(this.config);
+    @Test
+    public void validOwner() {
+        this.config.addUser("billy", "password", "Megacorp");
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+
+        Assert.assertEquals("Megacorp", userService.getOwnerName("billy"));
+    }
+
+    //@Test
+    public void nullOwner() {
+        // no org info
+        this.config.addUserPassword("richard", "password");
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+
+        Assert.assertNull(userService.getOwnerName("richard"));
+    }
+
+    //@Test
+    public void noAccountNullOwner() {
+        // no account setup
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+
+        Assert.assertNull(userService.getOwnerName("someone"));
+    }
+
+    //@Test
+    public void nullOwnerKey() {
+        // no account setup
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+
+        Assert.assertNull(userService.getOwnerName(null));
+    }
+
+    @Test
+    public void staticRole() {
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+        Role[] expected = new Role[] {Role.OWNER_ADMIN};
+
+        Assert.assertArrayEquals(expected, userService.getRoles("anyone").toArray());
+    }
+
+    private boolean validate(String username, String password) throws Exception {
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(this.config);
 
         return userService.validateUser(username, password);
     }
@@ -114,8 +166,13 @@ public class DefaultUserServiceAdapterTest {
             userPasswords = new HashMap<String, String>();
         }
 
-        public void addUserPassword(String username, String password) {
-            userPasswords.put("auth.user." + username, password);
+        // for testing bad password:org combo
+        public void addUserPassword(String username, String passwordOrg) {
+            userPasswords.put("auth.user." + username, passwordOrg);
+        }
+
+        public void addUser(String username, String password, String org) {
+            addUserPassword(username, password + ":" + org);
         }
 
         @Override

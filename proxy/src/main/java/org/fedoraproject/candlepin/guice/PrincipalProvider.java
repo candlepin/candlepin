@@ -12,27 +12,30 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servlet.filter.auth;
+package org.fedoraproject.candlepin.guice;
 
-
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
+import javax.ws.rs.core.Context;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 
 /**
- * NoAuthRequiredFilter
- * 
- * use this filter to bypass authentication on urls that don't require it.
- * 
+ *
  */
-public class NoAuthRequiredFilter extends AuthenticationFilter {
+public class PrincipalProvider implements Provider<Principal> {
 
-    private static final Principal PRINCIPAL = new NoAuthPrincipal();
+    private Principal principal;
+    
+    @Inject
+    public PrincipalProvider(@Context HttpServletRequest request) {
+        principal = (Principal) request.getAttribute(FilterConstants.PRINCIPAL_ATTR);
+    }
 
     @Override
-    protected Principal getPrincipal(HttpServletRequest request,
-            HttpServletResponse response) {
-        return PRINCIPAL;
+    public Principal get() {
+        return principal;
     }
+
 }

@@ -54,7 +54,7 @@ public class AuthValidationFilter implements Filter {
 
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        if (request.getAttribute(FilterConstants.USERNAME_ATTR) == null) {
+        if (request.getAttribute(FilterConstants.PRINCIPAL_ATTR) == null) {
             httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
         }
         else {

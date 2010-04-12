@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.service;
 
+import java.util.List;
+import org.fedoraproject.candlepin.auth.Role;
+
 /**
  * UserServiceAdapter
  */
@@ -27,5 +30,9 @@ public interface UserServiceAdapter {
      * @throws Exception if there was an error validating the user
      */
     boolean validateUser(String username, String password) throws Exception;
+
+    String getOwnerName(String username);
+
+    List<Role> getRoles(String username);
 
 }
