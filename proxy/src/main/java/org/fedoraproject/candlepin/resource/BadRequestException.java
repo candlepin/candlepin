@@ -14,25 +14,19 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import javax.ws.rs.core.Response.Status;
 
 /**
  * Represents a BAD_REQUEST (HTTP 400) error.
  */
-public class BadRequestException extends RuntimeException {
-    private static final long serialVersionUID = -3430329252623764984L;
-    
-    private final ExceptionMessage message;
+public class BadRequestException extends CandlepinException {
+    private static final Status HTTP_RETURN_CODE = Status.BAD_REQUEST; 
 
-    /**
-     * default ctor
-     */
-    public BadRequestException(String shortMessage, String longMessage) {
-        message = new ExceptionMessage()
-            .setLabel(shortMessage)
-            .setDisplayMessage(longMessage);
+    public BadRequestException(String label, String displayMessage) {
+        super(label, displayMessage);
     }
     
-    public ExceptionMessage message() {
-        return message;
+    public Status httpReturnCode() {
+        return HTTP_RETURN_CODE;
     }
 }

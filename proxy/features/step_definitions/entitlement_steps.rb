@@ -38,9 +38,10 @@ Then /^I Get an Exception If I Filter by Product ID "(\w+)"$/ do |product_id|
   begin
     @candlepin.list_entitlements(product_id)
   rescue RestClient::Exception => e
-    puts "response: #{e.response}"
-    puts "message: #{e.message}"
-    puts "error_code: #{e.http_code}"
-    puts "http_body: #{e.http_body}"
+    response = JSON.parse(e.http_body)
+    response['exceptionMessage']['label'].should == "Product Was Not Found."
+    response['exceptionMessage']['displayMessage'].should == "No such product: non_existent"
+    e.message.should == "Bad Request"
+    e.http_code.should == 400
   end
 end

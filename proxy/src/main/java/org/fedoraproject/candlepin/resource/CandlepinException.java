@@ -14,31 +14,28 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
-
-import org.jboss.resteasy.util.HttpHeaderNames;
-
 
 /**
- * BadRequestExceptionMapper
+ * Base class for runtime exceptions thrown by Resources.
  */
-
-@Provider
-public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestException> {
+public abstract class CandlepinException extends RuntimeException {
+    private static final long serialVersionUID = -3430329252623764984L;
     
-//    @HeaderParam(HttpHeaderNames.CONTENT_TYPE)
-//    private MediaType contentType;
-
-    @Override
-    public Response toResponse(BadRequestException exception) {
-        return Response.status(Status.BAD_REQUEST)
-            .entity(exception.message())
-            .type(MediaType.APPLICATION_JSON)
-            .build();        
+    private ExceptionMessage message;
+    
+    public CandlepinException(String label, String displayMessage) {
+        message = new ExceptionMessage()
+            .setLabel(label)
+            .setDisplayMessage(displayMessage);
     }
+
+    public ExceptionMessage message() {
+        return message;
+    }
+    
+    public abstract Status httpReturnCode();
+    
+    
+    
 }
