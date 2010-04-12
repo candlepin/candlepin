@@ -79,7 +79,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files jboss
 %defattr(-,jboss,jboss,-)
-%{_localstatedir}/lib/jbossas/server/production/deploy/candlepin-*.war
+%{_localstatedir}/lib/jbossas/server/production/deploy/candlepin*
 
 %files tomcat5
 %defattr(644,tomcat,tomcat,775)
