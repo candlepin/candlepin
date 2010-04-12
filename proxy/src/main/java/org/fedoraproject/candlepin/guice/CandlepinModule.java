@@ -43,6 +43,7 @@ import org.fedoraproject.candlepin.util.DateSourceImpl;
 
 import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import org.fedoraproject.candlepin.auth.Principal;
 
 /**
  * CandlepinProductionConfiguration
@@ -81,5 +82,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
         bind(StatusResource.class);
+
+        bind(Principal.class).toProvider(PrincipalProvider.class);
     }
 }

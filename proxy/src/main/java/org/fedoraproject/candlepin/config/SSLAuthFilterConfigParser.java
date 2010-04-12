@@ -12,17 +12,17 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servlet.filter.auth;
+package org.fedoraproject.candlepin.config;
 
 /**
- * FilterConstants
+ * SSLAuthFilterConfigParser
  */
-public class FilterConstants {
-    public static final String BASIC_AUTH = "BASIC_AUTH_FILTER";
-    public static final String SSL_AUTH = "SSL_AUTH_FILTER";
-    public static final String PRINCIPAL_ATTR = "candlepin.principal";
-    
-    private FilterConstants() {
-        // do nothing
-    }
+public class SSLAuthFilterConfigParser extends ConfigurationParser {
+
+    public static final String SSLAUTH_FILTER_CONFIG_PREFIX = "sslauth.filter";
+    public static final String CLASS_CONFIG = "class";
+
+    public String getPrefix() {
+        return SSLAUTH_FILTER_CONFIG_PREFIX;
+    }   
 }

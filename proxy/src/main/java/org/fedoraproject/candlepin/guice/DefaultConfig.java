@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import static com.google.inject.name.Names.named;
+import static com.google.inject.name.Names.*;
 
 import java.io.Reader;
 
@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapte
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
+import org.fedoraproject.candlepin.servlet.filter.auth.AuthValidationFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.fedoraproject.candlepin.servlet.filter.auth.NoAuthRequiredFilter;
@@ -39,7 +40,6 @@ import org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import com.google.inject.AbstractModule;
-import org.fedoraproject.candlepin.servlet.filter.auth.AuthValidationFilter;
 
 /**
  * DefaultConfig

@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
@@ -40,11 +41,16 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      */
     @SuppressWarnings("unchecked")
     public List<Subscription> listByOwnerAndProduct(Owner o, String productId) {
-        List<Subscription> subs = (List<Subscription>) currentSession()
-            .createCriteria(Subscription.class)
-            .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("productId", productId)).list();
-
+        Criteria subscriptionCriteria = currentSession().createCriteria(Subscription.class);
+            
+        if (o != null) {
+            subscriptionCriteria.add(Restrictions.eq("owner", o));
+        }
+        if (productId != null) {
+            subscriptionCriteria.add(Restrictions.eq("productId", productId));
+        }
+        
+        List<Subscription> subs = subscriptionCriteria.list();
         if (subs == null) {
             return new LinkedList<Subscription>();
         }

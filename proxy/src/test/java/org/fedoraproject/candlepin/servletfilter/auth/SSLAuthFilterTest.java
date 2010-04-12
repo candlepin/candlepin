@@ -21,6 +21,11 @@ import java.security.cert.X509Certificate;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.fedoraproject.candlepin.servlet.filter.auth.SSLAuthFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,38 +37,27 @@ public class SSLAuthFilterTest {
     @Mock private HttpServletRequest request;
     @Mock private HttpServletResponse response;
     @Mock private FilterChain chain;
+    @Mock private ConsumerCurator consumerCurator;
 
     private SSLAuthFilter filter;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        this.filter = new SSLAuthFilter();
+        this.filter = new SSLAuthFilter(this.consumerCurator);
     }
 
     /**
-     * Makes sure next filter is called if user is already set.
+     * No cert
      *
      * @throws Exception
      */
     @Test
-    public void userSet() throws Exception {
-        when(request.getAttribute("username")).thenReturn("some_user");
+    public void noCert() throws Exception {
         this.filter.doFilter(request, response, chain);
 
-        verify(chain).doFilter(request, response);
-    }
-
-    /**
-     * No username and no cert
-     *
-     * @throws Exception
-     */
-    @Test
-    public void noUserNoCert() throws Exception {
-        this.filter.doFilter(request, response, chain);
-
-        verify(request, never()).setAttribute(eq("username"), anyString());
+        verify(request, never()).setAttribute(eq(FilterConstants.PRINCIPAL_ATTR),
+                any(Principal.class));
     }
 
     /**
@@ -73,23 +67,49 @@ public class SSLAuthFilterTest {
      */
     @Test
     public void correctUserName() throws Exception {
-        mockCert("CN=machine_name, OU=someguy@itcenter.org, UID=453-44423-235");
+        Consumer consumer = new Consumer("machine_name", null,
+                new ConsumerType(ConsumerType.SYSTEM));
+        ConsumerPrincipal expected = new ConsumerPrincipal(consumer);
+
+        String dn = "CN=machine_name, OU=someguy@itcenter.org, " +
+            "O=Green Mountain, UID=453-44423-235";
+
+        mockCert(dn);
+        when(this.consumerCurator.lookupByUuid("453-44423-235")).thenReturn(consumer);
         this.filter.doFilter(request, response, chain);
 
-        verify(request).setAttribute("username", "someguy@itcenter.org");
+        verify(request).setAttribute(FilterConstants.PRINCIPAL_ATTR, expected);
     }
 
     /**
-     * 403 if DN is set but does not contain OU
+     * DN is set but does not contain UID
      *
      * @throws Exception
      */
     @Test
-    public void noUserNameOnCert() throws Exception {
-        mockCert("CN=something, UID=99-423-235");
+    public void noUuidOnCert() throws Exception {
+        mockCert("CN=something, OU=jimmy@ibm.com, O=IBM");
+        when(this.consumerCurator.lookupByUuid(anyString())).thenReturn(
+                new Consumer("machine_name", null, null));
         this.filter.doFilter(request, response, chain);
 
-        verify(request, never()).setAttribute(eq("username"), anyString());
+        verify(request, never()).setAttribute(eq(FilterConstants.PRINCIPAL_ATTR), 
+                any(Principal.class));
+    }
+
+    /**
+     * Uuid in the cert is not found by the curator.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void noValidConsumerEntity() throws Exception {
+        mockCert("CN=my_box, OU=billy@jaspersoft.com, O=Jaspersoft, UID=235-8");
+        when(this.consumerCurator.lookupByUuid("235-8")).thenReturn(null);
+        this.filter.doFilter(request, response, chain);
+
+        verify(request, never()).setAttribute(eq(FilterConstants.PRINCIPAL_ATTR),
+                any(Principal.class));
     }
 
 

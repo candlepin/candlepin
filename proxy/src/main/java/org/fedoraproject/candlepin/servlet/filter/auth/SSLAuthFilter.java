@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
@@ -24,6 +25,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 
 /**
  * An {@link AuthenticationFilter} that inspects the Identity {@link X509Certificate}
@@ -31,12 +36,20 @@ import org.apache.log4j.Logger;
  */
 public class SSLAuthFilter extends AuthenticationFilter {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
-    private static final String USER_DN_ATTRIBUTE = "OU";
+    private static final String UUID_DN_ATTRIBUTE = "UID";
     
     private static Logger log = Logger.getLogger(SSLAuthFilter.class);
 
+    private ConsumerCurator consumerCurator;
+
+    @Inject
+    public SSLAuthFilter(ConsumerCurator consumerCurator) {
+        this.consumerCurator = consumerCurator;
+    }
+
     @Override
-    protected String getUserName(HttpServletRequest request, HttpServletResponse response)
+    protected Principal getPrincipal(HttpServletRequest request,
+        HttpServletResponse response)
         throws IOException, ServletException {
 
         X509Certificate[] certs = (X509Certificate[]) request
@@ -51,11 +64,12 @@ public class SSLAuthFilter extends AuthenticationFilter {
         // certs is an array of certificates presented by the client
         // with the first one in the array being the certificate of the client itself.
         X509Certificate identityCert = certs[0];
-        return parseUserName(identityCert);
+
+        return createPrincipal(parseUuid(identityCert));
     }
 
-    // Pulls the user name off of the x509 cert.
-    private String parseUserName(X509Certificate cert) {
+    // Pulls the consumer uuid off of the x509 cert.
+    private String parseUuid(X509Certificate cert) {
         String dn = cert.getSubjectDN().getName();
         Map<String, String> dnAttributes = new HashMap<String, String>();
 
@@ -66,7 +80,19 @@ public class SSLAuthFilter extends AuthenticationFilter {
             dnAttributes.put(pair[0], pair[1]);
         }
 
-        return dnAttributes.get(USER_DN_ATTRIBUTE);
+        return dnAttributes.get(UUID_DN_ATTRIBUTE);
+    }
+
+    private Principal createPrincipal(String consumerUuid) {
+        if (consumerUuid != null) {
+            Consumer consumer = this.consumerCurator.lookupByUuid(consumerUuid);
+
+            if (consumer != null) {
+                return new ConsumerPrincipal(consumer);
+            }
+        }
+
+        return null;
     }
 
     private void debugMessage(String msg) {
