@@ -23,6 +23,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.fedoraproject.candlepin.auth.Principal;
 
 /**
  * Base class for authentication filters.  Subclasses should only need to implement
@@ -55,13 +56,13 @@ public abstract class AuthenticationFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        if (request.getAttribute(FilterConstants.USERNAME_ATTR) == null) {
+        if (request.getAttribute(FilterConstants.PRINCIPAL_ATTR) == null) {
             try {
-                String username = getUserName(httpRequest, httpResponse);
+                Principal principal = getPrincipal(httpRequest, httpResponse);
 
-                if (username != null) {
-                    // we have a valid username, set it in the request and
-                    request.setAttribute(FilterConstants.USERNAME_ATTR, username);
+                if (principal != null) {
+                    // we have a valid principal, set it in the request
+                    request.setAttribute(FilterConstants.PRINCIPAL_ATTR, principal);
                 }
             }
             catch (IOException e) {
@@ -86,10 +87,10 @@ public abstract class AuthenticationFilter implements Filter {
      *
      * @param request
      * @param response
-     * @return the user's name, or <code>null</code> if the name is not present
+     * @return the user's {@link Principal}, or <code>null</code> if the name is not present
      * @throws Exception
      */
-    protected abstract String getUserName(HttpServletRequest request,
+    protected abstract Principal getPrincipal(HttpServletRequest request,
             HttpServletResponse response) throws Exception;
 
 }

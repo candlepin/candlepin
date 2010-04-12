@@ -21,6 +21,12 @@ import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
+import java.util.List;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 
 /**
  * An {@link AuthenticationFilter} which extracts BASIC authentication credentials
@@ -29,10 +35,13 @@ import com.google.inject.Inject;
 public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
 
     private UserServiceAdapter userServiceAdapter;
+    private OwnerCurator ownerCurator;
     
     @Inject
-    public BasicAuthViaUserServiceFilter(UserServiceAdapter userServiceAdapter) {
+    public BasicAuthViaUserServiceFilter(UserServiceAdapter userServiceAdapter,
+            OwnerCurator ownerCurator) {
         this.userServiceAdapter = userServiceAdapter;
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -44,7 +53,8 @@ public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
      * @throws Exception
      */
     @Override
-    protected String getUserName(HttpServletRequest request, HttpServletResponse response)
+    protected Principal getPrincipal(HttpServletRequest request,
+        HttpServletResponse response)
         throws Exception {
 
         String auth = request.getHeader("Authorization");
@@ -58,10 +68,30 @@ public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
             String password = userpass[1];
 
             if (userServiceAdapter.validateUser(username, password)) {
-                return username;
+                return createPrincipal(username);
             }
         }
 
         return null;
+    }
+
+    private Principal createPrincipal(String username) {
+        String ownerName = this.userServiceAdapter.getOwnerName(username);
+        Owner owner = getOwnerForName(ownerName);
+        List<Role> roles = this.userServiceAdapter.getRoles(username);
+
+        return new UserPrincipal(username, owner, roles);
+    }
+
+    private Owner getOwnerForName(String ownerName) {
+        Owner owner = this.ownerCurator.lookupByName(ownerName);
+
+        // create if not present
+        if (owner == null) {
+            owner = new Owner(ownerName);
+            this.ownerCurator.create(owner);
+        }
+
+        return owner;
     }
 }

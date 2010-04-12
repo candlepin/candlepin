@@ -15,27 +15,30 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 /**
  * A simple config-based user service.
  *
- * User names and passwords can be entered in /etc/candlepin/candlepin.conf in
+ * User names, passwords and Owners can be entered in /etc/candlepin/candlepin.conf in
  * the following manner:
  *
- * auth.user.<user_name>=<user_password>
+ * auth.user.<user_name>=<user_password>:<owner_name>
  *
  * For example:
- * auth.user.bill=billspassword
- * auth.user.adam=adamspassword
+ * auth.user.bill=billspassword:IBM
+ * auth.user.adam=adamspassword:NC State University
  *
- * Validation will reject any username/password combination that is not defined
+ * Validation will reject any username/password/owner combination that is not defined
  * in this manner.
  *
- * There is one critical exception, however.  If no username/password combinations
+ * There is one critical exception, however.  If no username/password:org combinations
  * are defined, then no validation occurs and <code>validateUser</code> always
  * returns <code>true</code> -- effectively acting as a passthrough.
  */
@@ -44,6 +47,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     private static final String USER_PASS_PREFIX = "auth.user.";
 
     private Map<String, String> passwords;
+    private Map<String, String> owners;
 
     /**
      * Creates a new instace, using the {@link Config} to retrieve username/password
@@ -54,13 +58,21 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     @Inject
     public DefaultUserServiceAdapter(Config config) {
         this.passwords = new HashMap<String, String>();
+        this.owners = new HashMap<String, String>();
         Map<String, String> authConfig = config.configurationWithPrefix(USER_PASS_PREFIX);
 
         // strip off the prefix 
         for (String prefix : authConfig.keySet()) {
             String user = prefix.substring(USER_PASS_PREFIX.length());
 
-            this.passwords.put(user, authConfig.get(prefix).trim());
+            String[] passwordOrg = authConfig.get(prefix).trim().split(":");
+
+            this.passwords.put(user, passwordOrg[0]);
+
+            // check if org is specified
+            if (passwordOrg.length > 1) {
+                this.owners.put(user, passwordOrg[1]);
+            }
         }
     }
 
@@ -88,6 +100,24 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         // if no username/password pairs were defined, then this just becomes
         // a passthrough
         return true;
+    }
+
+    @Override
+    public String getOwnerName(String username) {
+        String ownerName = this.owners.get(username);
+
+        //TODO: This is completely temporary!
+        //      Need to figure out how to do this properly
+        if (ownerName == null) {
+            ownerName = "Spacewalk Public Cert";
+        }
+
+        return ownerName;
+    }
+
+    @Override
+    public List<Role> getRoles(String username) {
+        return Arrays.asList(new Role[] {Role.OWNER_ADMIN});
     }
 
 }

@@ -51,6 +51,8 @@ import org.fedoraproject.candlepin.util.DateSource;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.guice.PrincipalProviderForTesting;
 
 public class CandlepinCommonTestingModule extends AbstractModule {
 
@@ -85,6 +87,6 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
                           .toProvider(RulesReaderProvider.class);
-
+        bind(Principal.class).toProvider(PrincipalProviderForTesting.class);
     }
 }

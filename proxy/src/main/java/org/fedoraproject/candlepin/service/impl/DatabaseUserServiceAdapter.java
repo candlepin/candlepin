@@ -18,12 +18,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.List;
 import java.util.Properties;
+import org.fedoraproject.candlepin.auth.Role;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 
 /**
  *
@@ -78,5 +81,18 @@ public class DatabaseUserServiceAdapter implements UserServiceAdapter{
         }
         
     }
+
+    @Override
+    public String getOwnerName(String username) {
+        // TODO:  Something more meaningful here
+        return username;
+    }
+
+    @Override
+    public List<Role> getRoles(String username) {
+        return Arrays.asList(new Role[] {Role.OWNER_ADMIN});
+    }
+
+   
 
 }

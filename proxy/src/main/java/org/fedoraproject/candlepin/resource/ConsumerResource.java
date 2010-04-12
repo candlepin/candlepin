@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -30,7 +29,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.io.FileUtils;
@@ -45,7 +43,6 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -60,6 +57,8 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 
 /**
  * API Gateway for Consumers
@@ -72,7 +71,6 @@ public class ConsumerResource {
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private OwnerCurator ownerCurator;
-    private Owner owner;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
@@ -82,21 +80,7 @@ public class ConsumerResource {
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
-
-    private String username;
-
-    /**
-     * @param ownerCurator interact with owner
-     * @param consumerCurator interact with consumer
-     * @param consumerTypeCurator interact with consumerType
-     * @param productAdapter
-     * @param entitler
-     * @param subAdapter
-     * @param epCurator
-     * @param entitlementCurator
-     * @param identityCertService
-     * @param request servlet request
-     */
+    private Principal principal;
 
     @Inject
     public ConsumerResource(OwnerCurator ownerCurator,
@@ -107,7 +91,7 @@ public class ConsumerResource {
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
-        @Context HttpServletRequest request) {
+        Principal principal) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
@@ -119,14 +103,7 @@ public class ConsumerResource {
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
-        this.username = (String) request.getAttribute("username");
-        // FIXME Why is this in here?
-        if (username != null) {
-            this.owner = ownerCurator.lookupByName(username);
-            if (owner == null) {
-                owner = ownerCurator.create(new Owner(username));
-            }
-        }
+        this.principal = principal;
     }
 
     /**
@@ -185,7 +162,7 @@ public class ConsumerResource {
 
         // copy the incoming consumer to avoid modifying the reference.
         Consumer copy = new Consumer(in);
-        copy.setOwner(owner);
+        copy.setOwner(principal.getOwner());
         copy.setType(type); // the type comes in without
 
         if (log.isDebugEnabled()) {
@@ -200,15 +177,19 @@ public class ConsumerResource {
             }
         }
 
-
-
         try {
             System.out.println("my consumer: " + copy);
             Consumer consumer = consumerCurator.create(copy);
+            IdentityCertificate idCert = null;
 
-            // TODO: Could use some cleanup.
-            IdentityCertificate idCert = identityCertService
-                .generateIdentityCert(consumer, this.username);
+            // This is pretty bad - I'm still not convinced that
+            // the id cert actually needs the username at all
+            if (principal instanceof UserPrincipal) {
+                UserPrincipal user = (UserPrincipal) principal;
+
+                idCert = identityCertService.generateIdentityCert(consumer,
+                        user.getUsername());
+            }
 
             if (log.isDebugEnabled()) {
                 log.debug("Generated identity cert: " + idCert);

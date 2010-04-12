@@ -12,17 +12,29 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servlet.filter.auth;
+package org.fedoraproject.candlepin.auth;
+
+import java.util.List;
+import org.fedoraproject.candlepin.model.Owner;
 
 /**
- * FilterConstants
+ * An entity interacting with Candlepin
  */
-public class FilterConstants {
-    public static final String BASIC_AUTH = "BASIC_AUTH_FILTER";
-    public static final String SSL_AUTH = "SSL_AUTH_FILTER";
-    public static final String PRINCIPAL_ATTR = "candlepin.principal";
-    
-    private FilterConstants() {
-        // do nothing
+public abstract class Principal {
+
+    private Owner owner;
+    private List<Role> roles;
+
+    public Principal(Owner owner, List<Role> roles) {
+        this.owner = owner;
+        this.roles = roles;
+    }
+
+    public Owner getOwner() {
+        return owner;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
     }
 }
