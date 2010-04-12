@@ -28,7 +28,7 @@ public class Status {
 
     private Boolean result;
     private String version;
-    private String hash;
+    private String release;
    
     /**
      * default ctor
@@ -37,10 +37,10 @@ public class Status {
       
     }
     
-    public Status(Boolean result, String version, String hash) {
+    public Status(Boolean result, String version, String release) {
         this.result = result;
         this.version = version;
-        this.hash = hash;
+        this.release = release;
         
     }
     
@@ -59,11 +59,11 @@ public class Status {
         this.version = version;
     }
 
-    public String getHash() {
-        return hash;
+    public String getRelease() {
+        return release;
     }
 
-    public void setHash(String hash) {
-        this.hash = hash;
+    public void setRelease(String release) {
+        this.release = release;
     }
 }
