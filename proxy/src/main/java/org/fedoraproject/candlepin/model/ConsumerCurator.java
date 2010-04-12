@@ -41,7 +41,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     public Consumer lookupByName(String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.like("name", name))
+            .add(Restrictions.eq("name", name))
             .uniqueResult();
     }
 
@@ -52,7 +52,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     public Consumer lookupByUuid(String uuid) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.like("uuid", uuid))
+            .add(Restrictions.eq("uuid", uuid))
             .uniqueResult();
     }
     

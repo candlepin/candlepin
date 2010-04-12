@@ -41,7 +41,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public Product lookupByName(String name) {
         return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.like("name", name))
+            .add(Restrictions.eq("name", name))
             .uniqueResult();
     }
 
@@ -51,7 +51,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public Product lookupById(String id) {
         return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.like("id", id))
+            .add(Restrictions.eq("id", id))
             .uniqueResult();
     }
     
@@ -64,7 +64,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public Product lookupByLabel(String label) {
         return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.like("label", label))
+            .add(Restrictions.eq("label", label))
             .uniqueResult();
     }
     
