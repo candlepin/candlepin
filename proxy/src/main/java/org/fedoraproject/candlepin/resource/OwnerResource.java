@@ -97,7 +97,8 @@ public class OwnerResource {
             return toReturn;
         }
 
-        throw new BadRequestException("Cound not create the Owner");
+        throw new BadRequestException(
+            "Cound not create the Owner", "Cound not create the Owner");
     }
     
     /**
@@ -111,8 +112,8 @@ public class OwnerResource {
         Owner owner = ownerCurator.find(ownerId);
 
         if (owner == null) {
-            throw new BadRequestException("Owner with id " + ownerId + 
-                " could not be found");
+            throw new BadRequestException("Owner couldn't be found",
+                "Owner with id " + ownerId + " could not be found");
         }
         
         ownerCurator.delete(owner);

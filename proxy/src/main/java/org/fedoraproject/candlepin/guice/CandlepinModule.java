@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.resource.AdminResource;
+import org.fedoraproject.candlepin.resource.BadRequestExceptionMapper;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
@@ -82,6 +83,8 @@ public class CandlepinModule extends AbstractModule {
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
         bind(StatusResource.class);
+        
+        bind(BadRequestExceptionMapper.class);
 
         bind(Principal.class).toProvider(PrincipalProvider.class);
     }

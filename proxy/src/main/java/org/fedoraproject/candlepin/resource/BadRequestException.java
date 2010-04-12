@@ -14,36 +14,25 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 /**
  * Represents a BAD_REQUEST (HTTP 400) error.
  */
-public class BadRequestException extends WebApplicationException {
-    /**
-     * 
-     */
+public class BadRequestException extends RuntimeException {
     private static final long serialVersionUID = -3430329252623764984L;
+    
+    private final ExceptionMessage message;
 
     /**
      * default ctor
-     * @param message Exception message
      */
-    public BadRequestException(String message) {
-        super(Response.status(Status.BAD_REQUEST)
-                .entity(message)
-                .type("text/plain")
-                .build()
-        );
+    public BadRequestException(String shortMessage, String longMessage) {
+        message = new ExceptionMessage()
+            .setLabel(shortMessage)
+            .setDisplayMessage(longMessage);
     }
     
-    public BadRequestException(ExceptionMessage message) {
-        super(Response.status(Status.BAD_REQUEST)
-            .entity(message)
-            .type(MediaType.APPLICATION_JSON)
-            .build());
+    public ExceptionMessage message() {
+        return message;
     }
 }

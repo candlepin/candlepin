@@ -93,7 +93,7 @@ public class ConsumerTypeResource {
         }
         catch (Exception e) {
             log.error("Problem creating consumertype:", e);
-            throw new BadRequestException(e.getMessage());
+            throw new BadRequestException("Problem creating consumertype", e.getMessage());
         }
     }
 
@@ -112,8 +112,8 @@ public class ConsumerTypeResource {
         ConsumerType type = consumerTypeCurator.find(in.getId());
 
         if (type == null) {
-            throw new BadRequestException("Consumer Type with label " +
-                in.getId() + " could not be found");
+            throw new BadRequestException("Consumer Type couldn't be found.", 
+                "Consumer Type with label " + in.getId() + " could not be found");
         }
 
         consumerTypeCurator.merge(in);
@@ -130,8 +130,8 @@ public class ConsumerTypeResource {
         ConsumerType type = consumerTypeCurator.find(id);
 
         if (type == null) {
-            throw new BadRequestException("Consumer Type with id " + id +
-                " could not be found");
+            throw new BadRequestException("Consumer Type couldn't be found.",
+                "Consumer Type with id " + id + " could not be found");
         }
 
         consumerTypeCurator.delete(type);

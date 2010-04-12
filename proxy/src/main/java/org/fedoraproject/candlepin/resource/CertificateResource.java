@@ -78,7 +78,9 @@ public class CertificateResource  {
         
         try {
             if (base64cert == null || "".equals(base64cert)) {
-                throw new BadRequestException("Empty certificate is being uploaded.");
+                throw new BadRequestException(
+                    "Empty certificate is being uploaded.",
+                    "Empty certificate is being uploaded.");
             }
             
             encodedCert = base64cert;
@@ -94,15 +96,15 @@ public class CertificateResource  {
         }
         catch (JDOMException e) {
             throw new BadRequestException(
-                "Invalid certificate is being uploaded: " + e.getMessage());
+                "Invalid certificate is being uploaded", e.getMessage());
         }
         catch (IOException e) {
             throw new BadRequestException(
-                "Invalid certificate is being uploaded: " + e.getMessage());
+                "Invalid certificate is being uploaded", e.getMessage());
         }
         catch (ParseException e) {
             throw new BadRequestException(
-                "Invalid certificate is being uploaded: " + e.getMessage());
+                "Invalid certificate is being uploaded", e.getMessage());
         }
         return encodedCert;
     }

@@ -98,8 +98,8 @@ public class SubscriptionResource {
         Subscription subscription = subCurator.find(subscriptionId);
 
         if (subscription == null) {
-            throw new BadRequestException("Subscription with id " +
-                subscriptionId + " could not be found");
+            throw new BadRequestException("Couldn't find subscriptipon",
+                "Subscription with id " + subscriptionId + " could not be found");
         }
 
         subCurator.delete(subscription);

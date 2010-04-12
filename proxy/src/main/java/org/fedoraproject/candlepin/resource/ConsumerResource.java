@@ -156,8 +156,9 @@ public class ConsumerResource {
             in.getType().getLabel());
 
         if (type == null) {
-            throw new BadRequestException("No such consumer type: " +
-                in.getType().getLabel());
+            throw new BadRequestException(
+                "Illegal consumer type", 
+                "No such consumer type: " + in.getType().getLabel());
         }
 
         // copy the incoming consumer to avoid modifying the reference.
@@ -204,7 +205,7 @@ public class ConsumerResource {
         }
         catch (Exception e) {
             log.error("Problem creating consumer:", e);
-            throw new BadRequestException(e.getMessage());
+            throw new BadRequestException("Couldn't create a consumer", e.getMessage());
         }
     }
 
@@ -341,7 +342,8 @@ public class ConsumerResource {
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         Product p = productAdapter.getProductById(productId);
         if (p == null) {
-            throw new BadRequestException("No such product: " + productId);
+            throw new BadRequestException(
+                "Product could not be found", "No such product: " + productId);
         }
 
         entitlementList.add(createEntitlement(consumer, p));
@@ -391,7 +393,8 @@ public class ConsumerResource {
         List<Subscription> s = subAdapter.getSubscriptionForToken(registrationToken);
         if ((s == null) || (s.isEmpty())) {
             log.debug("token: " + registrationToken);
-            throw new BadRequestException("No such token: " + registrationToken);
+            throw new BadRequestException(
+                "Token can't be found", "No such token: " + registrationToken);
         }
 
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
@@ -407,7 +410,8 @@ public class ConsumerResource {
         Pool pool = epCurator.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
-            throw new BadRequestException("No such entitlement pool: " + poolId);
+            throw new BadRequestException(
+                "Entitlement pool can't be found", "No such entitlement pool: " + poolId);
         }
 
         // Attempt to create an entitlement:
@@ -434,7 +438,9 @@ public class ConsumerResource {
         if ((poolId != null && token != null) ||
             (poolId != null && productId != null) ||
             (token != null && productId != null)) {
-            throw new BadRequestException("Cannot bind by multiple parameters.");
+            throw new BadRequestException(
+                "Too many query parameters have been specified", 
+                "Cannot bind by multiple parameters.");
         }
 
         // Verify consumer exists:
@@ -453,7 +459,8 @@ public class ConsumerResource {
     private Consumer verifyAndLookupConsumer(String consumerUuid) {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
-            throw new BadRequestException("No such consumer: " + consumerUuid);
+            throw new BadRequestException(
+                "Consumer couldn't be found", "No such consumer: " + consumerUuid);
         }
         return consumer;
     }
@@ -470,10 +477,7 @@ public class ConsumerResource {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
                 throw new BadRequestException(
-                    new ExceptionMessage()
-                        .setLabel("Product Was Not Found.")
-                        .setDisplayMessage("No such product: " + productId)
-                );
+                    "Product Was Not Found.", "No such product: " + productId);
             }
             return entitlementCurator.listByConsumerAndProduct(consumer, productId);
         }

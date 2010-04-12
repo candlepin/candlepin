@@ -95,8 +95,8 @@ public class SubscriptionTokenResource {
             .find(subscriptionTokenId);
 
         if (subscriptionToken == null) {
-            throw new BadRequestException("SubscriptionToken with id " +
-                subscriptionTokenId + " could not be found");
+            throw new BadRequestException("SubscriptionToken caouldn't be found",
+                "SubscriptionToken with id " + subscriptionTokenId + " could not be found");
         }
 
         subTokenCurator.delete(subscriptionToken);
