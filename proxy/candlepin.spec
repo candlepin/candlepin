@@ -59,17 +59,17 @@ touch $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
 
 # tomcat5
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/candlepin/
-unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/candlepin/
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/
+unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/
 
 # tomcat6
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/candlepin/
-unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/candlepin/
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
+unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
 
 # jbossas
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
-unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
+unzip target/%{name}-*.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -79,14 +79,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files jboss
 %defattr(-,jboss,jboss,-)
-%{_localstatedir}/lib/jbossas/server/production/deploy/candlepin*
+%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}*
 
 %files tomcat5
 %defattr(644,tomcat,tomcat,775)
-%{_localstatedir}/lib/tomcat5/webapps/candlepin*
+%{_localstatedir}/lib/tomcat5/webapps/%{name}*
 
 %files tomcat6
 %defattr(644,tomcat,tomcat,775)
-%{_localstatedir}/lib/tomcat6/webapps/candlepin*
+%{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %doc
