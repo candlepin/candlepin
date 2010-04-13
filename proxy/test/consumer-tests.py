@@ -148,7 +148,7 @@ class ConsumerTests(CandlepinTests):
 
         # Get pool ID for virtualization_host:
         virt_host = 'virtualization_host'
-        results = self.cp.getPools(product=virt_host)
+        results = self.cp.getPools(consumer=self.uuid, product=virt_host)
         print("Virt host pool: %s" % results)
         self.assertEquals(1, len(results))
         pool_id = results[0]['id']
