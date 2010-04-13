@@ -124,7 +124,7 @@ public class Owner implements Persisted, Serializable {
     }
 
     /**
-     * @param name the name to set
+     * @param displayName the name to set
      */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
@@ -204,7 +204,8 @@ public class Owner implements Persisted, Serializable {
         if ((this.key == null) ? (other.key != null) : !this.key.equals(other.key)) {
             return false;
         }
-        if ((this.displayName == null) ? (other.displayName != null) : !this.displayName.equals(other.displayName)) {
+        if ((this.displayName == null) ? (other.displayName != null) :
+            !this.displayName.equals(other.displayName)) {
             return false;
         }
         return true;
