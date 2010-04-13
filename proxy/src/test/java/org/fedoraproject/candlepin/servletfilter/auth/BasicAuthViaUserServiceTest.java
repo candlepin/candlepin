@@ -25,6 +25,7 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.service.UserServiceAdapter.OwnerInfo;
 import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
 import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
 import org.junit.Before;
@@ -100,6 +101,7 @@ public class BasicAuthViaUserServiceTest {
     public void correctPrincipal() throws Exception {
         setUserAndPassword("user", "redhat");
         when(userService.validateUser("user", "redhat")).thenReturn(true);
+        when(userService.getOwnerInfo("user")).thenReturn(new OwnerInfo("user", "user"));
         UserPrincipal expected = new UserPrincipal("user", null, null);
         this.filter.doFilter(request, response, chain);
 

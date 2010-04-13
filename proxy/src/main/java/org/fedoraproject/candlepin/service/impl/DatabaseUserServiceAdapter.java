@@ -83,16 +83,14 @@ public class DatabaseUserServiceAdapter implements UserServiceAdapter{
     }
 
     @Override
-    public String getOwnerName(String username) {
+    public OwnerInfo getOwnerInfo(String username) {
         // TODO:  Something more meaningful here
-        return username;
+        return new OwnerInfo(username, username);
     }
 
     @Override
     public List<Role> getRoles(String username) {
         return Arrays.asList(new Role[] {Role.OWNER_ADMIN});
     }
-
-   
 
 }

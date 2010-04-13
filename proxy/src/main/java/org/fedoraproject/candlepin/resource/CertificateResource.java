@@ -47,8 +47,6 @@ public class CertificateResource  {
     private OwnerCurator ownerCurator;
     private CertificateCurator certificateCurator;
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
-
-    //private static Logger log = Logger.getLogger(CertificateResource.class);
    
     /**
      * default ctor
@@ -128,9 +126,12 @@ public class CertificateResource  {
     }
     
     private Owner addOwner(Certificate cert) {
-        Owner owner = ownerCurator.lookupByName(cert.getOwner());
+        Owner owner = ownerCurator.lookupByKey(cert.getOwner());
         if (owner == null) {
-            owner = new Owner(cert.getOwner());
+            String ownerName = cert.getOwner();
+
+            // in this case, use the ownerName as the key and the name
+            owner = new Owner(ownerName, ownerName);
             ownerCurator.create(owner);
         }
         return owner;
