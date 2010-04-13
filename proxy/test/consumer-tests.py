@@ -13,58 +13,6 @@ class ConsumerTests(CandlepinTests):
     def tearDown(self):
         CandlepinTests.tearDown(self)
 
-    def test_unbind_by_entitlement(self):
-        pools = self.cp.getPools(consumer=self.uuid)
-        pool = pools[0]
-
-        self.assertEqual([], self.cp.getEntitlements(self.uuid))
-
-        # First we list all pools available to this consumer:
-        virt_host = 'virtualization_host'
-        results = self.cp.getPools(consumer=self.uuid)
-        pools = {}
-        for pool in results:
-            pools[pool['productId']] = pool
-        self.assertTrue(virt_host in pools)
-        #while in theory this could return a different pool object than
-        #is used to allocate the entitlement later on, 
-        #our default setup means that they should be the same.
-        results = self.cp.getPools( consumer=self.uuid,product=virt_host  )
-        expected_consumed = results[0]['consumed']
-
-        result = self.cp.getEntitlements(self.uuid)
-        self.assertEquals(len(result ),0)
-        
-        # Request a virtualization_host entitlement:
-        result = self.cp.bindPool(self.uuid, pools[virt_host]['id'])
-        self.assertTrue('id' in result[0])
-        self.assertEquals(virt_host, result[0]['pool']['productId'])
-        entitlementId =  result[0]['id']
-        consumed = result[0]['pool']['consumed']
-        expected_consumed = expected_consumed + 1
-        self.assertEquals(expected_consumed,consumed)
-
-        #make sure the number consumed in the pool increased by one
-        results = self.cp.getPools( consumer=self.uuid,product=virt_host  )
-        self.assertEquals(expected_consumed, results[0]['consumed'])
-
-        # Now list consumer's entitlements:
-        result = self.cp.getEntitlements(self.uuid)
-        self.assertEquals(len(result),1)
-        
-        #for p in result:
-        #    self.cp.unBindEntitlement( p['entitlement']['id'])
-        #    expected_consumed -= 1
-
-        self.cp.unBindEntitlement( entitlementId )
-        expected_consumed -= 1
-
-        result = self.cp.getEntitlements(self.uuid)
-        self.assertEquals(len(result),0)
-        results = self.cp.getPools( consumer=self.uuid,product=virt_host  )
-        self.assertEquals(expected_consumed, results[0]['consumed'])
-
-
     def test_list_cert_serials(self):
         result = self.cp.getCertificateSerials(self.uuid)
         print result
