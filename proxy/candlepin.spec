@@ -2,7 +2,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 1.0.2
+Version: 1.0.0
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -89,4 +89,4 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,tomcat,tomcat,775)
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
-%doc
+%changelog
