@@ -68,10 +68,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         
-        OIDUtil OIDUtil;
-        List <X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
+ //       OIDUtil OIDUtil;
+  //      List <X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
-            extensions, sub.getStartDate(), endDate, keyPair, serialNumber);
+            null, sub.getStartDate(), endDate, keyPair, serialNumber);
         
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serialNumber);
