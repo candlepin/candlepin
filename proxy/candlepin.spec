@@ -1,47 +1,92 @@
-Summary: Candlepin
 Name: candlepin
-Source: candlepin-bin.tar.gz
-Version: 1.0.0
-Release: %{_release}
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
-Vendor: Red Hat, Inc
-URL: http://fedorahosted.org/candlepin
 License: GLPv2
-Requires: jbossas >= 4.3
+Version: 1.0.2
+Release: 1
+URL: http://fedorahosted.org/candlepin
+# Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
+Source: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Vendor: Red Hat, Inc
 BuildArch: noarch
 
-%global _binary_filedigest_algorithm 1
-%global _source_filedigest_algorithm 1
-%global _binary_payload w9.gzdio
-%global _source_payload w9.gzdio
-
+Requires: candlepin-webapp
+BuildRequires: java >= 0:1.6.0
+#BuildRequires: rubygem-buildr
+BuildRequires: /usr/bin/buildr
 %define __jar_repack %{nil}
 
 %description
-Candlepin Entitlement Management
+Candlepin is an open source entitlement management system.
+
+%package tomcat5
+Summary: Candlepin web application for tomcat5
+Requires: tomcat5 >= 5.5
+Provides: candlepin-webapp
+
+%description tomcat5
+Candlepin web application for tomcat5
+
+%package tomcat6
+Summary: Candlepin web application for tomcat6
+Requires: tomcat6
+Provides: candlepin-webapp
+
+%description tomcat6
+Candlepin web application for tomcat6
+
+%package jboss
+Summary: Candlepin web application for jboss
+Requires: jbossas >= 4.3
+Provides: candlepin-webapp
+
+%description jboss
+Candlepin web application for jboss
 
 %prep
-
-%setup -c
+%setup -q 
 
 %build
+buildr clean test=no package
 
 %install
-# Cleaning up the build root
 rm -rf $RPM_BUILD_ROOT
-
 # Create the directory structure required to lay down our files
-mkdir -p $RPM_BUILD_ROOT/%{_container}
+# common
+install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
+touch $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
 
-# Copy the contents of the candlepin-bin.tar.gz to /var/lib/tomcat5/webapps (setup -c explodes the tar.gz automatically)
-cp -R . $RPM_BUILD_ROOT/%{_container}
+# tomcat5
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/
+unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/
+
+# tomcat6
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
+unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
+
+# jbossas
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
+unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+
+%files jboss
 %defattr(-,jboss,jboss,-)
-/var/lib/jbossas/server/production/deploy/candlepin-1.0.0.war
+%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}*
+
+%files tomcat5
+%defattr(644,tomcat,tomcat,775)
+%{_localstatedir}/lib/tomcat5/webapps/%{name}*
+
+%files tomcat6
+%defattr(644,tomcat,tomcat,775)
+%{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %doc

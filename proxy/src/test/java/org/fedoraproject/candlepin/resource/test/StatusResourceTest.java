@@ -45,10 +45,10 @@ public class StatusResourceTest extends DatabaseTestFixture  {
     }
     
     @Test
-    public void testHashIsKnown() throws Exception {
+    public void testReleaseIsKnown() throws Exception {
         Status status = statusResource.status();
-        System.out.println("_____________________" + status.getHash());
-        assertTrue("The hash should be known", !"Unkown".equals(status.getHash()));
-        assertTrue("The hash should be filled in", !"${hash}".equals(status.getHash())); 
+        System.out.println("_____________________" + status.getRelease());
+        assertTrue("The hash should be known", !"Unkown".equals(status.getRelease()));
+        assertTrue("The hash should be filled in", !"${hash}".equals(status.getRelease())); 
     }    
 }
