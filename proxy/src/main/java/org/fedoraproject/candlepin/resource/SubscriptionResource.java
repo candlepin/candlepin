@@ -17,23 +17,21 @@ package org.fedoraproject.candlepin.resource;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.auth.Principal;
 
 /**
  * SubscriptionResource
@@ -45,30 +43,14 @@ public class SubscriptionResource {
     
     private static Logger log = Logger.getLogger(SubscriptionResource.class);
     private SubscriptionCurator subCurator;
-    private SubscriptionTokenCurator subTokenCurator;
-    private OwnerCurator ownerCurator;
-
-    private String username;
-    private Owner owner;
+    private Principal principal;
 
     @Inject
     public SubscriptionResource(SubscriptionCurator subCurator,
         SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
-        @Context HttpServletRequest request) {
+        Principal principal) {
         this.subCurator = subCurator;
-        this.subTokenCurator = subTokenCurator;
-        this.username = (String) request.getAttribute("username");
-        this.ownerCurator = ownerCurator;
-        log.debug("username: " + username);
-        log.debug(request.getAttributeNames().toString());
-        if (this.username != null) {
-            this.owner = ownerCurator.lookupByName(this.username);
-            log.debug("this.owner: " + this.owner);
-            if (this.owner == null) {
-                this.owner = ownerCurator.create(new Owner(this.username));
-                log.debug("owner: " + this.owner);
-            }
-        }
+        this.principal = principal;
     }
 
     @GET
@@ -83,8 +65,8 @@ public class SubscriptionResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Subscription createSubscription(Subscription subscription) {
         //
-        subscription.setOwner(owner);
-        log.debug("owner: " + owner + subscription.getOwner());
+        subscription.setOwner(principal.getOwner());
+        log.debug("owner: " + subscription.getOwner());
         Subscription newSubscription = subCurator.create(subscription);
 
         return newSubscription;

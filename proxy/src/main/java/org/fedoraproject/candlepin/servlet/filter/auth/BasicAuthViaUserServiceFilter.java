@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.service.UserServiceAdapter.OwnerInfo;
 
 /**
  * An {@link AuthenticationFilter} which extracts BASIC authentication credentials
@@ -76,19 +77,19 @@ public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
     }
 
     private Principal createPrincipal(String username) {
-        String ownerName = this.userServiceAdapter.getOwnerName(username);
-        Owner owner = getOwnerForName(ownerName);
+        OwnerInfo ownerInfo = this.userServiceAdapter.getOwnerInfo(username);
+        Owner owner = getOwnerForInfo(ownerInfo);
         List<Role> roles = this.userServiceAdapter.getRoles(username);
 
         return new UserPrincipal(username, owner, roles);
     }
 
-    private Owner getOwnerForName(String ownerName) {
-        Owner owner = this.ownerCurator.lookupByName(ownerName);
+    private Owner getOwnerForInfo(OwnerInfo info) {
+        Owner owner = this.ownerCurator.lookupByKey(info.getKey());
 
         // create if not present
         if (owner == null) {
-            owner = new Owner(ownerName);
+            owner = new Owner(info.getKey(), info.getName());
             this.ownerCurator.create(owner);
         }
 

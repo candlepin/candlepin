@@ -31,16 +31,17 @@ public class OwnerTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() throws Exception {
-        String ownerName = "Example Corporation";
+        String ownerName = "Example-Corporation";
         Owner o = new Owner(ownerName);
         ownerCurator.create(o);
 
         Owner result = (Owner) entityManager().createQuery(
-                "select o from Owner o where o.name = :name").setParameter(
-                "name", ownerName).getSingleResult();
+                "select o from Owner o where o.key = :key").setParameter(
+                "key", ownerName).getSingleResult();
 
         assertNotNull(result);
-        assertEquals(ownerName, result.getName());
+        assertEquals(ownerName, result.getKey());
+        assertEquals(ownerName, result.getDisplayName());
         assertTrue(result.getId() > 0);
         assertEquals(o.getId(), result.getId());
     }

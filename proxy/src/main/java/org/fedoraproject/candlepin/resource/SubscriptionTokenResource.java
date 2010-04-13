@@ -28,7 +28,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
@@ -45,25 +44,13 @@ import com.google.inject.Inject;
 public class SubscriptionTokenResource {
     private static Logger log = Logger
         .getLogger(SubscriptionTokenResource.class);
-    private SubscriptionCurator subCurator;
     private SubscriptionTokenCurator subTokenCurator;
-
-    private String username;
-    private Owner owner;
 
     @Inject
     public SubscriptionTokenResource(SubscriptionCurator subCurator,
         SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
         @Context HttpServletRequest request) {
-        this.subCurator = subCurator;
         this.subTokenCurator = subTokenCurator;
-        this.username = (String) request.getAttribute("username");
-        if (username != null) {
-            this.owner = ownerCurator.lookupByName(username);
-            if (owner == null) {
-                owner = ownerCurator.create(new Owner(username));
-            }
-        }
     }
 
     @GET
@@ -102,8 +89,5 @@ public class SubscriptionTokenResource {
         subTokenCurator.delete(subscriptionToken);
 
     }
-        
-
-        
         
 }

@@ -143,6 +143,6 @@ public class TestResource {
     @POST
     @Path("/owner")
     public Owner getOwner() {
-        return new Owner("test_owner");
+        return new Owner("TEST", "test_owner");
     }
 }

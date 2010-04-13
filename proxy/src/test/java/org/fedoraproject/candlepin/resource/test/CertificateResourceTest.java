@@ -57,7 +57,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     @Test
     public void ownerCreated() {
         certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
-        Owner owner = ownerCurator.lookupByName("Spacewalk Public Cert");
+        Owner owner = ownerCurator.lookupByKey("Spacewalk Public Cert");
         assertNotNull(owner);
     }
     
@@ -72,7 +72,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void entitlementPoolCreation() {
         String encoded = TestUtil.xmlToBase64String(sampleCertXml);
         certResource.upload(encoded);
-        Owner owner = ownerCurator.lookupByName("Spacewalk Public Cert");
+        Owner owner = ownerCurator.lookupByKey("Spacewalk Public Cert");
         List<Pool> entPools = poolCurator.listByOwner(owner);
         assertEquals(5, entPools.size());
     }

@@ -103,7 +103,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
-    public String getOwnerName(String username) {
+    public OwnerInfo getOwnerInfo(String username) {
         String ownerName = this.owners.get(username);
 
         //TODO: This is completely temporary!
@@ -112,12 +112,13 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
             ownerName = "Spacewalk Public Cert";
         }
 
-        return ownerName;
+        return new OwnerInfo(ownerName, ownerName);
     }
 
     @Override
     public List<Role> getRoles(String username) {
         return Arrays.asList(new Role[] {Role.OWNER_ADMIN});
     }
+
 
 }
