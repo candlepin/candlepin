@@ -1,6 +1,6 @@
 Feature: Unregister a Consumer
     As a Consumer
-    I want to be able to obtain to unregister and free up the entitlement pool
+    I want to be able to unregister and free up the entitlement pool
 
     Scenario: Unregister multiple consumers
         Given I am a Consumer consumer
