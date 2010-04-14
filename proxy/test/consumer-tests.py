@@ -106,48 +106,6 @@ class ConsumerTests(CandlepinTests):
                 product_id='monitoring')
         self.assertEquals(1, len(result))
 
-    def test_unbind_all_single(self):
-        pools = self.cp.getPools(consumer=self.uuid)
-        pool = pools[0]
-
-        self.cp.bindPool(self.uuid, pool['id'])
-
-        # Now unbind it
-        self.cp.unBindAll(self.uuid)
-
-        self.assertEqual([], self.cp.getEntitlements(self.uuid))
-
-    def test_unbind_all_multi(self):
-        pools = self.cp.getPools(consumer=self.uuid)
-
-        preconsumed=0
-        postconsumed=0
-
-        if len(pools) > 1:
-            for pool in pools:
-                preconsumed = preconsumed + pool['consumed']
-                self.cp.bindPool(self.uuid, pool['id'])
-
-            pools = self.cp.getPools(consumer=self.uuid)
-            for pool in pools:
-                postconsumed = postconsumed + pool['consumed']
-                    
-            self.assertEqual(preconsumed+len(pools), postconsumed)
-
-            # Unbind them all
-            self.cp.unBindAll(self.uuid)
-            self.assertEqual([], self.cp.getEntitlements(self.uuid))
-            postunbound = 0
-            pools = self.cp.getPools(consumer=self.uuid)
-            for pool in pools:
-                postunbound = postunbound + pool['consumed']
-            self.assertEqual(preconsumed, postunbound)
-
-#    def test_unregister(self):
-#        result = self.cp.unRegisterConsumer(self.uuid)
-#        print result
-        
-
     def test_list_pools(self):
         pools = self.cp.getPools(consumer=self.uuid, product="monitoring")
         self.assertEquals(1, len(pools))
