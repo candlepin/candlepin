@@ -20,21 +20,6 @@ Given /I am a Consumer (\w+)/ do |consumer_name|
     When "I Register a New Consumer #{consumer_name}"
 end
 
-#When /I Register a New Consumer (\w+) with uuid (\w+)$/ do |consumer_name, uuid|
-#    c = @candlepin.get_consumer(uuid)
-#    consumer = {
-#        :consumer => {
-#            :type => {:label => :system},
-#            :name => consumer_name,
-#            :uuid => uuid
-#        }
-#    }
-#
-#    if not c
-#        @candlepin.register(consumer, @username, @password)
-#    end
-#end
-
 When /I Register a New Consumer (\w+)$/ do |consumer_name|
     consumer = {
         :consumer => {
@@ -44,6 +29,37 @@ When /I Register a New Consumer (\w+)$/ do |consumer_name|
     }
 
     @candlepin.register(consumer, @username, @password)
+end
+
+When /I Register a New Consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
+    consumer = {
+        :consumer => {
+            :type => {:label => :system},
+            :name => consumer_name,
+            :uuid => uuid
+        }
+    }
+
+    @candlepin.register(consumer, @username, @password)
+end
+
+Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ do |uuid|
+    consumer = {
+        :consumer => {
+            :type => {:label => :system},
+            :name => "any name",
+            :uuid => uuid
+        }
+    }
+
+    lambda {@candlepin.register}.should raise_error
+    begin
+        @candlepin.register(consumer, @username, @password)
+    rescue RestClient::Exception => e
+        e.message.should == "Bad Request"
+        e.http_code.should == 400
+    end
+
 end
 
 When /I Revoke All My Entitlements/ do

@@ -214,19 +214,3 @@ class ConsumerTests(CandlepinTests):
                 postconsumed = postconsumed + pool['consumed']
 
             self.assertEquals(preconsumed, postconsumed)
-
-    def test_register_by_uuid(self):
-        uuid = "special-uuid"
-        try:
-            consumer = self.cp.rest.get("/consumers/%s" % uuid)
-            self.assertEqual(uuid, consumer['consumer']['uuid'])
-        except CandlepinException, e:
-            self.assertEquals(404, e.response.status)
-            consumer = self.cp.registerConsumer('jesusr', 'redhat', 'byuuid', uuid=uuid)
-            self.assertEqual(uuid, consumer['uuid'])
-
-        # try reregistering
-        try:
-            consumer = self.cp.registerConsumer('jesusr', 'redhat', 'byuuid', uuid=uuid)
-        except CandlepinException, e:
-            self.assertEquals(400, e.response.status)

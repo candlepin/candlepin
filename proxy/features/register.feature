@@ -27,8 +27,14 @@ Feature: Register a Consumer
         When I Register a New Consumer foo
         Then The OU on my Identity Certificate's Subject is candlepin_user
 
-#    Scenario: Register by UUID
-#        Given I have username cucumber
-#        And I have password biteme
-#        When I Register a New Consumer them_apples with uuid how_bout
-#        Then The UID on my Identity Certificate's Subject is My Consumer's uuid
+    Scenario: Register by UUID
+        Given I have username candlepin_user
+        And I have password default
+        When I Register a New Consumer "my_machine" with uuid "special_uuid"
+        Then The UID on my Identity Certificate's Subject is special_uuid
+
+    Scenario: Reuse a UUID during registration
+        Given I have username candlepin_user
+        And I have password default
+        When I Register a New Consumer "my_machine" with uuid "special_uuid_too"
+        Then Registering another Consumer with uuid "special_uuid_too" causes a bad request
