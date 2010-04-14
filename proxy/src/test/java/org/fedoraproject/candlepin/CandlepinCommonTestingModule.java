@@ -36,7 +36,6 @@ import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
-import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -70,7 +69,6 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(ProductServiceAdapter.class)
             .to(DefaultProductServiceAdapter.class);
         bind(ProductResource.class);
-        bind(TestResource.class);
         bind(DateSource.class).to(DateSourceForTesting.class)
             .asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
