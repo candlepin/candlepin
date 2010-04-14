@@ -66,19 +66,6 @@ class ConsumerTests(CandlepinTests):
     def test_uuid(self):
         self.assertTrue(self.uuid != None)
 
-    def test_list_entitlements_product_filtering(self):
-        self.cp.bindProduct(self.uuid, 'virtualization_host')
-        result = self.cp.getEntitlements(self.uuid)
-        self.assertEquals(1, len(result))
-
-        self.cp.bindProduct(self.uuid, 'monitoring')
-        result = self.cp.getEntitlements(self.uuid)
-        self.assertEquals(2, len(result))
-
-        result = self.cp.getEntitlements(self.uuid, 
-                product_id='monitoring')
-        self.assertEquals(1, len(result))
-
     def test_list_pools(self):
         pools = self.cp.getPools(consumer=self.uuid, product="monitoring")
         self.assertEquals(1, len(pools))
