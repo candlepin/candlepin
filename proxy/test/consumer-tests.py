@@ -62,18 +62,3 @@ class ConsumerTests(CandlepinTests):
         serials = [cert_list[0]['serial'], cert_list[1]['serial']]
         cert_list = self.cp.getCertificates(self.uuid, serials)
         self.assertEquals(2, len(cert_list))
-
-    def test_uuid(self):
-        self.assertTrue(self.uuid != None)
-
-    def test_list_pools(self):
-        pools = self.cp.getPools(consumer=self.uuid, product="monitoring")
-        self.assertEquals(1, len(pools))
-
-    def test_list_pools_for_bad_objects(self):
-        self.assertRaises(Exception, self.cp.getPools, consumer='blah')
-        self.assertRaises(Exception, self.cp.getPools, owner='-1')
-
-    def test_list_pools_for_bad_query_combo(self):
-        # This isn't allowed, should give bad request.
-        self.assertRaises(Exception, self.cp.getPools, consumer=self.uuid, owner=1)
