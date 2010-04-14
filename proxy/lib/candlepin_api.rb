@@ -11,10 +11,13 @@ class Candlepin
         @base_url = "https://#{host}:#{port}/candlepin"
     end
 
-    def register(consumer, username=nil, password=nil)
-      
-        # TODO:  Maybe this should be created earlier?
+    def use_credentials(username=nil, password=nil)
         create_basic_client(username, password)
+    end
+
+    def register(consumer, username=nil, password=nil)
+        # TODO:  Maybe this should be created earlier?
+        use_credentials(username, password)
 
         @consumer = post('/consumers', consumer)['consumer']
 
@@ -43,10 +46,13 @@ class Candlepin
         return get(path)
     end
 
+    def get_entitlement(entitlement_id)
+        get("/entitlements/#{entitlement_id}")
+    end
+
     def unregister()
         delete("/consumers/#{@consumer['uuid']}")
     end
-
 
     def revoke_all_entitlements()
         delete("/consumers/#{@consumer['uuid']}/entitlements")
@@ -67,7 +73,7 @@ class Candlepin
     end
 
     def list_rules()
-	get_text("/rules")
+        get_text("/rules")
     end
 
     def upload_rules(rule_set)

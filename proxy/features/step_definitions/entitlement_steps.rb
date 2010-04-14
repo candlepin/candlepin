@@ -1,6 +1,15 @@
 require 'spec/expectations'
 require 'candlepin_api'
 
+Before do
+  # Map to store named entitlements
+  @entitlements = {}
+end
+
+Given /^I have an Entitlement named "([^\"]*)" for the "([^\"]*)" Product$/ do |name, product|
+  @entitlements[name] = @candlepin.consume_product(product)
+end
+
 When /I Consume an Entitlement for the "(\w+)" Product/ do |product|
     @candlepin.consume_product(product)
 end
@@ -18,7 +27,7 @@ Then /^I Have an Entitlement for the "([^\"]*)" Product$/ do |product_id|
         entitlement['entitlement']['pool']['productId']
     end
 
-    product_ids.should include product_id
+    product_ids.should include(product_id)
 end
 
 When /I Consume an Entitlement for the "(\w+)" Pool$/ do |pool|
@@ -43,5 +52,16 @@ Then /^I Get an Exception If I Filter by Product ID "(\w+)"$/ do |product_id|
     response['exceptionMessage']['displayMessage'].should == "No such product: non_existent"
     e.message.should == "Bad Request"
     e.http_code.should == 400
+  end
+end
+
+Then /^The entitlement named "([^\"]*)" should not exist$/ do |name|
+  entitlement = @entitlements[name]
+
+  # TODO:  There is probably an official rspec way to do this
+  begin
+    @candlepin.get_entitlement(entitlement[0]['entitlement']['id'])
+  rescue RestClient::Exception => e
+    e.http_code.should == 404
   end
 end

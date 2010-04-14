@@ -35,6 +35,9 @@ public interface UserServiceAdapter {
 
     List<Role> getRoles(String username);
 
+    /**
+     *  Owner representation for {@link UserServiceAdapter} API.
+     */
     public class OwnerInfo {
         private String key;
         private String name;

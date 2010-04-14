@@ -29,8 +29,8 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
-     * @param name owner's name to lookup.
-     * @return the owner whose name matches the one given.
+     * @param key owner's unique key to lookup.
+     * @return the owner whose key matches the one given.
      */
     public Owner lookupByKey(String key) {
         return (Owner) currentSession().createCriteria(Owner.class)
