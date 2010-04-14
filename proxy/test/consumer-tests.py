@@ -128,17 +128,6 @@ class ConsumerTests(CandlepinTests):
                 product_id='monitoring')
         self.assertEquals(1, len(result))
 
-    def test_bind_by_product(self):
-        # Request a monitoring entitlement:
-        results = self.cp.bindProduct(self.uuid, 'monitoring')
-        for result in results:
-            self.assertTrue('id' in result)
-            self.assertEquals('monitoring', result['pool']['productId'])
-
-        # Now list consumer's entitlements:
-        result = self.cp.getEntitlements(self.uuid)
-        print result
-
     def test_unbind_all_single(self):
         pools = self.cp.getPools(consumer=self.uuid)
         pool = pools[0]
