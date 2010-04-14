@@ -100,7 +100,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.6", false, new DERUTF8String(sub.getStartDate().toString() ) ));
         extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.7", false, new DERUTF8String(sub.getEndDate().toString() ) ));
         
-        
+        //1.3.6.1.4.1.2312.9.5.1 
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.5.1", false, new DERUTF8String(consumer.getUuid() ) ));
         
         
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 

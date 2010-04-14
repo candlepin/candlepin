@@ -55,6 +55,22 @@ public class Product implements Persisted {
     
     @Column(nullable = false, unique = true)
     private String name;
+    
+    // Server, Client, Cloud, whatever...
+    @Column(nullable = false)
+    private String variant;
+    
+    @Column(nullable = false)
+    private String version;
+    
+    // suppose we could have an arch table
+    @Column(nullable = true)
+    private String arch;
+    
+    // whatever numeric identifier we come up with for
+    // use in the cert's OID structure...
+    @Column(nullable = true)
+    private String hash;
 
     @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
             fetch = FetchType.EAGER)
