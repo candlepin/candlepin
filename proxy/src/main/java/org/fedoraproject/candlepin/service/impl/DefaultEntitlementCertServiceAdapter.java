@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
@@ -37,6 +38,7 @@ import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
 
 
 import com.google.inject.Inject;
+import com.redhat.candlepin.util.OIDUtil;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -68,10 +70,41 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         
- //       OIDUtil OIDUtil;
-  //      List <X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
+        // oiduitl is busted at the moment, so do this manually
+        OIDUtil OIDUtil;
+        List <X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
+        
+        // 10.10.10 is the product hash, arbitrary number atm
+        // replace ith approriate hash for product, we can maybe get away with faking this
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.1", false, new DERUTF8String(product.getName()) ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.1.2", false, new DERUTF8String(product.getLabel()) ));
+        // we don't have product attributes populated at the moment, so this doesnt work
+        //        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3", false, new DERUTF8String(product.getAttribute("arch").getValue()) ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3", false, new DERUTF8String("x86")));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.4", false, new DERUTF8String("10") ));
+        
+        
+        // Content info
+        // 666 is the cotent hash, which comes from...? 
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1", false, new DERUTF8String("yum") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.2", false, new DERUTF8String("foo-linux-server") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.6", false, new DERUTF8String("content/foobar-linux") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.8", false, new DERUTF8String("1") ));
+        
+        
+        // Subscription/order info
+        //need the sub product name, not id here
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.1", false, new DERUTF8String(sub.getProductId()) ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.2", false, new DERUTF8String(sub.getId().toString()) ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.5", false, new DERUTF8String(sub.getQuantity().toString()) ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.6", false, new DERUTF8String(sub.getStartDate().toString() ) ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.7", false, new DERUTF8String(sub.getEndDate().toString() ) ));
+        
+        
+        
+        
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
-            null, sub.getStartDate(), endDate, keyPair, serialNumber);
+            extensions, sub.getStartDate(), endDate, keyPair, serialNumber);
         
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serialNumber);
