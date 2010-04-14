@@ -21,6 +21,7 @@ import java.io.Reader;
 import javax.script.ScriptEngine;
 import javax.servlet.Filter;
 
+import org.fedoraproject.candlepin.config.LoggingConfig;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -52,6 +53,7 @@ class DefaultConfig extends AbstractModule {
         bind(LoggingFilter.class).asEagerSingleton();
         bind(NoAuthRequiredFilter.class).asEagerSingleton();
         bind(AuthValidationFilter.class).asEagerSingleton();
+        bind(LoggingConfig.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(
             BasicAuthViaUserServiceFilter.class).asEagerSingleton();
         bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH)).to(
