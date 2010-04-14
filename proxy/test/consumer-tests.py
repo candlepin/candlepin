@@ -66,33 +66,6 @@ class ConsumerTests(CandlepinTests):
     def test_uuid(self):
         self.assertTrue(self.uuid != None)
 
-    # Just need to request a product that will fail, for now creating a virt
-    # system and trying to give it virtualization_host:
-    def test_failed_bind_by_entitlement_pool(self):
-        # Create a virt system:
-        virt_uuid = self.create_consumer(consumer_type="virt_system")[0]
-
-        # Get pool ID for virtualization_host:
-        virt_host = 'virtualization_host'
-        results = self.cp.getPools(consumer=self.uuid, product=virt_host)
-        print("Virt host pool: %s" % results)
-        self.assertEquals(1, len(results))
-        pool_id = results[0]['id']
-
-        # Request a virtualization_host entitlement:
-        try:
-            self.cp.bindPool(virt_uuid, pool_id)
-            self.fail("Shouldn't have made it here.")
-        except CandlepinException, e:
-            self.assertEquals('rulefailed.virt.ents.only.for.physical.systems',
-                    e.response.read())
-            self.assertEquals(403, e.response.status)
-
-        # Now list consumer's entitlements:
-        result = self.cp.getEntitlements(virt_uuid)
-        self.assertEquals(type([]), type(result))
-        self.assertEquals(0, len(result))
-
     def test_list_entitlements_product_filtering(self):
         self.cp.bindProduct(self.uuid, 'virtualization_host')
         result = self.cp.getEntitlements(self.uuid)
