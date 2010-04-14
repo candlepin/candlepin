@@ -192,25 +192,3 @@ class ConsumerTests(CandlepinTests):
     def test_list_pools_for_bad_query_combo(self):
         # This isn't allowed, should give bad request.
         self.assertRaises(Exception, self.cp.getPools, consumer=self.uuid, owner=1)
-
-
-    def test_unregister_consumer(self):
-
-        ret = self.cp.registerConsumer("UnregMe", "samplepass", "some testsystem", {'arch':'i386', 'cpu':'intel'}, {'os':'linux', 'release':'6.0'})
-        uuid = ret['uuid']
-        pools = self.cp.getPools()
-
-        preconsumed=0
-        postconsumed=0
-
-        if len(pools) > 1:
-            for pool in self.cp.getPools():
-                preconsumed = preconsumed + pool['consumed']
-                self.cp.bindPool(uuid, pool['id'])
-
-            self.cp.unRegisterConsumer( uuid)
-
-            for pool in self.cp.getPools():
-                postconsumed = postconsumed + pool['consumed']
-
-            self.assertEquals(preconsumed, postconsumed)
