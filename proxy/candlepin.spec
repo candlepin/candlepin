@@ -2,7 +2,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.0
+Version: 0.0.1
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -90,3 +90,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Wed Apr 14 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.1-1
+- Add support for log4j settings in the candlepin.conf file (bkearney@redhat.com)
+- remove BuildRequires altogether (jesusr@redhat.com)
+- A bit more easy emma love (bkearney@redhat.com)
+- Remove the test resource (jbowes@redhat.com)
+- remove changelog, bump down version to 0.0.0 (jesusr@redhat.com)
+- Fixing up checkstyle  and cucumber test.  (jharris@redhat.com)
