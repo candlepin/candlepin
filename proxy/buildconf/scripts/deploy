@@ -28,12 +28,13 @@ function gendb ()
 
 function deploy ()
 {
+    VERSION="`grep Version: candlepin.spec | cut --delim=' ' -f2`"
     if [ -z $CLEAN ] ; then
         $SUDO rm -rf $DEPLOY
     else
         $SUDO rm -rf $CLEAN
     fi
-    $SUDO cp target/candlepin-1.0.0.war $DEPLOY
+    $SUDO cp target/candlepin-$VERSION.war $DEPLOY
 }
 
 function stopappserver ()
