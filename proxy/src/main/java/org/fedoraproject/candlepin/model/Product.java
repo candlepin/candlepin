@@ -57,10 +57,10 @@ public class Product implements Persisted {
     private String name;
     
     // Server, Client, Cloud, whatever...
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String variant;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String version;
     
     // suppose we could have an arch table
@@ -229,5 +229,61 @@ public class Product implements Persisted {
     @Override
     public int hashCode() {
         return label.hashCode() * 31 + name.hashCode();
+    }
+
+    /**
+     * @param hash the hash to set
+     */
+    public void setHash(String hash) {
+        this.hash = hash;
+    }
+
+    /**
+     * @return the hash
+     */
+    public String getHash() {
+        return hash;
+    }
+
+    /**
+     * @param arch the arch to set
+     */
+    public void setArch(String arch) {
+        this.arch = arch;
+    }
+
+    /**
+     * @return the arch
+     */
+    public String getArch() {
+        return arch;
+    }
+
+    /**
+     * @param version the version to set
+     */
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    /**
+     * @return the version
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * @param variant the variant to set
+     */
+    public void setVariant(String variant) {
+        this.variant = variant;
+    }
+
+    /**
+     * @return the variant
+     */
+    public String getVariant() {
+        return variant;
     }
 }

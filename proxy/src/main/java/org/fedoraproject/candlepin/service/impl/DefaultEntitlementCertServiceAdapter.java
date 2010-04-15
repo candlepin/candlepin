@@ -77,11 +77,11 @@ public class DefaultEntitlementCertServiceAdapter extends
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
         extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.1", false, new DERUTF8String(product.getName()) ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.1.2", false, new DERUTF8String(product.getLabel()) ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.1.2", false, new DERUTF8String(product.getVariant()) ));
         // we don't have product attributes populated at the moment, so this doesnt work
         //        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3", false, new DERUTF8String(product.getAttribute("arch").getValue()) ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3", false, new DERUTF8String("x86")));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.4", false, new DERUTF8String("10") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3", false, new DERUTF8String(product.getArch())));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.4", false, new DERUTF8String(product.getVersion()) ));
         
         
         // Content info
