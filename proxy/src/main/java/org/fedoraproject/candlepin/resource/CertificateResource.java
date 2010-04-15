@@ -41,9 +41,7 @@ import com.redhat.rhn.common.cert.CertificateFactory;
  */
 @Path("/certificates")
 public class CertificateResource  {
-    private static String encodedCert = ""; //FIXME bad bad bad
 
-    
     private OwnerCurator ownerCurator;
     private CertificateCurator certificateCurator;
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
@@ -81,7 +79,6 @@ public class CertificateResource  {
                     "Empty certificate is being uploaded.");
             }
             
-            encodedCert = base64cert;
             String decoded = new String(Base64.decodeBase64(base64cert));
             Certificate cert = CertificateFactory.read(decoded);
             
@@ -104,27 +101,9 @@ public class CertificateResource  {
             throw new BadRequestException(
                 "Invalid certificate is being uploaded", e.getMessage());
         }
-        return encodedCert;
+        return base64cert;
     }
 
-    /**
-     * Return the encoded certificate.
-     * @return the encoded certificate.
-     */
-    @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public String get() {
-//        byte[] s = null;
-//        if (cert != null) {
-//            s = Base64.encode(cert.asXmlString());
-//        }
-//        
-//        String str = createString(s);
-//        System.out.println(str);
-//        return str;
-        return encodedCert;
-    }
-    
     private Owner addOwner(Certificate cert) {
         Owner owner = ownerCurator.lookupByKey(cert.getOwner());
         if (owner == null) {
