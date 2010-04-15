@@ -26,7 +26,7 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
  */
 public class PrincipalProviderForTesting implements Provider<Principal> {
 
-    private static final String OWNER_NAME = "Default Owner";
+    private static final String OWNER_NAME = "Default-Owner";
 
     private OwnerCurator ownerCurator;
 
@@ -37,7 +37,7 @@ public class PrincipalProviderForTesting implements Provider<Principal> {
 
     @Override
     public Principal get() {
-        Owner owner = ownerCurator.lookupByName(OWNER_NAME);
+        Owner owner = ownerCurator.lookupByKey(OWNER_NAME);
 
         if (owner == null) {
             owner = new Owner(OWNER_NAME);

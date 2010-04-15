@@ -19,6 +19,7 @@ import java.util.Map;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.service.UserServiceAdapter.OwnerInfo;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.junit.Assert;
 import org.junit.Before;
@@ -115,17 +116,20 @@ public class DefaultUserServiceAdapterTest {
     public void validOwner() {
         this.config.addUser("billy", "password", "Megacorp");
         UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+        OwnerInfo info = userService.getOwnerInfo("billy");
 
-        Assert.assertEquals("Megacorp", userService.getOwnerName("billy"));
+        Assert.assertEquals("Megacorp", info.getName());
     }
 
+    // Note:  The following tests are failing due to the hack to hard-coding
+    //        'Spacewalk Public Cert' into the impl for functional testing.
     //@Test
     public void nullOwner() {
         // no org info
         this.config.addUserPassword("richard", "password");
         UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
 
-        Assert.assertNull(userService.getOwnerName("richard"));
+        Assert.assertNull(userService.getOwnerInfo("richard"));
     }
 
     //@Test
@@ -133,7 +137,7 @@ public class DefaultUserServiceAdapterTest {
         // no account setup
         UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
 
-        Assert.assertNull(userService.getOwnerName("someone"));
+        Assert.assertNull(userService.getOwnerInfo("someone"));
     }
 
     //@Test
@@ -141,7 +145,7 @@ public class DefaultUserServiceAdapterTest {
         // no account setup
         UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
 
-        Assert.assertNull(userService.getOwnerName(null));
+        Assert.assertNull(userService.getOwnerInfo(null));
     }
 
     @Test

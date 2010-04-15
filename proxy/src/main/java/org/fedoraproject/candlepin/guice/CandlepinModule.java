@@ -39,7 +39,6 @@ import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
-import org.fedoraproject.candlepin.resource.TestResource;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 import org.xnap.commons.i18n.I18n;
@@ -76,7 +75,6 @@ public class CandlepinModule extends AbstractModule {
         bind(ProductResource.class);
         bind(SubscriptionResource.class);
         bind(SubscriptionTokenResource.class);
-        bind(TestResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
         bind(RulesResource.class);

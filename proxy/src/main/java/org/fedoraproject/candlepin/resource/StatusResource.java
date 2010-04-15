@@ -41,9 +41,9 @@ public class StatusResource {
     private String version = "Unknown";
     
     /**
-     * The current git hash
+     * The current git release
      */
-    private String hash = "Unknown";
+    private String release = "Unknown";
     
     @Inject
     public StatusResource() {
@@ -53,7 +53,7 @@ public class StatusResource {
             Properties props = new Properties();
             props.load(in);
             version = props.getProperty("version");
-            hash = props.getProperty("hash");
+            release = props.getProperty("release");
             in.close();
         } 
         catch (Exception e) {
@@ -69,7 +69,7 @@ public class StatusResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     public Status status() {
-        Status status = new Status(true, version, hash);
+        Status status = new Status(true, version, release);
         return status;
     }
 }

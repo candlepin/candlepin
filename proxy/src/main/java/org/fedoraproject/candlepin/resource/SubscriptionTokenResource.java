@@ -17,18 +17,15 @@ package org.fedoraproject.candlepin.resource;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
@@ -44,29 +41,16 @@ import com.google.inject.Inject;
  */
 @Path("/subscriptiontokens")
 public class SubscriptionTokenResource {
-    private static Logger log = Logger.getLogger(SubscriptionTokenResource.class);
-    private SubscriptionCurator subCurator;
+    private static Logger log = Logger
+        .getLogger(SubscriptionTokenResource.class);
     private SubscriptionTokenCurator subTokenCurator;
-
-    private String username;
-    private Owner owner;
     private I18n i18n;
 
     @Inject
     public SubscriptionTokenResource(SubscriptionCurator subCurator,
         SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
-        I18n i18n,
-        @Context HttpServletRequest request) {
-        this.subCurator = subCurator;
+        I18n i18n) {
         this.subTokenCurator = subTokenCurator;
-        this.username = (String) request.getAttribute("username");
-        this.i18n = i18n;
-        if (username != null) {
-            this.owner = ownerCurator.lookupByName(username);
-            if (owner == null) {
-                owner = ownerCurator.create(new Owner(username));
-            }
-        }
     }
 
     @GET

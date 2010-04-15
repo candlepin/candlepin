@@ -14,23 +14,21 @@
  */
 package org.fedoraproject.candlepin.util;
 
-import java.util.UUID;
+import java.util.Date;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
- * Genuinely random utilities.
+ * Test Class for the DateSourceImpl class
  */
-public class Util {
+public class DateSourceImplTest {
 
-    private Util() {
-        // default ctor
+    protected DateSourceImpl impl = new DateSourceImpl();
+
+    @Test
+    public void testGetDate() {
+        long milis = System.currentTimeMillis() - 1000;
+        Date dt = new Date(milis);
+        assertTrue(dt.before(impl.currentDate()));
     }
-
-    /**
-     * Generates a random UUID.
-     * @return a random UUID.
-     */
-    public static String generateUUID() {
-        return UUID.randomUUID().toString();
-    }
-
 }

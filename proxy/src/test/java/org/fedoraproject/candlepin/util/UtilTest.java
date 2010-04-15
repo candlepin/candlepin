@@ -14,23 +14,17 @@
  */
 package org.fedoraproject.candlepin.util;
 
-import java.util.UUID;
+import static org.junit.Assert.assertNotSame;
+
+import org.junit.Test;
 
 /**
- * Genuinely random utilities.
+ * Test Class for the Util class
  */
-public class Util {
+public class UtilTest {
 
-    private Util() {
-        // default ctor
+    @Test
+    public void testRandomUUIDS() {
+        assertNotSame(Util.generateUUID(), Util.generateUUID());
     }
-
-    /**
-     * Generates a random UUID.
-     * @return a random UUID.
-     */
-    public static String generateUUID() {
-        return UUID.randomUUID().toString();
-    }
-
 }

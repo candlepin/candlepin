@@ -20,6 +20,11 @@ Given /I am a Consumer (\w+)/ do |consumer_name|
     When "I Register a New Consumer #{consumer_name}"
 end
 
+When /^I become user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
+  @candlepin.use_credentials(username, password)
+end
+
+
 #When /I Register a New Consumer (\w+) with uuid (\w+)$/ do |consumer_name, uuid|
 #    c = @candlepin.get_consumer(uuid)
 #    consumer = {

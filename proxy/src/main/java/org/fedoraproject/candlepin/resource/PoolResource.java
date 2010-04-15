@@ -83,7 +83,11 @@ public class PoolResource {
             throw new BadRequestException(
                 i18n.tr("Cannot filter on both owner and consumer"));
         }
-        
+        if (consumerUuid == null && ownerId == null && productId != null) {
+            throw new BadRequestException(
+                i18n.tr("A consumer or owner is needed to filter on product"));
+        }
+
         if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {
             return poolCurator.findAll();
         }
