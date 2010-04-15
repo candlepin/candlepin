@@ -22,8 +22,8 @@ import javax.ws.rs.core.Response.Status;
 public class BadRequestException extends CandlepinException {
     private static final Status HTTP_RETURN_CODE = Status.BAD_REQUEST; 
 
-    public BadRequestException(String label, String displayMessage) {
-        super(label, displayMessage);
+    public BadRequestException(String message) {
+        super(message);
     }
     
     public Status httpReturnCode() {

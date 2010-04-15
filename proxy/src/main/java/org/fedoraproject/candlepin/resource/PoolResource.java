@@ -32,6 +32,7 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -40,23 +41,25 @@ import com.google.inject.Inject;
  */
 @Path("/pools")
 public class PoolResource {
-
     //private static Logger log = Logger.getLogger(PoolResource.class);
 
     private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
     private ProductServiceAdapter productServiceAdapter;
+    private I18n i18n;
 
     @Inject
     public PoolResource(
         PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
-        ProductServiceAdapter productServiceAdapter) {
+        ProductServiceAdapter productServiceAdapter,
+        I18n i18n) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.productServiceAdapter = productServiceAdapter;
+        this.i18n = i18n;
     }
 
     /**
@@ -77,8 +80,8 @@ public class PoolResource {
         
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
-            throw new BadRequestException("Illegal filter parameters",
-                "Cannot filter on both owner and consumer");
+            throw new BadRequestException(
+                i18n.tr("Cannot filter on both owner and consumer"));
         }
         
         if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {

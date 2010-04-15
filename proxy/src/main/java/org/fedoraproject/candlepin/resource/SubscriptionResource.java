@@ -26,12 +26,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
-import org.fedoraproject.candlepin.model.Subscription;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -41,8 +43,6 @@ import com.google.inject.Inject;
 
 @Path("/subscriptions")
 public class SubscriptionResource {
-
-    
     private static Logger log = Logger.getLogger(SubscriptionResource.class);
     private SubscriptionCurator subCurator;
     private SubscriptionTokenCurator subTokenCurator;
@@ -50,15 +50,19 @@ public class SubscriptionResource {
 
     private String username;
     private Owner owner;
+    private I18n i18n;
 
     @Inject
     public SubscriptionResource(SubscriptionCurator subCurator,
         SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
+        I18n i18n,
         @Context HttpServletRequest request) {
         this.subCurator = subCurator;
         this.subTokenCurator = subTokenCurator;
         this.username = (String) request.getAttribute("username");
         this.ownerCurator = ownerCurator;
+        this.i18n = i18n;
+        
         log.debug("username: " + username);
         log.debug(request.getAttributeNames().toString());
         if (this.username != null) {
@@ -98,8 +102,8 @@ public class SubscriptionResource {
         Subscription subscription = subCurator.find(subscriptionId);
 
         if (subscription == null) {
-            throw new BadRequestException("Couldn't find subscriptipon",
-                "Subscription with id " + subscriptionId + " could not be found");
+            throw new BadRequestException(
+                i18n.tr("Subscription with id {0} could not be found", subscriptionId));
         }
 
         subCurator.delete(subscription);

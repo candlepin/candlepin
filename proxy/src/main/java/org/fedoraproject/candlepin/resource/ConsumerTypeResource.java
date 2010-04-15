@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -40,10 +41,12 @@ import com.google.inject.Inject;
 public class ConsumerTypeResource {
     private static Logger log = Logger.getLogger(ConsumerTypeResource.class);
     private ConsumerTypeCurator consumerTypeCurator;
+    private I18n i18n;
 
     @Inject
-    public ConsumerTypeResource(ConsumerTypeCurator consumerTypeCurator) {
+    public ConsumerTypeResource(ConsumerTypeCurator consumerTypeCurator, I18n i18n) {
         this.consumerTypeCurator = consumerTypeCurator;
+        this.i18n = i18n;
     }
 
     /**
@@ -93,7 +96,8 @@ public class ConsumerTypeResource {
         }
         catch (Exception e) {
             log.error("Problem creating consumertype:", e);
-            throw new BadRequestException("Problem creating consumertype", e.getMessage());
+            throw new BadRequestException(
+                i18n.tr("Problem creating consumertype: {0}", in));
         }
     }
 
@@ -112,8 +116,8 @@ public class ConsumerTypeResource {
         ConsumerType type = consumerTypeCurator.find(in.getId());
 
         if (type == null) {
-            throw new BadRequestException("Consumer Type couldn't be found.", 
-                "Consumer Type with label " + in.getId() + " could not be found");
+            throw new BadRequestException(
+                i18n.tr("Consumer Type with label {0} could not be found", in.getId()));
         }
 
         consumerTypeCurator.merge(in);
@@ -130,8 +134,8 @@ public class ConsumerTypeResource {
         ConsumerType type = consumerTypeCurator.find(id);
 
         if (type == null) {
-            throw new BadRequestException("Consumer Type couldn't be found.",
-                "Consumer Type with id " + id + " could not be found");
+            throw new BadRequestException(
+                i18n.tr("Consumer Type with id {0} could not be found", id));
         }
 
         consumerTypeCurator.delete(type);

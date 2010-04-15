@@ -56,6 +56,7 @@ COMMONS = ['commons-beanutils:commons-beanutils:jar:1.7.0',
 JDOM = 'jdom:jdom:jar:1.0'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
+GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
 CHECKSTYLE = ['checkstyle:checkstyle:jar:5.0',
               'antlr:antlr:jar:2.7.6',
@@ -81,6 +82,7 @@ SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 # Specify Maven 2.0 remote repositories here, like this:
 repositories.remote << "http://www.ibiblio.org/maven2/"
 repositories.remote << "http://repository.jboss.com/maven2/"
+repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 
 #############################################################################
 # PROJECT BUILD
@@ -117,9 +119,9 @@ define "candlepin" do
   #
   # building
   #
+  resources.from _('localized_resources/classes')
   compile.options.target = '1.6'
-
-  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, JACKSON, QUARTZ
+  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS
  
   #
   # testing
@@ -129,7 +131,7 @@ define "candlepin" do
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ
+  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS
 
   #
   # javadoc projects
@@ -240,6 +242,20 @@ task :fixeclipse do
   tmp.close()
   FileUtils.copy("tmp", ".classpath")
   File.delete("tmp")
+end
+
+task :extractkeys do
+  mkdir_p "localized_resources/classes"
+  %x{xgettext -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o localized_resources/keys.pot $(find src/main/java -name "*.java")}
+end
+
+task :mergekeys do
+  %x{touch localized_resources/de.po}
+  %x{msgmerge --backup=none -U localized_resources/de.po localized_resources/keys.pot}
+end
+
+task :createresourcebundles do
+  puts %x{msgfmt --java2 -d localized_resources/classes -r org.fedoraproject.candlepin.i18n.Messages -l de localized_resources/de.po}
 end
 
 

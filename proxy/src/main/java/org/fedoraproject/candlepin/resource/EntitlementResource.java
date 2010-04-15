@@ -33,6 +33,7 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -42,13 +43,11 @@ import com.google.inject.Inject;
  */
 @Path("/entitlements")
 public class EntitlementResource {
-    
-    //private PoolCurator epCurator;
     private final ConsumerCurator consumerCurator;
     private final ProductServiceAdapter prodAdapter;
-    //private SubscriptionServiceAdapter subAdapter; 
     private Entitler entitler;
     private final EntitlementCurator entitlementCurator;
+    private I18n i18n;
     
     //private static Logger log = Logger.getLogger(EntitlementResource.class);
 
@@ -57,14 +56,14 @@ public class EntitlementResource {
             EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
             ProductServiceAdapter prodAdapter, SubscriptionServiceAdapter subAdapter, 
-            Entitler entitler) {
+            Entitler entitler,
+            I18n i18n) {
         
-        //this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.prodAdapter = prodAdapter;
-        //this.subAdapter = subAdapter;
         this.entitler = entitler;
+        this.i18n = i18n;
     }
     
     
@@ -185,8 +184,8 @@ public class EntitlementResource {
 
             Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
             if (consumer == null) {
-                throw new BadRequestException("Consumer couldn't be found",
-                    "No such consumer: " + consumerUuid);
+                throw new BadRequestException(
+                    i18n.tr("No such consumer: {0}", consumerUuid));
             }
 
             return entitlementCurator.listByConsumer(consumer);

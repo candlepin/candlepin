@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -39,17 +40,16 @@ import com.google.inject.Inject;
  */
 @Path("/owners")
 public class OwnerResource {
-
     //private static Logger log = Logger.getLogger(OwnerResource.class);
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
+    private I18n i18n;
 
     @Inject
-    public OwnerResource(OwnerCurator ownerCurator,
-        PoolCurator poolCurator) {
-
+    public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator, I18n i18n) {
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
+        this.i18n = i18n;
     }
 
     /**
@@ -98,7 +98,7 @@ public class OwnerResource {
         }
 
         throw new BadRequestException(
-            "Cound not create the Owner", "Cound not create the Owner");
+            i18n.tr("Cound not create the Owner: {0}", owner));
     }
     
     /**
@@ -112,8 +112,8 @@ public class OwnerResource {
         Owner owner = ownerCurator.find(ownerId);
 
         if (owner == null) {
-            throw new BadRequestException("Owner couldn't be found",
-                "Owner with id " + ownerId + " could not be found");
+            throw new BadRequestException(
+                i18n.tr("Owner with id {0} could not be found", ownerId));
         }
         
         ownerCurator.delete(owner);

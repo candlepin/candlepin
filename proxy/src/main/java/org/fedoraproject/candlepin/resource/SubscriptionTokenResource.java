@@ -31,8 +31,9 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
+import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -43,21 +44,23 @@ import com.google.inject.Inject;
  */
 @Path("/subscriptiontokens")
 public class SubscriptionTokenResource {
-    private static Logger log = Logger
-        .getLogger(SubscriptionTokenResource.class);
+    private static Logger log = Logger.getLogger(SubscriptionTokenResource.class);
     private SubscriptionCurator subCurator;
     private SubscriptionTokenCurator subTokenCurator;
 
     private String username;
     private Owner owner;
+    private I18n i18n;
 
     @Inject
     public SubscriptionTokenResource(SubscriptionCurator subCurator,
         SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
+        I18n i18n,
         @Context HttpServletRequest request) {
         this.subCurator = subCurator;
         this.subTokenCurator = subTokenCurator;
         this.username = (String) request.getAttribute("username");
+        this.i18n = i18n;
         if (username != null) {
             this.owner = ownerCurator.lookupByName(username);
             if (owner == null) {
@@ -95,15 +98,11 @@ public class SubscriptionTokenResource {
             .find(subscriptionTokenId);
 
         if (subscriptionToken == null) {
-            throw new BadRequestException("SubscriptionToken caouldn't be found",
-                "SubscriptionToken with id " + subscriptionTokenId + " could not be found");
+            throw new BadRequestException(
+                i18n.tr("SubscriptionToken with id {0} could not be found",
+                    subscriptionTokenId));
         }
 
         subTokenCurator.delete(subscriptionToken);
-
     }
-        
-
-        
-        
 }

@@ -18,8 +18,11 @@ import java.io.Reader;
 
 import javax.script.ScriptEngine;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
+import org.fedoraproject.candlepin.guice.PrincipalProviderForTesting;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.RulesCurator;
@@ -47,12 +50,11 @@ import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceA
 import org.fedoraproject.candlepin.service.impl.stub.StubIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.guice.PrincipalProviderForTesting;
 
 public class CandlepinCommonTestingModule extends AbstractModule {
 
@@ -87,6 +89,8 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
                           .toProvider(RulesReaderProvider.class);
+        
         bind(Principal.class).toProvider(PrincipalProviderForTesting.class);
+        bind(I18n.class).toProvider(I18nProvider.class);
     }
 }
