@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.2
+Version: 0.0.3
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -19,7 +19,6 @@ BuildArch: noarch
 Requires: candlepin-webapp
 BuildRequires: java >= 0:1.6.0
 #BuildRequires: rubygem-buildr
-#BuildRequires: /usr/bin/buildr
 %define __jar_repack %{nil}
 
 %description
@@ -74,7 +73,8 @@ unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tom
 
 # jbossas
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
-unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}/
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war
+unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -95,6 +95,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Thu Apr 15 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.3-1
+- Change the default SSLProtocol we deploy server.xml with to "all" instead of
+  "TLS" (alikins@redhat.com)
+- Identity certs should be deleted by their id, not by consumer id (jbowes@redhat.com)
+- added support for localization of user-visible messages (ddolguik@redhat.com)
+- teach the deploy script to get war version from the spec file (jbowes@redhat.com)
+- support for parsing of accept-language headers (ddolguik@redhat.com)
+
 * Wed Apr 14 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.2-1
 - Add support for log4j settings in the candlepin.conf file (bkearney@redhat.com)
 - remove BuildRequires altogether (jesusr@redhat.com)
