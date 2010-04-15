@@ -1,8 +1,13 @@
+%global _binary_filedigest_algorithm 1
+%global _source_filedigest_algorithm 1
+%global _binary_payload w9.gzdio
+%global _source_payload w9.gzdio
+
 Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.0
+Version: 0.0.2
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -14,7 +19,7 @@ BuildArch: noarch
 Requires: candlepin-webapp
 BuildRequires: java >= 0:1.6.0
 #BuildRequires: rubygem-buildr
-BuildRequires: /usr/bin/buildr
+#BuildRequires: /usr/bin/buildr
 %define __jar_repack %{nil}
 
 %description
@@ -90,3 +95,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Wed Apr 14 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.2-1
+- Add support for log4j settings in the candlepin.conf file (bkearney@redhat.com)
+- remove BuildRequires altogether (jesusr@redhat.com)
+- A bit more easy emma love (bkearney@redhat.com)
+- Remove the test resource (jbowes@redhat.com)
+- remove changelog, bump down version to 0.0.0 (jesusr@redhat.com)
+- Fixing up checkstyle  and cucumber test.  (jharris@redhat.com)
