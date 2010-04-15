@@ -12,31 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth;
+package org.fedoraproject.candlepin.auth.interceptor;
 
-import java.util.List;
-import org.fedoraproject.candlepin.model.Owner;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * An entity interacting with Candlepin
+ * Annotation noting that the target method should only permit
+ * <code>ConsumerPrincipal</code>s whose UUID matches the parameter
+ * with the same <code>@PathParam</code> value.
  */
-public abstract class Principal {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface EnforceConsumer {
 
-    private Owner owner;
-    private List<Role> roles;
-
-    public Principal(Owner owner, List<Role> roles) {
-        this.owner = owner;
-        this.roles = roles;
-    }
-
-    public Owner getOwner() {
-        return owner;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-
-    public abstract boolean canAccessConsumer(String consumerUuid);
+    String pathParam() default "consumer_uuid";
 }

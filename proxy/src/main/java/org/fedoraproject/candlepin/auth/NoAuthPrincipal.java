@@ -24,4 +24,9 @@ public class NoAuthPrincipal extends Principal {
     public NoAuthPrincipal() {
         super(null, Arrays.asList(Role.values()));
     }
+
+    @Override
+    public boolean canAccessConsumer(String consumerUuid) {
+        return true;
+    }
 }

@@ -1,46 +1,30 @@
 require 'spec/expectations'
 require 'candlepin_api'
 
-Given /I have username (\w+)/ do |username|
+Given /^I have username "(\w+)"$/ do |username|
     # Not using username right now
     @username = username
 end
 
-Given /I have password (\w+)/ do |password|
+Given /^I have password "(\w+)"$/ do |password|
     # Not using password right now
     @password = password
 end
 
-Given /I am a Consumer (\w+)/ do |consumer_name|
+Given /^I am a Consumer "([^\"]*)"$/ do |consumer_name|
     # Just hardcodes in username/password so that
     # all the features don't have to spell it out
 
-    @username = 'Spacewalk Public Cert'
+    @username = 'foo'
     @password = 'password'
-    When "I Register a New Consumer #{consumer_name}"
+    When "I Register a New Consumer \"#{consumer_name}\""
 end
 
 When /^I become user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
   @candlepin.use_credentials(username, password)
 end
 
-
-#When /I Register a New Consumer (\w+) with uuid (\w+)$/ do |consumer_name, uuid|
-#    c = @candlepin.get_consumer(uuid)
-#    consumer = {
-#        :consumer => {
-#            :type => {:label => :system},
-#            :name => consumer_name,
-#            :uuid => uuid
-#        }
-#    }
-#
-#    if not c
-#        @candlepin.register(consumer, @username, @password)
-#    end
-#end
-
-When /I Register a New Consumer (\w+)$/ do |consumer_name|
+When /I Register a New Consumer "(\w+)"$/ do |consumer_name|
     consumer = {
         :consumer => {
             :type => {:label => :system},

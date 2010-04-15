@@ -40,6 +40,7 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.fedoraproject.candlepin.resource.NotFoundException;
 
 /**
  * ConsumerResourceTest
@@ -252,7 +253,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             consumer.getUuid(), pool.getId(), null, product.getId());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = NotFoundException.class)
     public void testBindByPoolBadConsumerUuid() throws Exception {
         consumerResource.bind(
             "notarealuuid", pool.getId(), null, null);
