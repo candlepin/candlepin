@@ -34,20 +34,3 @@ class SubscriptionTokenTests(CandlepinTests):
 
         results = self.cp.createSubscriptionToken(subscription_token_data)
         return results
-
-
-    def test_create_subscription(self):
-        sub_data =  {'startDate': '2007-07-13T00:00:00-04:00',
-                     'endDate': '2010-07-13T00:00:00-04:00',
-                     'activeSubscription': True,
-                     'consumed': 0,
-                     'subscriptionId': 3,
-                     'quantity': 20000,
-                     'id': 3,
-                     'productId': 'provisioning'}
-
-        result = self.cp.getSubscriptions()
-        sub = result[0]
-        del sub['subscription']['id']
-#        del sub['subscription']['quantity']
-        results = self.cp.createSubscription(sub);
