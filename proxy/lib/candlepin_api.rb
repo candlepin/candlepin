@@ -50,8 +50,9 @@ class Candlepin
         get("/entitlements/#{entitlement_id}")
     end
 
-    def unregister()
-        delete("/consumers/#{@consumer['uuid']}")
+    def unregister(uuid = nil)
+        uuid = @consumer['uuid'] if not uuid
+        delete("/consumers/#{uuid}")
     end
 
     def revoke_all_entitlements()

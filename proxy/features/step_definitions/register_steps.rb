@@ -39,6 +39,19 @@ When /I Register a New Consumer (\w+)$/ do |consumer_name|
     @candlepin.register(consumer, @username, @password)
 end
 
+Given /^there is no Consumer with uuid "([^\"]*)"$/ do |uuid|
+    @candlepin.use_credentials(@username, @password)
+    begin
+        @candlepin.unregister(uuid)
+    rescue RestClient::Exception => e
+        # If it doesn't exist already, then we don't care if the unregister
+        # failed
+        e.message.should == "Resource Not Found"
+        e.http_code.should == 404
+    end
+end
+
+
 When /I Register a New Consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
     consumer = {
         :consumer => {

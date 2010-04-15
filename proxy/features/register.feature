@@ -30,11 +30,13 @@ Feature: Register a Consumer
     Scenario: Register by UUID
         Given I have username candlepin_user
         And I have password default
+        And there is no Consumer with uuid "special_uuid"
         When I Register a New Consumer "my_machine" with uuid "special_uuid"
         Then The UID on my Identity Certificate's Subject is special_uuid
 
     Scenario: Reuse a UUID during registration
         Given I have username candlepin_user
         And I have password default
-        When I Register a New Consumer "my_machine" with uuid "special_uuid_too"
-        Then Registering another Consumer with uuid "special_uuid_too" causes a bad request
+        And there is no Consumer with uuid "special_uuid"
+        When I Register a New Consumer "my_machine" with uuid "special_uuid"
+        Then Registering another Consumer with uuid "special_uuid" causes a bad request
