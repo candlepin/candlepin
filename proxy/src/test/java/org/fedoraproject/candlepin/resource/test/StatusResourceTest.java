@@ -38,8 +38,7 @@ public class StatusResourceTest extends DatabaseTestFixture  {
     @Test
     public void testVersionIsKnown() throws Exception {
         Status status = statusResource.status();
-        System.out.println("_____________________" + status.getVersion());        
-        assertTrue("The vesrsion should be known", !"Unkown".equals(status.getVersion()));
+        assertTrue("The vesrsion should be known", !"Unknown".equals(status.getVersion()));
         assertTrue("The vesrsion should be filled in", !"${version}"
             .equals(status.getVersion()));        
     }
@@ -47,7 +46,6 @@ public class StatusResourceTest extends DatabaseTestFixture  {
     @Test
     public void testReleaseIsKnown() throws Exception {
         Status status = statusResource.status();
-        System.out.println("_____________________" + status.getRelease());
         assertTrue("The hash should be known", !"Unkown".equals(status.getRelease()));
         assertTrue("The hash should be filled in", !"${hash}".equals(status.getRelease())); 
     }    
