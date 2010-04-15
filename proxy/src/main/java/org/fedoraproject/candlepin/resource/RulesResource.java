@@ -27,6 +27,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -35,17 +36,18 @@ import com.google.inject.Inject;
  */
 @Path("/rules")
 public class RulesResource {
-
     private static Logger log = Logger.getLogger(CertificateResource.class);
     private RulesCurator rulesCurator;
+    private I18n i18n;
 
     /**
      * Default ctor
      * @param rulesCurator Curator used to interact with Rules.
      */
     @Inject
-    public RulesResource(RulesCurator rulesCurator) {
+    public RulesResource(RulesCurator rulesCurator, I18n i18n) {
         this.rulesCurator = rulesCurator;
+        this.i18n = i18n;
     }
 
     /**
@@ -71,8 +73,7 @@ public class RulesResource {
         catch (Throwable t) {
             log.error("Exception in rules upload", t);
             throw new BadRequestException(
-                "Error decoding the rules. The text should be base 64 encded",
-                "Error decoding the rules. The text should be base 64 encded");
+                i18n.tr("Error decoding the rules. The text should be base 64 encded"));
         }
         rulesCurator.update(rules);
         return rulesBuffer;

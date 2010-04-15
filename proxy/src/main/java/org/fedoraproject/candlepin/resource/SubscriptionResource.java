@@ -24,14 +24,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import org.fedoraproject.candlepin.auth.Principal;
 
 /**
  * SubscriptionResource
@@ -39,16 +39,15 @@ import org.fedoraproject.candlepin.auth.Principal;
 
 @Path("/subscriptions")
 public class SubscriptionResource {
-
-    
     private static Logger log = Logger.getLogger(SubscriptionResource.class);
     private SubscriptionCurator subCurator;
+
+    private I18n i18n;
     private Principal principal;
 
     @Inject
     public SubscriptionResource(SubscriptionCurator subCurator,
-        SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
-        Principal principal) {
+        I18n i18n, Principal principal) {
         this.subCurator = subCurator;
         this.principal = principal;
     }
@@ -80,8 +79,8 @@ public class SubscriptionResource {
         Subscription subscription = subCurator.find(subscriptionId);
 
         if (subscription == null) {
-            throw new BadRequestException("Couldn't find subscriptipon",
-                "Subscription with id " + subscriptionId + " could not be found");
+            throw new BadRequestException(
+                i18n.tr("Subscription with id {0} could not be found", subscriptionId));
         }
 
         subCurator.delete(subscription);

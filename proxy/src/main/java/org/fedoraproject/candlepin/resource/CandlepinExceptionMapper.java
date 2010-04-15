@@ -55,7 +55,7 @@ public class CandlepinExceptionMapper implements ExceptionMapper<CandlepinExcept
         
         String header = request.getHeader(HttpHeaderNames.ACCEPT);
         List<MediaType> headerMediaTypes = parseHeader(header);
-
+        
         MediaType responseMediaType = 
             headerMediaTypes.size() == 0 ? 
             MediaType.TEXT_PLAIN_TYPE : 

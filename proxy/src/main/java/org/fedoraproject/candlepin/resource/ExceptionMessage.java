@@ -25,18 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ExceptionMessage {
 
-    private String label;
     private String displayMessage;
 
-    public ExceptionMessage setLabel(String label) {
-        this.label = label;
-        return this;
-    }
-    
-    public String getLabel() {
-        return label;
-    }
-    
     public ExceptionMessage setDisplayMessage(String displayMessage) {
         this.displayMessage = displayMessage;
         return this;

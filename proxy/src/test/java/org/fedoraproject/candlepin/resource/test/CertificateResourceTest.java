@@ -41,7 +41,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void createObjects() throws Exception {
         
         certResource = new CertificateResource(ownerCurator,
-                spacewalkCertCurator, certificateCurator);
+                spacewalkCertCurator, certificateCurator, i18n);
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");

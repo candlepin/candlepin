@@ -41,6 +41,7 @@ import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
 import com.wideplay.warp.persist.jpa.JpaUnit;
@@ -85,5 +86,6 @@ public class CandlepinModule extends AbstractModule {
         bind(CandlepinExceptionMapper.class);
 
         bind(Principal.class).toProvider(PrincipalProvider.class);
+        bind(I18n.class).toProvider(I18nProvider.class);
     }
 }

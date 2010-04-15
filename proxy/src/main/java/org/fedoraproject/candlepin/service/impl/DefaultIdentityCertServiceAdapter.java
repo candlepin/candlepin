@@ -59,7 +59,7 @@ public class DefaultIdentityCertServiceAdapter implements
     @Override
     public void deleteIdentityCert(Consumer consumer) {
         IdentityCertificate certificate = identityCertCurator
-            .find(consumer.getId());
+            .find(consumer.getIdCert().getId());
         if (certificate != null) {
             identityCertCurator.delete(certificate);
         }

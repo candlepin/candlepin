@@ -34,7 +34,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        ownerResource = new OwnerResource(ownerCurator, poolCurator);
+        ownerResource = new OwnerResource(ownerCurator, poolCurator, i18n);
     }
 
     @Test
