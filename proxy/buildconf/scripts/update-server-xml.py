@@ -8,7 +8,7 @@ from sys import argv, exit
 https_connector_configuration="""
 <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true"
            maxThreads="150" scheme="https" secure="true"
-           clientAuth="want" sslProtocol="TLS" 
+           clientAuth="want" SSLProtocol="all" 
            keystoreFile="conf/keystore"
            truststoreFile="conf/keystore" 
            keystorePass="password"
