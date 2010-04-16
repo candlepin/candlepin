@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.guice.PrincipalProviderForTesting;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -37,12 +38,14 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     
     private CertificateResource certResource;
     private String sampleCertXml;
+    private Principal principal;
     
     @Before
     public void createObjects() throws Exception {
         
+        this.principal = new PrincipalProviderForTesting(ownerCurator).get();
         certResource = new CertificateResource(spacewalkCertCurator, certificateCurator, 
-            new PrincipalProviderForTesting(ownerCurator).get(), i18n);
+            principal, i18n);
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");
@@ -56,13 +59,6 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void ownerCreated() {
-        certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
-        Owner owner = ownerCurator.lookupByKey("Spacewalk Public Cert");
-        assertNotNull(owner);
-    }
-    
-    @Test
     public void simpleUploadCertProductsCreated() {
         certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
         List<Product> products = productCurator.listAll();
@@ -73,7 +69,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void entitlementPoolCreation() {
         String encoded = TestUtil.xmlToBase64String(sampleCertXml);
         certResource.upload(encoded);
-        Owner owner = ownerCurator.lookupByKey("Spacewalk Public Cert");
+        Owner owner = ownerCurator.lookupByKey(principal.getOwner().getKey());
         List<Pool> entPools = poolCurator.listByOwner(owner);
         assertEquals(5, entPools.size());
     }
