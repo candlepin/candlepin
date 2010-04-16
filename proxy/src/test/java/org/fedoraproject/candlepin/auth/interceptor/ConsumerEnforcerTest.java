@@ -56,17 +56,17 @@ public class ConsumerEnforcerTest {
         Assert.assertEquals("consumer", this.resource.getConsumer(uuid));
     }
 
-    @Test(expected=ForbiddenException.class)
+    @Test(expected = ForbiddenException.class)
     public void permissionDenied() {
         this.resource.getConsumer("randomuuid98752");
     }
 
-    @Test(expected=ForbiddenException.class)
+    @Test(expected = ForbiddenException.class)
     public void noPathParam() {
         this.resource.noPathParam(4, "whatever");
     }
 
-    @Test(expected=ForbiddenException.class)
+    @Test(expected = ForbiddenException.class)
     public void noMatchingPathParam() {
         this.resource.noMatchingPathParam("whatever");
     }
@@ -93,7 +93,7 @@ public class ConsumerEnforcerTest {
 
     public static class TestResource {
 
-        @EnforceConsumer(pathParam="consumer")
+        @EnforceConsumer(pathParam = "consumer")
         public String getConsumer(@PathParam("consumer") String consumerUuid) {
             return "consumer";
         }
@@ -108,7 +108,7 @@ public class ConsumerEnforcerTest {
             return true;
         }
 
-        @EnforceConsumer(pathParam="bar")
+        @EnforceConsumer(pathParam = "bar")
         public int noMatchingPathParam(@PathParam("notBar") String notBar) {
             return 42;
         }

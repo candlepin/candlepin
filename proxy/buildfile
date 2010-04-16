@@ -169,7 +169,7 @@ define "candlepin" do
   #
   # CHECKSTYLE task, a Buildr plugin would be better, but this is faster
   #
-  task :checkstyle do
+  task :checkstyle => compile do
     begin
       ant('checkstyle') do |ant|
         rm_rf 'reports/checkstyle_report.xml'
@@ -214,7 +214,6 @@ define "candlepin" do
           ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
 
           ant.fileset :dir=>"src/test/java", :includes=>'**/*.java'
-          #ant.fileset :dir=>"src/functionaltest/java", :includes=>'**/*.java'
         end
       end
     end
