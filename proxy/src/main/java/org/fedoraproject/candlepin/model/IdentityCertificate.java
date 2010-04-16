@@ -38,13 +38,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_id_cert")
-@SequenceGenerator(name = "seq_id_cert", 
-                   sequenceName = "seq_id_cert", allocationSize = 1)
+@SequenceGenerator(name = "seq_id_cert", sequenceName = "seq_id_cert", allocationSize = 1)
 public class IdentityCertificate implements Persisted {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, 
-                    generator = "seq_id_cert")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_id_cert")
     private Long id;
 
     @Column(nullable = false)
@@ -76,6 +74,10 @@ public class IdentityCertificate implements Persisted {
         return "";
     }
 
+    public void setKeyAsString(String key) {
+        this.key = key.getBytes();
+    }
+
     @XmlTransient
     public byte[] getKey() {
         return key;
@@ -103,6 +105,11 @@ public class IdentityCertificate implements Persisted {
         this.cert = cert;
     }
 
+    // Keep this so that the XML will unmarshall.
+    public void setCertAsString(String cert) {
+        this.cert = cert.getBytes();
+    }
+
     @XmlTransient
     public Long getId() {
         return id;
@@ -126,5 +133,5 @@ public class IdentityCertificate implements Persisted {
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
     }
-    
+
 }
