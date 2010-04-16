@@ -69,7 +69,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
             reader, preHelper, postHelper, productAdapter,
-            new ScriptEngineManager().getEngineByName("JavaScript"));
+            new ScriptEngineManager().getEngineByName("JavaScript"), i18n);
     }
 
     // grrr. have to test two conditions atm: sufficient number of entitlements

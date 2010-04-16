@@ -25,10 +25,12 @@ import org.fedoraproject.candlepin.util.DateSource;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.script.ScriptEngineManager;
 
@@ -71,8 +73,9 @@ public class DefaultRulesTest {
         StringReader inputStreamReader = new StringReader(RULES_JS);
 
         enforcer = new JavascriptEnforcer(dateSource, inputStreamReader,
-            preHelper, postHelper, prodAdapter, new ScriptEngineManager()
-                .getEngineByName("JavaScript"));
+            preHelper, postHelper, prodAdapter, 
+                new ScriptEngineManager().getEngineByName("JavaScript"), 
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
     }
 
     @Before
