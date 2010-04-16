@@ -11,10 +11,10 @@ Before do
     }
 end
 
-Then /^I have (\d+) subscriptions$/ do |subscription_size|
+Then /^I have at least (\d+) subscriptions$/ do |subscription_size|
     @candlepin.use_credentials(@username, @password)
     subscriptions = @candlepin.get_subscriptions()
-    subscriptions.length.should == subscription_size.to_i
+    subscriptions.length.should >= subscription_size.to_i
 end
 
 Then /^I can delete a subscription$/ do

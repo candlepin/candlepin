@@ -5,7 +5,7 @@ Feature: Manipulate Subscriptions
     Scenario: List existing subscriptions
         Given I have username foo
         And I have password bar
-        Then I have 5 subscriptions
+        Then I have at least 5 subscriptions
 
     Scenario: Delete a subscription
         Given I have username foo

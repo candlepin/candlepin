@@ -102,6 +102,19 @@ class Candlepin
         return delete("/subscriptions/#{subscription}")
     end
 
+    def get_subscription_tokens
+        return get("/subscriptiontokens")
+    end
+
+    def create_subscription_token(data)
+        return post("/subscriptiontokens", data)
+    end
+
+    def delete_subscription_token(subscription)
+        return delete("/subscriptiontokens/#{subscription}")
+    end
+
+
     private
 
     def create_basic_client(username=nil, password=nil)
