@@ -293,3 +293,21 @@ rescue LoadError
     abort 'Cucumber HTML buildr task is not available.  Be sure to install the cucumber gem.'
   end
 end
+
+task :fixemmareport do
+  puts "Fixing emma reports"
+  text = File.read("reports/emma/coverage.html")
+  newstr = ''
+  text.each_byte do |c|
+     if c != 160 then
+         newstr.concat(c)
+     else
+         newstr.concat('&nbsp;')
+     end
+  end
+  tmp = File.new("tmpreport", "w")
+  tmp.write(newstr)
+  tmp.close()
+  FileUtils.copy("tmpreport", "reports/emma/coverage.html")
+  File.delete("tmpreport")
+end
