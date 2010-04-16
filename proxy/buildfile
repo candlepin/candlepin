@@ -232,7 +232,9 @@ define "candlepin" do
 
 end
 
-task :fixeclipse do
+# runs the eclipse task to generate the .classpath and .project
+# files, then fixes the output.
+task :eclipse do
   puts "Fixing eclipse .classpath"
   text = File.read(".classpath")
   tmp = File.new("tmp", "w")
