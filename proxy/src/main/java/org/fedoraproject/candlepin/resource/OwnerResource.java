@@ -80,8 +80,8 @@ public class OwnerResource {
             return toReturn;
         }
 
-        throw new NotFoundException("Owner with UUID '" + ownerId +
-            "' could not be found");
+        throw new NotFoundException(
+            i18n.tr("Owner with UUID '{0}' could not be found", ownerId));
     }
 
     /**
@@ -133,8 +133,8 @@ public class OwnerResource {
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
         if (owner == null) {
-            throw new NotFoundException("owner with id: " + ownerId +
-                " was not found.");
+            throw new NotFoundException(
+                i18n.tr("owner with id: {0} was not found.", ownerId));
         }
 
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
@@ -159,8 +159,8 @@ public class OwnerResource {
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
         if (owner == null) {
-            throw new NotFoundException("owner with id: " + ownerId +
-                " was not found.");
+            throw new NotFoundException(
+                i18n.tr("owner with id: {0} was not found.", ownerId));
         }
         return poolCurator.listByOwner(owner);
     }    

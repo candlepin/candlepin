@@ -20,13 +20,7 @@ import javax.ws.rs.core.Response.Status;
  * Represents a BAD_REQUEST (HTTP 400) error.
  */
 public class BadRequestException extends CandlepinException {
-    private static final Status HTTP_RETURN_CODE = Status.BAD_REQUEST; 
-
     public BadRequestException(String message) {
-        super(message);
-    }
-    
-    public Status httpReturnCode() {
-        return HTTP_RETURN_CODE;
+        super(Status.BAD_REQUEST, message);
     }
 }

@@ -14,28 +14,13 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 /**
  * Thrown when a resource is not found.
  */
-public class NotFoundException extends WebApplicationException {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 5766371025014420584L;
-
-    /**
-     * ctor
-     * @param message Exception message string.
-     */
+public class NotFoundException extends CandlepinException {
     public NotFoundException(String message) {
-        super(Response.status(Status.NOT_FOUND)
-                .entity(message)
-                .type("text/plain")
-                .build()
-        );
+        super(Status.NOT_FOUND, message);
     }
 }

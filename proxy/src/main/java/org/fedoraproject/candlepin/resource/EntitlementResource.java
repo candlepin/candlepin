@@ -124,8 +124,8 @@ public class EntitlementResource {
         }
         
         throw new NotFoundException(
-            "Consumer: " + consumerUuid + " has no entitlement for product " +
-            productId);
+            i18n.tr("Consumer: {0} has no entitlement for product {1}",
+                consumerUuid, productId));
     }
     
 //    /**
@@ -208,7 +208,7 @@ public class EntitlementResource {
             return toReturn;
         }
         throw new NotFoundException(
-            "Entitlement with ID '" + dbid + "' could not be found");
+            i18n.tr("Entitlement with ID '{0}' could not be found", dbid));
     }
 
     /**
@@ -224,10 +224,7 @@ public class EntitlementResource {
             entitler.revokeEntitlement(toDelete);
             return;
         }
-        throw new NotFoundException("Entitlement with ID '" + dbid +
-            "' could not be found");
+        throw new NotFoundException(
+            i18n.tr("Entitlement with ID '{0}' could not be found", dbid));
     }
-
-
-
 }

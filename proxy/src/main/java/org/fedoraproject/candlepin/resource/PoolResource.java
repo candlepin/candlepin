@@ -96,21 +96,21 @@ public class PoolResource {
             if (productId != null) {
                 p = productServiceAdapter.getProductById(productId);
                 if (p == null) {
-                    throw new NotFoundException("product: " + productId);
+                    throw new NotFoundException(i18n.tr("product: {0}", productId));
                 }
             }
             Consumer c = null;
             if (consumerUuid != null) {
                 c = consumerCurator.lookupByUuid(consumerUuid);
                 if (c == null) {
-                    throw new NotFoundException("consumer: " + consumerUuid);
+                    throw new NotFoundException(i18n.tr("consumer: {0}", consumerUuid));
                 }                
             }        
             Owner o = null;
             if (ownerId != null) {
                 o = ownerCurator.find(ownerId);
                 if (o == null) {
-                    throw new NotFoundException("owner: " + ownerId);
+                    throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
                 }                
             }                   
             return poolCurator.listAvailableEntitlementPools(c, o, p, true);
@@ -134,8 +134,8 @@ public class PoolResource {
             return toReturn;
         }
 
-        throw new NotFoundException("Entitlement Pool with ID '" + id +
-            "' could not be found");
+        throw new NotFoundException(
+            i18n.tr("Entitlement Pool with ID '{0}' could not be found", id));
     }
 
 }

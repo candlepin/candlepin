@@ -243,16 +243,25 @@ task :fixeclipse do
   File.delete("tmp")
 end
 
+#
+# extract strings that need to be translated
+#
 task :extractkeys do
   mkdir_p "localized_resources/classes"
   %x{xgettext -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o localized_resources/keys.pot $(find src/main/java -name "*.java")}
 end
 
+#
+# merge in changes into existing po files
+#
 task :mergekeys do
   %x{touch localized_resources/de.po}
   %x{msgmerge --backup=none -U localized_resources/de.po localized_resources/keys.pot}
 end
 
+#
+# compile resource files
+#
 task :createresourcebundles do
   puts %x{msgfmt --java2 -d localized_resources/classes -r org.fedoraproject.candlepin.i18n.Messages -l de localized_resources/de.po}
 end

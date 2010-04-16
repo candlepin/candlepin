@@ -469,8 +469,8 @@ public class ConsumerResource {
             Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
             if (consumer == null) {
-                throw new NotFoundException("Consumer with ID " + consumerUuid +
-                    " could not be found.");
+                throw new NotFoundException(
+                    i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
             }
 
             for (Entitlement entitlement : entitlementCurator
@@ -508,8 +508,8 @@ public class ConsumerResource {
             entitler.revokeEntitlement(toDelete);
             return;
         }
-        throw new NotFoundException("Entitlement with ID '" + dbid +
-            "' could not be found");
+        throw new NotFoundException(
+            i18n.tr("Entitlement with ID '" + dbid + "' could not be found"));
     }
 
 }

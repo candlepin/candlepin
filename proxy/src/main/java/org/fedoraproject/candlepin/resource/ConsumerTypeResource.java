@@ -76,8 +76,8 @@ public class ConsumerTypeResource {
             return toReturn;
         }
 
-        throw new NotFoundException("ConsumerType with id '" + id +
-            "' could not be found");
+        throw new NotFoundException(
+            i18n.tr("ConsumerType with id '" + id + "' could not be found"));
     }
 
     /**
