@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import org.fedoraproject.candlepin.guice.PrincipalProviderForTesting;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -40,8 +41,8 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     @Before
     public void createObjects() throws Exception {
         
-        certResource = new CertificateResource(ownerCurator,
-                spacewalkCertCurator, certificateCurator);
+        certResource = new CertificateResource(spacewalkCertCurator, certificateCurator, 
+            new PrincipalProviderForTesting(ownerCurator).get());
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");

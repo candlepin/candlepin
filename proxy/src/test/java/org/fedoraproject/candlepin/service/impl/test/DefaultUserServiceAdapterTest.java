@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter.OwnerInfo;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,12 +29,12 @@ import org.junit.Test;
 /**
  *
  */
-public class DefaultUserServiceAdapterTest {
+public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
 
     private UserPasswordConfig config;
 
     @Before
-    public void init() {
+    public void setUp() {
         this.config = new UserPasswordConfig();
     }
 
@@ -115,7 +116,8 @@ public class DefaultUserServiceAdapterTest {
     @Test
     public void validOwner() {
         this.config.addUser("billy", "password", "Megacorp");
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+            ownerCurator);
         OwnerInfo info = userService.getOwnerInfo("billy");
 
         Assert.assertEquals("Megacorp", info.getName());
@@ -127,7 +129,8 @@ public class DefaultUserServiceAdapterTest {
     public void nullOwner() {
         // no org info
         this.config.addUserPassword("richard", "password");
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+            ownerCurator);
 
         Assert.assertNull(userService.getOwnerInfo("richard"));
     }
@@ -135,7 +138,8 @@ public class DefaultUserServiceAdapterTest {
     //@Test
     public void noAccountNullOwner() {
         // no account setup
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+            ownerCurator);
 
         Assert.assertNull(userService.getOwnerInfo("someone"));
     }
@@ -143,21 +147,24 @@ public class DefaultUserServiceAdapterTest {
     //@Test
     public void nullOwnerKey() {
         // no account setup
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+            ownerCurator);
 
         Assert.assertNull(userService.getOwnerInfo(null));
     }
 
     @Test
     public void staticRole() {
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config);
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+            ownerCurator);
         Role[] expected = new Role[] {Role.OWNER_ADMIN};
 
         Assert.assertArrayEquals(expected, userService.getRoles("anyone").toArray());
     }
 
     private boolean validate(String username, String password) throws Exception {
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(this.config);
+        UserServiceAdapter userService = new DefaultUserServiceAdapter(this.config, 
+            ownerCurator);
 
         return userService.validateUser(username, password);
     }

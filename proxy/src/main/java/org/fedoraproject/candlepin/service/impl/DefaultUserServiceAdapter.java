@@ -19,8 +19,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 /**
@@ -45,20 +49,25 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     private static final String USER_PASS_PREFIX = "auth.user.";
+    private static final String DEFAULT_ORG = "Default Org";
 
     private Map<String, String> passwords;
     private Map<String, String> owners;
+    private OwnerCurator ownerCurator;
 
+    private static Logger log = Logger.getLogger(DefaultUserServiceAdapter.class);
+    
     /**
-     * Creates a new instace, using the {@link Config} to retrieve username/password
+     * Creates a new instance, using the {@link Config} to retrieve username/password
      * pairs.
      *
      * @param config the Config that provides valid authentication credentials
      */
     @Inject
-    public DefaultUserServiceAdapter(Config config) {
+    public DefaultUserServiceAdapter(Config config, OwnerCurator ownerCurator) {
         this.passwords = new HashMap<String, String>();
         this.owners = new HashMap<String, String>();
+        this.ownerCurator = ownerCurator;
         Map<String, String> authConfig = config.configurationWithPrefix(USER_PASS_PREFIX);
 
         // strip off the prefix 
@@ -71,8 +80,22 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
             // check if org is specified
             if (passwordOrg.length > 1) {
+                createOrgIfNeeded(passwordOrg[1]);
                 this.owners.put(user, passwordOrg[1]);
             }
+            else {
+                createOrgIfNeeded(DEFAULT_ORG);
+                this.owners.put(user, DEFAULT_ORG);
+            }
+        }
+    }
+    
+    private void createOrgIfNeeded(String ownerName) {
+        Owner owner = ownerCurator.lookupByKey(ownerName);
+        if (owner == null) {
+            log.info("Creating new owner: " + ownerName);
+            Owner o = new Owner(ownerName, ownerName);
+            ownerCurator.create(o);
         }
     }
 
@@ -102,14 +125,14 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         return true;
     }
 
+    // TODO: Can't this just return an Owner? Even if it's not actually an 
+    // Owner from our DB.
     @Override
     public OwnerInfo getOwnerInfo(String username) {
         String ownerName = this.owners.get(username);
 
-        //TODO: This is completely temporary!
-        //      Need to figure out how to do this properly
         if (ownerName == null) {
-            ownerName = "Spacewalk Public Cert";
+            ownerName = DEFAULT_ORG;
         }
 
         return new OwnerInfo(ownerName, ownerName);
