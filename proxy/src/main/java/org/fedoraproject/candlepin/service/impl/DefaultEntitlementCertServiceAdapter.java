@@ -87,9 +87,13 @@ public class DefaultEntitlementCertServiceAdapter extends
         // Content info
         // 666 is the cotent hash, which comes from...? 
         extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1", false, new DERUTF8String("yum") ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.2", false, new DERUTF8String("foo-linux-server") ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.6", false, new DERUTF8String("content/foobar-linux") ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.8", false, new DERUTF8String("1") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1.1", false, new DERUTF8String("Foo Linux Awesome Server") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1.2", false, new DERUTF8String("foo-linux-server") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1.5", false, new DERUTF8String("Foo Linux") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1.6", false, new DERUTF8String("content/foobar-linux") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1.7", false, new DERUTF8String("$releasever/$releasearch") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1.8", false, new DERUTF8String("/content/gpg/foobar.gpg") ));
+        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.2.666.1.9", false, new DERUTF8String("$releasever/$releasearch") ));
         
         
         // Subscription/order info
