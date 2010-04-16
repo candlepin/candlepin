@@ -28,7 +28,7 @@ import com.google.inject.Inject;
  */
 public class LoggingConfig {
 
-    public final static String PREFIX = "log4j.logger.";
+    public static final String PREFIX = "log4j.logger.";
 
     @Inject
     public LoggingConfig(Config config) {
