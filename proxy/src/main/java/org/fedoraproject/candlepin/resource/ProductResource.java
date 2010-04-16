@@ -24,6 +24,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -37,6 +38,7 @@ public class ProductResource {
 
     //private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
+    private I18n i18n;
 
     /**
      * default ctor
@@ -45,8 +47,9 @@ public class ProductResource {
      *            Product Adapter used to interact with multiple services.
      */
     @Inject
-    public ProductResource(ProductServiceAdapter prodAdapter) {
+    public ProductResource(ProductServiceAdapter prodAdapter, I18n i18n) {
         this.prodAdapter = prodAdapter;
+        this.i18n = i18n;
     }
 
     /**
@@ -77,7 +80,7 @@ public class ProductResource {
             return toReturn;
         }
 
-        throw new NotFoundException("Product with UUID '" + pid +
-            "' could not be found");
+        throw new NotFoundException(
+            i18n.tr("Product with UUID '{0}' could not be found", pid));
     }
 }

@@ -41,9 +41,14 @@ import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.matcher.Matcher;
+import com.google.inject.matcher.Matchers;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import org.fedoraproject.candlepin.auth.interceptor.ConsumerEnforcer;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
 
 /**
  * CandlepinProductionConfiguration
@@ -81,9 +86,18 @@ public class CandlepinModule extends AbstractModule {
         bind(PostEntHelper.class);
         bind(PreEntHelper.class);
         bind(StatusResource.class);
-        
         bind(CandlepinExceptionMapper.class);
-
         bind(Principal.class).toProvider(PrincipalProvider.class);
+        bind(I18n.class).toProvider(I18nProvider.class);
+
+        Matcher resourceMatcher = getPackageMatcher("org.fedoraproject.candlepin.resource");
+        ConsumerEnforcer consumerEnforcer = new ConsumerEnforcer();
+        requestInjection(consumerEnforcer);
+        bindInterceptor(resourceMatcher, 
+                Matchers.annotatedWith(EnforceConsumer.class), consumerEnforcer);
+    }
+
+    private Matcher getPackageMatcher(String packageName) {
+        return Matchers.inPackage(Package.getPackage(packageName));
     }
 }

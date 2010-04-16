@@ -32,6 +32,7 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -40,23 +41,25 @@ import com.google.inject.Inject;
  */
 @Path("/pools")
 public class PoolResource {
-
     //private static Logger log = Logger.getLogger(PoolResource.class);
 
     private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
     private ProductServiceAdapter productServiceAdapter;
+    private I18n i18n;
 
     @Inject
     public PoolResource(
         PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
-        ProductServiceAdapter productServiceAdapter) {
+        ProductServiceAdapter productServiceAdapter,
+        I18n i18n) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.productServiceAdapter = productServiceAdapter;
+        this.i18n = i18n;
     }
 
     /**
@@ -77,12 +80,12 @@ public class PoolResource {
         
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
-            throw new BadRequestException("Illegal filter parameters",
-                "Cannot filter on both owner and consumer");
+            throw new BadRequestException(
+                i18n.tr("Cannot filter on both owner and consumer"));
         }
         if (consumerUuid == null && ownerId == null && productId != null) {
-            throw new BadRequestException("Illegal filter parameters",
-                "A consumer or owner is needed to filter on product");
+            throw new BadRequestException(
+                i18n.tr("A consumer or owner is needed to filter on product"));
         }
 
         if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {
@@ -93,21 +96,21 @@ public class PoolResource {
             if (productId != null) {
                 p = productServiceAdapter.getProductById(productId);
                 if (p == null) {
-                    throw new NotFoundException("product: " + productId);
+                    throw new NotFoundException(i18n.tr("product: {0}", productId));
                 }
             }
             Consumer c = null;
             if (consumerUuid != null) {
                 c = consumerCurator.lookupByUuid(consumerUuid);
                 if (c == null) {
-                    throw new NotFoundException("consumer: " + consumerUuid);
+                    throw new NotFoundException(i18n.tr("consumer: {0}", consumerUuid));
                 }                
             }        
             Owner o = null;
             if (ownerId != null) {
                 o = ownerCurator.find(ownerId);
                 if (o == null) {
-                    throw new NotFoundException("owner: " + ownerId);
+                    throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
                 }                
             }                   
             return poolCurator.listAvailableEntitlementPools(c, o, p, true);
@@ -131,8 +134,8 @@ public class PoolResource {
             return toReturn;
         }
 
-        throw new NotFoundException("Entitlement Pool with ID '" + id +
-            "' could not be found");
+        throw new NotFoundException(
+            i18n.tr("Entitlement Pool with ID '{0}' could not be found", id));
     }
 
 }

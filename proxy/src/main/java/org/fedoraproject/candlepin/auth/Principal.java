@@ -37,4 +37,6 @@ public abstract class Principal {
     public List<Role> getRoles() {
         return roles;
     }
+
+    public abstract boolean canAccessConsumer(String consumerUuid);
 }

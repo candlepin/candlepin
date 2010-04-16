@@ -39,8 +39,8 @@ public class AuthValidationFilter implements Filter {
     /**
      * {@inheritDoc}
      *
-     * This filter checks the request for a "username" attribute and throws
-     * a 403 if none is found.
+     * This filter checks the request for a principal attribute and throws
+     * a 401 if none is found.
      *
      * @param request
      * @param response
@@ -55,7 +55,7 @@ public class AuthValidationFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         if (request.getAttribute(FilterConstants.PRINCIPAL_ATTR) == null) {
-            httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
         else {
             chain.doFilter(request, response);

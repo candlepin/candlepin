@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.guice;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -24,6 +25,7 @@ import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextList
 import org.jboss.resteasy.plugins.guice.ModuleProcessor;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.xnap.commons.i18n.I18nManager;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -42,6 +44,11 @@ import com.wideplay.warp.persist.UnitOfWork;
  */
 public class CandlepinContextListener extends
         GuiceResteasyBootstrapServletContextListener {
+    
+    // a bit of application-initialization code. Not sure if this is the best spot for it.
+    static {
+        I18nManager.getInstance().setDefaultLocale(Locale.US);
+    }
 
     @Override
     public void contextInitialized(final ServletContextEvent event) {

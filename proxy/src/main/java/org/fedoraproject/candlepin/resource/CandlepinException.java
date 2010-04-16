@@ -21,21 +21,21 @@ import javax.ws.rs.core.Response.Status;
  */
 public abstract class CandlepinException extends RuntimeException {
     private static final long serialVersionUID = -3430329252623764984L;
+    private final Status returnCode;
     
-    private ExceptionMessage message;
+    private final ExceptionMessage message;
     
-    public CandlepinException(String label, String displayMessage) {
-        message = new ExceptionMessage()
-            .setLabel(label)
-            .setDisplayMessage(displayMessage);
+    public CandlepinException(Status returnCode, String message) {
+        this.returnCode = returnCode;
+        this.message = new ExceptionMessage()
+            .setDisplayMessage(message);
     }
 
     public ExceptionMessage message() {
         return message;
     }
     
-    public abstract Status httpReturnCode();
-    
-    
-    
+    public Status httpReturnCode() {
+        return returnCode;
+    }
 }

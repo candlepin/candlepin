@@ -81,7 +81,6 @@ class Candlepin
     end
 
     def get_consumer(cid)
-        create_basic_client("foo", "bar")
         get("/consumers/#{cid}")
     end
 

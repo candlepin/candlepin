@@ -26,9 +26,9 @@ import org.fedoraproject.candlepin.model.AttributeCurator;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -45,6 +45,7 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.junit.Before;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -78,6 +79,7 @@ public class DatabaseTestFixture {
     protected WorkManager unitOfWork;
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
+    protected I18n i18n;
 
     
     @Before
@@ -112,6 +114,7 @@ public class DatabaseTestFixture {
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
         entCertCurator = injector.getInstance(EntitlementCertificateCurator.class);
 
+        i18n = injector.getInstance(I18n.class);
        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));

@@ -17,21 +17,20 @@ package org.fedoraproject.candlepin.resource;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
+import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -45,11 +44,12 @@ public class SubscriptionTokenResource {
     private static Logger log = Logger
         .getLogger(SubscriptionTokenResource.class);
     private SubscriptionTokenCurator subTokenCurator;
+    private I18n i18n;
 
     @Inject
     public SubscriptionTokenResource(SubscriptionCurator subCurator,
         SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
-        @Context HttpServletRequest request) {
+        I18n i18n) {
         this.subTokenCurator = subTokenCurator;
     }
 
@@ -82,12 +82,11 @@ public class SubscriptionTokenResource {
             .find(subscriptionTokenId);
 
         if (subscriptionToken == null) {
-            throw new BadRequestException("SubscriptionToken caouldn't be found",
-                "SubscriptionToken with id " + subscriptionTokenId + " could not be found");
+            throw new BadRequestException(
+                i18n.tr("SubscriptionToken with id {0} could not be found",
+                    subscriptionTokenId));
         }
 
         subTokenCurator.delete(subscriptionToken);
-
     }
-        
 }

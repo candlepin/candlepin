@@ -1,0 +1,108 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-04-14 14:20-0300\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Dmitri Dolguikh <dmitri@redhat.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/main/java/org/fedoraproject/candlepin/pinsetter/core/PinsetterKernel.java:161
+msgid "pinsetter."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/CertificateResource.java:88
+msgid "Empty certificate is being uploaded."
+msgstr "Empty certificate is being uploaded."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/CertificateResource.java:105
+#: src/main/java/org/fedoraproject/candlepin/resource/CertificateResource.java:115
+msgid "Exception when parsing satellite certificate."
+msgstr "Exception when parsing satellite certificate."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/CertificateResource.java:110
+msgid "Exception when reading satellite certificate."
+msgstr "Exception when reading satellite certificate."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:160
+#, java-format
+msgid "No such consumer type: {0}"
+msgstr "Exception when reading satellite certificate."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:208
+#, java-format
+msgid "Problem creating consumer {0}"
+msgstr "Problem creating consumer {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:346
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:479
+#, java-format
+msgid "No such product: {0}"
+msgstr "Kein Produkt: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:397
+#, java-format
+msgid "No such token: {0}"
+msgstr "No such token: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:414
+#, java-format
+msgid "No such entitlement pool: {0}"
+msgstr "No such entitlement pool: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:442
+msgid "Cannot bind by multiple parameters."
+msgstr "Cannot bind by multiple parameters."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:462
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:188
+#, java-format
+msgid "No such consumer: {0}"
+msgstr "No such consumer: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerTypeResource.java:100
+#, java-format
+msgid "Problem creating consumertype: {0}"
+msgstr "Problem creating consumertype: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerTypeResource.java:120
+#, java-format
+msgid "Consumer Type with label {0} could not be found"
+msgstr "Consumer Type with label {0} could not be found"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerTypeResource.java:138
+#, java-format
+msgid "Consumer Type with id {0} could not be found"
+msgstr "Consumer Type with id {0} could not be found"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:101
+#, java-format
+msgid "Cound not create the Owner: {0}"
+msgstr "Cound not create the Owner: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:116
+#, java-format
+msgid "Owner with id {0} could not be found"
+msgstr "Owner with id {0} could not be found"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:84
+msgid "Cannot filter on both owner and consumer"
+msgstr "Cannot filter on both owner and consumer"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/RulesResource.java:76
+msgid "Error decoding the rules. The text should be base 64 encded"
+msgstr "Error decoding the rules. The text should be base 64 encded"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:106
+#, java-format
+msgid "Subscription with id {0} could not be found"
+msgstr "Subscription with id {0} could not be found"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionTokenResource.java:102
+#, java-format
+msgid "SubscriptionToken with id {0} could not be found"
+msgstr "SubscriptionToken with id {0} could not be found"
+

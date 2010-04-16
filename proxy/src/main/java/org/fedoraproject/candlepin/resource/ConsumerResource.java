@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -31,19 +30,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.OwnerCurator;
+
+import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -54,23 +52,20 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
 
 /**
  * API Gateway for Consumers
  */
 @Path("/consumers")
 public class ConsumerResource {
-
-    // @Context
-    // private UriInfo uriInfo;
-
     private static Logger log = Logger.getLogger(ConsumerResource.class);
-    private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
@@ -81,19 +76,19 @@ public class ConsumerResource {
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
     private Principal principal;
+    private I18n i18n;
 
     @Inject
-    public ConsumerResource(OwnerCurator ownerCurator,
-        ConsumerCurator consumerCurator,
+    public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         ProductServiceAdapter productAdapter, Entitler entitler,
         SubscriptionServiceAdapter subAdapter, PoolCurator epCurator,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
-        Principal principal) {
+        Principal principal,
+        I18n i18n) {
 
-        this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.productAdapter = productAdapter;
@@ -104,6 +99,7 @@ public class ConsumerResource {
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
         this.principal = principal;
+        this.i18n = i18n;
     }
 
     /**
@@ -127,15 +123,9 @@ public class ConsumerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
+    @EnforceConsumer
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
-        Consumer toReturn = consumerCurator.lookupByUuid(uuid);
-
-        if (toReturn != null) {
-            return toReturn;
-        }
-
-        throw new NotFoundException("Consumer with UUID '" + uuid +
-            "' could not be found");
+        return verifyAndLookupConsumer(uuid);
     }
 
     /**
@@ -157,8 +147,8 @@ public class ConsumerResource {
 
         if (type == null) {
             throw new BadRequestException(
-                "Illegal consumer type", 
-                "No such consumer type: " + in.getType().getLabel());
+                i18n.tr("No such consumer type: {0}", in.getType().getLabel()) 
+            );
         }
 
         // copy the incoming consumer to avoid modifying the reference.
@@ -205,7 +195,7 @@ public class ConsumerResource {
         }
         catch (Exception e) {
             log.error("Problem creating consumer:", e);
-            throw new BadRequestException("Couldn't create a consumer", e.getMessage());
+            throw new BadRequestException(i18n.tr("Problem creating consumer {0}", in));
         }
     }
 
@@ -220,18 +210,10 @@ public class ConsumerResource {
     @Transactional
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
-        try {
-            Consumer toDelete = verifyAndLookupConsumer(uuid);
-            if (toDelete == null) {
-                return;
-            }
-            this.unbindAllOrBySerialNumber(uuid, null);
-            consumerCurator.delete(toDelete);
-            identityCertService.deleteIdentityCert(toDelete);
-        }
-        catch (RuntimeException e) {
-            throw new NotFoundException(e.getMessage());
-        }
+        Consumer toDelete = verifyAndLookupConsumer(uuid);
+        this.unbindAllOrBySerialNumber(uuid, null);
+        consumerCurator.delete(toDelete);
+        identityCertService.deleteIdentityCert(toDelete);
     }
 
     /**
@@ -249,20 +231,6 @@ public class ConsumerResource {
     public Product getProduct(@PathParam("cid") String cid,
         @PathParam("pid") String pid) {
         return null;
-    }
-
-    /**
-     * Return the content of the file identified by the given filename.
-     * 
-     * @param path filename path.
-     * @return the content of the file identified by the given filename.
-     * @throws Exception if there's a problem loading the file.
-     */
-    public String getBytesFromFile(String path) throws Exception {
-        String fileContents = FileUtils.readFileToString(
-            new File(this.getClass().getResource(path).getPath()));
-        log.debug(fileContents);
-        return fileContents;
     }
 
     /**
@@ -332,18 +300,16 @@ public class ConsumerResource {
     /**
      * Entitles the given Consumer with the given Product.
      * 
-     * @param consumerUuid Consumer identifier to be entitled
      * @param productId Product identifying label.
      * @return Entitled object
      */
-    private List<Entitlement> bindByProduct(String consumerUuid, String productId,
-        Consumer consumer) {
+    private List<Entitlement> bindByProduct(String productId, Consumer consumer) {
 
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         Product p = productAdapter.getProductById(productId);
         if (p == null) {
             throw new BadRequestException(
-                "Product could not be found", "No such product: " + productId);
+                i18n.tr("No such product: {0}", productId));
         }
 
         entitlementList.add(createEntitlement(consumer, p));
@@ -383,18 +349,17 @@ public class ConsumerResource {
     /**
      * Grants entitlements based on a registration token.
      * 
-     * @param consumerUuid Consumer identifier.
      * @param registrationToken registration token.
+     * @param consumer Consumer to bind
      * @return token
      */
-    private List<Entitlement> bindByToken(String registrationToken,
-        Consumer consumer) {
+    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer) {
         
         List<Subscription> s = subAdapter.getSubscriptionForToken(registrationToken);
         if ((s == null) || (s.isEmpty())) {
             log.debug("token: " + registrationToken);
             throw new BadRequestException(
-                "Token can't be found", "No such token: " + registrationToken);
+                i18n.tr("No such token: {0}", registrationToken));
         }
 
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
@@ -411,7 +376,7 @@ public class ConsumerResource {
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
             throw new BadRequestException(
-                "Entitlement pool can't be found", "No such entitlement pool: " + poolId);
+                i18n.tr("No such entitlement pool: {0}", poolId));
         }
 
         // Attempt to create an entitlement:
@@ -439,8 +404,7 @@ public class ConsumerResource {
             (poolId != null && productId != null) ||
             (token != null && productId != null)) {
             throw new BadRequestException(
-                "Too many query parameters have been specified", 
-                "Cannot bind by multiple parameters.");
+                i18n.tr("Cannot bind by multiple parameters."));
         }
 
         // Verify consumer exists:
@@ -450,7 +414,7 @@ public class ConsumerResource {
             return bindByToken(token, consumer);
         }
         if (productId != null) {
-            return bindByProduct(consumerUuid, productId, consumer);
+            return bindByProduct(productId, consumer);
         }
 
         return bindByPool(poolId, consumer);
@@ -459,8 +423,9 @@ public class ConsumerResource {
     private Consumer verifyAndLookupConsumer(String consumerUuid) {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
-            throw new BadRequestException(
-                "Consumer couldn't be found", "No such consumer: " + consumerUuid);
+
+            throw new NotFoundException(
+                i18n.tr("No such consumer: {0}", consumerUuid));
         }
         return consumer;
     }
@@ -477,7 +442,7 @@ public class ConsumerResource {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
                 throw new BadRequestException(
-                    "Product Was Not Found.", "No such product: " + productId);
+                    i18n.tr("No such product: {0}", productId));
             }
             return entitlementCurator.listByConsumerAndProduct(consumer, productId);
         }
@@ -504,8 +469,8 @@ public class ConsumerResource {
             Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
             if (consumer == null) {
-                throw new NotFoundException("Consumer with ID " + consumerUuid +
-                    " could not be found.");
+                throw new NotFoundException(
+                    i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
             }
 
             for (Entitlement entitlement : entitlementCurator
@@ -543,8 +508,8 @@ public class ConsumerResource {
             entitler.revokeEntitlement(toDelete);
             return;
         }
-        throw new NotFoundException("Entitlement with ID '" + dbid +
-            "' could not be found");
+        throw new NotFoundException(
+            i18n.tr("Entitlement with ID '" + dbid + "' could not be found"));
     }
 
 }

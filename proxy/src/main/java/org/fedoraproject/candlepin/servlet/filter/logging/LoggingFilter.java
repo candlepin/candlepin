@@ -24,6 +24,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
@@ -34,34 +35,35 @@ public class LoggingFilter implements Filter {
 
     private static Logger log = Logger.getLogger(LoggingFilter.class);
 
-    //private FilterConfig filterConfig = null;
+    // private FilterConfig filterConfig = null;
 
     public void init(FilterConfig filterConfig) throws ServletException {
-        //this.filterConfig = filterConfig;
+        // this.filterConfig = filterConfig;
     }
 
     public void destroy() {
-        //this.filterConfig = null;
+        // this.filterConfig = null;
     }
 
     public void doFilter(ServletRequest request, ServletResponse response,
-                         FilterChain chain)
-        throws IOException, ServletException {
+        FilterChain chain) throws IOException, ServletException {
 
         if (log.isDebugEnabled()) {
             LoggingRequestWrapper lRequest = new LoggingRequestWrapper(
                 (HttpServletRequest) request);
+            LoggingResponseWrapper lResponse = new LoggingResponseWrapper(
+                (HttpServletResponse) response);
             if (lRequest.getQueryString() != null) {
-                log.debug(String.format("Request: '%s %s?%s'", lRequest.getMethod(),
-                    lRequest.getRequestURL(),
-                    lRequest.getQueryString()));
+                log.debug(String.format("Request: '%s %s?%s'", lRequest
+                    .getMethod(), lRequest.getRequestURL(), lRequest
+                    .getQueryString()));
             }
             else {
                 log.debug(String.format("Request: '%s %s'", lRequest
                     .getMethod(), lRequest.getRequestURL()));
             }
-            log.debug("Request Body: " + lRequest.getBody());
-
+            log.debug("====RequestBody====");
+            log.debug(lRequest.getBody());
 
             Enumeration<?> headerNames = lRequest.getHeaderNames();
 
@@ -71,7 +73,11 @@ public class LoggingFilter implements Filter {
                 log.debug(headerName + ":  " + lRequest.getHeader(headerName));
             }
 
-            chain.doFilter(lRequest, response);
+            chain.doFilter(lRequest, lResponse);
+
+            log.debug("====Response====");
+            log.debug(lResponse.getResponseBody());
+
         }
         else {
             chain.doFilter(request, response);

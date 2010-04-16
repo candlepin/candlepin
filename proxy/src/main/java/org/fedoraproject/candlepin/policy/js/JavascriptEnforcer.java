@@ -30,6 +30,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -45,6 +46,7 @@ public class JavascriptEnforcer implements Enforcer {
     private ProductServiceAdapter prodAdapter;
 
     private ScriptEngine jsEngine;
+    private I18n i18n;
 
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
@@ -58,11 +60,12 @@ public class JavascriptEnforcer implements Enforcer {
     public JavascriptEnforcer(DateSource dateSource,
         @Named("RulesReader") Reader rulesReader, PreEntHelper preHelper,
         PostEntHelper postHelper, ProductServiceAdapter prodAdapter,
-        ScriptEngine jsEngine) {
+        ScriptEngine jsEngine, I18n i18n) {
         this.dateSource = dateSource;
 
         this.prodAdapter = prodAdapter;
         this.jsEngine = jsEngine;
+        this.i18n = i18n;
 
         if (jsEngine == null) {
             throw new RuntimeException("No Javascript engine");
@@ -83,9 +86,8 @@ public class JavascriptEnforcer implements Enforcer {
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
-                new ValidationError("Entitlements for " +
-                    entitlementPool.getProductId() + " expired on: " +
-                    entitlementPool.getEndDate()));
+                new ValidationError(i18n.tr("Entitlements for {0} expired on: {1}", 
+                    entitlementPool.getProductId(), entitlementPool.getEndDate())));
             return preHelper;
         }
 

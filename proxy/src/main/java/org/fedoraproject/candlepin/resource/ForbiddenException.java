@@ -14,28 +14,13 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 /**
  * Thrown when a resource is not found.
  */
-public class ForbiddenException extends WebApplicationException {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 8452977854606374666L;
-
-    /**
-     * ctor
-     * @param message Exception message string.
-     */
+public class ForbiddenException extends CandlepinException {
     public ForbiddenException(String message) {
-        super(Response.status(Status.FORBIDDEN)
-                .entity(message)
-                .type("text/plain")
-                .build()
-        );
+        super(Status.FORBIDDEN, message);
     }
 }

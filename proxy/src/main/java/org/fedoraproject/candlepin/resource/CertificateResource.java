@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.jdom.JDOMException;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.redhat.rhn.common.cert.SpacewalkCertificate;
@@ -42,21 +43,26 @@ import com.redhat.rhn.common.cert.CertificateFactory;
  */
 @Path("/certificates")
 public class CertificateResource  {
-
+    private static String encodedCert = ""; //FIXME bad bad bad
     private SubscriptionsCertificateCurator certificateCurator;
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
     private Principal principal;
     
     private static Logger log = Logger.getLogger(CertificateResource.class);
     
+    private I18n i18n;
+    
     @Inject
     public CertificateResource(SpacewalkCertificateCurator spacewalkCertificateCurator,
                                SubscriptionsCertificateCurator certificateCurator,
-                               Principal principal) {
+                               Principal principal,
+                               I18n i18n) {
+   
 
         this.spacewalkCertificateCurator = spacewalkCertificateCurator;
         this.certificateCurator = certificateCurator;
         this.principal = principal;
+        this.i18n = i18n;
     }
     
     /**
@@ -72,8 +78,7 @@ public class CertificateResource  {
         try {
             if (base64cert == null || "".equals(base64cert)) {
                 throw new BadRequestException(
-                    "Empty certificate is being uploaded.",
-                    "Empty certificate is being uploaded.");
+                    i18n.tr("Empty certificate is being uploaded."));
             }
             
             String decoded = new String(Base64.decodeBase64(base64cert));
@@ -93,16 +98,19 @@ public class CertificateResource  {
             spacewalkCertificateCurator.parseCertificate(cert, owner);
         }
         catch (JDOMException e) {
+            log.error("Exception when parsing satellite certificate.", e);
             throw new BadRequestException(
-                "Invalid certificate is being uploaded", e.getMessage());
+                i18n.tr("Exception when parsing satellite certificate."));
         }
         catch (IOException e) {
+            log.error("Exception when reading satellite certificate.", e);
             throw new BadRequestException(
-                "Invalid certificate is being uploaded", e.getMessage());
+                i18n.tr("Exception when reading satellite certificate."));
         }
         catch (ParseException e) {
+            log.error("Exception when parsing satellite certificate.", e);
             throw new BadRequestException(
-                "Invalid certificate is being uploaded", e.getMessage());
+                i18n.tr("Exception when parsing satellite certificate."));
         }
         return base64cert;
     }

@@ -12,20 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
+package org.fedoraproject.candlepin.auth.interceptor;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Represents an error while authenticating.
- * @author mmccune
+ * Annotation noting that the target method should only permit
+ * <code>ConsumerPrincipal</code>s whose UUID matches the parameter
+ * with the same <code>@PathParam</code> value.
  */
-public class AuthenticationException extends RuntimeException {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface EnforceConsumer {
 
-    private static final long serialVersionUID = 1L;
-    
-    /**
-     * @param message exception message
-     */
-    public AuthenticationException(String message) {
-        super(message);
-    }
+    String pathParam() default "consumer_uuid";
 }
