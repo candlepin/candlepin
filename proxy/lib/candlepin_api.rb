@@ -90,6 +90,18 @@ class Candlepin
         delete("/consumers/#{@consumer['uuid']}/entitlements/#{eid}")
     end
 
+    def get_subscriptions
+        return get("/subscriptions")
+    end
+
+    def create_subscription(data)
+        return post("/subscriptions", data)
+    end
+
+    def delete_subscription(subscription)
+        return delete("/subscriptions/#{subscription}")
+    end
+
     private
 
     def create_basic_client(username=nil, password=nil)
