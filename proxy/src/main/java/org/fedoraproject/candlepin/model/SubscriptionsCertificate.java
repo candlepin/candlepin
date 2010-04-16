@@ -43,7 +43,7 @@ import org.hibernate.annotations.ForeignKey;
 @Table(name = "cp_certificate")
 @SequenceGenerator(name = "seq_certificate", sequenceName = "seq_certificate",
         allocationSize = 1)
-public class Certificate implements Persisted {
+public class SubscriptionsCertificate implements Persisted {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_certificate")
@@ -66,7 +66,7 @@ public class Certificate implements Persisted {
      * @param certificateIn certificate as a string
      * @param ownerIn owner of the certificate
      */
-    public Certificate(String certificateIn, Owner ownerIn) {
+    public SubscriptionsCertificate(String certificateIn, Owner ownerIn) {
         certificate = certificateIn;
         owner = ownerIn;   
     }
@@ -74,7 +74,7 @@ public class Certificate implements Persisted {
     /**
      * default ctor
      */
-    public Certificate() {
+    public SubscriptionsCertificate() {
     }
     
     /**

@@ -72,7 +72,9 @@ public class CertificateFactory {
      * @throws JDOMException XML parsing fails
      * @throws IOException unknown
      */
-    public static Certificate read(String certString) throws JDOMException, IOException {
+    public static SpacewalkCertificate read(String certString) 
+        throws JDOMException, IOException {
+        
         return readDocument(new SAXBuilder().build(new StringReader(certString)),
                 certString);
     }
@@ -86,7 +88,8 @@ public class CertificateFactory {
      * @throws JDOMException if parsing the XML fails
      * @throws IOException if reading the file fails
      */
-    public static Certificate read(File file) throws JDOMException, IOException {
+    public static SpacewalkCertificate read(File file) 
+        throws JDOMException, IOException {
         return readDocument(new SAXBuilder().build(file), file.getAbsolutePath());
     }
 
@@ -99,14 +102,14 @@ public class CertificateFactory {
      * @throws JDOMException if parsing the XML fails
      * @throws IOException if reading the contents of <code>url</code> fails
      */
-    public static Certificate read(URL url) throws JDOMException, IOException {
+    public static SpacewalkCertificate read(URL url) throws JDOMException, IOException {
         return readDocument(new SAXBuilder().build(url), url.toExternalForm());
     }
 
     @SuppressWarnings("unchecked")
-    private static Certificate readDocument(Document doc, String source)
+    private static SpacewalkCertificate readDocument(Document doc, String source)
         throws JDOMException {
-        Certificate result = new Certificate();
+        SpacewalkCertificate result = new SpacewalkCertificate();
         Element root = doc.getRootElement();
         if (!ELEM_CERT.equals(root.getName())) {
             throw new JDOMException("Expected root element in " + source + 
@@ -125,7 +128,7 @@ public class CertificateFactory {
         return result;
     }
 
-    private static void extractField(Certificate result, Element child)
+    private static void extractField(SpacewalkCertificate result, Element child)
         throws JDOMException {
         String name = child.getAttributeValue("name");
         FieldExtractor e = FIELD_MAP.get(name);

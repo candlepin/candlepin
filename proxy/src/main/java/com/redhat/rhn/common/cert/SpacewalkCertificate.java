@@ -24,11 +24,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * A server certificate.
+ * A certificate containing a customers subscription data.
  *
  * Borrowed from project Spacewalk: http://spacewalk.redhat.com
  */
-public class Certificate {
+public class SpacewalkCertificate {
 
     public static final String CURRENT_GENERATION = "2";
     // Some of these properties should probably be int's or Date's
@@ -54,7 +54,7 @@ public class Certificate {
     /**
      * Construct an empty certificate.
      */
-    Certificate() {
+    SpacewalkCertificate() {
         channelFamilies = new ArrayList<ChannelFamilyDescriptor>();
     }
 

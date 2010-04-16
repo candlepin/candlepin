@@ -18,32 +18,31 @@ import java.io.IOException;
 import java.text.ParseException;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.codec.binary.Base64;
-import org.fedoraproject.candlepin.model.CertificateCurator;
+import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.jdom.JDOMException;
 
 import com.google.inject.Inject;
-import com.redhat.rhn.common.cert.Certificate;
+import com.redhat.rhn.common.cert.SpacewalkCertificate;
 import com.redhat.rhn.common.cert.CertificateFactory;
 
 
 /**
- * CertificateResource
+ * CertificateResource - Rest interface to Subscription Certificates.
  */
 @Path("/certificates")
 public class CertificateResource  {
 
     private OwnerCurator ownerCurator;
-    private CertificateCurator certificateCurator;
+    private SubscriptionsCertificateCurator certificateCurator;
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
    
     /**
@@ -55,7 +54,7 @@ public class CertificateResource  {
     @Inject
     public CertificateResource(OwnerCurator ownerCurator,
                                SpacewalkCertificateCurator spacewalkCertificateCurator,
-                               CertificateCurator certificateCurator) {
+                               SubscriptionsCertificateCurator certificateCurator) {
 
         this.ownerCurator = ownerCurator;
         this.spacewalkCertificateCurator = spacewalkCertificateCurator;
@@ -80,11 +79,12 @@ public class CertificateResource  {
             }
             
             String decoded = new String(Base64.decodeBase64(base64cert));
-            Certificate cert = CertificateFactory.read(decoded);
+            SpacewalkCertificate cert = CertificateFactory.read(decoded);
             
             Owner owner = addOwner(cert);
-            org.fedoraproject.candlepin.model.Certificate certBlob =
-                new org.fedoraproject.candlepin.model.Certificate(decoded, owner);
+            org.fedoraproject.candlepin.model.SubscriptionsCertificate certBlob =
+                new org.fedoraproject.candlepin.model.SubscriptionsCertificate(decoded, 
+                    owner);
             certificateCurator.create(certBlob);
            
             spacewalkCertificateCurator.parseCertificate(cert, owner);
@@ -104,7 +104,7 @@ public class CertificateResource  {
         return base64cert;
     }
 
-    private Owner addOwner(Certificate cert) {
+    private Owner addOwner(SpacewalkCertificate cert) {
         Owner owner = ownerCurator.lookupByKey(cert.getOwner());
         if (owner == null) {
             String ownerName = cert.getOwner();

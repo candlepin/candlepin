@@ -18,7 +18,7 @@ import java.text.ParseException;
 import java.util.Date;
 
 import com.google.inject.Inject;
-import com.redhat.rhn.common.cert.Certificate;
+import com.redhat.rhn.common.cert.SpacewalkCertificate;
 import com.redhat.rhn.common.cert.ChannelFamilyDescriptor;
 
 /**
@@ -59,7 +59,8 @@ public class SpacewalkCertificateCurator {
      * @param owner owner of the certificate
      * @throws ParseException thrown if problem parsing.
      */
-    public void parseCertificate(Certificate cert, Owner owner) throws ParseException {
+    public void parseCertificate(SpacewalkCertificate cert, Owner owner) 
+        throws ParseException {
 
         // get the product the cert is for (and the channel families 
         // which have the other products you can have)

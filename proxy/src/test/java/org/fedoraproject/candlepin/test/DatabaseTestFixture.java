@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.model.AttributeCurator;
-import org.fedoraproject.candlepin.model.CertificateCurator;
+import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
@@ -66,7 +66,7 @@ public class DatabaseTestFixture {
     protected SubscriptionServiceAdapter subAdapter;
     protected ConsumerCurator consumerCurator;
     protected ConsumerTypeCurator consumerTypeCurator;
-    protected CertificateCurator certificateCurator;
+    protected SubscriptionsCertificateCurator certificateCurator;
     protected PoolCurator poolCurator;
     protected DateSourceForTesting dateSource;
     protected SpacewalkCertificateCurator spacewalkCertCurator;
@@ -98,7 +98,7 @@ public class DatabaseTestFixture {
         consumerCurator = injector.getInstance(ConsumerCurator.class);
 
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
-        certificateCurator = injector.getInstance(CertificateCurator.class);
+        certificateCurator = injector.getInstance(SubscriptionsCertificateCurator.class);
         poolCurator = injector.getInstance(PoolCurator.class);
         spacewalkCertCurator = injector.getInstance(SpacewalkCertificateCurator.class);
         entitlementCurator = injector.getInstance(EntitlementCurator.class);

@@ -37,7 +37,7 @@ public class ChannelFamilyExtractor implements FieldExtractor {
     /**
      * {@inheritDoc}
      */
-    public void extract(Certificate target, Element field) {
+    public void extract(SpacewalkCertificate target, Element field) {
         String quantity = field.getAttributeValue("quantity");
         String family = field.getAttributeValue("family");
         ChannelFamilyDescriptor cf = new ChannelFamilyDescriptor(family, quantity);

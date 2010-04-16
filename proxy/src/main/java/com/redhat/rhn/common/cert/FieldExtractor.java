@@ -25,7 +25,7 @@ import org.jdom.JDOMException;
  */
 interface FieldExtractor {
 
-    void extract(Certificate target, Element field) throws JDOMException;
+    void extract(SpacewalkCertificate target, Element field) throws JDOMException;
 
     boolean isRequired();
 

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.fedoraproject.candlepin.model.Certificate;
+import org.fedoraproject.candlepin.model.SubscriptionsCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
@@ -39,7 +39,7 @@ public class CertificateTest extends DatabaseTestFixture {
         
         ownerCurator.create(owner);
         certificateCurator.create(
-                new Certificate(
+                new SubscriptionsCertificate(
                 "This is not actually a certificate. No entitlements for you!",
                 owner));
     }
@@ -48,18 +48,19 @@ public class CertificateTest extends DatabaseTestFixture {
     @Ignore
     public void testGetCertificate() {
         //Certificate newCertificate = 
-        new Certificate();
+        new SubscriptionsCertificate();
     }
     
     @Test
     public void testList() throws Exception {
-        List<Certificate> certificates = certificateCurator.findAll(); 
+        List<SubscriptionsCertificate> certificates = certificateCurator.findAll(); 
         int beforeCount = certificates.size();
      
         for (int i = 0; i < 10; i++) {
             Owner owner = new Owner("owner" + i);
             ownerCurator.create(owner);
-            certificateCurator.create(new Certificate("this is a test", owner));
+            certificateCurator.create(new SubscriptionsCertificate(
+                "this is a test", owner));
         }
         
         certificates =  certificateCurator.findAll();
@@ -71,12 +72,13 @@ public class CertificateTest extends DatabaseTestFixture {
     public void testLookup() throws Exception {
         
         Owner owner = new Owner("test company");
-        Certificate certificate = new Certificate("not a cert", owner);
+        SubscriptionsCertificate certificate = new SubscriptionsCertificate(
+            "not a cert", owner);
         
         ownerCurator.create(owner);
         certificateCurator.create(certificate);
         
-        Certificate lookedUp = certificateCurator.find(certificate.getId()); 
+        SubscriptionsCertificate lookedUp = certificateCurator.find(certificate.getId()); 
 
         assertEquals(certificate.getId(), lookedUp.getId());
         assertEquals(certificate.getCertificate(), lookedUp.getCertificate());

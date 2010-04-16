@@ -57,7 +57,7 @@ class SimpleExtractor implements FieldExtractor {
      * {@inheritDoc}
      * @throws JDOMException
      */
-    public void extract(Certificate target, Element field) throws JDOMException {
+    public void extract(SpacewalkCertificate target, Element field) throws JDOMException {
         if (!PropertyUtils.isWriteable(target, propertyName)) {
             throw new JDOMException("Property " + propertyName +
                     " is not writable in target " + target);
