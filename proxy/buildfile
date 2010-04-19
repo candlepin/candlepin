@@ -284,6 +284,11 @@ begin
   Cucumber::Rake::Task.new('cucumber:html') do |task|
     task.cucumber_opts = %w{--format html}
   end
+
+  Cucumber::Rake::Task.new('cucumber:dots') do |task|
+    task.cucumber_opts = %w{--format progress}
+  end
+
 rescue LoadError
   desc 'Cucumber buildr task not available'
   task :cucumber do
@@ -293,6 +298,11 @@ rescue LoadError
   desc 'Cucumber HTML buildr task not available'
   task 'cucumber:html' do
     abort 'Cucumber HTML buildr task is not available.  Be sure to install the cucumber gem.'
+  end
+
+  desc 'Cucumber dots buildr task not available'
+  task 'cucumber:dots' do
+    abort 'Cucumber dots buildr task is not available.  Be sure to install the cucumber gem.'
   end
 end
 

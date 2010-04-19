@@ -20,6 +20,10 @@ Given /^I am a Consumer "([^\"]*)"$/ do |consumer_name|
     When "I Register a New Consumer \"#{consumer_name}\""
 end
 
+Given /^I am user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
+  @candlepin.use_credentials(username, password)
+end
+
 When /^I become user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
   @candlepin.use_credentials(username, password)
 end
@@ -33,6 +37,50 @@ When /I Register a New Consumer "(\w+)"$/ do |consumer_name|
     }
 
     @candlepin.register(consumer, @username, @password)
+end
+
+Given /^there is no Consumer with uuid "([^\"]*)"$/ do |uuid|
+    @candlepin.use_credentials(@username, @password)
+    begin
+        @candlepin.unregister(uuid)
+    rescue RestClient::Exception => e
+        # If it doesn't exist already, then we don't care if the unregister
+        # failed
+        e.message.should == "Resource Not Found"
+        e.http_code.should == 404
+    end
+end
+
+
+When /I Register a New Consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
+    consumer = {
+        :consumer => {
+            :type => {:label => :system},
+            :name => consumer_name,
+            :uuid => uuid
+        }
+    }
+
+    @candlepin.register(consumer, @username, @password)
+end
+
+Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ do |uuid|
+    consumer = {
+        :consumer => {
+            :type => {:label => :system},
+            :name => "any name",
+            :uuid => uuid
+        }
+    }
+
+    lambda {@candlepin.register}.should raise_error
+    begin
+        @candlepin.register(consumer, @username, @password)
+    rescue RestClient::Exception => e
+        e.message.should == "Bad Request"
+        e.http_code.should == 400
+    end
+
 end
 
 When /I Revoke All My Entitlements/ do

@@ -50,8 +50,9 @@ class Candlepin
         get("/entitlements/#{entitlement_id}")
     end
 
-    def unregister()
-        delete("/consumers/#{@consumer['uuid']}")
+    def unregister(uuid = nil)
+        uuid = @consumer['uuid'] if not uuid
+        delete("/consumers/#{uuid}")
     end
 
     def revoke_all_entitlements()
@@ -86,6 +87,40 @@ class Candlepin
 
     def unbind_entitlement(eid)
         delete("/consumers/#{@consumer['uuid']}/entitlements/#{eid}")
+    end
+
+    def get_subscriptions
+        return get("/subscriptions")
+    end
+
+    def create_subscription(data)
+        return post("/subscriptions", data)
+    end
+
+    def delete_subscription(subscription)
+        return delete("/subscriptions/#{subscription}")
+    end
+
+    def get_subscription_tokens
+        return get("/subscriptiontokens")
+    end
+
+    def create_subscription_token(data)
+        return post("/subscriptiontokens", data)
+    end
+
+    def delete_subscription_token(subscription)
+        return delete("/subscriptiontokens/#{subscription}")
+    end
+
+    def get_certificates(serials = [])
+        path = "/consumers/#{@consumer['uuid']}/certificates"
+        path += "?serials=" + serials.join(",") if serials.length > 0
+        return get(path)
+    end
+
+    def get_certificate_serials
+        return get("/consumers/#{@consumer['uuid']}/certificates/serials")
     end
 
     private
