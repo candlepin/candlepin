@@ -274,19 +274,23 @@ end
 begin
   require 'cucumber/rake/task'
 
-  Cucumber::Rake::Task.new do |task|
-    task.cucumber_opts = %w{--format pretty}
+  def run_cucumber(task, format)
+    task.cucumber_opts = ["--format", format]
 
     features = ENV['features']
     task.cucumber_opts << " #{features}" if not features.nil?
   end
 
+  Cucumber::Rake::Task.new do |task|
+    run_cucumber(task, "pretty")
+  end
+
   Cucumber::Rake::Task.new('cucumber:html') do |task|
-    task.cucumber_opts = %w{--format html}
+    run_cucumber(task, "html")
   end
 
   Cucumber::Rake::Task.new('cucumber:dots') do |task|
-    task.cucumber_opts = %w{--format progress}
+    run_cucumber(task, "progress")
   end
 
 rescue LoadError
