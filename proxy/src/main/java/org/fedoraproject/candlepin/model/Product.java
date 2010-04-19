@@ -71,7 +71,7 @@ public class Product implements Persisted {
     // whatever numeric identifier we come up with for
     // use in the cert's OID structure...
     @Column(nullable = true)
-    private String hash;
+    private Long hash;
 
     @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
             fetch = FetchType.EAGER)
@@ -240,14 +240,14 @@ public class Product implements Persisted {
     /**
      * @param hash the hash to set
      */
-    public void setHash(String hash) {
+    public void setHash(Long hash) {
         this.hash = hash;
     }
 
     /**
      * @return the hash
      */
-    public String getHash() {
+    public Long getHash() {
         return hash;
     }
 

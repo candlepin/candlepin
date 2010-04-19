@@ -60,6 +60,9 @@ public class Content implements Persisted {
     private String name;
     
     @Column(nullable = false)
+    private Long hash;
+    
+    @Column(nullable = false)
     private String vendor;
     
     @Column(nullable = true)
@@ -140,6 +143,20 @@ public class Content implements Persisted {
     }
     public void setEnabled(String enabled) {
         this.enabled = enabled;
+    }
+
+    /**
+     * @param hash the hash to set
+     */
+    public void setHash(Long hash) {
+        this.hash = hash;
+    }
+
+    /**
+     * @return the hash
+     */
+    public Long getHash() {
+        return hash;
     }
 
 }
