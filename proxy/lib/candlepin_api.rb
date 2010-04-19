@@ -114,6 +114,15 @@ class Candlepin
         return delete("/subscriptiontokens/#{subscription}")
     end
 
+    def get_certificates(serials = [])
+        path = "/consumers/#{@consumer['uuid']}/certificates"
+        path += "?serials=" + serials.join(",") if serials.length > 0
+        return get(path)
+    end
+
+    def get_certificate_serials
+        return get("/consumers/#{@consumer['uuid']}/certificates/serials")
+    end
 
     private
 
