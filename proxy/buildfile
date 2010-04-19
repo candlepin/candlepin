@@ -118,7 +118,7 @@ define "candlepin" do
   #
   # building
   #
-  resources.from _('localized_resources/classes')
+  resources.from _('po/classes')
   compile.options.target = '1.6'
   compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS
  
@@ -248,23 +248,23 @@ end
 # extract strings that need to be translated
 #
 task :extractkeys do
-  mkdir_p "localized_resources/classes"
-  %x{xgettext -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o localized_resources/keys.pot $(find src/main/java -name "*.java")}
+  mkdir_p "po/classes"
+  %x{xgettext -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")}
 end
 
 #
 # merge in changes into existing po files
 #
 task :mergekeys do
-  %x{touch localized_resources/de.po}
-  %x{msgmerge --backup=none -U localized_resources/de.po localized_resources/keys.pot}
+  %x{touch po/de.po}
+  %x{msgmerge --backup=none -U po/de.po po/keys.pot}
 end
 
 #
 # compile resource files
 #
 task :createresourcebundles do
-  puts %x{msgfmt --java2 -d localized_resources/classes -r org.fedoraproject.candlepin.i18n.Messages -l de localized_resources/de.po}
+  puts %x{msgfmt --java2 -d po/classes -r org.fedoraproject.candlepin.i18n.Messages -l de po/de.po}
 end
 
 
