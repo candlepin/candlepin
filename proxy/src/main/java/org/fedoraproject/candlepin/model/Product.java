@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
 
 /**
@@ -83,9 +84,14 @@ public class Product implements Persisted {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_attribute")
-    //   @JoinColumn(name="ATTRIBUTE_ID")
     private Set<Attribute> attributes;
 
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "cp_product_content")
+    private Set<Content> content;
+    
+    
+   
     /**
      * Constructor
      * 
@@ -286,4 +292,13 @@ public class Product implements Persisted {
     public String getVariant() {
         return variant;
     }
+
+    public Set<Content> getContent() {
+        return content;
+    }
+
+    public void setContent(Set<Content> content) {
+        this.content = content;
+    }
+
 }
