@@ -23,7 +23,6 @@ proxy/conf/eclipse/.project
 proxy/rhnwebapp
 proxy/velocity.log*
 proxy/*.jar
-proxy/*.txt
 proxy/*.out
 proxy/target
 proxy/target-eclipse
