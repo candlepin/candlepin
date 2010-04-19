@@ -50,9 +50,6 @@ public class LoggingRequestWrapper extends HttpServletRequestWrapper {
                 stringBuilder.append("");
             }
         }
-        catch (IOException ex) {
-            throw ex;
-        }
         finally {
             if (bufferedReader != null) {
                 try {

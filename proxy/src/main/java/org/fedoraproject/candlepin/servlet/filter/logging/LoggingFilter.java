@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.logging;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.util.Enumeration;
 
@@ -26,8 +28,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
-
 /**
  * LoggingFilter
  */
@@ -35,18 +35,18 @@ public class LoggingFilter implements Filter {
 
     private static Logger log = Logger.getLogger(LoggingFilter.class);
 
-    // private FilterConfig filterConfig = null;
-
     public void init(FilterConfig filterConfig) throws ServletException {
-        // this.filterConfig = filterConfig;
+        // Nothing to do here
     }
 
     public void destroy() {
-        // this.filterConfig = null;
+        // Nothing to do here
     }
 
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
+
+        System.out.println(log.toString());
 
         if (log.isDebugEnabled()) {
             LoggingRequestWrapper lRequest = new LoggingRequestWrapper(
