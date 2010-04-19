@@ -18,6 +18,7 @@
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 
@@ -60,7 +61,7 @@ public class CertificateTest extends DatabaseTestFixture {
             Owner owner = new Owner("owner" + i);
             ownerCurator.create(owner);
             certificateCurator.create(new SubscriptionsCertificate(
-                "this is a test", owner));
+                "this is a test " + i, owner));
         }
         
         certificates =  certificateCurator.findAll();
@@ -82,6 +83,40 @@ public class CertificateTest extends DatabaseTestFixture {
 
         assertEquals(certificate.getId(), lookedUp.getId());
         assertEquals(certificate.getCertificate(), lookedUp.getCertificate());
+    }
+
+    @Test
+    public void createDuplicateCertSameOwnerThrowsException() throws Exception {
+        Owner owner = new Owner("test company");
+        SubscriptionsCertificate certificate1 = new SubscriptionsCertificate("not a cert", owner);
+        SubscriptionsCertificate certificate2 = new SubscriptionsCertificate("not a cert", owner);
+
+        ownerCurator.create(owner);
+        certificateCurator.create(certificate1);
+        try {
+            certificateCurator.create(certificate2);
+            fail();
+        } catch (Exception e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void createDuplicateCertDifferentOwnerThrowsException() throws Exception {
+        Owner owner1 = new Owner("test company 1");
+        Owner owner2 = new Owner("test company 2");
+        SubscriptionsCertificate certificate1 = new SubscriptionsCertificate("not a cert", owner1);
+        SubscriptionsCertificate certificate2 = new SubscriptionsCertificate("not a cert", owner2);
+
+        ownerCurator.create(owner1);
+        ownerCurator.create(owner2);
+        certificateCurator.create(certificate1);
+        try {
+            certificateCurator.create(certificate2);
+            fail();
+        } catch (Exception e) {
+            // Expected
+        }
     }
 }
 

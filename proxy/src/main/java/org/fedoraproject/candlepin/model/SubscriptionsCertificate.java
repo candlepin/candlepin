@@ -51,7 +51,7 @@ public class SubscriptionsCertificate implements Persisted {
     
    
     @Lob
-    @Column(name = "certificate_blob")
+    @Column(name = "certificate_blob", unique = true)
     private String certificate;
     
     

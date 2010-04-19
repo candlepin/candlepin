@@ -15,6 +15,10 @@ class Candlepin
         create_basic_client(username, password)
     end
 
+    def upload_satellite_certificate(certificate)
+        post('/certificates', Base64.encode64(certificate).gsub(/\n/, ""))
+    end
+
     def register(consumer, username=nil, password=nil)
         # TODO:  Maybe this should be created earlier?
         use_credentials(username, password)

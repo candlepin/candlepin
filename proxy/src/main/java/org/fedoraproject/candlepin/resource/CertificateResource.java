@@ -43,7 +43,6 @@ import com.redhat.rhn.common.cert.CertificateFactory;
  */
 @Path("/certificates")
 public class CertificateResource  {
-    private static String encodedCert = ""; //FIXME bad bad bad
     private SubscriptionsCertificateCurator certificateCurator;
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
     private Principal principal;
@@ -84,8 +83,6 @@ public class CertificateResource  {
             String decoded = new String(Base64.decodeBase64(base64cert));
             SpacewalkCertificate cert = CertificateFactory.read(decoded);
             
-            // TODO: Check for duplicate upload of the same certificate.
-            
             // TODO: Check if certificate owner matches authorized owner?
             
             Owner owner = principal.getOwner();
@@ -93,7 +90,14 @@ public class CertificateResource  {
             
             SubscriptionsCertificate certBlob = new SubscriptionsCertificate(decoded, 
                     owner);
-            certificateCurator.create(certBlob);
+            try {
+                certificateCurator.create(certBlob);
+            }
+            catch (Exception e) {
+                log.error("Exception when creating subscription certificate.", e);
+                throw new BadRequestException(
+                    i18n.tr("Exception when creating subscription certificate."));
+            }
            
             spacewalkCertificateCurator.parseCertificate(cert, owner);
         }
