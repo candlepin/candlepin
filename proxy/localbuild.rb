@@ -99,6 +99,13 @@ module  JPPRepo
     jppInfo = $jpprepo[key]
     if (jppInfo == nil)
       puts "No JPP Info for #{key}"
+      key = "#{groupId}:#{id}"
+      puts "looking for #{key}"
+      jppInfo = $jpprepo[key]
+    end
+
+    if (jppInfo == nil)
+      puts "No JPP Info for #{key}"
       return ""
     else
       retVal =  "/usr/share/maven2/repository/#{jppInfo.groupId}/#{jppInfo.artifactId}.jar"
