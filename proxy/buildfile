@@ -312,7 +312,18 @@ end
 namespace :emma do
    task :html do
       puts "Fixing emma reports"
-      text = File.read("reports/emma/coverage.html")
+      fixemmareports("reports/emma/coverage.html")
+
+      dir = "reports/emma/_files"
+      Dir.foreach(dir) do |filename|
+          fixemmareports("#{dir}/#{filename}") unless filename == "." || filename == ".."
+      end
+   end
+end
+
+# fixes the html produced by emma
+def fixemmareports(filetofix)
+      text = File.read(filetofix)
       newstr = ''
       text.each_byte do |c|
          if c != 160 then
@@ -324,7 +335,6 @@ namespace :emma do
       tmp = File.new("tmpreport", "w")
       tmp.write(newstr)
       tmp.close()
-      FileUtils.copy("tmpreport", "reports/emma/coverage.html")
+      FileUtils.copy("tmpreport", filetofix)
       File.delete("tmpreport")
-   end
 end
