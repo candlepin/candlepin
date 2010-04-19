@@ -82,7 +82,6 @@ module  JPPRepo
 
   def build_path(group_path, id, version, name)
     if ($jpprepo == nil)
-      puts "No JPP repo."
       parser = XML::SaxParser.file("/etc/maven/maven2-depmap.xml")
       parser.callbacks = PostCallbacks.new
       parser.parse
