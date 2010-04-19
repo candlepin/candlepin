@@ -23,6 +23,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.internal.Nullable;
 
 /**
  * I18nProvider
@@ -31,8 +32,13 @@ public class I18nProvider implements Provider<I18n> {
     private I18n i18n;
 
     @Inject
-    public I18nProvider(HttpServletRequest request) {
-        Locale locale = request.getLocale();
+    public I18nProvider(@Nullable HttpServletRequest request) {
+        Locale locale = null;
+        
+        if (request != null) {
+            locale = request.getLocale();
+        }
+        
         i18n = I18nFactory.getI18n(
             getClass(), 
             locale == null ? Locale.US : locale,

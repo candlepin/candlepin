@@ -51,6 +51,13 @@ Given /^there is no Consumer with uuid "([^\"]*)"$/ do |uuid|
     end
 end
 
+Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uuid|
+    # Again - bad!
+    @username = 'foo'
+    @password = 'password'
+    Given "there is no Consumer with uuid \"#{uuid}\""
+    When "I Register a New Consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
+end
 
 When /I Register a New Consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
     consumer = {

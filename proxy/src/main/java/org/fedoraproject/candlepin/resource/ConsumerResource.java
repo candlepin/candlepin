@@ -208,6 +208,7 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @Transactional
+    @EnforceConsumer
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
@@ -226,10 +227,11 @@ public class ConsumerResource {
      * @return the product whose id matches pid, from the consumer, cid.
      */
     @GET
-    @Path("{cid}/products/{pid}")
+    @Path("{consumer_uuid}/products/{product_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Product getProduct(@PathParam("cid") String cid,
-        @PathParam("pid") String pid) {
+    @EnforceConsumer
+    public Product getProduct(@PathParam("consumer_uuid") String cid,
+        @PathParam("product_id") String pid) {
         return null;
     }
 
@@ -242,6 +244,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
+    @EnforceConsumer
     public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
@@ -281,6 +284,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "serials")
+    @EnforceConsumer
     public List<CertificateSerial> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -459,6 +463,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
+    @EnforceConsumer
     public void unbindAllOrBySerialNumber(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serial") String serials) {
@@ -498,6 +503,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
+    @EnforceConsumer
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("dbid") Long dbid) {
 

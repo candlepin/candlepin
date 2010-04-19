@@ -35,9 +35,9 @@ public class ConsumerPrincipal extends Principal {
     }
 
     @Override
-    public boolean canAccessConsumer(String consumerUuid) {
-        if (consumerUuid != null && this.consumer != null) {
-            return consumerUuid.equals(this.consumer.getUuid());
+    public boolean canAccessConsumer(Consumer other) {
+        if (this.consumer != null) {
+            return this.consumer.equals(other);
         }
 
         return false;

@@ -15,3 +15,13 @@ Then /^I should not be able to view Consumer "([^\"]*)"$/ do |consumer_uuid|
     e.http_code.should == 403
   end
 end
+
+Then /^I should not find Consumer "([^\"]*)"$/ do |consumer_uuid|
+  begin
+    @candlepin.get_consumer(consumer_uuid)
+  rescue RestClient::Exception => e
+    e.http_code.should == 404
+  end
+
+end
+

@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
 
+import org.fedoraproject.candlepin.model.Consumer;
+
 /**
  *
  */
@@ -26,7 +28,7 @@ public class NoAuthPrincipal extends Principal {
     }
 
     @Override
-    public boolean canAccessConsumer(String consumerUuid) {
+    public boolean canAccessConsumer(Consumer consumer) {
         return true;
     }
 }

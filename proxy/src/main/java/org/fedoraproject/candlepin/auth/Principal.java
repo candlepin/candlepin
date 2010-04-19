@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.List;
+
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 
 /**
@@ -38,5 +40,5 @@ public abstract class Principal {
         return roles;
     }
 
-    public abstract boolean canAccessConsumer(String consumerUuid);
+    public abstract boolean canAccessConsumer(Consumer consumer);
 }

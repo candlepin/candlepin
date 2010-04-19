@@ -8,5 +8,10 @@ Feature: Proper Authentication for viewing a Consumer
         Then I should be able to view my Consumer data
 
     Scenario: A different Consumer is Denied
-        Given I am a Consumer "rhel_box"
-        Then I should not be able to view Consumer "made_up_uuid"
+        Given Consumer "other_machine" exists with uuid "abcde"
+        And I am a Consumer "rhel_box"
+        Then I should not be able to view Consumer "abcde"
+
+    Scenario: A Non-existant Consumer is Not Found
+        Given I am a Consumer "some_name"
+        Then I should not find Consumer "made_up_uuid"
