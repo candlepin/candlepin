@@ -13,8 +13,6 @@
  * in this software or its documentation.
  */
 
-
-
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
@@ -29,57 +27,56 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-
 public class CertificateTest extends DatabaseTestFixture {
 
     @Before
     public void setUpTestObjects() {
-        
+
         String ownerName = "Example Corporation";
         Owner owner = new Owner(ownerName);
-        
+
         ownerCurator.create(owner);
-        certificateCurator.create(
-                new SubscriptionsCertificate(
-                "This is not actually a certificate. No entitlements for you!",
-                owner));
+        certificateCurator.create(new SubscriptionsCertificate(
+            "This is not actually a certificate. No entitlements for you!",
+            owner));
     }
-    
-    
+
     @Ignore
     public void testGetCertificate() {
-        //Certificate newCertificate = 
+        // Certificate newCertificate =
         new SubscriptionsCertificate();
     }
-    
+
     @Test
     public void testList() throws Exception {
-        List<SubscriptionsCertificate> certificates = certificateCurator.findAll(); 
+        List<SubscriptionsCertificate> certificates = certificateCurator
+            .findAll();
         int beforeCount = certificates.size();
-     
+
         for (int i = 0; i < 10; i++) {
             Owner owner = new Owner("owner" + i);
             ownerCurator.create(owner);
             certificateCurator.create(new SubscriptionsCertificate(
                 "this is a test " + i, owner));
         }
-        
-        certificates =  certificateCurator.findAll();
+
+        certificates = certificateCurator.findAll();
         int afterCount = certificates.size();
         assertEquals(10, afterCount - beforeCount);
     }
-    
+
     @Test
     public void testLookup() throws Exception {
-        
+
         Owner owner = new Owner("test company");
         SubscriptionsCertificate certificate = new SubscriptionsCertificate(
             "not a cert", owner);
-        
+
         ownerCurator.create(owner);
         certificateCurator.create(certificate);
-        
-        SubscriptionsCertificate lookedUp = certificateCurator.find(certificate.getId()); 
+
+        SubscriptionsCertificate lookedUp = certificateCurator.find(certificate
+            .getId());
 
         assertEquals(certificate.getId(), lookedUp.getId());
         assertEquals(certificate.getCertificate(), lookedUp.getCertificate());
@@ -88,25 +85,31 @@ public class CertificateTest extends DatabaseTestFixture {
     @Test
     public void createDuplicateCertSameOwnerThrowsException() throws Exception {
         Owner owner = new Owner("test company");
-        SubscriptionsCertificate certificate1 = new SubscriptionsCertificate("not a cert", owner);
-        SubscriptionsCertificate certificate2 = new SubscriptionsCertificate("not a cert", owner);
+        SubscriptionsCertificate certificate1 = new SubscriptionsCertificate(
+            "not a cert", owner);
+        SubscriptionsCertificate certificate2 = new SubscriptionsCertificate(
+            "not a cert", owner);
 
         ownerCurator.create(owner);
         certificateCurator.create(certificate1);
         try {
             certificateCurator.create(certificate2);
             fail();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // Expected
         }
     }
 
     @Test
-    public void createDuplicateCertDifferentOwnerThrowsException() throws Exception {
+    public void createDuplicateCertDifferentOwnerThrowsException()
+        throws Exception {
         Owner owner1 = new Owner("test company 1");
         Owner owner2 = new Owner("test company 2");
-        SubscriptionsCertificate certificate1 = new SubscriptionsCertificate("not a cert", owner1);
-        SubscriptionsCertificate certificate2 = new SubscriptionsCertificate("not a cert", owner2);
+        SubscriptionsCertificate certificate1 = new SubscriptionsCertificate(
+            "not a cert", owner1);
+        SubscriptionsCertificate certificate2 = new SubscriptionsCertificate(
+            "not a cert", owner2);
 
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);
@@ -114,9 +117,9 @@ public class CertificateTest extends DatabaseTestFixture {
         try {
             certificateCurator.create(certificate2);
             fail();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // Expected
         }
     }
 }
-
