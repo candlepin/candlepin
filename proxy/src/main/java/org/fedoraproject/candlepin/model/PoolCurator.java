@@ -122,7 +122,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         crit.add(Restrictions.lt("startDate", new Date())); // TODO: is this right?
         crit.add(Restrictions.gt("endDate", new Date())); // TODO: is this right?
         // FIXME: sort by enddate?
-        results = (List<Pool>) crit.list();
+        results = crit.list();
         
         if (results == null) {
             log.debug("no results");

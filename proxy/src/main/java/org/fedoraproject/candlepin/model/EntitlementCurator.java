@@ -58,7 +58,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumer(Consumer consumer) {
-        List<Entitlement> results = (List<Entitlement>) currentSession()
+        List<Entitlement> results = currentSession()
             .createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer)).list();
         if (results == null) {
@@ -72,7 +72,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumerAndProduct(Consumer consumer, 
         String productId) {
-        List<Entitlement> results = (List<Entitlement>) currentSession()
+        List<Entitlement> results = currentSession()
             .createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer)).list();
         if (results == null) {

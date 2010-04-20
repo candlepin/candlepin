@@ -33,7 +33,7 @@ public class EntitlementCertificateCurator extends
 
     @SuppressWarnings("unchecked")
     public List<EntitlementCertificate> listForEntitlement(Entitlement e) {
-        return (List<EntitlementCertificate>) currentSession().createCriteria(
+        return currentSession().createCriteria(
             EntitlementCertificate.class).add(
                 Restrictions.eq("entitlement", e)).list();
 
@@ -41,7 +41,7 @@ public class EntitlementCertificateCurator extends
 
     @SuppressWarnings("unchecked")
     public List<EntitlementCertificate> listForConsumer(Consumer c) {
-        return (List<EntitlementCertificate>) currentSession().createCriteria(
+        return currentSession().createCriteria(
             EntitlementCertificate.class).
             createAlias("entitlement", "ent").
             add(Restrictions.eq("ent.consumer", c)).list();

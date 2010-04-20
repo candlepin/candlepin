@@ -74,7 +74,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      */
     @SuppressWarnings("unchecked")
     public List<Subscription> listByOwner(Owner o) {
-        List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
+        List<Subscription> subs = currentSession().createCriteria(
                 Subscription.class)
             .add(Restrictions.eq("owner", o)).list();
         if (subs == null) {
@@ -91,7 +91,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      */
     @SuppressWarnings("unchecked")
     public List<Subscription> listByOwnerAndProductSince(Owner o, Date sinceDate) {
-        List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
+        List<Subscription> subs = currentSession().createCriteria(
                 Subscription.class)
             .add(Restrictions.eq("owner", o))
             .add(Restrictions.gt("modified", sinceDate)).list();
@@ -126,7 +126,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      */
     @SuppressWarnings("unchecked")
     public List<Subscription> listSince(Date sinceDate) {
-        List<Subscription> subs = (List<Subscription>) currentSession().createCriteria(
+        List<Subscription> subs = currentSession().createCriteria(
                 Subscription.class)
             .add(Restrictions.gt("modified", sinceDate)).list();
         if (subs == null) {
