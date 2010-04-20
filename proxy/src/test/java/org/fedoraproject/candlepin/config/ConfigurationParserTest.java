@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
  */
 public class ConfigurationParserTest {
 
+    @SuppressWarnings("serial")
     @Test
     public void testParserConfig() {
         ConfigurationParser cp = new ConfigurationParser() {
