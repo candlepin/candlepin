@@ -29,7 +29,7 @@ public class LoggingResponseWrapper extends HttpServletResponseWrapper {
     protected StringBuffer buffer = new StringBuffer();
     protected HttpServletResponse realResponse;
 
-    public LoggingResponseWrapper(HttpServletResponse resp) throws IOException {
+    public LoggingResponseWrapper(HttpServletResponse resp) {
         super(resp);
         realResponse = resp;
     }
