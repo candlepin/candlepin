@@ -65,21 +65,11 @@ function import_ca_cert_into_keystore
 	echo y | sudo keytool -importcert -alias candlepin_ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
 }
 
-function answers_for_tomcat_cert
-{
-	echo XX
-    echo candlepin
-	echo Fedora
-	echo \n
-	echo \n
-	echo \n
-    echo y
-	echo \n
-}
-
+HOSTNAME=$(hostname)
 function generate_tomcat_certificate
 {
-	answers_for_tomcat_cert | sudo keytool -genkey -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password > /dev/null
+	echo -n "\n" | sudo keytool -genkeypair -dname "CN=$HOSTNAME, OU=ateam, O=redhat,C=us"  -alias tomcat -keyalg RSA -keystore /etc/tomcat6/keystore -storepass password
+
 }
 
 function update_keystore
@@ -164,7 +154,7 @@ fi
 buildr clean package test=no
 
 # generate SSL certs if they are needed
-`dirname $0`/gen-certs
+sh -x `dirname $0`/gen-certs
 
 # update keystore file and put it into tomcat's conf directory
 update_keystore
