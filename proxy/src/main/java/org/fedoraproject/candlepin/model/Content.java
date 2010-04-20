@@ -18,9 +18,12 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -35,6 +38,7 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_content")
+@SequenceGenerator(name = "seq_content", sequenceName = "seq_content", allocationSize = 1)
 public class Content implements Persisted {
 
     
@@ -51,6 +55,7 @@ public class Content implements Persisted {
     */
     // Product ID is stored as a string. Could be a product OID or label.
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_content")
     private String id;
     
     @Column(nullable = false)
