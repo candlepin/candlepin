@@ -16,15 +16,17 @@ package org.fedoraproject.candlepin.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
-
-import org.junit.Test;
 
 public class CandlepinConfigurationTest {
 
@@ -206,6 +208,36 @@ public class CandlepinConfigurationTest {
         }
 
     }
+    
+    @SuppressWarnings("serial")
+    @Test
+    public void getStringMethods() {
+        Config config = new CandlepinConfigurationForTesting(
+            new HashMap<String, String>() {
+
+                {
+                    put("a.c.a.b", "value3");
+                    put("a.c.e.f", "value5");
+                    put("array", "v1 ,v2, v3");
+                }
+            });
+        
+        assertEquals("value3", config.getString("a.c.a.b"));
+        assertEquals("value5", config.getString("a.c.e.f"));
+        assertEquals("defvalue", config.getString("not.exist", "defvalue"));
+        assertNull(config.getString("not.exist"));
+        assertNull(config.getString("not.exist", null));
+        assertNull(config.getStringArray("not.exist"));
+        assertNull(config.getStringArray(null));
+        
+        String[] array = config.getStringArray("array");
+        assertNotNull(array);
+        assertEquals(3, array.length);
+        assertEquals("v1 ", array[0]);
+        assertEquals("v2", array[1]);
+        assertEquals(" v3", array[2]);
+    }
+    
 
     public static class CandlepinConfigurationForTesting extends Config {
 
