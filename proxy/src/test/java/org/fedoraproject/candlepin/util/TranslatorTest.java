@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -72,6 +73,12 @@ public class TranslatorTest {
         
         Long bl = Translator.bigDecimal2LongObj(bd);
         assertEquals(new Long(1), bl);
+
+        assertEquals(0, Translator.bigDecimal2Int(null));
+        assertEquals(new Integer(0), Translator.bigDecimal2IntObject(null));
+        assertEquals(0L, Translator.bigDecimal2Long(null));
+        assertNull(Translator.bigDecimal2LongObj(null));
+
     }
     
     @Test
@@ -83,6 +90,14 @@ public class TranslatorTest {
     @Test
     public void long2SomethingElse() throws Exception {
         assertEquals(10L, Translator.long2Objlong(10L));
+        assertEquals(0L, Translator.long2Objlong(null));
+        assertTrue(Translator.long2Boolean(1L));
+        assertFalse(Translator.long2Boolean(null));
+        assertFalse(Translator.long2Boolean(10L));
+        assertEquals(new Integer(10), Translator.long2Integer(10L));
+        assertNull(Translator.long2Integer(null));
+        assertEquals(10, Translator.long2Int(10L));
+        assertEquals(0, Translator.long2Int(null));
     }
 
     @Test
@@ -137,4 +152,20 @@ public class TranslatorTest {
         assertEquals(l.toString(), Translator.list2String(l));
         assertEquals("", Translator.list2String(null));
     }
+
+    @Test
+    public void convert() {
+        Integer ten = new Integer(10);
+        Object o = Translator.convert(ten, String.class);
+        assertNotNull(o);
+        assertEquals(String.class, o.getClass());
+        assertEquals("10", o);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void convertNull() {
+        Translator.convert(null, String.class);
+    }
+
 }
