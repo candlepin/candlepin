@@ -68,7 +68,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() {
-        Pool lookedUp = (Pool) entityManager().find(
+        Pool lookedUp = entityManager().find(
                 Pool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());

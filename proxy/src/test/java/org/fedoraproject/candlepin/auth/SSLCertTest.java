@@ -58,7 +58,7 @@ public class SSLCertTest {
         caCertificate = (X509Certificate) certificateFactory
             .generateCertificate(getClass().getResourceAsStream("ca.crt"));
 
-        TrustAnchor anchor = new TrustAnchor((X509Certificate) caCertificate,
+        TrustAnchor anchor = new TrustAnchor(caCertificate,
             null);
         PKIXparams = new PKIXParameters(Collections.singleton(anchor));
         PKIXparams.setRevocationEnabled(false);
