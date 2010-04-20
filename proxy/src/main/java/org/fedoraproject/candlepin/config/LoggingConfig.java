@@ -32,6 +32,10 @@ public class LoggingConfig {
 
     @Inject
     public LoggingConfig(Config config) {
+        configure(config);
+    }
+    
+    public void configure(Config config) {
         Map<String, String> logLevels = config.configurationWithPrefix(PREFIX);
         for (Entry<String, String> entry : logLevels.entrySet()) {
             String key = entry.getKey().replace(PREFIX, "");

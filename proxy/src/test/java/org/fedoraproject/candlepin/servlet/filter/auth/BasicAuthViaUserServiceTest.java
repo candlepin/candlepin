@@ -14,24 +14,28 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter.OwnerInfo;
-import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
-import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
+
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class BasicAuthViaUserServiceTest {
 

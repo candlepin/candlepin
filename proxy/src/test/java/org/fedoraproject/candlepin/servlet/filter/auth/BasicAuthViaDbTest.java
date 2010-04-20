@@ -14,7 +14,16 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.fedoraproject.candlepin.config.TestingConfiguration;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.service.impl.DatabaseUserServiceAdapter;
+
+import org.apache.commons.codec.binary.Base64;
+import org.junit.After;
+import org.junit.Before;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -25,14 +34,6 @@ import java.sql.PreparedStatement;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.codec.binary.Base64;
-import org.fedoraproject.candlepin.config.TestingConfiguration;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.service.impl.DatabaseUserServiceAdapter;
-import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
-import org.junit.After;
-import org.junit.Before;
 
 public class BasicAuthViaDbTest {
 

@@ -47,11 +47,6 @@ public class BasicAuthViaUserServiceFilter extends AuthenticationFilter {
 
     /**
      * {@inheritDoc}
-     *
-     * @param request
-     * @param response
-     * @return
-     * @throws Exception
      */
     @Override
     protected Principal getPrincipal(HttpServletRequest request,

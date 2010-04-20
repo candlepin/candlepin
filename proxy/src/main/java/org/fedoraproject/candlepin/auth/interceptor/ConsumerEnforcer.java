@@ -43,10 +43,6 @@ public class ConsumerEnforcer implements MethodInterceptor {
 
     /**
      * {@inheritDoc}
-     *
-     * @param invocation
-     * @return
-     * @throws Throwable
      */
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {

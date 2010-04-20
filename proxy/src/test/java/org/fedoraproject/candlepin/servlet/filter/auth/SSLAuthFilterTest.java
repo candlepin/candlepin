@@ -14,23 +14,30 @@
  */
 package org.fedoraproject.candlepin.servlet.filter.auth;
 
-import java.security.Principal;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.security.cert.X509Certificate;
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
-import org.fedoraproject.candlepin.servlet.filter.auth.SSLAuthFilter;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.security.Principal;
+import java.security.cert.X509Certificate;
+
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class SSLAuthFilterTest {
 
