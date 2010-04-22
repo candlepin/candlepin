@@ -32,6 +32,22 @@ public class PropertyUtilTest {
     public static final String NULL = null;
     
     @Test
+    public void testStaticPropertyClassName() {
+        try {
+            String v = PropertyUtil.getStaticPropertyAsString(
+                getClass().getName(), "FOO");
+            assertNotNull(v);
+            assertEquals("foobar", v);
+        }
+        catch (NoSuchFieldException e) {
+            fail(e.getMessage());
+        }
+        catch (ClassNotFoundException cnfe) {
+            fail(cnfe.getMessage());
+        }
+
+    }
+    @Test
     public void testStaticProperty() {
         try {
             String v = PropertyUtil.getStaticPropertyAsString(getClass(), "FOO");
