@@ -73,7 +73,7 @@ public class RulesResource {
         catch (Throwable t) {
             log.error("Exception in rules upload", t);
             throw new BadRequestException(
-                i18n.tr("Error decoding the rules. The text should be base 64 encded"));
+                i18n.tr("Error decoding the rules. The text should be base 64 encoded"));
         }
         rulesCurator.update(rules);
         return rulesBuffer;
