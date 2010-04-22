@@ -73,45 +73,68 @@ public class DefaultEntitlementCertServiceAdapter extends
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         
         // oiduitl is busted at the moment, so do this manually
-        OIDUtil OIDUtil;
         List <X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
         
         Long productHash = product.getHash();
         
-        String productOid = "1.3.6.1.4.1.2312.9.1." + productHash.toString();
+        
+        String PRODUCT_CERT_OID = OIDUtil.REDHAT_OID + "." + 
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
+    
+        String productOid = PRODUCT_CERT_OID  + "." + productHash.toString();
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
-        extensions.add(new X509ExtensionWrapper(productOid + ".1", false, new DERUTF8String(product.getName()) ));
-        extensions.add(new X509ExtensionWrapper(productOid + ".2", false, new DERUTF8String(product.getVariant()) ));
+        extensions.add(new X509ExtensionWrapper(productOid + "." + OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), 
+                    false, new DERUTF8String(product.getName()) ));
+        extensions.add(new X509ExtensionWrapper(productOid + "." + OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_DESC_KEY),
+                    false, new DERUTF8String(product.getVariant()) ));
         // we don't have product attributes populated at the moment, so this doesnt work
         //        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3", false, new DERUTF8String(product.getAttribute("arch").getValue()) ));
-        extensions.add(new X509ExtensionWrapper(productOid + ".3", false, new DERUTF8String(product.getArch())));
-        extensions.add(new X509ExtensionWrapper(productOid + ".4", false, new DERUTF8String(product.getVersion()) ));
+        extensions.add(new X509ExtensionWrapper(productOid + "." + OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY),
+                    false, new DERUTF8String(product.getArch())));
+        extensions.add(new X509ExtensionWrapper(productOid + "." + OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY),
+                    false, new DERUTF8String(product.getVersion()) ));
         
         
         Set<Content> content = product.getContent();
         for (Content con : content) {
-            String contentOid = "1.3.6.1.4.1.2312.9.2." + con.getHash().toString() + ".1";
-            extensions.add(new X509ExtensionWrapper(contentOid, false, new DERUTF8String("yum") ));
-            extensions.add(new X509ExtensionWrapper(contentOid + ".1", false, new DERUTF8String(con.getName()) ));
-            extensions.add(new X509ExtensionWrapper(contentOid + ".2", false, new DERUTF8String(con.getLabel()) ));
-            extensions.add(new X509ExtensionWrapper(contentOid + ".5", false, new DERUTF8String(con.getVendor()) ));
-            extensions.add(new X509ExtensionWrapper(contentOid + ".6", false, new DERUTF8String(con.getContentUrl()) )); 
-            extensions.add(new X509ExtensionWrapper(contentOid + ".7", false, new DERUTF8String(con.getGpgUrl()) ));
-            extensions.add(new X509ExtensionWrapper(contentOid + ".8", false, new DERUTF8String(con.getEnabled()) ));
+            String contentOid = OIDUtil.REDHAT_OID + "." +  OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + "." + con.getHash().toString() + "." + OIDUtil.CF_REPO_TYPE.get(OIDUtil.CF_REPO_TYPE_YUM_KEY);
+            extensions.add(new X509ExtensionWrapper(contentOid , false, new DERUTF8String("yum") ));
+            extensions.add(new X509ExtensionWrapper(contentOid + "." + OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY),
+                        false, new DERUTF8String(con.getName()) ));
+            extensions.add(new X509ExtensionWrapper(contentOid + "." + OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_LABEL_KEY),
+                        false, new DERUTF8String(con.getLabel()) ));
+            extensions.add(new X509ExtensionWrapper(contentOid + "." + OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_VENDOR_ID_KEY) ,
+                        false, new DERUTF8String(con.getVendor()) ));
+            extensions.add(new X509ExtensionWrapper(contentOid + "." + OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_DOWNLOAD_URL_KEY) ,
+                        false, new DERUTF8String(con.getContentUrl()) )); 
+            extensions.add(new X509ExtensionWrapper(contentOid + "." + OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY),
+                        false, new DERUTF8String(con.getGpgUrl()) ));
+            extensions.add(new X509ExtensionWrapper(contentOid + "." + OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED),
+                        false, new DERUTF8String(con.getEnabled()) ));
         }
 
    
         // Subscription/order info
         //need the sub product name, not id here
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.1", false, new DERUTF8String(sub.getProductId()) ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.2", false, new DERUTF8String(sub.getId().toString()) ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.5", false, new DERUTF8String(sub.getQuantity().toString()) ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.6", false, new DERUTF8String(sub.getStartDate().toString() ) ));
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.4.7", false, new DERUTF8String(sub.getEndDate().toString() ) ));
+       String subscriptionOid = OIDUtil.REDHAT_OID + "." + OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
+        extensions.add(new X509ExtensionWrapper(subscriptionOid + "." + OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), 
+                    false, new DERUTF8String(sub.getProductId()) ));
+        extensions.add(new X509ExtensionWrapper(subscriptionOid + "." + OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), 
+                    false, new DERUTF8String(sub.getId().toString()) ));
+        //TODO: regnum? virtlimit/socketlimit?
+        extensions.add(new X509ExtensionWrapper(subscriptionOid + "." + OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY),
+                    false, new DERUTF8String(sub.getQuantity().toString()) ));
+        extensions.add(new X509ExtensionWrapper(subscriptionOid + "."  + OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STARTDATE_KEY),
+                    false, new DERUTF8String(sub.getStartDate().toString() ) ));
+        extensions.add(new X509ExtensionWrapper(subscriptionOid + "." + OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY),
+                    false, new DERUTF8String(sub.getEndDate().toString() ) ));
         
         //1.3.6.1.4.1.2312.9.5.1 
-        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.5.1", false, new DERUTF8String(consumer.getUuid() ) ));
+        // REDHAT_OID here seems wrong...
+        String consumerOid = OIDUtil.REDHAT_OID + "." + OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.SYSTEM_NAMESPACE_KEY);
+        extensions.add(new X509ExtensionWrapper(consumerOid + "." + OIDUtil.SYSTEM_OIDS.get(OIDUtil.UUID_KEY),
+                false, new DERUTF8String(consumer.getUuid() ) ));
         
         
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
