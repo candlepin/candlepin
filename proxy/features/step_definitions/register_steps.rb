@@ -90,6 +90,18 @@ Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ 
 
 end
 
+Then /^Searching for a Consumer with uuid "([^\"]*)" causes a not found$/ do |uuid|
+
+    lambda {@candlepin.get_consumer(uuid)}.should raise_error
+    begin
+        @candlepin.get_consumer(uuid)
+    rescue RestClient::Exception => e
+        e.message.should == "Resource Not Found"
+        e.http_code.should == 404
+    end
+
+end
+
 When /I Revoke All My Entitlements/ do
     @candlepin.revoke_all_entitlements
 end

@@ -40,3 +40,9 @@ Feature: Register a Consumer
         And there is no Consumer with uuid "special_uuid"
         When I Register a New Consumer "my_machine" with uuid "special_uuid"
         Then Registering another Consumer with uuid "special_uuid" causes a bad request
+        
+    Scenario: Getting a consumer that does not exist should return a Not Found
+        Given I have username "candlepin_user"
+        And I have password "default"
+        And there is no Consumer with uuid "jar_jar_binks"
+        Then Searching for a Consumer with uuid "jar_jar_binks" causes a not found     
