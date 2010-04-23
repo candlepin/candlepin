@@ -17,7 +17,7 @@ Then /^importing the Satelite Certificate again should cause a bad request$/ do
         e.message.should == "Bad Request"
         e.http_code.should == 400
     else
-        assert fail "Excepted exception was not raised"
+        assert(fail, "Excepted exception was not raised")
     end
 end
 

@@ -20,7 +20,7 @@ Then /^attempting to Consume an entitlement for the "([^\"]*)" product is forbid
         e.message.should == "Forbidden"
         e.http_code.should == 403
     else
-        assert fail "Excepted exception was not raised"
+        assert(fail, "Excepted exception was not raised")
     end
 end
 

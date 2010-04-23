@@ -82,11 +82,11 @@ Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ 
 
     begin
         @candlepin.register(consumer, @username, @password)
-    rescue NoMemoryError => e
+    rescue RestClient::Exception => e
         e.message.should == "Bad Request"
         e.http_code.should == 400
     else
-        assert fail "Excepted exception was not raised"
+        assert(fail, "Excepted exception was not raised")
     end
 
 end
