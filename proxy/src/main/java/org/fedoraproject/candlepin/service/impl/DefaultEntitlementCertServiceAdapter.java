@@ -106,9 +106,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             String contentOid = OIDUtil.REDHAT_OID + "." +  
                    OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + 
                    "." + con.getHash().toString() + "." + 
-                   OIDUtil.CF_REPO_TYPE.get(OIDUtil.CF_REPO_TYPE_YUM_KEY);
-            extensions.add(new X509ExtensionWrapper(contentOid , 
-                    false, new DERUTF8String("yum")));
+                   OIDUtil.CF_REPO_TYPE.get(con.getType());
             extensions.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY),
                     false, new DERUTF8String(con.getName())));
