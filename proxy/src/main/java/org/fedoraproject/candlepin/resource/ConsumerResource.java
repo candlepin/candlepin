@@ -169,7 +169,10 @@ public class ConsumerResource {
         }
 
         try {
-            System.out.println("my consumer: " + copy);
+            if (log.isDebugEnabled()) {
+                log.debug("my consumer: " + copy);
+            }
+
             Consumer consumer = consumerCurator.create(copy);
             IdentityCertificate idCert = null;
 
