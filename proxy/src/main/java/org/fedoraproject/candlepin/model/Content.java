@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.io.Serializable;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -29,8 +27,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.annotations.ForeignKey;
-
 /**
  * ProductContent
  */
@@ -42,17 +38,7 @@ import org.hibernate.annotations.ForeignKey;
 public class Content implements Persisted {
 
     
-    /*  Example oid of this model
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2 (File repo type))
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2.1 (Name) : Red Hat Enterprise Linux (core server)
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2.2 (Label) : rhel-server
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2.3 (Physical Entitlements): 1
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2.4 (Flex Guest Entitlements): 0
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2.5 (Vendor ID): %Red_Hat_Id% or %Red_Hat_Label%
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2.6 (Download URL): content/rhel-server-isos/$releasever/$basearch
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2.7 (GPG Key URL): gpg/rhel-server-isos/$releasever/$basearch
-    1.3.6.1.4.1.2312.9.2.<content_hash>.2.8 (Enabled): 1
-    */
+  
     // Product ID is stored as a string. Could be a product OID or label.
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_content")
