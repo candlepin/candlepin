@@ -82,4 +82,13 @@ public interface SubscriptionServiceAdapter {
      * @return all subscriptions.
      */
     List<Subscription> getSubscriptions();
+    
+    /**
+     * Return a list of subscription IDs which provide access to the given product.
+     * Note that these subscriptions may not associate directly with the requested
+     * product.
+     * 
+     * @return List of subscription IDs.
+     */
+    List<Long> getSubscriptionIdsProviding(Owner owner, String productId);
 }

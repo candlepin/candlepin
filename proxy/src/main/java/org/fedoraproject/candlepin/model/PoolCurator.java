@@ -94,7 +94,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
+    private List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
 
         if (log.isDebugEnabled()) {
@@ -253,4 +253,5 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("pool", entitlementPool))
             .list();
     }
+    
 }

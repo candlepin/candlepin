@@ -18,9 +18,11 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -32,14 +34,14 @@ public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
     
     private SubscriptionCurator subCurator;
+    private ProductServiceAdapter prodAdapter;
+    private static Logger log = Logger.getLogger(DefaultSubscriptionServiceAdapter.class);
 
-    /**
-     * default ctor
-     * @param subCurator SubscriptionCurator
-     */
     @Inject
-    public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
+    public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator,
+        ProductServiceAdapter prodAdapter) {
         this.subCurator = subCurator;
+        this.prodAdapter = prodAdapter;
     }
 
     @Override
@@ -76,5 +78,28 @@ public class DefaultSubscriptionServiceAdapter implements
     public List<Subscription> getSubscriptions() {
         List<Subscription> toReturn = subCurator.findAll();
         return toReturn == null ? new LinkedList<Subscription>() : toReturn;
+    }
+
+    @Override
+    public List<Long> getSubscriptionIdsProviding(Owner owner, String productId) {
+        log.debug("Searching for subscriptions providing: " + productId);
+        List<Long> subIds = new LinkedList<Long>();
+        
+        for (Subscription sub : getSubscriptions(owner)) {
+            if (sub.getProductId().equals(productId)) {
+                subIds.add(sub.getId());
+                if (log.isDebugEnabled()) {
+                    log.debug("   found: " + sub);
+                }
+                continue;
+            }
+            else if (prodAdapter.provides(sub.getProductId(), productId)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("   found provides: " + sub);
+                }
+                subIds.add(sub.getId());
+            }
+        }
+        return subIds;
     }
 }
