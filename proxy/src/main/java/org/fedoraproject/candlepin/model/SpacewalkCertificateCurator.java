@@ -136,6 +136,7 @@ public class SpacewalkCertificateCurator {
         ep.setEndDate(end);
         ep.setConsumed(new Long(0));
         ep.setSubscriptionId(sub.getId());
+
         owner.addEntitlementPool(ep);
         poolCurator.create(ep);
     }
@@ -143,7 +144,13 @@ public class SpacewalkCertificateCurator {
     private Product createProductIfDoesNotExist(String name) {
         Product p = productCurator.lookupByName(name);
         if (p == null) {
-            p = new Product(name, name);
+            // FIXME: sat cert doesn't have this info, but PRoduct
+            // needs it now. Populate now so we don't NPE on
+            // sat-cert imported products, but the real answer
+            // is to populate with more "real" product data
+
+            // okay, the abs is a little lame, but all of this needs to be removed shortly FIXME
+            p = new Product(name, name, "server", "1.0", "ALL", Math.abs(Long.valueOf(name.hashCode())) );
 
             // Representing the implicit logic in the Satellite certificate:
             if (name.equals(PRODUCT_VIRT_HOST)) {
