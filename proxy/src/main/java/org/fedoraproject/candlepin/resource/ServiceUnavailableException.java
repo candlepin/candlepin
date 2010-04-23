@@ -12,23 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servlet.filter.auth;
+package org.fedoraproject.candlepin.resource;
 
-import static com.google.inject.name.Names.named;
-
-import javax.servlet.Filter;
-
-import com.google.inject.AbstractModule;
+import javax.ws.rs.core.Response.Status;
 
 /**
- * BasicAuthViaUserServiceModule
+ * ServiceUnavailableException
+ * Represents a Service Unavailable (HTTP 503) error.
  */
-public class BasicAuthViaUserServiceModule extends AbstractModule {
-    @Override
-    public void configure() {
-        bind(Filter.class)
-            .annotatedWith(named(FilterConstants.BASIC_AUTH))
-            .to(BasicAuthViaUserServiceFilter.class)
-            .asEagerSingleton();
+public class ServiceUnavailableException extends CandlepinException {
+    public ServiceUnavailableException(String message) {
+        super(Status.SERVICE_UNAVAILABLE, message);
     }
 }

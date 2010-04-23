@@ -19,8 +19,8 @@ package org.fedoraproject.candlepin.config;
  */
 public class SSLAuthFilterConfigParser extends ConfigurationParser {
 
-    public static final String SSLAUTH_FILTER_CONFIG_PREFIX = "sslauth.filter";
-    public static final String CLASS_CONFIG = "class";
+    public static final String SSLAUTH_FILTER_CONFIG_PREFIX = "sslauth";
+    public static final String ENABLED_CONFIG = "enabled";
 
     public String getPrefix() {
         return SSLAUTH_FILTER_CONFIG_PREFIX;

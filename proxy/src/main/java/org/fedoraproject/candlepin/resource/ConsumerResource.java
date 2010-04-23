@@ -136,7 +136,8 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(Consumer in, @Context Principal principal) throws BadRequestException {
+    public Consumer create(Consumer in, @Context Principal principal)
+        throws BadRequestException {
         // API:registerConsumer
 
         ConsumerType type = consumerTypeCurator.lookupByLabel(
