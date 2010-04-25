@@ -31,6 +31,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -40,7 +43,6 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -56,9 +58,6 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
 
 /**
  * API Gateway for Consumers
@@ -518,7 +517,24 @@ public class ConsumerResource {
             return;
         }
         throw new NotFoundException(
-            i18n.tr("Entitlement with ID '" + dbid + "' could not be found"));
+            i18n.tr("Entitlement with ID '{0}' could not be found.", dbid));
     }
-
+    
+    @DELETE
+    @Path("/{consumer_uuid}/certificates/{serial}")
+    @EnforceConsumer
+    public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid, 
+        @PathParam("serial") BigInteger serial) {
+        
+        verifyAndLookupConsumer(consumerUuid);
+        Entitlement toDelete = entitlementCurator.findByCertificateSerial(serial);
+        
+        if (toDelete != null) {
+            entitler.revokeEntitlement(toDelete);
+            return;
+        }
+        throw new NotFoundException(
+            i18n.tr("Entitlement Certificate with serial number {0} could not be found.", 
+                serial));
+    }
 }
