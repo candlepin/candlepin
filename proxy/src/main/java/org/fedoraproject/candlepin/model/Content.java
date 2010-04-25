@@ -45,6 +45,9 @@ public class Content implements Persisted {
     private String id;
     
     @Column(nullable = false)
+    private String type;
+    
+    @Column(nullable = false)
     private String label;
     
     @Column(nullable = false)
@@ -134,6 +137,12 @@ public class Content implements Persisted {
     }
     public void setEnabled(String enabled) {
         this.enabled = enabled;
+    }
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
     }
 
     /**

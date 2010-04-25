@@ -105,6 +105,17 @@ public class Product implements Persisted {
         setName(name);
     }
     
+    public Product(String label, String name, String variant,
+                   String version, String arch, Long hash) {
+        setId(label);
+        setLabel(label);
+        setName(name);
+        setVariant(variant);
+        setVersion(version);
+        setArch(arch);
+        setHash(hash);
+    }
+
     protected Product() {
     }
 
