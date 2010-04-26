@@ -54,12 +54,15 @@ public class CandlepinExceptionMapper implements ExceptionMapper<CandlepinExcept
         HttpServletRequest request = injector.getInstance(HttpServletRequest.class);
         
         String header = request.getHeader(HttpHeaderNames.ACCEPT);
-        List<MediaType> headerMediaTypes = parseHeader(header);
-        
-        MediaType responseMediaType = 
-            headerMediaTypes.size() == 0 ? 
-            MediaType.TEXT_PLAIN_TYPE : 
-            getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
+        MediaType responseMediaType = MediaType.APPLICATION_XML_TYPE;
+        if (header != null) {     
+            List<MediaType> headerMediaTypes = parseHeader(header);
+            
+            responseMediaType = 
+                headerMediaTypes.size() == 0 ? 
+                MediaType.TEXT_PLAIN_TYPE : 
+                getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
+        }
                
         return Response.status(exception.httpReturnCode())
             .entity(exception.message())

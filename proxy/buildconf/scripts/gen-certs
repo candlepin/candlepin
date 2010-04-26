@@ -4,16 +4,6 @@ CERTS_HOME=/etc/candlepin/certs
 CA_KEY=$CERTS_HOME/candlepin-ca.key
 CA_CERT=$CERTS_HOME/candlepin-ca.crt
 
-# Idea pulled from /etc/pki/tls/certs/make-dummy-cert
-answers() {
-    echo XX
-    echo \n
-    echo \n
-    echo Fedora
-    echo \n
-    echo candlepin
-    echo \n
-}
 
 rpm -q openssl > /dev/null
 if [ "$?" -ne 0 ]; then
@@ -26,11 +16,13 @@ if [ ! -d $CERTS_HOME ]; then
     sudo mkdir -p $CERTS_HOME
 fi
 
+HOSTNAME=$(hostname)
+
 if [ -f $CA_KEY ] && [ -f $CA_CERT ]; then
     echo "Certificates are already present."
 else
     echo "Creating CA private key"
     sudo openssl genrsa -out $CA_KEY 1024
     echo "Creating CA certificate"
-    answers | sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT 2> /dev/null
+    sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj "/CN=$HOSTNAME/C=US/L=Raleigh/"
 fi

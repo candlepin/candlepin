@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.3
+Version: 0.0.4
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,6 +95,42 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Fri Apr 23 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.4-1
+- logging cleanup (jbowes@redhat.com)
+- Remove untranslated de strings (jbowes@redhat.com)
+- lot's of code cleanup, remove dead code, add unit tests (jesusr@redhat.com)
+- Protecting all consumer-related methods with @EnforceConsumer (jharris@redhat.com)
+- don't allow a duplicate satellite cert to be uploaded (jbowes@redhat.com)
+- Search for version specific jar.  If that is mising, go for version agnostic. (ayoung@redhat.com)
+- adding a localbuild.rb script, to allow us to fetch only from a local maven repo. (ayoung@redhat.com)
+- move localized_resources to po, which is the more standard dir name (jbowes@redhat.com)
+- Allow all cucumber tasks to run with specified features (jbowes@redhat.com)
+- fix ALL emma reports (jesusr@redhat.com)
+- change satellite certificate test to look for 'at least' x products (for multiple runs) (jbowes@redhat.com)
+- Convert entitlement certificate tests to cucumber (jbowes@redhat.com)
+- remove :fixeclipse hack. Extended the eclipse task instead.  (jesusr@redhat.com)
+- fix the emma reports without requiring seperate task. (jesusr@redhat.com)
+- Convert subscription token tests to cucumber (jbowes@redhat.com)
+- Fix some tests. (dgoodwin@redhat.com)
+- Associate uploaded subscription certificates with owners.  (dgoodwin@redhat.com)
+- Add setters for the getXXAsString methods so that deserialization works (bkearney@redhat.com)
+- Log out the response which is sent to the client (bkearney@redhat.com)
+- fixed two broken tests (ddolguik@redhat.com)
+- localized jsenforcer error messages (ddolguik@redhat.com)
+- updated exceptions thrown from Resources to be serializable to JSON/XML; use
+  localized messages (ddolguik@redhat.com)
+- remove old java functional tests, use cucumber (jesusr@redhat.com)
+- Convert subscription tests to cucumber (jbowes@redhat.com)
+- fix whitespace around = (jesusr@redhat.com)
+- Rename Certificate to SubscriptionCertificate. (dgoodwin@redhat.com)
+- checkstyle needs to depend on compile to get access to Exception info (jesusr@redhat.com)
+- fix checkstyle static final NOT final static (jesusr@redhat.com)
+- Adding consumer interceptor for validating consumer resources (jharris@redhat.com)
+- Remove duplicate nosetest (jbowes@redhat.com)
+- allow register by uuid cucumber tests to run without cleaning the db first (jbowes@redhat.com)
+- Drop the static encoded cert in CertificateResource. (dgoodwin@redhat.com)
+- Convert nosetests to cucumber tests (jbowes@redhat.com)
+
 * Thu Apr 15 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.3-1
 - Change the default SSLProtocol we deploy server.xml with to "all" instead of
   "TLS" (alikins@redhat.com)

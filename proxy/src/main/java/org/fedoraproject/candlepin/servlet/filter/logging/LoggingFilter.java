@@ -46,8 +46,6 @@ public class LoggingFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
-        System.out.println(log.toString());
-
         if (log.isDebugEnabled()) {
             LoggingRequestWrapper lRequest = new LoggingRequestWrapper(
                 (HttpServletRequest) request);
@@ -76,7 +74,8 @@ public class LoggingFilter implements Filter {
             chain.doFilter(lRequest, lResponse);
 
             log.debug("====Response====");
-            log.debug(lResponse.getResponseBody());
+            log.debug("Status: " + lResponse.getStatus());
+            log.debug("Response Body:" + lResponse.getResponseBody());
 
         }
         else {

@@ -50,6 +50,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private static final String METADATA_VALUE = "jsontestname";
     private static final String METADATA_NAME = "name";
     private static final String CONSUMER_NAME = "consumer name";
+    private static final String NON_EXISTENT_CONSUMER = "i don't exist";
     
     private ConsumerType standardSystemType;
     private Consumer consumer;
@@ -125,18 +126,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(serial1, serials.get(0).getSerial());
         assertEquals(serial2, serials.get(1).getSerial());
     }
-
-    // TODO: Test no such consumer type.
-    
-//    @Test
-//    public void testDelete() {
-//        Consumer c = TestUtil.createConsumer();
-//        String uuid = c.getUuid();
-//        ConsumerResource capi = new ConsumerResource();
-//        assertNotNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
-//        capi.delete(uuid);
-//        assertNull(ObjectFactory.get().lookupByUUID(c.getClass(), uuid));
-//    }
 
     @Test
     public void testCreateConsumer() {
@@ -281,5 +270,26 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
         assertNotNull(submitted.getType().getId());
+    }
+    
+    @Test
+    public void unbindBySerialWithExistingCertificateShouldPass() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        List<EntitlementCertificate> serials = consumerResource.
+            getEntitlementCertificates(consumer.getUuid(), null);
+        assertEquals(1, serials.size());
+
+        consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0).getSerial());
+        assertEquals(0, consumerResource.listEntitlements(consumer.getUuid(), null).size());
+    }
+    
+    @Test(expected = NotFoundException.class)
+    public void unbindByInvalidSerialShouldFail() {
+        consumerResource.unbindBySerial(consumer.getUuid(), new BigInteger("1234"));
+    }
+    
+    @Test(expected = NotFoundException.class)
+    public void unbindBySerialWithInvalidUuidShouldFail() {
+        consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new BigInteger("1234"));
     }
 }

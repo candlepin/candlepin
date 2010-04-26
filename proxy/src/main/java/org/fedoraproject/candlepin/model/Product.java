@@ -55,6 +55,22 @@ public class Product implements Persisted {
     
     @Column(nullable = false, unique = true)
     private String name;
+    
+    // Server, Client, Cloud, whatever...
+    @Column(nullable = true)
+    private String variant;
+    
+    @Column(nullable = true)
+    private String version;
+    
+    // suppose we could have an arch table
+    @Column(nullable = true)
+    private String arch;
+    
+    // whatever numeric identifier we come up with for
+    // use in the cert's OID structure...
+    @Column(nullable = true)
+    private Long hash;
 
     @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
             fetch = FetchType.EAGER)
@@ -67,9 +83,14 @@ public class Product implements Persisted {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_attribute")
-    //   @JoinColumn(name="ATTRIBUTE_ID")
     private Set<Attribute> attributes;
 
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "cp_product_content")
+    private Set<Content> content;
+    
+    
+   
     /**
      * Constructor
      * 
@@ -84,6 +105,17 @@ public class Product implements Persisted {
         setName(name);
     }
     
+    public Product(String label, String name, String variant,
+                   String version, String arch, Long hash) {
+        setId(label);
+        setLabel(label);
+        setName(name);
+        setVariant(variant);
+        setVersion(version);
+        setArch(arch);
+        setHash(hash);
+    }
+
     protected Product() {
     }
 
@@ -214,4 +246,69 @@ public class Product implements Persisted {
     public int hashCode() {
         return label.hashCode() * 31 + name.hashCode();
     }
+
+    /**
+     * @param hash the hash to set
+     */
+    public void setHash(Long hash) {
+        this.hash = hash;
+    }
+
+    /**
+     * @return the hash
+     */
+    public Long getHash() {
+        return hash;
+    }
+
+    /**
+     * @param arch the arch to set
+     */
+    public void setArch(String arch) {
+        this.arch = arch;
+    }
+
+    /**
+     * @return the arch
+     */
+    public String getArch() {
+        return arch;
+    }
+
+    /**
+     * @param version the version to set
+     */
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    /**
+     * @return the version
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * @param variant the variant to set
+     */
+    public void setVariant(String variant) {
+        this.variant = variant;
+    }
+
+    /**
+     * @return the variant
+     */
+    public String getVariant() {
+        return variant;
+    }
+
+    public Set<Content> getContent() {
+        return content;
+    }
+
+    public void setContent(Set<Content> content) {
+        this.content = content;
+    }
+
 }

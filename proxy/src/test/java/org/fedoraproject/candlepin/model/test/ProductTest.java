@@ -93,8 +93,6 @@ public class ProductTest extends DatabaseTestFixture {
         entityManager().persist(parent);
         commitTransaction();
 
-        // EntityManager em2 = EntityManagerUtil.createEntityManager(); XXX not
-        // sure why we need to ask for a new EntityManager here
         Product result = (Product) entityManager().createQuery(
                 "select p from Product as p where name = :name").setParameter(
                 "name", parent.getName()).getSingleResult();
@@ -129,7 +127,6 @@ public class ProductTest extends DatabaseTestFixture {
         entityManager().persist(parent1);
         commitTransaction();
 
-        // EntityManager em2 = EntityManagerUtil.createEntityManager();
         Product result = (Product) entityManager().createQuery(
                 "select p from Product as p where name = :name").setParameter(
                 "name", child1.getName()).getSingleResult();
@@ -139,7 +136,6 @@ public class ProductTest extends DatabaseTestFixture {
         entityManager().remove(parent1);
         commitTransaction();
 
-        // em2 = EntityManagerUtil.createEntityManager();
         List<Product> results = entityManager().createQuery(
                 "select p from Product as p where name = :name").setParameter(
                 "name", child1.getName()).getResultList();

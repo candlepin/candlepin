@@ -80,12 +80,25 @@ Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ 
         }
     }
 
-    lambda {@candlepin.register}.should raise_error
     begin
         @candlepin.register(consumer, @username, @password)
     rescue RestClient::Exception => e
         e.message.should == "Bad Request"
         e.http_code.should == 400
+    else
+        assert(fail, "Excepted exception was not raised")
+    end
+
+end
+
+Then /^Searching for a Consumer with uuid "([^\"]*)" causes a not found$/ do |uuid|
+
+    lambda {@candlepin.get_consumer(uuid)}.should raise_error
+    begin
+        @candlepin.get_consumer(uuid)
+    rescue RestClient::Exception => e
+        e.message.should == "Resource Not Found"
+        e.http_code.should == 404
     end
 
 end
