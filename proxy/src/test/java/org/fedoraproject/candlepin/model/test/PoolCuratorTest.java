@@ -104,6 +104,32 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
     
     @Test
+    public void testProductNameViaFind() {
+        Product p = new Product("another", "A Great Operating System");
+        productCurator.create(p);
+        
+        Pool pool = createPoolAndSub(owner, p.getId(), 25L,
+            TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
+        poolCurator.create(pool);
+        pool = poolCurator.find(pool.getId());
+        
+        assertEquals("A Great Operating System", pool.getProductName());
+    }
+    
+    @Test
+    public void testProductNameViaFindAll() {
+        Product p = new Product("another", "A Great Operating System");
+        productCurator.create(p);
+        
+        Pool pool = createPoolAndSub(owner, p.getId(), 25L,
+            TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
+        poolCurator.create(pool);
+        pool = poolCurator.findAll().get(0);
+        
+        assertEquals("A Great Operating System", pool.getProductName());
+    }
+    
+    @Test
     public void testFuzzyProductMatchingWithoutSubscription() {
         
         Product parent = TestUtil.createProduct();

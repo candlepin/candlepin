@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,6 +53,25 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         this.subAdapter = subAdapter;
         this.productAdapter = productAdapter;
         this.enforcer = enforcer;
+    }
+    
+    @Override
+    public Pool find(Serializable id) {
+        Pool pool = super.find(id);
+        addProductName(pool);
+        
+        return pool;
+    }
+    
+    @Override
+    public List<Pool> findAll() {
+        List<Pool> pools = super.findAll();
+        
+        for (Pool pool : pools) {
+            addProductName(pool);
+        }
+        
+        return pools;
     }
 
     /**
@@ -187,11 +207,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             // TODO:  probably should call out to the adapter 
             //        once for all the ids we want instead of 
             //        calling per product
-            Product product = this.productAdapter.getProductById(p.getProductId());
-            
-            if (product != null) {
-                p.setProductName(product.getName());
-            }
+            addProductName(p);
         }
         
         // If querying for pools available to a specific consumer, we need
@@ -215,6 +231,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         return results;
+    }
+    
+    private void addProductName(Pool pool) {
+        if (pool != null) {
+            String id = pool.getProductId();
+            Product product = this.productAdapter.getProductById(id);
+            
+            if (product != null) {
+                pool.setProductName(product.getName());
+            }
+        }
     }
     
     /**
