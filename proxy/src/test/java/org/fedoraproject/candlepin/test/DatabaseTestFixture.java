@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.test;
 
+import java.math.BigInteger;
 import java.util.Date;
 
 import javax.persistence.EntityManager;
@@ -23,11 +24,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.model.AttributeCurator;
-import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -41,6 +43,7 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
+import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
@@ -191,5 +194,25 @@ public class DatabaseTestFixture {
         subTokenCurator.create(st);
         return st;
         
+    }
+    
+    protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool, 
+            EntitlementCertificate cert) {
+        Entitlement toReturn = new Entitlement();
+        toReturn.setOwner(owner);
+        toReturn.setPool(pool);
+        toReturn.setOwner(owner);
+        cert.setEntitlement(toReturn);
+        toReturn.getCertificates().add(cert);
+        return toReturn;
+    }
+    
+    protected EntitlementCertificate createEntitlementCertificate(String key, String cert, 
+            int serial) {
+        EntitlementCertificate toReturn = new EntitlementCertificate();
+        toReturn.setKey(key.getBytes());
+        toReturn.setCert(cert.getBytes());
+        toReturn.setSerial(new BigInteger("" + serial));
+        return toReturn;
     }
 }

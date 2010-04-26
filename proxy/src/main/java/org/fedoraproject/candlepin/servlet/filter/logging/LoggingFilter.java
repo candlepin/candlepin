@@ -74,7 +74,8 @@ public class LoggingFilter implements Filter {
             chain.doFilter(lRequest, lResponse);
 
             log.debug("====Response====");
-            log.debug(lResponse.getResponseBody());
+            log.debug("Status: " + lResponse.getStatus());
+            log.debug("Response Body:" + lResponse.getResponseBody());
 
         }
         else {
