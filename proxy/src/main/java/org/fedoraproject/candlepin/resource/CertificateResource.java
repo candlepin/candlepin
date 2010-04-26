@@ -21,6 +21,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.codec.binary.Base64;
@@ -45,7 +46,6 @@ import com.redhat.rhn.common.cert.CertificateFactory;
 public class CertificateResource  {
     private SubscriptionsCertificateCurator certificateCurator;
     private SpacewalkCertificateCurator spacewalkCertificateCurator;
-    private Principal principal;
     
     private static Logger log = Logger.getLogger(CertificateResource.class);
     
@@ -54,13 +54,11 @@ public class CertificateResource  {
     @Inject
     public CertificateResource(SpacewalkCertificateCurator spacewalkCertificateCurator,
                                SubscriptionsCertificateCurator certificateCurator,
-                               Principal principal,
                                I18n i18n) {
    
 
         this.spacewalkCertificateCurator = spacewalkCertificateCurator;
         this.certificateCurator = certificateCurator;
-        this.principal = principal;
         this.i18n = i18n;
     }
     
@@ -72,7 +70,7 @@ public class CertificateResource  {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public String upload(String base64cert) {
+    public String upload(String base64cert, @Context Principal principal) {
         
         try {
             if (base64cert == null || "".equals(base64cert)) {

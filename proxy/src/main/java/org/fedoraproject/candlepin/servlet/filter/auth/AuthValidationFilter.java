@@ -23,6 +23,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
+import org.fedoraproject.candlepin.auth.Principal;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
 /**
  * This is assumed to be the final filter in the authentication chain, and is
  * responsible for verifying that a user has been authenticated by some previous
@@ -58,6 +61,7 @@ public class AuthValidationFilter implements Filter {
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
         else {
+            ResteasyProviderFactory.pushContext(Principal.class, (Principal) request.getAttribute(FilterConstants.PRINCIPAL_ATTR));
             chain.doFilter(request, response);
         }
     }

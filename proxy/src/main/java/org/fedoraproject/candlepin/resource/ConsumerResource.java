@@ -28,6 +28,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
@@ -74,7 +75,6 @@ public class ConsumerResource {
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
-    private Principal principal;
     private I18n i18n;
 
     @Inject
@@ -85,7 +85,6 @@ public class ConsumerResource {
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
-        Principal principal,
         I18n i18n) {
 
         this.consumerCurator = consumerCurator;
@@ -97,7 +96,6 @@ public class ConsumerResource {
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
-        this.principal = principal;
         this.i18n = i18n;
     }
 
@@ -138,7 +136,7 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Consumer create(Consumer in) throws BadRequestException {
+    public Consumer create(Consumer in, @Context Principal principal) throws BadRequestException {
         // API:registerConsumer
 
         ConsumerType type = consumerTypeCurator.lookupByLabel(
