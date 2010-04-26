@@ -41,17 +41,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private static Logger log = Logger.getLogger(PoolCurator.class);
 
     private SubscriptionServiceAdapter subAdapter;
-    private ProductServiceAdapter prodAdapter;
+    private ProductServiceAdapter productAdapter;
     private Enforcer enforcer;
 
     @Inject
     protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer, 
-        ProductServiceAdapter prodAdapter) {
+        ProductServiceAdapter productAdapter) {
         
         super(Pool.class);
         this.subAdapter = subAdapter;
+        this.productAdapter = productAdapter;
         this.enforcer = enforcer;
-        this.prodAdapter = prodAdapter;
     }
 
     /**
@@ -162,7 +162,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     newResults.add(p);
                 }
                 else if (p.getSubscriptionId() == null && 
-                    prodAdapter.provides(p.getProductId(), productId)) {
+                    productAdapter.provides(p.getProductId(), productId)) {
                     // If not bound to a subscription, do fuzzy product checking:
                     newResults.add(p);
                     if (log.isDebugEnabled()) {
@@ -180,6 +180,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 }
             }
             results = newResults;
+        }
+        
+        for (Pool p : results) {            
+            // enrich with the product name
+            // TODO:  probably should call out to the adapter 
+            //        once for all the ids we want instead of 
+            //        calling per product
+            Product product = this.productAdapter.getProductById(p.getProductId());
+            
+            if (product != null) {
+                p.setProductName(product.getName());
+            }
         }
         
         // If querying for pools available to a specific consumer, we need

@@ -86,11 +86,13 @@ public class Pool implements Persisted {
     private Date endDate;
     
     @Column(nullable = true)
-    private String productId;    
+    private String productId;
 
     @CollectionOfElements
     @JoinTable(name = "cp_entitlement_pool_attribute")
     private Set<Attribute> attributes;
+    
+    private String productName;
 
     /**
      * default ctor
@@ -206,6 +208,26 @@ public class Pool implements Persisted {
     @XmlTransient
     public void setOwner(Owner owner) {
         this.owner = owner;
+    }
+
+    /**
+     * The Marketing/Operations product name for the
+     * <code>productId</code>.
+     * 
+     * @return the productName
+     */
+    public String getProductName() {
+        return productName;
+    }
+
+    /**
+     * The Marketing/Operations product name for the
+     * <code>productId</code>.
+     * 
+     * @param productName the productName to set
+     */
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     /**
