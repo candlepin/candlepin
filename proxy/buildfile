@@ -195,7 +195,7 @@ define "candlepin" do
           ant.property :key=>'checkstyle.cache.file', :value=>'target/checkstyle.cache.src'
           ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
 
-          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java'
+          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java', :excludes=>'**/OIDUtil.java'
         end
 
         # check the test src
