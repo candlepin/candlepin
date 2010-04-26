@@ -57,7 +57,6 @@ class SSLAuth {
         // certs is an array of certificates presented by the client
         // with the first one in the array being the certificate of the client itself.
         X509Certificate identityCert = certs[0];
-        System.out.println("********" + certs.length);
 
         return createPrincipal(parseUuid(identityCert));
     }
