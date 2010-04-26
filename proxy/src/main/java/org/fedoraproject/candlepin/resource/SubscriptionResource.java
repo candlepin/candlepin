@@ -23,6 +23,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
@@ -43,13 +44,11 @@ public class SubscriptionResource {
     private SubscriptionCurator subCurator;
 
     private I18n i18n;
-    private Principal principal;
 
     @Inject
     public SubscriptionResource(SubscriptionCurator subCurator,
-        I18n i18n, Principal principal) {
+        I18n i18n) {
         this.subCurator = subCurator;
-        this.principal = principal;
     }
 
     @GET
@@ -62,7 +61,8 @@ public class SubscriptionResource {
 
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Subscription createSubscription(Subscription subscription) {
+    public Subscription createSubscription(Subscription subscription,
+        @Context Principal principal) {
         //
         subscription.setOwner(principal.getOwner());
         log.debug("owner: " + subscription.getOwner());

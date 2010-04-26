@@ -20,10 +20,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import javax.servlet.Filter;
-
-import org.fedoraproject.candlepin.servlet.filter.auth.SSLAuthFilter;
-
 /**
  * Defines the default Candlepin configuration
  */
@@ -97,26 +93,17 @@ public class Config {
     }
     
     // to disable SSLAuthFilter add to candlepin.conf:
-    // sslauth.filter.class=
-    // org.fedoraproject.candlepin.servlet.filter.auth.PassThroughAuthenticationFilter
-    @SuppressWarnings("unchecked")
-    public Class<? extends Filter> sslAuthFilterClass() {
-        try {
-            String filterClassName = (String) new SSLAuthFilterConfigParser()
-                .parseConfig(configuration)
-                .get(SSLAuthFilterConfigParser.CLASS_CONFIG);
-            
-            if (null != filterClassName) {
-                return (Class<? extends Filter>) Class.forName(filterClassName);
-            }
-            
-            return SSLAuthFilter.class;
-        } 
-        catch (ClassNotFoundException e) {
-            throw new RuntimeException(
-                "Exception when parsing SSLAuthFilter Configuration", e
-            );
+    // sslauth.enabled=no
+    public boolean sslAuthEnabled() {
+        String enabled = (String) new SSLAuthFilterConfigParser()
+            .parseConfig(configuration)
+            .get(SSLAuthFilterConfigParser.ENABLED_CONFIG);
+
+        if (null != enabled && enabled.equals("no")) {
+            return false;
         }
+
+        return true;
     }
     
 

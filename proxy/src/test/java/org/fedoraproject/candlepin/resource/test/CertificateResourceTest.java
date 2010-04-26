@@ -45,7 +45,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         
         this.principal = new PrincipalProviderForTesting(ownerCurator).get();
         certResource = new CertificateResource(spacewalkCertCurator, certificateCurator, 
-            principal, i18n);
+            i18n);
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");
@@ -60,7 +60,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     
     @Test
     public void simpleUploadCertProductsCreated() {
-        certResource.upload(TestUtil.xmlToBase64String(sampleCertXml));
+        certResource.upload(TestUtil.xmlToBase64String(sampleCertXml), principal);
         List<Product> products = productCurator.listAll();
         assertEquals(6, products.size());
     }
@@ -68,7 +68,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     @Test
     public void entitlementPoolCreation() {
         String encoded = TestUtil.xmlToBase64String(sampleCertXml);
-        certResource.upload(encoded);
+        certResource.upload(encoded, principal);
         Owner owner = ownerCurator.lookupByKey(principal.getOwner().getKey());
         List<Pool> entPools = poolCurator.listByOwner(owner);
         assertEquals(5, entPools.size());

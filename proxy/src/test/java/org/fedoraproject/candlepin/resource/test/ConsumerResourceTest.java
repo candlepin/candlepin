@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -59,11 +60,13 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private Pool fullPool;
     
     private ConsumerResource consumerResource;
+    private Principal principal;
     private Owner owner;
 
     @Before
     public void setUp() {
 
+        principal = injector.getInstance(Principal.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
@@ -132,7 +135,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted  = consumerResource.create(toSubmit);
+        Consumer submitted  = consumerResource.create(toSubmit, principal);
         
         assertNotNull(submitted);
         assertNotNull(submitted);
@@ -149,7 +152,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.setUuid(uuid);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);        
 
-        Consumer submitted  = consumerResource.create(toSubmit);
+        Consumer submitted  = consumerResource.create(toSubmit, principal);
         assertNull(toSubmit.getId());
         assertNotNull(submitted);
         assertNotNull(submitted);
@@ -161,7 +164,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         //The second post should fail because of constraint failures
         try {
-            consumerResource.create(toSubmit);
+            consumerResource.create(toSubmit, principal);
         } 
         catch (BadRequestException e) {
             // Good
@@ -254,7 +257,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.setUuid("1023131");
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted  = consumerResource.create(toSubmit);
+        Consumer submitted  = consumerResource.create(toSubmit, principal);
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
@@ -266,7 +269,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerType type = new ConsumerType(standardSystemType.getLabel());
         assertNull(type.getId());
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, null, type);
-        submitted = consumerResource.create(nulltypeid);
+        submitted = consumerResource.create(nulltypeid, principal);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
         assertNotNull(submitted.getType().getId());

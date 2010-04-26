@@ -19,7 +19,6 @@ import static com.google.inject.name.Names.*;
 import java.io.Reader;
 
 import javax.script.ScriptEngine;
-import javax.servlet.Filter;
 
 import org.fedoraproject.candlepin.config.LoggingConfig;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
@@ -32,11 +31,6 @@ import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapte
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
-import org.fedoraproject.candlepin.servlet.filter.auth.AuthValidationFilter;
-import org.fedoraproject.candlepin.servlet.filter.auth.BasicAuthViaUserServiceFilter;
-import org.fedoraproject.candlepin.servlet.filter.auth.FilterConstants;
-import org.fedoraproject.candlepin.servlet.filter.auth.NoAuthRequiredFilter;
-import org.fedoraproject.candlepin.servlet.filter.auth.SSLAuthFilter;
 import org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
@@ -51,13 +45,7 @@ class DefaultConfig extends AbstractModule {
     public void configure() {
         bind(HttpServletDispatcher.class).asEagerSingleton();
         bind(LoggingFilter.class).asEagerSingleton();
-        bind(NoAuthRequiredFilter.class).asEagerSingleton();
-        bind(AuthValidationFilter.class).asEagerSingleton();
         bind(LoggingConfig.class).asEagerSingleton();
-        bind(Filter.class).annotatedWith(named(FilterConstants.BASIC_AUTH)).to(
-            BasicAuthViaUserServiceFilter.class).asEagerSingleton();
-        bind(Filter.class).annotatedWith(named(FilterConstants.SSL_AUTH)).to(
-            SSLAuthFilter.class).asEagerSingleton();
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(named("RulesReader")).toProvider(
             RulesReaderProvider.class);
