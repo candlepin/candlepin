@@ -48,6 +48,9 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     public Boolean provides(String productId, String providesProductId) {
         Product p = getProductById(productId);
         Product queried = getProductById(providesProductId);
+        if (p.getChildProducts() == null) {
+            return Boolean.FALSE;
+        }
         if (p.getChildProducts().contains(queried)) {
             return Boolean.TRUE;
         }

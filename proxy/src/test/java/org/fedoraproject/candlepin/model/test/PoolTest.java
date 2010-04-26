@@ -268,6 +268,16 @@ public class PoolTest extends DatabaseTestFixture {
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
         
+        Subscription sub = new Subscription(owner, parentProduct.getId().toString(),
+            new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
+                    .createDate(3000, 2, 9),
+                    TestUtil.createDate(2010, 2, 12));
+        subCurator.create(sub);
         
+        
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(null, owner, 
+            childProduct, false);
+        assertEquals(1, results.size());
+        assertEquals(sub.getId(), results.get(0).getSubscriptionId());
     }
 }

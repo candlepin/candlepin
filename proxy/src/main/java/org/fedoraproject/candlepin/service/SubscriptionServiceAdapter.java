@@ -48,9 +48,14 @@ public interface SubscriptionServiceAdapter {
 
     /**
      * List all subscriptions for the given owner and product.
+     * 
+     * This method may do "fuzzy" product matching, where the subscription returned
+     * may actually be for a different product than requested, but would provide
+     * access to it.
+     * 
      * @param owner Owner of the subscriptions.
-     * @param productId product id filter.
-     * @return all subscriptions for the given owner and product.
+     * @param productId product ID desired.
+     * @return all subscriptions for the given owner which provide this product.
      */
     List<Subscription> getSubscriptions(Owner owner, String productId);
     
@@ -83,12 +88,4 @@ public interface SubscriptionServiceAdapter {
      */
     List<Subscription> getSubscriptions();
     
-    /**
-     * Return a list of subscription IDs which provide access to the given product.
-     * Note that these subscriptions may not associate directly with the requested
-     * product.
-     * 
-     * @return List of subscription IDs.
-     */
-    List<Long> getSubscriptionIdsProviding(Owner owner, String productId);
 }

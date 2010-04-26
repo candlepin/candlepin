@@ -124,13 +124,12 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void testGetSubscriptionIdsProviding() {
-        List<Long> subIds = adapter.getSubscriptionIdsProviding(owner, 
+    public void testGetSubscriptionsProviding() {
+        List<Subscription> subIds = adapter.getSubscriptions(owner, 
             parentProduct.getId());
         assertEquals(1, subIds.size());
 
-        subIds = adapter.getSubscriptionIdsProviding(owner, 
-            childProduct.getId());
+        subIds = adapter.getSubscriptions(owner, childProduct.getId());
         assertEquals(1, subIds.size());
     }
 

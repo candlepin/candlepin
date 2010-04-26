@@ -108,7 +108,7 @@ public class Entitler {
     }
 
     /**
-     * Request an entitlement by pool.
+     * Request an entitlement by pool..
      * 
      * If the entitlement cannot be granted, null will be returned.
      * 

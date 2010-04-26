@@ -46,7 +46,28 @@ public class DefaultSubscriptionServiceAdapter implements
 
     @Override
     public List<Subscription> getSubscriptions(Owner owner, String productId) {
-        return subCurator.listByOwnerAndProduct(owner, productId);
+        
+        log.debug("Searching for subscriptions providing: " + productId);
+        List<Subscription> subs = new LinkedList<Subscription>();
+        
+        // We need "fuzzy" product matching, so we need to list all subs for this owner
+        // and then filter out products that do not match:
+        for (Subscription sub : getSubscriptions(owner)) {
+            if (sub.getProductId().equals(productId)) {
+                subs.add(sub);
+                if (log.isDebugEnabled()) {
+                    log.debug("   found: " + sub);
+                }
+                continue;
+            }
+            else if (prodAdapter.provides(sub.getProductId(), productId)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("   found provides: " + sub);
+                }
+                subs.add(sub);
+            }
+        }
+        return subs;
     }
 
     @Override
@@ -80,26 +101,4 @@ public class DefaultSubscriptionServiceAdapter implements
         return toReturn == null ? new LinkedList<Subscription>() : toReturn;
     }
 
-    @Override
-    public List<Long> getSubscriptionIdsProviding(Owner owner, String productId) {
-        log.debug("Searching for subscriptions providing: " + productId);
-        List<Long> subIds = new LinkedList<Long>();
-        
-        for (Subscription sub : getSubscriptions(owner)) {
-            if (sub.getProductId().equals(productId)) {
-                subIds.add(sub.getId());
-                if (log.isDebugEnabled()) {
-                    log.debug("   found: " + sub);
-                }
-                continue;
-            }
-            else if (prodAdapter.provides(sub.getProductId(), productId)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("   found provides: " + sub);
-                }
-                subIds.add(sub.getId());
-            }
-        }
-        return subIds;
-    }
 }

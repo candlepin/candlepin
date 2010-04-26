@@ -319,6 +319,7 @@ public class Pool implements Persisted {
 
     public String toString() {
         return "EntitlementPool [id = " + getId() + ", product = " + getProductId() +
+            ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
 }
