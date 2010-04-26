@@ -87,4 +87,20 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.listAvailableEntitlementPools(consumer);
         assertEquals(0, results.size());
     }
+    
+    @Test
+    public void testFuzzyProductMatchingWithoutSubscription() {
+        
+        Product parent = TestUtil.createProduct();
+        parent.addChildProduct(product);
+        productCurator.create(parent);
+        
+        Pool p = new Pool(owner, parent.getId(), new Long(5), 
+            TestUtil.createDate(2000, 3, 2), 
+            TestUtil.createDate(2040, 3, 2));
+        poolCurator.create(p);
+        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product);
+        assertEquals(1, results.size());
+        
+    }
 }

@@ -161,15 +161,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     // Check for exact match:
                     newResults.add(p);
                 }
-//                else if (p.getSubscriptionId().equals(null) && 
-//                    prodAdapter.provides(p.getProductId(), productId)) {
-//                    // If not bound to a subscription, do fuzzy product checking:
-//                    newResults.add(p);
-//                    if (log.isDebugEnabled()) {
-//                        log.debug("Pool indirectly provides " + productId + 
-//                            ": " + p);
-//                    }
-//                }
+                else if (p.getSubscriptionId() == null && 
+                    prodAdapter.provides(p.getProductId(), productId)) {
+                    // If not bound to a subscription, do fuzzy product checking:
+                    newResults.add(p);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Pool indirectly provides " + productId + 
+                            ": " + p);
+                    }
+                }
                 else if (subIds.contains(p.getSubscriptionId())) {
                     // Do fuzzy product checking for pools backed by a subscription:
                     if (log.isDebugEnabled()) {
