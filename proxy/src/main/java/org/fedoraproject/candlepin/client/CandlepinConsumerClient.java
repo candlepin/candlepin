@@ -141,7 +141,7 @@ public class CandlepinConsumerClient {
      */
     public List<Pool> listPools() {
         ICandlepinConsumerClient client = clientWithCert();
-        List<Pool> pools = client.listPools();
+        List<Pool> pools = client.listPools(getUUID());
         return pools;
     }
     

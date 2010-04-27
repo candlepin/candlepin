@@ -20,6 +20,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
 
 /**
  * BaseCommand
@@ -27,9 +28,11 @@ import org.apache.commons.cli.PosixParser;
 public abstract class BaseCommand {
     
     protected Options options = null;
+    protected CandlepinConsumerClient client;
     
     public BaseCommand() {
         options = getOptions();
+        client = new CandlepinConsumerClient("https://localhost:8443/candlepin");         
     }
     
     public abstract String getName();
@@ -54,5 +57,9 @@ public abstract class BaseCommand {
     public void generateHelp() {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp( String.format("CLIMain %s [options]", getName()), options);
+    }
+    
+    public CandlepinConsumerClient getClient() {
+        return client;
     }
 }

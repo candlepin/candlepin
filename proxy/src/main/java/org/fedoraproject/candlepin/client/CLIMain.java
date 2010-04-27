@@ -14,12 +14,15 @@
  */
 package org.fedoraproject.candlepin.client;
 
+import java.security.Security;
 import java.util.HashMap;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.fedoraproject.candlepin.client.cmds.BaseCommand;
 import org.fedoraproject.candlepin.client.cmds.HelpCommand;
+import org.fedoraproject.candlepin.client.cmds.ListCommand;
 import org.fedoraproject.candlepin.client.cmds.RegisterCommand;
 
 /**
@@ -34,7 +37,7 @@ public class CLIMain {
     
     protected void registerCommands() {
         try {
-            Class[] commands = {RegisterCommand.class};
+            Class[] commands = {RegisterCommand.class, ListCommand.class};
             for (Class cmdClass : commands) {
                 BaseCommand cmd = (BaseCommand) cmdClass.newInstance();
                 cmds.put(cmd.getName(), cmd);
@@ -82,6 +85,10 @@ public class CLIMain {
     
 
     public static void main(String[] args) {
+        System.setProperty("javax.net.ssl.trustStore",
+            "/home/bkearney/tomcat6/conf/keystore");
+        Security.addProvider(new BouncyCastleProvider());
+    
         CLIMain cli = new CLIMain();
         cli.execute(args);
         

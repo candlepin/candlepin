@@ -57,6 +57,11 @@ public interface ICandlepinConsumerClient {
     @Produces(MediaType.APPLICATION_JSON)
     List<Pool> listPools();
     
+    @GET
+    @Path("pools")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<Pool> listPools(@QueryParam("consumer")String uuid);    
+    
     @POST
     @Path("consumers/{uuid}/entitlements")
     @Consumes(MediaType.APPLICATION_JSON)

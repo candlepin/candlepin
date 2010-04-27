@@ -14,49 +14,56 @@
  */
 package org.fedoraproject.candlepin.client.cmds;
 
+import java.util.List;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * RegisterCommand
  */
-public class RegisterCommand extends BaseCommand {
+public class ListCommand extends BaseCommand {
 
     @Override
     public String getName() {
-        return "register";
+        return "list";
     }
 
 
     public String getDescription() {
-        return "Register the client to a Unified Entitlement Platform.";
+        return "List available or consumer entitlement pools";
     }
     
     public Options getOptions() {
         Options opts = super.getOptions();
-        opts.addOption("u", "username", true, "The username to register with");
-        opts.addOption("p", "password", true, "The password to use");
-        opts.addOption("f", "force", false, "Force a registration even if one exists");
+        //opts.addOption("u", "username", true, "The username to register with");
+        //opts.addOption("p", "password", true, "The password to use");
+        //opts.addOption("f", "force", false, "Force a registration even if one exists");
         return opts;
     }
     
     public void execute(CommandLine cmdLine) {
-        String username = cmdLine.getOptionValue("u");
-        String password = cmdLine.getOptionValue("p");
-        boolean force = cmdLine.hasOption("f");        
-        if ((username == null) || (password == null)) {
-            System.err.println("Both username and password must be provided");
-            return;
-        }
         CandlepinConsumerClient client = this.getClient();
         
-        if (client.isRegistered() && !force) {
-            System.out.println("Already registered. Use force to re-register");
+        if (!client.isRegistered()) {
+            System.out.println("You must register first in order to list the pools you can consume");
             return;
         }
-        String uuid = client.register(username, password, "JavaClient", "system");
-        System.out.println("Registered with UUID: " + uuid);
+        
+        List<Pool> pools = client.listPools();
+        System.out.println(
+            String.format("%-10s %-20s %-10s %-20s %-20s", "ID", 
+                "Name", "Quantity", "Begin", "End"));
+        for (Pool pool : pools) {
+            System.out.println(String.format("%-10d %-20s %-10s %-20s %-20s", 
+                pool.getId(),
+                pool.getProductName(),
+                pool.getQuantity(),
+                pool.getStartDate(),
+                pool.getEndDate()));
+        }
         
     }
 
