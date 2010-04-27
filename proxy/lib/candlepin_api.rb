@@ -67,6 +67,14 @@ class Candlepin
         post("/consumers/#{@consumer['uuid']}/entitlements?product=#{product}")
     end
     
+    def list_products
+      get("/products")
+    end
+    
+    def create_product(product_json)
+      return post("/products", product_json)
+    end
+    
     def consume_pool(pool)
         post("/consumers/#{@consumer['uuid']}/entitlements?pool=#{pool}")
     end
