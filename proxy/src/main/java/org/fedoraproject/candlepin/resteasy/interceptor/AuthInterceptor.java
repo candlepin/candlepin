@@ -33,8 +33,10 @@ import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
  * NoAuthInterceptor
@@ -47,20 +49,23 @@ public class AuthInterceptor implements PreProcessInterceptor {
     private BasicAuth basicAuth;
     private SSLAuth sslAuth;
     private boolean sslAuthEnabled; 
+    private Injector injector;
     
     @Inject
     public AuthInterceptor(Config config, UserServiceAdapter userService,
-        OwnerCurator ownerCurator, ConsumerCurator consumerCurator) {
+        OwnerCurator ownerCurator, ConsumerCurator consumerCurator, Injector injector) {
         super();
         basicAuth = new BasicAuth(userService, ownerCurator);
         sslAuth = new SSLAuth(consumerCurator);
         
         sslAuthEnabled = config.sslAuthEnabled();
+        this.injector = injector;
     }
 
     @Override
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
+        I18n i18n = injector.getInstance(I18n.class);
         if (log.isDebugEnabled()) {
             log.debug("Authentication check for " + request.getUri().getPath());
         }
@@ -80,7 +85,8 @@ public class AuthInterceptor implements PreProcessInterceptor {
                     log.debug("Error getting principal " + e);
                     e.printStackTrace();
                 }
-                throw new ServiceUnavailableException("Error contacting user service");
+                throw new ServiceUnavailableException(
+                    i18n.tr("Error contacting user service"));
             }
         }
         if (principal == null) {
@@ -99,6 +105,6 @@ public class AuthInterceptor implements PreProcessInterceptor {
             return null;
         }
         
-        throw new UnauthorizedException("unauthorized");
+        throw new UnauthorizedException(i18n.tr("Invalid username or password"));
     }
 }
