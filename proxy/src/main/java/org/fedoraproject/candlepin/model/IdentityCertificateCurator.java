@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.math.BigInteger;
-
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -32,7 +30,7 @@ public class IdentityCertificateCurator extends
     }
 
     public IdentityCertificate lookupBySerialNumber(
-        BigInteger serialNumber) {
+        Long serialNumber) {
         return (IdentityCertificate) currentSession().createCriteria(
             IdentityCertificate.class).add(
             Restrictions.eq("serial", serialNumber)).uniqueResult();

@@ -20,7 +20,6 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Random;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
@@ -44,9 +43,6 @@ public class DefaultIdentityCertServiceAdapter implements
     private IdentityCertificateCurator identityCertCurator;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
-
-    // Seeded with this(System.currentTimeMillis()
-    private Random random = new Random();
 
     @Inject
     public DefaultIdentityCertServiceAdapter(PKIUtility pki,
@@ -92,7 +88,7 @@ public class DefaultIdentityCertServiceAdapter implements
         
         identityCert.setCert(pki.getPemEncoded(x509cert));
         identityCert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
-        identityCert.setSerial(x509cert.getSerialNumber());
+        identityCert.setSerial(x509cert.getSerialNumber().longValue());
         identityCert.setConsumer(consumer);
         consumer.setIdCert(identityCert);
 
