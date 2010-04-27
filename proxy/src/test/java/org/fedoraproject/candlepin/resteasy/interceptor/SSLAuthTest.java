@@ -24,7 +24,6 @@ import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.resteasy.interceptor.SSLAuth;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
@@ -35,7 +34,7 @@ import org.mockito.MockitoAnnotations;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 
-public class SSLAuthFilterTest {
+public class SSLAuthTest {
 
     @Mock private HttpRequest request;
     @Mock private ConsumerCurator consumerCurator;
