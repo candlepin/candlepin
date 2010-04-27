@@ -72,19 +72,9 @@ public class Subscription implements Persisted {
     
     private Date modified;
 
-    /** default ctor */
     public Subscription() {
     }
 
-    /**
-     * ctor
-     * @param ownerIn subscription owner
-     * @param productIdIn product id associated with the subscription
-     * @param maxMembersIn quantity
-     * @param startDateIn when the subscription starts
-     * @param endDateIn when the subscription ends.
-     * @param modified when the subscription last changed.
-     */
     public Subscription(Owner ownerIn, String productIdIn, Long maxMembersIn,
             Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
@@ -93,6 +83,11 @@ public class Subscription implements Persisted {
         this.startDate = startDateIn;
         this.endDate = endDateIn;
         this.modified = modified;
+    }
+    
+    public String toString() {
+        return "Subscription [id = " + getId() + ", product = " + getProductId() +
+            ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
 
     /**

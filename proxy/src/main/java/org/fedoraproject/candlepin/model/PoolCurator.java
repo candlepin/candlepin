@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
@@ -40,13 +42,36 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private static Logger log = Logger.getLogger(PoolCurator.class);
 
     private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter productAdapter;
     private Enforcer enforcer;
 
     @Inject
-    protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer) {
+    protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer, 
+        ProductServiceAdapter productAdapter) {
+        
         super(Pool.class);
         this.subAdapter = subAdapter;
+        this.productAdapter = productAdapter;
         this.enforcer = enforcer;
+    }
+    
+    @Override
+    public Pool find(Serializable id) {
+        Pool pool = super.find(id);
+        addProductName(pool);
+        
+        return pool;
+    }
+    
+    @Override
+    public List<Pool> findAll() {
+        List<Pool> pools = super.findAll();
+        
+        for (Pool pool : pools) {
+            addProductName(pool);
+        }
+        
+        return pools;
     }
 
     /**
@@ -55,8 +80,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     public List<Pool> listByOwner(Owner o) {
-        refreshPools(o, null);
-        return listAvailableEntitlementPools(null, o, (String) null, true);
+        return listAvailableEntitlementPools(null, o, (String) null, true, true);
     }
     
     
@@ -67,16 +91,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     public List<Pool> listAvailableEntitlementPools(Consumer c) {
-        refreshPools(c.getOwner(), null);
-        return listAvailableEntitlementPools(c, null, (String) null, true);
+        return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true, true);
     }
     
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             Product p, boolean activeOnly) {
         String productId = (p == null) ? null : p.getId();
         Owner owner = o == null ? c.getOwner() : o;
-        refreshPools(owner, productId);
-        return listAvailableEntitlementPools(c, o, productId, activeOnly);
+        return listAvailableEntitlementPools(c, owner, productId, activeOnly, true);
     }
     
     /**
@@ -88,20 +110,43 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     public List<Pool> listByOwnerAndProduct(Owner owner,
             Product product) {  
-        refreshPools(owner, product.getId());        
         return listAvailableEntitlementPools(null, owner, product, false);
     }
 
+    /**
+     * List entitlement pools.
+     * 
+     * Pools will be refreshed from the underlying subscription service.
+     * 
+     * If a consumer is specified, a pass through the rules will be done for each
+     * potentially usable pool.
+     * 
+     * @param c
+     * @param o
+     * @param productId
+     * @param activeOnly
+     * @param refresh
+     * @return
+     */
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, boolean activeOnly) {
+    private List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, boolean activeOnly, boolean refresh) {
 
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
             log.debug("   consumer: " + c);
             log.debug("   owner: " + o);
             log.debug("   product: " + productId);
+            log.debug("   refresh: " + refresh);
+        }
+        
+        // Be careful here, we're trying to list pools, but before we do that we need a 
+        // refresh, which in turn needs a list of pools and will re-call this method
+        // to get them, only with refresh set to false.
+        List<Long> subIds = new LinkedList<Long>();
+        if (refresh) {
+            subIds = refreshPools(o, productId);
         }
         
         List<Pool> results = null;
@@ -116,9 +161,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.eq("owner", o));            
         }
 
-        if (productId != null) {
-            crit.add(Restrictions.eq("productId", productId));
-        }
         crit.add(Restrictions.lt("startDate", new Date())); // TODO: is this right?
         crit.add(Restrictions.gt("endDate", new Date())); // TODO: is this right?
         // FIXME: sort by enddate?
@@ -126,7 +168,46 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         
         if (results == null) {
             log.debug("no results");
-            results = new ArrayList<Pool>();
+            return new ArrayList<Pool>();
+        }
+        
+        // Filter for product we want:
+        if (productId != null) {
+
+            List<Pool> newResults = new LinkedList<Pool>();
+            for (Pool p : results) {
+                
+                if (p.getProductId().equals(productId)) {
+                    // Check for exact match:
+                    newResults.add(p);
+                }
+                else if (p.getSubscriptionId() == null && 
+                    productAdapter.provides(p.getProductId(), productId)) {
+                    // If not bound to a subscription, do fuzzy product checking:
+                    newResults.add(p);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Pool indirectly provides " + productId + 
+                            ": " + p);
+                    }
+                }
+                else if (subIds.contains(p.getSubscriptionId())) {
+                    // Do fuzzy product checking for pools backed by a subscription:
+                    if (log.isDebugEnabled()) {
+                        log.debug("Pool's subscription indirectly provides " + productId + 
+                            ": " + p);
+                    }
+                    newResults.add(p);
+                }
+            }
+            results = newResults;
+        }
+        
+        for (Pool p : results) {            
+            // enrich with the product name
+            // TODO:  probably should call out to the adapter 
+            //        once for all the ids we want instead of 
+            //        calling per product
+            addProductName(p);
         }
         
         // If querying for pools available to a specific consumer, we need
@@ -135,21 +216,32 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // available, and the consumer requests the actual entitlement, and the
         // request still could fail.
         if (c != null) {
-            List<Pool> finalResults = new LinkedList<Pool>();
+            List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
                 PreEntHelper helper = enforcer.pre(c, p);
                 if (helper.getResult().isSuccessful()) {
-                    finalResults.add(p);
+                    newResults.add(p);
                 }
                 else {
                     log.info("Omitting pool due to failed rule check: " + p.getId());
                     log.info(helper.getResult().getErrors());
                 }
             }
-            return finalResults;
+            results = newResults;
         }
 
         return results;
+    }
+    
+    private void addProductName(Pool pool) {
+        if (pool != null) {
+            String id = pool.getProductId();
+            Product product = this.productAdapter.getProductById(id);
+            
+            if (product != null) {
+                pool.setProductName(product.getName());
+            }
+        }
     }
     
     /**
@@ -162,19 +254,37 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *
      * @param owner Owner to be refreshed.
      * @param productId Products to refresh.
+     * @return List of subscription IDs which provide access to this product.
      */
-    private void refreshPools(Owner owner, String productId) {
+    private List<Long> refreshPools(Owner owner, String productId) {
         log.debug("Refreshing pools");
         
+        List<Long> validSubscriptionIds = new LinkedList<Long>();
         List<Subscription> subs = null;
         if (productId == null) {
             subs = subAdapter.getSubscriptions(owner);
         }
         else {
+            // TODO FIX HERE
             subs = subAdapter.getSubscriptions(owner, productId);
         }
         
-        List<Pool> pools = listByOwnerAndProductNoRefresh(owner, productId);
+        if (log.isDebugEnabled()) {
+            log.debug("Found subscriptions: ");
+            for (Subscription sub : subs) {
+                log.debug("   " + sub);
+            }
+        }
+        
+        List<Pool> pools = listAvailableEntitlementPools(null, owner, productId, false,
+            false);
+
+        if (log.isDebugEnabled()) {
+            log.debug("Found pools: ");
+            for (Pool p : pools) {
+                log.debug("   " + p);
+            }
+        }
         
         // Map all  pools for this owner/product that have a
         // subscription ID associated with them.
@@ -186,6 +296,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         
         for (Subscription sub : subs) {
+            validSubscriptionIds.add(sub.getId());
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
                 createPool(subToPoolMap, sub);
             }
@@ -198,7 +309,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
             deactivatePool(entry.getValue());
         }
-
+        
+        return validSubscriptionIds;
     }
 
     private boolean poolExistsForSubscription(Map<Long, Pool> subToPoolMap,
@@ -237,11 +349,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         merge(pool);
     }
 
-    private List<Pool> listByOwnerAndProductNoRefresh(Owner owner,
-        String productId) {
-        return listAvailableEntitlementPools(null, owner, productId, false);
-    }
-    
     /**
      * @param entitlementPool entitlement pool to search.
      * @return entitlements in the given pool.
@@ -253,4 +360,5 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("pool", entitlementPool))
             .list();
     }
+    
 }

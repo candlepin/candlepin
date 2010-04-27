@@ -18,9 +18,11 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -32,19 +34,40 @@ public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
     
     private SubscriptionCurator subCurator;
+    private ProductServiceAdapter prodAdapter;
+    private static Logger log = Logger.getLogger(DefaultSubscriptionServiceAdapter.class);
 
-    /**
-     * default ctor
-     * @param subCurator SubscriptionCurator
-     */
     @Inject
-    public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator) {
+    public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator,
+        ProductServiceAdapter prodAdapter) {
         this.subCurator = subCurator;
+        this.prodAdapter = prodAdapter;
     }
 
     @Override
     public List<Subscription> getSubscriptions(Owner owner, String productId) {
-        return subCurator.listByOwnerAndProduct(owner, productId);
+        
+        log.debug("Searching for subscriptions providing: " + productId);
+        List<Subscription> subs = new LinkedList<Subscription>();
+        
+        // We need "fuzzy" product matching, so we need to list all subs for this owner
+        // and then filter out products that do not match:
+        for (Subscription sub : getSubscriptions(owner)) {
+            if (sub.getProductId().equals(productId)) {
+                subs.add(sub);
+                if (log.isDebugEnabled()) {
+                    log.debug("   found: " + sub);
+                }
+                continue;
+            }
+            else if (prodAdapter.provides(sub.getProductId(), productId)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("   found provides: " + sub);
+                }
+                subs.add(sub);
+            }
+        }
+        return subs;
     }
 
     @Override
@@ -77,4 +100,5 @@ public class DefaultSubscriptionServiceAdapter implements
         List<Subscription> toReturn = subCurator.findAll();
         return toReturn == null ? new LinkedList<Subscription>() : toReturn;
     }
+
 }

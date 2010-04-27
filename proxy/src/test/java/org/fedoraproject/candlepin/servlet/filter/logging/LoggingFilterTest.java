@@ -104,7 +104,8 @@ public class LoggingFilterTest {
                 add("====Headers====");
                 add("Accept:  NoSubstitutes");
                 add("====Response====");
-                add("");
+                add("Status: 0");
+                add("Response Body:");
             }
         });
 
@@ -126,7 +127,8 @@ public class LoggingFilterTest {
                 add("");
                 add("====Headers====");
                 add("====Response====");
-                add("");
+                add("Status: 0");
+                add("Response Body:");
             }
         });
     }
@@ -159,7 +161,8 @@ public class LoggingFilterTest {
                 add("this is my body");
                 add("====Headers====");
                 add("====Response====");
-                add("");
+                add("Status: 0");
+                add("Response Body:");
             }
         });
     }

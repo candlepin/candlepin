@@ -87,4 +87,61 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.listAvailableEntitlementPools(consumer);
         assertEquals(0, results.size());
     }
+    
+    @Test
+    public void testProductName() {
+        Product p = new Product("someProduct", "An Extremely Great Product");
+        productCurator.create(p);
+        
+        Pool pool = createPoolAndSub(owner, p.getId(), 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+        
+        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, p);
+        Pool onlyPool = results.get(0);
+        
+        assertEquals("An Extremely Great Product", onlyPool.getProductName());
+    }
+    
+    @Test
+    public void testProductNameViaFind() {
+        Product p = new Product("another", "A Great Operating System");
+        productCurator.create(p);
+        
+        Pool pool = createPoolAndSub(owner, p.getId(), 25L,
+            TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
+        poolCurator.create(pool);
+        pool = poolCurator.find(pool.getId());
+        
+        assertEquals("A Great Operating System", pool.getProductName());
+    }
+    
+    @Test
+    public void testProductNameViaFindAll() {
+        Product p = new Product("another", "A Great Operating System");
+        productCurator.create(p);
+        
+        Pool pool = createPoolAndSub(owner, p.getId(), 25L,
+            TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
+        poolCurator.create(pool);
+        pool = poolCurator.findAll().get(0);
+        
+        assertEquals("A Great Operating System", pool.getProductName());
+    }
+    
+    @Test
+    public void testFuzzyProductMatchingWithoutSubscription() {
+        
+        Product parent = TestUtil.createProduct();
+        parent.addChildProduct(product);
+        productCurator.create(parent);
+        
+        Pool p = new Pool(owner, parent.getId(), new Long(5), 
+            TestUtil.createDate(2000, 3, 2), 
+            TestUtil.createDate(2040, 3, 2));
+        poolCurator.create(p);
+        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product);
+        assertEquals(1, results.size());
+        
+    }
 }

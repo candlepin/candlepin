@@ -12,17 +12,29 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.config;
+package org.fedoraproject.candlepin.client;
 
 /**
- * SSLAuthFilterConfigParser
+ * ClientException
  */
-public class SSLAuthFilterConfigParser extends ConfigurationParser {
+public class ClientException extends RuntimeException {
 
-    public static final String SSLAUTH_FILTER_CONFIG_PREFIX = "sslauth";
-    public static final String ENABLED_CONFIG = "enabled";
+    private static final long serialVersionUID = -7217728552039510992L;
 
-    public String getPrefix() {
-        return SSLAUTH_FILTER_CONFIG_PREFIX;
-    }   
+    public ClientException() {
+        super();
+    }
+
+    public ClientException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ClientException(String message) {
+        super(message);
+    }
+
+    public ClientException(Throwable cause) {
+        super(cause);
+    }
+
 }

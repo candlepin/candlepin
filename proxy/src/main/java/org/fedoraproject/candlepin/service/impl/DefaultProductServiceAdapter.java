@@ -29,10 +29,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     private ProductCurator prodCurator;
 
-    /**
-     * default ctor
-     * @param prodCurator Product Curator for interacting with Products.
-     */
     @Inject
     public DefaultProductServiceAdapter(ProductCurator prodCurator) {
         this.prodCurator = prodCurator;
@@ -46,6 +42,19 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     public List<Product> getProducts() {
         return prodCurator.findAll();
+    }
+
+    @Override
+    public Boolean provides(String productId, String providesProductId) {
+        Product p = getProductById(productId);
+        Product queried = getProductById(providesProductId);
+        if (p.getChildProducts() == null) {
+            return Boolean.FALSE;
+        }
+        if (p.getChildProducts().contains(queried)) {
+            return Boolean.TRUE;
+        }
+        return Boolean.FALSE;
     }
 
 }

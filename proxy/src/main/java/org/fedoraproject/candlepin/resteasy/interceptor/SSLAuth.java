@@ -12,45 +12,38 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servlet.filter.auth;
+package org.fedoraproject.candlepin.resteasy.interceptor;
 
-import com.google.inject.Inject;
-import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.jboss.resteasy.spi.HttpRequest;
+
+import com.google.inject.Inject;
 
 /**
- * An {@link AuthenticationFilter} that inspects the Identity {@link X509Certificate}
- * on a given request in order to extract user information.
+ * SSLAuth
  */
-public class SSLAuthFilter extends AuthenticationFilter {
+class SSLAuth {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
     private static final String UUID_DN_ATTRIBUTE = "UID";
     
-    private static Logger log = Logger.getLogger(SSLAuthFilter.class);
+    private static Logger log = Logger.getLogger(SSLAuth.class);
 
     private ConsumerCurator consumerCurator;
 
     @Inject
-    public SSLAuthFilter(ConsumerCurator consumerCurator) {
+    SSLAuth(ConsumerCurator consumerCurator) {
         this.consumerCurator = consumerCurator;
     }
 
-    @Override
-    protected Principal getPrincipal(HttpServletRequest request,
-        HttpServletResponse response)
-        throws IOException, ServletException {
+    Principal getPrincipal(HttpRequest request) {
 
         X509Certificate[] certs = (X509Certificate[]) request
             .getAttribute(CERTIFICATES_ATTR);
@@ -100,5 +93,4 @@ public class SSLAuthFilter extends AuthenticationFilter {
             log.debug(msg);
         }
     }
-
 }

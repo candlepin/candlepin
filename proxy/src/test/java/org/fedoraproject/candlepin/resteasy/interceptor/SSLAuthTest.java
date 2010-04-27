@@ -12,14 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.servlet.filter.auth;
+package org.fedoraproject.candlepin.resteasy.interceptor;
 
-import static org.mockito.Matchers.any;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
@@ -27,6 +25,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 
+import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -35,23 +34,17 @@ import org.mockito.MockitoAnnotations;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+public class SSLAuthTest {
 
-public class SSLAuthFilterTest {
-
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
-    @Mock private FilterChain chain;
+    @Mock private HttpRequest request;
     @Mock private ConsumerCurator consumerCurator;
 
-    private SSLAuthFilter filter;
+    private SSLAuth auth;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        this.filter = new SSLAuthFilter(this.consumerCurator);
+        this.auth = new SSLAuth(this.consumerCurator);
     }
 
     /**
@@ -61,10 +54,7 @@ public class SSLAuthFilterTest {
      */
     @Test
     public void noCert() throws Exception {
-        this.filter.doFilter(request, response, chain);
-
-        verify(request, never()).setAttribute(eq(FilterConstants.PRINCIPAL_ATTR),
-                any(Principal.class));
+        assertNull(this.auth.getPrincipal(request));
     }
 
     /**
@@ -83,9 +73,7 @@ public class SSLAuthFilterTest {
 
         mockCert(dn);
         when(this.consumerCurator.lookupByUuid("453-44423-235")).thenReturn(consumer);
-        this.filter.doFilter(request, response, chain);
-
-        verify(request).setAttribute(FilterConstants.PRINCIPAL_ATTR, expected);
+        assertEquals(expected, this.auth.getPrincipal(request));
     }
 
     /**
@@ -98,10 +86,7 @@ public class SSLAuthFilterTest {
         mockCert("CN=something, OU=jimmy@ibm.com, O=IBM");
         when(this.consumerCurator.lookupByUuid(anyString())).thenReturn(
                 new Consumer("machine_name", null, null));
-        this.filter.doFilter(request, response, chain);
-
-        verify(request, never()).setAttribute(eq(FilterConstants.PRINCIPAL_ATTR), 
-                any(Principal.class));
+        assertNull(this.auth.getPrincipal(request));
     }
 
     /**
@@ -113,10 +98,7 @@ public class SSLAuthFilterTest {
     public void noValidConsumerEntity() throws Exception {
         mockCert("CN=my_box, OU=billy@jaspersoft.com, O=Jaspersoft, UID=235-8");
         when(this.consumerCurator.lookupByUuid("235-8")).thenReturn(null);
-        this.filter.doFilter(request, response, chain);
-
-        verify(request, never()).setAttribute(eq(FilterConstants.PRINCIPAL_ATTR),
-                any(Principal.class));
+        assertNull(this.auth.getPrincipal(request));
     }
 
 

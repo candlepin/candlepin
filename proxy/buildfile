@@ -22,7 +22,8 @@ RESTEASY = [group('jaxrs-api',
             'javax.persistence:persistence-api:jar:1.0',
             'xalan:xalan:jar:2.6.0',
             'org.scannotation:scannotation:jar:1.0.2',
-            'org.codehaus.jettison:jettison:jar:1.1']
+            'org.codehaus.jettison:jettison:jar:1.1',
+            'commons-httpclient:commons-httpclient:jar:3.1']
 
 JACKSON = [group('jackson-core-lgpl', 
                  'jackson-mapper-lgpl', 
@@ -138,6 +139,7 @@ define "candlepin" do
   javadoc
 
   package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', :path=>"org/fedoraproject/candlepin/"
+  package(:jar, :id=>'candlepin-client').clean.include 'target/classes/org/fedoraproject/candlepin/model', 'target/classes/org/fedoraproject/candlepin/client', :path=>"org/fedoraproject/candlepin/"  
   package(:war, :id=>"candlepin").libs << HSQLDB
   
   #
@@ -195,7 +197,7 @@ define "candlepin" do
           ant.property :key=>'checkstyle.cache.file', :value=>'target/checkstyle.cache.src'
           ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
 
-          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java'
+          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java', :excludes=>'**/OIDUtil.java'
         end
 
         # check the test src

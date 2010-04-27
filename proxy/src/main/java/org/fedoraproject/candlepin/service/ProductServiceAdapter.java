@@ -38,4 +38,13 @@ public interface ProductServiceAdapter {
      * @return all products.
      */
     List<Product> getProducts();
+    
+    /**
+     * Check if the given product provides access to some other product.
+     * @param subjectProductId 
+     * @param providesProductId 
+     * @return True if product provides subject product.
+     */
+    Boolean provides(String subjectProductId, String providesProductId);
+    
 }
