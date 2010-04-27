@@ -1,5 +1,6 @@
 require 'base64'
 require 'openssl'
+require 'rubygems'
 require 'rest_client'
 require 'json'
 
@@ -33,6 +34,47 @@ class Candlepin
         create_ssl_client
     end
 
+    def get_owners
+        get('/owners')
+    end
+
+    def get_owner(owner_id)
+        get("/owners/#{owner_id}")
+    end
+
+    def create_owner(owner_name)
+        owner = {
+          'owner' => {
+            'key' => owner_name,
+            'displayName' => owner_name
+          }
+        }
+
+        post('/owners', owner)
+    end
+
+    def get_consumer_types
+        get('/consumertypes')
+    end
+
+    def get_consumer_type(type_id)
+        get("/consumertypes/#{type_id}")
+    end
+
+    def create_consumer_type(type_label)
+        consumer_type =  {
+          'consumertype' => {
+            'label' => type_label
+          }
+        }
+
+        post('/consumertypes', consumer_type)
+    end
+
+    def delete_consumer_type(type_id)
+        delete("/consumertypes/#{type_id}")
+    end
+    
     def get_pool(poolid)
       get("/pools/#{poolid}'")
     end
@@ -55,7 +97,7 @@ class Candlepin
     end
 
     def unregister(uuid = nil)
-        uuid = @consumer['uuid'] if not uuid
+        uuid = @consumer['uuid'] unless uuid
         delete("/consumers/#{uuid}")
     end
 
@@ -157,7 +199,6 @@ class Candlepin
 
         return JSON.parse(response.body)
     end
-
     
     def post_text(uri, data=nil)
         response = @client[uri].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
