@@ -14,37 +14,53 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.math.BigInteger;
-
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * ClientCertificateSerials: Represents a collection of certificate serial numbers.
+ * CertificateSerial: A simple database sequence used to ensure certificates receive
+ * unique serial numbers.
  * 
- * Class only exists because it doesn't seem possible to just serialize a list 
- * of strings to JSON.
+ * Also used for serialization over the REST API.
  */
 @XmlRootElement(name = "serials")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class CertificateSerial {
+@Entity
+@Table(name = "cp_serial_generator")
+@SequenceGenerator(name = "seq_certificate_serial", sequenceName = "seq_certificate_serial",
+        allocationSize = 1)
+public class CertificateSerial implements Persisted {
 
-    private BigInteger serial;
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator =
+        "seq_certificate_serial")
+    private Long serial;
     
     public CertificateSerial() {
     }
 
-    public CertificateSerial(BigInteger serial) {
+    public CertificateSerial(Long serial) {
         this.serial = serial;
     }
 
-    public BigInteger getSerial() {
+    public Long getSerial() {
         return serial;
     }
 
-    public void setSerial(BigInteger serial) {
-        this.serial = serial;
+    // Keep the Persisted interface happy:
+    public Long getId() {
+        return serial;
+    }
+
+    public void setSerial(Long id) {
+        this.serial = id;
     }
 
 }
