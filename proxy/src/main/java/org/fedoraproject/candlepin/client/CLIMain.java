@@ -30,27 +30,27 @@ import org.fedoraproject.candlepin.client.cmds.RegisterCommand;
  */
 public class CLIMain {
     protected HashMap<String, BaseCommand> cmds = new HashMap<String, BaseCommand>();
-    
+
     protected CLIMain() {
         registerCommands();
     }
-    
+
     protected void registerCommands() {
         try {
-            Class[] commands = {RegisterCommand.class, ListCommand.class};
+            Class[] commands = { RegisterCommand.class, ListCommand.class };
             for (Class cmdClass : commands) {
                 BaseCommand cmd = (BaseCommand) cmdClass.newInstance();
                 cmds.put(cmd.getName(), cmd);
             }
-            //Now add the help command
+            // Now add the help command
             cmds.put("help", new HelpCommand(cmds));
         }
         catch (Exception e) {
             throw new ClientException(e);
         }
     }
-    
-    protected BaseCommand getCommand(String[] args) { 
+
+    protected BaseCommand getCommand(String[] args) {
         // Get the first item which does not start with a -
         // and assume it is the module name
         BaseCommand cmd = null;
@@ -64,13 +64,13 @@ public class CLIMain {
         }
         return cmd;
     }
-    
+
     protected void execute(String[] args) {
         BaseCommand cmd = this.getCommand(args);
         if (cmd == null) {
             System.out.println("No command was specified");
             cmd = cmds.get("help");
-        } 
+        }
         try {
             CommandLine cmdLine = cmd.getCommandLine(args);
             if (cmdLine.hasOption("h")) {
@@ -82,16 +82,14 @@ public class CLIMain {
             cmd.generateHelp();
         }
     }
-    
 
     public static void main(String[] args) {
         System.setProperty("javax.net.ssl.trustStore",
             "/home/bkearney/tomcat6/conf/keystore");
         Security.addProvider(new BouncyCastleProvider());
-    
+
         CLIMain cli = new CLIMain();
         cli.execute(args);
-        
+
     }
 }
-

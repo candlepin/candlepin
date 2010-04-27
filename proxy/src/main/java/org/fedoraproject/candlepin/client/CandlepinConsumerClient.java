@@ -114,10 +114,11 @@ public class CandlepinConsumerClient {
         }
         return false;
     }
-    
+
     /**
-     * Remove he consumer from candlepin and all of the entitlements which
-     * the conumser have subscribed to.
+     * Remove he consumer from candlepin and all of the entitlements which the
+     * conumser have subscribed to.
+     * 
      * @return True if the consumr is no longer registered.
      */
     public boolean unRegister() {
@@ -126,7 +127,8 @@ public class CandlepinConsumerClient {
         if (isRegistered()) {
             ClientResponse<Object> response = client.deleteConsumer(getUUID());
             System.out.println(response.getResponseStatus());
-            success = (response.getResponseStatus().equals(Response.Status.NO_CONTENT));
+            success = (response.getResponseStatus()
+                .equals(Response.Status.NO_CONTENT));
             if (success) {
                 removeFiles();
             }
@@ -144,7 +146,7 @@ public class CandlepinConsumerClient {
         List<Pool> pools = client.listPools(getUUID());
         return pools;
     }
-    
+
     public List<Entitlement> bindByPool(Long poolId) {
         ICandlepinConsumerClient client = clientWithCert();
         return client.bindByEntitlementID(getUUID(), poolId).getEntity();
@@ -180,8 +182,8 @@ public class CandlepinConsumerClient {
         httpclient.getState().setCredentials(AuthScope.ANY, creds);
 
         ICandlepinConsumerClient client = ProxyFactory.create(
-            ICandlepinConsumerClient.class, url,
-            new ApacheHttpClientExecutor(httpclient));
+            ICandlepinConsumerClient.class, url, new ApacheHttpClientExecutor(
+                httpclient));
         return client;
     }
 
@@ -199,9 +201,9 @@ public class CandlepinConsumerClient {
             throw new ClientException(e);
         }
     }
-    
+
     protected void removeFiles() {
-        String[] files = {certFileName, keyFileName};
+        String[] files = { certFileName, keyFileName };
         for (String fileName : files) {
             File file = new File(fileName);
             file.delete();

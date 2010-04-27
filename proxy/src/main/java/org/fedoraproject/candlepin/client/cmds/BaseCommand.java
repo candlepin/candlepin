@@ -26,39 +26,41 @@ import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
  * BaseCommand
  */
 public abstract class BaseCommand {
-    
+
     protected Options options = null;
     protected CandlepinConsumerClient client;
-    
+
     public BaseCommand() {
         options = getOptions();
-        client = new CandlepinConsumerClient("https://localhost:8443/candlepin");         
+        client = new CandlepinConsumerClient("https://localhost:8443/candlepin");
     }
-    
+
     public abstract String getName();
+
     public abstract String getDescription();
-    
+
     public void execute(CommandLine cmdLine) {
-        
+
     }
-    
+
     public Options getOptions() {
         Options opts = new Options();
         opts.addOption("h", "help", false, "Module Help");
         return opts;
     }
-    
+
     public CommandLine getCommandLine(String[] args) throws ParseException {
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
         return cmd;
     }
-    
+
     public void generateHelp() {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp( String.format("CLIMain %s [options]", getName()), options);
+        formatter.printHelp(String.format("CLIMain %s [options]", getName()),
+            options);
     }
-    
+
     public CandlepinConsumerClient getClient() {
         return client;
     }

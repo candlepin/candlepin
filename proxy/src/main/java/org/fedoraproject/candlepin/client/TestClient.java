@@ -40,18 +40,26 @@ public class TestClient {
             // this initialization only needs to be done once per VM
             String host = "https://localhost:8443/candlepin";
             CandlepinConsumerClient client = new CandlepinConsumerClient(host);
-            System.out.println("Should not be registered: " + client.isRegistered());
+            System.out.println("Should not be registered: " +
+                client.isRegistered());
             String uuid = client.register("bk", "password", "Fred2", "system");
             System.out.println("UUID returned from Register: " + uuid);
-            System.out.println("UUID from the getUUID call : " + client.getUUID());
+            System.out.println("UUID from the getUUID call : " +
+                client.getUUID());
             List<Pool> pools = client.listPools();
-            System.out.println("Number of pools the consumer can choose from: " + pools.size());
-            System.out.println("Should be registered: " + client.isRegistered());
-            System.out.println("Register Existing should pass: " + client.registerExisting("bk", "password", uuid));
-            System.out.println("Register Garbage should fail: " + client.registerExisting("bk", "password", "99"));
-            List<Entitlement> ents = client.bindByPool(6l);
+            System.out
+                .println("Number of pools the consumer can choose from: " +
+                    pools.size());
+            System.out
+                .println("Should be registered: " + client.isRegistered());
+            System.out.println("Register Existing should pass: " +
+                client.registerExisting("bk", "password", uuid));
+            System.out.println("Register Garbage should fail: " +
+                client.registerExisting("bk", "password", "99"));
+            List<Entitlement> ents = client.bindByPool(6L);
             System.out.println(ents.size());
-            //System.out.println("Unregister should pass: " + client.unRegister());
+            // System.out.println("Unregister should pass: " +
+            // client.unRegister());
         }
         catch (Exception e) {
             e.printStackTrace();

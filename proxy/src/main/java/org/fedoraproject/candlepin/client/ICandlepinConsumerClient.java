@@ -18,7 +18,6 @@ import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -46,25 +45,25 @@ public interface ICandlepinConsumerClient {
     @Path("consumers/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<Consumer> getConsumer(@PathParam("uuid") String uuid);
-    
+
     @DELETE
     @Path("consumers/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    ClientResponse<Object> deleteConsumer(@PathParam("uuid") String uuid);    
+    ClientResponse<Object> deleteConsumer(@PathParam("uuid") String uuid);
 
     @GET
     @Path("pools")
     @Produces(MediaType.APPLICATION_JSON)
     List<Pool> listPools();
-    
+
     @GET
     @Path("pools")
     @Produces(MediaType.APPLICATION_JSON)
-    List<Pool> listPools(@QueryParam("consumer")String uuid);    
-    
+    List<Pool> listPools(@QueryParam("consumer") String uuid);
+
     @POST
     @Path("consumers/{uuid}/entitlements")
     @Consumes(MediaType.APPLICATION_JSON)
-    ClientResponse<List<Entitlement>> bindByEntitlementID(@PathParam("uuid")String uuid, 
-        @QueryParam("pool") Long poolId);
+    ClientResponse<List<Entitlement>> bindByEntitlementID(
+        @PathParam("uuid") String uuid, @QueryParam("pool") Long poolId);
 }

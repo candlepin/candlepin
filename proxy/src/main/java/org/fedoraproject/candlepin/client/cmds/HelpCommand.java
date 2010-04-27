@@ -24,11 +24,11 @@ import org.apache.commons.cli.CommandLine;
  */
 public class HelpCommand extends BaseCommand {
     protected HashMap<String, BaseCommand> cmds;
-    
+
     public HelpCommand(HashMap<String, BaseCommand> cmds) {
         this.cmds = cmds;
     }
-    
+
     @Override
     public String getName() {
         return "help";
@@ -38,17 +38,18 @@ public class HelpCommand extends BaseCommand {
     public String getDescription() {
         return "Generate this help message";
     }
-    
+
     public void execute(CommandLine cmdLine) {
-        System.out.println("Command Line should be CLIMain MODULENAME [options].");
-        System.out.println("\nModules include:");        
+        System.out
+            .println("Command Line should be CLIMain MODULENAME [options].");
+        System.out.println("\nModules include:");
         String[] commandNames = cmds.keySet().toArray(new String[0]);
         Arrays.sort(commandNames);
         for (String cmdName : commandNames) {
             BaseCommand cmd = cmds.get(cmdName);
-            System.out.println(
-                String.format("     %-15s %s", cmd.getName(), cmd.getDescription()));
+            System.out.println(String.format("     %-15s %s", cmd.getName(),
+                cmd.getDescription()));
         }
     }
- 
+
 }

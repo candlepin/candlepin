@@ -28,36 +28,37 @@ public class RegisterCommand extends BaseCommand {
         return "register";
     }
 
-
     public String getDescription() {
         return "Register the client to a Unified Entitlement Platform.";
     }
-    
+
     public Options getOptions() {
         Options opts = super.getOptions();
         opts.addOption("u", "username", true, "The username to register with");
         opts.addOption("p", "password", true, "The password to use");
-        opts.addOption("f", "force", false, "Force a registration even if one exists");
+        opts.addOption("f", "force", false,
+            "Force a registration even if one exists");
         return opts;
     }
-    
+
     public void execute(CommandLine cmdLine) {
         String username = cmdLine.getOptionValue("u");
         String password = cmdLine.getOptionValue("p");
-        boolean force = cmdLine.hasOption("f");        
+        boolean force = cmdLine.hasOption("f");
         if ((username == null) || (password == null)) {
             System.err.println("Both username and password must be provided");
             return;
         }
         CandlepinConsumerClient client = this.getClient();
-        
+
         if (client.isRegistered() && !force) {
             System.out.println("Already registered. Use force to re-register");
             return;
         }
-        String uuid = client.register(username, password, "JavaClient", "system");
+        String uuid = client.register(username, password, "JavaClient",
+            "system");
         System.out.println("Registered with UUID: " + uuid);
-        
+
     }
 
 }

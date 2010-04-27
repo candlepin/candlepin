@@ -31,40 +31,38 @@ public class ListCommand extends BaseCommand {
         return "list";
     }
 
-
     public String getDescription() {
         return "List available or consumer entitlement pools";
     }
-    
+
     public Options getOptions() {
         Options opts = super.getOptions();
-        //opts.addOption("u", "username", true, "The username to register with");
-        //opts.addOption("p", "password", true, "The password to use");
-        //opts.addOption("f", "force", false, "Force a registration even if one exists");
+        // opts.addOption("u", "username", true,
+        // "The username to register with");
+        // opts.addOption("p", "password", true, "The password to use");
+        // opts.addOption("f", "force", false,
+        // "Force a registration even if one exists");
         return opts;
     }
-    
+
     public void execute(CommandLine cmdLine) {
         CandlepinConsumerClient client = this.getClient();
-        
+
         if (!client.isRegistered()) {
-            System.out.println("You must register first in order to list the pools you can consume");
+            System.out
+            .println("You must register first in order to list the pools you can consume");
             return;
         }
-        
+
         List<Pool> pools = client.listPools();
-        System.out.println(
-            String.format("%-10s %-20s %-10s %-20s %-20s", "ID", 
-                "Name", "Quantity", "Begin", "End"));
+        System.out.println(String.format("%-10s %-20s %-10s %-20s %-20s", "ID",
+            "Name", "Quantity", "Begin", "End"));
         for (Pool pool : pools) {
-            System.out.println(String.format("%-10d %-20s %-10s %-20s %-20s", 
-                pool.getId(),
-                pool.getProductName(),
-                pool.getQuantity(),
-                pool.getStartDate(),
-                pool.getEndDate()));
+            System.out.println(String.format("%-10d %-20s %-10s %-20s %-20s",
+                pool.getId(), pool.getProductName(), pool.getQuantity(), pool
+                    .getStartDate(), pool.getEndDate()));
         }
-        
+
     }
 
 }
