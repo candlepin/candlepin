@@ -24,6 +24,8 @@ import org.fedoraproject.candlepin.client.cmds.BaseCommand;
 import org.fedoraproject.candlepin.client.cmds.HelpCommand;
 import org.fedoraproject.candlepin.client.cmds.ListCommand;
 import org.fedoraproject.candlepin.client.cmds.RegisterCommand;
+import org.fedoraproject.candlepin.client.cmds.SubscribeCommand;
+import org.fedoraproject.candlepin.client.cmds.UpdateCommand;
 
 /**
  * ClientMain
@@ -33,11 +35,14 @@ public class CLIMain {
 
     protected CLIMain() {
         registerCommands();
+        initializeClient();
     }
 
     protected void registerCommands() {
+        // First, create the client we will need to use
         try {
-            Class[] commands = { RegisterCommand.class, ListCommand.class };
+            Class[] commands = { RegisterCommand.class, ListCommand.class,
+                SubscribeCommand.class, UpdateCommand.class };
             for (Class cmdClass : commands) {
                 BaseCommand cmd = (BaseCommand) cmdClass.newInstance();
                 cmds.put(cmd.getName(), cmd);
@@ -47,6 +52,14 @@ public class CLIMain {
         }
         catch (Exception e) {
             throw new ClientException(e);
+        }
+    }
+
+    protected void initializeClient() {
+        CandlepinConsumerClient client = new CandlepinConsumerClient(
+            "https://localhost:8443/candlepin");
+        for (BaseCommand cmd : cmds.values()) {
+            cmd.setClient(client);
         }
     }
 

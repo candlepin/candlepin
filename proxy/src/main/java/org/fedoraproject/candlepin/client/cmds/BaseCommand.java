@@ -32,7 +32,6 @@ public abstract class BaseCommand {
 
     public BaseCommand() {
         options = getOptions();
-        client = new CandlepinConsumerClient("https://localhost:8443/candlepin");
     }
 
     public abstract String getName();
@@ -63,5 +62,9 @@ public abstract class BaseCommand {
 
     public CandlepinConsumerClient getClient() {
         return client;
+    }
+    
+    public void setClient(CandlepinConsumerClient client) {
+        this.client = client;
     }
 }
