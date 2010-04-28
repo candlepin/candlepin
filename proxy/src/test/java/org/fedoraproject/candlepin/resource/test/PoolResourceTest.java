@@ -18,12 +18,12 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.BadRequestException;
-import org.fedoraproject.candlepin.resource.NotFoundException;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;

@@ -20,6 +20,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -28,9 +31,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.BadRequestException;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
-import org.fedoraproject.candlepin.resource.ForbiddenException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -40,7 +41,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
-import org.fedoraproject.candlepin.resource.NotFoundException;
 
 /**
  * ConsumerResourceTest

@@ -12,9 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
+package org.fedoraproject.candlepin.exceptions;
 
 import javax.ws.rs.core.Response.Status;
+
 
 /**
  * ServiceUnavailableException

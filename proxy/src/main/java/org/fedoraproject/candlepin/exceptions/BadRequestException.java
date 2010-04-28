@@ -12,27 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
+package org.fedoraproject.candlepin.exceptions;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.ws.rs.core.Response.Status;
+
 
 /**
- * ExceptionMessage
+ * Represents a BAD_REQUEST (HTTP 400) error.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-public class ExceptionMessage {
-
-    private String displayMessage;
-
-    public ExceptionMessage setDisplayMessage(String displayMessage) {
-        this.displayMessage = displayMessage;
-        return this;
-    }
-
-    public String getDisplayMessage() {
-        return displayMessage;
+public class BadRequestException extends CandlepinException {
+    public BadRequestException(String message) {
+        super(Status.BAD_REQUEST, message);
     }
 }
