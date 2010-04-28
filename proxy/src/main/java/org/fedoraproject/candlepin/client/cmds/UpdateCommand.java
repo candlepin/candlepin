@@ -14,55 +14,33 @@
  */
 package org.fedoraproject.candlepin.client.cmds;
 
-import java.util.List;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
-import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * RegisterCommand
  */
-public class ListCommand extends BaseCommand {
+public class UpdateCommand extends BaseCommand {
 
     @Override
     public String getName() {
-        return "list";
+        return "update";
     }
 
     public String getDescription() {
-        return "List available or consumer entitlement pools";
+        return "Updates all the local subscription information";
     }
 
     public Options getOptions() {
         Options opts = super.getOptions();
-        // opts.addOption("u", "username", true,
-        // "The username to register with");
-        // opts.addOption("p", "password", true, "The password to use");
-        // opts.addOption("f", "force", false,
-        // "Force a registration even if one exists");
         return opts;
     }
 
     public void execute(CommandLine cmdLine) {
         CandlepinConsumerClient client = this.getClient();
 
-        if (!client.isRegistered()) {
-            System.out
-            .println("You must register first in order to list the pools you can consume");
-            return;
-        }
-
-        List<Pool> pools = client.listPools();
-        System.out.println(String.format("%-10s %-30s %-10s %-20s %-20s", "ID",
-            "Name", "Quantity", "Begin", "End"));
-        for (Pool pool : pools) {
-            System.out.println(String.format("%-10d %-30s %-10s %-20tF %-20tF",
-                pool.getId(), pool.getProductName(), pool.getQuantity(), pool
-                    .getStartDate(), pool.getEndDate()));
-        }
-
+        client.updateEntitlementCertificates();
     }
 
 }

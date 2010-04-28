@@ -5,7 +5,7 @@ include LibXML
 
 module  JPPRepo 
 
-  $jpprepo = nil
+  @jpprepo = nil
 
   class ArchiveDef
     attr_accessor   :groupId
@@ -81,14 +81,14 @@ module  JPPRepo
   end
 
   def build_path(group_path, id, version, name)
-    if ($jpprepo == nil)
+    if (@jpprepo == nil)
       parser = XML::SaxParser.file("/etc/maven/maven2-depmap.xml")
       parser.callbacks = PostCallbacks.new
       parser.parse
-      $jpprepo = parser.callbacks.arch_map
+      @jpprepo = parser.callbacks.arch_map
     end
 
-    if ($jpprepo == nil)
+    if (@jpprepo == nil)
       puts "Still no repo"
       return ""
     end
@@ -96,13 +96,13 @@ module  JPPRepo
    
     key = "#{groupId}:#{id}:#{version}"
     puts "looking for #{key}"
-    jppInfo = $jpprepo[key]
-    if (jppInfo == nil)
-      puts "No JPP Info for #{key}"
-      key = "#{groupId}:#{id}"
-      puts "looking for #{key}"
-      jppInfo = $jpprepo[key]
-    end
+    jppInfo = @jpprepo[key]
+#    if (jppInfo == nil)
+#      puts "No JPP Info for #{key}"
+#      key = "#{groupId}:#{id}"
+#      puts "looking for #{key}"
+#      jppInfo = @jpprepo[key]
+#    end
 
     if (jppInfo == nil)
       puts "No JPP Info for #{key}"

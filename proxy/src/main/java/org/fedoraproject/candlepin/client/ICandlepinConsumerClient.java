@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Pool;
 import org.jboss.resteasy.client.ClientResponse;
 
@@ -66,4 +67,10 @@ public interface ICandlepinConsumerClient {
     @Consumes(MediaType.APPLICATION_JSON)
     ClientResponse<List<Entitlement>> bindByEntitlementID(
         @PathParam("uuid") String uuid, @QueryParam("pool") Long poolId);
+
+    @GET
+    @Path("consumers/{uuid}/certificates")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<EntitlementCertificate> getEntitlementCertificates(
+        @PathParam("uuid") String uuid);
 }

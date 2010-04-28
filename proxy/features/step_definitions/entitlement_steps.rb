@@ -15,6 +15,7 @@ When /I Consume an Entitlement for the "(\w+)" Product/ do |product|
 end
 
 Then /I Have (\d+) Entitlement[s]?/ do |entitlement_size|
+    print JSON.pretty_generate(@candlepin.list_products)
     @candlepin.list_entitlements.length.should == entitlement_size.to_i
 end
 

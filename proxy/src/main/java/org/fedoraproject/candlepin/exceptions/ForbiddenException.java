@@ -12,30 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
+package org.fedoraproject.candlepin.exceptions;
 
 import javax.ws.rs.core.Response.Status;
 
-/**
- * Base class for runtime exceptions thrown by Resources.
- */
-public abstract class CandlepinException extends RuntimeException {
-    private static final long serialVersionUID = -3430329252623764984L;
-    private final Status returnCode;
-    
-    private final ExceptionMessage message;
-    
-    public CandlepinException(Status returnCode, String message) {
-        this.returnCode = returnCode;
-        this.message = new ExceptionMessage()
-            .setDisplayMessage(message);
-    }
 
-    public ExceptionMessage message() {
-        return message;
-    }
-    
-    public Status httpReturnCode() {
-        return returnCode;
+/**
+ * Thrown when a resource is not found.
+ */
+public class ForbiddenException extends CandlepinException {
+    public ForbiddenException(String message) {
+        super(Status.FORBIDDEN, message);
     }
 }

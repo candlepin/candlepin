@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.xnap.commons.i18n.I18n;

@@ -12,27 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.exceptions;
 
-import org.hibernate.criterion.Restrictions;
+import javax.ws.rs.core.Response.Status;
 
-import com.google.inject.Inject;
 
 /**
- * IdentityCertificateCurator
+ * Represents a BAD_REQUEST (HTTP 400) error.
  */
-public class IdentityCertificateCurator extends
-    AbstractHibernateCurator<IdentityCertificate> {
-
-    @Inject
-    public IdentityCertificateCurator() {
-        super(IdentityCertificate.class);
-    }
-
-    public IdentityCertificate lookupBySerialNumber(
-        Long serialNumber) {
-        return (IdentityCertificate) currentSession().createCriteria(
-            IdentityCertificate.class).add(
-            Restrictions.eq("serial", serialNumber)).uniqueResult();
+public class BadRequestException extends CandlepinException {
+    public BadRequestException(String message) {
+        super(Status.BAD_REQUEST, message);
     }
 }

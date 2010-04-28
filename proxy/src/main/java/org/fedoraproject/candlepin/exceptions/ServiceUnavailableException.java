@@ -12,15 +12,17 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
+package org.fedoraproject.candlepin.exceptions;
 
 import javax.ws.rs.core.Response.Status;
 
+
 /**
- * Thrown when a resource is not found.
+ * ServiceUnavailableException
+ * Represents a Service Unavailable (HTTP 503) error.
  */
-public class NotFoundException extends CandlepinException {
-    public NotFoundException(String message) {
-        super(Status.NOT_FOUND, message);
+public class ServiceUnavailableException extends CandlepinException {
+    public ServiceUnavailableException(String message) {
+        super(Status.SERVICE_UNAVAILABLE, message);
     }
 }

@@ -16,8 +16,10 @@ package org.fedoraproject.candlepin.client;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
@@ -28,6 +30,7 @@ import org.apache.commons.httpclient.protocol.Protocol;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Pool;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
@@ -43,6 +46,7 @@ public class CandlepinConsumerClient {
     private String url;
     private String dir = "/home/bkearney/.candlepin";
     private String consumerDirName = dir + File.separator + "consumer";
+    private String entitlementDirName = dir + File.separator + "entitlements";
     private String certFileName = consumerDirName + File.separator + "cert.pem";
     private String keyFileName = consumerDirName + File.separator + "key.pem";
 
@@ -152,6 +156,23 @@ public class CandlepinConsumerClient {
         return client.bindByEntitlementID(getUUID(), poolId).getEntity();
     }
 
+    public boolean updateEntitlementCertificates() {
+        mkdir(entitlementDirName);
+        ICandlepinConsumerClient client = clientWithCert();
+        List<EntitlementCertificate> certs = client
+            .getEntitlementCertificates(getUUID());
+        Set<BigInteger> certSerials = new java.util.HashSet<BigInteger>();
+        for (EntitlementCertificate cert : certs) {
+            String entCertFileName = entitlementDirName + File.separator +
+                cert.getSerial() + "-cert.pem";
+            String entKeyFileName = entitlementDirName + File.separator +
+                cert.getSerial() + "-key.pem";
+            dumpToFile(entCertFileName, cert.getCertAsString());
+            dumpToFile(entKeyFileName, cert.getKeyAsString());
+        }
+        return true;
+    }
+
     protected ICandlepinConsumerClient clientWithCert() {
         try {
             Protocol customHttps = new Protocol("https",
@@ -188,14 +209,17 @@ public class CandlepinConsumerClient {
     }
 
     protected void recordIdentity(Consumer aConsumer) {
-        try {
-            File consumerDir = new File(consumerDirName);
-            if (!consumerDir.exists()) {
-                consumerDir.mkdir();
-            }
+        mkdir(consumerDirName);
+        dumpToFile(certFileName, aConsumer.getIdCert().getCertAsString());
+        dumpToFile(keyFileName, aConsumer.getIdCert().getKeyAsString());
+    }
 
-            dumpToFile(certFileName, aConsumer.getIdCert().getCertAsString());
-            dumpToFile(keyFileName, aConsumer.getIdCert().getKeyAsString());
+    protected void mkdir(String dirName) {
+        try {
+            File dir = new File(dirName);
+            if (!dir.exists()) {
+                dir.mkdir();
+            }
         }
         catch (Exception e) {
             throw new ClientException(e);

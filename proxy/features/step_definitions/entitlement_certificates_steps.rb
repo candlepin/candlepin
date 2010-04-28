@@ -9,6 +9,8 @@ Then /^I have (\d+) certificate$/ do |certificates|
     @candlepin.get_certificates.length.should == certificates.to_i
 end
 
+# TODO: this test should actually be using ?serials=x,y,z to test serial filtering
+# server side, not client side:
 When /^I filter certificates on the serial number for "([^\"]*)"$/ do |entitlement|
     certificates = @candlepin.get_certificates()
     found = certificates.find {|item|

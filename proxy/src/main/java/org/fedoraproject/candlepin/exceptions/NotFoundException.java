@@ -12,15 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
+package org.fedoraproject.candlepin.exceptions;
 
 import javax.ws.rs.core.Response.Status;
 
+
 /**
- * Represents an Unauthorized (HTTP 401) error.
+ * Thrown when a resource is not found.
  */
-public class UnauthorizedException extends CandlepinException {
-    public UnauthorizedException(String message) {
-        super(Status.UNAUTHORIZED, message);
+public class NotFoundException extends CandlepinException {
+    public NotFoundException(String message) {
+        super(Status.NOT_FOUND, message);
     }
 }

@@ -20,42 +20,44 @@ RESTEASY = [group('jaxrs-api',
                   :under => 'org.jboss.resteasy',
                   :version => '1.2.1.GA'), 
             'javax.persistence:persistence-api:jar:1.0',
-            'xalan:xalan:jar:2.6.0',
+            'xalan:xalan:jar:2.7.0',
             'org.scannotation:scannotation:jar:1.0.2',
             'org.codehaus.jettison:jettison:jar:1.1',
-            'commons-httpclient:commons-httpclient:jar:3.1']
+	    'commons-httpclient:commons-httpclient:jar:3.1']
 
 JACKSON = [group('jackson-core-lgpl', 
-                 'jackson-mapper-lgpl', 
+                 'jackson-mapper', 
                  'jackson-jaxrs',
                  :under => 'org.codehaus.jackson',
-                 :version => '1.4.1')]
+                 :version => '1.4.3')]
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
 LOG4J = 'log4j:log4j:jar:1.2.14'
 HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
-             'org.hibernate:hibernate-annotations:jar:3.4.0.GA',
-             'org.hibernate:hibernate-commons-annotations:jar:3.3.0.ga',
-             'org.hibernate:hibernate-entitymanager:jar:3.4.0.GA',
+             'org.hibernate:hibernate-annotations:jar:3.4.0.GA_CP01',
+             'org.hibernate:hibernate3-commons-annotations:jar:3.3.0.ga',
+             'org.hibernate:hibernate-entitymanager:jar:3.4.0.GA_CP01',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:3.1.0.GA',
              'antlr:antlr:jar:2.7.6',
-             'asm:asm:jar:3.0',
+             'org.objectweb.asm:asm:jar:3.1',
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.9.0.GA',
              'javax.transaction:jta:jar:1.1',
              'org.slf4j:slf4j-api:jar:1.5.8',
-             'org.slf4j:slf4j-log4j12:jar:1.4.2',
-             'org.freemarker:freemarker:jar:2.3.15' ]
-DB = 'postgresql:postgresql:jar:8.4-701.jdbc4'
+             'org.slf4j:slf4j-log4j12:jar:1.5.8',
+             'org.freemarker:freemarker:jar:2.3.15']
+DB = 'postgresql:postgresql:jar:8.4.701'
+#DB = 'postgresql:postgresql:jar:8.4-701'
+#DB = 'postgresql:postgresql:jar:8.4-701.jdbc4'
 COMMONS = ['commons-beanutils:commons-beanutils:jar:1.7.0',
            'commons-codec:commons-codec:jar:1.4',
            'commons-cli:commons-cli:jar:1.2',
-           'commons-pool:commons-pool:jar:1.2',
-           'commons-dbcp:commons-dbcp:jar:1.2.1',
-           'commons-collections:commons-collections:jar:3.1',
-           'commons-io:commons-io:jar:1.3.2',
+           'commons-pool:commons-pool:jar:1.5.4',
+           'commons-dbcp:commons-dbcp:jar:1.4',
+           'commons-collections:commons-collections:jar:3.2.1',
+           'commons-io:commons-io:jar:1.4',
            'commons-logging:commons-logging:jar:1.1.1']
-JDOM = 'jdom:jdom:jar:1.0'
+JDOM = 'org.jdom:jdom:jar:1.1.1'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
@@ -74,7 +76,8 @@ GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet',
            'com.wideplay.warp:warp-persist:jar:2.0-20090214',
            'javax.servlet:servlet-api:jar:2.5']
 
-QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
+QUARTZ = 'org.quartz-scheduler:quartz:jar:1.5.2'
+#QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
@@ -82,9 +85,9 @@ SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 # REPOSITORIES
 #
 # Specify Maven 2.0 remote repositories here, like this:
-repositories.remote << "http://www.ibiblio.org/maven2/"
-repositories.remote << "http://repository.jboss.com/maven2/"
-repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
+#repositories.remote << "http://www.ibiblio.org/maven2/"
+#repositories.remote << "http://repository.jboss.com/maven2/"
+#repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 
 #############################################################################
 # PROJECT BUILD
@@ -138,8 +141,7 @@ define "candlepin" do
   #
   javadoc
 
-  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', 'target/classes/org/fedoraproject/candlepin/exceptions', :path=>"org/fedoraproject/candlepin/"
-  package(:jar, :id=>'candlepin-client').clean.include 'target/classes/org/fedoraproject/candlepin/model', 'target/classes/org/fedoraproject/candlepin/client', :path=>"org/fedoraproject/candlepin/"  
+  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', :path=>"org/fedoraproject/candlepin/"
   package(:war, :id=>"candlepin").libs << HSQLDB
   
   #
@@ -197,7 +199,7 @@ define "candlepin" do
           ant.property :key=>'checkstyle.cache.file', :value=>'target/checkstyle.cache.src'
           ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
 
-          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java', :excludes=>'**/OIDUtil.java'
+          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java'
         end
 
         # check the test src

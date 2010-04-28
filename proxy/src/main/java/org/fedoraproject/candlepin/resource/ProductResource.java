@@ -22,6 +22,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.xnap.commons.i18n.I18n;

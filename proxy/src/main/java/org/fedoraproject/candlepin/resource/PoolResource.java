@@ -17,12 +17,15 @@ package org.fedoraproject.candlepin.resource;
 import java.util.List;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -115,6 +118,30 @@ public class PoolResource {
             }                   
             return poolCurator.listAvailableEntitlementPools(c, o, p, true);
         }
+    }
+    
+    @POST
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public Pool createPool(Pool pool) {
+        // BOOO! We assume that pool.owner is partially constructed
+        // (alternatively: we only care about the id field) - take it any way you want.
+        // passing owner URI instead would be spiffy (not to say RESTful).
+        Owner owner = ownerCurator.find(pool.getOwner().getId());
+        if (owner == null) {
+            throw new NotFoundException(
+                i18n.tr("Owner with UUID '{0}' could not be found", 
+                    pool.getOwner().getId()));
+        }
+
+        pool.setOwner(owner);
+        Pool toReturn = poolCurator.create(pool);
+        
+        if (toReturn != null) {
+            return toReturn;
+        }
+
+        throw new BadRequestException(
+            i18n.tr("Cound not create the Pool: {0}", pool));
     }
 
     /**

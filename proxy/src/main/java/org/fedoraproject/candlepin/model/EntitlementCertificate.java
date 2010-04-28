@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.math.BigInteger;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -56,18 +54,18 @@ public class EntitlementCertificate implements Persisted {
     private byte[] cert;
 
     @Column(nullable = false)
-    private BigInteger serial;
+    private Long serial;
 
     @ManyToOne
     @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
     private Entitlement entitlement;
 
-    public BigInteger getSerial() {
+    public Long getSerial() {
         return serial;
     }
 
-    public void setSerial(BigInteger serialNumber) {
+    public void setSerial(Long serialNumber) {
         this.serial = serialNumber;
     }
 
@@ -84,6 +82,10 @@ public class EntitlementCertificate implements Persisted {
     public String getKeyAsString() {
         return new String(key);
     }
+    
+    public void setKeyAsString(String key) {
+        this.key = key.getBytes();        
+    }    
 
     public void setCert(byte[] cert) {
         this.cert = cert;
@@ -97,6 +99,10 @@ public class EntitlementCertificate implements Persisted {
     @XmlElement(name = "cert")
     public String getCertAsString() {
         return new String(cert);
+    }
+    
+    public void setCertAsString(String cert) {
+        this.cert = cert.getBytes();        
     }
 
     @XmlTransient

@@ -12,16 +12,26 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
-
-import javax.ws.rs.core.Response.Status;
+package org.fedoraproject.candlepin.model;
 
 /**
- * ServiceUnavailableException
- * Represents a Service Unavailable (HTTP 503) error.
+ * CertificateSerialCurator - Interface to request a unique certificate serial number.
+ * Doesn't do much else.
  */
-public class ServiceUnavailableException extends CandlepinException {
-    public ServiceUnavailableException(String message) {
-        super(Status.SERVICE_UNAVAILABLE, message);
+public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
+
+    protected CertificateSerialCurator() {
+        super(CertificateSerial.class);
     }
+
+    /**
+     * Get the next available serial number.
+     * @return next available serial number.
+     */
+    public Long getNextSerial() {
+        CertificateSerial serial = new CertificateSerial();
+        create(serial);
+        return serial.getId();
+    }
+
 }

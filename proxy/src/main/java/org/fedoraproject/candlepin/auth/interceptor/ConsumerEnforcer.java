@@ -22,10 +22,10 @@ import javax.ws.rs.PathParam;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.resource.ForbiddenException;
-import org.fedoraproject.candlepin.resource.NotFoundException;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;

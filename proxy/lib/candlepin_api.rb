@@ -1,5 +1,6 @@
 require 'base64'
 require 'openssl'
+require 'rubygems'
 require 'rest_client'
 require 'json'
 
@@ -33,6 +34,47 @@ class Candlepin
         create_ssl_client
     end
 
+    def get_owners
+        get('/owners')
+    end
+
+    def get_owner(owner_id)
+        get("/owners/#{owner_id}")
+    end
+
+    def create_owner(owner_name)
+        owner = {
+          'owner' => {
+            'key' => owner_name,
+            'displayName' => owner_name
+          }
+        }
+
+        post('/owners', owner)
+    end
+
+    def get_consumer_types
+        get('/consumertypes')
+    end
+
+    def get_consumer_type(type_id)
+        get("/consumertypes/#{type_id}")
+    end
+
+    def create_consumer_type(type_label)
+        consumer_type =  {
+          'consumertype' => {
+            'label' => type_label
+          }
+        }
+
+        post('/consumertypes', consumer_type)
+    end
+
+    def delete_consumer_type(type_id)
+        delete("/consumertypes/#{type_id}")
+    end
+    
     def get_pool(poolid)
       get("/pools/#{poolid}'")
     end
@@ -44,7 +86,26 @@ class Candlepin
       path << "product=#{params[:product]}&" if params[:product]
       return get(path)
     end
+    
+    def create_pool(product_id, owner_id, start_date, end_date, quantity = 100)
+      pool = {
+        'pool' => {
+          'activeSubscription' => false,
+          'quantity' => quantity,
+          'consumed' => 0,
+          'startDate' => start_date,
+          'endDate' => end_date,
+          'productId' => product_id,
+          'owner' => {
+            'id' => owner_id
+          }          
+        }
+      }
+      
+      post('/pools', pool)
+    end
 
+    # TODO: Add support for serial filtering:
     def get_certificates()
         path = "/consumers/#{@consumer['uuid']}/certificates"
         return get(path)
@@ -55,7 +116,7 @@ class Candlepin
     end
 
     def unregister(uuid = nil)
-        uuid = @consumer['uuid'] if not uuid
+        uuid = @consumer['uuid'] unless uuid
         delete("/consumers/#{uuid}")
     end
 
@@ -65,6 +126,24 @@ class Candlepin
 
     def consume_product(product)
         post("/consumers/#{@consumer['uuid']}/entitlements?product=#{product}")
+    end
+    
+    def list_products
+      get("/products")
+    end
+    
+    def create_product(name, version = 1, variant = 'server', attributes = {})
+      product = {
+        'product' => {
+          'name' => name,
+          'label' => name,
+          'arch' => 'ALL',
+          'id' => name,
+          'version' => '1',
+          'variant' => 'server'
+        }
+      }
+      return post("/products", product)
     end
     
     def consume_pool(pool)
@@ -157,7 +236,6 @@ class Candlepin
 
         return JSON.parse(response.body)
     end
-
     
     def post_text(uri, data=nil)
         response = @client[uri].post(data, :content_type => 'text/plain', :accept => 'text/plain' )

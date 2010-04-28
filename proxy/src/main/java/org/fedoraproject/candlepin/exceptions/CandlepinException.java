@@ -12,15 +12,31 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.resource;
+package org.fedoraproject.candlepin.exceptions;
 
 import javax.ws.rs.core.Response.Status;
 
+
 /**
- * Represents a BAD_REQUEST (HTTP 400) error.
+ * Base class for runtime exceptions thrown by Resources.
  */
-public class BadRequestException extends CandlepinException {
-    public BadRequestException(String message) {
-        super(Status.BAD_REQUEST, message);
+public abstract class CandlepinException extends RuntimeException {
+    private static final long serialVersionUID = -3430329252623764984L;
+    private final Status returnCode;
+    
+    private final ExceptionMessage message;
+    
+    public CandlepinException(Status returnCode, String message) {
+        this.returnCode = returnCode;
+        this.message = new ExceptionMessage()
+            .setDisplayMessage(message);
+    }
+
+    public ExceptionMessage message() {
+        return message;
+    }
+    
+    public Status httpReturnCode() {
+        return returnCode;
     }
 }

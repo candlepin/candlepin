@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.service;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.Date;
 import java.util.List;
@@ -48,7 +47,7 @@ public interface EntitlementCertServiceAdapter {
      */
     EntitlementCertificate generateEntitlementCert(Consumer consumer,
         Entitlement entitlement, Subscription sub, Product product, Date endDate, 
-        BigInteger serialNumber) throws GeneralSecurityException, IOException;
+        Long serialNumber) throws GeneralSecurityException, IOException;
 
     /**
      * Return a list of all entitlement certificates for a given consumer.

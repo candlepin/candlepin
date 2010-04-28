@@ -18,6 +18,7 @@ import java.util.Properties;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
@@ -27,7 +28,6 @@ import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.resource.AdminResource;
-import org.fedoraproject.candlepin.resource.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;

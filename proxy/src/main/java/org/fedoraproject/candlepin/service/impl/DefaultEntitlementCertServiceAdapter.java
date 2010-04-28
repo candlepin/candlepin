@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
@@ -64,7 +63,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     @Override
     public EntitlementCertificate generateEntitlementCert(Consumer consumer,
         Entitlement entitlement, Subscription sub, Product product, Date endDate, 
-        BigInteger serialNumber) throws GeneralSecurityException, IOException {
+        Long serialNumber) throws GeneralSecurityException, IOException {
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: " + consumer.getUuid());
         log.debug("   product: " + product.getId());

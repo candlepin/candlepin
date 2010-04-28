@@ -24,11 +24,11 @@ import javax.ws.rs.PathParam;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.resource.ForbiddenException;
-import org.fedoraproject.candlepin.resource.NotFoundException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
