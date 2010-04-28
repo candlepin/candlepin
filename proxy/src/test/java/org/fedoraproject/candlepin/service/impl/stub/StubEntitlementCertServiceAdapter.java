@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.service.impl.stub;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.Date;
 
@@ -56,7 +57,7 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
         log.debug("   end date: " + endDate);
         
         EntitlementCertificate cert = new EntitlementCertificate();
-        cert.setSerial(serialNumber);
+        cert.setSerial(new BigInteger(serialNumber.toString()));
         cert.setKey("---- STUB KEY -----".getBytes());
         cert.setCert("---- STUB CERT -----".getBytes());
         cert.setEntitlement(entitlement);

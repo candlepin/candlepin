@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -255,12 +256,12 @@ public class ConsumerResource {
         log.debug("Getting client certificates for consumer: " + consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
-        Set<Long> serialSet = new HashSet<Long>();
+        Set<BigInteger> serialSet = new HashSet<BigInteger>();
         if (serials != null) {
             log.debug("Requested serials: " + serials);
             for (String s : serials.split(",")) {
                 log.debug("   " + s);
-                serialSet.add(Long.parseLong(s));
+                serialSet.add(new BigInteger(s));
             }
         }
 
@@ -528,7 +529,8 @@ public class ConsumerResource {
         @PathParam("serial") Long serial) {
         
         verifyAndLookupConsumer(consumerUuid);
-        Entitlement toDelete = entitlementCurator.findByCertificateSerial(serial);
+        Entitlement toDelete = entitlementCurator.findByCertificateSerial(
+            new BigInteger(serial.toString()));
         
         if (toDelete != null) {
             entitler.revokeEntitlement(toDelete);

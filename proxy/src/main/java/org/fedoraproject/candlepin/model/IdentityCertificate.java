@@ -15,6 +15,8 @@
 
 package org.fedoraproject.candlepin.model;
 
+import java.math.BigInteger;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -50,16 +52,16 @@ public class IdentityCertificate implements Persisted {
     private byte[] cert;
 
     @Column(nullable = false)
-    private Long serial;
+    private BigInteger serial;
 
     @OneToOne(mappedBy = "idCert")
     private Consumer consumer;
 
-    public Long getSerial() {
+    public BigInteger getSerial() {
         return serial;
     }
 
-    public void setSerial(Long serialNumber) {
+    public void setSerial(BigInteger serialNumber) {
         this.serial = serialNumber;
     }
 

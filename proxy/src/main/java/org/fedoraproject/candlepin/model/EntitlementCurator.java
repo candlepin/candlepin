@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -108,7 +109,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
     
     @Transactional
-    public Entitlement findByCertificateSerial(Long serial) {
+    public Entitlement findByCertificateSerial(BigInteger serial) {
         return (Entitlement) currentSession().createCriteria(Entitlement.class)
             .createCriteria("certificates")
                 .add(Restrictions.eq("serial", serial))

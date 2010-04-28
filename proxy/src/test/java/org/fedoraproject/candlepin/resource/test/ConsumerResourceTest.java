@@ -40,6 +40,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -117,8 +118,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, serials.size());
 
-        Long serial1 = serials.get(0).getSerial();
-        Long serial2 = serials.get(3).getSerial();
+        BigInteger serial1 = serials.get(0).getSerial();
+        BigInteger serial2 = serials.get(3).getSerial();
 
         String serialsToFilter =  serial1.toString() + "," + serial2.toString();
 
@@ -281,7 +282,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
-        consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0).getSerial());
+        consumerResource.unbindBySerial(consumer.getUuid(),
+            serials.get(0).getSerial().longValue());
         assertEquals(0, consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }
     

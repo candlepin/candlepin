@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
+import java.math.BigInteger;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -47,7 +49,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         poolCurator.create(firstPool);
         
         EntitlementCertificate firstCertificate 
-            = createEntitlementCertificate("key", "certificate", new Long(123));
+            = createEntitlementCertificate("key", "certificate",
+                new BigInteger(Integer.toString(123)));
         
         firstEntitlement = createEntitlement(owner, consumer, firstPool, 
             firstCertificate);
@@ -59,7 +62,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         
         EntitlementCertificate secondCertificate 
             = createEntitlementCertificate("key", "certificate", 
-                new Long(EXPECTED_CERTIFICATE_SERIAL));
+                new BigInteger(Integer.toString(EXPECTED_CERTIFICATE_SERIAL)));
         
         secondEntitlement = createEntitlement(owner, consumer, secondPool, 
             secondCertificate);
@@ -70,7 +73,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void shouldReturnCorrectCertificate() {
         assertEquals(secondEntitlement, 
             entitlementCurator.findByCertificateSerial(
-                new Long(EXPECTED_CERTIFICATE_SERIAL)));
+                new BigInteger(new Long(EXPECTED_CERTIFICATE_SERIAL).toString())));
     }
     
     

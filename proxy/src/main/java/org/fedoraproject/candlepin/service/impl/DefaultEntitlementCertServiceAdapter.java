@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
@@ -74,7 +75,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             product, endDate, serialNumber, keyPair);
         
         EntitlementCertificate cert = new EntitlementCertificate();
-        cert.setSerial(serialNumber);
+        cert.setSerial(new BigInteger(serialNumber.toString()));
         cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCert(this.pki.getPemEncoded(x509Cert));
         cert.setEntitlement(entitlement);
@@ -197,7 +198,6 @@ public class DefaultEntitlementCertServiceAdapter extends
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED),
                     false, new DERUTF8String(con.getEnabled())));
         }
-        
         return toReturn;
     }
     
