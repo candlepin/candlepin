@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.service.impl.test;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.security.KeyPair;
@@ -29,7 +30,6 @@ import java.util.Map;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -44,9 +44,6 @@ import org.mockito.ArgumentMatcher;
  */
 public class DefaultEntitlementCertServiceAdapterTest {
 
-    /**
-     * 
-     */
     private static final String CONTENT_LABEL = "label";
     private static final long CONTENT_HASH = 1234L;
     private static final String CONTENT_TYPE = "type";
