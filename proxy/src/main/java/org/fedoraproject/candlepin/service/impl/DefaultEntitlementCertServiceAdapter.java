@@ -84,7 +84,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         cert.setCert(this.pki.getPemEncoded(x509Cert));
         cert.setEntitlement(entitlement);
         
-        log.debug("Generated cert: " + serialNumber);
+        log.debug("Generated cert serial number: " + serialNumber);
         log.debug("Key: " + cert.getKeyAsString());
         log.debug("Cert: " + cert.getCertAsString());
         
@@ -150,8 +150,21 @@ public class DefaultEntitlementCertServiceAdapter extends
         // TODO:
         // get Product
         
+        
         // NOTE: getChhildProduct itself may be recursive...
         // get ChildPRoducts
+        
+        
+        Set<Product> childProducts = product.getChildProducts();
+        for (Product childProduct : childProducts) {
+            log.debug("childProduct  " + childProduct);
+            Set<Content> childContentSet = childProduct.getContent();
+            for (Content childContent : childContentSet) {
+                log.debug("childContent.getName " + childContent.getName());
+                log.debug("childContent.getHash " + childContent.getHash());
+            }
+            
+        }   
         
         // NOTE: how do we tell which products to include?
         //       we can type Product
