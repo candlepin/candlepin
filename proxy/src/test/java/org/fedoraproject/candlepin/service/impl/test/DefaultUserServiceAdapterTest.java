@@ -155,6 +155,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
 
     @Test
     public void staticRole() {
+        config.addUser("anyone", "whatever", "Default Org", "owneradmin");
         UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
             ownerCurator);
         Role[] expected = new Role[] {Role.OWNER_ADMIN};
@@ -184,6 +185,11 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
 
         public void addUser(String username, String password, String org) {
             addUserPassword(username, password + ":" + org);
+        }
+
+        public void addUser(String username, String password, String org,
+            String roles) {
+            addUserPassword(username, password + ":" + org + ":" + roles);
         }
 
         @Override

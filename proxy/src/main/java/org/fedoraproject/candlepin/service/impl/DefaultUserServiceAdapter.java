@@ -15,10 +15,12 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import com.google.inject.Inject;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Role;
@@ -33,11 +35,11 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
  * User names, passwords and Owners can be entered in /etc/candlepin/candlepin.conf in
  * the following manner:
  *
- * auth.user.<user_name>=<user_password>:<owner_name>
+ * auth.user.<user_name>=<user_password>:<owner_name>:role1,role2
  *
  * For example:
  * auth.user.bill=billspassword:IBM
- * auth.user.adam=adamspassword:NC State University
+ * auth.user.adam=adamspassword:NC State University:superadmin
  *
  * Validation will reject any username/password/owner combination that is not defined
  * in this manner.
@@ -51,8 +53,9 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     private static final String USER_PASS_PREFIX = "auth.user.";
     private static final String DEFAULT_ORG = "Default Org";
 
-    private Map<String, String> passwords;
-    private Map<String, String> owners;
+    private Map<String, String> userPasswords;
+    private Map<String, String> userOwners;
+    private Map<String, Set<Role>> userRoles;
     private OwnerCurator ownerCurator;
 
     private static Logger log = Logger.getLogger(DefaultUserServiceAdapter.class);
@@ -65,8 +68,10 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
      */
     @Inject
     public DefaultUserServiceAdapter(Config config, OwnerCurator ownerCurator) {
-        this.passwords = new HashMap<String, String>();
-        this.owners = new HashMap<String, String>();
+
+        this.userPasswords = new HashMap<String, String>();
+        this.userOwners = new HashMap<String, String>();
+        this.userRoles = new HashMap<String, Set<Role>>();
         this.ownerCurator = ownerCurator;
         Map<String, String> authConfig = config.configurationWithPrefix(USER_PASS_PREFIX);
 
@@ -76,16 +81,39 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
             String[] passwordOrg = authConfig.get(prefix).trim().split(":");
 
-            this.passwords.put(user, passwordOrg[0]);
+
+            this.userPasswords.put(user, passwordOrg[0]);
+            this.userRoles.put(user, new HashSet<Role>());
 
             // check if org is specified
             if (passwordOrg.length > 1) {
                 createOrgIfNeeded(passwordOrg[1]);
-                this.owners.put(user, passwordOrg[1]);
+                this.userOwners.put(user, passwordOrg[1]);
             }
             else {
                 createOrgIfNeeded(DEFAULT_ORG);
-                this.owners.put(user, DEFAULT_ORG);
+                this.userOwners.put(user, DEFAULT_ORG);
+            }
+
+            // check if roles are specified:
+            if (passwordOrg.length > 2) {
+                String [] roles = passwordOrg[2].trim().split(",");
+                for (String role : roles) {
+                    if (role.toLowerCase().equals("consumer")) {
+                        userRoles.get(user).add(Role.CONSUMER);
+                    }
+                    else if (role.toLowerCase().equals("owneradmin")) {
+                        userRoles.get(user).add(Role.OWNER_ADMIN);
+                    }
+                    else if (role.toLowerCase().equals("superadmin")) {
+                        userRoles.get(user).add(Role.SUPER_ADMIN);
+                    }
+                    else {
+                        throw new RuntimeException("Unknown role in candlepin.conf: " +
+                            role);
+                    }
+                    log.debug("Added role for " + user + ": " + role);
+                }
             }
         }
     }
@@ -109,10 +137,10 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     @Override
     public boolean validateUser(String username, String password) {
 
-        if (!this.passwords.isEmpty()) {
+        if (!this.userPasswords.isEmpty()) {
 
             if (username != null && password != null) {
-                return password.equals(this.passwords.get(username));
+                return password.equals(this.userPasswords.get(username));
             }
             else {
                 // neither can be null if there are passwords to check
@@ -129,7 +157,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     // Owner from our DB.
     @Override
     public OwnerInfo getOwnerInfo(String username) {
-        String ownerName = this.owners.get(username);
+        String ownerName = this.userOwners.get(username);
 
         if (ownerName == null) {
             ownerName = DEFAULT_ORG;
@@ -140,7 +168,11 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public List<Role> getRoles(String username) {
-        return Arrays.asList(new Role[] {Role.OWNER_ADMIN});
+        Set<Role> roles = userRoles.get(username);
+        if (roles == null) {
+            roles = new HashSet<Role>();
+        }
+        return new LinkedList<Role>(roles);
     }
 
 
