@@ -4,6 +4,8 @@ require 'candlepin_api'
 Before do
   # Map to store named entitlements
   @entitlements = {}
+  @consume_exception = nil
+  @pool_id = nil
 end
 
 Given /^I have an Entitlement named "([^\"]*)" for the "([^\"]*)" Product$/ do |name, product|
@@ -36,7 +38,9 @@ When /I Consume an Entitlement for the "(\w+)" Pool$/ do |pool|
   product_pools = all_pools.select {|p| p['pool'].has_value?(pool)}
   product_pools.empty?.should == false
 
-  results = @candlepin.consume_pool(product_pools[0]['pool']['id'])
+  # needed for trying to consume the same pool twice
+  @pool_id = product_pools[0]['pool']['id']
+  results = @candlepin.consume_pool(@pool_id)
 end
 
 Then /^I Get (\d+) Entitlement When I Filter by Product ID "(\w+)"$/ do |entitlement_size, product_id|
@@ -64,3 +68,25 @@ Then /^The entitlement named "([^\"]*)" should not exist$/ do |name|
     e.http_code.should == 404
   end
 end
+
+When /^I try to consume an Entitlement for the "([^\"]*)" Product again$/ do |product|
+
+  begin
+    @candlepin.consume_product(product)
+  rescue RestClient::Exception => e
+      @consume_exception = e
+  end
+end
+
+When /^I try to consume an Entitlement for the "([^\"]*)" Pool again$/ do |pool|
+  begin
+    @candlepin.consume_pool(@pool_id)
+  rescue RestClient::Exception => e
+      @consume_exception = e
+  end
+end
+
+Then /^I recieve an http forbidden response$/ do
+    @consume_exception.http_code.should == 403
+end
+

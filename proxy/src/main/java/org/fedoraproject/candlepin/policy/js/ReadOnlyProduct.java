@@ -31,7 +31,7 @@ public class ReadOnlyProduct {
     private Map<String, String> attributes = null;
 
     /**
-     * read-only product contructor.
+     * read-only product constructor.
      * @param product read/write product to copy
      */
     public ReadOnlyProduct(Product product) {
@@ -93,8 +93,11 @@ public class ReadOnlyProduct {
 
     private void initializeReadOnlyAttributes() {
         attributes = new HashMap<String, String>();
-        for (Attribute current : product.getAttributes()) {
-            attributes.put(current.getName(), current.getValue());
+        Set<Attribute> attributeList = product.getAttributes();
+        if (attributeList != null) {
+            for (Attribute current : attributeList) {
+                attributes.put(current.getName(), current.getValue());
+            }
         }
     }
 }

@@ -4,12 +4,11 @@
 
 // Checks common for both virt host and virt platform entitlements:
 function virtualization_common() {
-	pre.checkQuantity(pool);
+    pre_global();
 
 	// Can only be given to a physical system:
 	if (consumer.getType() != "system") {
 		pre.addError("rulefailed.virt.ents.only.for.physical.systems");
-		return;
 	}
 
 	// Host must not have any guests currently (could be changed but for simplicities sake):
@@ -35,14 +34,17 @@ function post_virtualization_host_platform() {
 }
 
 function pre_global() {
+	if (consumer.hasEntitlement(product) && product.getAttribute("multi-entitlement") != "yes") {
+		pre.addError("rulefailed.consumer.already.has.product");
+	}
 
 	// Support free entitlements for guests, if their parent has virt host or
 	// platform,
 	// and is entitled to the product the guest is requesting:
 	if (consumer.getType() == "virt_system" && consumer.getParent() != null) {
-		if ((consumer.getParent().hasEntitlement("virtualization_host") || consumer
-				.getParent().hasEntitlement("virtualization_host_platform"))
-				&& consumer.getParent().hasEntitlement(product.getLabel())) {
+		var parent = consumer.getParent();
+		if ((parent.hasEntitlement("virtualization_host") || parent.hasEntitlement("virtualization_host_platform"))
+				&& parent.hasEntitlement(product)) {
 			pre.grantFreeEntitlement();
 		}
 	} else {

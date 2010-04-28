@@ -211,4 +211,5 @@ public class EnforcerTest extends DatabaseTestFixture {
             poolCurator.listAvailableEntitlementPools(consumer));
         assertEquals(pool1.getId(), result.getId());
     }
+    
 }
