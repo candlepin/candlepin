@@ -298,7 +298,7 @@ public class ConsumerResource {
         List<CertificateSerial> allCerts = new LinkedList<CertificateSerial>();
         for (EntitlementCertificate cert :
             entCertService.listForConsumer(consumer)) {
-            allCerts.add(new CertificateSerial(cert.getId()));
+            allCerts.add(new CertificateSerial(cert.getSerial()));
         }
 
         return allCerts;
