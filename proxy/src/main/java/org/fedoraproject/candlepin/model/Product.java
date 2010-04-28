@@ -72,6 +72,20 @@ public class Product implements Persisted {
     @Column(nullable = true)
     private Long hash;
 
+    //FIXME: nullable just to bootstrap for now
+    @Column(nullable = true)
+    private String type;
+ 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    // NOTE: we need a product "type" so we can tell what class of
+    //       product we are... 
     @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
             fetch = FetchType.EAGER)
     @ForeignKey(name = "fk_product_product_id",
@@ -90,6 +104,7 @@ public class Product implements Persisted {
     private Set<Content> content;
     
     
+ 
    
     /**
      * Constructor

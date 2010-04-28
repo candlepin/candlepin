@@ -19,8 +19,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -37,8 +35,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @SequenceGenerator(name = "seq_content", sequenceName = "seq_content", allocationSize = 1)
 public class Content implements Persisted {
 
-    
-  
     // Product ID is stored as a string. Could be a product OID or label.
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_content")
@@ -49,6 +45,8 @@ public class Content implements Persisted {
     
     @Column(nullable = false)
     private String label;
+    
+    // Description?
     
     @Column(nullable = false)
     private String name;
@@ -62,16 +60,20 @@ public class Content implements Persisted {
     @Column(nullable = true)
     private String contentUrl;
     
+    
+    // attribute?
     @Column(nullable = true)
     private String gpgUrl;
     
+    
+    // probably a join here, seems external to content set defination
     @Column(nullable = true)
     private String enabled;
 
-    @ManyToOne
+ //   @ManyToOne
 //    @ForeignKey(name = "fk_product_content")
-    @JoinColumn
-    private Content Content;
+ //   @JoinColumn
+ //   private Content Content;
     
     
     public Content(String name, String vendor, String contentUrl,

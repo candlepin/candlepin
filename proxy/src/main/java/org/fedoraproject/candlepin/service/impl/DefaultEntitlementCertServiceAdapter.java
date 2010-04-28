@@ -60,6 +60,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         this.keyPairCurator = keyPairCurator;
     }
 
+    
+    // NOTE: we use entitlement here, but it version does not...
+    // NOTE: we can get consumer from entitlement.getConsumer()
     @Override
     public EntitlementCertificate generateEntitlementCert(Consumer consumer,
         Entitlement entitlement, Subscription sub, Product product, Date endDate, 
@@ -68,6 +71,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         log.debug("   consumer: " + consumer.getUuid());
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + endDate);
+        
         
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         
@@ -140,16 +144,27 @@ public class DefaultEntitlementCertServiceAdapter extends
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY),
                 false, new DERUTF8String(sub.getEndDate().toString())));
         
-        return toReturn;
-    }
-
-    public List<X509ExtensionWrapper> productExtensions(Product product) {
-        List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
-        
         String productCertOid = OIDUtil.REDHAT_OID + "." + 
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
     
-        String productOid = productCertOid  + "." + product.getHash().toString();
+        // TODO:
+        // get Product
+        
+        // NOTE: getChhildProduct itself may be recursive...
+        // get ChildPRoducts
+        
+        // NOTE: how do we tell which products to include?
+        //       we can type Product
+        //       or we could include any product that has Content associated with it...
+        //       or we could string match on SKU format, but would like to 
+        //            annex sku references
+        // for subProduct in childProducts.thatAreContentSku
+        //         addProductExtention(subProduct)
+        //         for contentSet in subProduct.getContent:
+        //               addContent(contentSet)
+        
+        
+        String productOid = productCertOid  + "." + productHash.toString();
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
@@ -179,7 +194,9 @@ public class DefaultEntitlementCertServiceAdapter extends
                    OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + 
                    "." + con.getHash().toString() + "." + 
                    OIDUtil.CF_REPO_TYPE.get(con.getType());
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
+            extensions.add(new X509ExtensionWrapper(contentOid, 
+                    false, new DERUTF8String(con.getType())));
+            extensions.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY),
                     false, new DERUTF8String(con.getName())));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
@@ -198,7 +215,7 @@ public class DefaultEntitlementCertServiceAdapter extends
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED),
                     false, new DERUTF8String(con.getEnabled())));
         }
-        return toReturn;
+       return toReturn;
     }
     
     private String createDN(Consumer consumer) {
