@@ -73,4 +73,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
                 new Long(EXPECTED_CERTIFICATE_SERIAL)));
     }
     
+    
+    
 }

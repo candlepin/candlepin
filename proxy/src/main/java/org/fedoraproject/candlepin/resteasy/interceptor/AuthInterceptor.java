@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -79,6 +80,13 @@ public class AuthInterceptor implements PreProcessInterceptor {
         else {
             try {
                 principal = basicAuth.getPrincipal(request);
+            }
+            catch (CandlepinException e) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Error getting principal " + e);
+                    e.printStackTrace();
+                }
+                throw e;
             }
             catch (Exception e) {
                 if (log.isDebugEnabled()) {
