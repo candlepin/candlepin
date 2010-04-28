@@ -14,10 +14,10 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import java.math.BigInteger;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -54,6 +54,7 @@ public class Entitler {
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;
     private EntitlementCertificateCurator entCertCurator;
+    private CertificateSerialCurator serialCurator;
     
     @Inject
     protected Entitler(PoolCurator epCurator,
@@ -61,7 +62,8 @@ public class Entitler {
         EntitlementCertificateCurator entCertCurator,
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter productAdapter) {
+        ProductServiceAdapter productAdapter,
+        CertificateSerialCurator serialCurator) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
@@ -71,6 +73,7 @@ public class Entitler {
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
         this.entCertCurator = entCertCurator;
+        this.serialCurator = serialCurator;
     }
 
     /**
@@ -169,10 +172,9 @@ public class Entitler {
             // TODO: Assuming every entitlement = generate a cert, most likely we'll want
             // to know if this product entails granting a cert someday.
             try {
-                // TODO: Fix serial here:
                 EntitlementCertificate cert = this.entCertAdapter.
                     generateEntitlementCert(consumer, e, sub, prod,
-                    sub.getEndDate(), BigInteger.valueOf(e.getId()));
+                    sub.getEndDate(), serialCurator.getNextSerial());
                 e.getCertificates().add(cert);
                 this.entCertCurator.create(cert);
             }

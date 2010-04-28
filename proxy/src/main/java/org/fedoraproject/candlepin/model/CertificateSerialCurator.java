@@ -14,25 +14,24 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
-
-import com.google.inject.Inject;
-
 /**
- * IdentityCertificateCurator
+ * CertificateSerialCurator - Interface to request a unique certificate serial number.
+ * Doesn't do much else.
  */
-public class IdentityCertificateCurator extends
-    AbstractHibernateCurator<IdentityCertificate> {
+public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
 
-    @Inject
-    public IdentityCertificateCurator() {
-        super(IdentityCertificate.class);
+    protected CertificateSerialCurator() {
+        super(CertificateSerial.class);
     }
 
-    public IdentityCertificate lookupBySerialNumber(
-        Long serialNumber) {
-        return (IdentityCertificate) currentSession().createCriteria(
-            IdentityCertificate.class).add(
-            Restrictions.eq("serial", serialNumber)).uniqueResult();
+    /**
+     * Get the next available serial number.
+     * @return next available serial number.
+     */
+    public Long getNextSerial() {
+        CertificateSerial serial = new CertificateSerial();
+        create(serial);
+        return serial.getId();
     }
+
 }

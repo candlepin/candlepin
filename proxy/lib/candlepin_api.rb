@@ -105,6 +105,7 @@ class Candlepin
       post('/pools', pool)
     end
 
+    # TODO: Add support for serial filtering:
     def get_certificates()
         path = "/consumers/#{@consumer['uuid']}/certificates"
         return get(path)

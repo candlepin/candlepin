@@ -265,7 +265,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             subs = subAdapter.getSubscriptions(owner);
         }
         else {
-            // TODO FIX HERE
             subs = subAdapter.getSubscriptions(owner, productId);
         }
         

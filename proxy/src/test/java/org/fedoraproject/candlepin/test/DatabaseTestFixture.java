@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.test;
 
-import java.math.BigInteger;
 import java.util.Date;
 
 import javax.persistence.EntityManager;
@@ -208,11 +207,11 @@ public class DatabaseTestFixture {
     }
     
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert, 
-            int serial) {
+            Long serial) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         toReturn.setKey(key.getBytes());
         toReturn.setCert(cert.getBytes());
-        toReturn.setSerial(new BigInteger("" + serial));
+        toReturn.setSerial(serial);
         return toReturn;
     }
 }

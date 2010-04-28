@@ -15,15 +15,14 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Random;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
@@ -43,17 +42,17 @@ public class DefaultIdentityCertServiceAdapter implements
         .getLogger(DefaultIdentityCertServiceAdapter.class);
     private IdentityCertificateCurator identityCertCurator;
     private KeyPairCurator keyPairCurator;
-
-    // Seeded with this(System.currentTimeMillis()
-    private Random random = new Random();
+    private CertificateSerialCurator serialCurator;
 
     @Inject
     public DefaultIdentityCertServiceAdapter(PKIUtility pki,
         IdentityCertificateCurator identityCertCurator,
-        KeyPairCurator keyPairCurator) {
+        KeyPairCurator keyPairCurator,
+        CertificateSerialCurator serialCurator) {
         this.pki = pki;
         this.identityCertCurator = identityCertCurator;
         this.keyPairCurator = keyPairCurator;
+        this.serialCurator = serialCurator;
     }
 
     @Override
@@ -80,7 +79,7 @@ public class DefaultIdentityCertServiceAdapter implements
             return certificate;
         }
 
-        BigInteger serialNumber = nextSerialNumber();
+        Long serialNumber = serialCurator.getNextSerial();
         String dn = createDN(consumer, username);
         IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
@@ -89,20 +88,11 @@ public class DefaultIdentityCertServiceAdapter implements
         
         identityCert.setCert(pki.getPemEncoded(x509cert));
         identityCert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
-        identityCert.setSerial(x509cert.getSerialNumber());
+        identityCert.setSerial(x509cert.getSerialNumber().longValue());
         identityCert.setConsumer(consumer);
         consumer.setIdCert(identityCert);
 
         return identityCertCurator.create(identityCert);
-    }
-
-    private BigInteger nextSerialNumber() {
-        BigInteger serialNumber = BigInteger.valueOf(random.nextInt(1000000));
-        while (identityCertCurator
-            .lookupBySerialNumber(serialNumber) != null) {
-            serialNumber = BigInteger.valueOf(random.nextLong());
-        }
-        return serialNumber;
     }
 
     private String createDN(Consumer consumer, String username) {

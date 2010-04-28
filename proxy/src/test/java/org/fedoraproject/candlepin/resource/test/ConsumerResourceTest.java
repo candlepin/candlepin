@@ -39,7 +39,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.math.BigInteger;
 import java.util.List;
 import org.fedoraproject.candlepin.resource.NotFoundException;
 
@@ -118,8 +117,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, serials.size());
 
-        BigInteger serial1 = serials.get(0).getSerial();
-        BigInteger serial2 = serials.get(3).getSerial();
+        Long serial1 = serials.get(0).getSerial();
+        Long serial2 = serials.get(3).getSerial();
 
         String serialsToFilter =  serial1.toString() + "," + serial2.toString();
 
@@ -288,11 +287,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Test(expected = NotFoundException.class)
     public void unbindByInvalidSerialShouldFail() {
-        consumerResource.unbindBySerial(consumer.getUuid(), new BigInteger("1234"));
+        consumerResource.unbindBySerial(consumer.getUuid(), new Long("1234"));
     }
     
     @Test(expected = NotFoundException.class)
     public void unbindBySerialWithInvalidUuidShouldFail() {
-        consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new BigInteger("1234"));
+        consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"));
     }
 }

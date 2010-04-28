@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -253,12 +252,12 @@ public class ConsumerResource {
         log.debug("Getting client certificates for consumer: " + consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
-        Set<BigInteger> serialSet = new HashSet<BigInteger>();
+        Set<Long> serialSet = new HashSet<Long>();
         if (serials != null) {
             log.debug("Requested serials: " + serials);
             for (String s : serials.split(",")) {
                 log.debug("   " + s);
-                serialSet.add(BigInteger.valueOf(Long.parseLong(s)));
+                serialSet.add(Long.parseLong(s));
             }
         }
 
@@ -296,7 +295,7 @@ public class ConsumerResource {
         List<CertificateSerial> allCerts = new LinkedList<CertificateSerial>();
         for (EntitlementCertificate cert :
             entCertService.listForConsumer(consumer)) {
-            allCerts.add(new CertificateSerial(cert.getSerial()));
+            allCerts.add(new CertificateSerial(cert.getId()));
         }
 
         return allCerts;
@@ -523,7 +522,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/certificates/{serial}")
     @EnforceConsumer
     public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid, 
-        @PathParam("serial") BigInteger serial) {
+        @PathParam("serial") Long serial) {
         
         verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator.findByCertificateSerial(serial);
