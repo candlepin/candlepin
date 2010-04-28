@@ -82,6 +82,10 @@ public class EntitlementCertificate implements Persisted {
     public String getKeyAsString() {
         return new String(key);
     }
+    
+    public void setKeyAsString(String key) {
+        this.key = key.getBytes();        
+    }    
 
     public void setCert(byte[] cert) {
         this.cert = cert;
@@ -95,6 +99,10 @@ public class EntitlementCertificate implements Persisted {
     @XmlElement(name = "cert")
     public String getCertAsString() {
         return new String(cert);
+    }
+    
+    public void setCertAsString(String cert) {
+        this.cert = cert.getBytes();        
     }
 
     @XmlTransient
