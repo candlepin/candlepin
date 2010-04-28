@@ -86,6 +86,24 @@ class Candlepin
       path << "product=#{params[:product]}&" if params[:product]
       return get(path)
     end
+    
+    def create_pool(product_id, owner_id, start_date, end_date, quantity = 100)
+      pool = {
+        'pool' => {
+          'activeSubscription' => false,
+          'quantity' => quantity,
+          'consumed' => 0,
+          'startDate' => start_date,
+          'endDate' => end_date,
+          'productId' => product_id,
+          'owner' => {
+            'id' => owner_id
+          }          
+        }
+      }
+      
+      post('/pools', pool)
+    end
 
     def get_certificates()
         path = "/consumers/#{@consumer['uuid']}/certificates"
@@ -113,8 +131,18 @@ class Candlepin
       get("/products")
     end
     
-    def create_product(product_json)
-      return post("/products", product_json)
+    def create_product(name, version = 1, variant = 'server', attributes = {})
+      product = {
+        'product' => {
+          'name' => name,
+          'label' => name,
+          'arch' => 'ALL',
+          'id' => name,
+          'version' => '1',
+          'variant' => 'server'
+        }
+      }
+      return post("/products", product)
     end
     
     def consume_pool(pool)
