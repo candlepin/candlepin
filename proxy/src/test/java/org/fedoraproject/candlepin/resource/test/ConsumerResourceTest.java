@@ -23,7 +23,7 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.CertificateSerial;
+import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -95,7 +95,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void testGetCertSerials() {
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
-        List<CertificateSerial> serials = consumerResource.
+        List<CertificateSerialDto> serials = consumerResource.
             getEntitlementCertificateSerials(consumer.getUuid());
         assertEquals(1, serials.size());
     }

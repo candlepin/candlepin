@@ -39,7 +39,7 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.CertificateSerial;
+import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -289,17 +289,17 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "serials")
     @EnforceConsumer
-    public List<CertificateSerial> getEntitlementCertificateSerials(
+    public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
         log.debug("Getting client certificate serials for consumer: " +
             consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
-        List<CertificateSerial> allCerts = new LinkedList<CertificateSerial>();
+        List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
         for (EntitlementCertificate cert :
             entCertService.listForConsumer(consumer)) {
-            allCerts.add(new CertificateSerial(cert.getSerial()));
+            allCerts.add(new CertificateSerialDto(cert.getSerial()));
         }
 
         return allCerts;
