@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.5
+Version: 0.0.6
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,7 +95,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
-* Thu Apr 29 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.5-1
+* Thu Apr 29 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.6-1
 - 582223 - don't allow the same product to be consumed more than once (jbowes@redhat.com)
 - More serial BigInteger/Long fixes. (dgoodwin@redhat.com)
 - Revert to using BigInteger for certificate serials. (dgoodwin@redhat.com)
