@@ -50,14 +50,14 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
     @Override
     public EntitlementCertificate generateEntitlementCert(Consumer consumer,
         Entitlement entitlement, Subscription sub, Product product, Date endDate, 
-        Long serialNumber) throws GeneralSecurityException, IOException {
+        BigInteger serialNumber) throws GeneralSecurityException, IOException {
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: " + consumer.getUuid());
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + endDate);
         
         EntitlementCertificate cert = new EntitlementCertificate();
-        cert.setSerial(new BigInteger(serialNumber.toString()));
+        cert.setSerial(serialNumber);
         cert.setKey("---- STUB KEY -----".getBytes());
         cert.setCert("---- STUB CERT -----".getBytes());
         cert.setEntitlement(entitlement);

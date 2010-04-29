@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.math.BigInteger;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
@@ -174,7 +175,8 @@ public class Entitler {
             try {
                 EntitlementCertificate cert = this.entCertAdapter.
                     generateEntitlementCert(consumer, e, sub, prod,
-                    sub.getEndDate(), serialCurator.getNextSerial());
+                    sub.getEndDate(), new BigInteger(
+                        serialCurator.getNextSerial().toString()));
                 e.getCertificates().add(cert);
                 this.entCertCurator.create(cert);
             }

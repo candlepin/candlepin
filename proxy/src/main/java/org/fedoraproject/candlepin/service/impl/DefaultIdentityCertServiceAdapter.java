@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
@@ -79,7 +80,7 @@ public class DefaultIdentityCertServiceAdapter implements
             return certificate;
         }
 
-        Long serialNumber = serialCurator.getNextSerial();
+        BigInteger serialNumber = new BigInteger(serialCurator.getNextSerial().toString());
         String dn = createDN(consumer, username);
         IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);

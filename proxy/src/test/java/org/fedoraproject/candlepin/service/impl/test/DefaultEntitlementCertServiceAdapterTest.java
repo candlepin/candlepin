@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -90,12 +91,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws Exception {
         
         certServiceAdapter.createX509Certificate(mock(Consumer.class),
-            subscription, product, mock(Date.class), new Long(1234),
+            subscription, product, mock(Date.class), new BigInteger("1234"),
             keyPair());
         
         verify(mockedPKI).createX509Certificate(any(String.class), 
             argThat(new ListContainsContentExtensions()), 
-            any(Date.class), any(Date.class), any(KeyPair.class), any(Long.class));
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class));
     }
     
     private boolean isEncodedContentValid(List<X509ExtensionWrapper> content) {

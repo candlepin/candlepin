@@ -66,13 +66,13 @@ public class PKIUtility {
         Date startDate,
         Date endDate,
         KeyPair clientKeyPair, 
-        Long serialNumber)
+        BigInteger serialNumber)
         throws GeneralSecurityException, IOException {
 
         X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
         X509Certificate caCert = reader.getCACert();
         // set cert fields
-        certGen.setSerialNumber(new BigInteger(serialNumber.toString()));
+        certGen.setSerialNumber(serialNumber);
         certGen.setIssuerDN(caCert.getSubjectX500Principal());
         certGen.setNotBefore(startDate);
         certGen.setNotAfter(endDate);

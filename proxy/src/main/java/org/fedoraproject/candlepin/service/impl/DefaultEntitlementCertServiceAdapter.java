@@ -63,7 +63,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     @Override
     public EntitlementCertificate generateEntitlementCert(Consumer consumer,
         Entitlement entitlement, Subscription sub, Product product, Date endDate, 
-        Long serialNumber) throws GeneralSecurityException, IOException {
+        BigInteger serialNumber) throws GeneralSecurityException, IOException {
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: " + consumer.getUuid());
         log.debug("   product: " + product.getId());
@@ -88,7 +88,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     }
 
     public X509Certificate createX509Certificate(Consumer consumer,
-        Subscription sub, Product product, Date endDate, Long serialNumber,
+        Subscription sub, Product product, Date endDate, BigInteger serialNumber,
         KeyPair keyPair) throws GeneralSecurityException, IOException {
         // oiduitl is busted at the moment, so do this manually
         List<X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
