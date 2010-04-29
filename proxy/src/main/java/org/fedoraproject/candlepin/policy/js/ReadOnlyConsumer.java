@@ -65,6 +65,9 @@ public class ReadOnlyConsumer {
      * @return the Consumer's parent
      */
     public ReadOnlyConsumer getParent() {
+        if (consumer.getParent() == null) {
+            return null;
+        }
         return new ReadOnlyConsumer(consumer.getParent());
     }
    
@@ -121,5 +124,9 @@ public class ReadOnlyConsumer {
             }
         }
         return false;
+    }
+
+    public boolean hasEntitlement(ReadOnlyProduct product) {
+        return hasEntitlement(product.getLabel());
     }
 }

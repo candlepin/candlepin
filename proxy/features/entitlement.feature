@@ -63,3 +63,16 @@ Feature: Consume an Entitlement
         And I Consume an Entitlement for the "monitoring" Product
         And I Consume an Entitlement for the "virtualization_host" Product
         Then I Get 1 Entitlement When I Filter by Product ID "monitoring"
+
+    Scenario: Consuming the same entitlement by product twice is not allowed
+        Given I am a Consumer "random_box"
+        When I Consume an Entitlement for the "virtualization_host" Product
+        And I try to consume an Entitlement for the "virtualization_host" Product again
+        Then I recieve an http forbidden response
+
+    Scenario: Consuming the same entitlement by pool twice is not allowed
+        Given I am a Consumer "random_box"
+        When I Consume an Entitlement for the "virtualization_host" Pool
+        And I try to consume an Entitlement for the "virtualization_host" Pool again
+        Then I recieve an http forbidden response
+

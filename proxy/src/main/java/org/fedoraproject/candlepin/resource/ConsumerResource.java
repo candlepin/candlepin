@@ -336,6 +336,14 @@ public class ConsumerResource {
         catch (EntitlementRefusedException e) {
             // Could be multiple errors, but we'll just report the first one for now:
             // TODO: Convert resource key to user friendly string?
+            // See below for more TODOS
+            String error = e.getResult().getErrors().get(0).getResourceKey();
+            if (error.equals("rulefailed.consumer.already.has.product")) {
+                throw new ForbiddenException(i18n.tr(
+                    "This consumer is already subscribed to the product ''{0}''",
+                    p.getId()));
+            }
+
             throw new ForbiddenException(e.getResult().getErrors().get(0).getResourceKey());
         }
     }
@@ -350,6 +358,14 @@ public class ConsumerResource {
         catch (EntitlementRefusedException e) {
             // Could be multiple errors, but we'll just report the first one for now:
             // TODO: Convert resource key to user friendly string?
+            // TODO: multiple checks here for the errors will get ugly, but the returned
+            // string is dependent on the caller (ie pool vs product)
+            String error = e.getResult().getErrors().get(0).getResourceKey();
+            if (error.equals("rulefailed.consumer.already.has.product")) {
+                throw new ForbiddenException(i18n.tr(
+                    "This consumer is already subscribed to the product matching pool " +
+                    "with id ''{0}''", pool.getId().toString()));
+            }
             throw new ForbiddenException(e.getResult().getErrors().get(0).getResourceKey());
         }
     }

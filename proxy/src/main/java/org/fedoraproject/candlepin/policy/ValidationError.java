@@ -29,8 +29,8 @@ public class ValidationError {
     }
    
     /**
-     * Return the value of th eresource key.
-     * @return the value of th eresource key.
+     * Return the value of the resource key.
+     * @return the value of the resource key.
      */
     public String getResourceKey() {
         return resourceKey;

@@ -14,100 +14,98 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
+import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.util.DateSource;
+import org.fedoraproject.candlepin.test.TestUtil;
+import org.fedoraproject.candlepin.util.DateSourceImpl;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.Date;
 import java.util.Locale;
 
 import javax.script.ScriptEngineManager;
-
-import junit.framework.Assert;
 
 /**
  * DefaultRulesTest
  */
 public class DefaultRulesTest {
     private Enforcer enforcer;
-    private DateSource dateSource;
-    private PreEntHelper preHelper;
-    private PostEntHelper postHelper;
-    private ProductServiceAdapter prodAdapter;
+    @Mock private ProductServiceAdapter prodAdapter;
+    private Owner owner;
     private Consumer consumer;
-    private List<Pool> pools;
-    private static final String RULES_JS = "" + 
-        "function select_pool_global() { return pools.getFirst();} \n"        + 
-        "function select_pool_monitoring() {                       \n"        + 
-        "    var poolItr; var pool;                                \n"        + 
-        "    for (poolItr = pools.iterator(); poolItr.hasNext();){ \n"        + 
-        "        pool = poolItr.next();                            \n"        + 
-        "        if (pool.getProductId() == \"monitoring\"){       \n"        + 
-        "            return pool;                                  \n"        + 
-        "       }                                                  \n"        + 
-        "    }                                                     \n"        + 
-        "    return pools.getFirst();                              \n"        + 
-        "}                                                         \n";
 
     @Before
-    public void createEnforcer() {
+    public void createEnforcer() throws Exception {
+        MockitoAnnotations.initMocks(this);
 
-        // If you wish to test against the default rules file,
-        // use the following code to load it in from the classpath
-        /*
-         * URL url = this.getClass().getClassLoader().getResource(
-         * "rules/default-rules.js"); InputStreamReader inputStreamReader = new
-         * InputStreamReader(url .openStream());
-         */
-        StringReader inputStreamReader = new StringReader(RULES_JS);
+        URL url = this.getClass().getClassLoader().getResource("rules/default-rules.js");
+        InputStreamReader inputStreamReader = new InputStreamReader(url.openStream());
 
-        enforcer = new JavascriptEnforcer(dateSource, inputStreamReader,
-            preHelper, postHelper, prodAdapter, 
+        enforcer = new JavascriptEnforcer(new DateSourceImpl(), inputStreamReader,
+            new PreEntHelper(), new PostEntHelper(), prodAdapter, 
                 new ScriptEngineManager().getEngineByName("JavaScript"), 
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
+
+        owner = new Owner();
+        consumer = new Consumer("test consumer", owner,
+            new ConsumerType(ConsumerType.SYSTEM));
     }
+    
+    @Test
+    public void testBindForSameProductNotAllowed() {
+        Product product = new Product("a-product", "A product for testing");
+        Pool pool = new Pool(owner, product.getId(), new Long(5),
+            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
 
-    @Before
-    public void createPools() {
+        Entitlement e = new Entitlement(pool, consumer, new Date());
+        consumer.addEntitlement(e);
+        
+        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
 
-        pools = new ArrayList<Pool>();
-        consumer = new Consumer();
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
 
-        Pool pool = new Pool();
-        pool.setId(new Long(0));
-        pool.setProductId("default");
-        pools.add(pool);
-
-        pool = new Pool();
-        pool.setId(new Long(1));
-        pool.setProductId("monitoring");
-        pools.add(pool);
+        assertTrue(result.hasErrors());
+        assertFalse(result.isSuccessful());
     }
 
     @Test
-    public void runDefaultRules() {
-        Pool selected = enforcer.selectBestPool(consumer, "Shampoo", pools);
-        Assert.assertNotNull(selected);
-        Assert.assertEquals("default", selected.getProductId());
-    }
+    public void testBindFromSameProductAllowedWithMultiEntitlementAttribute() {
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(new Attribute("multi-entitlement", "yes"));
+        Pool pool = new Pool(owner, product.getId(), new Long(5),
+            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
 
-    @Test
-    public void runMonitoringRules() {
-        final String productId = "monitoring";
-        Pool selected = enforcer.selectBestPool(consumer, productId, pools);
-        Assert.assertNotNull(selected);
-        Assert.assertEquals(productId, selected.getProductId());
-    }
+        Entitlement e = new Entitlement(pool, consumer, new Date());
+        consumer.addEntitlement(e);
+        
+        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
 
+        assertTrue(result.isSuccessful());
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasErrors());
+    }
 }
