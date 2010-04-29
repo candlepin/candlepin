@@ -131,7 +131,6 @@ public class CandlepinConsumerClient {
         boolean success = false;
         if (isRegistered()) {
             ClientResponse<Object> response = client.deleteConsumer(getUUID());
-            System.out.println(response.getResponseStatus());
             success = (response.getResponseStatus()
                 .equals(Response.Status.NO_CONTENT));
             if (success) {
@@ -236,7 +235,6 @@ public class CandlepinConsumerClient {
 
     protected void recordIdentity(Consumer aConsumer) {        
         mkdir(consumerDirName);
-        System.out.println(aConsumer.getIdCert().getCert());
         dumpToFile(certFileName, aConsumer.getIdCert().getCert());
         dumpToFile(keyFileName, aConsumer.getIdCert().getKey());
     }
