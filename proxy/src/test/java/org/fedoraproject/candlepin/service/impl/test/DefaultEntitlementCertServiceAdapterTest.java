@@ -160,7 +160,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         extends ArgumentMatcher<List<X509ExtensionWrapper>> {
         
         public boolean matches(Object list) {
-            return isEncodedContentValid((List)list);
+            return isEncodedContentValid((List) list);
         }
     }
 }
