@@ -51,4 +51,8 @@ public class CertificateSerial implements Persisted {
         this.id = id;
     }
 
+    public String toString() {
+        return "CertificateSerial[id=" + id + "]";
+    }
+
 }

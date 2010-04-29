@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.model.AttributeCurator;
+import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -82,6 +83,7 @@ public class DatabaseTestFixture {
     protected WorkManager unitOfWork;
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
+    protected CertificateSerialCurator certSerialCurator;
     protected I18n i18n;
 
     
@@ -116,6 +118,7 @@ public class DatabaseTestFixture {
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
         entCertCurator = injector.getInstance(EntitlementCertificateCurator.class);
+        certSerialCurator = injector.getInstance(CertificateSerialCurator.class);
 
         i18n = injector.getInstance(I18n.class);
        
