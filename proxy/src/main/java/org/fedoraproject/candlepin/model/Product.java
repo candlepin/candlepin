@@ -31,6 +31,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.hibernate.annotations.ForeignKey;
 
 /**
@@ -45,6 +47,7 @@ import org.hibernate.annotations.ForeignKey;
 @Table(name = "cp_product")
 @SequenceGenerator(name = "seq_product", sequenceName = "seq_product", allocationSize = 1)
 public class Product implements Persisted {
+    private static Logger log = Logger.getLogger(Product.class);
 
     // Product ID is stored as a string. Could be a product OID or label.
     @Id
@@ -152,6 +155,28 @@ public class Product implements Persisted {
     public Set<Product> getChildProducts() {
         return childProducts;
     }
+
+    
+    public Set<Product> getAllChildProducts(Set<Product> products) {
+        products.add(this);
+        if (childProducts.isEmpty()) {
+            return products;
+        }
+        
+        for (Product childProduct : childProducts) {
+            Set<Product> ps = new HashSet<Product>();
+            log.debug("product.name " + childProduct.getName());
+            log.debug("adding childProduct " + childProduct);
+            products.add(childProduct);
+            ps = childProduct.getAllChildProducts(products);
+            for (Product p : ps) { 
+//                log.debug("adding " + p.getName() + "to " + products);
+                products.add(p);
+            }
+        }
+        return products;
+    }   
+    
 
     /**
      * replaces all of the product children with the new set.

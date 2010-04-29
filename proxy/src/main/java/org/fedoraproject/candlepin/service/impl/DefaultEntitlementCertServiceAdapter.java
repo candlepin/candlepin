@@ -20,6 +20,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -97,8 +98,13 @@ public class DefaultEntitlementCertServiceAdapter extends
         // oiduitl is busted at the moment, so do this manually
         List<X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
         
-        extensions.addAll(productExtensions(product));
-        extensions.addAll(contentExtensions(product));
+        Set<Product> products = new HashSet<Product>();
+        products.addAll(product.getAllChildProducts(products));
+        for (Product childProduct : products) {
+            extensions.addAll(productExtensions(childProduct));
+            extensions.addAll(contentExtensions(childProduct));
+        }
+
         extensions.addAll(subscriptionExtensions(sub));
         extensions.addAll(consumerExtensions(consumer));
         
@@ -106,6 +112,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             extensions, sub.getStartDate(), endDate, keyPair, serialNumber);
         return x509Cert;
     }
+    
 
     public List<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
@@ -125,6 +132,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
         // Subscription/order info
         //need the sub product name, not id here
+        // NOTE: order ~= subscription
+        //       entitlement == entitlement
+        
         String subscriptionOid = OIDUtil.REDHAT_OID + "." + 
                 OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
@@ -143,41 +153,17 @@ public class DefaultEntitlementCertServiceAdapter extends
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY),
                 false, new DERUTF8String(sub.getEndDate().toString())));
+      
+        return toReturn;
+    }
+        
+    public List<X509ExtensionWrapper> productExtensions(Product product) {
+        List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
         
         String productCertOid = OIDUtil.REDHAT_OID + "." + 
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
-    
-        // TODO:
-        // get Product
         
-        
-        // NOTE: getChhildProduct itself may be recursive...
-        // get ChildPRoducts
-        
-        
-        Set<Product> childProducts = product.getChildProducts();
-        for (Product childProduct : childProducts) {
-            log.debug("childProduct  " + childProduct);
-            Set<Content> childContentSet = childProduct.getContent();
-            for (Content childContent : childContentSet) {
-                log.debug("childContent.getName " + childContent.getName());
-                log.debug("childContent.getHash " + childContent.getHash());
-            }
-            
-        }   
-        
-        // NOTE: how do we tell which products to include?
-        //       we can type Product
-        //       or we could include any product that has Content associated with it...
-        //       or we could string match on SKU format, but would like to 
-        //            annex sku references
-        // for subProduct in childProducts.thatAreContentSku
-        //         addProductExtention(subProduct)
-        //         for contentSet in subProduct.getContent:
-        //               addContent(contentSet)
-        
-        
-        String productOid = productCertOid  + "." + productHash.toString();
+        String productOid = productCertOid  + "." + product.getHash().toString();
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
@@ -203,13 +189,14 @@ public class DefaultEntitlementCertServiceAdapter extends
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
         Set<Content> content = product.getContent();
         for (Content con : content) {
+            log.debug("contentset: " + con.getName() + " " + con.getType() + " " + con.getContentUrl());
             String contentOid = OIDUtil.REDHAT_OID + "." +  
                    OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + 
                    "." + con.getHash().toString() + "." + 
                    OIDUtil.CF_REPO_TYPE.get(con.getType());
-            extensions.add(new X509ExtensionWrapper(contentOid, 
+            toReturn.add(new X509ExtensionWrapper(contentOid, 
                     false, new DERUTF8String(con.getType())));
-            extensions.add(new X509ExtensionWrapper(contentOid + "." + 
+            toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY),
                     false, new DERUTF8String(con.getName())));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
@@ -229,7 +216,7 @@ public class DefaultEntitlementCertServiceAdapter extends
                     false, new DERUTF8String(con.getEnabled())));
         }
        return toReturn;
-    }
+   }
     
     private String createDN(Consumer consumer) {
         StringBuilder sb = new StringBuilder("CN=");
