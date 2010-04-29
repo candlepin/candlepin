@@ -73,7 +73,7 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
                     "/etc/candlepin/certs/candlepin-ca.crt"));
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(PemUtility.pemToKeystore(certificateFile, privateKeyFile,
+            kmf.init(PemUtil.pemToKeystore(certificateFile, privateKeyFile,
                 "password"), passwd);
 
             TrustManagerFactory tmf = TrustManagerFactory

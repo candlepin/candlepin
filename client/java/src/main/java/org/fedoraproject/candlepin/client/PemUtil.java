@@ -18,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -27,9 +28,9 @@ import org.bouncycastle.openssl.PEMReader;
 /**
  * PemUtility
  */
-public class PemUtility {
+public class PemUtil {
 
-    private PemUtility() {
+    private PemUtil() {
 
     }
 
@@ -39,13 +40,10 @@ public class PemUtility {
             X509Certificate cert = readCert(certificateFile);
             Certificate[] certs = { cert };
 
-            PEMReader reader = new PEMReader(new FileReader(privateKeyFile));
-            KeyPair kPair = (KeyPair) reader.readObject();
-
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
             ks.setCertificateEntry("certificate", cert);
-            ks.setKeyEntry("privateKey", kPair.getPrivate(), password
+            ks.setKeyEntry("privateKey", readPrivateKey(privateKeyFile), password
                 .toCharArray(), certs);
             return ks;
         }
@@ -64,6 +62,17 @@ public class PemUtility {
             name = name.substring(0, location);
         }
         return name;
+    }
+    
+    public static PrivateKey readPrivateKey(String filename) {
+        try {
+            PEMReader reader = new PEMReader(new FileReader(filename));
+            KeyPair kPair = (KeyPair) reader.readObject();
+            return kPair.getPrivate();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);            
+        }
     }
     
     public static X509Certificate readCert(String certificateFile) {

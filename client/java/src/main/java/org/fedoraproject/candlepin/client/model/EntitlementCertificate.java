@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
+import java.math.BigInteger;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -21,12 +25,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Simple Entitlement Certificate Model
  */
-@XmlRootElement
+@XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class EntitlementCertificate {
     protected String key;
     protected String cert;
-    protected Long serial;
+    protected BigInteger serial;
+    
+    public EntitlementCertificate() {
+        
+    }
+    
+    public EntitlementCertificate(X509Certificate cert, PrivateKey privateKey) {
+        this.cert = cert.toString();
+        this.serial = cert.getSerialNumber();
+        this.key = privateKey.toString();
+    }
     public String getKey() {
         return key;
     }
@@ -39,10 +53,10 @@ public class EntitlementCertificate {
     public void setCert(String cert) {
         this.cert = cert;
     }
-    public Long getSerial() {
+    public BigInteger getSerial() {
         return serial;
     }
-    public void setSerial(Long serial) {
+    public void setSerial(BigInteger serial) {
         this.serial = serial;
     }
 }

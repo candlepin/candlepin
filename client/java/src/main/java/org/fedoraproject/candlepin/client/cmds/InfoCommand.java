@@ -14,9 +14,12 @@
  */
 package org.fedoraproject.candlepin.client.cmds;
 
+import java.util.List;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 
 /**
  * RegisterCommand
@@ -42,6 +45,21 @@ public class InfoCommand extends BaseCommand {
 
         if (client.isRegistered()) {
             System.out.println("Registered as consumer: " + client.getUUID());
+            List<EntitlementCertificate> certs = 
+                client.getCurrentEntitlementCertificates();
+            if (certs.size() > 0) {
+                System.out.println(
+                    String.format("There are %d current subsriptions", certs.size()));
+                System.out.println(
+                    String.format("%-20s", "serial"));             
+                for (EntitlementCertificate cert : certs) {
+                    System.out.println(
+                        String.format("%-20s", cert.getSerial()));
+                }
+            } 
+            else {
+                System.out.println("No current subscriptions");
+            }
         }
         else {
             System.out.println("Not registered");
