@@ -24,27 +24,32 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 /**
  *
  */
-public class PrincipalProviderForTesting implements Provider<Principal> {
+public class TestPrincipalProvider implements Provider<Principal> {
 
     private static final String OWNER_NAME = "Default-Owner";
 
     private OwnerCurator ownerCurator;
 
     @Inject
-    public PrincipalProviderForTesting(OwnerCurator ownerCurator) {
+    public TestPrincipalProvider(OwnerCurator ownerCurator) {
         this.ownerCurator = ownerCurator;
     }
 
     @Override
     public Principal get() {
-        Owner owner = ownerCurator.lookupByKey(OWNER_NAME);
+        TestPrincipalProviderSetter principalSingleton = TestPrincipalProviderSetter.get();
+        Principal principal = principalSingleton.getPrincipal();
+        if (principal == null) {
+            
+            Owner owner = ownerCurator.lookupByKey(OWNER_NAME);
 
-        if (owner == null) {
-            owner = new Owner(OWNER_NAME);
-            ownerCurator.create(owner);
-        }
-
-        return new UserPrincipal("Default User", owner, null);
+            if (owner == null) {
+                owner = new Owner(OWNER_NAME);
+                ownerCurator.create(owner);
+            }
+            principal = new UserPrincipal("Default User", owner, null);
+        }   
+        return principal;
     }
 
 }

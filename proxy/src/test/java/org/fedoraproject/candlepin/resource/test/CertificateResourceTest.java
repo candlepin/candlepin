@@ -18,7 +18,7 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.guice.PrincipalProviderForTesting;
+import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -43,7 +43,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     @Before
     public void createObjects() throws Exception {
         
-        this.principal = new PrincipalProviderForTesting(ownerCurator).get();
+        this.principal = new TestPrincipalProvider(ownerCurator).get();
         certResource = new CertificateResource(spacewalkCertCurator, certificateCurator, 
             i18n);
         

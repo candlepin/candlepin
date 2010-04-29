@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.AttributeCurator;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -53,6 +54,8 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
@@ -89,13 +92,26 @@ public class DatabaseTestFixture {
     
     @Before
     public void init() {
-        injector = Guice.createInjector(
-                new CandlepinCommonTestingModule(),
+        Module guiceOverrideModule = getGuiceOverrideModule();
+        if (guiceOverrideModule == null) {
+            injector = Guice.createInjector(
+                    new CandlepinCommonTestingModule(),
+                    new CandlepinNonServletEnvironmentTestingModule(),
+                    PersistenceService.usingJpa()
+                        .across(UnitOfWork.REQUEST)
+                        .buildModule()
+            );
+        }
+        else {
+            injector = Guice.createInjector(
+                Modules.override(new CandlepinCommonTestingModule()).with(
+                    guiceOverrideModule),
                 new CandlepinNonServletEnvironmentTestingModule(),
                 PersistenceService.usingJpa()
                     .across(UnitOfWork.REQUEST)
                     .buildModule()
-        );
+            );
+        }
 
         injector.getInstance(EntityManagerFactory.class); 
         emf = injector.getProvider(EntityManagerFactory.class).get();
@@ -124,6 +140,13 @@ public class DatabaseTestFixture {
        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
+        
+        // Clear any principal's configured in previous tests.
+        TestPrincipalProviderSetter.get().setPrincipal(null);
+    }
+    
+    protected Module getGuiceOverrideModule() {
+        return null;
     }
         
     protected EntityManager entityManager() {

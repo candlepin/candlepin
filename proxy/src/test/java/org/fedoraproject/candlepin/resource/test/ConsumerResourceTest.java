@@ -19,10 +19,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -90,6 +92,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         fullPool.setConsumed(new Long(10));
         poolCurator.create(fullPool);
+        
+        // Run these tests as a Consumer principal.
+        TestPrincipalProviderSetter.get().setPrincipal(new ConsumerPrincipal(consumer));
     }
     
     @Test
@@ -102,6 +107,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testGetCerts() {
+       
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
         List<EntitlementCertificate> serials = consumerResource.
             getEntitlementCertificates(consumer.getUuid(), null);
@@ -296,4 +302,5 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void unbindBySerialWithInvalidUuidShouldFail() {
         consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"));
     }
+    
 }
