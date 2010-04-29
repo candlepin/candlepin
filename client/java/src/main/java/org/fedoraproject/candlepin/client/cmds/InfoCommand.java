@@ -51,10 +51,13 @@ public class InfoCommand extends BaseCommand {
                 System.out.println(
                     String.format("There are %d current subsriptions", certs.size()));
                 System.out.println(
-                    String.format("%-20s", "serial"));             
+                    String.format("  %-20s %-30s %-25s %-25s", "Serial #", 
+                        "Product Name", "Start Date", "End Dae"));             
                 for (EntitlementCertificate cert : certs) {
                     System.out.println(
-                        String.format("%-20s", cert.getSerial()));
+                        String.format("  %-20s %-30s %-25s %-25s", 
+                            cert.getSerial(), cert.getProductName(), cert.getStartDate(), 
+                            cert.getEndDate()));
                 }
             } 
             else {

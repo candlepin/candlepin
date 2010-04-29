@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -21,6 +22,10 @@ import java.security.cert.X509Certificate;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.bouncycastle.x509.extension.X509ExtensionUtil;
+import org.fedoraproject.candlepin.client.ClientException;
+import org.fedoraproject.candlepin.client.PemUtil;
 
 /**
  * Simple Entitlement Certificate Model
@@ -37,9 +42,14 @@ public class EntitlementCertificate {
     }
     
     public EntitlementCertificate(X509Certificate cert, PrivateKey privateKey) {
-        this.cert = cert.toString();
-        this.serial = cert.getSerialNumber();
-        this.key = privateKey.toString();
+        try {
+            this.cert = PemUtil.getPemEncoded(cert);
+            this.serial = cert.getSerialNumber();
+            this.key = PemUtil.getPemEncoded(privateKey);
+        } 
+        catch (Exception e) {
+            throw new ClientException(e);
+        }
     }
     public String getKey() {
         return key;
@@ -59,4 +69,23 @@ public class EntitlementCertificate {
     public void setSerial(BigInteger serial) {
         this.serial = serial;
     }
+    
+    public X509Certificate getX509Cert() {
+        return PemUtil.createCert(cert);
+    }
+    
+    public String getProductName() {
+        return PemUtil.getExtensionValue(getX509Cert(), 
+            "1.3.6.1.4.1.2312.9.4.1", "Unknown");
+    }
+    
+    public String getStartDate() {
+        return PemUtil.getExtensionValue(getX509Cert(), 
+            "1.3.6.1.4.1.2312.9.4.6", "Unknown");
+    }    
+    
+    public String getEndDate() {
+        return PemUtil.getExtensionValue(getX509Cert(), 
+            "1.3.6.1.4.1.2312.9.4.7", "Unknown");
+    }        
 }

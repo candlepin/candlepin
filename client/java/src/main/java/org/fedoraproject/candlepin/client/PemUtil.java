@@ -14,8 +14,14 @@
  */
 package org.fedoraproject.candlepin.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -24,6 +30,8 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PEMWriter;
+import org.bouncycastle.x509.extension.X509ExtensionUtil;
 
 /**
  * PemUtility
@@ -86,5 +94,55 @@ public class PemUtil {
             throw new RuntimeException(e);
         }        
     }
+    
+    public static X509Certificate createCert(String certData) {
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X509");
+            X509Certificate cert = (X509Certificate) cf
+                .generateCertificate(new ByteArrayInputStream(certData.getBytes()));        
+            return cert;
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }        
+    }    
+    
+
+    public static String getPemEncoded(X509Certificate cert) throws 
+        GeneralSecurityException, IOException {
+        
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+        PEMWriter w =  new PEMWriter(oswriter);
+        w.writeObject(cert);
+        w.close();
+        return new String(byteArrayOutputStream.toByteArray());
+    }
+        
+    public static String getPemEncoded(Key key) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+        PEMWriter writer = new PEMWriter(oswriter);
+        writer.writeObject(key);
+        writer.close();
+        return new String(byteArrayOutputStream.toByteArray());
+    }    
+    
+    public static String getExtensionValue(X509Certificate cert, String oid, 
+        String defaultValue) {
+        byte[] value = cert.getExtensionValue(oid);
+        
+        if (value != null) {
+            try {
+                return X509ExtensionUtil.fromExtensionValue(value).toString();
+            }
+            catch (IOException e) {
+                throw new ClientException(e);
+            }
+        } 
+        else {
+            return defaultValue;
+        }
+    }    
 
 }
