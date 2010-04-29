@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.4
+Version: 0.0.5
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,6 +95,63 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Thu Apr 29 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.5-1
+- 582223 - don't allow the same product to be consumed more than once (jbowes@redhat.com)
+- More serial BigInteger/Long fixes. (dgoodwin@redhat.com)
+- Revert to using BigInteger for certificate serials. (dgoodwin@redhat.com)
+- Allow roles to be specified in candlepin.conf. (dgoodwin@redhat.com)
+- Move the client bits into their own directory (bkearney@redhat.com)
+- getEntitlementCertificateSerials was returning a entCert's id instead of it's
+  serial number (alikins@redhat.com)
+- added tests around content set extensions in entitlement certificate.
+  (ddolguik@redhat.com)
+- Adding a catch clause for CandlepinExceptions, which have localized messages
+  (calfonso@redhat.com)
+- Remove stray print from cucumber tests (jbowes@redhat.com)
+- Move exceptions to their own package, and add them to the api
+  (jbowes@redhat.com)
+- First cut of writing out the entitlement certificates (bkearney@redhat.com)
+- Add additional setters to the certificate class so that resteasy will de-
+  serialize it correctly (bkearney@redhat.com)
+- added create_pool and create_product methods. added PoolResource#createPool()
+  (ddolguik@redhat.com)
+- buildfile with a different set of versions, for building against jpackage
+  repos. (ayoung@redhat.com)
+- No longer ignores versions. Minor cleanup (ayoung@redhat.com)
+- Generate unique cert serials from a db sequence. (dgoodwin@redhat.com)
+- added create_product method (ddolguik@redhat.com)
+- Adding crud methods for owners and consumer_types to ruby lib.  (jharris@redhat.com)
+- i18nize AuthInterceptor (jbowes@redhat.com)
+- Rename SSLAuthFilterTest -> SSLAuthTest (jbowes@redhat.com)
+- Basic list commands work from the command line (bkearney@redhat.com)
+- Adding in the product name for poolCurator .find() and .findAll() (jharris@redhat.com)
+- Initial client code (bkearney@redhat.com)
+- 579913 - clearing out old manager files, adding productname to pool (jharris@redhat.com)
+- Replace servlet filter authentication with resteasy interceptors (jbowes@redhat.com)
+- Switch from constructor injection to method injection for principal (jbowes@redhat.com)
+- Add fuzzy product matching for subscriptions/pools. (dgoodwin@redhat.com)
+- Fix up the failing loggingfiltertests (jbowes@redhat.com)
+- implmented ConsumerResource#unbindBySerial() (ddolguik@redhat.com)
+- Add status output to the logging filter (bkearney@redhat.com)
+- Script to generate a sql script to import a product cert as a Product (alikins@redhat.com)
+- Add a "type" to the content model (aka, 'yum', 'file').  (alikins@redhat.com)
+- Silence ruby warning about argument parenthesis (jbowes@redhat.com)
+- chop lambda usage out of cucumber tests (jbowes@redhat.com)
+- added retrieval of entitlements by certificate serial number. (ddolguik@redhat.com)
+- Fix an NPE with 404s and no media types. (bkearney@redhat.com)
+- Add sub/product adapter methods for matching product provides. (dgoodwin@redhat.com)
+- move over to use OIDUtil for contept->number mapping instead of hardcoding it (alikins@redhat.com)
+- Do not import the sat cert thats full of bogus product info (alikins@redhat.com)
+- Need a id seq here (alikins@redhat.com)
+- add hash to product and content models (alikins@redhat.com)
+- Fix up product/content model mappings. (alikins@redhat.com)
+- more roughing out the content info (alikins@redhat.com)
+- Add getter/setters for arch/variant/version (alikins@redhat.com)
+- Start adding stuff to the product model for the oid product model
+- Bundle OIDUtil for now (alikins@redhat.com)
+- Change deploy and gen-cert scripts to use the hostname of the machine instead
+  of localhost (alikins@redhat.com)
+
 * Fri Apr 23 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.4-1
 - logging cleanup (jbowes@redhat.com)
 - Remove untranslated de strings (jbowes@redhat.com)
