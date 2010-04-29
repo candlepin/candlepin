@@ -36,9 +36,7 @@ public class PemUtility {
     public static KeyStore pemToKeystore(String certificateFile,
         String privateKeyFile, String password) {
         try {
-            CertificateFactory cf = CertificateFactory.getInstance("X509");
-            X509Certificate cert = (X509Certificate) cf
-                .generateCertificate(new FileInputStream(certificateFile));
+            X509Certificate cert = readCert(certificateFile);
             Certificate[] certs = { cert };
 
             PEMReader reader = new PEMReader(new FileReader(privateKeyFile));
@@ -57,22 +55,27 @@ public class PemUtility {
     }
 
     public static String extractUUID(String certificateFile) {
+        X509Certificate cert = readCert(certificateFile);
+        String name = cert.getSubjectDN().getName();
+        int location = name.indexOf("UID=");
+        if (location > 0) {
+            name = name.substring(location + 4);
+            location = name.indexOf(",");
+            name = name.substring(0, location);
+        }
+        return name;
+    }
+    
+    public static X509Certificate readCert(String certificateFile) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X509");
             X509Certificate cert = (X509Certificate) cf
-                .generateCertificate(new FileInputStream(certificateFile));
-            String name = cert.getSubjectDN().getName();
-            int location = name.indexOf("UID=");
-            if (location > 0) {
-                name = name.substring(location + 4);
-                location = name.indexOf(",");
-                name = name.substring(0, location);
-            }
-            return name;
+                .generateCertificate(new FileInputStream(certificateFile));        
+            return cert;
         }
         catch (Exception e) {
             throw new RuntimeException(e);
-        }
+        }        
     }
 
 }

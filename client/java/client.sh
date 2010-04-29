@@ -1,5 +1,5 @@
 # ENV Variables
-CANDLEPIN_HOME=/home/bkearney/code/candlepin/proxy
+CANDLEPIN_HOME=/home/bkearney/code/candlepin/client/java
 REPO=/home/bkearney/.m2/repository
 
 #Classpath

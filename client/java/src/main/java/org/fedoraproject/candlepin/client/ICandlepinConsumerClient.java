@@ -26,10 +26,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.client.model.Consumer;
+import org.fedoraproject.candlepin.client.model.Entitlement;
+import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.client.model.Pool;
 import org.jboss.resteasy.client.ClientResponse;
 
 /**

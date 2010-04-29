@@ -32,3 +32,6 @@ jaas/bin
 .DS_Store
 proxy/.project
 *~
+client/java/target
+client/java/.project
+client/java/.classpath

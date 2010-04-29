@@ -18,6 +18,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.math.BigInteger;
 import java.net.URL;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -27,11 +29,10 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.protocol.Protocol;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.client.model.Consumer;
+import org.fedoraproject.candlepin.client.model.Entitlement;
+import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.client.model.Pool;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClientExecutor;
@@ -90,7 +91,7 @@ public class CandlepinConsumerClient {
             password);
         Consumer cons = new Consumer();
         cons.setName(name);
-        cons.setType(new ConsumerType(type));
+        cons.setType(type);
         cons = client.register(cons);
         recordIdentity(cons);
         return cons.getUuid();
@@ -155,6 +156,7 @@ public class CandlepinConsumerClient {
         ICandlepinConsumerClient client = clientWithCert();
         return client.bindByEntitlementID(getUUID(), poolId).getEntity();
     }
+    
 
     public boolean updateEntitlementCertificates() {
         mkdir(entitlementDirName);
@@ -162,15 +164,39 @@ public class CandlepinConsumerClient {
         List<EntitlementCertificate> certs = client
             .getEntitlementCertificates(getUUID());
         Set<BigInteger> certSerials = new java.util.HashSet<BigInteger>();
+        //EntitlementCertificate
         for (EntitlementCertificate cert : certs) {
             String entCertFileName = entitlementDirName + File.separator +
                 cert.getSerial() + "-cert.pem";
             String entKeyFileName = entitlementDirName + File.separator +
                 cert.getSerial() + "-key.pem";
-            dumpToFile(entCertFileName, cert.getCertAsString());
-            dumpToFile(entKeyFileName, cert.getKeyAsString());
+            dumpToFile(entCertFileName, cert.getCert());
+            dumpToFile(entKeyFileName, cert.getKey());
         }
         return true;
+    }
+    
+    public List<EntitlementCertificate> getCurrentEntitlementCertificates() {
+        try {
+            mkdir(entitlementDirName);
+            List<EntitlementCertificate> certs = new ArrayList<EntitlementCertificate>();
+            File entitlementDir = new File(entitlementDirName);      
+            for (String filename : entitlementDir.list()) {
+                if (filename.endsWith("-cert.pem")) {
+                    X509Certificate cert = PemUtility.readCert(filename);
+                    EntitlementCertificate entCert = new EntitlementCertificate();
+                    //entCert.setCertAsString(cert.getEncoded());
+                    entCert.setSerial(cert.getSerialNumber().longValue());
+                    //TODO ADD THE KEY
+                    certs.add(entCert);
+                }
+            }
+    
+            return certs;
+        }
+        catch (Exception e) {
+            throw new ClientException(e);
+        }            
     }
 
     protected ICandlepinConsumerClient clientWithCert() {
@@ -208,17 +234,18 @@ public class CandlepinConsumerClient {
         return client;
     }
 
-    protected void recordIdentity(Consumer aConsumer) {
+    protected void recordIdentity(Consumer aConsumer) {        
         mkdir(consumerDirName);
-        dumpToFile(certFileName, aConsumer.getIdCert().getCertAsString());
-        dumpToFile(keyFileName, aConsumer.getIdCert().getKeyAsString());
+        System.out.println(aConsumer.getIdCert().getCert());
+        dumpToFile(certFileName, aConsumer.getIdCert().getCert());
+        dumpToFile(keyFileName, aConsumer.getIdCert().getKey());
     }
 
     protected void mkdir(String dirName) {
         try {
             File dir = new File(dirName);
             if (!dir.exists()) {
-                dir.mkdir();
+                dir.mkdirs();
             }
         }
         catch (Exception e) {

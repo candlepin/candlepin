@@ -18,11 +18,11 @@ import java.security.Security;
 import java.util.List;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.client.model.Entitlement;
+import org.fedoraproject.candlepin.client.model.Pool;
 
 /**
- * TestClient
+ * TestClient class
  */
 public class TestClient {
 

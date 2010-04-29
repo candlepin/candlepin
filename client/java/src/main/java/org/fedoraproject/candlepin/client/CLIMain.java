@@ -22,6 +22,7 @@ import org.apache.commons.cli.ParseException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.fedoraproject.candlepin.client.cmds.BaseCommand;
 import org.fedoraproject.candlepin.client.cmds.HelpCommand;
+import org.fedoraproject.candlepin.client.cmds.InfoCommand;
 import org.fedoraproject.candlepin.client.cmds.ListCommand;
 import org.fedoraproject.candlepin.client.cmds.RegisterCommand;
 import org.fedoraproject.candlepin.client.cmds.SubscribeCommand;
@@ -41,7 +42,8 @@ public class CLIMain {
     protected void registerCommands() {
         // First, create the client we will need to use
         try {
-            Class[] commands = { RegisterCommand.class, ListCommand.class,
+            Class[] commands = { RegisterCommand.class,
+                InfoCommand.class, ListCommand.class,
                 SubscribeCommand.class, UpdateCommand.class };
             for (Class cmdClass : commands) {
                 BaseCommand cmd = (BaseCommand) cmdClass.newInstance();
