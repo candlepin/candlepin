@@ -75,10 +75,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
         
-        ConsumerType type = new ConsumerType("some-consumer-type");
-        consumerTypeCurator.create(type);
-        
-        consumer = TestUtil.createConsumer(type, owner);
+        consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
         
         product = TestUtil.createProduct();
@@ -301,6 +298,15 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test(expected = NotFoundException.class)
     public void unbindBySerialWithInvalidUuidShouldFail() {
         consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"));
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void testGetCertificatesFailsIfUuidDoesNotMatch() {
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumerCurator.create(evilConsumer);
+        TestPrincipalProviderSetter.get().setPrincipal(
+            new ConsumerPrincipal(evilConsumer));
+        consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
     
 }

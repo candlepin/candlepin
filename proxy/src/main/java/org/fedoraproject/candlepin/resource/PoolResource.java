@@ -24,6 +24,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -77,6 +78,7 @@ public class PoolResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "pools")
+    @EnforceConsumer(queryParam = "consumer")
     public List<Pool> list(@QueryParam("owner") Long ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId) {

@@ -28,5 +28,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface EnforceConsumer {
 
-    String pathParam() default "consumer_uuid";
+    String pathParam() default "";
+    String queryParam() default "";
 }

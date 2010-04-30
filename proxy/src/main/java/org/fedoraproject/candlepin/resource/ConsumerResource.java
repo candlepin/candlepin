@@ -123,7 +123,7 @@ public class ConsumerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
-    @EnforceConsumer
+    @EnforceConsumer(pathParam = "consumer_uuid")
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
         return verifyAndLookupConsumer(uuid);
     }
@@ -212,7 +212,7 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @Transactional
-    @EnforceConsumer
+    @EnforceConsumer(pathParam = "consumer_uuid")
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
@@ -233,7 +233,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/products/{product_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @EnforceConsumer
+    @EnforceConsumer(pathParam = "consumer_uuid")
     public Product getProduct(@PathParam("consumer_uuid") String cid,
         @PathParam("product_id") String pid) {
         return null;
@@ -248,7 +248,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
-    @EnforceConsumer
+    @EnforceConsumer(pathParam = "consumer_uuid")
     public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
@@ -288,7 +288,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "serials")
-    @EnforceConsumer
+    @EnforceConsumer(pathParam = "consumer_uuid")
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -483,7 +483,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
-    @EnforceConsumer
+    @EnforceConsumer(pathParam = "consumer_uuid")
     public void unbindAllOrBySerialNumber(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serial") String serials) {
@@ -523,7 +523,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
-    @EnforceConsumer
+    @EnforceConsumer(pathParam = "consumer_uuid")
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("dbid") Long dbid) {
 
@@ -540,7 +540,7 @@ public class ConsumerResource {
     
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
-    @EnforceConsumer
+    @EnforceConsumer(pathParam = "consumer_uuid")
     public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid, 
         @PathParam("serial") Long serial) {
         

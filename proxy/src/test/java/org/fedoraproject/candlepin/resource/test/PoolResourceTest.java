@@ -18,8 +18,11 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -158,4 +161,14 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListNoSuchProduct() {
         poolResource.list(owner1.getId(), null, "boogity");
     }
+    
+    @Test(expected = ForbiddenException.class)
+    public void testConsumerCannotListPoolsForAnotherConsumer() {
+        TestPrincipalProviderSetter.get().setPrincipal(
+            new ConsumerPrincipal(failConsumer));
+        
+        poolResource.list(null, passConsumer.getUuid(), null);
+    }
+
+
 }
