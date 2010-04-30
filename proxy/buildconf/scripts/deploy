@@ -65,32 +65,48 @@ function import_ca_cert_into_keystore
 	echo y | sudo keytool -importcert -alias candlepin_ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
 }
 
-HOSTNAME=$(hostname)
+HOSTNAME=${HOSTNAME:-$(hostname)}
 function generate_tomcat_certificate
 {
-	echo -n "\n" | sudo keytool -genkeypair -dname "CN=$HOSTNAME, OU=ateam, O=redhat,C=us"  -alias tomcat -keyalg RSA -keystore /etc/tomcat6/keystore -storepass password
+	echo -n "\n" | sudo keytool -genkeypair -dname "CN=$HOSTNAME, OU=ateam, O=redhat,C=us"  -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password
 
+}
+
+function update_keystore_with_delete
+{
+    ALIAS=$1
+    if [ "$ALIAS" = "tomcat" ]; then
+        generate_tomcat_certificate
+    else
+        import_ca_cert_into_keystore
+    fi
+	if [ "$?" -ne "0" ] && [ "$FORCECERT" != "" ]; then
+		echo "alias already exists. deleting..."
+		sudo keytool -delete -alias $ALIAS -keystore $CONTAINER_CONF_DIR/keystore -storepass password
+		if [ "$?" -ne "0" ]; then
+			echo "couldn't delete $ALIAS alias, bailing."
+			exit 1
+		else
+			echo "deleted $ALIAS."
+		fi
+        
+        if [ "$ALIAS" = "tomcat" ]; then
+            generate_tomcat_certificate
+        else
+            import_ca_cert_into_keystore
+        fi
+
+		if [ "$?" -ne "0" ]; then
+			echo "failed to import cert. bailing."
+			exit 1
+		fi
+	fi
 }
 
 function update_keystore
 {
-	generate_tomcat_certificate
-	import_ca_cert_into_keystore
-	if [ "$?" -ne "0" ]; then
-		echo "ca_crt alias already exists. deleting..."
-		sudo keytool -delete -alias candlepin_ca_crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
-		if [ "$?" -ne "0" ]; then
-			echo "couldn't delete candlepin_ca_crt alias, bailing."
-			exit 1
-		else
-			echo "deleted candlepin_ca_crt."
-		fi
-		import_ca_cert_into_keystore
-		if [ "$?" -ne "0" ]; then
-			echo "failed to import ca cert. bailing."
-			exit 1
-		fi
-	fi
+    update_keystore_with_delete "tomcat"
+    update_keystore_with_delete "candlepin_ca_crt"
 }
 
 function update_tomcat_conf
