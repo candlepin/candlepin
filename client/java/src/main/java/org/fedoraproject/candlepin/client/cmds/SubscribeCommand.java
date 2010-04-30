@@ -49,6 +49,7 @@ public class SubscribeCommand extends BaseCommand {
         CandlepinConsumerClient client = this.getClient();
 
         client.bindByPool(Long.decode(pool));
+        client.updateEntitlementCertificates();
     }
 
 }

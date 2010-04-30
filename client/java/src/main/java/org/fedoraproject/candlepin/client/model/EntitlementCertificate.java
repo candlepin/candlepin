@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.fedoraproject.candlepin.client.ClientException;
 import org.fedoraproject.candlepin.client.PemUtil;
 
@@ -73,6 +72,10 @@ public class EntitlementCertificate {
     public X509Certificate getX509Cert() {
         return PemUtil.createCert(cert);
     }
+    
+    public PrivateKey getPrivateKey() {
+        return PemUtil.createPrivateKey(key);
+    }    
     
     public String getProductName() {
         return PemUtil.getExtensionValue(getX509Cert(), 

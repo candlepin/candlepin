@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyPair;
@@ -106,6 +107,17 @@ public class PemUtil {
             throw new RuntimeException(e);
         }        
     }    
+    
+    public static PrivateKey createPrivateKey(String keyData) {
+        try {
+            PEMReader reader = new PEMReader(new StringReader(keyData));
+            KeyPair kPair = (KeyPair) reader.readObject();
+            return kPair.getPrivate();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);            
+        }
+    }        
     
 
     public static String getPemEncoded(X509Certificate cert) throws 

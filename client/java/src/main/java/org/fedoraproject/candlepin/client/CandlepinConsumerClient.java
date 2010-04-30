@@ -15,8 +15,10 @@
 package org.fedoraproject.candlepin.client;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.net.URL;
+import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -197,6 +199,22 @@ public class CandlepinConsumerClient {
         catch (Exception e) {
             throw new ClientException(e);
         }            
+    }
+    
+    public void generatePKCS12Certificates(String password) {
+        try {
+            List<EntitlementCertificate> certs = getCurrentEntitlementCertificates();
+            for (EntitlementCertificate cert : certs) {
+                KeyStore store = PKCS12Util.createPKCS12Keystore(cert.getX509Cert(),
+                    cert.getPrivateKey(), null);
+                File p12File = new File(entitlementDirName + 
+                    File.separator + cert.getSerial() + ".p12");
+                store.store(new FileOutputStream(p12File), password.toCharArray());
+            }
+        }
+        catch (Exception e) {
+            throw new ClientException(e);            
+        }
     }
 
     protected ICandlepinConsumerClient clientWithCert() {
