@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -35,60 +34,66 @@ public class EntitlementCertificate {
     protected String key;
     protected String cert;
     protected BigInteger serial;
-    
+
     public EntitlementCertificate() {
-        
+
     }
-    
+
     public EntitlementCertificate(X509Certificate cert, PrivateKey privateKey) {
         try {
             this.cert = PemUtil.getPemEncoded(cert);
             this.serial = cert.getSerialNumber();
             this.key = PemUtil.getPemEncoded(privateKey);
-        } 
+        }
         catch (Exception e) {
             throw new ClientException(e);
         }
     }
+
     public String getKey() {
         return key;
     }
+
     public void setKey(String key) {
         this.key = key;
     }
+
     public String getCert() {
         return cert;
     }
+
     public void setCert(String cert) {
         this.cert = cert;
     }
+
     public BigInteger getSerial() {
         return serial;
     }
+
     public void setSerial(BigInteger serial) {
         this.serial = serial;
     }
-    
+
     public X509Certificate getX509Cert() {
         return PemUtil.createCert(cert);
     }
-    
+
     public PrivateKey getPrivateKey() {
         return PemUtil.createPrivateKey(key);
-    }    
-    
+    }
+
     public String getProductName() {
-        return PemUtil.getExtensionValue(getX509Cert(), 
+        return PemUtil.getExtensionValue(getX509Cert(),
             "1.3.6.1.4.1.2312.9.4.1", "Unknown");
     }
-    
+
     public String getStartDate() {
-        return PemUtil.getExtensionValue(getX509Cert(), 
+        return PemUtil.getExtensionValue(getX509Cert(),
             "1.3.6.1.4.1.2312.9.4.6", "Unknown");
-    }    
-    
+    }
+
     public String getEndDate() {
-        return PemUtil.getExtensionValue(getX509Cert(), 
+        return PemUtil.getExtensionValue(getX509Cert(),
             "1.3.6.1.4.1.2312.9.4.7", "Unknown");
-    }        
+    }
 }

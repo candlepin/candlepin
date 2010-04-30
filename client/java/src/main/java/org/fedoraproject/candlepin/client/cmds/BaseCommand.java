@@ -63,7 +63,7 @@ public abstract class BaseCommand {
     public CandlepinConsumerClient getClient() {
         return client;
     }
-    
+
     public void setClient(CandlepinConsumerClient client) {
         this.client = client;
     }

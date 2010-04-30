@@ -52,8 +52,8 @@ public class PemUtil {
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
             ks.setCertificateEntry("certificate", cert);
-            ks.setKeyEntry("privateKey", readPrivateKey(privateKeyFile), password
-                .toCharArray(), certs);
+            ks.setKeyEntry("privateKey", readPrivateKey(privateKeyFile),
+                password.toCharArray(), certs);
             return ks;
         }
         catch (Exception e) {
@@ -72,7 +72,7 @@ public class PemUtil {
         }
         return name;
     }
-    
+
     public static PrivateKey readPrivateKey(String filename) {
         try {
             PEMReader reader = new PEMReader(new FileReader(filename));
@@ -80,34 +80,35 @@ public class PemUtil {
             return kPair.getPrivate();
         }
         catch (Exception e) {
-            throw new RuntimeException(e);            
+            throw new RuntimeException(e);
         }
     }
-    
+
     public static X509Certificate readCert(String certificateFile) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X509");
             X509Certificate cert = (X509Certificate) cf
-                .generateCertificate(new FileInputStream(certificateFile));        
+                .generateCertificate(new FileInputStream(certificateFile));
             return cert;
         }
         catch (Exception e) {
             throw new RuntimeException(e);
-        }        
+        }
     }
-    
+
     public static X509Certificate createCert(String certData) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X509");
             X509Certificate cert = (X509Certificate) cf
-                .generateCertificate(new ByteArrayInputStream(certData.getBytes()));        
+                .generateCertificate(new ByteArrayInputStream(certData
+                    .getBytes()));
             return cert;
         }
         catch (Exception e) {
             throw new RuntimeException(e);
-        }        
-    }    
-    
+        }
+    }
+
     public static PrivateKey createPrivateKey(String keyData) {
         try {
             PEMReader reader = new PEMReader(new StringReader(keyData));
@@ -115,35 +116,36 @@ public class PemUtil {
             return kPair.getPrivate();
         }
         catch (Exception e) {
-            throw new RuntimeException(e);            
+            throw new RuntimeException(e);
         }
-    }        
-    
+    }
 
-    public static String getPemEncoded(X509Certificate cert) throws 
-        GeneralSecurityException, IOException {
-        
+    public static String getPemEncoded(X509Certificate cert)
+        throws GeneralSecurityException, IOException {
+
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
-        PEMWriter w =  new PEMWriter(oswriter);
+        OutputStreamWriter oswriter = new OutputStreamWriter(
+            byteArrayOutputStream);
+        PEMWriter w = new PEMWriter(oswriter);
         w.writeObject(cert);
         w.close();
         return new String(byteArrayOutputStream.toByteArray());
     }
-        
+
     public static String getPemEncoded(Key key) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+        OutputStreamWriter oswriter = new OutputStreamWriter(
+            byteArrayOutputStream);
         PEMWriter writer = new PEMWriter(oswriter);
         writer.writeObject(key);
         writer.close();
         return new String(byteArrayOutputStream.toByteArray());
-    }    
-    
-    public static String getExtensionValue(X509Certificate cert, String oid, 
+    }
+
+    public static String getExtensionValue(X509Certificate cert, String oid,
         String defaultValue) {
         byte[] value = cert.getExtensionValue(oid);
-        
+
         if (value != null) {
             try {
                 return X509ExtensionUtil.fromExtensionValue(value).toString();
@@ -151,10 +153,10 @@ public class PemUtil {
             catch (IOException e) {
                 throw new ClientException(e);
             }
-        } 
+        }
         else {
             return defaultValue;
         }
-    }    
+    }
 
 }

@@ -45,21 +45,20 @@ public class InfoCommand extends BaseCommand {
 
         if (client.isRegistered()) {
             System.out.println("Registered as consumer: " + client.getUUID());
-            List<EntitlementCertificate> certs = 
-                client.getCurrentEntitlementCertificates();
+            List<EntitlementCertificate> certs = client
+                .getCurrentEntitlementCertificates();
             if (certs.size() > 0) {
-                System.out.println(
-                    String.format("There are %d current subsriptions", certs.size()));
-                System.out.println(
-                    String.format("  %-20s %-30s %-25s %-25s", "Serial #", 
-                        "Product Name", "Start Date", "End Dae"));             
+                System.out.println(String.format(
+                    "There are %d current subsriptions", certs.size()));
+                System.out.println(String.format("  %-20s %-30s %-25s %-25s",
+                    "Serial #", "Product Name", "Start Date", "End Dae"));
                 for (EntitlementCertificate cert : certs) {
-                    System.out.println(
-                        String.format("  %-20s %-30s %-25s %-25s", 
-                            cert.getSerial(), cert.getProductName(), cert.getStartDate(), 
-                            cert.getEndDate()));
+                    System.out.println(String.format(
+                        "  %-20s %-30s %-25s %-25s", cert.getSerial(), cert
+                            .getProductName(), cert.getStartDate(), cert
+                            .getEndDate()));
                 }
-            } 
+            }
             else {
                 System.out.println("No current subscriptions");
             }
