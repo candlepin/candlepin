@@ -165,12 +165,8 @@ public class Product implements Persisted {
         
         for (Product childProduct : childProducts) {
             Set<Product> ps = new HashSet<Product>();
-            log.debug("product.name " + childProduct.getName());
-            log.debug("adding childProduct " + childProduct);
-            products.add(childProduct);
             ps = childProduct.getAllChildProducts(products);
             for (Product p : ps) { 
-//                log.debug("adding " + p.getName() + "to " + products);
                 products.add(p);
             }
         }
