@@ -16,9 +16,9 @@ if [ ! -d $CERTS_HOME ]; then
     sudo mkdir -p $CERTS_HOME
 fi
 
-HOSTNAME=$(hostname)
+HOSTNAME=${HOSTNAME:-$(hostname)}
 
-if [ -f $CA_KEY ] && [ -f $CA_CERT ]; then
+if [ -f $CA_KEY ] && [ -f $CA_CERT ] && [ "$FORCECERT" = "" ]; then
     echo "Certificates are already present."
 else
     echo "Creating CA private key"
