@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resteasy.interceptor;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
@@ -32,7 +33,8 @@ import com.google.inject.Inject;
  * BasicAuth
  */
 class BasicAuth {
-    
+
+    private Logger log = Logger.getLogger(BasicAuth.class);
     private UserServiceAdapter userServiceAdapter;
     private OwnerCurator ownerCurator;
     
@@ -60,6 +62,13 @@ class BasicAuth {
             String password = userpass[1];
 
             if (userServiceAdapter.validateUser(username, password)) {
+                Principal principal = createPrincipal(username);
+                if (log.isDebugEnabled()) {
+                    log.debug("principal created for owner '" +
+                        principal.getOwner().getDisplayName() + "' with username '" +
+                        username + "'");
+                }
+
                 return createPrincipal(username);
             }
         }

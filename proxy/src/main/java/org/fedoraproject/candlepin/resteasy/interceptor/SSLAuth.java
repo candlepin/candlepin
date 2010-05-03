@@ -49,7 +49,9 @@ class SSLAuth {
             .getAttribute(CERTIFICATES_ATTR);
 
         if (certs == null || certs.length < 1) {
-            debugMessage("no certificate was present to authenticate the client");
+            if (log.isDebugEnabled()) {
+                log.debug("no certificate was present to authenticate the client");
+            }
 
             return null;
         }
@@ -58,7 +60,16 @@ class SSLAuth {
         // with the first one in the array being the certificate of the client itself.
         X509Certificate identityCert = certs[0];
 
-        return createPrincipal(parseUuid(identityCert));
+        ConsumerPrincipal principal = createPrincipal(parseUuid(identityCert));
+        
+        if (log.isDebugEnabled()) {
+            log.debug("principal created for owner '" +
+                principal.getOwner().getDisplayName() +
+                "' with consumer '" +
+                principal.getConsumer().getUuid() + "'");
+        }
+        
+        return principal;
     }
 
     // Pulls the consumer uuid off of the x509 cert.
@@ -76,7 +87,7 @@ class SSLAuth {
         return dnAttributes.get(UUID_DN_ATTRIBUTE);
     }
 
-    private Principal createPrincipal(String consumerUuid) {
+    private ConsumerPrincipal createPrincipal(String consumerUuid) {
         if (consumerUuid != null) {
             Consumer consumer = this.consumerCurator.lookupByUuid(consumerUuid);
 
@@ -88,9 +99,4 @@ class SSLAuth {
         return null;
     }
 
-    private void debugMessage(String msg) {
-        if (log.isDebugEnabled()) {
-            log.debug(msg);
-        }
-    }
 }

@@ -102,6 +102,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
                 principal = sslAuth.getPrincipal(request);
             }
             else {
+                log.debug("SSLAuth disabled, setting NoAuth Principal");
                 principal = new NoAuthPrincipal();
             }
         }
