@@ -63,5 +63,11 @@ public class ConsumerPrincipal extends Principal {
         hash = 83 * hash + (this.consumer != null ? this.consumer.hashCode() : 0);
         return hash;
     }
+    
+    public String toString() {
+        return "ConsumerPrincipal [uuid=" + consumer.getUuid() + ", roles=" + 
+            getRoles() + "]"; 
+         
+    }
 
 }

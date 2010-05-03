@@ -16,9 +16,13 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.*;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -33,6 +37,7 @@ import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
 
 /**
  * PoolResourceTest
@@ -88,7 +93,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(passConsumer.getType());
         consumerCurator.create(passConsumer);
         
-        TestPrincipalProviderSetter.get().setPrincipal(new ConsumerPrincipal(passConsumer));
+        // Run these tests as an owner admin:
+        List<Role> roles = new LinkedList<Role>();
+        roles.add(Role.OWNER_ADMIN);
+        Principal ownerAdmin = new UserPrincipal("someuser", owner1, roles);
+        TestPrincipalProviderSetter.get().setPrincipal(ownerAdmin);
     }
     
     @Test
@@ -161,6 +170,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test(expected = NotFoundException.class)
     public void testListNoSuchProduct() {
         poolResource.list(owner1.getId(), null, "boogity");
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void ownerAdminCannotCreatePoolsDirectly() {
+        poolResource.createPool(TestUtil.createEntitlementPool(TestUtil.createProduct()));
     }
     
     @Test(expected = ForbiddenException.class)

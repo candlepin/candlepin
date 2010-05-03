@@ -65,4 +65,10 @@ public class UserPrincipal extends Principal {
         return hash;
     }
 
+    public String toString() {
+        return "UserPrincipal [username=" + username + ", roles=" + 
+            getRoles() + "]"; 
+         
+    }
+
 }
