@@ -62,7 +62,7 @@ class SSLAuth {
 
         ConsumerPrincipal principal = createPrincipal(parseUuid(identityCert));
         
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled() && principal != null) {
             log.debug("principal created for owner '" +
                 principal.getOwner().getDisplayName() +
                 "' with consumer '" +

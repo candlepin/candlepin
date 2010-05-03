@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Owner;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
@@ -64,7 +65,8 @@ public class SSLAuthTest {
      */
     @Test
     public void correctUserName() throws Exception {
-        Consumer consumer = new Consumer("machine_name", null,
+        Owner owner = new Owner("test owner");
+        Consumer consumer = new Consumer("machine_name", owner,
                 new ConsumerType(ConsumerType.SYSTEM));
         ConsumerPrincipal expected = new ConsumerPrincipal(consumer);
 

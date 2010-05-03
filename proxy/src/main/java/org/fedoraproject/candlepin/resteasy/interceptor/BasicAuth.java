@@ -69,7 +69,7 @@ class BasicAuth {
                         username + "'");
                 }
 
-                return createPrincipal(username);
+                return principal;
             }
         }
 
