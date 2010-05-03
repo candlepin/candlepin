@@ -90,7 +90,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         fullPool.setConsumed(new Long(10));
         poolCurator.create(fullPool);
         
-        // Run these tests as a Consumer principal.
+        // Run these tests with the consumer role:
         TestPrincipalProviderSetter.get().setPrincipal(new ConsumerPrincipal(consumer));
     }
     
@@ -301,12 +301,17 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
     
     @Test(expected = ForbiddenException.class)
-    public void testGetCertificatesFailsIfUuidDoesNotMatch() {
+    public void testCannotGetAnotherConsumersCerts() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
         TestPrincipalProviderSetter.get().setPrincipal(
             new ConsumerPrincipal(evilConsumer));
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void testConsumerCannotListAllConsumers() {
+        consumerResource.list();
     }
     
 }

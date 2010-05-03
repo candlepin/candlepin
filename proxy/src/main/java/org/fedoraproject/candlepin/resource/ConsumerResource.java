@@ -33,7 +33,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -109,7 +111,8 @@ public class ConsumerResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Wrapped(element = "consumers")    
+    @Wrapped(element = "consumers")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Consumer> list() {
         return consumerCurator.findAll();
     }
@@ -124,6 +127,7 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @EnforceConsumer(pathParam = "consumer_uuid")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
         return verifyAndLookupConsumer(uuid);
     }
@@ -139,6 +143,7 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Consumer create(Consumer in, @Context Principal principal)
         throws BadRequestException {
         // API:registerConsumer
@@ -213,6 +218,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     @Transactional
     @EnforceConsumer(pathParam = "consumer_uuid")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
@@ -249,6 +255,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
     @EnforceConsumer(pathParam = "consumer_uuid")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
@@ -289,6 +296,7 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "serials")
     @EnforceConsumer(pathParam = "consumer_uuid")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -419,6 +427,7 @@ public class ConsumerResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
         @QueryParam("product") String productId) {
@@ -457,6 +466,7 @@ public class ConsumerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("product") String productId) {
@@ -484,6 +494,7 @@ public class ConsumerResource {
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
     @EnforceConsumer(pathParam = "consumer_uuid")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void unbindAllOrBySerialNumber(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serial") String serials) {
@@ -524,6 +535,7 @@ public class ConsumerResource {
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
     @EnforceConsumer(pathParam = "consumer_uuid")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("dbid") Long dbid) {
 
@@ -541,6 +553,7 @@ public class ConsumerResource {
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
     @EnforceConsumer(pathParam = "consumer_uuid")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid, 
         @PathParam("serial") Long serial) {
         
