@@ -55,9 +55,8 @@ public class ConsumerEnforcer implements MethodInterceptor {
         log.debug("Invoked.");
         
         // First make sure this user has the Consumer role:
-        if (!currentUser.getRoles().contains(Role.CONSUMER)) {
+        if (!currentUser.hasRole(Role.CONSUMER)) {
             I18n i18n = this.i18nProvider.get();
-            
             String error = "Insufficient permission";
             throw new ForbiddenException(i18n.tr(error));
         }
@@ -92,6 +91,16 @@ public class ConsumerEnforcer implements MethodInterceptor {
         EnforceConsumer annotation) throws NotFoundException {
         
         String consumerUuid = getViewedConsumerUuid(invocation, annotation);
+        
+        if (consumerUuid == null) {
+            // This method is protected for those with consumer role, but this query did
+            // not include the consumer UUID param.
+            I18n i18n = this.i18nProvider.get();
+            String error = "Insufficient permission";
+            throw new ForbiddenException(i18n.tr(error));
+        }
+        
+        log.debug("Consumer uuid: " + consumerUuid);
         Consumer consumer = this.consumerCurator.lookupByUuid(consumerUuid);
         
         if (consumer == null) {
