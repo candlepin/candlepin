@@ -44,8 +44,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     public void createObjects() throws Exception {
         
         this.principal = new TestPrincipalProvider(ownerCurator).get();
-        certResource = new CertificateResource(spacewalkCertCurator, certificateCurator, 
-            i18n);
+        certResource = injector.getInstance(CertificateResource.class);
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");
@@ -73,7 +72,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         List<Pool> entPools = poolCurator.listByOwner(owner);
         assertEquals(5, entPools.size());
     }
-
+    
     @Test
     public void channelFamilyCreation() {
         // TODO!!!!!! Current test cert has no channel families.

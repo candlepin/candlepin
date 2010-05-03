@@ -34,7 +34,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        consumerTypeResource = new ConsumerTypeResource(consumerTypeCurator, i18n);
+        consumerTypeResource = injector.getInstance(ConsumerTypeResource.class);
     }
 
     @Test

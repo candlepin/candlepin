@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.test;
 
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -23,6 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.AttributeCurator;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
@@ -141,8 +146,10 @@ public class DatabaseTestFixture {
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
         
-        // Clear any principal's configured in previous tests.
-        TestPrincipalProviderSetter.get().setPrincipal(null);
+        // Tests run as super admin by default:
+        Owner superAdminOwner = new Owner("superadminowner", "superadminowner");
+        ownerCurator.create(superAdminOwner);
+        setupPrincipal(superAdminOwner, Role.SUPER_ADMIN);
     }
     
     protected Module getGuiceOverrideModule() {
@@ -240,5 +247,14 @@ public class DatabaseTestFixture {
         toReturn.setCert(cert.getBytes());
         toReturn.setSerial(serial);
         return toReturn;
+    }
+    
+    protected void setupPrincipal(Owner owner, Role role) { 
+        List<Role> roles = new LinkedList<Role>();
+        roles.add(role);
+        Principal ownerAdmin = new UserPrincipal("someuser", owner, roles);
+        
+        // TODO: might be good to get rid of this singleton
+        TestPrincipalProviderSetter.get().setPrincipal(ownerAdmin);
     }
 }

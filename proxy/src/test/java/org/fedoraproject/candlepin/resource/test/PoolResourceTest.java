@@ -16,12 +16,9 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.*;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
@@ -94,10 +91,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         consumerCurator.create(passConsumer);
         
         // Run these tests as an owner admin:
-        List<Role> roles = new LinkedList<Role>();
-        roles.add(Role.OWNER_ADMIN);
-        Principal ownerAdmin = new UserPrincipal("someuser", owner1, roles);
-        TestPrincipalProviderSetter.get().setPrincipal(ownerAdmin);
+        setupPrincipal(owner1, Role.OWNER_ADMIN);
     }
     
     @Test

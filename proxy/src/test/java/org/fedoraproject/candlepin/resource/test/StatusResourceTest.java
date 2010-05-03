@@ -32,7 +32,7 @@ public class StatusResourceTest extends DatabaseTestFixture  {
 
     @Before
     public void createObjects() throws Exception {
-        statusResource = new StatusResource();
+        statusResource = injector.getInstance(StatusResource.class);
     }
     
     @Test

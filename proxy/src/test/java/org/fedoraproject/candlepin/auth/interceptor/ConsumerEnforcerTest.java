@@ -46,131 +46,131 @@ import com.google.inject.matcher.Matchers;
  */
 public class ConsumerEnforcerTest {
 
-    private Consumer requestor;
-    private TestResource resource;
+//    private Consumer requestor;
+//    private TestResource resource;
+//
+//    @Before
+//    public void init() {
+//        this.requestor = new Consumer();
+//        Principal principal = new ConsumerPrincipal(this.requestor);
+//
+//        AbstractModule module = new TestModule(principal);
+//        Injector injector = Guice.createInjector(module);
+//        this.resource = injector.getInstance(TestResource.class);
+//    }
+//
+//    @Test
+//    public void permissionGranted() {
+//        String uuid = this.requestor.getUuid();
+//        Assert.assertEquals("consumer", this.resource.getConsumer(uuid));
+//    }
+//
+//    @Test
+//    public void permissionGrantedForDefault() {
+//        String uuid = this.requestor.getUuid();
+//        Assert.assertEquals("defaultConsumer", this.resource.getDefaultConsumer(uuid));
+//    }
+//
+//    @Test(expected = ForbiddenException.class)
+//    public void permissionDenied() {
+//        this.resource.getConsumer("randomuuid98752");
+//    }
+//
+//    @Test(expected = ForbiddenException.class)
+//    public void noPathParam() {
+//        this.resource.noPathParam(4, "whatever");
+//    }
+//
+//    @Test(expected = ForbiddenException.class)
+//    public void noMatchingPathParam() {
+//        this.resource.noMatchingPathParam("whatever");
+//    }
+//    
+//    @Test(expected = NotFoundException.class)
+//    public void noConsumerFound() {
+//        // mock out the consumer curator that always returns
+//        // null for lookupConsumerByUuid
+//        AbstractModule module = new TestModule(new ConsumerPrincipal(this.requestor), true);
+//        Injector injector = Guice.createInjector(module);
+//        this.resource = injector.getInstance(TestResource.class);
+//        
+//        this.resource.getConsumer("thisIsNull");
+//    }
+//
+//    class TestModule extends AbstractModule {
+//
+//        private Principal principal;
+//        private boolean nullUuidLookup;
+//
+//        public TestModule(Principal principal) {
+//            this(principal, false);
+//        }
+//        
+//        public TestModule(Principal principal, boolean nullUuidLookup) {
+//            this.principal = principal;
+//            this.nullUuidLookup = nullUuidLookup;
+//        }
+//
+//        @Override
+//        protected void configure() {
+//            bind(TestResource.class);
+//            bind(Principal.class).toInstance(principal);
+//            bind(ConsumerCurator.class).toInstance(createConsumerCurator());
+//            bind(EntityManager.class).toInstance(mock(EntityManager.class));
+//            bind(I18n.class).toProvider(I18nProvider.class);
+//            bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
+//            
+//            SecurityInterceptor consumerEnforcer = new SecurityInterceptor();
+//            requestInjection(consumerEnforcer);
+//
+//            bindInterceptor(Matchers.any(),
+//                Matchers.annotatedWith(EnforceConsumer.class), consumerEnforcer);
+//        }
+//        
+//        private ConsumerCurator createConsumerCurator() {
+//            ConsumerCurator curator = mock(ConsumerCurator.class);
+//            
+//            when(curator.lookupByUuid(anyString())).thenAnswer(new Answer<Consumer>() {
+//
+//                @Override
+//                public Consumer answer(InvocationOnMock invocation) throws Throwable {
+//                    if (nullUuidLookup) {
+//                        return null;
+//                    }
+//                    
+//                    String consumerUuid = (String) invocation.getArguments()[0];
+//                    Consumer consumer = new Consumer();
+//                    consumer.setUuid(consumerUuid);
+//                    
+//                    return consumer;
+//                }
+//                
+//            });
+//            
+//            return curator;
+//        }
+//    }
 
-    @Before
-    public void init() {
-        this.requestor = new Consumer();
-        Principal principal = new ConsumerPrincipal(this.requestor);
-
-        AbstractModule module = new TestModule(principal);
-        Injector injector = Guice.createInjector(module);
-        this.resource = injector.getInstance(TestResource.class);
-    }
-
-    @Test
-    public void permissionGranted() {
-        String uuid = this.requestor.getUuid();
-        Assert.assertEquals("consumer", this.resource.getConsumer(uuid));
-    }
-
-    @Test
-    public void permissionGrantedForDefault() {
-        String uuid = this.requestor.getUuid();
-        Assert.assertEquals("defaultConsumer", this.resource.getDefaultConsumer(uuid));
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void permissionDenied() {
-        this.resource.getConsumer("randomuuid98752");
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void noPathParam() {
-        this.resource.noPathParam(4, "whatever");
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void noMatchingPathParam() {
-        this.resource.noMatchingPathParam("whatever");
-    }
-    
-    @Test(expected = NotFoundException.class)
-    public void noConsumerFound() {
-        // mock out the consumer curator that always returns
-        // null for lookupConsumerByUuid
-        AbstractModule module = new TestModule(new ConsumerPrincipal(this.requestor), true);
-        Injector injector = Guice.createInjector(module);
-        this.resource = injector.getInstance(TestResource.class);
-        
-        this.resource.getConsumer("thisIsNull");
-    }
-
-    class TestModule extends AbstractModule {
-
-        private Principal principal;
-        private boolean nullUuidLookup;
-
-        public TestModule(Principal principal) {
-            this(principal, false);
-        }
-        
-        public TestModule(Principal principal, boolean nullUuidLookup) {
-            this.principal = principal;
-            this.nullUuidLookup = nullUuidLookup;
-        }
-
-        @Override
-        protected void configure() {
-            bind(TestResource.class);
-            bind(Principal.class).toInstance(principal);
-            bind(ConsumerCurator.class).toInstance(createConsumerCurator());
-            bind(EntityManager.class).toInstance(mock(EntityManager.class));
-            bind(I18n.class).toProvider(I18nProvider.class);
-            bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
-            
-            SecurityInterceptor consumerEnforcer = new SecurityInterceptor();
-            requestInjection(consumerEnforcer);
-
-            bindInterceptor(Matchers.any(),
-                Matchers.annotatedWith(EnforceConsumer.class), consumerEnforcer);
-        }
-        
-        private ConsumerCurator createConsumerCurator() {
-            ConsumerCurator curator = mock(ConsumerCurator.class);
-            
-            when(curator.lookupByUuid(anyString())).thenAnswer(new Answer<Consumer>() {
-
-                @Override
-                public Consumer answer(InvocationOnMock invocation) throws Throwable {
-                    if (nullUuidLookup) {
-                        return null;
-                    }
-                    
-                    String consumerUuid = (String) invocation.getArguments()[0];
-                    Consumer consumer = new Consumer();
-                    consumer.setUuid(consumerUuid);
-                    
-                    return consumer;
-                }
-                
-            });
-            
-            return curator;
-        }
-    }
-
-    public static class TestResource {
-
-        @EnforceConsumer(pathParam = "consumer")
-        public String getConsumer(@PathParam("consumer") String consumerUuid) {
-            return "consumer";
-        }
-
-        @EnforceConsumer
-        public String getDefaultConsumer(@PathParam("consumer_uuid") String uuid) {
-            return "defaultConsumer";
-        }
-
-        @EnforceConsumer
-        public boolean noPathParam(int someInt, String someString) {
-            return true;
-        }
-
-        @EnforceConsumer(pathParam = "bar")
-        public int noMatchingPathParam(@PathParam("notBar") String notBar) {
-            return 42;
-        }
-    }
+//    public static class TestResource {
+//
+//        @EnforceConsumer(pathParam = "consumer")
+//        public String getConsumer(@PathParam("consumer") String consumerUuid) {
+//            return "consumer";
+//        }
+//
+//        @EnforceConsumer
+//        public String getDefaultConsumer(@PathParam("consumer_uuid") String uuid) {
+//            return "defaultConsumer";
+//        }
+//
+//        @EnforceConsumer
+//        public boolean noPathParam(int someInt, String someString) {
+//            return true;
+//        }
+//
+//        @EnforceConsumer(pathParam = "bar")
+//        public int noMatchingPathParam(@PathParam("notBar") String notBar) {
+//            return 42;
+//        }
+//    }
 }
