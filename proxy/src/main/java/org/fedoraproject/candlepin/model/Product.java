@@ -32,7 +32,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.hibernate.annotations.ForeignKey;
 
 /**
@@ -124,7 +123,8 @@ public class Product implements Persisted {
     }
     
     public Product(String label, String name, String variant,
-                   String version, String arch, Long hash) {
+                   String version, String arch, Long hash,
+                   String type, Set<Product> childProducts) {
         setId(label);
         setLabel(label);
         setName(name);
@@ -132,6 +132,8 @@ public class Product implements Persisted {
         setVersion(version);
         setArch(arch);
         setHash(hash);
+        setType(type);
+        setChildProducts(childProducts);
     }
 
     protected Product() {
@@ -153,13 +155,14 @@ public class Product implements Persisted {
      * @return set of child products.
      */
     public Set<Product> getChildProducts() {
+        log.debug("childProducts " + childProducts);
         return childProducts;
     }
 
     
     public Set<Product> getAllChildProducts(Set<Product> products) {
         products.add(this);
-        if (childProducts.isEmpty()) {
+        if ((childProducts == null) || (childProducts.isEmpty())) {
             return products;
         }
         

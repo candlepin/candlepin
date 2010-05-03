@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.model;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashSet;
 
 import com.google.inject.Inject;
 import com.redhat.rhn.common.cert.SpacewalkCertificate;
@@ -152,7 +153,7 @@ public class SpacewalkCertificateCurator {
             // okay, the abs is a little lame, but all of this needs to be removed shortly 
             // FIXME
             p = new Product(name, name, "server", "1.0", "ALL", 
-                Math.abs(Long.valueOf(name.hashCode())));
+                Math.abs(Long.valueOf(name.hashCode())), "SVC", new HashSet<Product>());
 
             // Representing the implicit logic in the Satellite certificate:
             if (name.equals(PRODUCT_VIRT_HOST)) {

@@ -25,6 +25,7 @@ import java.security.PublicKey;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -65,7 +66,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         certServiceAdapter 
             = new DefaultEntitlementCertServiceAdapter(mockedPKI, null, null);
         
-        product = new Product("a product", "a product", "variant", "version", "arch", 123L);
+        product = new Product("a product", "a product", 
+                              "variant", "version", "arch", 
+                              123L, "SVC", new HashSet<Product>());
         
         Content content = new Content(CONTENT_NAME, CONTENT_VENDOR, CONTENT_URL,
             CONTENT_GPG_URL, CONTENT_ENABLED);

@@ -189,7 +189,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
         Set<Content> content = product.getContent();
         for (Content con : content) {
-            log.debug("contentset: " + con.getName() + " " + con.getType() + " " + con.getContentUrl());
+            log.debug("contentset: " + con.getName() + " " + 
+                    con.getType() + " " + con.getContentUrl());
             String contentOid = OIDUtil.REDHAT_OID + "." +  
                    OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + 
                    "." + con.getHash().toString() + "." + 
@@ -215,8 +216,8 @@ public class DefaultEntitlementCertServiceAdapter extends
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED),
                     false, new DERUTF8String(con.getEnabled())));
         }
-       return toReturn;
-   }
+        return toReturn;
+    }    
     
     private String createDN(Consumer consumer) {
         StringBuilder sb = new StringBuilder("CN=");
