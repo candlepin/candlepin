@@ -38,13 +38,13 @@ import com.google.inject.Provider;
  * Interceptor for enforcing that a referenced consumer UUID can
  * be accessed by the current {@link Principal}.
  */
-public class ConsumerEnforcer implements MethodInterceptor {
+public class SecurityInterceptor implements MethodInterceptor {
 
     @Inject private ConsumerCurator consumerCurator;
     @Inject private Provider<Principal> principalProvider;
     @Inject private Provider<I18n> i18nProvider;
     
-    private static Logger log = Logger.getLogger(ConsumerEnforcer.class);
+    private static Logger log = Logger.getLogger(SecurityInterceptor.class);
 
     /**
      * {@inheritDoc}

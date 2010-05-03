@@ -19,7 +19,7 @@ import java.io.Reader;
 import javax.script.ScriptEngine;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.interceptor.ConsumerEnforcer;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.guice.I18nProvider;
@@ -96,7 +96,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         Matcher resourceMatcher = getPackageMatcher("org.fedoraproject.candlepin.resource");
-        ConsumerEnforcer roleEnforcer = new ConsumerEnforcer();
+        SecurityInterceptor roleEnforcer = new SecurityInterceptor();
         requestInjection(roleEnforcer);
         bindInterceptor(resourceMatcher, Matchers.annotatedWith(EnforceConsumer.class), 
             roleEnforcer);

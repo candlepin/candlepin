@@ -30,10 +30,6 @@ public class ConsumerPrincipal extends Principal {
         this.consumer = consumer;
     }
 
-    public Consumer getConsumer() {
-        return consumer;
-    }
-
     @Override
     public boolean canAccessConsumer(Consumer other) {
         if (this.consumer != null) {

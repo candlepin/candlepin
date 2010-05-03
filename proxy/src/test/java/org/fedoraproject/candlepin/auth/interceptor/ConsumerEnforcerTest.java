@@ -120,7 +120,7 @@ public class ConsumerEnforcerTest {
             bind(I18n.class).toProvider(I18nProvider.class);
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
             
-            ConsumerEnforcer consumerEnforcer = new ConsumerEnforcer();
+            SecurityInterceptor consumerEnforcer = new SecurityInterceptor();
             requestInjection(consumerEnforcer);
 
             bindInterceptor(Matchers.any(),
