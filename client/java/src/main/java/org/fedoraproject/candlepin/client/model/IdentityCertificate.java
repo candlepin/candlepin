@@ -26,16 +26,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class IdentityCertificate {
     protected String key;
     protected String cert;
-    
+
     public String getKey() {
         return key;
     }
+
     public void setKey(String key) {
         this.key = key;
     }
+
     public String getCert() {
         return cert;
     }
+
     public void setCert(String cert) {
         this.cert = cert;
     }

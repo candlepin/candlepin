@@ -202,6 +202,10 @@ class Candlepin
         return get(path)
     end
 
+    def get_status
+        return get("/status/")
+    end
+
     def get_certificate_serials
         return get("/consumers/#{@consumer['uuid']}/certificates/serials")
     end

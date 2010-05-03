@@ -34,8 +34,7 @@ public class SubscribeCommand extends BaseCommand {
 
     public Options getOptions() {
         Options opts = super.getOptions();
-        opts.addOption("p", "pool", true,
-            "The pool id to subscribe to");
+        opts.addOption("p", "pool", true, "The pool id to subscribe to");
         return opts;
     }
 
@@ -49,6 +48,7 @@ public class SubscribeCommand extends BaseCommand {
         CandlepinConsumerClient client = this.getClient();
 
         client.bindByPool(Long.decode(pool));
+        client.updateEntitlementCertificates();
     }
 
 }

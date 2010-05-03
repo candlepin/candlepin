@@ -34,6 +34,12 @@ public class UpdateCommand extends BaseCommand {
 
     public Options getOptions() {
         Options opts = super.getOptions();
+        opts
+            .addOption(
+                "p",
+                "pkcs12",
+                true,
+                "Generate pkcs files for the entitlement certificates with the password provided");
         return opts;
     }
 
@@ -41,6 +47,10 @@ public class UpdateCommand extends BaseCommand {
         CandlepinConsumerClient client = this.getClient();
 
         client.updateEntitlementCertificates();
+        if (cmdLine.hasOption("p")) {
+            String password = cmdLine.getOptionValue("p");
+            client.generatePKCS12Certificates(password);
+        }
     }
 
 }

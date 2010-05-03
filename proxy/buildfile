@@ -115,11 +115,21 @@ define "candlepin" do
   # Resource Substitution
   resources.filter.using 'version'=>VERSION_NUMBER,
         'release'=>RELEASE_NUMBER
-  
+
+  # Hook in gettext bundle generation to compile
+  sources = FileList[_("po/*.po")]
+  generate = file(_("target/generated-source") => sources) do |dir|
+    mkdir_p dir.to_s
+    sources.each do |source|
+      locale = source.match("\/([^/]*)?\.po$")[1]
+      sh "msgfmt --java -r org.fedoraproject.candlepin.i18n.Messages -d #{dir} -l #{locale} #{source}"
+    end
+  end
+  compile.from generate
+
   #
   # building
   #
-  resources.from _('po/classes')
   compile.options.target = '1.6'
   compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS
  
@@ -243,31 +253,22 @@ task :eclipse do
   tmp.close()
   FileUtils.copy("tmp", ".classpath")
   File.delete("tmp")
+
+  # make the gettext output dir to silence eclipse errors
+  mkdir_p("target/generated-source")
 end
 
-#
-# extract strings that need to be translated
-#
-task :extractkeys do
-  mkdir_p "po/classes"
-  %x{xgettext -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")}
+namespace "gettext" do
+    task :extract do
+      %x{xgettext -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")}
+    end
+    task :merge do
+      sources = FileList["po/*.po"]
+      sources.each do |source|
+        sh "msgmerge --backup=none -U #{source} po/keys.pot"
+      end
+    end
 end
-
-#
-# merge in changes into existing po files
-#
-task :mergekeys do
-  %x{touch po/de.po}
-  %x{msgmerge --backup=none -U po/de.po po/keys.pot}
-end
-
-#
-# compile resource files
-#
-task :createresourcebundles do
-  puts %x{msgfmt --java2 -d po/classes -r org.fedoraproject.candlepin.i18n.Messages -l de po/de.po}
-end
-
 
 #==========================================================================
 # Cucumber testing

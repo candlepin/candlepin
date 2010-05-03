@@ -15,8 +15,10 @@
 package org.fedoraproject.candlepin.client;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.net.URL;
+import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -29,7 +31,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.protocol.Protocol;
-import org.bouncycastle.jce.provider.PEMUtil;
 import org.fedoraproject.candlepin.client.model.Consumer;
 import org.fedoraproject.candlepin.client.model.Entitlement;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
@@ -156,7 +157,6 @@ public class CandlepinConsumerClient {
         ICandlepinConsumerClient client = clientWithCert();
         return client.bindByEntitlementID(getUUID(), poolId).getEntity();
     }
-    
 
     public boolean updateEntitlementCertificates() {
         FileUtil.mkdir(entitlementDirName);
@@ -164,7 +164,7 @@ public class CandlepinConsumerClient {
         List<EntitlementCertificate> certs = client
             .getEntitlementCertificates(getUUID());
         Set<BigInteger> certSerials = new java.util.HashSet<BigInteger>();
-        //EntitlementCertificate
+        // EntitlementCertificate
         for (EntitlementCertificate cert : certs) {
             String entCertFileName = entitlementDirName + File.separator +
                 cert.getSerial() + "-cert.pem";
@@ -175,28 +175,47 @@ public class CandlepinConsumerClient {
         }
         return true;
     }
-    
+
     public List<EntitlementCertificate> getCurrentEntitlementCertificates() {
         try {
             FileUtil.mkdir(entitlementDirName);
             List<EntitlementCertificate> certs = new ArrayList<EntitlementCertificate>();
-            File entitlementDir = new File(entitlementDirName);      
+            File entitlementDir = new File(entitlementDirName);
             for (File file : entitlementDir.listFiles()) {
                 String filename = file.getAbsolutePath();
                 if (filename.endsWith("-cert.pem")) {
-                    String eKeyFileName = filename.replace("-cert.pem", "-key.pem");                    
+                    String eKeyFileName = filename.replace("-cert.pem",
+                        "-key.pem");
                     X509Certificate cert = PemUtil.readCert(filename);
                     PrivateKey key = PemUtil.readPrivateKey(eKeyFileName);
-                    EntitlementCertificate entCert = new EntitlementCertificate(cert, key);
+                    EntitlementCertificate entCert = new EntitlementCertificate(
+                        cert, key);
                     certs.add(entCert);
                 }
             }
-    
+
             return certs;
         }
         catch (Exception e) {
             throw new ClientException(e);
-        }            
+        }
+    }
+
+    public void generatePKCS12Certificates(String password) {
+        try {
+            List<EntitlementCertificate> certs = getCurrentEntitlementCertificates();
+            for (EntitlementCertificate cert : certs) {
+                KeyStore store = PKCS12Util.createPKCS12Keystore(cert
+                    .getX509Cert(), cert.getPrivateKey(), null);
+                File p12File = new File(entitlementDirName + File.separator +
+                    cert.getSerial() + ".p12");
+                store.store(new FileOutputStream(p12File), password
+                    .toCharArray());
+            }
+        }
+        catch (Exception e) {
+            throw new ClientException(e);
+        }
     }
 
     protected ICandlepinConsumerClient clientWithCert() {
@@ -234,7 +253,7 @@ public class CandlepinConsumerClient {
         return client;
     }
 
-    protected void recordIdentity(Consumer aConsumer) {        
+    protected void recordIdentity(Consumer aConsumer) {
         FileUtil.mkdir(consumerDirName);
         FileUtil.dumpToFile(certFileName, aConsumer.getIdCert().getCert());
         FileUtil.dumpToFile(keyFileName, aConsumer.getIdCert().getKey());
@@ -244,6 +263,5 @@ public class CandlepinConsumerClient {
         String[] files = { certFileName, keyFileName };
         FileUtil.removeFiles(files);
     }
-
 
 }

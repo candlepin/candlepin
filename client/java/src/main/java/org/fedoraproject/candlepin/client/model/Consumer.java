@@ -29,31 +29,39 @@ public class Consumer {
     protected ConsumerType type;
     protected String uuid;
     protected IdentityCertificate idCert;
-    
+
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
+
     public ConsumerType getType() {
         return type;
     }
+
     public void setType(ConsumerType type) {
         this.type = type;
     }
+
     public void setType(String type) {
         this.type = new ConsumerType(type, null);
-    }    
+    }
+
     public String getUuid() {
         return uuid;
     }
+
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
+
     public IdentityCertificate getIdCert() {
         return idCert;
     }
+
     public void setIdCert(IdentityCertificate idCert) {
         this.idCert = idCert;
     }

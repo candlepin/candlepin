@@ -50,7 +50,7 @@ public class ListCommand extends BaseCommand {
 
         if (!client.isRegistered()) {
             System.out
-            .println("You must register first in order to list the pools you can consume");
+                .println("You must register first in order to list the pools you can consume");
             return;
         }
 

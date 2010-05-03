@@ -20,24 +20,28 @@ package org.fedoraproject.candlepin.client.model;
 public class ConsumerType {
     protected Long id;
     protected String label;
-    
+
     public ConsumerType() {
-        
+
     }
+
     public ConsumerType(String label, Long id) {
         this.label = label;
         this.id = id;
     }
-    
+
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
+
     public String getLabel() {
         return label;
     }
+
     public void setLabel(String label) {
         this.label = label;
     }

@@ -21,7 +21,7 @@ import java.io.FileWriter;
  * File Utilities
  */
 public class FileUtil {
-    
+
     protected FileUtil() {
     };
 
@@ -36,7 +36,7 @@ public class FileUtil {
             throw new ClientException(e);
         }
     }
-    
+
     public static void removeFiles(String[] files) {
         for (String fileName : files) {
             File file = new File(fileName);
@@ -55,5 +55,5 @@ public class FileUtil {
         catch (Exception e) {
             throw new ClientException(e);
         }
-    }    
+    }
 }
