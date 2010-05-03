@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -306,6 +307,18 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         consumerCurator.create(evilConsumer);
         TestPrincipalProviderSetter.get().setPrincipal(
             new ConsumerPrincipal(evilConsumer));
+        consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void testCannotGetAnotherOwnersConsumersCerts() {
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumerCurator.create(evilConsumer);
+        
+        Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
+        ownerCurator.create(evilOwner);
+        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
+        
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
     
