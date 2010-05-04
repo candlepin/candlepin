@@ -20,13 +20,10 @@ import java.util.Set;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
-import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -97,18 +94,6 @@ public class SecurityInterceptor implements MethodInterceptor {
 //            verifyPathParams(currentUser, invocation, annotation);
 //        }
 //      
-        Object target = invocation.getThis();
-        if ((target instanceof EntitlementCertificateCurator) &&
-            (currentUser instanceof ConsumerPrincipal)) {
-            
-            AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
-            ConsumerPrincipal currentConsumer = (ConsumerPrincipal) currentUser;
-            
-            String filterName = curator.entityType().getSimpleName() + "_CONSUMER_FILTER";
-            curator.enableFilter(filterName, "consumer_id", 
-                currentConsumer.consumer().getId());
-        }
-        
         return invocation.proceed();
     }
     
