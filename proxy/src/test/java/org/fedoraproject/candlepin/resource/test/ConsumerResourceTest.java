@@ -301,7 +301,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"));
     }
     
-    @Test //(expected = ForbiddenException.class)
+    @Test
     public void testCannotGetAnotherConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
@@ -312,8 +312,20 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         TestPrincipalProviderSetter.get().setPrincipal(
             new ConsumerPrincipal(evilConsumer));
         
-        
         assertEquals(0, 
+            consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
+    }
+
+    @Test
+    public void testCanGetOwnedConsumersCerts() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        
+        TestPrincipalProviderSetter.get().setPrincipal(
+            new ConsumerPrincipal(consumer));
+        
+        assertEquals(3, 
             consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
     }
     
