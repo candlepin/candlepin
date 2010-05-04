@@ -301,13 +301,20 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"));
     }
     
-    @Test(expected = ForbiddenException.class)
+    @Test //(expected = ForbiddenException.class)
     public void testCannotGetAnotherConsumersCerts() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
         TestPrincipalProviderSetter.get().setPrincipal(
             new ConsumerPrincipal(evilConsumer));
-        consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+        
+        
+        assertEquals(0, 
+            consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
     }
     
     @Test(expected = ForbiddenException.class)

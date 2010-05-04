@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -40,10 +42,15 @@ public class EntitlementCertificateCurator extends
     }
 
     @SuppressWarnings("unchecked")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<EntitlementCertificate> listForConsumer(Consumer c) {
-        return currentSession().createCriteria(
-            EntitlementCertificate.class).
-            createAlias("entitlement", "ent").
-            add(Restrictions.eq("ent.consumer", c)).list();
+//        currentSession()
+//            .enableFilter("EntitlementCertificate_CONSUMER_FILTER")
+//            .setParameter("consumer_id", c.getId());
+        
+        return currentSession().createCriteria(EntitlementCertificate.class)
+            .createAlias("entitlement", "ent")
+            .add(Restrictions.eq("ent.consumer", c))
+            .list();
     }
 }

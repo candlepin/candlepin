@@ -31,7 +31,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.ParamDef;
 
 /**
  * Represents certificate used to entitle a consumer
@@ -42,8 +45,17 @@ import org.hibernate.annotations.ForeignKey;
 @Table(name = "cp_ent_certificate")
 @SequenceGenerator(name = "seq_ent_cert", 
                    sequenceName = "seq_ent_cert", allocationSize = 1)
-public class EntitlementCertificate implements Persisted {
+@FilterDef(
+    name = "EntitlementCertificate_CONSUMER_FILTER", 
+    parameters = @ParamDef(name = "consumer_id", type = "long")
+)
+@Filter(name = "EntitlementCertificate_CONSUMER_FILTER", 
+    condition = "id in (select c.id from cp_ent_certificate c " +
+        "inner join cp_entitlement e on c.entitlement_id = e.id " +
+        "inner join cp_consumer_entitlements con_en on e.id = con_en.entitlement_id " + 
+            "and con_en.consumer_id = :consumer_id)")
 
+public class EntitlementCertificate implements Persisted {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, 
                     generator = "seq_ent_cert")

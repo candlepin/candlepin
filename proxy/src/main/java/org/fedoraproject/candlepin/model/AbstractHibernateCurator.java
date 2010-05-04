@@ -38,6 +38,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         //getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.entityType = entityType;
     }
+    
+    public Class<E> entityType() {
+        return entityType;
+    }
+    
+    public void enableFilter(String filterName, String parameterName, Object value) {
+        currentSession().enableFilter(filterName).setParameter(parameterName, value);
+    }
 
     /**
      * @param id db id of entity to be found.
