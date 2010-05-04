@@ -51,6 +51,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
     private Consumer failConsumer;
     private Consumer passConsumer;
+    private Consumer foreignConsumer;
     
     @Before
     public void setUp() {
@@ -89,6 +90,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(passConsumer.getType());
         consumerCurator.create(passConsumer);
         
+        foreignConsumer = TestUtil.createConsumer(owner2);
+        foreignConsumer.setMetadataField("cpu_cores", "2");
+        consumerTypeCurator.create(foreignConsumer.getType());
+        consumerCurator.create(foreignConsumer);
+
         // Run these tests as an owner admin:
         setupPrincipal(owner1, Role.OWNER_ADMIN);
     }
@@ -144,8 +150,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testListConsumerFiltering() {
+        setupPrincipal(new ConsumerPrincipal(passConsumer));
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null);
         assertEquals(2, pools.size());
+
+        setupPrincipal(new ConsumerPrincipal(failConsumer));
         pools = poolResource.list(null, failConsumer.getUuid(), null);
         assertEquals(1, pools.size());
     }
@@ -170,12 +179,31 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolResource.createPool(TestUtil.createEntitlementPool(TestUtil.createProduct()));
     }
     
-    @Test(expected = ForbiddenException.class)
-    public void testConsumerCannotListPoolsForAnotherConsumer() {
-        setupPrincipal(new ConsumerPrincipal(failConsumer));
+    @Test
+    public void ownerAdminCannotListAnotherOwnersPools() {
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null);
+        assertEquals(2, pools.size());
         
-        poolResource.list(null, passConsumer.getUuid(), null);
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        pools = poolResource.list(owner1.getId(), null, null);
+        assertEquals(0, pools.size());
     }
 
+
+    @Test
+    public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
+        setupPrincipal(new ConsumerPrincipal(foreignConsumer));
+
+        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null);
+        assertEquals(0, pools.size());
+    }
+
+    @Test
+    public void testConsumerCannotListPoolsForAnotherOwner() {
+        setupPrincipal(new ConsumerPrincipal(foreignConsumer));
+
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null);
+        assertEquals(0, pools.size());
+    }
 
 }

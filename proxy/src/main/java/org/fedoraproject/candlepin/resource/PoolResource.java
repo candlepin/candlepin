@@ -80,7 +80,7 @@ public class PoolResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "pools")
-    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
     public List<Pool> list(@QueryParam("owner") Long ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId) {
