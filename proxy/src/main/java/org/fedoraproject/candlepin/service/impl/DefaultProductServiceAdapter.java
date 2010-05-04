@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.service.impl;
 
 import java.util.List;
 
+
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -26,7 +27,6 @@ import com.google.inject.Inject;
  * Default implementation of the ProductserviceAdapter.
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
-
     private ProductCurator prodCurator;
 
     @Inject
@@ -49,7 +49,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     public Boolean provides(String productId, String providesProductId) {
         Product p = getProductById(productId);
         Product queried = getProductById(providesProductId);
-        if (p.getChildProducts() == null) {
+        if ((p == null) || (p.getChildProducts() == null)) {
             return Boolean.FALSE;
         }
         if (p.getChildProducts().contains(queried)) {
