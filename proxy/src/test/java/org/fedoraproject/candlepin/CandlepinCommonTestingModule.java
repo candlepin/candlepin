@@ -96,6 +96,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(I18n.class).toProvider(I18nProvider.class);
         
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
+        
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(
             "org.fedoraproject.candlepin.resource"));
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();

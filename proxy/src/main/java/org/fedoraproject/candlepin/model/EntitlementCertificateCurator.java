@@ -16,8 +16,6 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.List;
 
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 

@@ -49,7 +49,6 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
 
 /**
  * CandlepinProductionConfiguration
@@ -92,14 +91,12 @@ public class CandlepinModule extends AbstractModule {
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
 
-        Matcher resourceMatcher = getPackageMatcher("org.fedoraproject.candlepin.resource");
-        SecurityInterceptor consumerEnforcer = new SecurityInterceptor();
-        requestInjection(consumerEnforcer);
-        bindInterceptor(resourceMatcher, 
-                Matchers.annotatedWith(EnforceConsumer.class), consumerEnforcer);
+        Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(
+            "org.fedoraproject.candlepin.resource"));
+        SecurityInterceptor securityEnforcer = new SecurityInterceptor();
+        requestInjection(securityEnforcer);
+        bindInterceptor(resourcePkgMatcher, Matchers.any(), 
+            securityEnforcer);
     }
 
-    private Matcher getPackageMatcher(String packageName) {
-        return Matchers.inPackage(Package.getPackage(packageName));
-    }
 }
