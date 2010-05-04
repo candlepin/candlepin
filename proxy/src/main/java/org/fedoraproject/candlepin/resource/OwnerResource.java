@@ -20,6 +20,7 @@ import java.util.List;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -165,5 +166,28 @@ public class OwnerResource {
                 i18n.tr("owner with id: {0} was not found.", ownerId));
         }
         return poolCurator.listByOwner(owner);
-    }    
+    }
+    
+    /**
+     * 'Tickle' an owner to have all of their entitlement pools synced with their
+     * subscriptions.
+     * 
+     * This method (and the one below may not be entirely RESTful, as the updated data is
+     * not supplied as an argument.
+     * 
+     * @param ownerKey unique id key of the owner whose pools should be updated
+     */
+    @PUT
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{owner_key}/subscriptions")
+    public void refreshEntitlementPools(@PathParam("owner_key") String ownerKey) {
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new NotFoundException(
+                i18n.tr("owner with key: {0} was not found.", ownerKey));
+        }
+        
+        poolCurator.refreshPools(owner);
+    }
+
 }
