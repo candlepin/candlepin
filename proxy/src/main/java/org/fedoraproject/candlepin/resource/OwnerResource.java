@@ -25,6 +25,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -131,6 +133,7 @@ public class OwnerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/entitlements")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
@@ -157,6 +160,7 @@ public class OwnerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/pools")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Pool> ownerEntitlementPools(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
