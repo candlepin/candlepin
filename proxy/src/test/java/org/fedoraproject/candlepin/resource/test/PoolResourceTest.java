@@ -23,7 +23,6 @@ import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -173,8 +172,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test(expected = ForbiddenException.class)
     public void testConsumerCannotListPoolsForAnotherConsumer() {
-        TestPrincipalProviderSetter.get().setPrincipal(
-            new ConsumerPrincipal(failConsumer));
+        setupPrincipal(new ConsumerPrincipal(failConsumer));
         
         poolResource.list(null, passConsumer.getUuid(), null);
     }

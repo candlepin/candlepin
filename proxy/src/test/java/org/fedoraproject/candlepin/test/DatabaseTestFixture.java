@@ -254,7 +254,12 @@ public class DatabaseTestFixture {
         roles.add(role);
         Principal ownerAdmin = new UserPrincipal("someuser", owner, roles);
         
-        // TODO: might be good to get rid of this singleton
-        TestPrincipalProviderSetter.get().setPrincipal(ownerAdmin);
+        setupPrincipal(ownerAdmin);
     }
+
+    protected void setupPrincipal(Principal p) {
+        // TODO: might be good to get rid of this singleton
+        TestPrincipalProviderSetter.get().setPrincipal(p);
+    }
+
 }

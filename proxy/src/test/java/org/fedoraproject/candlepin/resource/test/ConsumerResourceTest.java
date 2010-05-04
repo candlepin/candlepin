@@ -25,7 +25,6 @@ import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -92,7 +91,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         poolCurator.create(fullPool);
         
         // Run these tests with the consumer role:
-        TestPrincipalProviderSetter.get().setPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer));
     }
     
     @Test
@@ -309,8 +308,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
-        TestPrincipalProviderSetter.get().setPrincipal(
-            new ConsumerPrincipal(evilConsumer));
+        setupPrincipal(new ConsumerPrincipal(evilConsumer));
         
         assertEquals(0, 
             consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
