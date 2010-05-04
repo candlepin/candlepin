@@ -19,6 +19,8 @@ import java.io.Reader;
 import javax.script.ScriptEngine;
 
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.CRUDInterceptor;
+import org.fedoraproject.candlepin.auth.interceptor.CRUDSecured;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.FilterInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
@@ -110,6 +112,13 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
             Matchers.annotatedWith(EnforceAccessControl.class), 
             filterInterceptor);
+
+        CRUDInterceptor crudInterceptor = new CRUDInterceptor();
+        requestInjection(crudInterceptor);
+        bindInterceptor(
+            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
+            Matchers.annotatedWith(CRUDSecured.class), 
+            crudInterceptor);
     }
     
 }

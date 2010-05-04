@@ -19,6 +19,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import org.fedoraproject.candlepin.auth.interceptor.CRUDSecured;
 import org.hibernate.Session;
 
 import com.google.inject.Inject;
@@ -78,6 +79,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param entity to be deleted.
      */
     @Transactional
+    @CRUDSecured
     public void delete(E entity) {
         E toDelete = find(entity.getId());
         currentSession().delete(toDelete);
