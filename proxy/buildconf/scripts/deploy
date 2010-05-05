@@ -116,14 +116,20 @@ function update_tomcat_conf
 
 function upload_products
 {
-    BUILDDIR="buildconf/scripts/"
-    CERTDIR="$BUILDDIR/product_certs"
+    if [ -z "$IMPORTDIR" ]; then
+	echo
+	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	echo
+	echo "Please point IMPORTDIR to the location of the product import scripts"
+	echo
+	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	return
+    fi
+    #BUILDDIR="buildconf/scripts/"
+    CERTDIR="$IMPORTDIR/product_certs"
     # generates a sql script to import products and improrts it
     rm -rf $CERTDIR/deploy.sql
-    for i in `ls -d $CERTDIR/*.pem`
-    do
-       $BUILDDIR/import_product_certs.py $i >> $CERTDIR/deploy.sql
-    done
+    $IMPORTDIR/import_product_certs.py $CERTDIR/*.pem > $CERTDIR/deploy.sql
     psql -f $CERTDIR/deploy.sql candlepin
 }
 
@@ -200,6 +206,6 @@ sleep 10
 echo "Initializing Candlepin..."
 wget -qO- http://localhost:8080/candlepin/admin/init
 
-upload_sat_cert
+#upload_sat_cert
 
 upload_products
