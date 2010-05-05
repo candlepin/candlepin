@@ -219,7 +219,7 @@ public class ConsumerResource {
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
-        unbindAllOrBySerialNumber(uuid, null);
+        unbindAll(uuid);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
     }
@@ -480,40 +480,31 @@ public class ConsumerResource {
     }
 
     /**
-     * Unbind entitlements by serial number, or unbind all.
+     * Unbind all entitlements.
      * 
      * @param consumerUuid Unique id for the Consumer.
-     * @param serials comma seperated list of subscription numbers.
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public void unbindAllOrBySerialNumber(
-        @PathParam("consumer_uuid") String consumerUuid,
-        @QueryParam("serial") String serials) {
+    public void unbindAll(@PathParam("consumer_uuid") String consumerUuid) {
 
-        if (serials == null) {
-            // FIXME: just a stub, needs CertifcateService (and/or a
-            // CertificateCurator) to lookup by serialNumber
-            Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        // FIXME: just a stub, needs CertifcateService (and/or a
+        // CertificateCurator) to lookup by serialNumber
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
-            if (consumer == null) {
-                throw new NotFoundException(
-                    i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
-            }
-
-            entitler.revokeAllEntitlements(consumer);
-
-            // Need to parse off the value of subscriptionNumberArgs, probably
-            // use comma separated see IntergerList in sparklines example in
-            // jersey examples find all entitlements for this consumer and
-            // subscription numbers delete all of those (and/or return them to
-            // entitlement pool)
+        if (consumer == null) {
+            throw new NotFoundException(
+                i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
         }
-        else {
-            throw new RuntimeException(
-                "Unbind by serial number not yet supported.");
-        }
+
+        entitler.revokeAllEntitlements(consumer);
+
+        // Need to parse off the value of subscriptionNumberArgs, probably
+        // use comma separated see IntergerList in sparklines example in
+        // jersey examples find all entitlements for this consumer and
+        // subscription numbers delete all of those (and/or return them to
+        // entitlement pool)
 
     }
 
