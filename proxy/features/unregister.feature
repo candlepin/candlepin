@@ -4,8 +4,8 @@ Feature: Unregister a Consumer
 
     Scenario: Unregister multiple consumers
         Given I am a Consumer "consumer"
-        And I have an Entitlement named "virt_entitlement" for the "RHN Satellite Virtulization Host" Product
-        And I have an Entitlement named "monitoring_entitlement" for the "RHN Satellite Monitoring" Product
+        And I have an Entitlement named "virt_entitlement" for the "72093906" Product
+        And I have an Entitlement named "monitoring_entitlement" for the "1852089416" Product
         When I unregister
         And I become user "foo" with password "bar"
         Then The entitlement named "virt_entitlement" should not exist
