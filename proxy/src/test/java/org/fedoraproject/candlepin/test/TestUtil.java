@@ -103,8 +103,11 @@ public class TestUtil {
     }
     
     public static Pool createEntitlementPool(Product product) {
-        Pool pool = new Pool(new Owner("Test Owner " + randomInt()),
-                product.getId(), new Long(1000),
+        return createEntitlementPool(product, new Owner("Test Owner " + randomInt()));
+    }
+
+    public static Pool createEntitlementPool(Product product, Owner owner) {
+        Pool pool = new Pool(owner, product.getId(), new Long(1000),
                 TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
         return pool;
     }

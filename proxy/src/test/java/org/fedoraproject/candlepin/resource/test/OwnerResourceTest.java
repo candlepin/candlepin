@@ -14,17 +14,16 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.Subscription;
+import static org.junit.Assert.*;
+
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -39,28 +38,27 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar Jar Binks";
 
     private OwnerResource ownerResource;
+    private Owner owner;
+    private Product product;
 
     @Before
     public void setUp() {
-        ownerResource = new OwnerResource(ownerCurator, poolCurator, i18n);
+        ownerResource = injector.getInstance(OwnerResource.class);
+        owner = new Owner(OWNER_NAME);
+        ownerCurator.create(owner);
+        product = TestUtil.createProduct();
+        productCurator.create(product);
     }
 
     @Test
     public void testCreateOwner() {
-        Owner toSubmit = new Owner(OWNER_NAME);
-
-        Owner submitted = ownerResource.createOwner(toSubmit);
-
-        assertNotNull(submitted);
-        assertNotNull(ownerCurator.find(submitted.getId()));
-        assertTrue(submitted.getEntitlementPools().size() == 0);
+        assertNotNull(owner);
+        assertNotNull(ownerCurator.find(owner.getId()));
+        assertTrue(owner.getEntitlementPools().size() == 0);
     }
     
     @Test    
     public void testSimpleDeleteOwner() {
-        Owner owner = new Owner(OWNER_NAME);
-        ownerCurator.create(owner);
-        assertNotNull(owner.getId());
         Long id = owner.getId();
         ownerResource.deleteOwner(id);
         owner = ownerCurator.find(id);
@@ -179,4 +177,35 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
     }
+
+    public void testComplexDeleteOwner() throws Exception {
+
+        // Create some consumers:
+        Consumer c1 = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c1.getType());
+        consumerCurator.create(c1);
+        Consumer c2 = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c2.getType());
+        consumerCurator.create(c2);
+
+        // Create a pool for this owner:
+        Pool pool = TestUtil.createEntitlementPool(product, owner);
+        poolCurator.create(pool);
+
+        // Give those consumers entitlements:
+        entitler.entitle(c1, pool);
+
+        assertEquals(2, consumerCurator.listByOwner(owner).size());
+        assertEquals(1, poolCurator.listByOwner(owner).size());
+        assertEquals(1, entitlementCurator.listByOwner(owner).size());
+
+        ownerResource.deleteOwner(owner.getId());
+
+        assertEquals(0, consumerCurator.listByOwner(owner).size());
+        assertNull(consumerCurator.lookupByUuid(c1.getUuid()));
+        assertNull(consumerCurator.lookupByUuid(c2.getUuid()));
+        assertEquals(0, poolCurator.listByOwner(owner).size());
+        assertEquals(0, entitlementCurator.listByOwner(owner).size());
+    }
+
 }

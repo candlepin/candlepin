@@ -51,4 +51,5 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             return results;
         }
     }
+
 }

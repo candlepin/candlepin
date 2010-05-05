@@ -216,7 +216,7 @@ public class ConsumerResource {
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
-        this.unbindAllOrBySerialNumber(uuid, null);
+        unbindAllOrBySerialNumber(uuid, null);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
     }
@@ -498,10 +498,7 @@ public class ConsumerResource {
                     i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
             }
 
-            for (Entitlement entitlement : entitlementCurator
-                .listByConsumer(consumer)) {
-                entitler.revokeEntitlement(entitlement);
-            }
+            entitler.revokeAllEntitlements(consumer);
 
             // Need to parse off the value of subscriptionNumberArgs, probably
             // use comma separated see IntergerList in sparklines example in
