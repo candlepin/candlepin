@@ -36,6 +36,8 @@ import org.fedoraproject.candlepin.util.DateSource;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.ParamDef;
 
@@ -46,13 +48,26 @@ import org.hibernate.annotations.ParamDef;
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@FilterDef(
-    name = "Pool_OWNER_FILTER", 
-    parameters = @ParamDef(name = "owner_id", type = "long")
-)
-@Filter(name = "Pool_OWNER_FILTER", 
-    condition = "id in (select p.id from cp_pool p where p.owner_id = :owner_id)"
-)
+@FilterDefs({
+    @FilterDef(
+        name = "Pool_OWNER_FILTER", 
+        parameters = @ParamDef(name = "owner_id", type = "long")
+    ),
+    @FilterDef(
+        name = "Pool_CONSUMER_FILTER", 
+        parameters = @ParamDef(name = "consumer_id", type = "long")
+    )
+})
+@Filters({
+    @Filter(name = "Pool_OWNER_FILTER", 
+        condition = "id in (select p.id from cp_pool p where p.owner_id = :owner_id)"
+    ),
+    @Filter(name = "Pool_CONSUMER_FILTER", 
+        condition = "id in (select p.id from cp_pool p " +
+            "inner join cp_owner o on p.owner_id = o.id " +
+            "inner join cp_consumer c on c.owner_id = o.id and c.id = :consumer_id)"
+    )
+})
 @Table(name = "cp_pool")
 @SequenceGenerator(name = "seq_pool",
         sequenceName = "seq_pool", allocationSize = 1)

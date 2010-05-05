@@ -44,8 +44,13 @@ public class FilterInterceptor implements MethodInterceptor {
             enableConsumerFilter(currentUser, target, role);
         }
         
-        if ((target instanceof PoolCurator) && (Role.OWNER_ADMIN == role)) {
-            enableOwnerFilter(currentUser, target, role);
+        if ((target instanceof PoolCurator)) {
+            if (Role.OWNER_ADMIN == role) { 
+                enableOwnerFilter(currentUser, target, role);
+            } 
+            else if (Role.CONSUMER == role) {
+                enableConsumerFilter(currentUser, target, role);
+            }
         }
         
         return invocation.proceed();
