@@ -130,7 +130,7 @@ function upload_products
     # generates a sql script to import products and improrts it
     rm -rf $CERTDIR/deploy.sql
     $IMPORTDIR/import_product_certs.py $CERTDIR/*.pem > $CERTDIR/deploy.sql
-    psql -f $CERTDIR/deploy.sql candlepin
+    psql -U candlepin -f $CERTDIR/deploy.sql candlepin
 }
 
 # Read in user defined variables
