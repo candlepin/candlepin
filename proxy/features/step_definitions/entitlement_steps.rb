@@ -12,7 +12,7 @@ Given /^I have an Entitlement named "([^\"]*)" for the "([^\"]*)" Product$/ do |
   @entitlements[name] = @candlepin.consume_product(product)
 end
 
-When /I Consume an Entitlement for the "(\w+)" Product/ do |product|
+When /I Consume an Entitlement for the "([^\"]*)" Product/ do |product|
     @candlepin.consume_product(product)
 end
 
@@ -32,7 +32,7 @@ Then /^I Have an Entitlement for the "([^\"]*)" Product$/ do |product_id|
     product_ids.should include(product_id)
 end
 
-When /I Consume an Entitlement for the "(\w+)" Pool$/ do |pool|
+When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
   all_pools = @candlepin.get_pools({:consumer => @candlepin.consumer['uuid']})
   
   product_pools = all_pools.select {|p| p['pool'].has_value?(pool)}
@@ -43,7 +43,7 @@ When /I Consume an Entitlement for the "(\w+)" Pool$/ do |pool|
   results = @candlepin.consume_pool(@pool_id)
 end
 
-Then /^I Get (\d+) Entitlement When I Filter by Product ID "(\w+)"$/ do |entitlement_size, product_id|
+Then /^I Get (\d+) Entitlement When I Filter by Product ID "([^\"]*)"$/ do |entitlement_size, product_id|
   @candlepin.list_entitlements(product_id).length.should == entitlement_size.to_i
 end
 

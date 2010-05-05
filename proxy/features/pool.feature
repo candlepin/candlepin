@@ -5,4 +5,4 @@ Feature: Entitlement Pools have Product Name
 
     Scenario: First pool available has the correct name
         Given I am a Consumer "consumer"
-        Then The first pool's product name is "SPACEWALK-001"
+        Then The first pool's product name is "Spacewalk"
