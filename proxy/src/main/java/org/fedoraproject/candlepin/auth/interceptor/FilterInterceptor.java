@@ -18,8 +18,10 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.PoolCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -44,6 +46,17 @@ public class FilterInterceptor implements MethodInterceptor {
             String filterName = curator.entityType().getSimpleName() + "_CONSUMER_FILTER";
             curator.enableFilter(filterName, "consumer_id", 
                 currentConsumer.consumer().getId());
+        }
+        
+        if ((target instanceof PoolCurator) &&
+            (currentUser instanceof UserPrincipal)) {
+            
+            AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
+            UserPrincipal currentConsumer = (UserPrincipal) currentUser;
+
+            String filterName = curator.entityType().getSimpleName() + "_OWNER_FILTER";
+            curator.enableFilter(filterName, "owner_id", 
+                currentConsumer.getOwner().getId());
         }
         
         return invocation.proceed();

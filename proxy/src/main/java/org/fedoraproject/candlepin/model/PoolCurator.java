@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -94,6 +95,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true, true);
     }
     
+    @EnforceAccessControl
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             Product p, boolean activeOnly) {
         String productId = (p == null) ? null : p.getId();
