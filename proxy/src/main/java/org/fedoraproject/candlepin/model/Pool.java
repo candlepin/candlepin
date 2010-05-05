@@ -34,7 +34,10 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.util.DateSource;
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.ParamDef;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -43,6 +46,13 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
+@FilterDef(
+    name = "Pool_OWNER_FILTER", 
+    parameters = @ParamDef(name = "owner_id", type = "long")
+)
+@Filter(name = "Pool_OWNER_FILTER", 
+    condition = "id in (select p.id from cp_pool p where p.owner_id = :owner_id)"
+)
 @Table(name = "cp_pool")
 @SequenceGenerator(name = "seq_pool",
         sequenceName = "seq_pool", allocationSize = 1)
