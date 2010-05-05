@@ -80,6 +80,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param o Owner to filter
      * @return pools owned by the given Owner.
      */
+    @EnforceAccessControl
     public List<Pool> listByOwner(Owner o) {
         return listAvailableEntitlementPools(null, o, (String) null, true, true);
     }
