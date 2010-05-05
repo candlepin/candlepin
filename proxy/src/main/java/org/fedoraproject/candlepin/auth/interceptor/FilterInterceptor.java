@@ -18,6 +18,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
@@ -37,28 +38,38 @@ public class FilterInterceptor implements MethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Principal currentUser = this.principalProvider.get();
         Object target = invocation.getThis();
-        if ((target instanceof EntitlementCertificateCurator) &&
-            (currentUser instanceof ConsumerPrincipal)) {
-            
-            AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
-            ConsumerPrincipal currentConsumer = (ConsumerPrincipal) currentUser;
-            
-            String filterName = curator.entityType().getSimpleName() + "_CONSUMER_FILTER";
-            curator.enableFilter(filterName, "consumer_id", 
-                currentConsumer.consumer().getId());
+        Role role = currentUser.getRoles().get(0);
+        
+        if ((target instanceof EntitlementCertificateCurator) && (Role.CONSUMER == role)) {
+            enableConsumerFilter(currentUser, target, role);
         }
         
-        if ((target instanceof PoolCurator) &&
-            (currentUser instanceof UserPrincipal)) {
-            
-            AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
-            UserPrincipal currentConsumer = (UserPrincipal) currentUser;
-
-            String filterName = curator.entityType().getSimpleName() + "_OWNER_FILTER";
-            curator.enableFilter(filterName, "owner_id", 
-                currentConsumer.getOwner().getId());
+        if ((target instanceof PoolCurator) && (Role.OWNER_ADMIN == role)) {
+            enableOwnerFilter(currentUser, target, role);
         }
         
         return invocation.proceed();
+    }
+
+    private void enableConsumerFilter(Principal currentUser, Object target,
+        Role role) {
+        AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
+        ConsumerPrincipal user = (ConsumerPrincipal) currentUser;
+        
+        String filterName = filterName(curator.entityType(), role); 
+        curator.enableFilter(filterName, "consumer_id", user.consumer().getId());
+    }
+
+    private void enableOwnerFilter(Principal currentUser, Object target, Role role) {
+        AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
+        UserPrincipal user = (UserPrincipal) currentUser;
+
+        String filterName = filterName(curator.entityType(), role); 
+        curator.enableFilter(filterName, "owner_id", user.getOwner().getId());
+    }
+    
+    private String filterName(Class<?> entity, Role role) {
+        return entity.getSimpleName() +
+            (role == Role.CONSUMER ? "_CONSUMER_FILTER" : "_OWNER_FILTER");
     }
 }

@@ -19,5 +19,4 @@ package org.fedoraproject.candlepin.auth;
  */
 public enum Role {
     CONSUMER, OWNER_ADMIN, SUPER_ADMIN;
-
 }
