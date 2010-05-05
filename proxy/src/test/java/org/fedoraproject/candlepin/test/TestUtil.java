@@ -21,7 +21,6 @@ import java.util.Random;
 import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -116,11 +115,6 @@ public class TestUtil {
         Pool pool = new Pool(owner, product.getId(), new Long(1000),
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
         return pool;
-    }
-    
-    public static Entitlement createEntitlement(Pool pool, Consumer c) {
-        Entitlement e = new Entitlement(pool, c, pool.getStartDate());
-        return e;
     }
     
     public static Date createDate(int year, int month, int day) {
