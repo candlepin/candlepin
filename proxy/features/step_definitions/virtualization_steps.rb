@@ -1,7 +1,7 @@
 Given /^I am a Consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|
     # XXX prodbably don't want to hardcode these
-    @username = 'Spacewalk Public Cert'
-    @password = 'password'
+    @username = 'Default Org'
+    @password = 'Default Org'
 
     consumer = {
         :consumer => {
