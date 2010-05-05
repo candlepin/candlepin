@@ -98,10 +98,13 @@ public class CLIMain {
     }
     
     protected void handleClientException(RuntimeException e, BaseCommand cmd) {
-        if (e.getCause().getClass() == java.net.ConnectException.class) {
-            System.out.println("Error connecting to " + cmd.getClient().getUrl());
+        if (e.getCause() != null) {
+            if (e.getCause().getClass() == java.net.ConnectException.class) {
+                System.out.println("Error connecting to " + cmd.getClient().getUrl());
+                return;
+            }
         }
-        
+        e.printStackTrace();
     }
 
     public static void main(String[] args) {

@@ -17,6 +17,9 @@ package org.fedoraproject.candlepin.client.model;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -87,13 +90,13 @@ public class EntitlementCertificate {
             "1.3.6.1.4.1.2312.9.4.1", "Unknown");
     }
 
-    public String getStartDate() {
-        return PemUtil.getExtensionValue(getX509Cert(),
-            "1.3.6.1.4.1.2312.9.4.6", "Unknown");
+    public Date getStartDate() {
+        return PemUtil.getExtensionDate(getX509Cert(),
+            "1.3.6.1.4.1.2312.9.4.6", null);        
     }
 
-    public String getEndDate() {
-        return PemUtil.getExtensionValue(getX509Cert(),
-            "1.3.6.1.4.1.2312.9.4.7", "Unknown");
+    public Date getEndDate() {
+        return PemUtil.getExtensionDate(getX509Cert(),
+            "1.3.6.1.4.1.2312.9.4.7", null);        
     }
 }
