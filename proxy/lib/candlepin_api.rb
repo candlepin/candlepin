@@ -3,6 +3,7 @@ require 'openssl'
 require 'rubygems'
 require 'rest_client'
 require 'json'
+require 'uri'
 
 class Candlepin
 
@@ -224,30 +225,30 @@ class Candlepin
     end
 
     def get(uri)
-        response = @client[uri].get :accept => :json
+        response = @client[URI.escape(uri)].get :accept => :json
 
         return JSON.parse(response.body)
     end
 
     def get_text(uri)
-      response = @client[uri].get
+      response = @client[URI.escape(uri)].get
       return (response.body)
     end
 
     def post(uri, data=nil)
         data = data.to_json if not data.nil?
-        response = @client[uri].post(data, :content_type => :json, :accept => :json)
+        response = @client[URI.escape(uri)].post(data, :content_type => :json, :accept => :json)
 
         return JSON.parse(response.body)
     end
     
     def post_text(uri, data=nil)
-        response = @client[uri].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
+        response = @client[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
         return response.body
     end
 
     def delete(uri)
-        @client[uri].delete
+        @client[URI.escape(uri)].delete
     end
 end
 
