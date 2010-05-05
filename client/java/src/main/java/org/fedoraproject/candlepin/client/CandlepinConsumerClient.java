@@ -217,6 +217,10 @@ public class CandlepinConsumerClient {
             throw new ClientException(e);
         }
     }
+    
+    public String getUrl() {
+        return url;
+    }
 
     protected ICandlepinConsumerClient clientWithCert() {
         try {
