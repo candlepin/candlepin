@@ -80,7 +80,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     public List<Pool> listByOwner(Owner o) {
-        return listAvailableEntitlementPools(null, o, (String) null, true, true);
+        return listAvailableEntitlementPools(null, o, (String) null, true);
     }
     
     
@@ -91,14 +91,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     public List<Pool> listAvailableEntitlementPools(Consumer c) {
-        return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true, true);
+        return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true);
     }
     
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             Product p, boolean activeOnly) {
         String productId = (p == null) ? null : p.getId();
         Owner owner = o == null ? c.getOwner() : o;
-        return listAvailableEntitlementPools(c, owner, productId, activeOnly, true);
+        return listAvailableEntitlementPools(c, owner, productId, activeOnly);
     }
     
     /**
@@ -114,6 +114,64 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
+     * Check our underlying subscription service and update the pool data. Note
+     * that refreshing the pools doesn't actually take any action, should a subscription
+     * be reduced, expired, or revoked. Pre-existing entitlements will need to be dealt
+     * with separately from this event.
+     *
+     * @param owner Owner to be refreshed.
+     * @return List of subscription IDs which provide access to this product.
+     */
+    public List<Long> refreshPools(Owner owner) {
+        log.debug("Refreshing pools");
+        
+        List<Long> validSubscriptionIds = new LinkedList<Long>();
+        List<Subscription> subs = subAdapter.getSubscriptions(owner);
+        
+        if (log.isDebugEnabled()) {
+            log.debug("Found subscriptions: ");
+            for (Subscription sub : subs) {
+                log.debug("   " + sub);
+            }
+        }
+        
+        List<Pool> pools = listAvailableEntitlementPools(null, owner, (String) null, false);
+    
+        if (log.isDebugEnabled()) {
+            log.debug("Found pools: ");
+            for (Pool p : pools) {
+                log.debug("   " + p);
+            }
+        }
+        
+        // Map all  pools for this owner/product that have a
+        // subscription ID associated with them.
+        Map<Long, Pool> subToPoolMap = new HashMap<Long, Pool>();
+        for (Pool p : pools) {
+            if (p.getSubscriptionId() != null) {
+                subToPoolMap.put(p.getSubscriptionId(), p);
+            }
+        }
+        
+        for (Subscription sub : subs) {
+            validSubscriptionIds.add(sub.getId());
+            if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
+                createPool(subToPoolMap, sub);
+            }
+            else {
+                updatePool(subToPoolMap, sub);
+            }
+        }
+    
+        // de-activate pools whose subscription disappeared:
+        for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
+            deactivatePool(entry.getValue());
+        }
+        
+        return validSubscriptionIds;
+    }
+
+    /**
      * List entitlement pools.
      * 
      * Pools will be refreshed from the underlying subscription service.
@@ -125,28 +183,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param o
      * @param productId
      * @param activeOnly
-     * @param refresh
      * @return
      */
     @SuppressWarnings("unchecked")
     @Transactional
     private List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, boolean activeOnly, boolean refresh) {
+            String productId, boolean activeOnly) {
 
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
             log.debug("   consumer: " + c);
             log.debug("   owner: " + o);
             log.debug("   product: " + productId);
-            log.debug("   refresh: " + refresh);
-        }
-        
-        // Be careful here, we're trying to list pools, but before we do that we need a 
-        // refresh, which in turn needs a list of pools and will re-call this method
-        // to get them, only with refresh set to false.
-        List<Long> subIds = new LinkedList<Long>();
-        if (refresh) {
-            subIds = refreshPools(o, productId);
         }
         
         List<Pool> results = null;
@@ -189,14 +237,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                         log.debug("Pool indirectly provides " + productId + 
                             ": " + p);
                     }
-                }
-                else if (subIds.contains(p.getSubscriptionId())) {
-                    // Do fuzzy product checking for pools backed by a subscription:
-                    if (log.isDebugEnabled()) {
-                        log.debug("Pool's subscription indirectly provides " + productId + 
-                            ": " + p);
-                    }
-                    newResults.add(p);
                 }
             }
             results = newResults;
@@ -244,74 +284,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
     }
     
-    /**
-     * Before executing any entitlement pool query, check our underlying
-     * subscription service and update the pool data. Must be careful to call
-     * this before we do any pool query. Note that refreshing the pools doesn't
-     * actually take any action, should a subscription be reduced, expired, or
-     * revoked. Pre-existing entitlements will need to be dealt with separately
-     * from this event.
-     *
-     * @param owner Owner to be refreshed.
-     * @param productId Products to refresh.
-     * @return List of subscription IDs which provide access to this product.
-     */
-    private List<Long> refreshPools(Owner owner, String productId) {
-        log.debug("Refreshing pools");
-        
-        List<Long> validSubscriptionIds = new LinkedList<Long>();
-        List<Subscription> subs = null;
-        if (productId == null) {
-            subs = subAdapter.getSubscriptions(owner);
-        }
-        else {
-            subs = subAdapter.getSubscriptions(owner, productId);
-        }
-        
-        if (log.isDebugEnabled()) {
-            log.debug("Found subscriptions: ");
-            for (Subscription sub : subs) {
-                log.debug("   " + sub);
-            }
-        }
-        
-        List<Pool> pools = listAvailableEntitlementPools(null, owner, productId, false,
-            false);
-
-        if (log.isDebugEnabled()) {
-            log.debug("Found pools: ");
-            for (Pool p : pools) {
-                log.debug("   " + p);
-            }
-        }
-        
-        // Map all  pools for this owner/product that have a
-        // subscription ID associated with them.
-        Map<Long, Pool> subToPoolMap = new HashMap<Long, Pool>();
-        for (Pool p : pools) {
-            if (p.getSubscriptionId() != null) {
-                subToPoolMap.put(p.getSubscriptionId(), p);
-            }
-        }
-        
-        for (Subscription sub : subs) {
-            validSubscriptionIds.add(sub.getId());
-            if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                createPool(subToPoolMap, sub);
-            }
-            else {
-                updatePool(subToPoolMap, sub);
-            }
-        }
-
-        // de-activate pools whose subscription disappeared:
-        for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
-            deactivatePool(entry.getValue());
-        }
-        
-        return validSubscriptionIds;
-    }
-
     private boolean poolExistsForSubscription(Map<Long, Pool> subToPoolMap,
             Long id) {
         return subToPoolMap.containsKey(id);
