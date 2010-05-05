@@ -342,7 +342,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(null, consumerCurator.lookupByUuid(consumer.getUuid()));
     }
     
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testCannotGetAnotherOwnersConsumersCerts() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
@@ -351,7 +351,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(evilOwner);
         setupPrincipal(evilOwner, Role.OWNER_ADMIN);
         
-        consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+        assertEquals(0, consumerResource.getEntitlementCertificates(
+            consumer.getUuid(), null).size());
     }
     
     @Test(expected = ForbiddenException.class)

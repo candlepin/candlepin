@@ -93,7 +93,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerAdminCannotAccessAnotherOwnersPools() {
-        Owner evilOwner = new Owner(OWNER_NAME);
+        Owner evilOwner = new Owner("evilowner");
         ownerCurator.create(evilOwner);
         setupPrincipal(evilOwner, Role.OWNER_ADMIN);
 

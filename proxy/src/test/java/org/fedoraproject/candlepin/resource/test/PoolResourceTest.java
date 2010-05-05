@@ -109,6 +109,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListForOrg() {
         List<Pool> pools = poolResource.list(owner1.getId(), null, null);
         assertEquals(2, pools.size());
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
         pools = poolResource.list(owner2.getId(), null, null);
         assertEquals(1, pools.size());
     }
