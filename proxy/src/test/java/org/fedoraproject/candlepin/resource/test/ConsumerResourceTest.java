@@ -320,8 +320,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
         
-        TestPrincipalProviderSetter.get().setPrincipal(
-            new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer));
         
         assertEquals(3, 
             consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
@@ -331,16 +330,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void canDeleteConsumerOtherThanSelf() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
-        TestPrincipalProviderSetter.get().setPrincipal(
-            new ConsumerPrincipal(evilConsumer));
+        setupPrincipal(new ConsumerPrincipal(evilConsumer));
         
         consumerResource.deleteConsumer(consumer.getUuid());
     }
     
     @Test
     public void consumerCanDeleteSelf() {
-        TestPrincipalProviderSetter.get().setPrincipal(
-            new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer));
         consumerResource.deleteConsumer(consumer.getUuid());
         assertEquals(null, consumerCurator.lookupByUuid(consumer.getUuid()));
     }
