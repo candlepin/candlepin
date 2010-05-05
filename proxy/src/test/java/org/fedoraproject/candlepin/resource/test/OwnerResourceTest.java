@@ -14,12 +14,15 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Subscription;
 import static org.junit.Assert.*;
 
+
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -202,4 +205,58 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, entitlementCurator.listByOwner(owner).size());
     }
 
+    @Test(expected = ForbiddenException.class)
+    public void testConsumerRoleCannotGetOwner() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+        setupPrincipal(new ConsumerPrincipal(c));
+
+        ownerResource.getOwner(owner.getId());
+    }
+
+    @Test
+    public void testOwnerAdminCanGetPools() {
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+
+        Product p = TestUtil.createProduct();
+        productCurator.create(p);
+        Pool pool1 = TestUtil.createEntitlementPool(owner, p);
+        Pool pool2 = TestUtil.createEntitlementPool(owner, p);
+        poolCurator.create(pool1);
+        poolCurator.create(pool2);
+
+        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getId());
+        assertEquals(2, pools.size());
+    }
+
+    @Test
+    public void testOwnerAdminCannotAccessAnotherOwnersPools() {
+        Owner evilOwner = new Owner("evilowner");
+        ownerCurator.create(evilOwner);
+        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
+
+        Product p = TestUtil.createProduct();
+        productCurator.create(p);
+        Pool pool1 = TestUtil.createEntitlementPool(owner, p);
+        Pool pool2 = TestUtil.createEntitlementPool(owner, p);
+        poolCurator.create(pool1);
+        poolCurator.create(pool2);
+
+        // Filtering should just cause this to return no results:
+        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getId());
+        assertEquals(0, pools.size());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testOwnerAdminCannotListAllOwners() {
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        ownerResource.list();
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testOwnerAdminCannotDelete() {
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        ownerResource.deleteOwner(owner.getId());
+    }
 }

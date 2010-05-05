@@ -131,7 +131,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     
     @Test
     public void testFuzzyProductMatchingWithoutSubscription() {
-        
         Product parent = TestUtil.createProduct();
         parent.addChildProduct(product);
         productCurator.create(parent);
@@ -142,6 +141,56 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product);
         assertEquals(1, results.size());
+    }
+    
+    @Test
+    public void shouldReturnPoolsBelongingToTheOwnerWhenFilterIsEnabled() {
+        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
         
+        Owner anotherOwner = createOwner();
+        ownerCurator.create(anotherOwner);
+        
+        Product anotherProduct = new Product("another_product", "another product");
+        productCurator.create(anotherProduct);
+        
+        Pool p = new Pool(anotherOwner, anotherProduct.getId(), new Long(5), 
+            TestUtil.createDate(2000, 3, 2), 
+            TestUtil.createDate(2040, 3, 2));
+        poolCurator.create(p);
+
+        assertEquals(2, poolCurator.findAll().size());
+        
+        poolCurator.enableFilter("Pool_OWNER_FILTER", "owner_id", anotherOwner.getId());
+        assertEquals(1, poolCurator.findAll().size());
+    }
+    
+    @Test
+    public void shouldReturnPoolsBelongingToConsumersOwnerWhenFilterIsEnabled() {
+        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        
+        Owner anotherOwner = createOwner();
+        ownerCurator.create(anotherOwner);
+        
+        Product anotherProduct = new Product("another_product", "another product");
+        productCurator.create(anotherProduct);
+        
+        Pool p = new Pool(anotherOwner, anotherProduct.getId(), new Long(5), 
+            TestUtil.createDate(2000, 3, 2), 
+            TestUtil.createDate(2040, 3, 2));
+        poolCurator.create(p);
+
+        assertEquals(2, poolCurator.findAll().size());
+        
+        Consumer anotherConsumer = TestUtil.createConsumer(anotherOwner);
+        consumerTypeCurator.create(anotherConsumer.getType());
+        consumerCurator.create(anotherConsumer);
+        
+        poolCurator.enableFilter("Pool_CONSUMER_FILTER", "consumer_id", 
+            anotherConsumer.getId());
+        assertEquals(1, poolCurator.findAll().size());
     }
 }

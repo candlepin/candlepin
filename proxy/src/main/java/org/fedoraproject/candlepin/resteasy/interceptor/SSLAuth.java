@@ -66,7 +66,7 @@ class SSLAuth {
             log.debug("principal created for owner '" +
                 principal.getOwner().getDisplayName() +
                 "' with consumer '" +
-                principal.getConsumer().getUuid() + "'");
+                principal.consumer().getUuid() + "'");
         }
         
         return principal;

@@ -24,6 +24,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -42,6 +44,7 @@ import com.google.inject.Inject;
 /**
  * API gateway for the EntitlementPool
  */
+
 @Path("/pools")
 public class PoolResource {
     //private static Logger log = Logger.getLogger(PoolResource.class);
@@ -77,6 +80,7 @@ public class PoolResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "pools")
+    @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
     public List<Pool> list(@QueryParam("owner") Long ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId) {

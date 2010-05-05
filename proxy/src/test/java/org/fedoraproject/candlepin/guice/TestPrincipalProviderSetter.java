@@ -12,11 +12,29 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth;
+package org.fedoraproject.candlepin.guice;
+
+import org.fedoraproject.candlepin.auth.Principal;
 
 /**
- *
+ * TestPrincipalProviderSetter
  */
-public enum Role {
-    CONSUMER, OWNER_ADMIN, SUPER_ADMIN;
+public class TestPrincipalProviderSetter {
+    private static TestPrincipalProviderSetter instance;
+    private Principal principal;
+    
+    public static TestPrincipalProviderSetter get() {
+        if (instance == null) {
+            instance = new TestPrincipalProviderSetter();
+        }
+        return instance;
+    }
+    
+    public Principal getPrincipal() {
+        return principal;
+    }
+    
+    public void setPrincipal(Principal setMe) {
+        this.principal = setMe;
+    }
 }

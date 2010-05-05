@@ -15,18 +15,22 @@
 package org.fedoraproject.candlepin.auth.interceptor;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.fedoraproject.candlepin.auth.Role;
+
 /**
- * Annotation noting that the target method should only permit
- * <code>ConsumerPrincipal</code>s whose UUID matches the parameter
- * with the same <code>@PathParam</code> value.
+ * Annotation specifying which roles can access a given method. 
+ * Can be applied to both the class, or a method within the class, where the latter takes
+ * precedence. 
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface EnforceConsumer {
+@Target({ElementType.METHOD/*, ElementType.TYPE*/})
+@Inherited
+public @interface AllowRoles {
 
-    String pathParam() default "consumer_uuid";
+    Role [] roles() default {};
 }

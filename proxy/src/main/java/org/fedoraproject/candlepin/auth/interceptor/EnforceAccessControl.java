@@ -12,11 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth;
+package org.fedoraproject.candlepin.auth.interceptor;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- *
+ * EnforceAccessControl
  */
-public enum Role {
-    CONSUMER, OWNER_ADMIN, SUPER_ADMIN;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@Inherited
+public @interface EnforceAccessControl {
 }

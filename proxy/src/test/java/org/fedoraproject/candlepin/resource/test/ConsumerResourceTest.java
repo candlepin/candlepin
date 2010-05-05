@@ -19,7 +19,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -73,10 +75,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
         
-        ConsumerType type = new ConsumerType("some-consumer-type");
-        consumerTypeCurator.create(type);
-        
-        consumer = TestUtil.createConsumer(type, owner);
+        consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
         
         product = TestUtil.createProduct();
@@ -90,6 +89,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         fullPool.setConsumed(new Long(10));
         poolCurator.create(fullPool);
+        
+        // Run these tests with the consumer role:
+        setupPrincipal(new ConsumerPrincipal(consumer));
     }
     
     @Test
@@ -102,6 +104,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testGetCerts() {
+       
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
         List<EntitlementCertificate> serials = consumerResource.
             getEntitlementCertificates(consumer.getUuid(), null);
@@ -296,4 +299,65 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void unbindBySerialWithInvalidUuidShouldFail() {
         consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"));
     }
+    
+    @Test
+    public void testCannotGetAnotherConsumersCerts() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumerCurator.create(evilConsumer);
+        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        
+        assertEquals(0, 
+            consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
+    }
+
+    @Test
+    public void testCanGetOwnedConsumersCerts() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        
+        setupPrincipal(new ConsumerPrincipal(consumer));
+        
+        assertEquals(3, 
+            consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void canDeleteConsumerOtherThanSelf() {
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumerCurator.create(evilConsumer);
+        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        
+        consumerResource.deleteConsumer(consumer.getUuid());
+    }
+    
+    @Test
+    public void consumerCanDeleteSelf() {
+        setupPrincipal(new ConsumerPrincipal(consumer));
+        consumerResource.deleteConsumer(consumer.getUuid());
+        assertEquals(null, consumerCurator.lookupByUuid(consumer.getUuid()));
+    }
+    
+    @Test
+    public void testCannotGetAnotherOwnersConsumersCerts() {
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumerCurator.create(evilConsumer);
+        
+        Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
+        ownerCurator.create(evilOwner);
+        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
+        
+        assertEquals(0, consumerResource.getEntitlementCertificates(
+            consumer.getUuid(), null).size());
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void testConsumerCannotListAllConsumers() {
+        consumerResource.list();
+    }
+    
 }

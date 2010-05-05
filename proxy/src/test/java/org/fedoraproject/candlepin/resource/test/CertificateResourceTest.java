@@ -18,7 +18,7 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.guice.PrincipalProviderForTesting;
+import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -43,9 +43,8 @@ public class CertificateResourceTest extends DatabaseTestFixture {
     @Before
     public void createObjects() throws Exception {
         
-        this.principal = new PrincipalProviderForTesting(ownerCurator).get();
-        certResource = new CertificateResource(spacewalkCertCurator, certificateCurator, 
-            i18n);
+        this.principal = new TestPrincipalProvider(ownerCurator).get();
+        certResource = injector.getInstance(CertificateResource.class);
         
         InputStream is = this.getClass().getResourceAsStream(
                 "/org/fedoraproject/candlepin/resource/test/spacewalk-public.cert");
@@ -73,7 +72,7 @@ public class CertificateResourceTest extends DatabaseTestFixture {
         List<Pool> entPools = poolCurator.listByOwner(owner);
         assertEquals(5, entPools.size());
     }
-
+    
     @Test
     public void channelFamilyCreation() {
         // TODO!!!!!! Current test cert has no channel families.
