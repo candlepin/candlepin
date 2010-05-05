@@ -16,7 +16,6 @@ function virtualization_common() {
 //		pre.addError("rulefailed.host.already.has.guests");
 //	}
 }
-
 function pre_virtualization_host() {
 	virtualization_common();
 }
@@ -24,6 +23,15 @@ function pre_virtualization_host() {
 function post_virtualization_host() {
 	post_global();
 }
+
+function pre_72093906() {
+	virtualization_common();
+}
+
+function post_72093906() {
+	post_global();
+}
+
 function pre_virtualization_host_platform() {
 	virtualization_common();
 }
@@ -43,7 +51,7 @@ function pre_global() {
 	// and is entitled to the product the guest is requesting:
 	if (consumer.getType() == "virt_system" && consumer.getParent() != null) {
 		var parent = consumer.getParent();
-		if ((parent.hasEntitlement("virtualization_host") || parent.hasEntitlement("virtualization_host_platform"))
+		if ((parent.hasEntitlement("1755176548") || parent.hasEntitlement("72093906"))
 				&& parent.hasEntitlement(product)) {
 			pre.grantFreeEntitlement();
 		}
