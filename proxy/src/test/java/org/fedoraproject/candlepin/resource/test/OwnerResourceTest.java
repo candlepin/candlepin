@@ -67,8 +67,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsWithNewSubscriptions() {
-        Owner owner = new Owner(OWNER_NAME);
-        ownerCurator.create(owner);
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
 
@@ -123,8 +121,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsWithRemovedSubscriptions() {
-        Owner owner = new Owner(OWNER_NAME);
-        ownerCurator.create(owner);
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
 
@@ -153,8 +149,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshMultiplePools() {
-        Owner owner = new Owner(OWNER_NAME);
-        ownerCurator.create(owner);
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
         Product prod2 = TestUtil.createProduct();
