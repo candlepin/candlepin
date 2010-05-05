@@ -171,6 +171,8 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         Set<Role> roles = userRoles.get(username);
         if (roles == null) {
             roles = new HashSet<Role>();
+            // TODO: drop this once we have a proper user service
+            roles.add(Role.SUPER_ADMIN);
         }
         return new LinkedList<Role>(roles);
     }
