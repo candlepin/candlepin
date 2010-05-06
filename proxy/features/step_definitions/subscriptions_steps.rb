@@ -6,7 +6,7 @@ Before do
         'subscription' => {'startDate' => '2007-07-13T00:00:00-04:00',
                            'endDate'   => '2010-07-13T00:00:00-04:00',
                            'quantity'  =>  37,
-                           'productId' => 'RHN Satellite Provisioning'
+                           'productId' => '121098989'
         }
     }
 end

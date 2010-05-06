@@ -32,9 +32,11 @@ Then /^I Have an Entitlement for the "([^\"]*)" Product$/ do |product_id|
     product_ids.should include(product_id)
 end
 
+# need a test for a Pool created with a productid that doesn't exist...
+
 When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
   all_pools = @candlepin.get_pools({:consumer => @candlepin.consumer['uuid']})
-  
+ 
   product_pools = all_pools.select {|p| p['pool'].has_value?(pool)}
   product_pools.empty?.should == false
 
