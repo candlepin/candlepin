@@ -53,6 +53,10 @@ class Candlepin
         post('/owners', owner)
     end
 
+    def delete_owner(owner_id)
+        delete("/owners/#{owner_id}")
+    end
+
     def get_consumer_types
         get('/consumertypes')
     end
