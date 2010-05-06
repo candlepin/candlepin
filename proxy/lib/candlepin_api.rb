@@ -8,8 +8,33 @@ class Candlepin
 
     attr_reader :identity_certificate, :consumer
 
-    def initialize(host='localhost', port=8443)
+    # Initialize a connection to candlepin. Can use username/password for 
+    # basic authentication, or provide an identity certificate and key to
+    # connect as a "consumer".
+    def initialize(username=nil, password=nil, cert=nil, key=nil, 
+                   host='localhost', port=8443)
+
+        if not username.nil? and not cert.nil?
+            raise "Cannot connect with both username and identity cert"
+        end
+
+        if username.nil? and cert.nil?
+            raise "Need username/password or cert/key"
+        end
+
         @base_url = "https://#{host}:#{port}/candlepin"
+
+        if not cert.nil? 
+            print("Nil idcert\n")
+            @identity_certificate = OpenSSL::X509::Certificate.new(cert)
+            @identity_key = OpenSSL::PKey::RSA.new(key)
+            create_ssl_client()
+        else
+            @username = username
+            @password = password
+            create_basic_client(@username, @password)
+        end
+
     end
 
     def use_credentials(username=nil, password=nil)

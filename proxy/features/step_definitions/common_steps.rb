@@ -11,8 +11,8 @@ Before do
     if $config.nil?
         initialize_config()
     end
-    @candlepin = Candlepin.new
-    @candlepin.use_credentials($config['username'], $config['password'])
+    @candlepin = Candlepin.new(username=$config['username'], 
+                               password=$config['password'])
     @test_owner = @candlepin.create_owner(
         gen_random_string('testowner'))['owner']
 end
