@@ -112,14 +112,14 @@ public class ReadOnlyConsumer {
     /**
      * Return true if this Consumer has any entitlements for the given product
      * label.
-     * @param productLabel label of the product to lookup.
+     * @param productId id of the product to lookup.
      * @return true if this Consumer has any entitlements for the given product
      * label
      */
     //TODO Is this correct?
-    public boolean hasEntitlement(String productLabel) {
+    public boolean hasEntitlement(String productId) {
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProductId().equals(productLabel)) {
+            if (e.getProductId().equals(productId)) {
                 return true;
             }
         }
@@ -127,6 +127,6 @@ public class ReadOnlyConsumer {
     }
 
     public boolean hasEntitlement(ReadOnlyProduct product) {
-        return hasEntitlement(product.getLabel());
+        return hasEntitlement(product.getId());
     }
 }

@@ -55,6 +55,13 @@ public class ReadOnlyProduct {
     }
    
     /**
+     * Return the product id
+     * @return the product id
+     */
+    public String getId() {
+        return product.getId();
+    }
+    /**
      * Return the read-only copies of the child Products.
      * @return the read-only copies of the child Products.
      */
