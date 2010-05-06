@@ -12,8 +12,11 @@ Before do
         initialize_config()
     end
     @candlepin = Candlepin.new
+    @candlepin.create_owner(gen_random_string('testowner'))
 end
 
+# Reads the cucumber.conf file for test config if it exists, uses default
+# config if not.
 def initialize_config
     config_file = File.expand_path("../", File.dirname(__FILE__))
     config_file = File.join(config_file, "cucumber.conf")
@@ -51,6 +54,10 @@ def initialize_config
     end
 end
 
+def gen_random_string(prefix)
+    return "%s-%s" % (prefix, rand(100000)
+end
+
 Then /My ([\w ]+) exists/ do |property|
     @candlepin.send(to_name(property)).should_not be_nil
 end
@@ -61,8 +68,5 @@ end
 
 def to_name(text)
     text.downcase.gsub(/\s/, '_')
-end
-
-def load_properties(properties_filename)
 end
 
