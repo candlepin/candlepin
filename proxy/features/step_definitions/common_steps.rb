@@ -47,10 +47,10 @@ def initialize_config
     else
         print("No config file found, using default test config\n")
         $config = {}
-        $config['username'] = 'root'
-        $config['password'] = 'root'
+        $config['username'] = 'admin'
+        $config['password'] = 'admin'
         $config['hostname'] = 'localhost'
-        $config['port'] = '443'
+        $config['port'] = '8443'
     end
 
     # Quick check to make sure config contains the properties we use:

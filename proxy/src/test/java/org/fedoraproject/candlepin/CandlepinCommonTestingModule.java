@@ -48,8 +48,10 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.ConfigUserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
@@ -95,8 +97,10 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
                           .toProvider(RulesReaderProvider.class);
         
-        bind(I18n.class).toProvider(I18nProvider.class);
+
+        bind(UserServiceAdapter.class).to(ConfigUserServiceAdapter.class);
         
+        bind(I18n.class).toProvider(I18nProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(

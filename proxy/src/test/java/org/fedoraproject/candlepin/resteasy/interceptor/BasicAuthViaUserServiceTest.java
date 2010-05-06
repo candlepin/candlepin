@@ -23,12 +23,11 @@ import java.util.List;
 
 import javax.ws.rs.core.HttpHeaders;
 
+import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.fedoraproject.candlepin.service.UserServiceAdapter.OwnerInfo;
-
-import org.apache.commons.codec.binary.Base64;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,10 +93,13 @@ public class BasicAuthViaUserServiceTest {
      */
     @Test
     public void correctPrincipal() throws Exception {
+        Owner owner = new Owner("user", "user");
+        
         setUserAndPassword("user", "redhat");
         when(userService.validateUser("user", "redhat")).thenReturn(true);
-        when(userService.getOwnerInfo("user")).thenReturn(new OwnerInfo("user", "user"));
-        UserPrincipal expected = new UserPrincipal("user", null, null);
+        when(userService.getOwner("user")).thenReturn(owner);
+        when(ownerCurator.lookupByKey("user")).thenReturn(owner);
+        UserPrincipal expected = new UserPrincipal("user", owner, null);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 

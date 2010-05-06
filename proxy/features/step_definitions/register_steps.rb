@@ -12,12 +12,15 @@ Given /^I have password "(\w+)"$/ do |password|
 end
 
 Given /^I am a Consumer "([^\"]*)"$/ do |consumer_name|
-    # Just hardcodes in username/password so that
-    # all the features don't have to spell it out
+  # Just hardcodes in username/password so that
+  # all the features don't have to spell it out
 
-    @username = 'foo'
-    @password = 'password'
-    When "I Register a New Consumer \"#{consumer_name}\""
+  # Currently this lines up with the default user that is defined
+  # in common_steps
+
+  @username = 'some_guy'
+  @password = 'password'
+  When "I Register a New Consumer \"#{consumer_name}\""
 end
 
 Given /^I am user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|

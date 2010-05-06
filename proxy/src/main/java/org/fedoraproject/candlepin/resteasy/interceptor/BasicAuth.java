@@ -24,7 +24,6 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.fedoraproject.candlepin.service.UserServiceAdapter.OwnerInfo;
 import org.jboss.resteasy.spi.HttpRequest;
 
 import com.google.inject.Inject;
@@ -77,22 +76,10 @@ class BasicAuth {
     }
 
     private Principal createPrincipal(String username) {
-        OwnerInfo ownerInfo = this.userServiceAdapter.getOwnerInfo(username);
-        Owner owner = getOwnerForInfo(ownerInfo);
+        Owner owner = this.userServiceAdapter.getOwner(username);
+        owner = this.ownerCurator.lookupByKey(owner.getKey());
         List<Role> roles = this.userServiceAdapter.getRoles(username);
 
         return new UserPrincipal(username, owner, roles);
-    }
-
-    private Owner getOwnerForInfo(OwnerInfo info) {
-        Owner owner = this.ownerCurator.lookupByKey(info.getKey());
-
-        // create if not present
-        if (owner == null) {
-            owner = new Owner(info.getKey(), info.getName());
-            this.ownerCurator.create(owner);
-        }
-
-        return owner;
     }
 }

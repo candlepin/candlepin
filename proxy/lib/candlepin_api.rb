@@ -82,6 +82,17 @@ class Candlepin
         delete("/owners/#{owner_id}")
     end
 
+    def create_user(owner_id, login, password)
+      user = {
+        'user' => {
+          'login' => login,
+          'password' => password
+        }
+      }
+
+      post("/owners/#{owner_id}/users", user)
+    end
+
     def get_consumer_types
         get('/consumertypes')
     end

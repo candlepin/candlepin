@@ -16,11 +16,12 @@ package org.fedoraproject.candlepin.service.impl.test;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.fedoraproject.candlepin.service.UserServiceAdapter.OwnerInfo;
-import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.ConfigUserServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Assert;
 import org.junit.Before;
@@ -116,11 +117,11 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     @Test
     public void validOwner() {
         this.config.addUser("billy", "password", "Megacorp");
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+        UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
-        OwnerInfo info = userService.getOwnerInfo("billy");
+        Owner owner = userService.getOwner("billy");
 
-        Assert.assertEquals("Megacorp", info.getName());
+        Assert.assertEquals("Megacorp", owner.getDisplayName());
     }
 
     // Note:  The following tests are failing due to the hack to hard-coding
@@ -129,34 +130,34 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     public void nullOwner() {
         // no org info
         this.config.addUserPassword("richard", "password");
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+        UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
 
-        Assert.assertNull(userService.getOwnerInfo("richard"));
+        Assert.assertNull(userService.getOwner("richard"));
     }
 
     //@Test
     public void noAccountNullOwner() {
         // no account setup
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+        UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
 
-        Assert.assertNull(userService.getOwnerInfo("someone"));
+        Assert.assertNull(userService.getOwner("someone"));
     }
 
     //@Test
     public void nullOwnerKey() {
         // no account setup
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+        UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
 
-        Assert.assertNull(userService.getOwnerInfo(null));
+        Assert.assertNull(userService.getOwner(null));
     }
 
     @Test
     public void staticRole() {
         config.addUser("anyone", "whatever", "Default Org", "owneradmin");
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(config, 
+        UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
         Role[] expected = new Role[] {Role.OWNER_ADMIN};
 
@@ -164,7 +165,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     }
 
     private boolean validate(String username, String password) throws Exception {
-        UserServiceAdapter userService = new DefaultUserServiceAdapter(this.config, 
+        UserServiceAdapter userService = new ConfigUserServiceAdapter(this.config, 
             ownerCurator);
 
         return userService.validateUser(username, password);
