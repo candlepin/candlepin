@@ -1,6 +1,6 @@
 # Login credentials for a super admin:
-username=root
-password=root
+username=admin
+password=admin
 
 # Candlepin server to connect to:
 hostname=localhost
