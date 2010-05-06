@@ -101,4 +101,9 @@ public class DefaultSubscriptionServiceAdapter implements
         return toReturn == null ? new LinkedList<Subscription>() : toReturn;
     }
 
+    @Override
+    public boolean hasUnacceptedSubscriptionTerms(Owner owner) {
+        return false;
+    }
+
 }

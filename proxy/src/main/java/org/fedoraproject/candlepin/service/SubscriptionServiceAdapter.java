@@ -88,4 +88,12 @@ public interface SubscriptionServiceAdapter {
      */
     List<Subscription> getSubscriptions();
     
+    /**
+     * Checks to see if the customer has subscription terms that need to be accepted 
+     * @param owner
+     * @return false if no subscriptions a runtime exception will a localized message
+     * if there are terms to be accepted
+     */
+    boolean hasUnacceptedSubscriptionTerms(Owner owner);
+    
 }
