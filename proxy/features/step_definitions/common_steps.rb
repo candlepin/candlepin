@@ -12,7 +12,14 @@ Before do
         initialize_config()
     end
     @candlepin = Candlepin.new
-    @candlepin.create_owner(gen_random_string('testowner'))
+    @candlepin.use_credentials($config['username'], $config['password'])
+    @test_owner = @candlepin.create_owner(
+        gen_random_string('testowner'))['owner']
+end
+
+After do
+    @candlepin.use_credentials($config['username'], $config['password'])
+    @candlepin.delete_owner(@test_owner['id'])
 end
 
 # Reads the cucumber.conf file for test config if it exists, uses default
@@ -55,7 +62,7 @@ def initialize_config
 end
 
 def gen_random_string(prefix)
-    return "%s-%s" % (prefix, rand(100000)
+    "%s-%s" % [prefix, rand(100000)]
 end
 
 Then /My ([\w ]+) exists/ do |property|
