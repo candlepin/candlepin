@@ -180,4 +180,16 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
             "This implementation does not support creating new Users!");
     }
 
+    @Override
+    public void deleteUser(User user) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public List<User> listByOwner(Owner owner) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

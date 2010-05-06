@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.Formatter;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -24,6 +25,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -51,7 +53,8 @@ public class User implements Persisted {
     @ForeignKey(name = "fk_user_owner_id")
     @JoinColumn(nullable = false)
     private Owner owner;
-
+    
+    @Column(nullable = false, unique = true)
     private String login;
 
     // TODO: Hash!

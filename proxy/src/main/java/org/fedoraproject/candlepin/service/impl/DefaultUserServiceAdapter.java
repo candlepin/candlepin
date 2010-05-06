@@ -78,5 +78,15 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         return false;
     }
 
+    @Override
+    public void deleteUser(User user) {
+        userCurator.delete(user);
+    }
+
+    @Override
+    public List<User> listByOwner(Owner owner) {
+        return userCurator.findByOwner(owner);
+    }
+
 
 }

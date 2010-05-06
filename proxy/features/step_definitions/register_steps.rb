@@ -36,7 +36,6 @@ When /I register a consumer "(\w+)"$/ do |consumer_name|
             :name => consumer_name,
         }
     }
-    print("got here\n")
     @owner_admin_cp.register(consumer)
 end
 
@@ -106,6 +105,10 @@ end
 
 When /I Revoke All My Entitlements/ do
     @candlepin.revoke_all_entitlements
+end
+
+Then /^my consumer should have an identity certificate$/ do
+      @owner_admin_cp.send('identity_certificate').should_not be_nil
 end
 
 Then /The (\w+) on my Identity Certificate's Subject is My ([\w ]+)'s (\w+)/ do |subject_property, entity, property|

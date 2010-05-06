@@ -47,7 +47,9 @@ class Candlepin
 
     def register(consumer, username=nil, password=nil)
         # TODO:  Maybe this should be created earlier?
-        use_credentials(username, password)
+        if not username.nil? and not password.nil?
+            use_credentials(username, password)
+        end
 
         @consumer = post('/consumers', consumer)['consumer']
 

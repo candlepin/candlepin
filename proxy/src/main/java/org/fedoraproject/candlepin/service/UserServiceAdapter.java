@@ -39,5 +39,9 @@ public interface UserServiceAdapter {
     List<Role> getRoles(String username);
     
     User createUser(User user);
+    
+    void deleteUser(User user);
+    
+    List<User> listByOwner(Owner owner);
    
 }

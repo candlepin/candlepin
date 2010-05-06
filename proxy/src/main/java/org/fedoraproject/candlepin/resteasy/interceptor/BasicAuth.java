@@ -60,6 +60,7 @@ class BasicAuth {
             String username = userpass[0];
             String password = userpass[1];
 
+            log.debug("check for: " + username + " - " + password);
             if (userServiceAdapter.validateUser(username, password)) {
                 Principal principal = createPrincipal(username);
                 if (log.isDebugEnabled()) {
