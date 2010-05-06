@@ -20,6 +20,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 
@@ -51,6 +53,7 @@ public class AdminResource {
     @GET
     @Produces({MediaType.TEXT_PLAIN})
     @Path("init")
+    @AllowRoles(roles = {Role.NO_AUTH})
     public String initialize() {
         
         log.debug("Called initialize()");

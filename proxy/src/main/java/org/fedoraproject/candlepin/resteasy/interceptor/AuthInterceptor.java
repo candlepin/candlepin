@@ -20,6 +20,8 @@ import javax.ws.rs.ext.Provider;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
@@ -73,8 +75,17 @@ public class AuthInterceptor implements PreProcessInterceptor {
         
         Principal principal = null;
 
-        if (request.getUri().getPath().equals("/admin/init")) {
-            log.debug("No auth path; setting NoAuth principal");
+        boolean noAuthAllowed = false;
+        AllowRoles roles = method.getMethod().getAnnotation(AllowRoles.class);
+        if (roles != null) {
+            for (Role role : roles.roles()) {
+                if (role == Role.NO_AUTH) {
+                    noAuthAllowed = true;
+                }
+            }
+        }
+        if (noAuthAllowed) {
+            log.debug("No auth allowed for resource; setting NoAuth principal");
             principal = new NoAuthPrincipal();
         }
         else {
