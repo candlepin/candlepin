@@ -18,9 +18,7 @@ Given /^I am a Consumer "([^\"]*)"$/ do |consumer_name|
   # Currently this lines up with the default user that is defined
   # in common_steps
 
-  @username = 'some_guy'
-  @password = 'password'
-  When "I Register a New Consumer \"#{consumer_name}\""
+  When "I register a consumer \"#{consumer_name}\""
 end
 
 Given /^I am user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
@@ -31,15 +29,15 @@ When /^I become user "([^\"]*)" with password "([^\"]*)"$/ do |username, passwor
   @candlepin.use_credentials(username, password)
 end
 
-When /I Register a New Consumer "(\w+)"$/ do |consumer_name|
+When /I register a consumer "(\w+)"$/ do |consumer_name|
     consumer = {
         :consumer => {
             :type => {:label => :system},
             :name => consumer_name,
         }
     }
-
-    @candlepin.register(consumer, @username, @password)
+    print("got here\n")
+    @owner_admin_cp.register(consumer)
 end
 
 Given /^there is no Consumer with uuid "([^\"]*)"$/ do |uuid|
@@ -59,10 +57,10 @@ Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uui
     @username = 'foo'
     @password = 'password'
     Given "there is no Consumer with uuid \"#{uuid}\""
-    When "I Register a New Consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
+    When "I register a consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
 end
 
-When /I Register a New Consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
+When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
     consumer = {
         :consumer => {
             :type => {:label => :system},

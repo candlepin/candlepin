@@ -77,3 +77,7 @@ def to_name(text)
     text.downcase.gsub(/\s/, '_')
 end
 
+def connect(username=nil, password=nil, cert=nil, key=nil)
+    Candlepin.new(username=username, password=password,
+        cert=cert, key=key, hostname=$config['hostname'], port=$config['port'])
+end
