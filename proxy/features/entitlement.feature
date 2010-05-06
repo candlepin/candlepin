@@ -62,7 +62,7 @@ Feature: Consume an Entitlement
         Given I am a Consumer "consumer"
         And I Consume an Entitlement for the "1852089416" Product
         And I Consume an Entitlement for the "72093906" Product
-        Then I Get 1 Entitlement When I Filter by Product ID "RHN Satellite Monitoring"
+        Then I Get 1 Entitlement When I Filter by Product ID "1852089416"
 
     Scenario: Consuming the same entitlement by product twice is not allowed
         Given I am a Consumer "random_box"
