@@ -34,9 +34,10 @@ import org.fedoraproject.candlepin.client.cmds.UpdateCommand;
 public class CLIMain {
     protected HashMap<String, BaseCommand> cmds = new HashMap<String, BaseCommand>();
 
+    public static String DEFAULT_SERVER = "https://localhost:8443/candlepin";
+        
     protected CLIMain() {
         registerCommands();
-        initializeClient();
     }
 
     protected void registerCommands() {
@@ -53,14 +54,6 @@ public class CLIMain {
         }
         catch (Exception e) {
             throw new ClientException(e);
-        }
-    }
-
-    protected void initializeClient() {
-        CandlepinConsumerClient client = new CandlepinConsumerClient(
-            "https://localhost:8443/candlepin");
-        for (BaseCommand cmd : cmds.values()) {
-            cmd.setClient(client);
         }
     }
 
@@ -89,12 +82,29 @@ public class CLIMain {
             CommandLine cmdLine = cmd.getCommandLine(args);
             if (cmdLine.hasOption("h")) {
                 cmd.generateHelp();
+                return;
             }
+            String server = cmdLine.getOptionValue("s", CLIMain.DEFAULT_SERVER);
+            CandlepinConsumerClient client = new CandlepinConsumerClient(server);
+            cmd.setClient(client);
             cmd.execute(cmdLine);
         }
         catch (ParseException e) {
             cmd.generateHelp();
         }
+        catch (RuntimeException e) {
+            this.handleClientException(e, cmd);
+        }
+    }
+    
+    protected void handleClientException(RuntimeException e, BaseCommand cmd) {
+        if (e.getCause() != null) {
+            if (e.getCause().getClass() == java.net.ConnectException.class) {
+                System.out.println("Error connecting to " + cmd.getClient().getUrl());
+                return;
+            }
+        }
+        e.printStackTrace();
     }
 
     public static void main(String[] args) {

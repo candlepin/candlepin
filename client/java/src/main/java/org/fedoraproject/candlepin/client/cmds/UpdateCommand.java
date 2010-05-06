@@ -39,7 +39,8 @@ public class UpdateCommand extends BaseCommand {
                 "p",
                 "pkcs12",
                 true,
-                "Generate pkcs files for the entitlement certificates with the password provided");
+                "Generate pkcs files for the entitlement " +
+                "certificates with the password provided");
         return opts;
     }
 

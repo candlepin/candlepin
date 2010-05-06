@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.model;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -40,10 +41,11 @@ public class EntitlementCertificateCurator extends
     }
 
     @SuppressWarnings("unchecked")
+    @EnforceAccessControl
     public List<EntitlementCertificate> listForConsumer(Consumer c) {
-        return currentSession().createCriteria(
-            EntitlementCertificate.class).
-            createAlias("entitlement", "ent").
-            add(Restrictions.eq("ent.consumer", c)).list();
+        return currentSession().createCriteria(EntitlementCertificate.class)
+            .createAlias("entitlement", "ent")
+            .add(Restrictions.eq("ent.consumer", c))
+            .list();
     }
 }

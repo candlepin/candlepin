@@ -214,9 +214,9 @@ public class ConsumerTest extends DatabaseTestFixture {
         entityManager().persist(pool.getOwner());
         entityManager().persist(pool);
 
-        Entitlement e1 = TestUtil.createEntitlement(pool, consumer);
-        Entitlement e2 = TestUtil.createEntitlement(pool, consumer);
-        Entitlement e3 = TestUtil.createEntitlement(pool, consumer);
+        Entitlement e1 = createEntitlement(pool, consumer);
+        Entitlement e2 = createEntitlement(pool, consumer);
+        Entitlement e3 = createEntitlement(pool, consumer);
         entityManager().persist(e1);
         entityManager().persist(e2);
         entityManager().persist(e3);
@@ -228,6 +228,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(3, lookedUp.getEntitlements().size());
+    }
+    
+    private Entitlement createEntitlement(Pool pool, Consumer c) {
+        Entitlement e = new Entitlement(pool, c, pool.getStartDate());
+        return e;
     }
     
     @Test

@@ -71,6 +71,19 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     @SuppressWarnings("unchecked")
+    public List<Entitlement> listByOwner(Owner owner) {
+        List<Entitlement> results = currentSession()
+            .createCriteria(Entitlement.class)
+            .add(Restrictions.eq("owner", owner)).list();
+        if (results == null) {
+            return new LinkedList<Entitlement>();
+        }
+        else {
+            return results;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     @Transactional
     public List<Entitlement> listByConsumerAndProduct(Consumer consumer, 
         String productId) {

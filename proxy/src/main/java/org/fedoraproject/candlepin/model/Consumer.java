@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlSecured;
 import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
@@ -53,6 +54,7 @@ import org.hibernate.annotations.MapKeyManyToMany;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
+@AccessControlSecured(path = "uuid")
 @Entity
 @Table(name = "cp_consumer")
 @SequenceGenerator(name = "seq_consumer", sequenceName = "seq_consumer", allocationSize = 1)

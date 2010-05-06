@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.criterion.Restrictions;
@@ -56,6 +57,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .uniqueResult();
     }
     
+    public List<Consumer> listByOwner(Owner owner) {
+        return (List<Consumer>) currentSession().createCriteria(Consumer.class)
+            .add(Restrictions.eq("owner", owner)).list();
+    }
+
     
     
     /**

@@ -20,13 +20,20 @@ import java.util.List;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -45,13 +52,19 @@ public class OwnerResource {
     //private static Logger log = Logger.getLogger(OwnerResource.class);
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
+    private ConsumerCurator consumerCurator;
     private I18n i18n;
+    private Entitler entitler;
+    private static Logger log = Logger.getLogger(OwnerResource.class);
 
     @Inject
-    public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator, I18n i18n) {
+    public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator, I18n i18n,
+        Entitler entitler, ConsumerCurator consumerCurator) {
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
         this.i18n = i18n;
+        this.consumerCurator = consumerCurator;
+        this.entitler = entitler;
     }
 
     /**
@@ -118,8 +131,23 @@ public class OwnerResource {
                 i18n.tr("Owner with id {0} could not be found", ownerId));
         }
         
-        ownerCurator.delete(owner);
+        cleanupAndDelete(owner);
     }    
+
+    private void cleanupAndDelete(Owner owner) {
+        log.info("Cleaning up owner: " + owner);
+        for (Consumer c : consumerCurator.listByOwner(owner)) {
+            log.info("Deleting consumer: " + c);
+            entitler.revokeAllEntitlements(c);
+            consumerCurator.delete(c);
+        }
+        for (Pool p : poolCurator.listByOwner(owner)) {
+            log.info("Deleting pool: " + p);
+            poolCurator.delete(p);
+        }
+        log.info("Deleting owner: " + owner);
+        ownerCurator.delete(owner);
+    }
 
     /**
      * Return the entitlements for the owner of the given id.
@@ -131,6 +159,7 @@ public class OwnerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/entitlements")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
@@ -157,6 +186,7 @@ public class OwnerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/pools")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Pool> ownerEntitlementPools(
         @PathParam("owner_id") Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
@@ -165,5 +195,28 @@ public class OwnerResource {
                 i18n.tr("owner with id: {0} was not found.", ownerId));
         }
         return poolCurator.listByOwner(owner);
-    }    
+    }
+    
+    /**
+     * 'Tickle' an owner to have all of their entitlement pools synced with their
+     * subscriptions.
+     * 
+     * This method (and the one below may not be entirely RESTful, as the updated data is
+     * not supplied as an argument.
+     * 
+     * @param ownerKey unique id key of the owner whose pools should be updated
+     */
+    @PUT
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{owner_key}/subscriptions")
+    public void refreshEntitlementPools(@PathParam("owner_key") String ownerKey) {
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new NotFoundException(
+                i18n.tr("owner with key: {0} was not found.", ownerKey));
+        }
+        
+        poolCurator.refreshPools(owner);
+    }
+
 }

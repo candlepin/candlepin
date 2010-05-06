@@ -129,17 +129,7 @@ public class SpacewalkCertificateCurator {
         Subscription sub = new Subscription(owner, p.getId(), maxmem, start, end, start);
         subCurator.create(sub);
         
-        Pool ep = new Pool();
-        ep.setOwner(owner);
-        ep.setProductId(p.getId());
-        ep.setQuantity(maxmem);
-        ep.setStartDate(start);
-        ep.setEndDate(end);
-        ep.setConsumed(new Long(0));
-        ep.setSubscriptionId(sub.getId());
-
-        owner.addEntitlementPool(ep);
-        poolCurator.create(ep);
+        poolCurator.refreshPools(owner);
     }
     
     private Product createProductIfDoesNotExist(String name) {

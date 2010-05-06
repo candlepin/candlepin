@@ -28,7 +28,6 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -179,85 +178,6 @@ public class PoolTest extends DatabaseTestFixture {
         }
     }
 
-    @Test
-    public void testRefreshPoolsWithNewSubscriptions() {
-        Product prod2 = TestUtil.createProduct();
-        productCurator.create(prod2);
-
-        Subscription sub = new Subscription(owner, prod2.getId().toString(),
-                new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
-                        .createDate(3000, 2, 9),
-                        TestUtil.createDate(2010, 2, 12));
-        subCurator.create(sub);
-
-        // Pool should get created just by doing this lookup:
-        List<Pool> pools = poolCurator
-                .listByOwnerAndProduct(owner, prod2);
-        assertEquals(1, pools.size());
-        Pool newPool = pools.get(0);
-
-        assertEquals(sub.getId(), newPool.getSubscriptionId());
-        assertEquals(sub.getQuantity(), newPool.getQuantity());
-        assertEquals(sub.getStartDate(), newPool.getStartDate());
-        assertEquals(sub.getEndDate(), newPool.getEndDate());
-    }
-
-    @Test
-    public void testRefreshPoolsWithChangedSubscriptions() {
-        Subscription sub = new Subscription(owner, prod.getId().toString(),
-                new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
-                        .createDate(3000, 2, 9),
-                        TestUtil.createDate(2010, 2, 12));
-        subCurator.create(sub);
-        assertTrue(pool.getQuantity() < sub.getQuantity());
-        assertTrue(pool.getStartDate() != sub.getStartDate());
-        assertTrue(pool.getEndDate() != sub.getEndDate());
-
-        pool.setSubscriptionId(sub.getId());
-        poolCurator.merge(pool);
-
-        poolCurator.listByOwnerAndProduct(owner, prod);
-
-        pool = poolCurator.find(pool.getId());
-        assertEquals(sub.getId(), pool.getSubscriptionId());
-        assertEquals(sub.getQuantity(), pool.getQuantity());
-        assertEquals(sub.getStartDate(), pool.getStartDate());
-        assertEquals(sub.getEndDate(), pool.getEndDate());
-    }
-
-    @Test
-    public void testRefreshPoolsWithRemovedSubscriptions() {
-        Product prod2 = TestUtil.createProduct();
-        productCurator.create(prod2);
-
-        Subscription sub = new Subscription(owner, prod2.getId().toString(),
-                new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
-                        .createDate(3000, 2, 9),
-                        TestUtil.createDate(2010, 2, 12));
-        subCurator.create(sub);
-
-        // Pool should get created just by doing this lookup:
-        List<Pool> pools = poolCurator
-                .listByOwnerAndProduct(owner, prod2);
-        assertEquals(1, pools.size());
-        Pool newPool = pools.get(0);
-
-        // Now delete the subscription:
-        subCurator.delete(sub);
-
-        // Trigger the refresh:
-        pools = poolCurator
-                .listByOwnerAndProduct(owner, prod2);
-        assertEquals(1, pools.size());
-        newPool = pools.get(0);
-        assertFalse(newPool.isActive());
-    }
-
-    @Test
-    public void testSubscriptionIdUnique() {
-
-    }
-
     // test subscription product changed exception
     
     @Test
@@ -268,16 +188,15 @@ public class PoolTest extends DatabaseTestFixture {
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
         
-        Subscription sub = new Subscription(owner, parentProduct.getId().toString(),
+        Pool pool = new Pool(owner, parentProduct.getId().toString(),
             new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
-                    .createDate(3000, 2, 9),
-                    TestUtil.createDate(2010, 2, 12));
-        subCurator.create(sub);
+                    .createDate(3000, 2, 9));
+        poolCurator.create(pool);
         
         
         List<Pool> results = poolCurator.listAvailableEntitlementPools(null, owner, 
             childProduct, false);
         assertEquals(1, results.size());
-        assertEquals(sub.getId(), results.get(0).getSubscriptionId());
+        assertEquals(pool.getId(), results.get(0).getId());
     }
 }

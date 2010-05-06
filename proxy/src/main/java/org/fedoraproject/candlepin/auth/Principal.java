@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.auth;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
@@ -25,11 +26,14 @@ import org.fedoraproject.candlepin.model.Owner;
 public abstract class Principal {
 
     private Owner owner;
-    private List<Role> roles;
+    private List<Role> roles = new LinkedList<Role>();
 
     public Principal(Owner owner, List<Role> roles) {
         this.owner = owner;
         this.roles = roles;
+        if (roles == null) {
+            this.roles = new LinkedList<Role>();
+        }
     }
 
     public Owner getOwner() {
@@ -38,6 +42,15 @@ public abstract class Principal {
 
     public List<Role> getRoles() {
         return roles;
+    }
+    
+    public Boolean hasRole(Role role) {
+        if (roles.contains(role)) {
+            return Boolean.TRUE;
+        }
+        else {
+            return Boolean.FALSE;
+        }
     }
 
     public abstract boolean canAccessConsumer(Consumer consumer);

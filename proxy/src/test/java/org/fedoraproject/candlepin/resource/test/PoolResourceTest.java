@@ -18,7 +18,10 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
@@ -30,6 +33,7 @@ import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
 
 /**
  * PoolResourceTest
@@ -47,6 +51,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
     private Consumer failConsumer;
     private Consumer passConsumer;
+    private Consumer foreignConsumer;
     
     @Before
     public void setUp() {
@@ -71,8 +76,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
         
-        poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator, 
-            productAdapter, i18n);
+        poolResource = injector.getInstance(PoolResource.class);
         
         // Consumer system with too many cpu cores:
         failConsumer = TestUtil.createConsumer(owner1);
@@ -85,6 +89,14 @@ public class PoolResourceTest extends DatabaseTestFixture {
         passConsumer.setMetadataField("cpu_cores", "2");
         consumerTypeCurator.create(passConsumer.getType());
         consumerCurator.create(passConsumer);
+        
+        foreignConsumer = TestUtil.createConsumer(owner2);
+        foreignConsumer.setMetadataField("cpu_cores", "2");
+        consumerTypeCurator.create(foreignConsumer.getType());
+        consumerCurator.create(foreignConsumer);
+
+        // Run these tests as an owner admin:
+        setupPrincipal(owner1, Role.OWNER_ADMIN);
     }
     
     @Test
@@ -97,6 +109,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListForOrg() {
         List<Pool> pools = poolResource.list(owner1.getId(), null, null);
         assertEquals(2, pools.size());
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
         pools = poolResource.list(owner2.getId(), null, null);
         assertEquals(1, pools.size());
     }
@@ -138,8 +151,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testListConsumerFiltering() {
+        setupPrincipal(new ConsumerPrincipal(passConsumer));
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null);
         assertEquals(2, pools.size());
+
+        setupPrincipal(new ConsumerPrincipal(failConsumer));
         pools = poolResource.list(null, failConsumer.getUuid(), null);
         assertEquals(1, pools.size());
     }
@@ -158,4 +174,37 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListNoSuchProduct() {
         poolResource.list(owner1.getId(), null, "boogity");
     }
+    
+    @Test(expected = ForbiddenException.class)
+    public void ownerAdminCannotCreatePoolsDirectly() {
+        poolResource.createPool(TestUtil.createEntitlementPool(TestUtil.createProduct()));
+    }
+    
+    @Test
+    public void ownerAdminCannotListAnotherOwnersPools() {
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null);
+        assertEquals(2, pools.size());
+        
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        pools = poolResource.list(owner1.getId(), null, null);
+        assertEquals(0, pools.size());
+    }
+
+
+    @Test
+    public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
+        setupPrincipal(new ConsumerPrincipal(foreignConsumer));
+
+        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null);
+        assertEquals(0, pools.size());
+    }
+
+    @Test
+    public void testConsumerCannotListPoolsForAnotherOwner() {
+        setupPrincipal(new ConsumerPrincipal(foreignConsumer));
+
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null);
+        assertEquals(0, pools.size());
+    }
+
 }

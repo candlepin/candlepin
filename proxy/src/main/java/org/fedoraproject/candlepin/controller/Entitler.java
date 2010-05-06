@@ -202,4 +202,12 @@ public class Entitler {
         epCurator.merge(entitlement.getPool());
         entitlementCurator.delete(entitlement);
     }
+
+    @Transactional
+    public void revokeAllEntitlements(Consumer consumer) {
+        for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
+            revokeEntitlement(e);
+        }
+    }
+
 }

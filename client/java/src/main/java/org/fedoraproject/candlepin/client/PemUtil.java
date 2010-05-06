@@ -29,7 +29,12 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import org.bouncycastle.asn1.DERUTCTime;
+import org.bouncycastle.asn1.cms.Time;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
@@ -158,5 +163,27 @@ public class PemUtil {
             return defaultValue;
         }
     }
+
+    public static Date getExtensionDate(X509Certificate cert, String oid,
+        Date defaultValue) {
+        byte[] value = cert.getExtensionValue(oid);
+
+        if (value != null) {
+            try {
+                String dateString =  X509ExtensionUtil.fromExtensionValue(value).toString();
+                SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.s");
+                return fmt.parse(dateString);
+            }
+            catch (IOException e) {
+                throw new ClientException(e);
+            }
+            catch (ParseException e) {
+                throw new ClientException(e);
+            }            
+        }
+        else {
+            return defaultValue;
+        }
+    }    
 
 }

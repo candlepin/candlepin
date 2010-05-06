@@ -33,8 +33,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.auth.interceptor.EnforceConsumer;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
@@ -109,7 +110,8 @@ public class ConsumerResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Wrapped(element = "consumers")    
+    @Wrapped(element = "consumers")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Consumer> list() {
         return consumerCurator.findAll();
     }
@@ -123,7 +125,7 @@ public class ConsumerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
-    @EnforceConsumer
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
         return verifyAndLookupConsumer(uuid);
     }
@@ -139,6 +141,7 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Consumer create(Consumer in, @Context Principal principal)
         throws BadRequestException {
         // API:registerConsumer
@@ -212,11 +215,11 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @Transactional
-    @EnforceConsumer
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleteing  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
-        this.unbindAllOrBySerialNumber(uuid, null);
+        unbindAll(uuid);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
     }
@@ -233,7 +236,6 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/products/{product_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @EnforceConsumer
     public Product getProduct(@PathParam("consumer_uuid") String cid,
         @PathParam("product_id") String pid) {
         return null;
@@ -248,7 +250,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
-    @EnforceConsumer
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
@@ -288,7 +290,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "serials")
-    @EnforceConsumer
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -419,6 +421,7 @@ public class ConsumerResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
         @QueryParam("product") String productId) {
@@ -457,6 +460,7 @@ public class ConsumerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("product") String productId) {
@@ -476,43 +480,31 @@ public class ConsumerResource {
     }
 
     /**
-     * Unbind entitlements by serial number, or unbind all.
+     * Unbind all entitlements.
      * 
      * @param consumerUuid Unique id for the Consumer.
-     * @param serials comma seperated list of subscription numbers.
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
-    @EnforceConsumer
-    public void unbindAllOrBySerialNumber(
-        @PathParam("consumer_uuid") String consumerUuid,
-        @QueryParam("serial") String serials) {
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    public void unbindAll(@PathParam("consumer_uuid") String consumerUuid) {
 
-        if (serials == null) {
-            // FIXME: just a stub, needs CertifcateService (and/or a
-            // CertificateCurator) to lookup by serialNumber
-            Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        // FIXME: just a stub, needs CertifcateService (and/or a
+        // CertificateCurator) to lookup by serialNumber
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
-            if (consumer == null) {
-                throw new NotFoundException(
-                    i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
-            }
-
-            for (Entitlement entitlement : entitlementCurator
-                .listByConsumer(consumer)) {
-                entitler.revokeEntitlement(entitlement);
-            }
-
-            // Need to parse off the value of subscriptionNumberArgs, probably
-            // use comma separated see IntergerList in sparklines example in
-            // jersey examples find all entitlements for this consumer and
-            // subscription numbers delete all of those (and/or return them to
-            // entitlement pool)
+        if (consumer == null) {
+            throw new NotFoundException(
+                i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
         }
-        else {
-            throw new RuntimeException(
-                "Unbind by serial number not yet supported.");
-        }
+
+        entitler.revokeAllEntitlements(consumer);
+
+        // Need to parse off the value of subscriptionNumberArgs, probably
+        // use comma separated see IntergerList in sparklines example in
+        // jersey examples find all entitlements for this consumer and
+        // subscription numbers delete all of those (and/or return them to
+        // entitlement pool)
 
     }
 
@@ -523,7 +515,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
-    @EnforceConsumer
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("dbid") Long dbid) {
 
@@ -540,7 +532,7 @@ public class ConsumerResource {
     
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
-    @EnforceConsumer
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid, 
         @PathParam("serial") Long serial) {
         
