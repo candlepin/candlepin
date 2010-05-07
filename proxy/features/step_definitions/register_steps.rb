@@ -37,6 +37,7 @@ When /I register a consumer "(\w+)"$/ do |consumer_name|
         }
     }
     @consumer = @owner_admin_cp.register(consumer)
+    @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
 end
 
 Given /^there is no consumer with uuid "([^\"]*)"$/ do |uuid|
@@ -111,17 +112,17 @@ Then /^my consumer should have an identity certificate$/ do
     @consumer['idCert']['key'][0, 3].should eql('---')
 end
 
-Then /the (\w+) on my identity certificate's subject is my ([\w ]+)'s (\w+)/ do |subject_property, entity, property|
-    expected = @owner_admin_cp.send(to_name(entity))[ to_name(property) ]
-    subject_value(subject_property).should == expected
+Then /the (\w+) on my identity certificate's subject is my consumer's UUID/ do |subject_property|
+    uuid = @consumer['uuid']
+    subject_value(@x509_cert, subject_property).should == uuid
 end
 
 Then /the (\w+) on my identity certificate's subject is (\w+)$/ do |subject_property, expected|
-    subject_value(subject_property).should == expected
+    subject_value(@x509_cert, subject_property).should == expected
 end
 
 # Grabs the value of a key=value pair in the identity cert's subject
-def subject_value(key)
-    subject = @owner_admin_cp.identity_certificate.subject
+def subject_value(x509_cert, key)
+    subject = x509_cert.subject
     subject.to_s.scan(/\/#{key}=([^\/=]+)/)[0][0]
 end 
