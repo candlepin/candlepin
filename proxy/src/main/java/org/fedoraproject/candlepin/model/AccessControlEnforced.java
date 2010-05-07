@@ -12,20 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth.interceptor;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package org.fedoraproject.candlepin.model;
 
 /**
- * AccessControlSecured
+ * AccessControlEnforced
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@Inherited
-public @interface AccessControlSecured {
-    String path();
+public interface AccessControlEnforced {
+    boolean shouldGrantAcessTo(Owner owner);
+    boolean shouldGrantAcessTo(Consumer consumer);
 }

@@ -1,3 +1,3 @@
 When /^I unregister$/ do 
-  @candlepin.unregister()
+  @consumer_cp.unregister()
 end

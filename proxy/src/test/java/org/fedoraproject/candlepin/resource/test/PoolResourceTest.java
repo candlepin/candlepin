@@ -177,7 +177,13 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotCreatePoolsDirectly() {
-        poolResource.createPool(TestUtil.createEntitlementPool(TestUtil.createProduct()));
+        setupPrincipal(owner1, Role.OWNER_ADMIN);
+        
+        securityInterceptor.enable();
+        filterInterceptor.enable();
+
+        poolResource.createPool(
+            TestUtil.createEntitlementPool(owner1, TestUtil.createProduct()));
     }
     
     @Test
@@ -186,6 +192,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
         
         setupPrincipal(owner2, Role.OWNER_ADMIN);
+        securityInterceptor.enable();
+        filterInterceptor.enable();
+        
         pools = poolResource.list(owner1.getId(), null, null);
         assertEquals(0, pools.size());
     }
@@ -194,7 +203,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test
     public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
         setupPrincipal(new ConsumerPrincipal(foreignConsumer));
-
+        securityInterceptor.enable();
+        filterInterceptor.enable();
+        
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null);
         assertEquals(0, pools.size());
     }
@@ -202,6 +213,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test
     public void testConsumerCannotListPoolsForAnotherOwner() {
         setupPrincipal(new ConsumerPrincipal(foreignConsumer));
+        securityInterceptor.enable();
+        filterInterceptor.enable();
 
         List<Pool> pools = poolResource.list(owner1.getId(), null, null);
         assertEquals(0, pools.size());

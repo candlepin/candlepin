@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Filter;
@@ -71,7 +72,7 @@ import org.hibernate.annotations.ParamDef;
 @Table(name = "cp_pool")
 @SequenceGenerator(name = "seq_pool",
         sequenceName = "seq_pool", allocationSize = 1)
-public class Pool implements Persisted {
+public class Pool implements Persisted, AccessControlEnforced {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_pool")
@@ -368,5 +369,15 @@ public class Pool implements Persisted {
         return "EntitlementPool [id = " + getId() + ", product = " + getProductId() +
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
+    }
+    
+    @Override
+    public boolean shouldGrantAcessTo(Owner owner) {
+        return AccessControlValidator.shouldGrantAccess(this, owner);
+    }
+    
+    @Override
+    public boolean shouldGrantAcessTo(Consumer consumer) {
+        return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
 }

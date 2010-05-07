@@ -17,7 +17,11 @@ package org.fedoraproject.candlepin.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.hibernate.criterion.Restrictions;
+
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * OwnerCurator
@@ -27,11 +31,18 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     protected OwnerCurator() {
         super(Owner.class);
     }
+    
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Transactional
+    public Owner create(Owner entity) {
+        return super.create(entity);
+    }
 
     /**
      * @param key owner's unique key to lookup.
      * @return the owner whose key matches the one given.
      */
+    @Transactional
     public Owner lookupByKey(String key) {
         return (Owner) currentSession().createCriteria(Owner.class)
         .add(Restrictions.eq("key", key))
@@ -41,6 +52,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     /**
      * @return list of known owners.
      */
+    @Transactional
     @SuppressWarnings("unchecked")
     public List<Owner> listAll() {
         List<Owner> results = currentSession().createCriteria(Owner.class).list();

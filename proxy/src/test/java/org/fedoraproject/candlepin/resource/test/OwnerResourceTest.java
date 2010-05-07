@@ -212,6 +212,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
         setupPrincipal(new ConsumerPrincipal(c));
+        
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
 
         ownerResource.getOwner(owner.getId());
     }
@@ -244,6 +248,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 
+        securityInterceptor.enable();
+        filterInterceptor.enable();
+        crudInterceptor.enable();
+        
         // Filtering should just cause this to return no results:
         List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getId());
         assertEquals(0, pools.size());
@@ -252,12 +260,22 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void testOwnerAdminCannotListAllOwners() {
         setupPrincipal(owner, Role.OWNER_ADMIN);
+
+        securityInterceptor.enable();
+        filterInterceptor.enable();
+        crudInterceptor.enable();
+        
         ownerResource.list();
     }
 
     @Test(expected = ForbiddenException.class)
     public void testOwnerAdminCannotDelete() {
         setupPrincipal(owner, Role.OWNER_ADMIN);
+
+        securityInterceptor.enable();
+        filterInterceptor.enable();
+        crudInterceptor.enable();
+        
         ownerResource.deleteOwner(owner.getId());
     }
 }
