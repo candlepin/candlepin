@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.7
+Version: 0.0.8
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,6 +95,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Fri May 07 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.8-1
+- pulled in fixes
+- unit tests still fail
+
 * Fri May 07 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.7-1
 - added role-based access control on OwnerCurator#create and
   ConsumerCurator#create (ddolguik@redhat.com)

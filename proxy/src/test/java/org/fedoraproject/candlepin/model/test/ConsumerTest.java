@@ -303,7 +303,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer2);
         
         setupPrincipal(new ConsumerPrincipal(consumer2));
-        consumerCurator.delete(consumer);
+        crudInterceptor.enable();
 
         consumerCurator.update(consumer);
     }
