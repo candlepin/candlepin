@@ -11,13 +11,9 @@ Given /^I have password "(\w+)"$/ do |password|
     @password = password
 end
 
-Given /^I am a Consumer "([^\"]*)"$/ do |consumer_name|
-  # Just hardcodes in username/password so that
-  # all the features don't have to spell it out
-
-  # Currently this lines up with the default user that is defined
-  # in common_steps
-
+Given /^I am a consumer "([^\"]*)"$/ do |consumer_name|
+  # This will register with the user you are logged in as
+  Given "I am logged in as \"#{@username}\"" 
   When "I register a consumer \"#{consumer_name}\""
 end
 
@@ -38,6 +34,10 @@ When /I register a consumer "(\w+)"$/ do |consumer_name|
     }
     @consumer = @owner_admin_cp.register(consumer)
     @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
+    @consumer_cp = connect(username=nil, password=nil,
+                           cert=@consumer['idCert']['cert'],
+                           key=@consumer['idCert']['key'])
+    @consumer_cp.consumer = @consumer
 end
 
 When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
@@ -51,6 +51,10 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
 
     @consumer = @owner_admin_cp.register(consumer)
     @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
+    @consumer_cp = connect(username=nil, password=nil,
+                           cert=@consumer['idCert']['cert'],
+                           key=@consumer['idCert']['key'])
+    @consumer_cp.consumer = @consumer
 end
 
 Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uuid|

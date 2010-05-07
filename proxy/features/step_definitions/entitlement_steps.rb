@@ -8,12 +8,12 @@ Before do
   @pool_id = nil
 end
 
-Given /^I have an Entitlement named "([^\"]*)" for the "([^\"]*)" Product$/ do |name, product|
-  @entitlements[name] = @candlepin.consume_product(product)
+Given /^I have an entitlement named "([^\"]*)" for the "([^\"]*)" product$/ do |name, product|
+  @entitlements[name] = @consumer_cp.consume_product(product)
 end
 
 When /I Consume an Entitlement for the "(\w+)" Product/ do |product|
-    @candlepin.consume_product(product)
+    @consumer_cp.consume_product(product)
 end
 
 Then /I Have (\d+) Entitlement[s]?/ do |entitlement_size|
@@ -63,7 +63,7 @@ Then /^The entitlement named "([^\"]*)" should not exist$/ do |name|
 
   # TODO:  There is probably an official rspec way to do this
   begin
-    @candlepin.get_entitlement(entitlement[0]['entitlement']['id'])
+    @owner_admin_cp.get_entitlement(entitlement[0]['entitlement']['id'])
   rescue RestClient::Exception => e
     e.http_code.should == 404
   end
