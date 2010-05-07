@@ -96,6 +96,7 @@ public class DatabaseTestFixture {
     protected I18n i18n;
     protected TestingInterceptor crudInterceptor;
     protected TestingInterceptor filterInterceptor;
+    protected TestingInterceptor securityInterceptor;
 
     
     @Before
@@ -148,15 +149,16 @@ public class DatabaseTestFixture {
         i18n = injector.getInstance(I18n.class);
         
         crudInterceptor = testingModule.crudInterceptor();
-        filterInterceptor = testingModule.crudInterceptor();
+        filterInterceptor = testingModule.filterInterceptor();
+        securityInterceptor = testingModule.securityInterceptor(); 
         
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
         
         // Tests run as super admin by default:
-        Owner superAdminOwner = new Owner("superadminowner", "superadminowner");
-        ownerCurator.create(superAdminOwner);
-        setupPrincipal(superAdminOwner, Role.SUPER_ADMIN);
+//        Owner superAdminOwner = new Owner("superadminowner", "superadminowner");
+//        ownerCurator.create(superAdminOwner);
+//        setupPrincipal(superAdminOwner, Role.SUPER_ADMIN);
     }
     
     protected Module getGuiceOverrideModule() {

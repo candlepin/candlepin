@@ -19,6 +19,7 @@ import java.io.Reader;
 import javax.script.ScriptEngine;
 
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.CRUDInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.CRUDSecured;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
@@ -57,7 +58,6 @@ import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
@@ -66,6 +66,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
 
     private TestingInterceptor filterInterceptor;
     private TestingInterceptor crudInterceptor;
+    private TestingInterceptor securityInterceptor;
 
     @Override
     public void configure() {
@@ -102,12 +103,18 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         
-        Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(
-            "org.fedoraproject.candlepin.resource"));
-        SecurityInterceptor securityEnforcer = new SecurityInterceptor();
-        requestInjection(securityEnforcer);
-        bindInterceptor(resourcePkgMatcher, Matchers.any(), 
-            securityEnforcer);
+        SecurityInterceptor se = new SecurityInterceptor();
+        requestInjection(se);
+        securityInterceptor = new TestingInterceptor(se);
+        
+        bindInterceptor(
+            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.resource")),
+            Matchers.any(), 
+            securityInterceptor);
+        bindInterceptor(
+            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")),
+            Matchers.annotatedWith(AllowRoles.class), 
+            securityInterceptor);
         
         FilterInterceptor fi = new FilterInterceptor();
         requestInjection(fi);
@@ -133,5 +140,9 @@ public class CandlepinCommonTestingModule extends AbstractModule {
     
     public TestingInterceptor crudInterceptor() {
         return crudInterceptor;
+    }
+    
+    public TestingInterceptor securityInterceptor() {
+        return securityInterceptor;
     }
 }

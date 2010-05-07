@@ -53,6 +53,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return entity matching given id, or null otherwise.
      */
     @Transactional
+    @CRUDSecured
     public E find(Serializable id) {
         return id == null ? null : get(entityType, id);
     }
