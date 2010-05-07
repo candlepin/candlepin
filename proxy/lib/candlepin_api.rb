@@ -28,6 +28,7 @@ class Candlepin
         if not cert.nil? 
             @identity_certificate = OpenSSL::X509::Certificate.new(cert)
             @identity_key = OpenSSL::PKey::RSA.new(key)
+            @uuid = @identity_certificate.subject.to_s.scan(/\/UID=([^\/=]+)/)[0][0]
             create_ssl_client()
         else
             @username = username
@@ -151,7 +152,7 @@ class Candlepin
 
     # TODO: Add support for serial filtering:
     def get_certificates()
-        path = "/consumers/#{@consumer['uuid']}/certificates"
+        path = "/consumers/#{@uuid}/certificates"
         return get(path)
     end
 
@@ -160,16 +161,16 @@ class Candlepin
     end
 
     def unregister(uuid = nil)
-        uuid = @consumer['uuid'] unless uuid
+        uuid = @uuid unless uuid
         delete("/consumers/#{uuid}")
     end
 
     def revoke_all_entitlements()
-        delete("/consumers/#{@consumer['uuid']}/entitlements")
+        delete("/consumers/#{@uuid}/entitlements")
     end
 
     def consume_product(product)
-        post("/consumers/#{@consumer['uuid']}/entitlements?product=#{product}")
+        post("/consumers/#{@uuid}/entitlements?product=#{product}")
     end
     
     def list_products
@@ -191,11 +192,11 @@ class Candlepin
     end
     
     def consume_pool(pool)
-        post("/consumers/#{@consumer['uuid']}/entitlements?pool=#{pool}")
+        post("/consumers/#{@uuid}/entitlements?pool=#{pool}")
     end
 
     def list_entitlements(product_id = nil)
-        path = "/consumers/#{@consumer['uuid']}/entitlements"
+        path = "/consumers/#{@uuid}/entitlements"
         path << "?product=#{product_id}" if product_id
         get(path)
     end
@@ -213,7 +214,7 @@ class Candlepin
     end
 
     def unbind_entitlement(eid)
-        delete("/consumers/#{@consumer['uuid']}/entitlements/#{eid}")
+        delete("/consumers/#{@uuid}/entitlements/#{eid}")
     end
 
     def get_subscriptions
@@ -241,7 +242,7 @@ class Candlepin
     end
 
     def get_certificates(serials = [])
-        path = "/consumers/#{@consumer['uuid']}/certificates"
+        path = "/consumers/#{@uuid}/certificates"
         path += "?serials=" + serials.join(",") if serials.length > 0
         return get(path)
     end
@@ -251,7 +252,7 @@ class Candlepin
     end
 
     def get_certificate_serials
-        return get("/consumers/#{@consumer['uuid']}/certificates/serials")
+        return get("/consumers/#{@uuid}/certificates/serials")
     end
 
     private
