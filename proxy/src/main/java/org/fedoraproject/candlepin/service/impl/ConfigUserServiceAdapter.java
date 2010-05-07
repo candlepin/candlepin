@@ -182,14 +182,15 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public void deleteUser(User user) {
-        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException(
+            "This implementation does not support deleting Users!");
         
     }
 
     @Override
     public List<User> listByOwner(Owner owner) {
         // TODO Auto-generated method stub
-        return null;
+        return new LinkedList<User>();
     }
 
 }
