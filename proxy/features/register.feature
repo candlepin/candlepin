@@ -11,9 +11,6 @@ Feature: Register a Consumer
         And I register a consumer "someconsumer"
         Then my consumer should have an identity certificate
 
-#        And I am a Consumer "my_machine"
-#        Then My Identity Certificate exists
-
     Scenario: Correct UID on Identity Certificate
         Given I am a Consumer "some_box"
         Then The UID on my Identity Certificate's Subject is My Consumer's uuid
