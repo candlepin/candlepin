@@ -65,6 +65,8 @@ public class Subscription implements Persisted {
     @Column(nullable = false)
     private Date endDate;
  
+    private String contractNumber;
+    
     @CollectionOfElements
     @ForeignKey(name = "fk_subscription_token")
     @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
@@ -201,6 +203,22 @@ public class Subscription implements Persisted {
      */
     public void setModified(Date modified) {
         this.modified = modified;
+    }
+
+    /**
+     * 
+     * @return the subscription's contract number
+     */
+    public String getContractNumber() {
+        return contractNumber;
+    }
+
+    /**
+     * set the contract number
+     * @param contractNumber
+     */
+    public void setContractNumber(String contractNumber) {
+        this.contractNumber = contractNumber;
     }
 
 }
