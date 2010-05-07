@@ -9,6 +9,7 @@ class Candlepin
 
     attr_accessor :consumer
     attr_reader :identity_certificate
+    attr_accessor :uuid
 
     # Initialize a connection to candlepin. Can use username/password for 
     # basic authentication, or provide an identity certificate and key to

@@ -30,6 +30,7 @@ When /I register a consumer "(\w+)"$/ do |consumer_name|
                            cert=@consumer['idCert']['cert'],
                            key=@consumer['idCert']['key'])
     @consumer_cp.consumer = @consumer
+    @consumers[consumer_name] = @consumer_cp
 end
 
 When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
@@ -47,6 +48,7 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
                            cert=@consumer['idCert']['cert'],
                            key=@consumer['idCert']['key'])
     @consumer_cp.consumer = @consumer
+    @consumers[consumer_name] = @consumer_cp
 end
 
 Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uuid|

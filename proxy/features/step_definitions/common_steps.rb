@@ -15,6 +15,11 @@ Before do
                                password=$config['password'])
     @test_owner = @candlepin.create_owner(
         gen_random_string('testowner'))['owner']
+
+    # Hash to store consumer Candlepin objects, indexed by consumer name.
+    # Note that @consumers['consumername'].uuid will get you the consumers UUID.
+    @consumers = {}
+
 end
 
 After do
