@@ -39,10 +39,9 @@ When /I register a consumer "(\w+)"$/ do |consumer_name|
     @owner_admin_cp.register(consumer)
 end
 
-Given /^there is no Consumer with uuid "([^\"]*)"$/ do |uuid|
-    @candlepin.use_credentials(@username, @password)
+Given /^there is no consumer with uuid "([^\"]*)"$/ do |uuid|
     begin
-        @candlepin.unregister(uuid)
+        @owner_admin_cp.unregister(uuid)
     rescue RestClient::Exception => e
         # If it doesn't exist already, then we don't care if the unregister
         # failed
@@ -55,7 +54,7 @@ Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uui
     # Again - bad!
     @username = 'foo'
     @password = 'password'
-    Given "there is no Consumer with uuid \"#{uuid}\""
+    Given "there is no consumer with uuid \"#{uuid}\""
     When "I register a consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
 end
 
@@ -68,7 +67,7 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
         }
     }
 
-    @candlepin.register(consumer, @username, @password)
+    @owner_admin_cp.register(consumer)
 end
 
 Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ do |uuid|
@@ -111,17 +110,17 @@ Then /^my consumer should have an identity certificate$/ do
       @owner_admin_cp.send('identity_certificate').should_not be_nil
 end
 
-Then /The (\w+) on my Identity Certificate's Subject is My ([\w ]+)'s (\w+)/ do |subject_property, entity, property|
-    expected = @candlepin.send(to_name(entity))[ to_name(property) ]
+Then /the (\w+) on my identity certificate's subject is my ([\w ]+)'s (\w+)/ do |subject_property, entity, property|
+    expected = @owner_admin_cp.send(to_name(entity))[ to_name(property) ]
     subject_value(subject_property).should == expected
 end
 
-Then /The (\w+) on my Identity Certificate's Subject is (\w+)$/ do |subject_property, expected|
+Then /the (\w+) on my identity certificate's subject is (\w+)$/ do |subject_property, expected|
     subject_value(subject_property).should == expected
 end
 
 # Grabs the value of a key=value pair in the identity cert's subject
 def subject_value(key)
-    subject = @candlepin.identity_certificate.subject
+    subject = @owner_admin_cp.identity_certificate.subject
     subject.to_s.scan(/\/#{key}=([^\/=]+)/)[0][0]
 end 

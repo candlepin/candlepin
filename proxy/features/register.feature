@@ -12,33 +12,33 @@ Feature: Register a Consumer
         Then my consumer should have an identity certificate
 
     Scenario: Correct UID on Identity Certificate
-        Given I am a Consumer "some_box"
-        Then The UID on my Identity Certificate's Subject is My Consumer's uuid
+        Given I am logged in as "bill"
+        And I register a consumer "some_box"
+        Then the UID on my identity certificate's subject is my consumer's uuid
 
     Scenario: Correct CN on Identity Certificate
-        Given I am a Consumer "kitt_the_car"
-        Then The CN on my Identity Certificate's Subject is kitt_the_car
+        Given I am logged in as "bill"
+        And I register a consumer "kitt_the_car"
+        Then the CN on my identity certificate's subject is kitt_the_car
 
     Scenario: Correct OU on Identity Certificate
-        Given I am a Consumer "foo"
-        Then The OU on my Identity Certificate's Subject is candlepin_user
+        Given I am logged in as "bill"
+        And I register a consumer "foo"
+        Then the OU on my identity certificate's subject is bill
 
     Scenario: Register by UUID
-        Given I have username "test_user"
-        And I have password "password"
-        And there is no Consumer with uuid "special_uuid"
+        Given I am logged in as "bill"
+        And there is no consumer with uuid "special_uuid"
         When I register a consumer "my_machine" with uuid "special_uuid"
-        Then The UID on my Identity Certificate's Subject is special_uuid
+        Then the UID on my identity certificate's subject is special_uuid
 
     Scenario: Reuse a UUID during registration
-        Given I have username "test_user"
-        And I have password "password"
-        And there is no Consumer with uuid "special_uuid"
+        Given I am logged in as "bill"
+        And there is no consumer with uuid "special_uuid"
         When I register a consumer "my_machine" with uuid "special_uuid"
         Then Registering another Consumer with uuid "special_uuid" causes a bad request
         
     Scenario: Getting a consumer that does not exist should return a Not Found
-        Given I have username "test_user"
-        And I have password "password"
-        And there is no Consumer with uuid "jar_jar_binks"
+        Given I am logged in as "bill"
+        And there is no consumer with uuid "jar_jar_binks"
         Then Searching for a Consumer with uuid "jar_jar_binks" causes a not found     
