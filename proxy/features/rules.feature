@@ -5,12 +5,12 @@ Feature: Upload Rules
 
 # TODO: Re-enable once we have proper permissions support
 #   	Scenario: Rules are Downloaded
-#        Given I am a Consumer "Somebox"
+#        Given I am a consumer "Somebox"
 #        When I Download Rules
 #        Then I Have Rules
 
 #      Scenario: Rules are Uploaded
-#        Given I am a Consumer "Somebox"
+#        Given I am a consumer "Somebox"
 #        And I Download Original Rules
 #        And I have ruleset "ffffffffffffffffffffffff"
 #        When I Upload Ruleset

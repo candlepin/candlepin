@@ -6,7 +6,8 @@ require 'json'
 
 class Candlepin
 
-    attr_reader :identity_certificate, :consumer
+    attr_accessor :consumer
+    attr_reader :identity_certificate
 
     # Initialize a connection to candlepin. Can use username/password for 
     # basic authentication, or provide an identity certificate and key to
@@ -25,7 +26,6 @@ class Candlepin
         @base_url = "https://#{host}:#{port}/candlepin"
 
         if not cert.nil? 
-            print("Nil idcert\n")
             @identity_certificate = OpenSSL::X509::Certificate.new(cert)
             @identity_key = OpenSSL::PKey::RSA.new(key)
             create_ssl_client()
