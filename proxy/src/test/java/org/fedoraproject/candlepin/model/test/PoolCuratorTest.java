@@ -290,7 +290,4 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         
         assertEquals(1, poolCurator.findAll().size());
     }
-    
-    
-    
 }
