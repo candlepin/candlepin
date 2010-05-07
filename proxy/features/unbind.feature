@@ -4,7 +4,7 @@ Feature: Unbind an entitlement
 
     Scenario: Unbind a single entitlement
         Given I am a Consumer "consumer"
-        When I Consume an Entitlement for the "1852089416" Product
-        And I unbind my "1852089416" Entitlement
+        When I Consume an Entitlement for the "monitoring" Product
+        And I unbind my "monitoring" Entitlement
         Then I Have 0 Entitlements
-        And my "1852089416" entitlement is returned to the pool
+        And my "monitoring" entitlement is returned to the pool
