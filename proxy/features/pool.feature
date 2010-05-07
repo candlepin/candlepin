@@ -8,4 +8,4 @@ Feature: Entitlement Pools have Product Name
         And I am logged in as "test_owner"
         And owner "test_owner" has 2 entitlements for "virtualization_host"
         And I am a consumer "consumer"
-        Then the first pool's product name is "virtualization_host"
+        Then the first pool's product names have "virtualization_host"

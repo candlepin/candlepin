@@ -1,7 +1,7 @@
 require 'spec/expectations'
 require 'candlepin_api'
 
-Then /^The first pool's product names have "([^\"]*)"$/ do |product_name|
+Then /^the first pool's product names have "([^\"]*)"$/ do |product_name|
   products = []
   @candlepin.get_pools do |pool|
 	products.push(pool['pool']['productname'])
