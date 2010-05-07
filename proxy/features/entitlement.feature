@@ -3,6 +3,12 @@ Feature: Consume an Entitlement
     As a Consumer
     I want to be able to Consumer Entitlements and Get my Entitlement Certificates
 
+    Background:
+        Given an owner admin "test_owner"
+        And I am logged in as "test_owner"
+        And owner "test_owner" has 2 entitlements for "virtualization_host"
+        And owner "test_owner" has 4 entitlements for "monitoring"
+
     Scenario: An Exception is thrown When Consumer filters Entitlement by Invalid Product ID
         Given I am a consumer "consumer"
         Then I Get an Exception If I Filter by Product ID "non_existent"

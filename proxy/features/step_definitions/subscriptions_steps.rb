@@ -11,6 +11,18 @@ Before do
     }
 end
 
+Given /^owner "([^\"]*)" has (\d+) entitlements for "([^\"]*)"$/ do |owner, quantity, product|
+  subscription = {
+    'subscription' => {'startDate' => '2007-07-13T00:00:00-04:00',
+      'endDate'   => '2012-07-13T00:00:00-04:00',
+      'quantity'  =>  quantity,
+      'productId' => product
+    }
+  }
+
+  @candlepin.create_subscription(subscription)
+end
+
 Then /^I have at least (\d+) subscriptions$/ do |subscription_size|
     @candlepin.use_credentials(@username, @password)
     subscriptions = @candlepin.get_subscriptions()

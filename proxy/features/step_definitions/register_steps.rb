@@ -17,14 +17,6 @@ Given /^I am a consumer "([^\"]*)"$/ do |consumer_name|
   When "I register a consumer \"#{consumer_name}\""
 end
 
-#Given /^I am user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
-#  @candlepin.use_credentials(username, password)
-#end
-
-When /^I become user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
-  @candlepin.use_credentials(username, password)
-end
-
 When /I register a consumer "(\w+)"$/ do |consumer_name|
     consumer = {
         :consumer => {
