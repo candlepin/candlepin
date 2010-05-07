@@ -8,14 +8,17 @@ Feature: Proper Authentication for viewing a Consumer
         And I am logged in as "guy"
 
     Scenario: A Consumer can access their data
-        Given I am a consumer "consumer"
-        Then I should be able to view my Consumer data
+        Given I register a consumer "consumer"
+        And I am logged in as consumer "consumer"
+        Then I should be able to view my consumer data
 
     Scenario: A different Consumer is Denied
-        Given Consumer "other_machine" exists with uuid "abcde"
-        And I am a consumer "rhel_box"
-        Then I should not be able to view Consumer "abcde"
+        Given I register a consumer "consumer1"
+        And I register a consumer "consumer2"
+        And I am logged in as consumer "consumer2"
+        Then I should not be able to view consumer "consumer1"
 
     Scenario: A Non-existant Consumer is Not Found
-        Given I am a consumer "some_name"
-        Then I should not find Consumer "made_up_uuid"
+        Given I register a consumer "consumer1"
+        And I am logged in as consumer "consumer1"
+        Then I should not find consumer "made_up_uuid"
