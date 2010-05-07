@@ -89,7 +89,7 @@ Then /^Searching for a Consumer with uuid "([^\"]*)" causes a not found$/ do |uu
 end
 
 When /I Revoke All My Entitlements/ do
-    @candlepin.revoke_all_entitlements
+    @consumer_cp.revoke_all_entitlements
 end
 
 Then /^my consumer should have an identity certificate$/ do
