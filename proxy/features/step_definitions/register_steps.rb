@@ -50,9 +50,6 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
 end
 
 Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uuid|
-    # Again - bad!
-    @username = 'foo'
-    @password = 'password'
     When "I register a consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
 end
 
@@ -89,7 +86,7 @@ Then /^Searching for a Consumer with uuid "([^\"]*)" causes a not found$/ do |uu
 end
 
 When /I Revoke All My Entitlements/ do
-    @candlepin.revoke_all_entitlements
+    @consumer_cp.revoke_all_entitlements
 end
 
 Then /^my consumer should have an identity certificate$/ do

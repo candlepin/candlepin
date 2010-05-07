@@ -60,18 +60,6 @@ public class SubscriptionResource {
         return subList;
     }
 
-    @POST
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Subscription createSubscription(Subscription subscription,
-        @Context Principal principal) {
-        //
-        subscription.setOwner(principal.getOwner());
-        log.debug("owner: " + subscription.getOwner());
-        Subscription newSubscription = subCurator.create(subscription);
-
-        return newSubscription;
-    }
-
     @DELETE
     @Path("/{subscription_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

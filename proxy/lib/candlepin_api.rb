@@ -151,6 +151,10 @@ class Candlepin
       post('/pools', pool)
     end
 
+    def refresh_pools(owner_key)
+      put("/owners/#{owner_key}/subscriptions")
+    end
+
     # TODO: Add support for serial filtering:
     def get_certificates()
         path = "/consumers/#{@uuid}/certificates"
@@ -222,8 +226,8 @@ class Candlepin
         return get("/subscriptions")
     end
 
-    def create_subscription(data)
-        return post("/subscriptions", data)
+    def create_subscription(owner_id, data)
+      return post("/owners/#{owner_id}/subscriptions", data)
     end
 
     def delete_subscription(subscription)
@@ -290,6 +294,13 @@ class Candlepin
     def post_text(uri, data=nil)
         response = @client[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
         return response.body
+    end
+
+    def put(uri, data=nil)
+        data = data.to_json if not data.nil?
+        response = @client[uri].put(data, :content_type => :json, :accept => :json)
+
+        return JSON.parse(response.body) unless response.body.empty?
     end
 
     def delete(uri)

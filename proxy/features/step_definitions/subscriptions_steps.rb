@@ -20,7 +20,10 @@ Given /^owner "([^\"]*)" has (\d+) entitlements for "([^\"]*)"$/ do |owner, quan
     }
   }
 
-  @candlepin.create_subscription(subscription)
+  @candlepin.create_subscription(@test_owner['id'], subscription)
+
+  # Just refesh the entitlement pools each time
+  @candlepin.refresh_pools(@test_owner['key'])
 end
 
 Then /^I have at least (\d+) subscriptions$/ do |subscription_size|
