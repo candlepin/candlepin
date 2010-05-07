@@ -7,7 +7,6 @@ When /^I visit the status URI$/ do ||
 end
 
 Then /^status should be known$/ do ||
-    @candlepin.use_credentials("guest", "guest")
     json = @candlepin.get_status()
     json['status']['release'].should_not == "Unknown"
     json['status']['release'].should_not == "${hash}"

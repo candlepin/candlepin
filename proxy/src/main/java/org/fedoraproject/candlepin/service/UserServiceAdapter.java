@@ -15,7 +15,10 @@
 package org.fedoraproject.candlepin.service;
 
 import java.util.List;
+
 import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.User;
 
 /**
  * UserServiceAdapter
@@ -31,28 +34,14 @@ public interface UserServiceAdapter {
      */
     boolean validateUser(String username, String password) throws Exception;
 
-    OwnerInfo getOwnerInfo(String username);
+    Owner getOwner(String username);
 
     List<Role> getRoles(String username);
-
-    /**
-     *  Owner representation for {@link UserServiceAdapter} API.
-     */
-    public class OwnerInfo {
-        private String key;
-        private String name;
-
-        public OwnerInfo(String key, String name) {
-            this.key = key;
-            this.name = name;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
+    
+    User createUser(User user);
+    
+    void deleteUser(User user);
+    
+    List<User> listByOwner(Owner owner);
+   
 }

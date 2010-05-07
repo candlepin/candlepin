@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resource;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -27,9 +28,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -39,6 +40,8 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.xnap.commons.i18n.I18n;
 
@@ -52,6 +55,7 @@ public class OwnerResource {
     //private static Logger log = Logger.getLogger(OwnerResource.class);
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
+    private UserServiceAdapter userService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
     private Entitler entitler;
@@ -59,9 +63,11 @@ public class OwnerResource {
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator, I18n i18n,
-        Entitler entitler, ConsumerCurator consumerCurator) {
+        UserServiceAdapter userService, Entitler entitler, 
+        ConsumerCurator consumerCurator) {
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
+        this.userService = userService;
         this.i18n = i18n;
         this.consumerCurator = consumerCurator;
         this.entitler = entitler;
@@ -89,14 +95,7 @@ public class OwnerResource {
     @Path("/{owner_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Owner getOwner(@PathParam("owner_id") Long ownerId) {
-        Owner toReturn = ownerCurator.find(ownerId);
-
-        if (toReturn != null) {
-            return toReturn;
-        }
-
-        throw new NotFoundException(
-            i18n.tr("Owner with UUID '{0}' could not be found", ownerId));
+        return findOwner(ownerId);
     }
 
     /**
@@ -124,18 +123,16 @@ public class OwnerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     //FIXME No way this is as easy as this :)
     public void deleteOwner(@PathParam("owner_id") Long ownerId) {
-        Owner owner = ownerCurator.find(ownerId);
-
-        if (owner == null) {
-            throw new BadRequestException(
-                i18n.tr("Owner with id {0} could not be found", ownerId));
-        }
+        Owner owner = findOwner(ownerId);
         
         cleanupAndDelete(owner);
     }    
 
     private void cleanupAndDelete(Owner owner) {
         log.info("Cleaning up owner: " + owner);
+        for (User u : userService.listByOwner(owner)) {
+            userService.deleteUser(u);
+        }
         for (Consumer c : consumerCurator.listByOwner(owner)) {
             log.info("Deleting consumer: " + c);
             entitler.revokeAllEntitlements(c);
@@ -162,11 +159,7 @@ public class OwnerResource {
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_id") Long ownerId) {
-        Owner owner = ownerCurator.find(ownerId);
-        if (owner == null) {
-            throw new NotFoundException(
-                i18n.tr("owner with id: {0} was not found.", ownerId));
-        }
+        Owner owner = findOwner(ownerId);
 
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
         for (Pool pool : owner.getEntitlementPools()) {
@@ -189,12 +182,44 @@ public class OwnerResource {
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Pool> ownerEntitlementPools(
         @PathParam("owner_id") Long ownerId) {
+        Owner owner = findOwner(ownerId);
+    
+        return poolCurator.listByOwner(owner);
+    }
+    
+    // ----- User -----
+    @POST
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, 
+        MediaType.APPLICATION_FORM_URLENCODED })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{owner_id}/users")
+    public User createUser(@PathParam("owner_id") Long ownerId, User user) {
+        Owner owner = findOwner(ownerId);
+        user.setOwner(owner);
+        
+        return userService.createUser(user);
+    }
+    
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{owner_id}/users/{user_id}")
+    public User getUser(@PathParam("owner_id") Long ownerId, 
+        @PathParam("user_id") Long userId) {
+        
+        // TODO: Add another method to the user service API?
+        
+        return null;
+    }
+    
+    private Owner findOwner(Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
+        
         if (owner == null) {
             throw new NotFoundException(
                 i18n.tr("owner with id: {0} was not found.", ownerId));
         }
-        return poolCurator.listByOwner(owner);
+        
+        return owner;
     }
     
     /**
@@ -218,5 +243,4 @@ public class OwnerResource {
         
         poolCurator.refreshPools(owner);
     }
-
 }

@@ -9,7 +9,7 @@ Before do
 end
 
 Given /^I have an Entitlement named "([^\"]*)" for the "([^\"]*)" Product$/ do |name, product|
-  @entitlements[name] = @candlepin.consume_product(product)
+  @entitlements[name] = @consumer_cp.consume_product(product)
 end
 
 When /I Consume an Entitlement for the "([^\"]*)" Product/ do |product|
@@ -17,15 +17,15 @@ When /I Consume an Entitlement for the "([^\"]*)" Product/ do |product|
 end
 
 Then /I Have (\d+) Entitlement[s]?/ do |entitlement_size|
-    @candlepin.list_entitlements.length.should == entitlement_size.to_i
+    @consumer_cp.list_entitlements.length.should == entitlement_size.to_i
 end
 
 Then /I Have (\d+) Certificate[s]?/ do |certificates_size|
-    @candlepin.get_certificates.length.should == certificates_size.to_i
+    @consumer_cp.get_certificates.length.should == certificates_size.to_i
 end
 
 Then /^I Have an Entitlement for the "([^\"]*)" Product$/ do |product_id|
-    product_ids = @candlepin.list_entitlements.collect do |entitlement|
+    product_ids = @consumer_cp.list_entitlements.collect do |entitlement|
         entitlement['entitlement']['pool']['productId']
     end
 
@@ -42,7 +42,7 @@ When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
 
   # needed for trying to consume the same pool twice
   @pool_id = product_pools[0]['pool']['id']
-  results = @candlepin.consume_pool(@pool_id)
+  results = @consumer_cp.consume_pool(@pool_id)
 end
 
 Then /^I Get (\d+) Entitlement When I Filter by Product ID "([^\"]*)"$/ do |entitlement_size, product_id|
@@ -51,7 +51,7 @@ end
 
 Then /^I Get an Exception If I Filter by Product ID "(\w+)"$/ do |product_id|
   begin
-    @candlepin.list_entitlements(product_id)
+    @consumer_cp.list_entitlements(product_id)
   rescue RestClient::Exception => e
     response = JSON.parse(e.http_body)
     response['exceptionMessage']['displayMessage'].should == "No such product: non_existent"
@@ -65,7 +65,7 @@ Then /^The entitlement named "([^\"]*)" should not exist$/ do |name|
 
   # TODO:  There is probably an official rspec way to do this
   begin
-    @candlepin.get_entitlement(entitlement[0]['entitlement']['id'])
+    @owner_admin_cp.get_entitlement(entitlement[0]['entitlement']['id'])
   rescue RestClient::Exception => e
     e.http_code.should == 404
   end
@@ -74,7 +74,7 @@ end
 When /^I try to consume an Entitlement for the "([^\"]*)" Product again$/ do |product|
 
   begin
-    @candlepin.consume_product(product)
+    @consumer_cp.consume_product(product)
   rescue RestClient::Exception => e
       @consume_exception = e
   end
@@ -82,7 +82,7 @@ end
 
 When /^I try to consume an Entitlement for the "([^\"]*)" Pool again$/ do |pool|
   begin
-    @candlepin.consume_pool(@pool_id)
+    @consumer_cp.consume_pool(@pool_id)
   rescue RestClient::Exception => e
       @consume_exception = e
   end

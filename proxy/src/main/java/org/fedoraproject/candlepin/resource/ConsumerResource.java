@@ -38,6 +38,7 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
@@ -436,15 +437,25 @@ public class ConsumerResource {
 
         // Verify consumer exists:
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-
-        if (token != null) {
-            return bindByToken(token, consumer);
+        List<Entitlement> entitlements = null;
+        try {
+            if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
+            
+                if (token != null) {
+                    return bindByToken(token, consumer);
+                }
+                if (productId != null) {
+                    return bindByProduct(productId, consumer);
+                }
+        
+                entitlements = bindByPool(poolId, consumer);
+            }
+        } 
+        catch (CandlepinException e) {
+            log.debug(e.getMessage());
+            throw e;
         }
-        if (productId != null) {
-            return bindByProduct(productId, consumer);
-        }
-
-        return bindByPool(poolId, consumer);
+        return entitlements;
     }
 
     private Consumer verifyAndLookupConsumer(String consumerUuid) {

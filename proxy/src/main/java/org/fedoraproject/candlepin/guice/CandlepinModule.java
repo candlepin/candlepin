@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.guice;
 import java.util.Properties;
 
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.pki.PKIReader;
@@ -48,7 +49,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 
 /**
  * CandlepinProductionConfiguration

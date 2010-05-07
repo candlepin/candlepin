@@ -46,7 +46,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        ownerResource = injector.getInstance(OwnerResource.class);
+        this.ownerResource = injector.getInstance(OwnerResource.class);
+
         owner = new Owner(OWNER_NAME);
         ownerCurator.create(owner);
         product = TestUtil.createProduct();

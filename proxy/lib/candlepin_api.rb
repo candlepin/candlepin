@@ -7,10 +7,36 @@ require 'uri'
 
 class Candlepin
 
-    attr_reader :identity_certificate, :consumer
+    attr_accessor :consumer
+    attr_reader :identity_certificate
 
-    def initialize(host='localhost', port=8443)
+    # Initialize a connection to candlepin. Can use username/password for 
+    # basic authentication, or provide an identity certificate and key to
+    # connect as a "consumer".
+    def initialize(username=nil, password=nil, cert=nil, key=nil, 
+                   host='localhost', port=8443)
+
+        if not username.nil? and not cert.nil?
+            raise "Cannot connect with both username and identity cert"
+        end
+
+        if username.nil? and cert.nil?
+            raise "Need username/password or cert/key"
+        end
+
         @base_url = "https://#{host}:#{port}/candlepin"
+
+        if not cert.nil? 
+            @identity_certificate = OpenSSL::X509::Certificate.new(cert)
+            @identity_key = OpenSSL::PKey::RSA.new(key)
+            @uuid = @identity_certificate.subject.to_s.scan(/\/UID=([^\/=]+)/)[0][0]
+            create_ssl_client()
+        else
+            @username = username
+            @password = password
+            create_basic_client(@username, @password)
+        end
+
     end
 
     def use_credentials(username=nil, password=nil)
@@ -23,16 +49,20 @@ class Candlepin
 
     def register(consumer, username=nil, password=nil)
         # TODO:  Maybe this should be created earlier?
-        use_credentials(username, password)
+        if not username.nil? and not password.nil?
+            use_credentials(username, password)
+        end
 
         @consumer = post('/consumers', consumer)['consumer']
 
-        identity_cert = @consumer['idCert']['cert']
-        identity_key = @consumer['idCert']['key']
-        @identity_certificate = OpenSSL::X509::Certificate.new(identity_cert)
-        @identity_key = OpenSSL::PKey::RSA.new(identity_key)
+        return @consumer
 
-        create_ssl_client
+#        identity_cert = @consumer['idCert']['cert']
+#        identity_key = @consumer['idCert']['key']
+#        @identity_certificate = OpenSSL::X509::Certificate.new(identity_cert)
+#        @identity_key = OpenSSL::PKey::RSA.new(identity_key)
+
+#        create_ssl_client
     end
 
     def get_owners
@@ -56,6 +86,17 @@ class Candlepin
 
     def delete_owner(owner_id)
         delete("/owners/#{owner_id}")
+    end
+
+    def create_user(owner_id, login, password)
+      user = {
+        'user' => {
+          'login' => login,
+          'password' => password
+        }
+      }
+
+      post("/owners/#{owner_id}/users", user)
     end
 
     def get_consumer_types
@@ -112,7 +153,7 @@ class Candlepin
 
     # TODO: Add support for serial filtering:
     def get_certificates()
-        path = "/consumers/#{@consumer['uuid']}/certificates"
+        path = "/consumers/#{@uuid}/certificates"
         return get(path)
     end
 
@@ -121,16 +162,16 @@ class Candlepin
     end
 
     def unregister(uuid = nil)
-        uuid = @consumer['uuid'] unless uuid
+        uuid = @uuid unless uuid
         delete("/consumers/#{uuid}")
     end
 
     def revoke_all_entitlements()
-        delete("/consumers/#{@consumer['uuid']}/entitlements")
+        delete("/consumers/#{@uuid}/entitlements")
     end
 
     def consume_product(product)
-        post("/consumers/#{@consumer['uuid']}/entitlements?product=#{product}")
+        post("/consumers/#{@uuid}/entitlements?product=#{product}")
     end
     
     def list_products
@@ -152,11 +193,11 @@ class Candlepin
     end
     
     def consume_pool(pool)
-        post("/consumers/#{@consumer['uuid']}/entitlements?pool=#{pool}")
+        post("/consumers/#{@uuid}/entitlements?pool=#{pool}")
     end
 
     def list_entitlements(product_id = nil)
-        path = "/consumers/#{@consumer['uuid']}/entitlements"
+        path = "/consumers/#{@uuid}/entitlements"
         path << "?product=#{product_id}" if product_id
         get(path)
     end
@@ -174,7 +215,7 @@ class Candlepin
     end
 
     def unbind_entitlement(eid)
-        delete("/consumers/#{@consumer['uuid']}/entitlements/#{eid}")
+        delete("/consumers/#{@uuid}/entitlements/#{eid}")
     end
 
     def get_subscriptions
@@ -202,7 +243,7 @@ class Candlepin
     end
 
     def get_certificates(serials = [])
-        path = "/consumers/#{@consumer['uuid']}/certificates"
+        path = "/consumers/#{@uuid}/certificates"
         path += "?serials=" + serials.join(",") if serials.length > 0
         return get(path)
     end
@@ -212,7 +253,7 @@ class Candlepin
     end
 
     def get_certificate_serials
-        return get("/consumers/#{@consumer['uuid']}/certificates/serials")
+        return get("/consumers/#{@uuid}/certificates/serials")
     end
 
     private

@@ -11,8 +11,8 @@ Before do
     if $config.nil?
         initialize_config()
     end
-    @candlepin = Candlepin.new
-    @candlepin.use_credentials($config['username'], $config['password'])
+    @candlepin = Candlepin.new(username=$config['username'], 
+                               password=$config['password'])
     @test_owner = @candlepin.create_owner(
         gen_random_string('testowner'))['owner']
 end
@@ -47,10 +47,10 @@ def initialize_config
     else
         print("No config file found, using default test config\n")
         $config = {}
-        $config['username'] = 'root'
-        $config['password'] = 'root'
+        $config['username'] = 'admin'
+        $config['password'] = 'admin'
         $config['hostname'] = 'localhost'
-        $config['port'] = '443'
+        $config['port'] = '8443'
     end
 
     # Quick check to make sure config contains the properties we use:
@@ -65,10 +65,6 @@ def gen_random_string(prefix)
     "%s-%s" % [prefix, rand(100000)]
 end
 
-Then /My ([\w ]+) exists/ do |property|
-    @candlepin.send(to_name(property)).should_not be_nil
-end
-
 Then /My ([\w ]+)'s (\w+) is "([^"]+)"/ do |entity, property, expected|
     self.send(to_name(entity))[property].should == expected
 end
@@ -77,3 +73,7 @@ def to_name(text)
     text.downcase.gsub(/\s/, '_')
 end
 
+def connect(username=nil, password=nil, cert=nil, key=nil)
+    Candlepin.new(username=username, password=password,
+        cert=cert, key=key, hostname=$config['hostname'], port=$config['port'])
+end
