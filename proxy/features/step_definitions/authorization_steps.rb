@@ -2,9 +2,9 @@ require 'spec/expectations'
 require 'candlepin_api'
 
 Then /^I should be able to view my Consumer data$/ do
-  consumer_uuid = @candlepin.consumer['uuid']
+  consumer_uuid = @consumer['uuid']
 
-  consumer = @candlepin.get_consumer(consumer_uuid)
+  consumer = @consumer_cp.get_consumer(consumer_uuid)
   consumer['consumer']['uuid'].should == consumer_uuid
 end
 

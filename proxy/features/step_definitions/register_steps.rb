@@ -50,9 +50,6 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
 end
 
 Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uuid|
-    # Again - bad!
-    @username = 'foo'
-    @password = 'password'
     When "I register a consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
 end
 

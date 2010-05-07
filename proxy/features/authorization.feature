@@ -3,6 +3,10 @@ Feature: Proper Authentication for viewing a Consumer
     As a Consumer
     I want to be able to restrict access to my data to myself and my Owner
 
+    Background:
+        Given an owner admin "guy"
+        And I am logged in as "guy"
+
     Scenario: A Consumer can access their data
         Given I am a consumer "consumer"
         Then I should be able to view my Consumer data
