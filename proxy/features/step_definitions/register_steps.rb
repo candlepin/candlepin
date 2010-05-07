@@ -36,7 +36,7 @@ When /I register a consumer "(\w+)"$/ do |consumer_name|
             :name => consumer_name,
         }
     }
-    @owner_admin_cp.register(consumer)
+    @consumer = @owner_admin_cp.register(consumer)
 end
 
 Given /^there is no consumer with uuid "([^\"]*)"$/ do |uuid|
@@ -107,7 +107,8 @@ When /I Revoke All My Entitlements/ do
 end
 
 Then /^my consumer should have an identity certificate$/ do
-      @owner_admin_cp.send('identity_certificate').should_not be_nil
+    @consumer['idCert']['cert'][0, 3].should eql('---')
+    @consumer['idCert']['key'][0, 3].should eql('---')
 end
 
 Then /the (\w+) on my identity certificate's subject is my ([\w ]+)'s (\w+)/ do |subject_property, entity, property|

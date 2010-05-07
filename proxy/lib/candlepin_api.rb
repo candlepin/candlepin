@@ -53,12 +53,14 @@ class Candlepin
 
         @consumer = post('/consumers', consumer)['consumer']
 
-        identity_cert = @consumer['idCert']['cert']
-        identity_key = @consumer['idCert']['key']
-        @identity_certificate = OpenSSL::X509::Certificate.new(identity_cert)
-        @identity_key = OpenSSL::PKey::RSA.new(identity_key)
+        return @consumer
 
-        create_ssl_client
+#        identity_cert = @consumer['idCert']['cert']
+#        identity_key = @consumer['idCert']['key']
+#        @identity_certificate = OpenSSL::X509::Certificate.new(identity_cert)
+#        @identity_key = OpenSSL::PKey::RSA.new(identity_key)
+
+#        create_ssl_client
     end
 
     def get_owners
