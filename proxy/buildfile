@@ -280,6 +280,13 @@ begin
     task.cucumber_opts = ["--format", format]
 
     features = ENV['features']
+    if not features.nil?
+        parts = features.split(":")
+        if not parts[0].include? "features"
+            parts[0] = "features/#{parts[0]}.feature"
+        end
+        features = parts.join(":")
+    end
     task.cucumber_opts << " #{features}" if not features.nil?
   end
 
