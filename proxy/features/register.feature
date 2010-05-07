@@ -26,19 +26,16 @@ Feature: Register a Consumer
         And I register a consumer "foo"
         Then the OU on my identity certificate's subject is bill
 
-    Scenario: Register by UUID
+    Scenario: Register with explicit UUID
         Given I am logged in as "bill"
-        And there is no consumer with uuid "special_uuid"
         When I register a consumer "my_machine" with uuid "special_uuid"
         Then the UID on my identity certificate's subject is special_uuid
 
     Scenario: Reuse a UUID during registration
         Given I am logged in as "bill"
-        And there is no consumer with uuid "special_uuid"
         When I register a consumer "my_machine" with uuid "special_uuid"
         Then Registering another Consumer with uuid "special_uuid" causes a bad request
         
     Scenario: Getting a consumer that does not exist should return a Not Found
         Given I am logged in as "bill"
-        And there is no consumer with uuid "jar_jar_binks"
         Then Searching for a Consumer with uuid "jar_jar_binks" causes a not found     

@@ -21,9 +21,9 @@ Given /^I am a Consumer "([^\"]*)"$/ do |consumer_name|
   When "I register a consumer \"#{consumer_name}\""
 end
 
-Given /^I am user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
-  @candlepin.use_credentials(username, password)
-end
+#Given /^I am user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
+#  @candlepin.use_credentials(username, password)
+#end
 
 When /^I become user "([^\"]*)" with password "([^\"]*)"$/ do |username, password|
   @candlepin.use_credentials(username, password)
@@ -40,25 +40,6 @@ When /I register a consumer "(\w+)"$/ do |consumer_name|
     @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
 end
 
-Given /^there is no consumer with uuid "([^\"]*)"$/ do |uuid|
-    begin
-        @owner_admin_cp.unregister(uuid)
-    rescue RestClient::Exception => e
-        # If it doesn't exist already, then we don't care if the unregister
-        # failed
-        e.message.should == "Resource Not Found"
-        e.http_code.should == 404
-    end
-end
-
-Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uuid|
-    # Again - bad!
-    @username = 'foo'
-    @password = 'password'
-    Given "there is no consumer with uuid \"#{uuid}\""
-    When "I register a consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
-end
-
 When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
     consumer = {
         :consumer => {
@@ -68,7 +49,15 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
         }
     }
 
-    @owner_admin_cp.register(consumer)
+    @consumer = @owner_admin_cp.register(consumer)
+    @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
+end
+
+Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uuid|
+    # Again - bad!
+    @username = 'foo'
+    @password = 'password'
+    When "I register a consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
 end
 
 Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ do |uuid|

@@ -18,6 +18,7 @@ Before do
 end
 
 After do
+    @candlepin.use_credentials($config['username'], $config['password'])
     @candlepin.delete_owner(@test_owner['id'])
 end
 
