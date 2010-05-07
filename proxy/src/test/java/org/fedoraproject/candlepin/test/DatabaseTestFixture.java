@@ -25,10 +25,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
-import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.TestingInterceptor;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.AttributeCurator;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
@@ -95,14 +96,18 @@ public class DatabaseTestFixture {
     protected CertificateSerialCurator certSerialCurator;
     protected I18n i18n;
     protected Entitler entitler;
+    protected TestingInterceptor crudInterceptor;
+    protected TestingInterceptor filterInterceptor;
+    protected TestingInterceptor securityInterceptor;
 
     
     @Before
     public void init() {
         Module guiceOverrideModule = getGuiceOverrideModule();
+        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule();
         if (guiceOverrideModule == null) {
             injector = Guice.createInjector(
-                    new CandlepinCommonTestingModule(),
+                    testingModule,
                     new CandlepinNonServletEnvironmentTestingModule(),
                     PersistenceService.usingJpa()
                         .across(UnitOfWork.REQUEST)
@@ -111,7 +116,7 @@ public class DatabaseTestFixture {
         }
         else {
             injector = Guice.createInjector(
-                Modules.override(new CandlepinCommonTestingModule()).with(
+                Modules.override(testingModule).with(
                     guiceOverrideModule),
                 new CandlepinNonServletEnvironmentTestingModule(),
                 PersistenceService.usingJpa()
@@ -145,14 +150,18 @@ public class DatabaseTestFixture {
         certSerialCurator = injector.getInstance(CertificateSerialCurator.class);
 
         i18n = injector.getInstance(I18n.class);
-       
+        
+        crudInterceptor = testingModule.crudInterceptor();
+        filterInterceptor = testingModule.filterInterceptor();
+        securityInterceptor = testingModule.securityInterceptor(); 
+        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
         
         // Tests run as super admin by default:
-        Owner superAdminOwner = new Owner("superadminowner", "superadminowner");
-        ownerCurator.create(superAdminOwner);
-        setupPrincipal(superAdminOwner, Role.SUPER_ADMIN);
+//        Owner superAdminOwner = new Owner("superadminowner", "superadminowner");
+//        ownerCurator.create(superAdminOwner);
+//        setupPrincipal(superAdminOwner, Role.SUPER_ADMIN);
     }
     
     protected Module getGuiceOverrideModule() {

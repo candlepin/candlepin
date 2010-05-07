@@ -18,6 +18,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -35,11 +37,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         super(Consumer.class);
     }
 
+    @AllowRoles(roles = {Role.SUPER_ADMIN, Role.OWNER_ADMIN})
+    @Transactional
+    public Consumer create(Consumer entity) {
+        return super.create(entity);
+    }
+    
     /**
      * Lookup consumer by its name
      * @param name consumer name to find
      * @return Consumer whose name matches the given name, null otherwise.
      */
+    @Transactional
     public Consumer lookupByName(String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("name", name))
@@ -51,6 +60,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @param uuid Consumer uuid sought.
      * @return Consumer whose uuid matches the given value, or null otherwise.
      */
+    @Transactional
     public Consumer lookupByUuid(String uuid) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("uuid", uuid))
