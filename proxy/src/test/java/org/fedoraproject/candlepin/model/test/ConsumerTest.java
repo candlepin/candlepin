@@ -282,12 +282,16 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer2);
         
         setupPrincipal(new ConsumerPrincipal(consumer2));
+        crudInterceptor.enable();
+        
         consumerCurator.delete(consumer);
     }
 
     @Test
     public void canDeleteSelf() {
         setupPrincipal(new ConsumerPrincipal(consumer));
+        crudInterceptor.enable();
+
         consumerCurator.delete(consumer);
         
         assertNull(consumerCurator.find(consumer.getId()));
@@ -299,6 +303,8 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer2);
         
         setupPrincipal(new ConsumerPrincipal(consumer2));
+        consumerCurator.delete(consumer);
+
         consumerCurator.update(consumer);
     }
     
