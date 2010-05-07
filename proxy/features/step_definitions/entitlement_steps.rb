@@ -8,12 +8,12 @@ Before do
   @pool_id = nil
 end
 
-Given /^I have an Entitlement named "([^\"]*)" for the "([^\"]*)" Product$/ do |name, product|
+Given /^I have an entitlement named "([^\"]*)" for the "([^\"]*)" product$/ do |name, product|
   @entitlements[name] = @consumer_cp.consume_product(product)
 end
 
 When /I Consume an Entitlement for the "([^\"]*)" Product/ do |product|
-    @candlepin.consume_product(product)
+    @consumer_cp.consume_product(product)
 end
 
 Then /I Have (\d+) Entitlement[s]?/ do |entitlement_size|
@@ -35,7 +35,7 @@ end
 # need a test for a Pool created with a productid that doesn't exist...
 
 When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
-  all_pools = @candlepin.get_pools({:consumer => @candlepin.consumer['uuid']})
+  all_pools = @consumer_cp.get_pools({:consumer => @candlepin.consumer['uuid']})
  
   product_pools = all_pools.select {|p| p['pool'].has_value?(pool)}
   product_pools.empty?.should == false
@@ -46,7 +46,7 @@ When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
 end
 
 Then /^I Get (\d+) Entitlement When I Filter by Product ID "([^\"]*)"$/ do |entitlement_size, product_id|
-  @candlepin.list_entitlements(product_id).length.should == entitlement_size.to_i
+  @consumer_cp.list_entitlements(product_id).length.should == entitlement_size.to_i
 end
 
 Then /^I Get an Exception If I Filter by Product ID "(\w+)"$/ do |product_id|

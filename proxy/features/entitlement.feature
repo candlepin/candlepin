@@ -24,7 +24,7 @@ Feature: Consume an Entitlement
         Then I Have 1 Entitlement
 
     Scenario: Multiple Entitlements are Consumed
-        Given I am a Consumer "consumer"
+        Given I am a consumer "consumer"
         When I Consume an Entitlement for the "virtualization_host" Product 
         And I Consume an Entitlement for the "monitoring" Product
         Then I Have 2 Entitlements

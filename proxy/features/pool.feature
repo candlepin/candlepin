@@ -4,5 +4,5 @@ Feature: Entitlement Pools have Product Name
     I want to be able to see the Marketing name for all entitlement pools
 
     Scenario: First pool available has the correct name
-        Given I am a Consumer "consumer"
+        Given I am a consumer "consumer"
         Then The first pool's product names have "Spacewalk"
