@@ -63,7 +63,7 @@ Then /^The entitlement named "([^\"]*)" should not exist$/ do |name|
 
   # TODO:  There is probably an official rspec way to do this
   begin
-    @owner_admin_cp.get_entitlement(entitlement[0]['entitlement']['id'])
+    @candlepin.get_entitlement(entitlement[0]['entitlement']['id'])
   rescue RestClient::Exception => e
     e.http_code.should == 404
   end
