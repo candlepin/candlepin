@@ -52,6 +52,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param id db id of entity to be found.
      * @return entity matching given id, or null otherwise.
      */
+    @Transactional
     public E find(Serializable id) {
         return id == null ? null : get(entityType, id);
     }
@@ -61,6 +62,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return newly created entity
      */
     @Transactional
+    @CRUDSecured
     public E create(E entity) {
         save(entity);
         return entity;
@@ -91,6 +93,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return merged entity.
      */
     @Transactional
+    @CRUDSecured
     public E merge(E entity) {
         return getEntityManager().merge(entity);
     }

@@ -14,10 +14,12 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -193,4 +195,102 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             anotherConsumer.getId());
         assertEquals(1, poolCurator.findAll().size());
     }
+    
+    @Test(expected = ForbiddenException.class)
+    public void ownerAdminCannotDeleteAnotherOwnersPools() {
+        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        Pool pool2 = createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool2);
+        
+        assertEquals(2, poolCurator.findAll().size());
+        
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+        
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        crudInterceptor.enable();
+        
+        poolCurator.delete(pool);
+    }
+    
+    @Test
+    public void ownerAdminCanDeletePools() {
+        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        Pool pool2 = createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool2);
+        
+        assertEquals(2, poolCurator.findAll().size());
+        
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        crudInterceptor.enable();
+        
+        poolCurator.delete(pool);
+        assertEquals(1, poolCurator.findAll().size());
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void ownerAdminCannotUpdateAnotherOwnersPools() {
+        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+
+        assertEquals(1, poolCurator.findAll().size());
+        
+        pool.setConsumed(10L);
+        
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        crudInterceptor.enable();
+
+        poolCurator.merge(pool);
+    }
+
+    @Test
+    public void ownerAdminCanUpdatePools() {
+        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        
+        assertEquals(1, poolCurator.findAll().size());
+        pool.setConsumed(10L);
+        
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        crudInterceptor.enable();
+        
+        poolCurator.merge(pool);
+        
+        Pool retirevedPool = poolCurator.find(pool.getId());
+        assertEquals(new Long(10), retirevedPool.getConsumed());
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void ownerAdminCannotCreateAnotherOwnersPools() {
+        Owner owner2 = createOwner();
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        crudInterceptor.enable();
+
+        createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+    }
+    
+    @Test
+    public void ownerAdminCanCreatePools() {
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        crudInterceptor.enable();
+        
+        createPoolAndSub(owner, product.getId(), new Long(100),
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        
+        assertEquals(1, poolCurator.findAll().size());
+    }
+    
+    
+    
 }

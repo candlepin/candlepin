@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.fedoraproject.candlepin.TestingInterceptor;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
@@ -93,14 +94,17 @@ public class DatabaseTestFixture {
     protected EntitlementCertificateCurator entCertCurator;
     protected CertificateSerialCurator certSerialCurator;
     protected I18n i18n;
+    protected TestingInterceptor crudInterceptor;
+    protected TestingInterceptor filterInterceptor;
 
     
     @Before
     public void init() {
         Module guiceOverrideModule = getGuiceOverrideModule();
+        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule();
         if (guiceOverrideModule == null) {
             injector = Guice.createInjector(
-                    new CandlepinCommonTestingModule(),
+                    testingModule,
                     new CandlepinNonServletEnvironmentTestingModule(),
                     PersistenceService.usingJpa()
                         .across(UnitOfWork.REQUEST)
@@ -109,7 +113,7 @@ public class DatabaseTestFixture {
         }
         else {
             injector = Guice.createInjector(
-                Modules.override(new CandlepinCommonTestingModule()).with(
+                Modules.override(testingModule).with(
                     guiceOverrideModule),
                 new CandlepinNonServletEnvironmentTestingModule(),
                 PersistenceService.usingJpa()
@@ -142,7 +146,10 @@ public class DatabaseTestFixture {
         certSerialCurator = injector.getInstance(CertificateSerialCurator.class);
 
         i18n = injector.getInstance(I18n.class);
-       
+        
+        crudInterceptor = testingModule.crudInterceptor();
+        filterInterceptor = testingModule.crudInterceptor();
+        
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
         

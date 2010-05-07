@@ -14,13 +14,16 @@
  */
 package org.fedoraproject.candlepin.auth.interceptor;
 
-import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.model.AccessControlEnforced;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -37,25 +40,29 @@ public class CRUDInterceptor implements MethodInterceptor {
         
         Principal currentUser = this.principalProvider.get();
         Object entity = invocation.getArguments()[0];
+        Role role = currentUser.getRoles().get(0);
         
-        AccessControlSecured secured = 
-            entity.getClass().getAnnotation(AccessControlSecured.class);
-        
-        if (secured == null || !(currentUser instanceof ConsumerPrincipal)) {
+        List<Class<?>> interfaces = Arrays.asList(entity.getClass().getInterfaces());
+        if (!interfaces.contains(AccessControlEnforced.class)) {
             return invocation.proceed();
         }
-        
-        ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
-        
-        String validationPath = secured.path();
-        Class<?> entityClass = entity.getClass();
-        Method identity = entityClass.getDeclaredMethod("getUuid");
-        String uuid = identity.invoke(entity).toString();
-        
-        if (!consumer.consumer().getUuid().equals(uuid)) {
+
+        if (Role.CONSUMER == role) {
+            ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
+            if (!((AccessControlEnforced) entity).shouldGrantAcessTo(consumer.consumer())) {
+                throw new ForbiddenException("access denied.");
+            }
+        }
+        else if (Role.OWNER_ADMIN == role) {
+            if (!((AccessControlEnforced) entity)
+                .shouldGrantAcessTo(currentUser.getOwner())) {
+                throw new ForbiddenException("access denied.");
+            }
+        }
+        else {
             throw new ForbiddenException("access denied.");
         }
-        
+            
         return invocation.proceed();
     }
 }

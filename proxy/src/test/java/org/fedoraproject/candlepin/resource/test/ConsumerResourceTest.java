@@ -327,7 +327,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
     
     @Test(expected = ForbiddenException.class)
-    public void canDeleteConsumerOtherThanSelf() {
+    public void canNotDeleteConsumerOtherThanSelf() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
         setupPrincipal(new ConsumerPrincipal(evilConsumer));

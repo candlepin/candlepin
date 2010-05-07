@@ -64,6 +64,9 @@ import com.wideplay.warp.persist.jpa.JpaUnit;
 
 public class CandlepinCommonTestingModule extends AbstractModule {
 
+    private TestingInterceptor filterInterceptor;
+    private TestingInterceptor crudInterceptor;
+
     @Override
     public void configure() {
 
@@ -106,19 +109,29 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bindInterceptor(resourcePkgMatcher, Matchers.any(), 
             securityEnforcer);
         
-        FilterInterceptor filterInterceptor = new FilterInterceptor();
-        requestInjection(filterInterceptor);
+        FilterInterceptor fi = new FilterInterceptor();
+        requestInjection(fi);
+        filterInterceptor = new TestingInterceptor(fi);
         bindInterceptor(
             Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
             Matchers.annotatedWith(EnforceAccessControl.class), 
             filterInterceptor);
 
-        CRUDInterceptor crudInterceptor = new CRUDInterceptor();
-        requestInjection(crudInterceptor);
+        CRUDInterceptor crud = new CRUDInterceptor();
+        requestInjection(crud);
+        crudInterceptor = new TestingInterceptor(crud);
+        
         bindInterceptor(
             Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
             Matchers.annotatedWith(CRUDSecured.class), 
             crudInterceptor);
     }
     
+    public TestingInterceptor filterInterceptor() {
+        return filterInterceptor;
+    }
+    
+    public TestingInterceptor crudInterceptor() {
+        return crudInterceptor;
+    }
 }

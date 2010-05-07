@@ -14,16 +14,14 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Map;
 
 import javax.persistence.PersistenceException;
 
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -272,6 +270,32 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer c = new Consumer("name", owner, null);
         assertNotNull(c);
     }
+    
+    @Test(expected = ForbiddenException.class)
+    public void cannotDeleteConsumerOtherThanItself() {
+        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        consumerCurator.create(consumer2);
+        
+        setupPrincipal(new ConsumerPrincipal(consumer2));
+        consumerCurator.delete(consumer);
+    }
 
+    @Test
+    public void canDeleteSelf() {
+        setupPrincipal(new ConsumerPrincipal(consumer));
+        consumerCurator.delete(consumer);
+        
+        assertNull(consumerCurator.find(consumer.getId()));
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void cannotUpdateOtherConsumer() {
+        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        consumerCurator.create(consumer2);
+        
+        setupPrincipal(new ConsumerPrincipal(consumer2));
+        consumerCurator.update(consumer);
+    }
+    
 
 }
