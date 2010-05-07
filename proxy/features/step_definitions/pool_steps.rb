@@ -1,6 +1,6 @@
 require 'spec/expectations'
 require 'candlepin_api'
 
-Then /^The first pool's product name is "([^\"]*)"$/ do |product_name|
-  @candlepin.get_pools[0]['pool']['productName'].should == product_name
+Then /^the first pool's product name is "([^\"]*)"$/ do |product_name|
+  @consumer_cp.get_pools(:consumer => @consumer_cp.uuid)[0]['pool']['productName'].should == product_name
 end
