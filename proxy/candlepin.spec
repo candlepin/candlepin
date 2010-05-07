@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.6
+Version: 0.0.7
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,6 +95,107 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Fri May 07 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.7-1
+- added role-based access control on OwnerCurator#create and
+  ConsumerCurator#create (ddolguik@redhat.com)
+- cuke: Getting authentication feature green (jharris@redhat.com)
+- cuke: entitlement.feature working - had to move around subscription creation
+  uri (jharris@redhat.com)
+- cuke: store consumer uuid on api object, if available. (jbowes@redhat.com)
+- removed empty lines at the end of the file (ddolguik@redhat.com)
+- cuke: get status feature passing (jbowes@redhat.com)
+- Getting started with subscription creation steps. (jharris@redhat.com)
+- cuke: work on getting unregister working; add @consumer_cp
+  (jbowes@redhat.com)
+- Removing the oracle datasource because it's not maintained.
+  (calfonso@redhat.com)
+- adding contract number to subscription (jomara@redhat.com)
+- cuke: register.feature now passing. (dgoodwin@redhat.com)
+- cuke: Introduce auth_steps.rb. (dgoodwin@redhat.com)
+- Cuke: Fix test for checking UUID on identity cert. (dgoodwin@redhat.com)
+- added crud access control to Pools (ddolguik@redhat.com)
+- Cuke: Stop re-initlializing Candlepin connections on register.
+  (dgoodwin@redhat.com)
+- Get register.feature working again (jbowes@redhat.com)
+- Remove unused step (jbowes@redhat.com)
+- Add a shortcut syntax for running a specific feature (jbowes@redhat.com)
+- Fix failing unit test (jbowes@redhat.com)
+- Get one scenario passing for the register feature (jbowes@redhat.com)
+- Beginnings of fixes for register.feature. (dgoodwin@redhat.com)
+- Adding a subscription terms check when doing a bind, default implementation
+  always passes back an answer of false (calfonso@redhat.com)
+- First pass at implementing the default curator-backed user service.
+  (jharris@redhat.com)
+- Allow Ruby Candlepin API to be initialized with credentials or certs.
+  (dgoodwin@redhat.com)
+- Add a new role to indicate which paths can use the NoAuth principal
+  (jbowes@redhat.com)
+- Create a test owner and delete during cucumber teardown.
+  (dgoodwin@redhat.com)
+- Change default candlepin admin credentials. (dgoodwin@redhat.com)
+- Add a cucumber test configuration file. (dgoodwin@redhat.com)
+- Move a semi-bad TestUtil method to where it's needed only.
+  (dgoodwin@redhat.com)
+- Remove dead unbind by serials path. (dgoodwin@redhat.com)
+- Add the API crawler. (dgoodwin@redhat.com)
+- Resurrect owner resource test. (dgoodwin@redhat.com)
+- added access control enforcement to PoolCurator#listByOwner
+  (ddolguik@redhat.com)
+- Comment out failing test for merge. (dgoodwin@redhat.com)
+- Disable rule upload cucumber tests. (dgoodwin@redhat.com)
+- Test fixes. (dgoodwin@redhat.com)
+- Test fixes. (dgoodwin@redhat.com)
+- Implement DELETE /owners/id. (dgoodwin@redhat.com)
+- access control is enforced on PoolCurator#listAvailableEntitlementPools for
+  Consumer role now (ddolguik@redhat.com)
+- a couple of refactorings in FilterInterceptor (ddolguik@redhat.com)
+- access control is enforced on PoolCurator#listAvailableEntitlementPools now
+  (ddolguik@redhat.com)
+- added hibernate filter limiting the pools for the specified owner
+  (ddolguik@redhat.com)
+- Replace refreshPools with a REST call to trigger the refresh
+  (jbowes@redhat.com)
+- Cleanup refs to test principal singleton. (dgoodwin@redhat.com)
+- Add PoolResource security tests. (dgoodwin@redhat.com)
+- Add OwnerResource security tests. (dgoodwin@redhat.com)
+- Cleanup creation of test principals. (dgoodwin@redhat.com)
+- added granular access control check on delete operations on Consumers
+  (ddolguik@redhat.com)
+- added a test to verify that consumer can access its own entitlments
+  (ddolguik@redhat.com)
+- Remove past attempt at consumer access enforcement. (dgoodwin@redhat.com)
+- pulled role enforcement and granular access control separately.
+  (ddolguik@redhat.com)
+- first cut at access control for list() methods via dynamic hibernate filters
+  (ddolguik@redhat.com)
+- removing logging from product model (calfonso@redhat.com)
+- move old python test client code to client/python (jbowes@redhat.com)
+- Add an owner/consumer security test. (dgoodwin@redhat.com)
+- Enable security on all Resource tests. (dgoodwin@redhat.com)
+- Add security to ConsumerResource and update tests. (dgoodwin@redhat.com)
+- Add AllowRoles annotation, implement in PoolResource. (dgoodwin@redhat.com)
+- fix failing test from last commit. oops. (jbowes@redhat.com)
+- Add more logging for auth (jbowes@redhat.com)
+- Rename ConsumerEnforcer to SecurityInterceptor. (dgoodwin@redhat.com)
+- Fixed for Products having recursize sub products (alikins@redhat.com)
+- Namespace the gettext tasks, and glob for po file (jbowes@redhat.com)
+- Switch to generating gettext message bundles at compile time
+  (jbowes@redhat.com)
+- Fix PoolResource security testing. (dgoodwin@redhat.com)
+- Move StatusResourceTest to Cucumber. (dgoodwin@redhat.com)
+- Support enforcing consumer QueryParam matching. (dgoodwin@redhat.com)
+- Add a utf-8 translation for client testing (jbowes@redhat.com)
+- 586563 - Add more certificate related options to the deploy script
+  (jbowes@redhat.com)
+- Remove unneeded Product add, clean up comments (alikins@redhat.com)
+- Add support for following Product hiearchy so we can do sub products.
+  (alikins@redhat.com)
+- in progress of entCertAdapter changing to using products and sub products
+  (alikins@redhat.com)
+- Add type to Content and Product model, update ent cert generation to use it
+  (alikins@redhat.com)
+- Test changes for Principal dependency injection. (dgoodwin@redhat.com)
+
 * Thu Apr 29 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.6-1
 - 582223 - don't allow the same product to be consumed more than once (jbowes@redhat.com)
 - More serial BigInteger/Long fixes. (dgoodwin@redhat.com)
