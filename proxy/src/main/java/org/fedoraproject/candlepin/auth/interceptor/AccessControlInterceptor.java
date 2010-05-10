@@ -33,7 +33,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 /**
- * CRUDInterceptor
+ * AccessControlInterceptor
  */
 public class AccessControlInterceptor implements MethodInterceptor {
     
@@ -95,8 +95,8 @@ public class AccessControlInterceptor implements MethodInterceptor {
         }
     }
     
-    private void enableConsumerFilter(Principal currentUser, Object target,
-        Role role) {
+    @SuppressWarnings("unchecked")
+    private void enableConsumerFilter(Principal currentUser, Object target, Role role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         ConsumerPrincipal user = (ConsumerPrincipal) currentUser;
         
@@ -104,6 +104,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         curator.enableFilter(filterName, "consumer_id", user.consumer().getId());
     }
 
+    @SuppressWarnings("unchecked")
     private void enableOwnerFilter(Principal currentUser, Object target, Role role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         UserPrincipal user = (UserPrincipal) currentUser;
