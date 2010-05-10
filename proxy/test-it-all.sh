@@ -2,8 +2,14 @@
 
 KILLPSQL=1
 IMPORTDIR=/home/adrian/src/cp_product_utils/
-#UNITTEST="test=no"
-UNITTEST="test"
+#IMPORTDIR=
+UNITTEST="test=no"
+#UNITTEST="test"
+
+if [ "$IMPORTDIR" == "" ]; then
+	echo "IMPORTDIR needs to be set to dir containing cp_product_utils"
+	exit
+fi
 
 # clean up
 buildr clean
