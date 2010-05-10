@@ -19,7 +19,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.fedoraproject.candlepin.auth.interceptor.CRUDSecured;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.Session;
 
 import com.google.inject.Inject;
@@ -53,7 +53,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return entity matching given id, or null otherwise.
      */
     @Transactional
-    @CRUDSecured
+    @EnforceAccessControl
     public E find(Serializable id) {
         return id == null ? null : get(entityType, id);
     }
@@ -63,7 +63,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return newly created entity
      */
     @Transactional
-    @CRUDSecured
+    @EnforceAccessControl
     public E create(E entity) {
         save(entity);
         return entity;
@@ -82,7 +82,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param entity to be deleted.
      */
     @Transactional
-    @CRUDSecured
+    @EnforceAccessControl
     public void delete(E entity) {
         E toDelete = find(entity.getId());
         currentSession().delete(toDelete);
@@ -94,7 +94,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return merged entity.
      */
     @Transactional
-    @CRUDSecured
+    @EnforceAccessControl
     public E merge(E entity) {
         return getEntityManager().merge(entity);
     }

@@ -20,7 +20,7 @@ import java.util.Set;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.auth.interceptor.CRUDSecured;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -80,7 +80,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Updated consumers
      */
     @Transactional
-    @CRUDSecured
+    @EnforceAccessControl
     public Consumer update(Consumer updatedConsumer) {
         Consumer existingConsumer = find(updatedConsumer.getId());
         if (existingConsumer == null) {

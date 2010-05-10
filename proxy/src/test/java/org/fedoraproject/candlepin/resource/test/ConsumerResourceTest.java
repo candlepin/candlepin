@@ -308,7 +308,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
         
         securityInterceptor.enable();
-        filterInterceptor.enable();
+        crudInterceptor.enable();
         
         assertEquals(0, 
             consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
@@ -334,7 +334,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         securityInterceptor.enable();
         crudInterceptor.enable();
-        filterInterceptor.enable();
         
         consumerResource.deleteConsumer(consumer.getUuid());
     }
@@ -362,7 +361,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void testConsumerCannotListAllConsumers() {
         securityInterceptor.enable();
-        filterInterceptor.enable();
+        crudInterceptor.enable();
         setupPrincipal(new ConsumerPrincipal(consumer));
         
         consumerResource.list();

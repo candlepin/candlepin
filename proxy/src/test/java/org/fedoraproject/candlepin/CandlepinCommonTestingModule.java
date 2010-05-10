@@ -21,9 +21,7 @@ import javax.script.ScriptEngine;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.CRUDInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.CRUDSecured;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
-import org.fedoraproject.candlepin.auth.interceptor.FilterInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.guice.I18nProvider;
@@ -50,9 +48,9 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.ConfigUserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.ConfigUserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
@@ -66,7 +64,6 @@ import com.wideplay.warp.persist.jpa.JpaUnit;
 
 public class CandlepinCommonTestingModule extends AbstractModule {
 
-    private TestingInterceptor filterInterceptor;
     private TestingInterceptor crudInterceptor;
     private TestingInterceptor securityInterceptor;
 
@@ -120,26 +117,14 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             Matchers.annotatedWith(AllowRoles.class), 
             securityInterceptor);
         
-        FilterInterceptor fi = new FilterInterceptor();
-        requestInjection(fi);
-        filterInterceptor = new TestingInterceptor(fi);
-        bindInterceptor(
-            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
-            Matchers.annotatedWith(EnforceAccessControl.class), 
-            filterInterceptor);
-
         CRUDInterceptor crud = new CRUDInterceptor();
         requestInjection(crud);
         crudInterceptor = new TestingInterceptor(crud);
         
         bindInterceptor(
             Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
-            Matchers.annotatedWith(CRUDSecured.class), 
+            Matchers.annotatedWith(EnforceAccessControl.class), 
             crudInterceptor);
-    }
-    
-    public TestingInterceptor filterInterceptor() {
-        return filterInterceptor;
     }
     
     public TestingInterceptor crudInterceptor() {

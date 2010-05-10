@@ -249,7 +249,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         securityInterceptor.enable();
-        filterInterceptor.enable();
         crudInterceptor.enable();
         
         // Filtering should just cause this to return no results:
@@ -262,7 +261,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Role.OWNER_ADMIN);
 
         securityInterceptor.enable();
-        filterInterceptor.enable();
         crudInterceptor.enable();
         
         ownerResource.list();
@@ -273,7 +271,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Role.OWNER_ADMIN);
 
         securityInterceptor.enable();
-        filterInterceptor.enable();
         crudInterceptor.enable();
         
         ownerResource.deleteOwner(owner.getId());

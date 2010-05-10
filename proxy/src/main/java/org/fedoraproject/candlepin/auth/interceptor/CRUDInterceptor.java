@@ -46,24 +46,22 @@ public class CRUDInterceptor implements MethodInterceptor {
         Object entity = invocation.getArguments()[0];
         Role role = currentUser.getRoles().get(0);
         
-        List<Class<?>> interfaces = Arrays.asList(entity.getClass().getInterfaces());
-        if (!interfaces.contains(AccessControlEnforced.class)) {
-            return invocation.proceed();
-        }
-
         String invokedMethodName = invocation.getMethod().getName();
         if (invokedMethodName.startsWith("list")) {
             listFilter(invocation, currentUser, role);
         }
         else {
+            List<Class<?>> interfaces = Arrays.asList(entity.getClass().getInterfaces());
+            if (!interfaces.contains(AccessControlEnforced.class)) {
+                return invocation.proceed();
+            }
             crudAccessControl(currentUser, entity, role);
         }
             
         return invocation.proceed();
     }
 
-    private void listFilter(MethodInvocation invocation, Principal currentUser,
-        Role role) {
+    private void listFilter(MethodInvocation invocation, Principal currentUser, Role role) {
         Object target = invocation.getThis();
         if ((target instanceof EntitlementCertificateCurator) && (Role.CONSUMER == role)) {
             enableConsumerFilter(currentUser, target, role);
@@ -79,8 +77,7 @@ public class CRUDInterceptor implements MethodInterceptor {
         }
     }
 
-    private void crudAccessControl(Principal currentUser, Object entity,
-        Role role) {
+    private void crudAccessControl(Principal currentUser, Object entity, Role role) {
         if (Role.CONSUMER == role) {
             ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
             if (!((AccessControlEnforced) entity).shouldGrantAcessTo(consumer.consumer())) {
