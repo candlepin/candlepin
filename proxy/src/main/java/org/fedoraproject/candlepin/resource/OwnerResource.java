@@ -142,13 +142,11 @@ public class OwnerResource {
             entitler.revokeAllEntitlements(c);
             consumerCurator.delete(c);
         }
+        for (Subscription s: subscriptionCurator.listByOwner(owner)) {
+            log.info("Deleting subscription: " + s);
+            subscriptionCurator.delete(s);
+        }
         for (Pool p : poolCurator.listByOwner(owner)) {
-            log.info("Deleting subscription: " + p.getSubscriptionId());
-            Subscription s = subscriptionCurator.find(p.getSubscriptionId());
-            if (s != null) {
-                subscriptionCurator.delete(s);
-            }
-            
             log.info("Deleting pool: " + p);
             poolCurator.delete(p);
         }

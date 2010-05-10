@@ -9,20 +9,25 @@ Before do
                            'productId' => 'provisioning'
         }
     }
+    @token_name = nil
 end
 
 Then /^I have at least (\d+) subscription token[s]?$/ do |token_size|
-    @candlepin.use_credentials(@username, @password)
     tokens = @candlepin.get_subscription_tokens()
     tokens.length.should >= token_size.to_i
+
+    # XXX tokens are backwards for standalone right now, refering to existing
+    # subscriptions which causes schema issues on owner delete. so just
+    # manually remove them here.
+    Given "there is no subscription token called \"#{@token_name}\"" 
 end
 
 Given /^I have a subscription token called "([^\"]*)"$/ do |token_name|
-    @candlepin.use_credentials(@username, @password)
-
+    @token_name = token_name
     token_id = get_token_id(token_name)
     if not token_id
-        result = @candlepin.create_subscription(@subscription)
+        result = @candlepin.create_subscription(@test_owner['id'],
+                                                @subscription)
         token = {
             'subscriptionToken' => {'token' => token_name,
                                     'subscription' => result['subscription'] }}
@@ -31,8 +36,6 @@ Given /^I have a subscription token called "([^\"]*)"$/ do |token_name|
 end
 
 Given /^there is no subscription token called "([^\"]*)"$/ do |token_name|
-    @candlepin.use_credentials(@username, @password)
-
     token_id = get_token_id(token_name)
     if token_id
         @candlepin.delete_subscription_token(token_id)
@@ -40,20 +43,21 @@ Given /^there is no subscription token called "([^\"]*)"$/ do |token_name|
 end
 
 Then /^I can create a subscription token "([^\"]*)"$/ do |token_name|
-    @candlepin.use_credentials(@username, @password)
-    result = @candlepin.create_subscription(@subscription)
+    @token_name = token_name
+    result = @candlepin.create_subscription(@test_owner['id'], @subscription)
     token = {'subscriptionToken' => {'token' => token_name,
                                      'subscription' => result['subscription'] }}
     @candlepin.create_subscription_token(token)
+
+    Given "there is no subscription token called \"#{@token_name}\"" 
 end
 
 Then /^I can delete a subscription token "([^\"]*)"$/ do |token_name|
-    @candlepin.use_credentials(@username, @password)
     @candlepin.delete_subscription_token(get_token_id(token_name))
+    @token_name = nil
 end
 
 def get_token_id(token_name)
-    @candlepin.use_credentials(@username, @password)
     tokens = @candlepin.get_subscription_tokens()
     matches = tokens.find_all{|token|
         token['subscriptionToken']['token'] == token_name}
