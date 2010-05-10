@@ -17,14 +17,18 @@ package org.fedoraproject.candlepin.resource;
 import java.util.List;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -39,6 +43,7 @@ public class ProductResource {
 
     //private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
+    private ProductCurator prodCurator;
     private I18n i18n;
 
     /**
@@ -48,8 +53,11 @@ public class ProductResource {
      *            Product Adapter used to interact with multiple services.
      */
     @Inject
-    public ProductResource(ProductServiceAdapter prodAdapter, I18n i18n) {
+    public ProductResource(ProductServiceAdapter prodAdapter, 
+                           ProductCurator prodCurator, 
+                           I18n i18n) {
         this.prodAdapter = prodAdapter;
+        this.prodCurator = prodCurator;
         this.i18n = i18n;
     }
 
@@ -84,4 +92,22 @@ public class ProductResource {
         throw new NotFoundException(
             i18n.tr("Product with UUID '{0}' could not be found", pid));
     }
+    
+    /**
+     * 
+     * @param product
+     * @return the newly created product, or the product that already
+     *         exists
+     */
+    @POST
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    public Product createProduct(Product product) {
+        if ((prodCurator.find(product.getId()) == null)) {
+            Product newProduct = prodCurator.create(product);
+            return newProduct;
+        }
+        return prodCurator.find(product.getId());
+        
+    }   
 }
