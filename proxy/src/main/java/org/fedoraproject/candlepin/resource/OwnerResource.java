@@ -235,6 +235,17 @@ public class OwnerResource {
         return newSubscription;
     }
     
+    @GET
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{owner_id}/subscriptions")    
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    public List<Subscription> getSubscriptions(@PathParam("owner_id") Long ownerId) {
+        List<Subscription> subList = new LinkedList<Subscription>();
+        subList = subscriptionCurator.listByOwner(findOwner(ownerId));
+        return subList;
+    }
+    
     private Owner findOwner(Long ownerId) {
         Owner owner = ownerCurator.find(ownerId);
         

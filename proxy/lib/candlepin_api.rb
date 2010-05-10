@@ -223,8 +223,8 @@ class Candlepin
         delete("/consumers/#{@uuid}/entitlements/#{eid}")
     end
 
-    def get_subscriptions
-        return get("/subscriptions")
+    def get_subscriptions(owner_id)
+      return get("/owners/#{owner_id}/subscriptions")
     end
 
     def create_subscription(owner_id, data)

@@ -19,7 +19,7 @@ When /^I delete the subscription for product "([^\"]*)"$/ do |product|
 end
 
 Then /^I have (\d+) subscriptions$/ do |subscription_size|
-    subscriptions = @candlepin.get_subscriptions()
+    subscriptions = @owner_admin_cp.get_subscriptions(@test_owner['id'])
     subscriptions.length.should == subscription_size.to_i
 end
 
