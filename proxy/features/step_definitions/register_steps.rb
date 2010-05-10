@@ -24,7 +24,7 @@ def register_consumer(consumer)
                            cert=@consumer['idCert']['cert'],
                            key=@consumer['idCert']['key'])
     @consumer_cp.consumer = @consumer
-    @consumers[consumer[:name]] = @consumer_cp
+    @consumers[consumer[:consumer][:name]] = @consumer_cp
 end
 
 When /I register a consumer "(\w+)"$/ do |consumer_name|
