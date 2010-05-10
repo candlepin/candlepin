@@ -137,9 +137,11 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         String subscriptionOid = OIDUtil.REDHAT_OID + "." + 
                 OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), 
-                false, new DERUTF8String(sub.getProductId())));
+        if (sub.getProductId() != null) {
+            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
+                    OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), 
+                    false, new DERUTF8String(sub.getProductId())));
+        }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), 
                 false, new DERUTF8String(sub.getId().toString())));
@@ -153,10 +155,11 @@ public class DefaultEntitlementCertServiceAdapter extends
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY),
                 false, new DERUTF8String(sub.getEndDate().toString())));
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
+        if (sub.getContractNumber() != null) {
+            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
                 false, new DERUTF8String(sub.getContractNumber())));
-        
+        }
       
         return toReturn;
     }
