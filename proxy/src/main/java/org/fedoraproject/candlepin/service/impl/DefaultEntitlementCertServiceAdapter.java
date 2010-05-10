@@ -38,9 +38,9 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.util.OIDUtil;
 
 import com.google.inject.Inject;
-import com.redhat.candlepin.util.OIDUtil;
 
 /**
  * DefaultEntitlementCertServiceAdapter
