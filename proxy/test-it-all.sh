@@ -2,8 +2,8 @@
 
 KILLPSQL=1
 IMPORTDIR=/home/adrian/src/cp_product_utils/
-UNITTEST="test=no"
-#UNITTEST=
+#UNITTEST="test=no"
+UNITTEST="test"
 
 # clean up
 buildr clean
