@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.AccessControlEnforced;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.PoolCurator;
 
@@ -43,7 +44,6 @@ public class AccessControlInterceptor implements MethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         
         Principal currentUser = this.principalProvider.get();
-        Object entity = invocation.getArguments()[0];
         Role role = currentUser.getRoles().get(0);
         
         String invokedMethodName = invocation.getMethod().getName();
@@ -51,6 +51,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
             listFilter(invocation, currentUser, role);
         }
         else {
+            Object entity = invocation.getArguments()[0];
             List<Class<?>> interfaces = Arrays.asList(entity.getClass().getInterfaces());
             if (!interfaces.contains(AccessControlEnforced.class)) {
                 return invocation.proceed();
@@ -68,7 +69,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
             enableConsumerFilter(currentUser, target, role);
         }
         
-        if ((target instanceof PoolCurator)) {
+        if ((target instanceof PoolCurator) || (target instanceof ConsumerCurator)) {
             if (Role.OWNER_ADMIN == role) { 
                 enableOwnerFilter(currentUser, target, role);
             } 

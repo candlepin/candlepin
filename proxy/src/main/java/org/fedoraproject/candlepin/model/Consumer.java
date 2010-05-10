@@ -40,8 +40,13 @@ import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.MapKeyManyToMany;
+import org.hibernate.annotations.ParamDef;
 
 
 /**
@@ -55,6 +60,24 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
+@FilterDefs({
+    @FilterDef(
+        name = "Consumer_OWNER_FILTER", 
+        parameters = @ParamDef(name = "owner_id", type = "long")
+    ),
+    @FilterDef(
+        name = "Consumer_CONSUMER_FILTER", 
+        parameters = @ParamDef(name = "consumer_id", type = "long")
+    )
+})
+@Filters({
+    @Filter(name = "Consumer_OWNER_FILTER", 
+        condition = "owner_id = :owner_id"
+    ),
+    @Filter(name = "Consumer_CONSUMER_FILTER", 
+        condition = "id = :consumer_id"
+    )
+})
 @Table(name = "cp_consumer")
 @SequenceGenerator(name = "seq_consumer", sequenceName = "seq_consumer", allocationSize = 1)
 public class Consumer implements Persisted, AccessControlEnforced {

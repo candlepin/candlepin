@@ -16,6 +16,9 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -56,5 +59,36 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         
         createConsumer(owner);
+    }
+    
+    @Test
+    public void consumerCanOnlySeeItself() {
+        Owner owner = createOwner();
+        Consumer first = createConsumer(owner);
+        Consumer second = createConsumer(owner);
+        
+        setupPrincipal(new ConsumerPrincipal(first));
+        crudInterceptor.enable();
+        
+        List<Consumer> all = consumerCurator.listAll();
+        assertEquals(1, all.size());
+        assertEquals(first, all.get(0));
+    }
+    
+    @Test
+    public void ownerCanOnlySeeOwnConsumers() {
+        Owner owner = createOwner();
+        Consumer first = createConsumer(owner);
+        Consumer second = createConsumer(owner);
+        
+        Owner anotherOwner = createOwner();
+        Consumer third = createConsumer(anotherOwner);
+        Consumer fourth = createConsumer(anotherOwner);
+        
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        crudInterceptor.enable();
+        
+        List<Consumer> all = consumerCurator.listAll();
+        assertEquals(2, all.size());
     }
 }
