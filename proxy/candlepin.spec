@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.9
+Version: 0.0.10
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,6 +95,43 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Mon May 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.10-1
+- Add ContractNumber to the ent cert if it exists for the subscription.  (alikins@redhat.com)
+- renamed AbstractHibernateCurator#findAll to listAll (ddolguik@redhat.com)
+- cuke: get virtualization passing (jbowes@redhat.com)
+- Moving the OIDUtil into the org.fedoraproject.candlepin.util (calfonso@redhat.com)
+- small cleanups in AccessControlInterceptor (ddolguik@redhat.com)
+- renamed CRUDInterceptor to AccessControlInterceptor (ddolguik@redhat.com)
+- removed FilterInterceptor (ddolguik@redhat.com)
+- merged FilterInterceptor into CRUDInterceptor (ddolguik@redhat.com)
+- Delete CertificateResourceTest (jbowes@redhat.com)
+- add some more info to deploy about cp_product_utils (alikins@redhat.com)
+- Turn running unit tests back on by default (alikins@redhat.com)
+- fixed broken ConsumerResourceTest (ddolguik@redhat.com)
+- cukes: fixing subscription feature (jharris@redhat.com)
+- change pools test to check for inclusion, not just first entry (alikins@redhat.com)
+- cuke: get unbind passing (jbowes@redhat.com)
+- More "unmerging" getting thigns working again (alikins@redhat.com)
+- rename all the product names back to human names.  (alikins@redhat.com)
+- one more using product name directly (alikins@redhat.com)
+- ReadOnlyConsumer.hasEntitlements was checking product label against product
+  id. Change to check product id. (alikins@redhat.com)
+- Change entitlement_certificates to use product hash (alikins@redhat.com)
+- Change entitlement tests to use product has/id's instead of string labels.  (alikins@redhat.com)
+- import prodcut data as the candlepin user (jbowes@redhat.com)
+- Make pools.features work (walk over list returned of pools, looking for the
+  name we are checking for instead of assuming first one is a specific name)
+  (alikins@redhat.com)
+- Change to use product.id hashes (alikins@redhat.com)
+- Change to using hash id's. Ugly, but we'll fix it soon.  (alikins@redhat.com)
+- first pass at updating cucumber tests for new product names.  (alikins@redhat.com)
+- Just a simple wrapper script to rebuild/reinstall/retest from scratch (alikins@redhat.com)
+- Example of a rule that checks for virt entitlement by product.id (alikins@redhat.com)
+- URI.escape all urls (alikins@redhat.com)
+- use the default user/pass we create in the deploy (alikins@redhat.com)
+- stop importing sat cert, instead import product data from product certs.  (alikins@redhat.com)
+- Fix a NPE when a subscription.product_id points to a non existing product (alikins@redhat.com)
+- make deploy import product certs to populate user data (alikins@redhat.com) 
 * Fri May 07 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.9-1
 - pulled in fixes
 - unit tests still fail
