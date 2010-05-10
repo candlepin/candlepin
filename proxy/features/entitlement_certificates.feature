@@ -2,6 +2,12 @@ Feature: Entitlement Certificates
     As a consumer
     I can view my entitlment certificates
 
+    Background:
+        Given an owner admin "test_owner"
+        And I am logged in as "test_owner"
+        And owner "test_owner" has 2 entitlements for "virtualization_host"
+        And owner "test_owner" has 4 entitlements for "monitoring"
+
     Scenario: List certificates
         Given I am a consumer "test_consumer"
         When I Consume an Entitlement for the "monitoring" Product
