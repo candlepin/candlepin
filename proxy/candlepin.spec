@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.10
+Version: 0.0.11
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,7 +95,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
-* Mon May 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.10-1
+* Mon May 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.11-1
 - Add ContractNumber to the ent cert if it exists for the subscription.  (alikins@redhat.com)
 - renamed AbstractHibernateCurator#findAll to listAll (ddolguik@redhat.com)
 - cuke: get virtualization passing (jbowes@redhat.com)
