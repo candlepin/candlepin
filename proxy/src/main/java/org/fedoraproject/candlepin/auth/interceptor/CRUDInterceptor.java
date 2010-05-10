@@ -22,8 +22,12 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.AccessControlEnforced;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.PoolCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -47,6 +51,36 @@ public class CRUDInterceptor implements MethodInterceptor {
             return invocation.proceed();
         }
 
+        String invokedMethodName = invocation.getMethod().getName();
+        if (invokedMethodName.startsWith("list")) {
+            listFilter(invocation, currentUser, role);
+        }
+        else {
+            crudAccessControl(currentUser, entity, role);
+        }
+            
+        return invocation.proceed();
+    }
+
+    private void listFilter(MethodInvocation invocation, Principal currentUser,
+        Role role) {
+        Object target = invocation.getThis();
+        if ((target instanceof EntitlementCertificateCurator) && (Role.CONSUMER == role)) {
+            enableConsumerFilter(currentUser, target, role);
+        }
+        
+        if ((target instanceof PoolCurator)) {
+            if (Role.OWNER_ADMIN == role) { 
+                enableOwnerFilter(currentUser, target, role);
+            } 
+            else if (Role.CONSUMER == role) {
+                enableConsumerFilter(currentUser, target, role);
+            }
+        }
+    }
+
+    private void crudAccessControl(Principal currentUser, Object entity,
+        Role role) {
         if (Role.CONSUMER == role) {
             ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
             if (!((AccessControlEnforced) entity).shouldGrantAcessTo(consumer.consumer())) {
@@ -62,7 +96,27 @@ public class CRUDInterceptor implements MethodInterceptor {
         else {
             throw new ForbiddenException("access denied.");
         }
-            
-        return invocation.proceed();
+    }
+    
+    private void enableConsumerFilter(Principal currentUser, Object target,
+        Role role) {
+        AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
+        ConsumerPrincipal user = (ConsumerPrincipal) currentUser;
+        
+        String filterName = filterName(curator.entityType(), role); 
+        curator.enableFilter(filterName, "consumer_id", user.consumer().getId());
+    }
+
+    private void enableOwnerFilter(Principal currentUser, Object target, Role role) {
+        AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
+        UserPrincipal user = (UserPrincipal) currentUser;
+
+        String filterName = filterName(curator.entityType(), role); 
+        curator.enableFilter(filterName, "owner_id", user.getOwner().getId());
+    }
+    
+    private String filterName(Class<?> entity, Role role) {
+        return entity.getSimpleName() +
+            (role == Role.CONSUMER ? "_CONSUMER_FILTER" : "_OWNER_FILTER");
     }
 }
