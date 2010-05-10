@@ -17,6 +17,16 @@ Given /^I am a consumer "([^\"]*)"$/ do |consumer_name|
   When "I register a consumer \"#{consumer_name}\""
 end
 
+def register_consumer(consumer)
+    @consumer = @owner_admin_cp.register(consumer)
+    @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
+    @consumer_cp = connect(username=nil, password=nil,
+                           cert=@consumer['idCert']['cert'],
+                           key=@consumer['idCert']['key'])
+    @consumer_cp.consumer = @consumer
+    @consumers[consumer[:name]] = @consumer_cp
+end
+
 When /I register a consumer "(\w+)"$/ do |consumer_name|
     consumer = {
         :consumer => {
@@ -24,13 +34,7 @@ When /I register a consumer "(\w+)"$/ do |consumer_name|
             :name => consumer_name,
         }
     }
-    @consumer = @owner_admin_cp.register(consumer)
-    @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
-    @consumer_cp = connect(username=nil, password=nil,
-                           cert=@consumer['idCert']['cert'],
-                           key=@consumer['idCert']['key'])
-    @consumer_cp.consumer = @consumer
-    @consumers[consumer_name] = @consumer_cp
+    register_consumer(consumer)
 end
 
 When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
@@ -41,15 +45,21 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
             :uuid => uuid
         }
     }
-
-    @consumer = @owner_admin_cp.register(consumer)
-    @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
-    @consumer_cp = connect(username=nil, password=nil,
-                           cert=@consumer['idCert']['cert'],
-                           key=@consumer['idCert']['key'])
-    @consumer_cp.consumer = @consumer
-    @consumers[consumer_name] = @consumer_cp
+    register_consumer(consumer)
 end
+
+Given /^I am a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|
+  # This will register with the user you are logged in as
+  Given "I am logged in as \"#{@username}\"" 
+  consumer = {
+      :consumer => {
+          :type => {:label => type},
+          :name => consumer_name,
+      }
+  }
+  register_consumer(consumer)
+end
+
 
 Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uuid|
     When "I register a consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
