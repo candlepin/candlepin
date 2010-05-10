@@ -35,7 +35,7 @@ import com.google.inject.Provider;
 /**
  * CRUDInterceptor
  */
-public class CRUDInterceptor implements MethodInterceptor {
+public class AccessControlInterceptor implements MethodInterceptor {
     
     @Inject private Provider<Principal> principalProvider;
     

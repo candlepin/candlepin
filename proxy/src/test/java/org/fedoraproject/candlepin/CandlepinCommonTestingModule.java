@@ -20,7 +20,7 @@ import javax.script.ScriptEngine;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.auth.interceptor.CRUDInterceptor;
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
@@ -117,7 +117,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             Matchers.annotatedWith(AllowRoles.class), 
             securityInterceptor);
         
-        CRUDInterceptor crud = new CRUDInterceptor();
+        AccessControlInterceptor crud = new AccessControlInterceptor();
         requestInjection(crud);
         crudInterceptor = new TestingInterceptor(crud);
         
