@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
+import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.test.TestRulesCurator;
 import org.fedoraproject.candlepin.pki.PKIReader;
@@ -113,7 +114,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             Matchers.any(), 
             securityInterceptor);
         bindInterceptor(
-            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")),
+            Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(AllowRoles.class), 
             securityInterceptor);
         
@@ -122,7 +123,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         crudInterceptor = new TestingInterceptor(crud);
         
         bindInterceptor(
-            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
+            Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(EnforceAccessControl.class), 
             crudInterceptor);
     }

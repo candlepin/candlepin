@@ -23,6 +23,7 @@ import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
+import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
@@ -100,11 +101,12 @@ public class CandlepinModule extends AbstractModule {
             "org.fedoraproject.candlepin.resource"));
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();
         requestInjection(securityEnforcer);
-        bindInterceptor(resourcePkgMatcher, Matchers.any(), 
-            securityEnforcer);
+        bindInterceptor(resourcePkgMatcher, Matchers.any(), securityEnforcer);
+        
+        Package[] all = Package.getPackages();
         
         bindInterceptor(
-            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")),
+            Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(AllowRoles.class), 
             securityEnforcer);
         
@@ -112,7 +114,7 @@ public class CandlepinModule extends AbstractModule {
         requestInjection(accessControlInterceptor);
         
         bindInterceptor(
-            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
+            Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(EnforceAccessControl.class), 
             accessControlInterceptor);
     }

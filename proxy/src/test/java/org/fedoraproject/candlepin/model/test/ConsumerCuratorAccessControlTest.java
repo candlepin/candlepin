@@ -56,5 +56,5 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         
         createConsumer(owner);
-    }    
+    }
 }
