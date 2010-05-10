@@ -88,7 +88,7 @@ public class OwnerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "owners")    
     public List<Owner> list() {
-        return ownerCurator.findAll();
+        return ownerCurator.listAll();
     }
 
     /**

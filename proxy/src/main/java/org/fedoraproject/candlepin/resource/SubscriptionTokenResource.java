@@ -58,7 +58,7 @@ public class SubscriptionTokenResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<SubscriptionToken> getSubscriptionTokens() {
         List<SubscriptionToken> subTokenList = new LinkedList<SubscriptionToken>();
-        subTokenList = subTokenCurator.findAll();
+        subTokenList = subTokenCurator.listAll();
         log.debug("sub token list" + subTokenList);
         return subTokenList;
     }

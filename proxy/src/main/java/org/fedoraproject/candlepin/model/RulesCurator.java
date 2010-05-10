@@ -40,7 +40,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     @Transactional
     // This seems lame...
     public Rules update(Rules updatedRules) {
-        List<Rules> existingRuleSet = findAll();
+        List<Rules> existingRuleSet = listAll();
         if (existingRuleSet.size() == 0) {
             return create(updatedRules);
         }
@@ -79,10 +79,10 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      * @return the rules
      */
     public Rules getRules() {
-        List<Rules> existingRuleSet = findAll();
+        List<Rules> existingRuleSet = listAll();
         if (existingRuleSet.size() == 0) {
             initiateRulesFromFile();
-            existingRuleSet = findAll();
+            existingRuleSet = listAll();
         }
         
         return existingRuleSet.get(0);

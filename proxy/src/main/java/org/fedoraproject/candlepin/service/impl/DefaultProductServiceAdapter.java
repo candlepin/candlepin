@@ -42,7 +42,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     
     @Override
     public List<Product> getProducts() {
-        return prodCurator.findAll();
+        return prodCurator.listAll();
     }
 
     @Override

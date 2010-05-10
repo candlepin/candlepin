@@ -74,7 +74,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<E> findAll() {
+    @EnforceAccessControl
+    public List<E> listAll() {
         return currentSession().createCriteria(entityType).list();
     }
     

@@ -65,8 +65,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
     
     @Override
-    public List<Pool> findAll() {
-        List<Pool> pools = super.findAll();
+    public List<Pool> listAll() {
+        List<Pool> pools = super.listAll();
         
         for (Pool pool : pools) {
             addProductName(pool);

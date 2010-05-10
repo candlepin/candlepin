@@ -15,8 +15,6 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.criterion.Restrictions;
@@ -39,6 +37,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param name the product name to lookup
      * @return the Product which matches the given name.
      */
+    @Transactional
     public Product lookupByName(String name) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.eq("name", name))
@@ -49,6 +48,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param id product id to lookup
      * @return the Product which matches the given id.
      */
+    @Transactional
     public Product lookupById(String id) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.eq("id", id))
@@ -62,24 +62,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param label product label to lookup
      * @return the Product which matches the given label.
      */
+    @Transactional
     public Product lookupByLabel(String label) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.eq("label", label))
             .uniqueResult();
-    }
-    
-    /**
-     * @return all Products
-     */
-    @SuppressWarnings("unchecked")
-    public List<Product> listAll() {
-        List<Product> results = currentSession().createCriteria(Product.class).list();
-        if (results == null) {
-            return new LinkedList<Product>();
-        }
-        else {
-            return results;
-        }
     }
     
     /**

@@ -193,7 +193,7 @@ public class EntitlementResource {
             return entitlementCurator.listByConsumer(consumer);
         }
 
-        return entitlementCurator.findAll();
+        return entitlementCurator.listAll();
     }
 
     /**

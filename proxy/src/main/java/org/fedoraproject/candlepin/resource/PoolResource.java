@@ -96,7 +96,7 @@ public class PoolResource {
         }
 
         if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {
-            return poolCurator.findAll();
+            return poolCurator.listAll();
         }
         else {
             Product p = null;

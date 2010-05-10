@@ -60,7 +60,7 @@ public class ConsumerTypeResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "consumertypes")    
     public List<ConsumerType> list() {
-        return consumerTypeCurator.findAll();
+        return consumerTypeCurator.listAll();
     }
 
     /**

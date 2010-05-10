@@ -97,7 +97,7 @@ public class DefaultSubscriptionServiceAdapter implements
     
     @Override
     public List<Subscription> getSubscriptions() {
-        List<Subscription> toReturn = subCurator.findAll();
+        List<Subscription> toReturn = subCurator.listAll();
         return toReturn == null ? new LinkedList<Subscription>() : toReturn;
     }
 

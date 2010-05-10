@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.hibernate.criterion.Restrictions;
@@ -48,20 +45,4 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         .add(Restrictions.eq("key", key))
         .uniqueResult();
     }
-
-    /**
-     * @return list of known owners.
-     */
-    @Transactional
-    @SuppressWarnings("unchecked")
-    public List<Owner> listAll() {
-        List<Owner> results = currentSession().createCriteria(Owner.class).list();
-        if (results == null) {
-            return new LinkedList<Owner>();
-        }
-        else {
-            return results;
-        }
-    }
-
 }

@@ -50,7 +50,7 @@ public class CertificateTest extends DatabaseTestFixture {
     @Test
     public void testList() throws Exception {
         List<SubscriptionsCertificate> certificates = certificateCurator
-            .findAll();
+            .listAll();
         int beforeCount = certificates.size();
 
         for (int i = 0; i < 10; i++) {
@@ -60,7 +60,7 @@ public class CertificateTest extends DatabaseTestFixture {
                 "this is a test " + i, owner));
         }
 
-        certificates = certificateCurator.findAll();
+        certificates = certificateCurator.listAll();
         int afterCount = certificates.size();
         assertEquals(10, afterCount - beforeCount);
     }

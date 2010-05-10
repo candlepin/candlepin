@@ -126,7 +126,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool = createPoolAndSub(owner, p.getId(), 25L,
             TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
-        pool = poolCurator.findAll().get(0);
+        pool = poolCurator.listAll().get(0);
         
         assertEquals("A Great Operating System", pool.getProductName());
     }
@@ -162,10 +162,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2040, 3, 2));
         poolCurator.create(p);
 
-        assertEquals(2, poolCurator.findAll().size());
+        assertEquals(2, poolCurator.listAll().size());
         
         poolCurator.enableFilter("Pool_OWNER_FILTER", "owner_id", anotherOwner.getId());
-        assertEquals(1, poolCurator.findAll().size());
+        assertEquals(1, poolCurator.listAll().size());
     }
     
     @Test
@@ -185,7 +185,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2040, 3, 2));
         poolCurator.create(p);
 
-        assertEquals(2, poolCurator.findAll().size());
+        assertEquals(2, poolCurator.listAll().size());
         
         Consumer anotherConsumer = TestUtil.createConsumer(anotherOwner);
         consumerTypeCurator.create(anotherConsumer.getType());
@@ -193,7 +193,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         
         poolCurator.enableFilter("Pool_CONSUMER_FILTER", "consumer_id", 
             anotherConsumer.getId());
-        assertEquals(1, poolCurator.findAll().size());
+        assertEquals(1, poolCurator.listAll().size());
     }
     
     @Test(expected = ForbiddenException.class)
@@ -205,7 +205,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool2);
         
-        assertEquals(2, poolCurator.findAll().size());
+        assertEquals(2, poolCurator.listAll().size());
         
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
@@ -225,13 +225,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool2);
         
-        assertEquals(2, poolCurator.findAll().size());
+        assertEquals(2, poolCurator.listAll().size());
         
         setupPrincipal(owner, Role.OWNER_ADMIN);
         crudInterceptor.enable();
         
         poolCurator.delete(pool);
-        assertEquals(1, poolCurator.findAll().size());
+        assertEquals(1, poolCurator.listAll().size());
     }
     
     @Test(expected = ForbiddenException.class)
@@ -240,7 +240,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.findAll().size());
+        assertEquals(1, poolCurator.listAll().size());
         
         pool.setConsumed(10L);
         
@@ -258,7 +258,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         
-        assertEquals(1, poolCurator.findAll().size());
+        assertEquals(1, poolCurator.listAll().size());
         pool.setConsumed(10L);
         
         setupPrincipal(owner, Role.OWNER_ADMIN);
@@ -288,6 +288,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         createPoolAndSub(owner, product.getId(), new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         
-        assertEquals(1, poolCurator.findAll().size());
+        assertEquals(1, poolCurator.listAll().size());
     }
 }

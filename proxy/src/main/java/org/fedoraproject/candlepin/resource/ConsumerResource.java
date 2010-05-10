@@ -114,7 +114,7 @@ public class ConsumerResource {
     @Wrapped(element = "consumers")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Consumer> list() {
-        return consumerCurator.findAll();
+        return consumerCurator.listAll();
     }
 
     /**

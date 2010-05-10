@@ -53,7 +53,7 @@ public class SubscriptionResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Subscription> getSubscriptions() {
         List<Subscription> subList = new LinkedList<Subscription>();
-        subList = subCurator.findAll();
+        subList = subCurator.listAll();
         return subList;
     }
 
