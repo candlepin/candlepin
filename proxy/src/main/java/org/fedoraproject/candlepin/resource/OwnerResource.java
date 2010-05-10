@@ -147,7 +147,9 @@ public class OwnerResource {
         for (Pool p : poolCurator.listByOwner(owner)) {
             log.info("Deleting subscription: " + p.getSubscriptionId());
             Subscription s = subscriptionCurator.find(p.getSubscriptionId());
-            subscriptionCurator.delete(s);
+            if (s != null) {
+                subscriptionCurator.delete(s);
+            }
             
             log.info("Deleting pool: " + p);
             poolCurator.delete(p);

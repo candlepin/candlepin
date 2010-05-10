@@ -89,9 +89,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         fullPool.setConsumed(new Long(10));
         poolCurator.create(fullPool);
-        
-        // Run these tests with the consumer role:
-        setupPrincipal(new ConsumerPrincipal(consumer));
     }
     
     @Test
@@ -366,6 +363,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testConsumerCannotListAllConsumers() {
         securityInterceptor.enable();
         filterInterceptor.enable();
+        setupPrincipal(new ConsumerPrincipal(consumer));
         
         consumerResource.list();
     }
