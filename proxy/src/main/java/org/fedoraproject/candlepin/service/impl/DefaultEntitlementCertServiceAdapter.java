@@ -132,9 +132,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
         // Subscription/order info
         //need the sub product name, not id here
-        // NOTE: order ~= subscription
+        // NOTE: order ~= subscriptio
         //       entitlement == entitlement
-        
+
         String subscriptionOid = OIDUtil.REDHAT_OID + "." + 
                 OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
@@ -153,6 +153,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY),
                 false, new DERUTF8String(sub.getEndDate().toString())));
+        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
+                false, new DERUTF8String(sub.getContractNumber())));
+        
       
         return toReturn;
     }
