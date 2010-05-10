@@ -121,6 +121,7 @@ function upload_products
 	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	echo
 	echo "Please point IMPORTDIR to the location of the product import scripts"
+	echo "             These are in the cp_product_utils git repo             "
 	echo
 	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	return
