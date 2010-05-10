@@ -63,6 +63,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
 
     private void listFilter(MethodInvocation invocation, Principal currentUser, Role role) {
         Object target = invocation.getThis();
+        // TODO: right now the filter is only enabled for EntitlementCertificate and Owner
         if ((target instanceof EntitlementCertificateCurator) && (Role.CONSUMER == role)) {
             enableConsumerFilter(currentUser, target, role);
         }
@@ -78,6 +79,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
     }
 
     private void crudAccessControl(Principal currentUser, Object entity, Role role) {
+        // Only available on entities that implement AccessControlEnforced interface
         if (Role.CONSUMER == role) {
             ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
             if (!((AccessControlEnforced) entity).shouldGrantAcessTo(consumer.consumer())) {

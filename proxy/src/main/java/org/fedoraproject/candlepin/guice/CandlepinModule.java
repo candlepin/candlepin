@@ -17,6 +17,9 @@ package org.fedoraproject.candlepin.guice;
 import java.util.Properties;
 
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
@@ -91,12 +94,27 @@ public class CandlepinModule extends AbstractModule {
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
 
+        // The order in which interceptors are bound is important!
+        // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(
             "org.fedoraproject.candlepin.resource"));
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();
         requestInjection(securityEnforcer);
         bindInterceptor(resourcePkgMatcher, Matchers.any(), 
             securityEnforcer);
+        
+        bindInterceptor(
+            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")),
+            Matchers.annotatedWith(AllowRoles.class), 
+            securityEnforcer);
+        
+        AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
+        requestInjection(accessControlInterceptor);
+        
+        bindInterceptor(
+            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.model")), 
+            Matchers.annotatedWith(EnforceAccessControl.class), 
+            accessControlInterceptor);
     }
 
 }
