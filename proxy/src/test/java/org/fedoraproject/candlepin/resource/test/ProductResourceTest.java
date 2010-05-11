@@ -18,11 +18,9 @@ package org.fedoraproject.candlepin.resource.test;
 import java.util.HashSet;
 
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -31,7 +29,7 @@ import org.junit.Test;
  */
 public class ProductResourceTest extends DatabaseTestFixture {
     
-    public ProductResource productResource;
+    private ProductResource productResource;
     
     @Before
     public void setUp() {
@@ -60,7 +58,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testCreateProductResource() {
         
         Product toSubmit = createProduct();
-        Product newProduct = productResource.createProduct(toSubmit);
+        productResource.createProduct(toSubmit);
         
         
     }
