@@ -30,7 +30,7 @@ import org.junit.Test;
 /**
  *
  */
-public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
+public class ConfigUserServiceAdapterTest extends DatabaseTestFixture {
 
     private UserPasswordConfig config;
 
