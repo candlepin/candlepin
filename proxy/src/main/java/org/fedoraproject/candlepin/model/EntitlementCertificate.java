@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ForeignKey;
@@ -55,7 +56,7 @@ import org.hibernate.annotations.ParamDef;
         "inner join cp_consumer_entitlements con_en on e.id = con_en.entitlement_id " + 
             "and con_en.consumer_id = :consumer_id)")
 
-public class EntitlementCertificate implements Persisted {
+public class EntitlementCertificate implements Persisted, AccessControlEnforced {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, 
                     generator = "seq_ent_cert")
@@ -134,5 +135,15 @@ public class EntitlementCertificate implements Persisted {
 
     public void setEntitlement(Entitlement entitlement) {
         this.entitlement = entitlement;
+    }
+
+    @Override
+    public boolean shouldGrantAcessTo(Owner owner) {
+        return AccessControlValidator.shouldGrantAccess(this, owner);
+    }
+
+    @Override
+    public boolean shouldGrantAcessTo(Consumer consumer) {
+        return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
 }

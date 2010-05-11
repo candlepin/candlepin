@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.auth.interceptor;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 
@@ -40,5 +41,13 @@ public class AccessControlValidator {
     
     public static boolean shouldGrantAccess(Consumer accessed, Owner owner) {
         return accessed.getOwner().getKey().equals(owner.getKey());
+    }
+    
+    public static boolean shouldGrantAccess(EntitlementCertificate c, Consumer consumer) {
+        return consumer.getUuid().equals(c.getEntitlement().getConsumer().getUuid());
+    }
+    
+    public static boolean shouldGrantAccess(EntitlementCertificate c, Owner owner) {
+        return owner.getKey().equals(c.getEntitlement().getOwner().getKey());
     }
 }
