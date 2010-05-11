@@ -154,6 +154,7 @@ if [ "$JBOSS_HOME" != "" ]; then
         DEPLOY="$JBOSS_HOME/server/default/deploy/"
     fi
     CONTAINER_CONF_DIR="/etc/tomcat6/conf"
+    CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
 else
     # use tomcat 6, if not specified
     TC=tomcat6
