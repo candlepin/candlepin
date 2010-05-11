@@ -42,14 +42,14 @@ public class AccessControlInterceptor implements MethodInterceptor {
         String invokedMethodName = invocation.getMethod().getName();
         if (invokedMethodName.startsWith("list")) {
             Object entity = ((AbstractHibernateCurator) invocation.getThis()).entityType();
-            if (!isAccessControlled(entity)) {
+            if (!isAccessControlled((Class) entity)) {
                 return invocation.proceed();
             }
             listFilter(invocation);
         }
         else {
             Object entity = invocation.getArguments()[0];
-            if (!isAccessControlled(entity)) {
+            if (!isAccessControlled(entity.getClass())) {
                 return invocation.proceed();
             }
             crudAccessControl(entity);
@@ -58,8 +58,8 @@ public class AccessControlInterceptor implements MethodInterceptor {
         return invocation.proceed();
     }
 
-    private boolean isAccessControlled(Object entity) {
-        return Arrays.asList(entity.getClass().getInterfaces())
+    private boolean isAccessControlled(Class clazz) {
+        return Arrays.asList(clazz.getInterfaces())
             .contains(AccessControlEnforced.class);
     }
 
