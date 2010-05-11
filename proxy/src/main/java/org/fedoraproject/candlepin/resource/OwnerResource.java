@@ -142,7 +142,7 @@ public class OwnerResource {
             entitler.revokeAllEntitlements(c);
             consumerCurator.delete(c);
         }
-        for (Subscription s: subscriptionCurator.listByOwner(owner)) {
+        for (Subscription s : subscriptionCurator.listByOwner(owner)) {
             log.info("Deleting subscription: " + s);
             subscriptionCurator.delete(s);
         }
