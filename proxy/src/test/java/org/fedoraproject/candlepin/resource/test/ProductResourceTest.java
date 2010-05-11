@@ -39,7 +39,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
         productResource = injector.getInstance(ProductResource.class);
     }
     
-    @Test
     private Product createProduct() {
   //      String id = "test_product";
         String label = "test_product";
