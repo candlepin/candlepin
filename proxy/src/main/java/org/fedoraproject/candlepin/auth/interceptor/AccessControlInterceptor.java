@@ -80,7 +80,10 @@ public class AccessControlInterceptor implements MethodInterceptor {
         Role role = currentUser.getRoles().get(0);
 
         // Only available on entities that implement AccessControlEnforced interface
-        if (Role.CONSUMER == role) {
+        if (currentUser.getRoles().contains(Role.SUPER_ADMIN)) {
+            return;
+        }
+        else if (Role.CONSUMER == role) {
             ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
             if (!((AccessControlEnforced) entity).shouldGrantAcessTo(consumer.consumer())) {
                 throw new ForbiddenException("access denied.");
@@ -91,9 +94,6 @@ public class AccessControlInterceptor implements MethodInterceptor {
                 .shouldGrantAcessTo(currentUser.getOwner())) {
                 throw new ForbiddenException("access denied.");
             }
-        }
-        else if (Role.SUPER_ADMIN == role) {
-            return;
         }
         else {
             throw new ForbiddenException("access denied.");
