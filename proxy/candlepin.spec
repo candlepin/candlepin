@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.12
+Version: 0.0.13
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,6 +95,24 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Tue May 11 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.13-1
+- fix jboss deployment (jesusr@redhat.com)
+- checkstyle fix for OwnerResource (jbowes@redhat.com)
+- another small fix in AccessControlInterceptor (ddolguik@redhat.com)
+- cuke: get subscription_tokens feature passing (jbowes@redhat.com)
+- EntitlementCertificate.java now has a filter for Owner role (ddolguik@redhat.com)
+- fix to make AccessControlInterceptor to work with NoAuthPrincipal (ddolguik@redhat.com)
+- fixes to get cucumber tests to pass (ddolguik@redhat.com)
+- added crud access control for EntitlementCertificate (ddolguik@redhat.com)
+- fix checkstyle (jbowes@redhat.com)
+- fix failing ProductResourceTest (jbowes@redhat.com)
+- Adding unit tests for default user service. (jharris@redhat.com)
+- Renaming config user service test to be right. (jharris@redhat.com)
+- Add the test cases for product creation as well (alikins@redhat.com)
+- Add a POST /product resource for creating objects (alikins@redhat.com)
+- added access control filters for Consumer (ddolguik@redhat.com)
+- remove unused imports (jesusr@redhat.com)
+
 * Mon May 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.12-1
 - Add ContractNumber to the ent cert if it exists for the subscription.  (alikins@redhat.com)
 - renamed AbstractHibernateCurator#findAll to listAll (ddolguik@redhat.com)
