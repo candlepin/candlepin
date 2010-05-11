@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.auth.interceptor;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -26,9 +25,6 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.AccessControlEnforced;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
-import org.fedoraproject.candlepin.model.PoolCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -43,43 +39,46 @@ public class AccessControlInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         
-        Principal currentUser = this.principalProvider.get();
-        Role role = currentUser.getRoles().get(0);
-        
         String invokedMethodName = invocation.getMethod().getName();
         if (invokedMethodName.startsWith("list")) {
-            listFilter(invocation, currentUser, role);
+            Object entity = ((AbstractHibernateCurator) invocation.getThis()).entityType();
+            if (!isAccessControlled(entity)) {
+                return invocation.proceed();
+            }
+            listFilter(invocation);
         }
         else {
             Object entity = invocation.getArguments()[0];
-            List<Class<?>> interfaces = Arrays.asList(entity.getClass().getInterfaces());
-            if (!interfaces.contains(AccessControlEnforced.class)) {
+            if (!isAccessControlled(entity)) {
                 return invocation.proceed();
             }
-            crudAccessControl(currentUser, entity, role);
+            crudAccessControl(entity);
         }
             
         return invocation.proceed();
     }
 
-    private void listFilter(MethodInvocation invocation, Principal currentUser, Role role) {
-        Object target = invocation.getThis();
-        // TODO: right now the filter is only enabled for EntitlementCertificate and Owner
-        if ((target instanceof EntitlementCertificateCurator) && (Role.CONSUMER == role)) {
-            enableConsumerFilter(currentUser, target, role);
-        }
+    private boolean isAccessControlled(Object entity) {
+        return Arrays.asList(entity.getClass().getInterfaces())
+            .contains(AccessControlEnforced.class);
+    }
+
+    private void listFilter(MethodInvocation invocation) {
+        Principal currentUser = this.principalProvider.get();
+        Role role = currentUser.getRoles().get(0);
         
-        if ((target instanceof PoolCurator) || (target instanceof ConsumerCurator)) {
-            if (Role.OWNER_ADMIN == role) { 
-                enableOwnerFilter(currentUser, target, role);
-            } 
-            else if (Role.CONSUMER == role) {
-                enableConsumerFilter(currentUser, target, role);
-            }
+        if (Role.OWNER_ADMIN == role) { 
+            enableOwnerFilter(currentUser, invocation.getThis(), role);
+        } 
+        else if (Role.CONSUMER == role) {
+            enableConsumerFilter(currentUser, invocation.getThis(), role);
         }
     }
 
-    private void crudAccessControl(Principal currentUser, Object entity, Role role) {
+    private void crudAccessControl(Object entity) {
+        Principal currentUser = this.principalProvider.get();
+        Role role = currentUser.getRoles().get(0);
+
         // Only available on entities that implement AccessControlEnforced interface
         if (Role.CONSUMER == role) {
             ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
@@ -92,6 +91,9 @@ public class AccessControlInterceptor implements MethodInterceptor {
                 .shouldGrantAcessTo(currentUser.getOwner())) {
                 throw new ForbiddenException("access denied.");
             }
+        }
+        else if (Role.SUPER_ADMIN == role) {
+            return;
         }
         else {
             throw new ForbiddenException("access denied.");
