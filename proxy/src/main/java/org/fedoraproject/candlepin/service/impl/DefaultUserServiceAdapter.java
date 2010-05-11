@@ -47,7 +47,11 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     public Owner getOwner(String username) {
         User user = this.userCurator.findByLogin(username);
         
-        return user.getOwner();
+        if (user != null) {
+            return user.getOwner();
+        }
+        
+        return null;
     }
 
     @Override
@@ -57,11 +61,13 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         
         // this might not be the best way to do this
         // should we have a list of roles stored rather than this flag?
-        if (user.isSuperAdmin()) {
-            roles.add(Role.SUPER_ADMIN);
-        }
-        else {
-            roles.add(Role.OWNER_ADMIN);
+        if (user != null) {
+            if (user.isSuperAdmin()) {
+                roles.add(Role.SUPER_ADMIN);
+            }
+            else {
+                roles.add(Role.OWNER_ADMIN);
+            }
         }
         
         return roles;
