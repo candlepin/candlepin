@@ -87,6 +87,4 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         
         return existingRuleSet.get(0);
     }
-    
-    
 }
