@@ -57,6 +57,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
     
     @Override
+    @Transactional
+    @EnforceAccessControl
     public Pool find(Serializable id) {
         Pool pool = super.find(id);
         addProductName(pool);
@@ -65,6 +67,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
     
     @Override
+    @Transactional
+    @EnforceAccessControl
     public List<Pool> listAll() {
         List<Pool> pools = super.listAll();
         
@@ -80,6 +84,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param o Owner to filter
      * @return pools owned by the given Owner.
      */
+    @Transactional
     @EnforceAccessControl
     public List<Pool> listByOwner(Owner o) {
         return listAvailableEntitlementPools(null, o, (String) null, true);
@@ -92,10 +97,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param c Consumer to filter
      * @return pools owned by the given Owner.
      */
+    @Transactional
+    @EnforceAccessControl
     public List<Pool> listAvailableEntitlementPools(Consumer c) {
         return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true);
     }
     
+    @Transactional
     @EnforceAccessControl
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             Product p, boolean activeOnly) {
@@ -111,6 +119,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param product product filter.
      * @return list of EntitlementPools
      */
+    @Transactional
+    @EnforceAccessControl
     public List<Pool> listByOwnerAndProduct(Owner owner,
             Product product) {  
         return listAvailableEntitlementPools(null, owner, product, false);

@@ -56,7 +56,7 @@ import org.hibernate.annotations.ParamDef;
     ),
     @FilterDef(
         name = "EntitlementCertificate_OWNER_FILTER", 
-        parameters = @ParamDef(name = "consumer_id", type = "long")
+        parameters = @ParamDef(name = "owner_id", type = "long")
     )
 })
 @Filters({
@@ -66,8 +66,9 @@ import org.hibernate.annotations.ParamDef;
             "inner join cp_consumer_entitlements con_en on e.id = con_en.entitlement_id " + 
                 "and con_en.consumer_id = :consumer_id)"),
     @Filter(name = "Consumer_CONSUMER_FILTER", 
-        condition = "id = :consumer_id"
-    )
+        condition = "id in (select c.id from cp_ent_certificate c " +
+            "inner join cp_entitlement e on c.entitlement_id = e.id " +
+                "and c.owner_id = :owner_id)")
 })
 public class EntitlementCertificate implements Persisted, AccessControlEnforced {
     @Id

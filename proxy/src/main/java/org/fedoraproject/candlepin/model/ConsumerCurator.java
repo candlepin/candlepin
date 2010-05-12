@@ -68,6 +68,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .uniqueResult();
     }
     
+    @Transactional
+    @EnforceAccessControl
     public List<Consumer> listByOwner(Owner owner) {
         return (List<Consumer>) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("owner", owner)).list();

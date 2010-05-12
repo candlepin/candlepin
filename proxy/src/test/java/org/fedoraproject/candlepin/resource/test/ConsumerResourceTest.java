@@ -346,12 +346,25 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
     
     @Test
+    public void testCanGetConsumersCerts() {
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        
+        assertEquals(0, consumerResource.getEntitlementCertificates(
+            consumer.getUuid(), null).size());
+    }
+    
+    @Test
     public void testCannotGetAnotherOwnersConsumersCerts() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
         
         Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
         ownerCurator.create(evilOwner);
+        
+        securityInterceptor.enable();
+        crudInterceptor.enable();
         setupPrincipal(evilOwner, Role.OWNER_ADMIN);
         
         assertEquals(0, consumerResource.getEntitlementCertificates(
@@ -366,5 +379,4 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         consumerResource.list();
     }
-    
 }
