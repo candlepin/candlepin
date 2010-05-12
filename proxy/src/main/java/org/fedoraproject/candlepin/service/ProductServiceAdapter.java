@@ -47,4 +47,14 @@ public interface ProductServiceAdapter {
      */
     Boolean provides(String subjectProductId, String providesProductId);
     
+    /**
+     * Creates a new {@link Product}.
+     * 
+     * @param product
+     * @return the created {@link Product}
+     * @throws UnsupportedOperationException if this implementation does not
+     *         support new product creation
+     */
+    Product createProduct(Product product);
+    
 }

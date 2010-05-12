@@ -73,14 +73,22 @@ public final class OIDUtil {
 
     public static final Map<String, String> SYSTEM_OIDS = new HashMap<String, String>();
     public static final Map<String, String> ORDER_OIDS = new HashMap<String, String>();
-    public static final Map<String, String> ORDER_PRODUCT_OIDS = new HashMap<String, String>();
-    public static final Map<String, String> TOPLEVEL_NAMESPACES = new HashMap<String, String>();
-    public static final Map<String, String> CONTENT_ENTITLEMENT_OIDS = new HashMap<String, String>();
-    public static final Map<String, String> ROLE_ENTITLEMENT_OIDS = new HashMap<String, String>();
-    public static final Map<String, String> CONTENT_ENTITLEMENT_NAMESPACES = new HashMap<String, String>();
-    public static final Map<String, String> SERVER_ENTITLEMENT_NAMESPACES = new HashMap<String, String>();
-    public static final Map<String, String> CONTENT_ARCHITECTURES = new HashMap<String, String>();
-    public static final Map<String, String> CHANNEL_FAMILY_OIDS = new HashMap<String, String>();
+    public static final Map<String, String> ORDER_PRODUCT_OIDS = 
+        new HashMap<String, String>();
+    public static final Map<String, String> TOPLEVEL_NAMESPACES = 
+        new HashMap<String, String>();
+    public static final Map<String, String> CONTENT_ENTITLEMENT_OIDS = 
+        new HashMap<String, String>();
+    public static final Map<String, String> ROLE_ENTITLEMENT_OIDS = 
+        new HashMap<String, String>();
+    public static final Map<String, String> CONTENT_ENTITLEMENT_NAMESPACES = 
+        new HashMap<String, String>();
+    public static final Map<String, String> SERVER_ENTITLEMENT_NAMESPACES = 
+        new HashMap<String, String>();
+    public static final Map<String, String> CONTENT_ARCHITECTURES = 
+        new HashMap<String, String>();
+    public static final Map<String, String> CHANNEL_FAMILY_OIDS = 
+        new HashMap<String, String>();
     public static final Map<String, String> CHANNEL_OIDS = new HashMap<String, String>();
     public static final Map<String, String> CF_REPO_TYPE = new HashMap<String, String>();
 

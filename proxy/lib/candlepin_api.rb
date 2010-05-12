@@ -100,25 +100,6 @@ class Candlepin
       post("/owners/#{owner_id}/users", user)
     end
 
-    def create_product2(label, name, variant,
-		       version, arch, hash,
-		       type, childProducts) 
-      product = {
-	  'product' => {
-		'id' => label,
-		'label' => label,
-		'name' => name,
-		'variant' => variant,
-		'arch' => arch,
-		'hash' => hash,
-		'type' => type,
-		'childProducts' => childProducts
-		}
-   	 }	
-
-      post('/products', product)
-    end
-
     def get_consumer_types
         get('/consumertypes')
     end
@@ -202,12 +183,13 @@ class Candlepin
       get("/products")
     end
     
-    def create_product(label, name, version = 1, variant = 'ALL', 
+    def create_product(label, name, hash, version = 1, variant = 'ALL', 
 		       arch='ALL', type='SVC',childProducts=[], attributes = {})
       product = {
         'product' => {
           'name' => name,
           'label' => name,
+          'hash' => hash,
           'arch' => arch,
           'id' => name,
           'version' => version,

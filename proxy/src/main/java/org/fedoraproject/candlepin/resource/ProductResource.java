@@ -28,7 +28,6 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.model.ProductCurator;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -43,7 +42,7 @@ public class ProductResource {
 
     //private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
-    private ProductCurator prodCurator;
+    //private ProductCurator prodCurator;
     private I18n i18n;
 
     /**
@@ -54,10 +53,8 @@ public class ProductResource {
      */
     @Inject
     public ProductResource(ProductServiceAdapter prodAdapter, 
-                           ProductCurator prodCurator, 
                            I18n i18n) {
         this.prodAdapter = prodAdapter;
-        this.prodCurator = prodCurator;
         this.i18n = i18n;
     }
 
@@ -103,11 +100,6 @@ public class ProductResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public Product createProduct(Product product) {
-        if ((prodCurator.find(product.getId()) == null)) {
-            Product newProduct = prodCurator.create(product);
-            return newProduct;
-        }
-        return prodCurator.find(product.getId());
-        
+        return prodAdapter.createProduct(product);
     }   
 }

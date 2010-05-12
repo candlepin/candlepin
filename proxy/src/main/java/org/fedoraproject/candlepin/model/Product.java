@@ -69,7 +69,7 @@ public class Product implements Persisted {
     
     // whatever numeric identifier we come up with for
     // use in the cert's OID structure...
-    @Column(nullable = true)
+    @Column(nullable = true, unique = true)
     private Long hash;
 
     //FIXME: nullable just to bootstrap for now

@@ -58,4 +58,13 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return Boolean.FALSE;
     }
 
+    @Override
+    public Product createProduct(Product product) {
+        if ((prodCurator.find(product.getId()) == null)) {
+            Product newProduct = prodCurator.create(product);
+            return newProduct;
+        }
+        return prodCurator.find(product.getId());
+    }
+
 }

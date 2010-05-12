@@ -1,10 +1,13 @@
 
-
-Then /^I can create a product called "([^\"]*)"$/ do |product_name|
-#  	@owner_admin_cp.create_product('test_product', product_name, 'server',
-#				  '1.0', 'ALL', 1231231, 'SVC', [])
-	@candlepin.create_product(product_name, product_name)
+Given /^product "([^\"]*)" exists$/ do |product_name|
+  create_product product_name
 end
 
+Then /^I can create a product called "([^\"]*)"$/ do |product_name|
+  create_product product_name
+end
 
+def create_product(product_name)
+  @candlepin.create_product(product_name, product_name, product_name.hash.abs)
+end
 
