@@ -18,7 +18,7 @@ Given /^I am a consumer "([^\"]*)"$/ do |consumer_name|
 end
 
 def register_consumer(consumer)
-    @consumer = @owner_admin_cp.register(consumer)
+    @consumer = @current_owner_cp.register(consumer)
     @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
     @consumer_cp = connect(username=nil, password=nil,
                            cert=@consumer['idCert']['cert'],
