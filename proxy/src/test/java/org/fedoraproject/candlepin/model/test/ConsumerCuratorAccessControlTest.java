@@ -35,6 +35,7 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     public void superAdminCanCreateAConsumer() {
         setupPrincipal(null, Role.SUPER_ADMIN);
         securityInterceptor.enable();
+        crudInterceptor.enable();
         
         Consumer consumer = createConsumer(createOwner());
         assertNotNull(consumerCurator.find(consumer.getId()));
@@ -44,8 +45,9 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     public void ownerAdminCanCreateAConsumer() {
         Owner owner = createOwner();
         
-        setupPrincipal(null, Role.OWNER_ADMIN);
+        setupPrincipal(owner, Role.OWNER_ADMIN);
         securityInterceptor.enable();
+        crudInterceptor.enable();
         
         Consumer consumer = createConsumer(owner);
         assertNotNull(consumerCurator.find(consumer.getId()));
@@ -57,6 +59,7 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
         
         setupPrincipal(owner, Role.CONSUMER);
         securityInterceptor.enable();
+        crudInterceptor.enable();
         
         createConsumer(owner);
     }
