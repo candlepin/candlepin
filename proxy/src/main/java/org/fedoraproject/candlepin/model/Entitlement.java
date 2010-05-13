@@ -259,13 +259,11 @@ public class Entitlement implements Persisted, AccessControlEnforced {
 
     @Override
     public boolean shouldGrantAccessTo(Owner owner) {
-        // TODO Auto-generated method stub
-        return false;
+        return this.consumer.getOwner().equals(owner);
     }
 
     @Override
     public boolean shouldGrantAccessTo(Consumer consumer) {
-        // TODO Auto-generated method stub
-        return false;
+        return this.consumer.equals(consumer);
     }
 }
