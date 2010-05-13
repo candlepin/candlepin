@@ -370,6 +370,7 @@ public class Consumer implements Persisted, AccessControlEnforced {
      * 
      */
     public void addEntitlement(Entitlement entitlementIn) {
+        entitlementIn.setConsumer(this);
         this.entitlements.add(entitlementIn);
     }
 

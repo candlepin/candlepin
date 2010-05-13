@@ -52,8 +52,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             = createEntitlementCertificate("key", "certificate",
                 new BigInteger(Integer.toString(123)));
         
-        firstEntitlement = createEntitlement(owner, consumer, firstPool, 
-            firstCertificate);
+        firstEntitlement = createEntitlement(owner, null, firstPool, firstCertificate);
         entitlementCurator.create(firstEntitlement);
         
         Pool secondPool = createPoolAndSub(
@@ -64,8 +63,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             = createEntitlementCertificate("key", "certificate", 
                 new BigInteger(Integer.toString(EXPECTED_CERTIFICATE_SERIAL)));
         
-        secondEntitlement = createEntitlement(owner, consumer, secondPool, 
-            secondCertificate);
+        secondEntitlement = createEntitlement(owner, null, secondPool, secondCertificate);
         entitlementCurator.create(secondEntitlement);
     }
     
@@ -75,7 +73,4 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             entitlementCurator.findByCertificateSerial(
                 new BigInteger(new Long(EXPECTED_CERTIFICATE_SERIAL).toString())));
     }
-    
-    
-    
 }

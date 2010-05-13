@@ -234,14 +234,17 @@ public class DatabaseTestFixture {
         
     }
     
-    protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool, 
-            EntitlementCertificate cert) {
+    protected Entitlement createEntitlement(Owner owner, Consumer consumer, 
+            Pool pool, EntitlementCertificate cert) {
         Entitlement toReturn = new Entitlement();
         toReturn.setOwner(owner);
         toReturn.setPool(pool);
         toReturn.setOwner(owner);
-        cert.setEntitlement(toReturn);
-        toReturn.getCertificates().add(cert);
+        toReturn.setConsumer(consumer);
+        if (cert != null) {
+            cert.setEntitlement(toReturn);
+            toReturn.getCertificates().add(cert);
+        }
         return toReturn;
     }
     

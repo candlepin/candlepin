@@ -73,15 +73,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * @return all entities for a particular type.
      */
-    @SuppressWarnings("unchecked")
-    @Transactional
-    @EnforceAccessControl
     public List<E> listAll() {
-        return currentSession().createCriteria(entityType).list();
+        return listByCriteria(DetachedCriteria.forClass(entityType));
     }
     
     @SuppressWarnings("unchecked")
     @Transactional
+    @EnforceAccessControl
     public List<E> listByCriteria(DetachedCriteria query) {
         return query.getExecutableCriteria(currentSession()).list();
     }

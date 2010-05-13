@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -59,16 +58,12 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return toReturn;
     }
 
-    @Transactional
-    @EnforceAccessControl
     public List<Entitlement> listByConsumer(Consumer consumer) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer));
         return listByCriteria(query);
     }
 
-    @Transactional
-    @EnforceAccessControl
     public List<Entitlement> listByOwner(Owner owner) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("owner", owner));
@@ -77,7 +72,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public List<Entitlement> listByConsumerAndProduct(Consumer consumer, String productId) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer));
