@@ -17,6 +17,9 @@ package org.fedoraproject.candlepin.util;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -109,7 +112,8 @@ public class ApiCrawlerTest {
         processHttpVerb(m, apiCall);
         processAllowedRoles(m, apiCall);
         processQueryParams(m, apiCall);
-        
+
+        apiCall.setReturnType(getReturnType(m));
         return apiCall;
     }
     
@@ -145,13 +149,27 @@ public class ApiCrawlerTest {
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             for (Annotation a : m.getParameterAnnotations()[i]) {
                 if (a instanceof QueryParam) {
-                    String rawType = m.getParameterTypes()[i].toString();
-                    String type = rawType.substring(rawType.lastIndexOf('.') + 1).toLowerCase();
+                    String type = m.getParameterTypes()[i].getSimpleName().toLowerCase();
                     apiCall.addQueryParam(((QueryParam) a).value(), type);
                 }
             
             }
         }
+    }
+
+    private static String getReturnType(Method method) {
+        Type returnType = method.getGenericReturnType();
+        String typeString = method.getReturnType().getSimpleName().toLowerCase();
+        if(returnType instanceof ParameterizedType){
+            ParameterizedType type = (ParameterizedType) returnType;
+            Type[] typeArguments = type.getActualTypeArguments();
+            typeString += " of";
+            for(Type typeArgument : typeArguments){
+                Class typeArgClass = (Class) typeArgument;
+                typeString += " " + typeArgClass.getSimpleName().toLowerCase();
+            }
+        }
+        return typeString;
     }
     
     class RestApiCall {
@@ -159,6 +177,7 @@ public class ApiCrawlerTest {
         private List<Role> allowedRoles;
         private List<String> httpVerbs;
         private List<ApiParam> queryParams;
+        private String returnType;
         
         public RestApiCall() {
             allowedRoles = new LinkedList<Role>();
@@ -183,6 +202,10 @@ public class ApiCrawlerTest {
             queryParams.add(new ApiParam(name, type));
         }
         
+        public void setReturnType(String type) {
+            returnType = type;
+        }
+        
         public void print() {
             System.out.println(getFormattedHttpVerbs() + " " + this.url);
             System.out.print("  Allowed roles:");
@@ -194,6 +217,7 @@ public class ApiCrawlerTest {
             for (ApiParam param : queryParams) {
                 System.out.println("    " + param.getName() + " - " + param.getType());
             }
+            System.out.println("  Returns: " + returnType);
         }
         
         private String getFormattedHttpVerbs() {
