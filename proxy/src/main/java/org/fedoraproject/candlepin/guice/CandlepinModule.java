@@ -103,8 +103,6 @@ public class CandlepinModule extends AbstractModule {
         requestInjection(securityEnforcer);
         bindInterceptor(resourcePkgMatcher, Matchers.any(), securityEnforcer);
         
-        Package[] all = Package.getPackages();
-        
         bindInterceptor(
             Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(AllowRoles.class), 
