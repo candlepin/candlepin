@@ -95,7 +95,12 @@ public class ApiCrawlerTest {
         
         Path subPath = (Path) m.getAnnotation(Path.class);
         if (subPath != null) {
-            apiCall.setUrl(rootPath + "/" + subPath.value());
+            if (rootPath.endsWith("/") || subPath.value().startsWith("/")) {
+                apiCall.setUrl(rootPath + subPath.value());
+            }
+            else {
+                apiCall.setUrl(rootPath + "/" + subPath.value());
+            }
         }
         else {
             apiCall.setUrl(rootPath);
