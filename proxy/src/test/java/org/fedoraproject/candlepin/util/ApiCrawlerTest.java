@@ -145,7 +145,9 @@ public class ApiCrawlerTest {
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             for (Annotation a : m.getParameterAnnotations()[i]) {
                 if (a instanceof QueryParam) {
-                    apiCall.addQueryParam(((QueryParam) a).value());
+                    String rawType = m.getParameterTypes()[i].toString();
+                    String type = rawType.substring(rawType.lastIndexOf('.') + 1).toLowerCase();
+                    apiCall.addQueryParam(((QueryParam) a).value(), type);
                 }
             
             }
@@ -156,13 +158,13 @@ public class ApiCrawlerTest {
         private String url;
         private List<Role> allowedRoles;
         private List<String> httpVerbs;
-        private List<String> queryParams;
+        private List<ApiParam> queryParams;
         
         public RestApiCall() {
             allowedRoles = new LinkedList<Role>();
             allowedRoles.add(Role.SUPER_ADMIN); // assumed to always have access
             httpVerbs = new LinkedList<String>();
-            queryParams = new LinkedList<String>();
+            queryParams = new LinkedList<ApiParam>();
         }
         
         public void setUrl(String url) {
@@ -177,8 +179,8 @@ public class ApiCrawlerTest {
             allowedRoles.add(role);
         }
         
-        public void addQueryParam(String param) {
-            queryParams.add(param);
+        public void addQueryParam(String name, String type) {
+            queryParams.add(new ApiParam(name, type));
         }
         
         public void print() {
@@ -188,7 +190,10 @@ public class ApiCrawlerTest {
                 System.out.print(" " + allowed);
             }
             System.out.print("\n");
-            System.out.println("   Query params: " + queryParams);
+            System.out.println("  Query params:");
+            for (ApiParam param : queryParams) {
+                System.out.println("    " + param.getName() + " - " + param.getType());
+            }
         }
         
         private String getFormattedHttpVerbs() {
@@ -197,6 +202,24 @@ public class ApiCrawlerTest {
                 verbs = verbs + " " + verb;
             }
             return verbs;
+        }
+        
+        class ApiParam {
+            private String name;
+            private String type;
+            
+            public ApiParam(String name, String type) {
+                this.name = name;
+                this.type = type;
+            }
+            
+            public String getName() {
+                return name;
+            }
+            
+            public String getType() {
+                return type;
+            }
         }
     }
 }
