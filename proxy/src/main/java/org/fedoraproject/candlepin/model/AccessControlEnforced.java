@@ -18,6 +18,6 @@ package org.fedoraproject.candlepin.model;
  * AccessControlEnforced
  */
 public interface AccessControlEnforced {
-    boolean shouldGrantAcessTo(Owner owner);
-    boolean shouldGrantAcessTo(Consumer consumer);
+    boolean shouldGrantAccessTo(Owner owner);
+    boolean shouldGrantAccessTo(Consumer consumer);
 }

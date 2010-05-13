@@ -372,12 +372,12 @@ public class Pool implements Persisted, AccessControlEnforced {
     }
     
     @Override
-    public boolean shouldGrantAcessTo(Owner owner) {
+    public boolean shouldGrantAccessTo(Owner owner) {
         return AccessControlValidator.shouldGrantAccess(this, owner);
     }
     
     @Override
-    public boolean shouldGrantAcessTo(Consumer consumer) {
+    public boolean shouldGrantAccessTo(Consumer consumer) {
         return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
 }
