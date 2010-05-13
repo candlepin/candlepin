@@ -91,4 +91,27 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
         List<Consumer> all = consumerCurator.listAll();
         assertEquals(2, all.size());
     }
+    
+    @Test
+    public void consumerCanFindItself() {
+        Owner owner = createOwner();
+        Consumer first = createConsumer(owner);
+
+        setupPrincipal(new ConsumerPrincipal(first));
+        crudInterceptor.enable();
+        
+        assertEquals(first.getUuid(), consumerCurator.find(first.getId()).getUuid());
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void consumerCannotFindOtherConsumer() {
+        Owner owner = createOwner();
+        Consumer first = createConsumer(owner);
+        Consumer second = createConsumer(owner);
+
+        setupPrincipal(new ConsumerPrincipal(second));
+        crudInterceptor.enable();
+        
+        consumerCurator.find(first.getId());
+    }
 }
