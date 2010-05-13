@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
 import com.wideplay.warp.persist.Transactional;
@@ -57,53 +59,40 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return toReturn;
     }
 
-    @SuppressWarnings("unchecked")
-    public List<Entitlement> listByConsumer(Consumer consumer) {
-        List<Entitlement> results = currentSession()
-            .createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer)).list();
-        if (results == null) {
-            return new LinkedList<Entitlement>();
-        }
-        else {
-            return results;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public List<Entitlement> listByOwner(Owner owner) {
-        List<Entitlement> results = currentSession()
-            .createCriteria(Entitlement.class)
-            .add(Restrictions.eq("owner", owner)).list();
-        if (results == null) {
-            return new LinkedList<Entitlement>();
-        }
-        else {
-            return results;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     @Transactional
-    public List<Entitlement> listByConsumerAndProduct(Consumer consumer, 
-        String productId) {
-        List<Entitlement> results = currentSession()
-            .createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer)).list();
-        if (results == null) {
-            return new LinkedList<Entitlement>();
-        }
-        else {
-            // TODO: Possible to do this via hibernate query? No luck on first attempt
-            // with criteria query.
-            List<Entitlement> filtered = new LinkedList<Entitlement>();
-            for (Entitlement e : results) {
-                if (e.getProductId().equals(productId)) {
-                    filtered.add(e);
-                }
+    @EnforceAccessControl
+    public List<Entitlement> listByConsumer(Consumer consumer) {
+        DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer));
+        return listByCriteria(query);
+    }
+
+    @Transactional
+    @EnforceAccessControl
+    public List<Entitlement> listByOwner(Owner owner) {
+        DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
+            .add(Restrictions.eq("owner", owner));
+        
+        return listByCriteria(query);
+    }
+
+    @Transactional
+    @EnforceAccessControl
+    public List<Entitlement> listByConsumerAndProduct(Consumer consumer, String productId) {
+        DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer));
+        
+        List<Entitlement> results = listByCriteria(query);
+        
+        // TODO: Possible to do this via hibernate query? No luck on first attempt
+        // with criteria query.
+        List<Entitlement> filtered = new LinkedList<Entitlement>();
+        for (Entitlement e : results) {
+            if (e.getProductId().equals(productId)) {
+                filtered.add(e);
             }
-            return filtered;
         }
+        return filtered;
     }
     
     @Transactional

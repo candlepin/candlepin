@@ -379,4 +379,64 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         consumerResource.list();
     }
+    
+    @Test
+    public void consumerShouldSeeOwnEntitlements() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        
+        setupPrincipal(new ConsumerPrincipal(consumer));
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+        
+        assertEquals(3, 
+            consumerResource.listEntitlements(consumer.getUuid(), null).size());
+    }
+    
+    @Test
+    public void consumerShouldNotSeeAnotherConsumersEntitlements() {
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumerCurator.create(evilConsumer);
+        
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(evilConsumer.getUuid(), pool.getId(), null, null);
+        
+        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+        
+        assertEquals(0, 
+            consumerResource.listEntitlements(consumer.getUuid(), null).size());
+    }
+    
+    @Test
+    public void ownerShouldNotSeeOtherOwnerEntitlements() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        
+        Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
+        ownerCurator.create(evilOwner);
+        
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
+        
+        assertEquals(0, consumerResource.listEntitlements(consumer.getUuid(), null).size());
+    }
+    
+    @Test
+    public void ownerShouldSeeOwnEntitlements() {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null);
+        
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        
+        assertEquals(3, consumerResource.listEntitlements(consumer.getUuid(), null).size());
+    }
 }

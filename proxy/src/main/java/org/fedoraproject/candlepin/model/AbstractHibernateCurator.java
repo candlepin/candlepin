@@ -21,6 +21,7 @@ import javax.persistence.EntityManager;
 
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.Session;
+import org.hibernate.criterion.DetachedCriteria;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -77,6 +78,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @EnforceAccessControl
     public List<E> listAll() {
         return currentSession().createCriteria(entityType).list();
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<E> listByCriteria(DetachedCriteria query) {
+        return query.getExecutableCriteria(currentSession()).list();
     }
     
     /**

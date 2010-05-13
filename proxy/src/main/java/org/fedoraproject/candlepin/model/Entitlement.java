@@ -34,7 +34,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.ParamDef;
 
 
 
@@ -57,10 +62,30 @@ import org.hibernate.annotations.ForeignKey;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
+@FilterDefs({
+    @FilterDef(
+        name = "Entitlement_OWNER_FILTER", 
+        parameters = @ParamDef(name = "owner_id", type = "long")
+    ),
+    @FilterDef(
+        name = "Entitlement_CONSUMER_FILTER", 
+        parameters = @ParamDef(name = "consumer_id", type = "long")
+    )
+})
+@Filters({
+    @Filter(name = "Entitlement_OWNER_FILTER", 
+        condition = "owner_id = :owner_id"
+    ),
+    @Filter(name = "Entitlement_CONSUMER_FILTER", 
+        condition = "id in (select e.id from cp_entitlement e " +
+            "inner join cp_consumer_entitlements con_en on e.id = con_en.entitlement_id " + 
+            "and con_en.consumer_id = :consumer_id)"
+    )
+})
 @Table(name = "cp_entitlement")
 @SequenceGenerator(name = "seq_entitlement", sequenceName = "seq_entitlement",
         allocationSize = 1)
-public class Entitlement implements Persisted {
+public class Entitlement implements Persisted, AccessControlEnforced {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_entitlement")
@@ -230,5 +255,17 @@ public class Entitlement implements Persisted {
     public String toString() {
         return "Entitlement[id=" + getId() + ", product=" + getProductId() + 
             ", consumer= " + consumer.getUuid() + "]";
+    }
+
+    @Override
+    public boolean shouldGrantAcessTo(Owner owner) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean shouldGrantAcessTo(Consumer consumer) {
+        // TODO Auto-generated method stub
+        return false;
     }
 }
