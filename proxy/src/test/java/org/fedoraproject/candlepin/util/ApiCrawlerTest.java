@@ -19,7 +19,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -160,11 +159,11 @@ public class ApiCrawlerTest {
     private static String getReturnType(Method method) {
         Type returnType = method.getGenericReturnType();
         String typeString = method.getReturnType().getSimpleName().toLowerCase();
-        if(returnType instanceof ParameterizedType){
+        if (returnType instanceof ParameterizedType) {
             ParameterizedType type = (ParameterizedType) returnType;
             Type[] typeArguments = type.getActualTypeArguments();
             typeString += " of";
-            for(Type typeArgument : typeArguments){
+            for (Type typeArgument : typeArguments) {
                 Class typeArgClass = (Class) typeArgument;
                 typeString += " " + typeArgClass.getSimpleName().toLowerCase();
             }
