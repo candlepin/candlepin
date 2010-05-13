@@ -49,14 +49,14 @@ public class AccessControlInterceptor implements MethodInterceptor {
         }
         else if (invokedMethodName.equals("find")) {
             Object toReturn = invocation.proceed();
-            if (isAccessControlled(toReturn.getClass())) {
+            if ((toReturn != null) && isAccessControlled(toReturn.getClass())) {
                 crudAccessControl(toReturn);
             }
             return toReturn;
         }
         else {
             Object entity = invocation.getArguments()[0];
-            if (!isAccessControlled(entity.getClass())) {
+            if ((entity == null) || !isAccessControlled(entity.getClass())) {
                 return invocation.proceed();
             }
             crudAccessControl(entity);
