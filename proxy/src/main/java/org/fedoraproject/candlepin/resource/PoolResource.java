@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource;
 
 import java.util.List;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -74,7 +75,12 @@ public class PoolResource {
      * @param ownerId
      *            optional parameter to limit the search by owner
      * @param productId
-     *            optional parameter to limit the search by product      
+     *            optional parameter to limit the search by product
+     * @param consumerUuid
+     *            optional parameter to limit the search by consumer,
+     *            and only for applicable pools      
+     * @param listAll
+     *            use with consumerUuid to list all pools for the consumer's owner 
      * @return the list of available entitlement pools.
      */
     @GET
@@ -83,7 +89,8 @@ public class PoolResource {
     @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
     public List<Pool> list(@QueryParam("owner") Long ownerId,
         @QueryParam("consumer") String consumerUuid,
-        @QueryParam("product") String productId) {
+        @QueryParam("product") String productId,
+        @QueryParam("listall") @DefaultValue("false") boolean listAll) {
         
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
@@ -107,13 +114,17 @@ public class PoolResource {
                 }
             }
             Consumer c = null;
+            Owner o = null;
             if (consumerUuid != null) {
                 c = consumerCurator.lookupByUuid(consumerUuid);
                 if (c == null) {
                     throw new NotFoundException(i18n.tr("consumer: {0}", consumerUuid));
-                }                
+                }
+                if (listAll) {
+                    o = c.getOwner();
+                    c = null;
+                }
             }        
-            Owner o = null;
             if (ownerId != null) {
                 o = ownerCurator.find(ownerId);
                 if (o == null) {

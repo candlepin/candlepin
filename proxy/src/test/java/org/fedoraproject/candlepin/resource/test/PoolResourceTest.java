@@ -101,43 +101,43 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testListAll() {
-        List<Pool> pools = poolResource.list(null, null, null);
+        List<Pool> pools = poolResource.list(null, null, null, false);
         assertEquals(3, pools.size());
     }
    
     @Test
     public void testListForOrg() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null);
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false);
         assertEquals(2, pools.size());
         setupPrincipal(owner2, Role.OWNER_ADMIN);
-        pools = poolResource.list(owner2.getId(), null, null);
+        pools = poolResource.list(owner2.getId(), null, null, false);
         assertEquals(1, pools.size());
     }
 
     @Ignore
     @Test
     public void testListForProduct() {
-        List<Pool> pools = poolResource.list(null, null, product1.getId());
+        List<Pool> pools = poolResource.list(null, null, product1.getId(), false);
         assertEquals(2, pools.size());
-        pools = poolResource.list(null, null, product2.getId());
+        pools = poolResource.list(null, null, product2.getId(), false);
         assertEquals(1, pools.size());
     }
 
     @Test
     public void testListForOrgAndProduct() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, product1.getId());
+        List<Pool> pools = poolResource.list(owner1.getId(), null, product1.getId(), false);
         assertEquals(1, pools.size());
-        pools = poolResource.list(owner2.getId(), null, product2.getId());
+        pools = poolResource.list(owner2.getId(), null, product2.getId(), false);
         assertEquals(0, pools.size());
     }
 
     @Test
     public void testListConsumerAndProductFiltering() {
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), 
-            product1.getId());
+            product1.getId(), false);
         assertEquals(1, pools.size());
         pools = poolResource.list(null, failConsumer.getUuid(), 
-            product1.getId());
+            product1.getId(), false);
         assertEquals(0, pools.size());
     }
     
@@ -146,33 +146,33 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testListBlocksConsumerOwnerFiltering() {
         poolResource.list(owner1.getId(), passConsumer.getUuid(), 
-            product1.getId());
+            product1.getId(), false);
     }
     
     @Test
     public void testListConsumerFiltering() {
         setupPrincipal(new ConsumerPrincipal(passConsumer));
-        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null);
+        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null, false);
         assertEquals(2, pools.size());
 
         setupPrincipal(new ConsumerPrincipal(failConsumer));
-        pools = poolResource.list(null, failConsumer.getUuid(), null);
+        pools = poolResource.list(null, failConsumer.getUuid(), null, false);
         assertEquals(1, pools.size());
     }
     
     @Test(expected = NotFoundException.class)
     public void testListNoSuchOwner() {
-        poolResource.list(new Long(-1), null, null);
+        poolResource.list(new Long(-1), null, null, false);
     }
     
     @Test(expected = NotFoundException.class)
     public void testListNoSuchConsumer() {
-        poolResource.list(null, "blah", null);
+        poolResource.list(null, "blah", null, false);
     }
     
     @Test(expected = NotFoundException.class)
     public void testListNoSuchProduct() {
-        poolResource.list(owner1.getId(), null, "boogity");
+        poolResource.list(owner1.getId(), null, "boogity", false);
     }
     
     @Test(expected = ForbiddenException.class)
@@ -188,14 +188,14 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test
     public void ownerAdminCannotListAnotherOwnersPools() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null);
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false);
         assertEquals(2, pools.size());
         
         setupPrincipal(owner2, Role.OWNER_ADMIN);
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        pools = poolResource.list(owner1.getId(), null, null);
+        pools = poolResource.list(owner1.getId(), null, null, false);
         assertEquals(0, pools.size());
     }
 
@@ -206,7 +206,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null);
+        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null, false);
         assertEquals(0, pools.size());
     }
 
@@ -216,7 +216,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null);
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false);
         assertEquals(0, pools.size());
     }
 

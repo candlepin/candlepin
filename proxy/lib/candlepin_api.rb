@@ -131,6 +131,7 @@ class Candlepin
       path << "consumer=#{params[:consumer]}&" if params[:consumer]
       path << "owner=#{params[:owner]}&" if params[:owner]
       path << "product=#{params[:product]}&" if params[:product]
+      path << "listall=#{params[:listall]}&" if params[:listall]
       return get(path)
     end
     

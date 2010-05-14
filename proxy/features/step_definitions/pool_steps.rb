@@ -15,7 +15,8 @@ Then /^the first pool's product names have "([^\"]*)"$/ do |product_name|
 end
 
 When /^I view all pools for my owner$/ do
-  @found_pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid)
+  @found_pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid,
+                                        :listall => true)
 end
 
 Then /^I see (\d*) pools$/ do |num_pools|
