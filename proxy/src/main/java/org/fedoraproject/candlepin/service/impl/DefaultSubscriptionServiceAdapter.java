@@ -76,7 +76,7 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public List<Subscription> getSubscriptionForToken(String token) {
+    public List<Subscription> getSubscriptionForToken(Owner owner, String token) {
         return subCurator.listBySubscriptionTokenID(token);
     }
 
