@@ -68,7 +68,6 @@ public class Subscription implements Persisted {
     private String contractNumber;
     
     @CollectionOfElements
-    @ForeignKey(name = "fk_subscription_token")
     @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
     private Set<Attribute> attributes;
     
