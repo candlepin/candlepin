@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.List;
+
+import org.hibernate.criterion.Restrictions;
+
 /**
  * SubscriptionTokenCurator
  */
@@ -21,6 +25,14 @@ public class SubscriptionTokenCurator extends AbstractHibernateCurator<Subscript
 
     protected SubscriptionTokenCurator() {
         super(SubscriptionToken.class);
+    }
+
+    public List<SubscriptionToken> listByOwner(Owner o) {
+        List<SubscriptionToken> tokens = currentSession().createCriteria(
+            SubscriptionToken.class)
+            .createAlias("subscription", "sub")
+            .add(Restrictions.eq("sub.owner", o)).list();
+        return tokens;
     }
 
 }

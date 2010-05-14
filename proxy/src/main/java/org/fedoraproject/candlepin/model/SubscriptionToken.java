@@ -45,6 +45,8 @@ public class SubscriptionToken implements Persisted {
     @Column(nullable = true, unique = true)
     private String token;
     
+    // TODO: Should this be bi-directional with a cascade? Subs/tokens could be outside
+    // our database, but it's unlikely one would be in the db and the other not.
     @ManyToOne
     @ForeignKey(name = "fk_subscription_token")
     @JoinColumn
