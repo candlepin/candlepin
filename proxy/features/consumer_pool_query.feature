@@ -6,9 +6,9 @@ Feature: Query pools
         Given an owner admin "testowner"
         And product "some_product" exists
         And product "another_product" exists
-        And owner "testowner" has 2 entitlements for "some_product"
-        And owner "testowner" has 3 entitlements for "another_product"
-        And owner "testowner" has 6 entitlements for "some_product"
+        And test owner has 2 entitlements for "some_product"
+        And test owner has 3 entitlements for "another_product"
+        And test owner has 6 entitlements for "some_product"
 
     Scenario: View all pools
         Given I am a consumer "random_box"

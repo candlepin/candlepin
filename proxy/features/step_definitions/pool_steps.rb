@@ -29,6 +29,7 @@ Then /^I see (\d*) available entitlements$/ do |num_entitlements|
       available += pool['pool']['quantity'] - pool['pool']['consumed']
   end
   available.should == num_entitlements.to_i
+end
 
 Given /^test owner has no pools for "([^\"]*)"$/ do |productid|
   pools = @candlepin.get_pools({:owner => @test_owner['id'], :product => productid})
