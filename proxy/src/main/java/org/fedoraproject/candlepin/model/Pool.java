@@ -366,7 +366,8 @@ public class Pool implements Persisted, AccessControlEnforced {
     }
 
     public String toString() {
-        return "EntitlementPool [id = " + getId() + ", product = " + getProductId() +
+        return "EntitlementPool [id = " + getId() + ", owner = " + owner.getId() +
+            ", product = " + getProductId() +
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }

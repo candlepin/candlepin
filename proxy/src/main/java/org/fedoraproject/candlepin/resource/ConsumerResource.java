@@ -74,7 +74,7 @@ public class ConsumerResource {
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
-    private PoolCurator epCurator;
+    private PoolCurator poolCurator;
     private Entitler entitler;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
@@ -97,7 +97,7 @@ public class ConsumerResource {
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
         this.entitler = entitler;
-        this.epCurator = epCurator;
+        this.poolCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
@@ -382,16 +382,27 @@ public class ConsumerResource {
      */
     private List<Entitlement> bindByToken(String registrationToken, Consumer consumer) {
         
-        List<Subscription> s = subAdapter.getSubscriptionForToken(registrationToken);
-        if ((s == null) || (s.isEmpty())) {
+        List<Subscription> subs = subAdapter.getSubscriptionForToken(registrationToken);
+        if ((subs == null) || (subs.isEmpty())) {
             log.debug("token: " + registrationToken);
             throw new BadRequestException(
                 i18n.tr("No such token: {0}", registrationToken));
         }
 
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        for (Subscription subscription : s) {
-            Product p = productAdapter.getProductById(subscription.getProductId());
+        for (Subscription sub : subs) {
+
+            // Make sure we have created/updated a pool for this subscription:
+            Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
+            if (pool == null) {
+                poolCurator.createPoolForSubscription(sub);
+            }
+            else {
+                poolCurator.updatePoolForSubscription(pool, sub);
+            }
+
+
+            Product p = productAdapter.getProductById(sub.getProductId());
             entitlementList.add(createEntitlement(consumer, p));
             
         }
@@ -399,7 +410,7 @@ public class ConsumerResource {
     }
 
     private List<Entitlement> bindByPool(Long poolId, Consumer consumer) {
-        Pool pool = epCurator.find(poolId);
+        Pool pool = poolCurator.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
             throw new BadRequestException(

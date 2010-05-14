@@ -37,5 +37,5 @@ end
 
 Then /^test owner has (\d+) pool for "([^\"]*)"$/ do |count, productid|
   pools = @candlepin.get_pools({:owner => @test_owner['id'], :product => productid})
-  pools.length.should == count
+  pools.length.should == count.to_i
 end

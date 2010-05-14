@@ -38,6 +38,8 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -449,4 +451,23 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         assertEquals(3, consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }
+
+    @Test
+    public void bindByTokenNewSubscription() {
+        Subscription sub = TestUtil.createSubscription(owner);
+        Product prod = new Product(sub.getProductId(), sub.getProductId());
+        productCurator.create(prod);
+
+        SubscriptionToken token = TestUtil.createSubscriptionToken();
+        token.setSubscription(sub);
+        subCurator.create(sub);
+        subTokenCurator.create(token);
+        assertEquals(0, poolCurator.listByOwnerAndProduct(owner,
+            prod).size());
+
+        consumerResource.bind(consumer.getUuid(), null, token.getToken(), null);
+        assertEquals(1, poolCurator.listByOwnerAndProduct(owner,
+            prod).size());
+    }
+
 }
