@@ -137,7 +137,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted  = consumerResource.create(toSubmit, 
-            new UserPrincipal("someuser", owner, Collections.singletonList(Role.OWNER_ADMIN)));
+            new UserPrincipal("someuser", owner,
+                Collections.singletonList(Role.OWNER_ADMIN)));
         
         assertNotNull(submitted);
         assertNotNull(submitted);
@@ -155,7 +156,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);        
 
         Consumer submitted  = consumerResource.create(toSubmit, 
-            new UserPrincipal("someuser", owner, Collections.singletonList(Role.OWNER_ADMIN)));
+            new UserPrincipal("someuser", owner,
+                Collections.singletonList(Role.OWNER_ADMIN)));
         assertNull(toSubmit.getId());
         assertNotNull(submitted);
         assertNotNull(submitted);
@@ -261,7 +263,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted  = consumerResource.create(toSubmit, 
-            new UserPrincipal("someuser", owner, Collections.singletonList(Role.OWNER_ADMIN)));
+            new UserPrincipal("someuser", owner,
+                Collections.singletonList(Role.OWNER_ADMIN)));
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
@@ -274,7 +277,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNull(type.getId());
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, null, type);
         submitted = consumerResource.create(nulltypeid, 
-            new UserPrincipal("someuser", owner, Collections.singletonList(Role.OWNER_ADMIN)));
+            new UserPrincipal("someuser", owner,
+                Collections.singletonList(Role.OWNER_ADMIN)));
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
         assertNotNull(submitted.getType().getId());
@@ -289,7 +293,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         consumerResource.unbindBySerial(consumer.getUuid(),
             serials.get(0).getSerial().longValue());
-        assertEquals(0, consumerResource.listEntitlements(consumer.getUuid(), null).size());
+        assertEquals(0,
+            consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }
     
     @Test(expected = NotFoundException.class)
