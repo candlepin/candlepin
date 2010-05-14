@@ -176,10 +176,6 @@ class Candlepin
         delete("/consumers/#{@uuid}/entitlements")
     end
 
-    def consume_product(product)
-        post("/consumers/#{@uuid}/entitlements?product=#{product}")
-    end
-    
     def list_products
       get("/products")
     end
@@ -202,8 +198,17 @@ class Candlepin
       return post("/products", product)
     end
     
+    # TODO: Should we change these to bind to better match terminology?
     def consume_pool(pool)
         post("/consumers/#{@uuid}/entitlements?pool=#{pool}")
+    end
+
+    def consume_product(product)
+        post("/consumers/#{@uuid}/entitlements?product=#{product}")
+    end
+
+    def consume_token(token)
+        post("/consumers/#{@uuid}/entitlements?token=#{token}")
     end
 
     def list_entitlements(product_id = nil)

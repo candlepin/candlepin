@@ -92,3 +92,6 @@ Then /^I recieve an http forbidden response$/ do
     @consume_exception.http_code.should == 403
 end
 
+When /^consumer "([^\"]*)" binds by token "([^\"]*)"$/ do |consumer_name, token|
+    @consumers[consumer_name].consume_token(token)
+end

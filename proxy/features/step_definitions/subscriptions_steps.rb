@@ -12,6 +12,18 @@ Given /^test owner has (\d+) entitlements for "([^\"]*)"$/ do |quantity, product
   @candlepin.refresh_pools(@test_owner['key'])
 end
 
+Given /^test owner has a subscription for "([^\"]*)" with quantity (\d+) and token "([^\"]*)"$/ do |product, quantity, token|
+    result = create_subscription(product, quantity)
+    sub = result['subscription']
+
+    token_hash = {
+        'subscriptionToken' => {'token' => token,
+                                'subscription' => sub}}
+    @candlepin.create_subscription_token(token_hash)
+
+  # NOTE: do not refresh pools here, we just want a subscription created.
+end
+
 When /^I delete the subscription for product "([^\"]*)"$/ do |product|
   subscription_id = @subscriptions[product]['subscription']['id']
   
