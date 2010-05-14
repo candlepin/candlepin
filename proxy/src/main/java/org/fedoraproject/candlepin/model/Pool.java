@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.hibernate.annotations.CollectionOfElements;
@@ -224,6 +225,8 @@ public class Pool implements Persisted, AccessControlEnforced {
     /**
      * @return owner of the pool.
      */
+    @XmlTransient
+    @JsonIgnore
     public Owner getOwner() {
         return owner;
     }
@@ -232,6 +235,7 @@ public class Pool implements Persisted, AccessControlEnforced {
      * @param owner changes the owner of the pool.
      */
     @XmlTransient
+    @JsonIgnore
     public void setOwner(Owner owner) {
         this.owner = owner;
     }

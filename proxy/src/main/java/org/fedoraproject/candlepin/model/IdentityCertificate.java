@@ -31,6 +31,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 /**
  * Represents certificate used to identify a consumer
  */
@@ -66,6 +69,7 @@ public class IdentityCertificate implements Persisted {
     }
 
     @XmlElement(name = "key")
+    @JsonProperty("key")
     public String getKeyAsString() {
         if (key != null) {
             return new String(key);
@@ -79,6 +83,7 @@ public class IdentityCertificate implements Persisted {
     }
 
     @XmlTransient
+    @JsonIgnore
     public byte[] getKey() {
         return key;
     }
@@ -88,6 +93,7 @@ public class IdentityCertificate implements Persisted {
     }
 
     @XmlElement(name = "cert")
+    @JsonProperty("cert")
     public String getCertAsString() {
         if (cert != null) {
             return new String(cert);
@@ -97,6 +103,7 @@ public class IdentityCertificate implements Persisted {
     }
 
     @XmlTransient
+    @JsonIgnore
     public byte[] getCert() {
         return cert;
     }
@@ -111,6 +118,7 @@ public class IdentityCertificate implements Persisted {
     }
 
     @XmlTransient
+    @JsonIgnore
     public Long getId() {
         return id;
     }
@@ -126,6 +134,7 @@ public class IdentityCertificate implements Persisted {
     }
 
     @XmlTransient
+    @JsonIgnore
     public Consumer getConsumer() {
         return consumer;
     }

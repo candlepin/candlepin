@@ -31,6 +31,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
 
 /**
  * Represents the owner of entitlements.
@@ -146,6 +148,7 @@ public class Owner implements Persisted, Serializable {
      * @return the entitlementPools
      */
     @XmlElement(name = "pool")
+    @JsonProperty("pool")
     public Set<Pool> getEntitlementPools() {
         return entitlementPools;
     }

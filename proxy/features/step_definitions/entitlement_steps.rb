@@ -26,7 +26,7 @@ end
 
 Then /^I Have an Entitlement for the "([^\"]*)" Product$/ do |product_id|
     product_ids = @consumer_cp.list_entitlements.collect do |entitlement|
-        entitlement['entitlement']['pool']['productId']
+        entitlement['pool']['productId']
     end
 
     product_ids.should include(product_id)
@@ -37,11 +37,11 @@ end
 When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
   all_pools = @consumer_cp.get_pools({:consumer => @consumer_cp.consumer['uuid']})
  
-  product_pools = all_pools.select {|p| p['pool'].has_value?(pool)}
+  product_pools = all_pools.select {|p| p.has_value?(pool)}
   product_pools.empty?.should == false
 
   # needed for trying to consume the same pool twice
-  @pool_id = product_pools[0]['pool']['id']
+  @pool_id = product_pools[0]['id']
   results = @consumer_cp.consume_pool(@pool_id)
 end
 
@@ -54,7 +54,7 @@ Then /^I Get an Exception If I Filter by Product ID "(\w+)"$/ do |product_id|
     @consumer_cp.list_entitlements(product_id)
   rescue RestClient::Exception => e
     response = JSON.parse(e.http_body)
-    response['exceptionMessage']['displayMessage'].should == "No such product: non_existent"
+    response['displayMessage'].should == "No such product: non_existent"
     e.message.should == "Bad Request"
     e.http_code.should == 400
   end
@@ -65,7 +65,7 @@ Then /^The entitlement named "([^\"]*)" should not exist$/ do |name|
 
   # TODO:  There is probably an official rspec way to do this
   begin
-    @candlepin.get_entitlement(entitlement[0]['entitlement']['id'])
+    @candlepin.get_entitlement(entitlement[0]['id'])
   rescue RestClient::Exception => e
     e.http_code.should == 404
   end

@@ -54,16 +54,9 @@ class Candlepin
             use_credentials(username, password)
         end
 
-        @consumer = post('/consumers', consumer)['consumer']
+        @consumer = post('/consumers', consumer)
 
         return @consumer
-
-#        identity_cert = @consumer['idCert']['cert']
-#        identity_key = @consumer['idCert']['key']
-#        @identity_certificate = OpenSSL::X509::Certificate.new(identity_cert)
-#        @identity_key = OpenSSL::PKey::RSA.new(identity_key)
-
-#        create_ssl_client
     end
 
     def get_owners
@@ -76,10 +69,8 @@ class Candlepin
 
     def create_owner(owner_name)
         owner = {
-          'owner' => {
             'key' => owner_name,
             'displayName' => owner_name
-          }
         }
 
         post('/owners', owner)
@@ -91,10 +82,8 @@ class Candlepin
 
     def create_user(owner_id, login, password)
       user = {
-        'user' => {
           'login' => login,
           'password' => password
-        }
       }
 
       post("/owners/#{owner_id}/users", user)
@@ -110,9 +99,7 @@ class Candlepin
 
     def create_consumer_type(type_label)
         consumer_type =  {
-          'consumertype' => {
-            'label' => type_label
-          }
+          'label' => type_label
         }
 
         post('/consumertypes', consumer_type)
@@ -137,7 +124,6 @@ class Candlepin
     
     def create_pool(product_id, owner_id, start_date, end_date, quantity = 100)
       pool = {
-        'pool' => {
           'activeSubscription' => false,
           'quantity' => quantity,
           'consumed' => 0,
@@ -147,7 +133,6 @@ class Candlepin
           'owner' => {
             'id' => owner_id
           }          
-        }
       }
       
       post('/pools', pool)
@@ -183,17 +168,15 @@ class Candlepin
     def create_product(label, name, hash, version = 1, variant = 'ALL', 
 		       arch='ALL', type='SVC',childProducts=[], attributes = {})
       product = {
-        'product' => {
-          'name' => name,
-          'label' => name,
-          'hash' => hash,
-          'arch' => arch,
-          'id' => name,
-          'version' => version,
-          'variant' => variant,
-	  'type' => type,
-	  'childProducts' => childProducts
-        }
+        'name' => name,
+        'label' => name,
+        'hash' => hash,
+        'arch' => arch,
+        'id' => name,
+        'version' => version,
+        'variant' => variant,
+        'type' => type,
+        'childProducts' => childProducts
       }
       return post("/products", product)
     end
