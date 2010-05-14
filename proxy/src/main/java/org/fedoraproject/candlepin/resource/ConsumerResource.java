@@ -382,7 +382,8 @@ public class ConsumerResource {
      */
     private List<Entitlement> bindByToken(String registrationToken, Consumer consumer) {
         
-        List<Subscription> subs = subAdapter.getSubscriptionForToken(registrationToken);
+        List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer.getOwner(), 
+            registrationToken);
         if ((subs == null) || (subs.isEmpty())) {
             log.debug("token: " + registrationToken);
             throw new BadRequestException(
@@ -401,10 +402,8 @@ public class ConsumerResource {
                 poolCurator.updatePoolForSubscription(pool, sub);
             }
 
-
             Product p = productAdapter.getProductById(sub.getProductId());
             entitlementList.add(createEntitlement(consumer, p));
-            
         }
         return entitlementList;
     }

@@ -70,7 +70,7 @@ public interface SubscriptionServiceAdapter {
 
     /**
      * Return a subscription for the given token.
-     * @param the owner
+     * @param owner the owner
      * @param token token for subscription.
      * @return a subscription for the given token.
      */
