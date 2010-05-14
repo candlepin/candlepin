@@ -17,3 +17,6 @@ Feature: Manipulate Subscription Tokens
     Scenario: Create a subscription token
         Given there is no subscription token called "test-token"
         Then I can create a subscription token "test-token"
+
+#    Scenario: A pool is created if a new subscription returns when binding by token.
+#        Given

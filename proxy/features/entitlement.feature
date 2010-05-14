@@ -8,8 +8,8 @@ Feature: Consume an Entitlement
         And I am logged in as "test_owner"
         And product "virtualization_host" exists
         And product "monitoring" exists
-        And owner "test_owner" has 2 entitlements for "virtualization_host"
-        And owner "test_owner" has 4 entitlements for "monitoring"
+        And test owner has 2 entitlements for "virtualization_host"
+        And test owner has 4 entitlements for "monitoring"
 
     Scenario: An Exception is thrown When Consumer filters Entitlement by Invalid Product ID
         Given I am a consumer "consumer"

@@ -5,7 +5,7 @@ Before do
   @subscriptions = {}
 end
 
-Given /^owner "([^\"]*)" has (\d+) entitlements for "([^\"]*)"$/ do |owner, quantity, product|
+Given /^test owner has (\d+) entitlements for "([^\"]*)"$/ do |quantity, product|
   create_subscription(product, quantity)
 
   # Just refesh the entitlement pools each time
@@ -23,6 +23,8 @@ Then /^I have (\d+) subscriptions$/ do |subscription_size|
     subscriptions.length.should == subscription_size.to_i
 end
 
+# NOTE: product may not exist in the db, which works for now but could cause problems
+# later if anything expects it to be there.
 def create_subscription(product, quantity)
   subscription = {
     'subscription' => {'startDate' => '2007-07-13T00:00:00-04:00',
@@ -32,7 +34,6 @@ def create_subscription(product, quantity)
     }
   }
 
-  # TODO:  Actually use the owner!
   created = @candlepin.create_subscription(@test_owner['id'], subscription)
 
   @subscriptions[product] = created
