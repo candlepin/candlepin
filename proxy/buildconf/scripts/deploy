@@ -224,4 +224,4 @@ echo "Initializing Candlepin..."
 wget -qO- http://localhost:8080/candlepin/admin/init
 
 #upload_sat_cert
-upload_products
+#upload_products

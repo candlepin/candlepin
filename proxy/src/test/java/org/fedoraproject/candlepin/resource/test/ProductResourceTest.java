@@ -17,10 +17,13 @@ package org.fedoraproject.candlepin.resource.test;
 
 import java.util.HashSet;
 
+import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -47,8 +50,11 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Long  hash = Math.abs(Long.valueOf(label.hashCode()));
         String type = "SVC";
         HashSet<Product> childProducts = null;
+        HashSet<Content> content = null;
         Product prod = new Product(label, name, variant,
-                version, arch, hash, type, childProducts);
+                                   version, arch, hash, 
+                                   type, childProducts,
+                                   content);
         return prod;
         
     }
@@ -58,9 +64,25 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testCreateProductResource() {
         
         Product toSubmit = createProduct();
-        productResource.createProduct(toSubmit);
+        Product newProduct = productResource.createProduct(toSubmit);
         
+    }
+    
+    @Test
+    public void testCreateProductWithContent() {
+        Product toSubmit = createProduct();
+        Long  contentHash = Math.abs(Long.valueOf("test-content".hashCode()));
+        Content testContent = new Content("test-content", contentHash, 
+                            "test-content-label", "yum", "test-vendor",
+                             "test-content-url", "test-gpg-url", "1");
         
+        HashSet<Content> contentSet = new HashSet<Content>();
+        
+        contentSet.add(testContent);
+        toSubmit.setContent(contentSet);
+        
+        Product newProduct = productResource.createProduct(toSubmit);
+            
     }
     
 }

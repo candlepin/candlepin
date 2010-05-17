@@ -38,7 +38,7 @@ public class Content extends AbstractHibernateObject{
     // Product ID is stored as a string. Could be a product OID or label.
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_content")
-    private String id;
+    private Long id;
     
     @Column(nullable = false)
     private String type;
@@ -51,7 +51,7 @@ public class Content extends AbstractHibernateObject{
     @Column(nullable = false)
     private String name;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Long hash;
     
     @Column(nullable = false)
@@ -76,9 +76,13 @@ public class Content extends AbstractHibernateObject{
  //   private Content Content;
     
     
-    public Content(String name, String vendor, String contentUrl,
-        String gpgUrl, String enabled) {
+    public Content(String name, Long hash, String label, String type,
+                    String vendor, String contentUrl,
+                    String gpgUrl, String enabled) {
         setName(name);
+        setHash(hash);
+        setLabel(label);
+        setType(type);
         setVendor(vendor);
         setContentUrl(contentUrl);
         setGpgUrl(gpgUrl);
@@ -92,7 +96,7 @@ public class Content extends AbstractHibernateObject{
      * @see org.fedoraproject.candlepin.model.Persisted#getId()
      */
     @Override
-    public String getId() {
+    public Long getId() {
         // TODO Auto-generated method stub
         return id;
     }
@@ -100,7 +104,7 @@ public class Content extends AbstractHibernateObject{
     /**
      * @param id product id
      */
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
     

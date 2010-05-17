@@ -104,8 +104,10 @@ public class Product extends AbstractHibernateObject {
     @JoinTable(name = "cp_product_content")
     private Set<Content> content;
     
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "cp_product_enabled_content")
+    private Set<Content> enabledContent;
     
- 
    
     /**
      * Constructor
@@ -123,7 +125,8 @@ public class Product extends AbstractHibernateObject {
     
     public Product(String label, String name, String variant,
                    String version, String arch, Long hash,
-                   String type, Set<Product> childProducts) {
+                   String type, Set<Product> childProducts,
+                   Set<Content> content) {
         setId(label);
         setLabel(label);
         setName(name);
@@ -133,6 +136,7 @@ public class Product extends AbstractHibernateObject {
         setHash(hash);
         setType(type);
         setChildProducts(childProducts);
+        setContent(content);
     }
 
     protected Product() {
@@ -360,4 +364,28 @@ public class Product extends AbstractHibernateObject {
         this.content = content;
     }
 
+    /**
+     * @param enabledContent the enabledContent to set
+     */
+    public void setEnabledContent(Set<Content> enabledContent) {
+        this.enabledContent = enabledContent;
+    }
+    
+    public void addEnabledCOntent(Content content) {
+        if (this.enabledContent != null) {
+            this.enabledContent = new HashSet<Content>();
+        }
+        
+        this.enabledContent.add(content);
+        
+    }
+
+    /**
+     * @return the enabledContent
+     */
+    public Set<Content> getEnabledContent() {
+        return enabledContent;
+    }
+
+ 
 }

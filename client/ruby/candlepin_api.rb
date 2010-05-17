@@ -182,6 +182,8 @@ class Candlepin
     
     def create_product(label, name, hash, version = 1, variant = 'ALL', 
 		       arch='ALL', type='SVC',childProducts=[], attributes = {})
+
+      content_name = label + "_content"
       product = {
         'product' => {
           'name' => name,
@@ -191,9 +193,9 @@ class Candlepin
           'id' => name,
           'version' => version,
           'variant' => variant,
-	        'type' => type,
-	        'childProducts' => childProducts,
-	        'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
+	  'type' => type,
+	  'childProducts' => childProducts,
+	  'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
         }
       }
       post("/products", product)
