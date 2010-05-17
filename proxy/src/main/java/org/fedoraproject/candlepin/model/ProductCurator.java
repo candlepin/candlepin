@@ -77,11 +77,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     public Product update(Product updated) {
         Product existingProduct = find(updated.getId());
         if (existingProduct == null) {
-            return create(updated);
+            existingProduct = create(updated);    
         }
         
         if (updated.getChildProducts() != null) {
             existingProduct.setChildProducts(bulkUpdate(updated.getChildProducts()));
+        }
+        
+        if (updated.getContent() != null) {
+            existingProduct.setContent(bulkContentUpdate(updated.getContent()));
+//            existingProduct.setContent(updated.getContent());
         }
         existingProduct.setLabel(updated.getLabel());
         existingProduct.setName(updated.getName());
@@ -91,6 +96,14 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return existingProduct;
     }
     
+    
+    public Set<Content> bulkContentUpdate(Set<Content> content) {
+        Set<Content> toReturn = new HashSet<Content>();
+        for (Content toUpdate : content) {
+            toReturn.add(toUpdate);
+        }
+        return toReturn;
+    }
     /**
      * @param products set of products to update.
      * @return updated products.

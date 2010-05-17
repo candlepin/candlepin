@@ -167,6 +167,8 @@ class Candlepin
     
     def create_product(label, name, hash, version = 1, variant = 'ALL', 
 		       arch='ALL', type='SVC',childProducts=[], attributes = {})
+
+      content_name = label + "_content"
       product = {
         'name' => name,
         'label' => name,

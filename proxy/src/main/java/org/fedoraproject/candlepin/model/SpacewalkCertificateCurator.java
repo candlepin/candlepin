@@ -143,7 +143,9 @@ public class SpacewalkCertificateCurator {
             // okay, the abs is a little lame, but all of this needs to be removed shortly 
             // FIXME
             p = new Product(name, name, "server", "1.0", "ALL", 
-                Math.abs(Long.valueOf(name.hashCode())), "SVC", new HashSet<Product>());
+                Math.abs(Long.valueOf(name.hashCode())), 
+                "SVC", new HashSet<Product>(),
+                new HashSet<Content>());
 
             // Representing the implicit logic in the Satellite certificate:
             if (name.equals(PRODUCT_VIRT_HOST)) {
