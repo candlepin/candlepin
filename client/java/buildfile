@@ -25,7 +25,7 @@ RESTEASY = [group('jaxrs-api',
             'org.codehaus.jettison:jettison:jar:1.1',
             'commons-httpclient:commons-httpclient:jar:3.1',
              'org.slf4j:slf4j-api:jar:1.5.8',
-             'org.slf4j:slf4j-log4j12:jar:1.4.2',
+             'org.slf4j:slf4j-simple:jar:1.5.8',
              'org.freemarker:freemarker:jar:2.3.15' ]
 
 JACKSON = [group('jackson-core-lgpl', 
