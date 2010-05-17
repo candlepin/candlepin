@@ -470,4 +470,27 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             prod).size());
     }
 
+    @Test
+    public void bindByTokenPreExistingSubscription() {
+        Subscription sub = TestUtil.createSubscription(owner);
+        Product prod = new Product(sub.getProductId(), sub.getProductId());
+        productCurator.create(prod);
+
+        SubscriptionToken token = TestUtil.createSubscriptionToken();
+        token.setSubscription(sub);
+        subCurator.create(sub);
+        subTokenCurator.create(token);
+        poolCurator.refreshPools(owner);
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
+            prod);
+        assertEquals(1, pools.size());
+
+        List<Entitlement> ents = consumerResource.bind(
+            consumer.getUuid(), null, token.getToken(), null);
+        assertEquals(1, ents.size());
+        assertEquals(sub.getId(), ents.get(0).getPool().getSubscriptionId());
+        assertEquals(1, poolCurator.listByOwnerAndProduct(owner,
+            prod).size());
+    }
+
 }
