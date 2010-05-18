@@ -16,9 +16,6 @@ package org.fedoraproject.candlepin.guice;
 
 import java.util.Properties;
 
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
@@ -118,8 +115,6 @@ public class CandlepinModule extends AbstractModule {
             Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(EnforceAccessControl.class), 
             accessControlInterceptor);
-        
-        ObjectMapper mapper = new ObjectMapper();
     }
 
 }
