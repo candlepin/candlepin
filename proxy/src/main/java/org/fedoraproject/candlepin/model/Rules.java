@@ -33,7 +33,7 @@ import javax.persistence.Table;
 @Table(name = "cp_rules")
 @SequenceGenerator(name = "seq_rules", sequenceName = "seq_rules", allocationSize = 1)
 @Embeddable
-public class Rules implements Persisted {
+public class Rules extends AbstractHibernateObject{
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_rules")

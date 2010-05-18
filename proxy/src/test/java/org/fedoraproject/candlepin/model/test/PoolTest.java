@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.controller.Entitler;
@@ -198,5 +199,41 @@ public class PoolTest extends DatabaseTestFixture {
             childProduct, false);
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
+    }
+
+    /**
+     * After creating a new pool object, test is made to determine whether
+     * the created and updated values are present and not null.
+     */
+    @Test
+    public void testCreationTimestamp() {
+        Product newProduct = TestUtil.createProduct();
+        productCurator.create(newProduct);
+        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+            TestUtil.createDate(2011, 3, 30),
+            TestUtil.createDate(2022, 11, 29));
+        poolCurator.create(pool);
+        assertNotNull(pool.getCreated());
+        assertNotNull(pool.getUpdated());
+    }
+
+    /**
+     * After updating an existing pool object, test is made to determine whether
+     * the updated value has changed and created date has not changed.
+     */
+    @Test
+    public void testUpdationTimestamp() {
+        Product newProduct = TestUtil.createProduct();
+        productCurator.create(newProduct);
+        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+            TestUtil.createDate(2011, 3, 30),
+            TestUtil.createDate(2022, 11, 29));
+        poolCurator.create(pool);
+        Date created = (Date) pool.getCreated().clone();
+        Date updated = (Date) pool.getUpdated().clone();
+        pool.setQuantity(23L);
+        pool = poolCurator.merge(pool);
+        assertTrue(created.getTime() == pool.getCreated().getTime());
+        assertFalse(updated.getTime() == pool.getUpdated().getTime());
     }
 }

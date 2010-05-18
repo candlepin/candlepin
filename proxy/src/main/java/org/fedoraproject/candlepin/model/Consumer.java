@@ -80,7 +80,7 @@ import org.hibernate.annotations.ParamDef;
 })
 @Table(name = "cp_consumer")
 @SequenceGenerator(name = "seq_consumer", sequenceName = "seq_consumer", allocationSize = 1)
-public class Consumer implements Persisted, AccessControlEnforced {
+public class Consumer extends AbstractHibernateObject implements AccessControlEnforced {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer")

@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -234,5 +235,33 @@ public class ProductTest extends DatabaseTestFixture {
         testing = testing.getChildAttribute("channels");
         assertEquals(3, testing.getChildAttributes().size());
     }
+
+    /**
+     *Test whether the creation date of the product variable is set properly
+     *when persisted for the first time.
+     */
+    @Test
+    public void testCreationDate(){
+        Product prod = new Product("test-label", "test-product-name");
+        productCurator.create(prod);
+        assertNotNull(prod.getCreated());
+        assertNotNull(prod.getUpdated());
+    }
+
+    /**
+     * Test whether the product updation date is updated when merging.
+     */
+    @Test
+    public void testUpdationDate(){
+        Product prod = new Product("test-label", "test-product-name");
+        productCurator.create(prod);
+        long created = prod.getCreated().getTime();
+        long updated = prod.getUpdated().getTime();
+
+        prod.setName("test-changed-name");
+        this.productCurator.merge(prod);
+        assertTrue(prod.getCreated().getTime() == created);
+        assertFalse(prod.getUpdated().getTime() == updated);
+   }
 
 }

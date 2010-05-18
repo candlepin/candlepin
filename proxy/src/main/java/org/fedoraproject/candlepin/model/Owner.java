@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "cp_owner")
 @SequenceGenerator(name = "seq_owner", sequenceName = "seq_owner", allocationSize = 1)
-public class Owner implements Persisted, Serializable {
+public class Owner extends AbstractHibernateObject implements Serializable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_owner")

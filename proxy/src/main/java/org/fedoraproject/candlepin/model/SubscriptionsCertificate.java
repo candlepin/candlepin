@@ -43,7 +43,7 @@ import org.hibernate.annotations.ForeignKey;
 @Table(name = "cp_certificate")
 @SequenceGenerator(name = "seq_certificate", sequenceName = "seq_certificate",
         allocationSize = 1)
-public class SubscriptionsCertificate implements Persisted {
+public class SubscriptionsCertificate extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_certificate")
