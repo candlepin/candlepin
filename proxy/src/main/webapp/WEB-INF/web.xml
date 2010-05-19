@@ -22,6 +22,10 @@
       <listener-class>
         org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener
       </listener-class>
+      <listener-class>
+        org.fedoraproject.candlepin.event.HornetqContextListener
+      </listener-class>
+
     </listener>
 
   <login-config>
