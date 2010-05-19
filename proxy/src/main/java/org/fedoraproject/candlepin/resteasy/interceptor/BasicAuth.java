@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -78,9 +79,22 @@ class BasicAuth {
 
     private Principal createPrincipal(String username) {
         Owner owner = this.userServiceAdapter.getOwner(username);
-        owner = this.ownerCurator.lookupByKey(owner.getKey());
+        owner = lookupOwner(owner);
         List<Role> roles = this.userServiceAdapter.getRoles(username);
-
         return new UserPrincipal(username, owner, roles);
+    }
+    
+    private Owner lookupOwner(Owner owner) {
+        Owner o = this.ownerCurator.lookupByKey(owner.getKey());
+        if (o == null) {
+            if (owner.getKey() == null) {
+                throw new NotFoundException("An owner does not exist for a null org id");
+            }
+            o = this.ownerCurator.create(owner);
+        }
+        else {
+            o = owner;
+        }
+        return owner;
     }
 }
