@@ -92,8 +92,12 @@ public class Config {
         return new DbBasicAuthConfigParser().parseConfig(configuration);
     }
     
-    // to disable SSLAuthFilter add to candlepin.conf:
-    // sslauth.enabled=no
+    /**
+     *  to disable SSLAuthFilter add to candlepin.conf:
+     *  sslauth.enabled=no
+     *  
+     *  @return if ssl authentication should be enabled
+     */
     public boolean sslAuthEnabled() {
         String enabled = (String) new SSLAuthFilterConfigParser()
             .parseConfig(configuration)
@@ -105,7 +109,11 @@ public class Config {
 
         return true;
     }
-    
+
+    public boolean indentJson() {
+        return getBoolean(ConfigProperties.PRETTY_PRINT);
+    }
+
 
     protected synchronized void loadConfiguration() {
         if (configuration == null) {
@@ -170,5 +178,14 @@ public class Config {
         }
 
         return value.split(",");
+    }
+    
+    private boolean getBoolean(String s) {
+        if (s == null) {
+            return false;
+        }
+        String value = getString(s).toLowerCase();
+        
+        return value.equals("true") || value.equals("on") || value.equals("1");
     }
 }

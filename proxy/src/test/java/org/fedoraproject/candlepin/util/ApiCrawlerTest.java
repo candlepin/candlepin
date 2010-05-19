@@ -106,7 +106,8 @@ public class ApiCrawlerTest {
             System.out.println(clazz.getSimpleName().toLowerCase());
             System.out.println(mapper.writeValueAsString(schema));
             System.out.println("\n");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println("Unable to create json schema for " + clazz.toString());
         }
     }

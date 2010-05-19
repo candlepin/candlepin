@@ -29,6 +29,8 @@ public class ConfigProperties {
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
+    
+    public static final String PRETTY_PRINT = "candlepin.pretty_print";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -36,6 +38,8 @@ public class ConfigProperties {
             {
                 this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
+                
+                this.put(PRETTY_PRINT, "false");
             }
         };
 }

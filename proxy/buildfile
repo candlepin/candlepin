@@ -15,7 +15,6 @@ require "buildr/java/emma"
 RESTEASY = [group('jaxrs-api', 
                   'resteasy-jaxrs',
                   'resteasy-jaxb-provider', 
-                  'resteasy-jackson-provider',
                   'resteasy-guice', 
                   :under => 'org.jboss.resteasy',
                   :version => '1.2.1.GA'), 
