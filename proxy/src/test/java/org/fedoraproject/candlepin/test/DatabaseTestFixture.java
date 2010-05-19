@@ -41,6 +41,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
@@ -88,6 +89,7 @@ public class DatabaseTestFixture {
     protected EntitlementCurator entitlementCurator;
     protected AttributeCurator attributeCurator;
     protected RulesCurator rulesCurator;
+    protected EventCurator eventCurator;
     protected SubscriptionCurator subCurator;
     protected SubscriptionTokenCurator subTokenCurator;
     protected WorkManager unitOfWork;
@@ -130,6 +132,7 @@ public class DatabaseTestFixture {
         ownerCurator = injector.getInstance(OwnerCurator.class);
         productCurator = injector.getInstance(ProductCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
+        eventCurator = injector.getInstance(EventCurator.class);
 
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         certificateCurator = injector.getInstance(SubscriptionsCertificateCurator.class);
@@ -257,12 +260,13 @@ public class DatabaseTestFixture {
         return toReturn;
     }
     
-    protected void setupPrincipal(Owner owner, Role role) { 
+    protected Principal setupPrincipal(Owner owner, Role role) {
         List<Role> roles = new LinkedList<Role>();
         roles.add(role);
         Principal ownerAdmin = new UserPrincipal("someuser", owner, roles);
         
         setupPrincipal(ownerAdmin);
+        return ownerAdmin;
     }
 
     protected void setupPrincipal(Principal p) {
