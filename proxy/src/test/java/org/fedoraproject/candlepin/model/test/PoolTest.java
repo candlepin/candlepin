@@ -130,57 +130,8 @@ public class PoolTest extends DatabaseTestFixture {
                 .getEntitlements().size());
     }
 
-    @Test
-    public void concurrentCreationOfEntitlementsShouldWorkIfUnderMaxMemberLimit()
-        throws Exception {
-        Long numAvailEntitlements = new Long(2);
-
-        Product newProduct = TestUtil.createProduct();
-        productCurator.create(newProduct);
-
-        Pool consumerPool = createPoolAndSub(owner, newProduct
-                .getId(), numAvailEntitlements, TestUtil
-                .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool = poolCurator.create(consumerPool);
-
-        Entitler anotherEntitler = injector.getInstance(Entitler.class);
-
-        entitler.entitle(consumer, newProduct);
-        anotherEntitler.entitle(consumer, newProduct);
-
-        assertFalse(poolCurator.find(consumerPool.getId())
-                .entitlementsAvailable());
-    }
-
-    @Test
-    public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit()
-        throws Exception {
-        Long numAvailEntitlements = new Long(1);
-
-        Product newProduct = TestUtil.createProduct();
-        productCurator.create(newProduct);
-
-        Pool consumerPool = createPoolAndSub(owner, newProduct
-                .getId(), numAvailEntitlements, TestUtil
-                .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool = poolCurator.create(consumerPool);
-
-        Entitler anotherEntitler = injector.getInstance(Entitler.class);
-
-        Entitlement e1 = entitler.entitle(consumer, newProduct);
-        assertNotNull(e1);
-        try {
-            @SuppressWarnings("unused")
-            Entitlement e2 = anotherEntitler.entitle(consumer, newProduct);
-            fail();
-        }
-        catch (EntitlementRefusedException e) {
-            // expected
-        }
-    }
-
     // test subscription product changed exception
-    
+
     @Test
     public void testLookupPoolsProvidingProduct() {
         Product parentProduct = TestUtil.createProduct();

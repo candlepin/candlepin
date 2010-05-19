@@ -34,8 +34,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     private Product product;
     private Consumer consumer;
 
-    private static final String CPU_LIMITED_PRODUCT = "CPULIMITED001";
-
     @Before
     public void setUp() {
         owner = createOwner();
@@ -73,21 +71,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(0, results.size());
     }
 
-    @Test
-    public void testLookupRuleFiltering() {
-
-        Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
-        productCurator.create(p);
-
-        Pool pool = createPoolAndSub(owner, p.getId(), new Long(100),
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        poolCurator.create(pool);
-
-        List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer);
-        assertEquals(0, results.size());
-    }
-    
     @Test
     public void testProductName() {
         Product p = new Product("someProduct", "An Extremely Great Product");

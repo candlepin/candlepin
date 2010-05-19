@@ -234,6 +234,18 @@ public class Product extends AbstractHibernateObject {
     public Set<Attribute> getAttributes() {
         return attributes;
     }
+    
+    public Set<String> getAttributeNames() {
+        Set<String> toReturn = new HashSet<String>();
+        if (attributes == null) {
+            return toReturn;
+        }
+        
+        for (Attribute attribute : attributes) {
+            toReturn.add(attribute.getName());
+        }
+        return toReturn;
+    }
 
     /**
      * Replaces all of the product attributes with the given set.

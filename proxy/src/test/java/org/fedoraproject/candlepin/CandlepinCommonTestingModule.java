@@ -19,8 +19,8 @@ import java.io.Reader;
 import javax.script.ScriptEngine;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
@@ -55,6 +55,7 @@ import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapte
 import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
+import org.fedoraproject.candlepin.test.EnforcerForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
@@ -84,7 +85,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(ProductResource.class);
         bind(DateSource.class).to(DateSourceForTesting.class)
             .asEagerSingleton();
-        bind(Enforcer.class).to(JavascriptEnforcer.class);
+        bind(Enforcer.class).to(EnforcerForTesting.class); //.to(JavascriptEnforcer.class);
         bind(PKIUtility.class).to(CandlepinPKIUtility.class);
         bind(PKIReader.class).to(CandlepinPKIReader.class);
         bind(SubscriptionServiceAdapter.class).to(

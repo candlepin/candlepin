@@ -79,7 +79,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolResource = injector.getInstance(PoolResource.class);
         
         // Consumer system with too many cpu cores:
-        failConsumer = TestUtil.createConsumer(owner1);
+        
+        failConsumer = TestUtil.createConsumer(createOwner());
         failConsumer.setMetadataField("cpu_cores", "4");
         consumerTypeCurator.create(failConsumer.getType());
         consumerCurator.create(failConsumer);
@@ -154,10 +155,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(passConsumer));
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null, false);
         assertEquals(2, pools.size());
-
-        setupPrincipal(new ConsumerPrincipal(failConsumer));
-        pools = poolResource.list(null, failConsumer.getUuid(), null, false);
-        assertEquals(1, pools.size());
     }
     
     @Test(expected = NotFoundException.class)

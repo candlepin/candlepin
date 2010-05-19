@@ -1,3 +1,11 @@
+// defines mapping of product attributes to functions
+// the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
+// func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
+function attribute_mappings() {
+	return "CPULIMITED001:1:CPULIMITED001, virtualization_host:1:virtualization_host," +
+			"virtualization_host_platform:1:virtualization_host_platform";
+}
+
 // Checks common for both virt host and virt platform entitlements:
 function virtualization_common() {
 	pre.checkQuantity(pool);

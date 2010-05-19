@@ -2,6 +2,13 @@
  * Default Candlepin rule set.
  */
 
+// defines mapping of product attributes to functions
+// the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
+// func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
+function attribute_mappings() {
+	return "";
+}
+
 // Checks common for both virt host and virt platform entitlements:
 function virtualization_common() {
     pre_global();
@@ -16,6 +23,7 @@ function virtualization_common() {
 //		pre.addError("rulefailed.host.already.has.guests");
 //	}
 }
+
 function pre_virtualization_host() {
 	virtualization_common();
 }

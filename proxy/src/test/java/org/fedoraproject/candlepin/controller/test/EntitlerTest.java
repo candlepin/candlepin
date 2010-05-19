@@ -14,15 +14,12 @@
  */
 package org.fedoraproject.candlepin.controller.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
 import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -31,11 +28,15 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
 import org.fedoraproject.candlepin.model.test.SpacewalkCertificateCuratorTest;
+import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 import com.redhat.rhn.common.cert.CertificateFactory;
 
 public class EntitlerTest extends DatabaseTestFixture {
@@ -67,19 +68,29 @@ public class EntitlerTest extends DatabaseTestFixture {
 
         virtHost = productCurator
                 .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
+        virtHost.addAttribute(
+            new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST, ""));
         assertNotNull(virtHost);
         
         virtHostPlatform = productCurator.lookupByLabel(
                 SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM);
+        virtHostPlatform.addAttribute(
+            new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM, ""));
         
         virtGuest = productCurator.lookupByLabel(
                 SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
+        virtGuest.addAttribute(
+            new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST, ""));
         
         monitoring = productCurator.lookupByLabel(
                 SpacewalkCertificateCurator.PRODUCT_MONITORING);
+        monitoring.addAttribute(
+            new Attribute(SpacewalkCertificateCurator.PRODUCT_MONITORING, ""));
         
         provisioning = productCurator.lookupByLabel(
                 SpacewalkCertificateCurator.PRODUCT_PROVISIONING);
+        provisioning.addAttribute(
+            new Attribute(SpacewalkCertificateCurator.PRODUCT_PROVISIONING, ""));
         
         entitler = injector.getInstance(Entitler.class);
 
@@ -229,5 +240,16 @@ public class EntitlerTest extends DatabaseTestFixture {
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
         assertTrue(entitlements.isEmpty());
+    }
+    
+    @Override
+    protected Module getGuiceOverrideModule() {
+        return new AbstractModule() {
+            
+            @Override
+            protected void configure() {
+                bind(Enforcer.class).to(JavascriptEnforcer.class);
+            }
+        };
     }
 }
