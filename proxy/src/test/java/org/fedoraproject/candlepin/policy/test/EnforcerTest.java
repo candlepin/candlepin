@@ -271,14 +271,14 @@ public class EnforcerTest extends DatabaseTestFixture {
         
         Product product = new Product("a-product", "A product for testing");
         product.addAttribute(new Attribute(LONGEST_EXPIRY_PRODUCT, ""));
-        when(this.productAdapter.getProductById(LONGEST_EXPIRY_PRODUCT))
+        when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
         
         List<Pool> availablePools 
             = Arrays.asList(new Pool[] {pool1, pool2, desired, pool3});
 
         Pool result 
-            = enforcer.selectBestPool(consumer, LONGEST_EXPIRY_PRODUCT, availablePools);
+            = enforcer.selectBestPool(consumer, "a-product", availablePools);
         assertEquals(desired.getId(), result.getId());
     }
 
@@ -296,14 +296,35 @@ public class EnforcerTest extends DatabaseTestFixture {
         
         Product product = new Product("a-product", "A product for testing");
         product.addAttribute(new Attribute(HIGHEST_QUANTITY_PRODUCT, ""));
-        when(this.productAdapter.getProductById(HIGHEST_QUANTITY_PRODUCT))
+        when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
         
         List<Pool> availablePools 
             = Arrays.asList(new Pool[] {pool1, pool2, desired});
 
         Pool result = enforcer.selectBestPool(consumer,
-            HIGHEST_QUANTITY_PRODUCT, availablePools);
+            "a-product", availablePools);
+        assertEquals(desired.getId(), result.getId());
+    }
+    
+    @Test
+    public void shouldUseHighestPriorityRule() {
+        Pool pool1 = createPoolAndSub(owner, "a-product", new Long(5),
+            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
+        Pool desired = createPoolAndSub(owner, "a-product", new Long(5),
+            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2051, 02, 26));
+        Pool pool2 = createPoolAndSub(owner, "a-product", new Long(500),
+            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2020, 02, 26));
+        
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(new Attribute(HIGHEST_QUANTITY_PRODUCT, ""));
+        product.addAttribute(new Attribute(LONGEST_EXPIRY_PRODUCT, ""));
+        when(this.productAdapter.getProductById("a-product"))
+            .thenReturn(product);
+        
+        List<Pool> availablePools 
+            = Arrays.asList(new Pool[] {pool1, pool2, desired});
+        Pool result = enforcer.selectBestPool(consumer, "a-product", availablePools);
         assertEquals(desired.getId(), result.getId());
     }
 
@@ -325,10 +346,10 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         Product product = new Product("a-product", "A product for testing");
         product.addAttribute(new Attribute(BAD_RULE_PRODUCT, ""));
-        when(this.productAdapter.getProductById(BAD_RULE_PRODUCT))
+        when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
 
-        enforcer.selectBestPool(consumer, BAD_RULE_PRODUCT, 
+        enforcer.selectBestPool(consumer, "a-product", 
             Collections.singletonList(pool1));
     }
 
