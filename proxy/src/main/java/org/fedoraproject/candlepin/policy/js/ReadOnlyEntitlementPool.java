@@ -14,7 +14,10 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import org.fedoraproject.candlepin.model.Pool;
 
@@ -64,5 +67,14 @@ public class ReadOnlyEntitlementPool {
 
     public String getProductId() {
         return entPool.getProductId();
+    }
+    
+    public static List<ReadOnlyEntitlementPool> fromCollection(Collection<Pool> pools) {
+        List<ReadOnlyEntitlementPool> toReturn 
+            = new ArrayList<ReadOnlyEntitlementPool>(pools.size());
+        for (Pool pool : pools) {
+            toReturn.add(new ReadOnlyEntitlementPool(pool));
+        }
+        return toReturn;
     }
 }

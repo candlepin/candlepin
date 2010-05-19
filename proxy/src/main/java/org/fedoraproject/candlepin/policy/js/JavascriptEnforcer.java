@@ -126,42 +126,9 @@ public class JavascriptEnforcer implements Enforcer {
             invokeGlobalPreRule();
         }
         else {
-            callRules(matchingRules);
+            callPreRules(matchingRules);
         }
         return preHelper;
-    }
-
-    private void callRules(List<Rule> matchingRules) {
-        Invocable inv = (Invocable) jsEngine;
-        for (Rule rule : matchingRules) {
-            try {
-                inv.invokeFunction(PRE_PREFIX + rule.getRuleName());
-                log.debug("Ran rule: " + PRE_PREFIX + rule.getRuleName());
-            }
-            catch (NoSuchMethodException e) {
-                invokeGlobalPreRule();
-            }
-            catch (ScriptException e) {
-                throw new RuleExecutionException(e);
-            }
-        }
-    }
-
-    private void invokeGlobalPreRule() {
-        Invocable inv = (Invocable) jsEngine;
-        // No method for this product, try to find a global function, if
-        // neither exists this is ok and we'll just carry on.
-        try {
-            inv.invokeFunction(GLOBAL_PRE_FUNCTION);
-            log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
-        }
-        catch (NoSuchMethodException ex) {
-            // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
-        }
-        catch (ScriptException ex) {
-            throw new RuleExecutionException(ex);
-        }
     }
 
     @Override
@@ -173,7 +140,6 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     private void runPost(PostEntHelper postHelper, Entitlement ent) {
-        Invocable inv = (Invocable) jsEngine;
         Pool pool = ent.getPool();
         Consumer c = ent.getConsumer();
 
@@ -189,58 +155,48 @@ public class JavascriptEnforcer implements Enforcer {
 
         List<Rule> matchingRules 
             = rulesForAttributes(product.getAttributeNames(), attributesToRules);
+        if (matchingRules.isEmpty()) {
+            invokeGlobalPostRule();
+        }
+        else {
+            callPostRules(matchingRules);
+        }
+    }
+
+    public Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools) {
+        Invocable inv = (Invocable) jsEngine;
+
+        log.info("Selecting best entitlement pool for product: " + productId);
+        List<ReadOnlyEntitlementPool> readOnlyPools 
+            = ReadOnlyEntitlementPool.fromCollection(pools);
+
+        // Provide objects for the script:
+        jsEngine.put("pools", readOnlyPools);
+        
+        Product product = prodAdapter.getProductById(productId);
+        List<Rule> matchingRules 
+            = rulesForAttributes(product.getAttributeNames(), attributesToRules);
+        
+        ReadOnlyEntitlementPool result = null;
+        boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
-                inv.invokeFunction(POST_PREFIX + rule.getRuleName());
-                log.debug("Ran rule: " + POST_PREFIX + rule.getRuleName());
+                result = (ReadOnlyEntitlementPool) inv.invokeFunction(
+                    SELECT_POOL_PREFIX + rule.getRuleName());
+                foundMatchingRule = true;
+                log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
+                    productId);
+                break;
             }
             catch (NoSuchMethodException e) {
-                // No method for this product, try to find a global function, if
-                // neither exists this is ok and we'll just carry on.
-                try {
-                    inv.invokeFunction(GLOBAL_POST_FUNCTION);
-                }
-                catch (NoSuchMethodException ex) {
-                    // This is fine, I hope...
-                    log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
-                }
-                catch (ScriptException ex) {
-                    throw new RuleExecutionException(ex);
-                }
-    
+                // continue on to the next rule in the list.
             }
             catch (ScriptException e) {
                 throw new RuleExecutionException(e);
             }
         }
-    }
-
-    public Pool selectBestPool(Consumer consumer, String productId,
-        List<Pool> pools) {
-
-        Invocable inv = (Invocable) jsEngine;
-
-        log.info("Selecting best entitlement pool for product: " + productId);
-        List<ReadOnlyEntitlementPool> readOnlyPools =
-            new LinkedList<ReadOnlyEntitlementPool>();
-        for (Pool p : pools) {
-            log.info("   " + p);
-            readOnlyPools.add(new ReadOnlyEntitlementPool(p));
-        }
-
-        // Provide objects for the script:
-        jsEngine.put("pools", readOnlyPools);
-
-        ReadOnlyEntitlementPool result = null;
-        try {
-            result = (ReadOnlyEntitlementPool) inv
-                .invokeFunction(SELECT_POOL_PREFIX + productId);
-            log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
-                productId);
-        }
-        catch (NoSuchMethodException e) {
-            // No method for this product, try to find a global function, if
-            // neither exists this is ok and we'll just carry on.
+        
+        if (!foundMatchingRule) {
             try {
                 result = (ReadOnlyEntitlementPool) inv
                     .invokeFunction(GLOBAL_SELECT_POOL_FUNCTION);
@@ -257,10 +213,7 @@ public class JavascriptEnforcer implements Enforcer {
                 throw new RuleExecutionException(ex);
             }
         }
-        catch (ScriptException e) {
-            throw new RuleExecutionException(e);
-        }
-
+        
         if (pools.size() > 0 && result == null) {
             throw new RuleExecutionException(
                 "Rule did not select a pool for product: " + productId);
@@ -355,6 +308,72 @@ public class JavascriptEnforcer implements Enforcer {
         catch (NumberFormatException e) {
             throw new IllegalArgumentException(
                 i18n.tr("second parameter should be the priority number.", e));
+        }
+    }
+    
+    private void callPreRules(List<Rule> matchingRules) {
+        Invocable inv = (Invocable) jsEngine;
+        for (Rule rule : matchingRules) {
+            try {
+                inv.invokeFunction(PRE_PREFIX + rule.getRuleName());
+                log.debug("Ran rule: " + PRE_PREFIX + rule.getRuleName());
+            }
+            catch (NoSuchMethodException e) {
+                invokeGlobalPreRule();
+            }
+            catch (ScriptException e) {
+                throw new RuleExecutionException(e);
+            }
+        }
+    }
+
+    private void callPostRules(List<Rule> matchingRules) {
+        Invocable inv = (Invocable) jsEngine;
+        for (Rule rule : matchingRules) {
+            try {
+                inv.invokeFunction(POST_PREFIX + rule.getRuleName());
+                log.debug("Ran rule: " + POST_PREFIX + rule.getRuleName());
+            }
+            catch (NoSuchMethodException e) {
+                invokeGlobalPostRule();
+            }
+            catch (ScriptException e) {
+                throw new RuleExecutionException(e);
+            }
+        }
+    }
+
+    private void invokeGlobalPreRule() {
+        Invocable inv = (Invocable) jsEngine;
+        // No method for this product, try to find a global function, if
+        // neither exists this is ok and we'll just carry on.
+        try {
+            inv.invokeFunction(GLOBAL_PRE_FUNCTION);
+            log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
+        }
+        catch (NoSuchMethodException ex) {
+            // This is fine, I hope...
+            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
+        }
+        catch (ScriptException ex) {
+            throw new RuleExecutionException(ex);
+        }
+    }
+
+    private void invokeGlobalPostRule() {
+        Invocable inv = (Invocable) jsEngine;
+        // No method for this product, try to find a global function, if
+        // neither exists this is ok and we'll just carry on.
+        try {
+            inv.invokeFunction(GLOBAL_POST_FUNCTION);
+            log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
+        }
+        catch (NoSuchMethodException ex) {
+            // This is fine, I hope...
+            log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
+        }
+        catch (ScriptException ex) {
+            throw new RuleExecutionException(ex);
         }
     }
     

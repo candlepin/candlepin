@@ -3,7 +3,8 @@
 // func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
 function attribute_mappings() {
 	return "CPULIMITED001:1:CPULIMITED001, virtualization_host:1:virtualization_host," +
-			"virtualization_host_platform:1:virtualization_host_platform";
+			"virtualization_host_platform:1:virtualization_host_platform, " +
+			"LONGEST001:1:LONGEST001, QUANTITY001:1:QUANTITY001, BADRULE001:1:BADRULE001";
 }
 
 // Checks common for both virt host and virt platform entitlements:

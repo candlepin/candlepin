@@ -269,8 +269,10 @@ public class EnforcerTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2055, 02, 26));
         
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(new Attribute(LONGEST_EXPIRY_PRODUCT, ""));
         when(this.productAdapter.getProductById(LONGEST_EXPIRY_PRODUCT))
-            .thenReturn(new Product(LONGEST_EXPIRY_PRODUCT, LONGEST_EXPIRY_PRODUCT));
+            .thenReturn(product);
         
         List<Pool> availablePools 
             = Arrays.asList(new Pool[] {pool1, pool2, desired, pool3});
@@ -292,8 +294,10 @@ public class EnforcerTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2060, 02, 26));
         
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(new Attribute(HIGHEST_QUANTITY_PRODUCT, ""));
         when(this.productAdapter.getProductById(HIGHEST_QUANTITY_PRODUCT))
-            .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
+            .thenReturn(product);
         
         List<Pool> availablePools 
             = Arrays.asList(new Pool[] {pool1, pool2, desired});
@@ -305,6 +309,9 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolNoPools() {
+        when(this.productAdapter.getProductById(HIGHEST_QUANTITY_PRODUCT))
+            .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
+        
         // There are no pools for the product in this case:
         Pool result = enforcer.selectBestPool(consumer,
             HIGHEST_QUANTITY_PRODUCT, new LinkedList<Pool>());
@@ -316,8 +323,10 @@ public class EnforcerTest extends DatabaseTestFixture {
         Pool pool1 = createPoolAndSub(owner, BAD_RULE_PRODUCT, new Long(5), TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
 
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(new Attribute(BAD_RULE_PRODUCT, ""));
         when(this.productAdapter.getProductById(BAD_RULE_PRODUCT))
-            .thenReturn(new Product(BAD_RULE_PRODUCT, BAD_RULE_PRODUCT));
+            .thenReturn(product);
 
         enforcer.selectBestPool(consumer, BAD_RULE_PRODUCT, 
             Collections.singletonList(pool1));
