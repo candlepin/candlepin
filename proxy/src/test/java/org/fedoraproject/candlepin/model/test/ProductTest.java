@@ -241,7 +241,7 @@ public class ProductTest extends DatabaseTestFixture {
      *when persisted for the first time.
      */
     @Test
-    public void testCreationDate(){
+    public void testCreationDate() {
         Product prod = new Product("test-label", "test-product-name");
         productCurator.create(prod);
         assertNotNull(prod.getCreated());
@@ -252,7 +252,7 @@ public class ProductTest extends DatabaseTestFixture {
      * Test whether the product updation date is updated when merging.
      */
     @Test
-    public void testUpdationDate(){
+    public void testUpdationDate() {
         Product prod = new Product("test-label", "test-product-name");
         productCurator.create(prod);
         long created = prod.getCreated().getTime();
@@ -262,6 +262,6 @@ public class ProductTest extends DatabaseTestFixture {
         this.productCurator.merge(prod);
         assertTrue(prod.getCreated().getTime() == created);
         assertFalse(prod.getUpdated().getTime() == updated);
-   }
+    }
 
 }
