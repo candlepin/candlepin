@@ -99,23 +99,6 @@ public class ProductTest extends DatabaseTestFixture {
         assertEquals(2, result.getChildProducts().size());
     }
 
-    @Test(expected = PersistenceException.class)
-    public void childHasSingleParentOnly() {
-        beginTransaction();
-
-        Product parent1 = new Product("parent-product1", "Parent Product 1");
-        Product child1 = new Product("child-product1", "Child Product 1");
-        Product parent2 = new Product("parent-product2", "Parent Product 2");
-
-        parent1.addChildProduct(child1);
-        parent2.addChildProduct(child1); // should cause the failure
-
-        entityManager().persist(child1);
-        entityManager().persist(parent1);
-        entityManager().persist(parent2);
-        commitTransaction();
-    }
-
     @Test
     @SuppressWarnings("unchecked")
     public void testCascading() {

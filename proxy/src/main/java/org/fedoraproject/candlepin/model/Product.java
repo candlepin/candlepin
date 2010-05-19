@@ -24,6 +24,7 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -86,7 +87,7 @@ public class Product implements Persisted {
 
     // NOTE: we need a product "type" so we can tell what class of
     //       product we are... 
-    @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
+    @ManyToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
             fetch = FetchType.EAGER)
     @ForeignKey(name = "fk_product_product_id",
                 inverseName = "fk_product_child_product_id")
