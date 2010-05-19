@@ -30,7 +30,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.ForeignKey;
 
 /**
@@ -118,7 +117,6 @@ public class User implements Persisted {
      * @return the owner
      */
     @XmlTransient
-    @JsonIgnore
     public Owner getOwner() {
         return owner;
     }

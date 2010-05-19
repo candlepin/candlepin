@@ -34,7 +34,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -160,7 +159,6 @@ public class Entitlement implements Persisted, AccessControlEnforced {
      * @return the owner
      */
     @XmlTransient
-    @JsonIgnore
     public Owner getOwner() {
         return owner;
     }
@@ -211,7 +209,6 @@ public class Entitlement implements Persisted, AccessControlEnforced {
      * @return return the associated Consumer
      */
     @XmlTransient
-    @JsonIgnore
     public Consumer getConsumer() {
         return consumer;
     }
@@ -247,7 +244,6 @@ public class Entitlement implements Persisted, AccessControlEnforced {
     }
 
     @XmlTransient
-    @JsonIgnore
     public Set<EntitlementCertificate> getCertificates() {
         return certificates;
     }

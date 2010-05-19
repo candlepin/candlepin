@@ -18,6 +18,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.ext.Provider;
 
+import org.codehaus.jackson.jaxrs.Annotations;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.fedoraproject.candlepin.config.Config;
@@ -33,7 +34,8 @@ import org.fedoraproject.candlepin.config.Config;
 @Consumes({"application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
     public JsonProvider() {
-        super();
+        // Prefer jackson annotations, but use jaxb if no jackson.
+        super(Annotations.JACKSON, Annotations.JAXB);
        
         this._mapperConfig.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
             false);

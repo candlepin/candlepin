@@ -31,8 +31,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -100,18 +98,17 @@ public class EntitlementCertificate implements Persisted, AccessControlEnforced 
         this.serial = serialNumber;
     }
 
+    @XmlTransient
     public void setKey(byte[] key) {
         this.key = key;
     }
 
     @XmlTransient
-    @JsonIgnore
     public byte[] getKey() {
         return key;
     }
     
     @XmlElement(name = "key")
-    @JsonProperty("key")
     public String getKeyAsString() {
         return new String(key);
     }
@@ -120,18 +117,17 @@ public class EntitlementCertificate implements Persisted, AccessControlEnforced 
         this.key = key.getBytes();        
     }    
 
+    @XmlTransient
     public void setCert(byte[] cert) {
         this.cert = cert;
     }
 
     @XmlTransient
-    @JsonIgnore
     public byte[] getCert() {
         return cert;
     }
     
     @XmlElement(name = "cert")
-    @JsonProperty("cert")
     public String getCertAsString() {
         return new String(cert);
     }
@@ -141,7 +137,6 @@ public class EntitlementCertificate implements Persisted, AccessControlEnforced 
     }
 
     @XmlTransient
-    @JsonIgnore
     public Long getId() {
         return id;
     }

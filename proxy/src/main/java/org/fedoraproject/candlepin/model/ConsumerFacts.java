@@ -25,7 +25,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.MapKeyManyToMany;
@@ -94,7 +93,6 @@ public class ConsumerFacts implements Persisted {
      * @return the associated Consumer.
      */
     @XmlTransient
-    @JsonIgnore
     public Consumer getConsumer() {
         return consumer;
     }

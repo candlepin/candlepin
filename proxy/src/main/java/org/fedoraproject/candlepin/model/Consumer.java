@@ -36,7 +36,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.Cascade;
@@ -253,7 +252,6 @@ public class Consumer implements Persisted, AccessControlEnforced {
      * @return child consumers.
      */
     @XmlTransient
-    @JsonIgnore
     public Set<Consumer> getChildConsumers() {
         return childConsumers;
     }
@@ -291,7 +289,6 @@ public class Consumer implements Persisted, AccessControlEnforced {
      * @return the owner of this Consumer.
      */
     @XmlTransient
-    @JsonIgnore
     public Owner getOwner() {
         return owner;
     }
@@ -357,7 +354,6 @@ public class Consumer implements Persisted, AccessControlEnforced {
      * @return Returns the entitlements.
      */
     @XmlTransient
-    @JsonIgnore
     public Set<Entitlement> getEntitlements() {
         return entitlements;
     }
@@ -385,7 +381,6 @@ public class Consumer implements Persisted, AccessControlEnforced {
     }
 
     @XmlTransient
-    @JsonIgnore
     public KeyPair getKeyPair() {
         return keyPair;
     }
