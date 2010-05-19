@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
@@ -94,6 +95,7 @@ public class DatabaseTestFixture {
     protected EventCurator eventCurator;
     protected SubscriptionCurator subCurator;
     protected SubscriptionTokenCurator subTokenCurator;
+    protected ContentCurator contentCurator;
     protected WorkManager unitOfWork;
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
@@ -147,6 +149,7 @@ public class DatabaseTestFixture {
         rulesCurator = injector.getInstance(RulesCurator.class);
         subCurator = injector.getInstance(SubscriptionCurator.class);
         subTokenCurator = injector.getInstance(SubscriptionTokenCurator.class);
+        contentCurator = injector.getInstance(ContentCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
         entitler = injector.getInstance(Entitler.class);
         
