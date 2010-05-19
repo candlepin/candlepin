@@ -31,6 +31,7 @@ import org.hornetq.core.server.impl.HornetQServerImpl;
  */
 public class HornetqContextListener implements ServletContextListener {
     private HornetQServer hornetqServer;
+    private EventHub eventKit;
     
     /* (non-Javadoc)
      * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.ServletContextEvent)
@@ -38,6 +39,7 @@ public class HornetqContextListener implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
         if (hornetqServer != null) {
+            eventKit.shutDown();
             try {
                 hornetqServer.stop();
             }
@@ -72,14 +74,14 @@ public class HornetqContextListener implements ServletContextListener {
             }
             try {
                 hornetqServer.start();
-                System.out.println("HornetQ started. bzzzz");
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
             
-            new OtherExampleListener();
-            new ExampleListener();
+            eventKit = new EventHub();
+            eventKit.registerListener(new OtherExampleListener());
+            eventKit.registerListener(new ExampleListener());
     }
 
 }

@@ -14,21 +14,17 @@
  */
 package org.fedoraproject.candlepin.event;
 
-
 /**
- * ExampleListener
+ * Event
  */
-public class ExampleListener implements EventListener {
-    @Override
-    public void onEvent(Event event) {
-        System.out.println(this.toString() + "I GOT A MESSAGE");
-        System.out.flush();
-        try {
-            Thread.sleep(10);
-        }
-        catch (Exception e) {
-        }
-        System.out.println("  message = " + event.getMessage());
+public class Event {
+    private String message;
+    
+    public Event(String message) {
+        this.message = message;
     }
-
+    
+    public String getMessage() {
+        return message;
+    }
 }

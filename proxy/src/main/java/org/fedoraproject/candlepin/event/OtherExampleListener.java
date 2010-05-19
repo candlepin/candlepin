@@ -14,49 +14,16 @@
  */
 package org.fedoraproject.candlepin.event;
 
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientConsumer;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.api.core.client.MessageHandler;
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 
 /**
  * OtherExampleListener
  */
-public class OtherExampleListener implements MessageHandler {
+public class OtherExampleListener implements EventListener {
     
-    public OtherExampleListener() {
-        try {
-            ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
-                new TransportConfiguration(
-                   InVMConnectorFactory.class.getName()));
-    
-            ClientSession session = factory.createSession(true, true);
-            
-            session.start();
-            
-            ClientConsumer consumer = session.createConsumer("example");
-            consumer.setMessageHandler(this);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
-    public void onMessage(ClientMessage msg) {
+    public void onEvent(Event event) {
         System.out.println(this.toString() + "I GOT A MESSAGE TOO");
-        System.out.println("  message = " + msg.getBodyBuffer().readString());
-        try {
-            msg.acknowledge();
-        }
-        catch (HornetQException e) {
-            e.printStackTrace();
-        }
+        System.out.println("  message = " + event.getMessage());
     }
 
 }

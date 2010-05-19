@@ -22,20 +22,14 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.event.Event;
+import org.fedoraproject.candlepin.event.EventHub;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientConsumer;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.ClientProducer;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 
 import com.google.inject.Inject;
 
@@ -73,7 +67,7 @@ public class AdminResource {
     @Path("init")
     @AllowRoles(roles = {Role.NO_AUTH})
     public String initialize() {
-        
+        messageTry();
         log.debug("Called initialize()");
 
         // First, determine if we've already setup the DB and if so, do *nothing*!
@@ -103,29 +97,11 @@ public class AdminResource {
         catch (UnsupportedOperationException e) {
             log.info("Admin creation is not supported!");
         }
-        messageTry();
+
         return "Initialized!";
     }
     
     private void messageTry() {
-        try {
-            ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
-                new TransportConfiguration(
-                   InVMConnectorFactory.class.getName()));
-            
-            ClientSession session = factory.createSession();
-            
-            ClientProducer producer = session.createProducer("example");
-            
-            ClientMessage message = session.createMessage(true);
-            
-            message.getBodyBuffer().writeString("Hello");
-            
-            producer.send(message);
-            session.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        EventHub.sendEvent(new Event("Hello, I am an example event"));
     }
 }
