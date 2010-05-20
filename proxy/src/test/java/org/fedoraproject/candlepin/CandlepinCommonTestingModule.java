@@ -37,7 +37,6 @@ import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;

@@ -377,6 +377,9 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
     
+    /**
+     * RuleOrderComparator
+     */
     public static class RuleOrderComparator implements Comparator<Rule> {
         @Override
         public int compare(Rule o1, Rule o2) {
@@ -384,6 +387,9 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
     
+    /**
+     * Rule
+     */
     public static class Rule {
         private final String ruleName;
         private final int order;
