@@ -20,9 +20,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
@@ -125,7 +127,79 @@ public class ProductTest extends DatabaseTestFixture {
                 "name", child1.getName()).getResultList();
         assertEquals(0, results.size());
     }
+    
+    @Test
+    public void testUpdate() {
+        Product product = new Product("test-product", "Test Product");
+        Product updatedProduct = productCurator.update(product);
+     
+        assertEquals(product.getId(), updatedProduct.getId());
+        assertEquals(product.getName(), updatedProduct.getName());
+    }
 
+    @Test
+    public void testProductFullConstructor() {
+        Set<Product> products = new HashSet<Product>();
+        Product prod = new Product("cp_test-label", "Test Product", "variant",
+            "version", "arch", new Long(1111111), "SVC", products);
+        productCurator.create(prod);
+
+        Product lookedUp = productCurator.find(prod.getId());
+    }
+
+    @Test
+    public void testProductChildProducts() {
+        Set<Product> childProducts = new HashSet<Product>();
+        Set<Product> products = new HashSet<Product>();
+        String parentLabel = "cp_test_parent_product";
+        String childLabel = "cp_test_child_product";
+
+        Product childProd = new Product(childLabel, "Test Child Product",
+            "variant", "version", "arch", Math.abs(Long.valueOf(parentLabel
+                .hashCode())), "SVC", products);
+
+        childProducts.add(childProd);
+        Product parentProd = new Product(parentLabel, "Test Parent Product",
+            "variant", "version", "arch", Math.abs(Long.valueOf(childLabel
+                .hashCode())), "MKT", childProducts);
+
+        productCurator.create(parentProd);
+        
+        Set<Product> testProducts = new HashSet<Product>();
+        Product lookedUp = productCurator.find(parentProd.getId());
+        assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
+        assertEquals(parentProd.getAllChildProducts(testProducts), lookedUp
+            .getAllChildProducts(testProducts));
+    }
+
+    
+    @Test
+    public void testBlkUpdate() {
+        Set<Product> childProducts = new HashSet<Product>();
+        Set<Product> products = new HashSet<Product>();
+        String parentLabel = "cp_test_parent_product";
+        String childLabel = "cp_test_child_product";
+
+        Product childProd = new Product(childLabel, "Test Child Product",
+            "variant", "version", "arch", Math.abs(Long.valueOf(parentLabel
+                .hashCode())), "SVC", products);
+
+        childProducts.add(childProd);
+        Product parentProd = new Product(parentLabel, "Test Parent Product",
+            "variant", "version", "arch", Math.abs(Long.valueOf(childLabel
+                .hashCode())), "MKT", null);
+        
+        productCurator.create(parentProd);
+        parentProd.setChildProducts(childProducts);
+        productCurator.update(parentProd);
+        
+        Set<Product> testProducts = new HashSet<Product>();
+        Product lookedUp = productCurator.find(parentProd.getId());
+        assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
+        assertEquals(parentProd.getAllChildProducts(testProducts), lookedUp
+            .getAllChildProducts(testProducts));
+    }
+    
     @Test
     public void testEquality() {
         assertEquals(new Product("label", "name"), new Product("label", "name"));
