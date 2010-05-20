@@ -133,30 +133,26 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     @Test
     public void shouldSelectAllRulesMappedToSingleAttribute() {
-        Map<String, Set<JavascriptEnforcer.Rule>> rules 
-            = new HashMap<String, Set<JavascriptEnforcer.Rule>>() { {
-                put("attr1", 
-                    rules(
-                        rule("func5", 5, "attr1"),
-                        rule("func1", 2, "attr1")
-                    )
-                );
-                put("attr3",
-                    rules(
-                        rule("func3", 2, "attr3")
-                    )
-                );
-            } };
+        Map<String, Set<JavascriptEnforcer.Rule>> rules =
+            new HashMap<String, Set<JavascriptEnforcer.Rule>>() {
+                {
+                    put("attr1", rules(rule("func5", 5, "attr1"), rule("func1", 2,
+                        "attr1")));
+                    put("attr3", rules(rule("func3", 2, "attr3")));
+                }
+            };
         
         List<JavascriptEnforcer.Rule> orderedAndFilteredRules = 
             ((JavascriptEnforcer) enforcer).rulesForAttributes(
                 new HashSet<String>() { { add("attr1"); } }, rules);
         
         assertEquals(
-            new LinkedList<JavascriptEnforcer.Rule>() { {
-                add(rule("func5", 5, "attr1"));
-                add(rule("func1", 2, "attr1"));
-            } },
+            new LinkedList<JavascriptEnforcer.Rule>() { 
+                {
+                    add(rule("func5", 5, "attr1"));
+                    add(rule("func1", 2, "attr1"));
+                }
+            },
             orderedAndFilteredRules
         );
     }
@@ -164,28 +160,34 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void shouldSelectAllRulesMappedToMultipleAttributes() {
         Map<String, Set<JavascriptEnforcer.Rule>> rules 
-            = new HashMap<String, Set<JavascriptEnforcer.Rule>>() { {
-            put("attr1",
-                rules(
-                    rule("func5", 5, "attr1", "attr2", "attr3"),
-                    rule("func1", 2, "attr1", "attr2"),
-                    rule("func6", 4, "attr1", "attr2", "attr3", "attr4"))
-            );
-            put("attr3", rules(rule("func3", 3, "attr3")));
-        } };
+            = new HashMap<String, Set<JavascriptEnforcer.Rule>>() {
+                {
+                    put("attr1",
+                        rules(
+                            rule("func5", 5, "attr1", "attr2", "attr3"),
+                            rule("func1", 2, "attr1", "attr2"),
+                            rule("func6", 4, "attr1", "attr2", "attr3", "attr4"))
+                    );
+                    put("attr3", rules(rule("func3", 3, "attr3")));
+                } 
+            };
         
         List<JavascriptEnforcer.Rule> orderedAndFilteredRules = 
             ((JavascriptEnforcer) enforcer).rulesForAttributes(
-                new HashSet<String>() { { 
-                    add("attr1"); add("attr2"); add("attr3"); 
-                } }, rules);
+                new HashSet<String>() { 
+                    { 
+                        add("attr1"); add("attr2"); add("attr3"); 
+                    } 
+                }, rules);
         
         assertEquals(
-            new LinkedList<JavascriptEnforcer.Rule>() { {
-                add(rule("func5", 5, "attr1", "attr2", "attr3"));
-                add(rule("func3", 3, "attr3"));
-                add(rule("func1", 2, "attr1", "attr2"));
-            } },
+            new LinkedList<JavascriptEnforcer.Rule>() { 
+                {
+                    add(rule("func5", 5, "attr1", "attr2", "attr3"));
+                    add(rule("func3", 3, "attr3"));
+                    add(rule("func1", 2, "attr1", "attr2"));
+                } 
+            },
             orderedAndFilteredRules
         );
     }
