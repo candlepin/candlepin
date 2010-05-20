@@ -20,6 +20,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+
 import com.wideplay.warp.persist.Transactional;
 
 /**
@@ -31,14 +34,12 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         super(Rules.class);
     }
     
-    
     /**
      * updates the rules to the given values.
      * @param updatedRules latest rules
      * @return a copy of the latest rules
      */
     @Transactional
-    // This seems lame...
     public Rules update(Rules updatedRules) {
         List<Rules> existingRuleSet = listAll();
         if (existingRuleSet.size() == 0) {
@@ -49,11 +50,35 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         }
         create(updatedRules);
         return updatedRules;
-        
     }
     
-    private void initiateRulesFromFile() {
-        String path = getDefaultRulesFile();
+    /**
+     * @return the rules
+     */
+    public Rules getRules() {
+        List<Rules> existingRuleSet = listAll();
+        if (existingRuleSet.size() == 0) {
+            return rulesFromFile(getDefaultRulesFile());
+        }
+        return existingRuleSet.get(0);
+    }
+    
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    public Rules create(Rules entity) {
+        return super.create(entity);
+    }
+    
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    public void delete(Rules entity) {
+        super.delete(entity);
+    }
+    
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    public Rules merge(Rules entity) {
+        return super.merge(entity);
+    }
+
+    private Rules rulesFromFile(String path) {
         InputStream is = this.getClass().getResourceAsStream(path);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder builder = new StringBuilder();
@@ -64,27 +89,12 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
             }
         }
         catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new CuratorException(e);
         }
-        Rules rules = new Rules(builder.toString());
-        create(rules);
+        return new Rules(builder.toString());
     }
     
     protected String getDefaultRulesFile() {
         return "/rules/default-rules.js";
-    }
-
-    /**
-     * @return the rules
-     */
-    public Rules getRules() {
-        List<Rules> existingRuleSet = listAll();
-        if (existingRuleSet.size() == 0) {
-            initiateRulesFromFile();
-            existingRuleSet = listAll();
-        }
-        
-        return existingRuleSet.get(0);
     }
 }
