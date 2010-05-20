@@ -18,5 +18,5 @@ package org.fedoraproject.candlepin.event;
  * EventListener
  */
 public interface EventListener {
-    public void onEvent(Event e);
+    void onEvent(Event e);
 }

@@ -32,8 +32,7 @@ public class EventHub {
     
     public EventHub() {
         ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
-            new TransportConfiguration(
-               InVMConnectorFactory.class.getName()));
+            new TransportConfiguration(InVMConnectorFactory.class.getName()));
 
         try {
             session = factory.createSession(true, true);
@@ -57,12 +56,15 @@ public class EventHub {
     public void registerListener(EventListener listener) {
         try {
             try {
-                session.createQueue("event", "event." + listener.getClass().getCanonicalName(), true);
-            } catch (HornetQException e) {
+                session.createQueue("event",
+                    "event." + listener.getClass().getCanonicalName(), true);
+            }
+            catch (HornetQException e) {
                 // XXX: does it exist already? just pass
                 e.printStackTrace();
             }
-            ClientConsumer consumer = session.createConsumer("event." + listener.getClass().getCanonicalName());
+            ClientConsumer consumer = session.createConsumer(
+                "event." + listener.getClass().getCanonicalName());
             consumer.setMessageHandler(new ListenerWrapper(listener));
         }
         catch (HornetQException e) {
@@ -74,8 +76,7 @@ public class EventHub {
         System.out.println("sending event");
         try {
             ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
-                new TransportConfiguration(
-                   InVMConnectorFactory.class.getName()));
+                new TransportConfiguration(InVMConnectorFactory.class.getName()));
             
             ClientSession session = factory.createSession();
             
@@ -86,6 +87,7 @@ public class EventHub {
             message.getBodyBuffer().writeString(event.getMessage());
             
             producer.send(message);
+            session.close();
         }
         catch (Exception e) {
             e.printStackTrace();

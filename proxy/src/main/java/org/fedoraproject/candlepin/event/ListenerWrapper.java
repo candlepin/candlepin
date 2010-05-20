@@ -29,9 +29,6 @@ public class ListenerWrapper implements MessageHandler {
         this.listener = listener;
     }
     
-    /* (non-Javadoc)
-     * @see org.hornetq.api.core.client.MessageHandler#onMessage(org.hornetq.api.core.client.ClientMessage)
-     */
     @Override
     public void onMessage(ClientMessage msg) {
         listener.onEvent(new Event(msg.getBodyBuffer().readString()));

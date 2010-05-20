@@ -31,15 +31,12 @@ import org.hornetq.core.server.impl.HornetQServerImpl;
  */
 public class HornetqContextListener implements ServletContextListener {
     private HornetQServer hornetqServer;
-    private EventHub eventKit;
+    private EventHub eventHub;
     
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.ServletContextEvent)
-     */
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
         if (hornetqServer != null) {
-            eventKit.shutDown();
+            eventHub.shutDown();
             try {
                 hornetqServer.stop();
             }
@@ -49,39 +46,38 @@ public class HornetqContextListener implements ServletContextListener {
         }
     }
 
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)
-     */
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
-            if (hornetqServer == null) {
-                Configuration config = new ConfigurationImpl();
-                
-                HashSet<TransportConfiguration> transports = new HashSet<TransportConfiguration>();
-                transports.add(new TransportConfiguration(InVMAcceptorFactory.class.getName()));
-                config.setAcceptorConfigurations(transports);
-                
-                config.setBindingsDirectory("/tmp/hornetq/bindings");
-                config.setCreateBindingsDir(true);
-                config.setJournalDirectory("/tmp/hornetq/journal");
-                config.setCreateJournalDir(true);
-                config.setLargeMessagesDirectory("/tmp/hornetq/largemsgs");
-                
-                // in vm, who needs security?
-                config.setSecurityEnabled(false);
-                
-                hornetqServer = new HornetQServerImpl(config);
-            }
-            try {
-                hornetqServer.start();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            
-            eventKit = new EventHub();
-            eventKit.registerListener(new OtherExampleListener());
-            eventKit.registerListener(new ExampleListener());
+        if (hornetqServer == null) {
+            Configuration config = new ConfigurationImpl();
+
+            HashSet<TransportConfiguration> transports =
+                new HashSet<TransportConfiguration>();
+            transports.add(new TransportConfiguration(InVMAcceptorFactory.class
+                .getName()));
+            config.setAcceptorConfigurations(transports);
+
+            config.setBindingsDirectory("/tmp/hornetq/bindings");
+            config.setCreateBindingsDir(true);
+            config.setJournalDirectory("/tmp/hornetq/journal");
+            config.setCreateJournalDir(true);
+            config.setLargeMessagesDirectory("/tmp/hornetq/largemsgs");
+
+            // in vm, who needs security?
+            config.setSecurityEnabled(false);
+
+            hornetqServer = new HornetQServerImpl(config);
+        }
+        try {
+            hornetqServer.start();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        eventHub = new EventHub();
+        eventHub.registerListener(new OtherExampleListener());
+        eventHub.registerListener(new ExampleListener());
     }
 
 }
