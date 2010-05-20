@@ -66,14 +66,19 @@ public class HornetqContextListener implements ServletContextListener {
                 .getName()));
             config.setAcceptorConfigurations(transports);
 
-            config.setBindingsDirectory("/tmp/hornetq/bindings");
-            config.setCreateBindingsDir(true);
-            config.setJournalDirectory("/tmp/hornetq/journal");
-            config.setCreateJournalDir(true);
-            config.setLargeMessagesDirectory("/tmp/hornetq/largemsgs");
-
+            // alter the default pass to silence log output
+            config.setClustered(false);
+            config.setClusterPassword(null);
+            
             // in vm, who needs security?
             config.setSecurityEnabled(false);
+
+            config.setCreateBindingsDir(true);
+            config.setCreateJournalDir(true);
+
+            config.setBindingsDirectory("/tmp/hornetq/bindings");
+            config.setJournalDirectory("/tmp/hornetq/journal");
+            config.setLargeMessagesDirectory("/tmp/hornetq/largemsgs");
 
             hornetqServer = new HornetQServerImpl(config);
         }
