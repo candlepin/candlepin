@@ -47,7 +47,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
             new ConsumerType("system"));
 
         Principal p = setupPrincipal(owner, Role.OWNER_ADMIN);
-        ConsumerEvent event = new ConsumerEvent(EventType.ConsumerCreated,
+        ConsumerEvent event = new ConsumerEvent(EventType.CONSUMER_CREATED,
             p, new Long(1), oldConsumer, newConsumer);
         eventCurator.create(event);
 

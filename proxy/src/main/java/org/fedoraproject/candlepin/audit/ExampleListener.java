@@ -12,33 +12,24 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.event;
+package org.fedoraproject.candlepin.audit;
 
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.MessageHandler;
 
 /**
- * ListnerWrapper
+ * ExampleListener
  */
-public class ListenerWrapper implements MessageHandler {
-
-    private EventListener listener;
-    
-    public ListenerWrapper(EventListener listener) {
-        this.listener = listener;
-    }
-    
+public class ExampleListener implements EventListener {
     @Override
-    public void onMessage(ClientMessage msg) {
-        listener.onEvent(new Event(msg.getBodyBuffer().readString()));
+    public void onEvent(Event event) {
+        System.out.println(this.toString() + "I GOT A MESSAGE");
+        System.out.flush();
         try {
-            msg.acknowledge();
+            Thread.sleep(10);
         }
-        catch (HornetQException e) {
-            // TODO Auto-generated catch block
+        catch (Exception e) {
             e.printStackTrace();
         }
+        System.out.println("  message = " + event.getMessage());
     }
 
 }

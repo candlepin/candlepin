@@ -49,7 +49,9 @@ public class Event implements Persisted {
     /**
      * Type - Constant representing the type of this event.
      */
-    public enum EventType { ConsumerCreated, ConsumerModified, ConsumerUpdated };
+    public enum EventType { GENERIC_MESSAGE, CONSUMER_CREATED, CONSUMER_MODIFIED,
+        CONSUMER_UPDATED
+    };
 
     // Uniquely identifies the event:
     @Id
@@ -75,12 +77,15 @@ public class Event implements Persisted {
     private String oldEntity;
     private String newEntity;
 
-    protected Event(EventType type, Principal principal,
+    public Event(EventType type, Principal principal,
         Long entityId, String oldEntity, String newEntity) {
         this.type = type;
 
         // TODO: toString good enough? Need something better?
-        this.principal = principal.toString();
+        // XXX: null principal is a hack. don't allow it.
+        if (principal != null) {
+            this.principal = principal.toString();
+        }
 
         this.entityId = entityId;
         this.oldEntity = oldEntity;
@@ -143,4 +148,7 @@ public class Event implements Persisted {
         this.newEntity = newEntity;
     }
 
+    public String getMessage() {
+        return newEntity;
+    }
 }

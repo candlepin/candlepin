@@ -12,23 +12,17 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.event;
+package org.fedoraproject.candlepin.audit;
 
 
 /**
- * ExampleListener
+ * OtherExampleListener
  */
-public class ExampleListener implements EventListener {
+public class OtherExampleListener implements EventListener {
+    
     @Override
     public void onEvent(Event event) {
-        System.out.println(this.toString() + "I GOT A MESSAGE");
-        System.out.flush();
-        try {
-            Thread.sleep(10);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        System.out.println(this.toString() + "I GOT A MESSAGE TOO");
         System.out.println("  message = " + event.getMessage());
     }
 

@@ -23,7 +23,7 @@
         org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener
       </listener-class>
       <listener-class>
-        org.fedoraproject.candlepin.event.HornetqContextListener
+        org.fedoraproject.candlepin.audit.HornetqContextListener
       </listener-class>
 
     </listener>

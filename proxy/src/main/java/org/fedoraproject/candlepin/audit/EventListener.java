@@ -12,19 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.event;
+package org.fedoraproject.candlepin.audit;
 
 /**
- * Event
+ * EventListener
  */
-public class Event {
-    private String message;
-    
-    public Event(String message) {
-        this.message = message;
-    }
-    
-    public String getMessage() {
-        return message;
-    }
+public interface EventListener {
+    void onEvent(Event e);
 }

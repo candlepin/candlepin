@@ -20,10 +20,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventHub;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.event.Event;
-import org.fedoraproject.candlepin.event.EventHub;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -102,6 +102,7 @@ public class AdminResource {
     }
     
     private void messageTry() {
-        EventHub.sendEvent(new Event("Hello, I am an example event"));
+        EventHub.sendEvent(new Event(Event.EventType.GENERIC_MESSAGE, null, null, "",
+            "Hello, I am an example event"));
     }
 }
