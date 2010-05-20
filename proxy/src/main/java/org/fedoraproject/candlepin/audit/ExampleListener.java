@@ -24,7 +24,7 @@ public class ExampleListener implements EventListener {
         System.out.println(this.toString() + "I GOT A MESSAGE");
         System.out.flush();
         try {
-            Thread.sleep(10);
+            Thread.sleep(100);
         }
         catch (Exception e) {
             e.printStackTrace();

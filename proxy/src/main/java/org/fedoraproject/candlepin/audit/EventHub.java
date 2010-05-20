@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import org.apache.log4j.Logger;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientConsumer;
@@ -28,6 +29,9 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
  * EventKit
  */
 public class EventHub {
+    private static  Logger log = Logger.getLogger(HornetqContextListener.class);
+
+    private static final String QUEUE_ADDRESS = "event";
     private ClientSession session;
     
     public EventHub() {
@@ -54,17 +58,22 @@ public class EventHub {
     }
     
     public void registerListener(EventListener listener) {
+        String queueName = QUEUE_ADDRESS + "." + listener.getClass().getCanonicalName();
+        log.debug("registering listener for " + queueName);
         try {
             try {
-                session.createQueue("event",
-                    "event." + listener.getClass().getCanonicalName(), true);
+                session.createQueue(QUEUE_ADDRESS, queueName);
+                log.debug("created new event queue " + queueName);
             }
             catch (HornetQException e) {
-                // XXX: does it exist already? just pass
-                e.printStackTrace();
+                // if the queue exists already we already created it in a previous run,
+                // so that's fine.
+                if (e.getCode() != HornetQException.QUEUE_EXISTS) {
+                    throw e;
+                }
             }
-            ClientConsumer consumer = session.createConsumer(
-                "event." + listener.getClass().getCanonicalName());
+            
+            ClientConsumer consumer = session.createConsumer(queueName);
             consumer.setMessageHandler(new ListenerWrapper(listener));
         }
         catch (HornetQException e) {
@@ -73,14 +82,17 @@ public class EventHub {
     }
     
     public static void sendEvent(Event event) {
-        System.out.println("sending event");
+        if (log.isDebugEnabled()) {
+            log.debug("Sending event - " + event);
+        }
+        
         try {
             ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
                 new TransportConfiguration(InVMConnectorFactory.class.getName()));
             
             ClientSession session = factory.createSession();
             
-            ClientProducer producer = session.createProducer("event");
+            ClientProducer producer = session.createProducer(QUEUE_ADDRESS);
             
             ClientMessage message = session.createMessage(true);
             

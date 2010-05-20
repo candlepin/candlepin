@@ -19,10 +19,17 @@ import java.util.HashSet;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.apache.log4j.Logger;
+import org.hornetq.api.core.HornetQException;
+import org.hornetq.api.core.SimpleString;
 import org.hornetq.api.core.TransportConfiguration;
+import org.hornetq.api.core.client.ClientSession;
+import org.hornetq.api.core.client.ClientSessionFactory;
+import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.config.Configuration;
 import org.hornetq.core.config.impl.ConfigurationImpl;
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
+import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.impl.HornetQServerImpl;
 
@@ -30,6 +37,8 @@ import org.hornetq.core.server.impl.HornetQServerImpl;
  * HornetqContextListener
  */
 public class HornetqContextListener implements ServletContextListener {
+    private static  Logger log = Logger.getLogger(HornetqContextListener.class);
+    
     private HornetQServer hornetqServer;
     private EventHub eventHub;
     
@@ -75,9 +84,46 @@ public class HornetqContextListener implements ServletContextListener {
             e.printStackTrace();
         }
 
+        cleanupOldQueues();
+        
         eventHub = new EventHub();
         eventHub.registerListener(new OtherExampleListener());
         eventHub.registerListener(new ExampleListener());
     }
 
+    /**
+     * Remove any old message queues that have a 0 message count in them.
+     * This lets us not worry about changing around the registered listeners.
+     */
+    private void cleanupOldQueues() {
+        log.debug("Cleaning old message queues");
+        String [] queues = hornetqServer.getHornetQServerControl().getQueueNames();
+        
+        ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
+            new TransportConfiguration(InVMConnectorFactory.class.getName()));
+
+        try {
+            ClientSession session = factory.createSession(true, true);
+            session.start();
+
+            for (int i = 0; i < queues.length; i++) {
+                int msgCount =
+                    session.queueQuery(new SimpleString(queues[i])).getMessageCount();
+                if (msgCount == 0) {
+                    log.debug(String.format("found queue '%s' with 0 messages. deleting",
+                        queues[i]));
+                    session.deleteQueue(queues[i]);
+                }
+                else {
+                    log.debug(String.format("found queue '%s' with %d messages. kept",
+                        queues[i], msgCount));
+                }
+            }
+        }
+        catch (HornetQException e) {
+            log.error("Problem cleaning old message queues - " + e);
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 }
