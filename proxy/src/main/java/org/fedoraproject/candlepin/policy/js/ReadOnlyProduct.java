@@ -36,6 +36,7 @@ public class ReadOnlyProduct {
      */
     public ReadOnlyProduct(Product product) {
         this.product = product;
+        initializeReadOnlyAttributes();
     }
    
     /**
@@ -79,10 +80,11 @@ public class ReadOnlyProduct {
      * @return attribute value
      */
     public String getAttribute(String name) {
-        if (attributes == null) {
-            initializeReadOnlyAttributes();
-        }
         return attributes.get(name);
+    }
+    
+    public Map<String, String> getAttributes() {
+        return attributes;
     }
    
     /**

@@ -42,7 +42,7 @@ import org.hibernate.annotations.MapKeyManyToMany;
 //@Table(name = "cp_consumer_facts")
 //@SequenceGenerator(name = "seq_consumer_facts",
 //        sequenceName = "seq_consumer_facts", allocationSize = 1)
-public class ConsumerFacts implements Persisted {
+public class ConsumerFacts extends AbstractHibernateObject{
     
     // TODO: Don't know if this is a good idea, technically the consumer +
     // metadata data key should be the identifier.

@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "cp_consumer_type")
 @SequenceGenerator(name = "seq_consumer_type",
     sequenceName = "seq_consumer_type", allocationSize = 1)
-public class ConsumerType implements Persisted {
+public class ConsumerType extends AbstractHibernateObject{
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer_type")

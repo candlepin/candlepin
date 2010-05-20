@@ -72,7 +72,7 @@ import org.hibernate.annotations.ParamDef;
 @Table(name = "cp_pool")
 @SequenceGenerator(name = "seq_pool",
         sequenceName = "seq_pool", allocationSize = 1)
-public class Pool implements Persisted, AccessControlEnforced {
+public class Pool extends AbstractHibernateObject implements AccessControlEnforced {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_pool")

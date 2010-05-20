@@ -108,4 +108,21 @@ public class DefaultRulesTest {
         assertFalse(result.hasErrors());
         assertFalse(result.hasErrors());
     }
+    
+    @Test
+    public void bindFromExhaustedPoolShouldFail() {
+        Product product = new Product("a-product", "A product for testing");
+        Pool pool = new Pool(owner, product.getId(), new Long(0),
+            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+
+        Entitlement e = new Entitlement(pool, consumer, new Date());
+        consumer.addEntitlement(e);
+        
+        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        
+        assertTrue(result.hasErrors());
+        assertFalse(result.isSuccessful());
+    }
 }

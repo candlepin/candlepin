@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "cp_subscription_token")
 @SequenceGenerator(name = "seq_subscription_token",
     sequenceName = "seq_subscription_token", allocationSize = 1)
-public class SubscriptionToken implements Persisted {
+public class SubscriptionToken extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,

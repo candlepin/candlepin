@@ -43,7 +43,7 @@ import org.hibernate.annotations.ForeignKey;
 @Table(name = "cp_subscription")
 @SequenceGenerator(name = "seq_subscription", sequenceName = "seq_subscription",
 allocationSize = 1)
-public class Subscription implements Persisted {
+public class Subscription extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_subscription")

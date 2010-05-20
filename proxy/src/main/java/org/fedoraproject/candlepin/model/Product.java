@@ -45,7 +45,7 @@ import org.hibernate.annotations.ForeignKey;
 @Entity
 @Table(name = "cp_product")
 @SequenceGenerator(name = "seq_product", sequenceName = "seq_product", allocationSize = 1)
-public class Product implements Persisted {
+public class Product extends AbstractHibernateObject {
    
     // Product ID is stored as a string. Could be a product OID or label.
     @Id
@@ -233,6 +233,18 @@ public class Product implements Persisted {
      */
     public Set<Attribute> getAttributes() {
         return attributes;
+    }
+    
+    public Set<String> getAttributeNames() {
+        Set<String> toReturn = new HashSet<String>();
+        if (attributes == null) {
+            return toReturn;
+        }
+        
+        for (Attribute attribute : attributes) {
+            toReturn.add(attribute.getName());
+        }
+        return toReturn;
     }
 
     /**

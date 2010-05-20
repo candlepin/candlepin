@@ -70,9 +70,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-
         principal = injector.getInstance(Principal.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
+        
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
@@ -202,28 +202,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(new Long(1), pool.getConsumed());
     }
     
-    @Test(expected = RuntimeException.class)
-    public void testMaxMembership() {
-        // 10 entitlements available, lets try to entitle 11 consumers.
-        for (int i = 0; i < pool.getQuantity(); i++) {
-            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
-            consumerCurator.create(c);
-            consumerResource.bind(c.getUuid(), null, null, product.getLabel());
-        }
-        
-        // Now for the 11th:
-        Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
-        consumerCurator.create(c);
-        consumerResource.bind(c.getUuid(), null, null, product.getLabel());
-    }
-    
-    @Test(expected = RuntimeException.class)
-    public void testEntitlementsHaveExpired() {
-        dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
-        consumerResource.bind(consumer.getUuid(), null, null,
-            product.getLabel());
-    }
-    
     @Test
     public void testBindByPool() throws Exception {
         List<Entitlement> resultList =
@@ -238,12 +216,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(1, resultList.size());
         assertEquals(pool.getId(), resultList.get(0).getPool().getId());
         assertEquals(1, entCertCurator.listForEntitlement(resultList.get(0)).size());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testBindByPoolNoFreeEntitlements() throws Exception {
-        consumerResource.bind(
-            consumer.getUuid(), fullPool.getId(), null, null);
     }
 
     @Test(expected = BadRequestException.class)
