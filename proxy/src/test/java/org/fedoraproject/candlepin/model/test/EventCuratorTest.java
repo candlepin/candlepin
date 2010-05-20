@@ -16,8 +16,8 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.audit.ConsumerEvent;
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.Event.EventType;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -41,17 +41,20 @@ public class EventCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() {
-        Consumer oldConsumer = new Consumer("consumername", new Owner("owner"),
+        Consumer newConsumer = new Consumer("consumername", owner,
             new ConsumerType("system"));
-        Consumer newConsumer = new Consumer("consumername", new Owner("owner"),
-            new ConsumerType("system"));
+        consumerTypeCurator.create(newConsumer.getType());
+        consumerCurator.create(newConsumer);
 
         Principal p = setupPrincipal(owner, Role.OWNER_ADMIN);
-        ConsumerEvent event = new ConsumerEvent(EventType.CONSUMER_CREATED,
-            p, new Long(1), oldConsumer, newConsumer);
+        EventFactory eventFactory = injector.getInstance(EventFactory.class);
+        Event event = eventFactory.consumerCreated(p, newConsumer);
         eventCurator.create(event);
 
         Event lookedUp = eventCurator.find(event.getId());
+        assertNull(lookedUp.getOldEntity());
+        assertEquals(EventType.CONSUMER_CREATED, lookedUp.getType());
+        assertTrue(lookedUp.getId() > 0);
         System.out.println(lookedUp.getPrincipal());
         System.out.println(lookedUp.getTimestamp());
         System.out.println(lookedUp.getOldEntity());

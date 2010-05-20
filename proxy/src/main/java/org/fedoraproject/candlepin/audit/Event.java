@@ -17,15 +17,10 @@ package org.fedoraproject.candlepin.audit;
 import java.util.Date;
 
 import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -41,9 +36,6 @@ import org.fedoraproject.candlepin.model.Persisted;
 @Entity
 @Table(name = "cp_event")
 @SequenceGenerator(name = "seq_event", sequenceName = "seq_event", allocationSize = 1)
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "entitytype", discriminatorType = DiscriminatorType.STRING)
-@DiscriminatorValue("none")
 public class Event implements Persisted {
 
     /**

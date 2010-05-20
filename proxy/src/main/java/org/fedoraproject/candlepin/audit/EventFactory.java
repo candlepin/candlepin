@@ -16,9 +16,6 @@ package org.fedoraproject.candlepin.audit;
 
 import java.io.IOException;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -27,23 +24,17 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 
 /**
- * ConsumerEvent
+ * EventFactory
  */
-@Entity
-@DiscriminatorValue("consumer")
-public class ConsumerEvent extends Event {
+public class EventFactory {
 
-    public ConsumerEvent(EventType type, Principal principal,
-        Long entityId, Consumer oldEntity, Consumer newEntity) {
-
-        // TODO: Verify type is one of the consumer types?
-
-        super(type, principal, entityId, null, null);
+    public Event consumerCreated(Principal principal, Consumer newConsumer) {
         ObjectMapper mapper = new ObjectMapper();
-        // TODO: What to do here?
+        String newEntityJson = null;
+        // TODO: Throw an auditing exception here
+
         try {
-            setOldEntity(mapper.writeValueAsString(oldEntity));
-            setNewEntity(mapper.writeValueAsString(newEntity));
+            newEntityJson = mapper.writeValueAsString(newConsumer);
         }
         catch (JsonGenerationException e) {
             // TODO Auto-generated catch block
@@ -57,6 +48,9 @@ public class ConsumerEvent extends Event {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-    }
 
+        Event e = new Event(EventType.CONSUMER_CREATED, principal, newConsumer.getId(),
+            null, newEntityJson);
+        return e;
+    }
 }
