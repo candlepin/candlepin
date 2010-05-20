@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.service.impl;
 import java.util.List;
 
 
+import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;

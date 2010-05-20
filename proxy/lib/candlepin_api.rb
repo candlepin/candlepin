@@ -191,11 +191,12 @@ class Candlepin
           'id' => name,
           'version' => version,
           'variant' => variant,
-	  'type' => type,
-	  'childProducts' => childProducts
+	        'type' => type,
+	        'childProducts' => childProducts,
+	        'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
         }
       }
-      return post("/products", product)
+      post("/products", product)
     end
     
     # TODO: Should we change these to bind to better match terminology?

@@ -4,6 +4,7 @@ Feature: Virtualization guest and host recognition
 
     Background:
         Given an owner admin "test_owner"
+        And product "virtualization_host" exists
         And test owner has 2 entitlements for "virtualization_host"
 
     Scenario: A guest cannot consume virtual host entitlements
