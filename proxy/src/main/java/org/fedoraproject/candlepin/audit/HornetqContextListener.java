@@ -40,12 +40,12 @@ public class HornetqContextListener implements ServletContextListener {
     private static  Logger log = Logger.getLogger(HornetqContextListener.class);
     
     private HornetQServer hornetqServer;
-    private EventHub eventHub;
+    private EventSource eventSource;
     
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
         if (hornetqServer != null) {
-            eventHub.shutDown();
+            eventSource.shutDown();
             try {
                 hornetqServer.stop();
             }
@@ -86,9 +86,9 @@ public class HornetqContextListener implements ServletContextListener {
 
         cleanupOldQueues();
         
-        eventHub = new EventHub();
-        eventHub.registerListener(new OtherExampleListener());
-        eventHub.registerListener(new ExampleListener());
+        eventSource = new EventSource();
+        eventSource.registerListener(new OtherExampleListener());
+        eventSource.registerListener(new ExampleListener());
     }
 
     /**

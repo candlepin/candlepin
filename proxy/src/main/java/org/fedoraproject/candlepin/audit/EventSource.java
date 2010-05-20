@@ -18,23 +18,21 @@ import org.apache.log4j.Logger;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientConsumer;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.ClientProducer;
 import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 
 /**
- * EventKit
+ * EventSource
  */
-public class EventHub {
+class EventSource {
     private static  Logger log = Logger.getLogger(HornetqContextListener.class);
+    static final String QUEUE_ADDRESS = "event";
 
-    private static final String QUEUE_ADDRESS = "event";
     private ClientSession session;
     
-    public EventHub() {
+    EventSource() {
         ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
 
@@ -47,7 +45,7 @@ public class EventHub {
         }
     }
     
-    public void shutDown() {
+    void shutDown() {
         try {
             session.stop();
             session.close();
@@ -57,7 +55,7 @@ public class EventHub {
         }
     }
     
-    public void registerListener(EventListener listener) {
+    void registerListener(EventListener listener) {
         String queueName = QUEUE_ADDRESS + "." + listener.getClass().getCanonicalName();
         log.debug("registering listener for " + queueName);
         try {
@@ -80,30 +78,4 @@ public class EventHub {
             e.printStackTrace();
         }
     }
-    
-    public static void sendEvent(Event event) {
-        if (log.isDebugEnabled()) {
-            log.debug("Sending event - " + event);
-        }
-        
-        try {
-            ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
-                new TransportConfiguration(InVMConnectorFactory.class.getName()));
-            
-            ClientSession session = factory.createSession();
-            
-            ClientProducer producer = session.createProducer(QUEUE_ADDRESS);
-            
-            ClientMessage message = session.createMessage(true);
-            
-            message.getBodyBuffer().writeString(event.getMessage());
-            
-            producer.send(message);
-            session.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    
 }

@@ -21,7 +21,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventHub;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -102,7 +102,7 @@ public class AdminResource {
     }
     
     private void messageTry() {
-        EventHub.sendEvent(new Event(Event.EventType.GENERIC_MESSAGE, null, null, "",
+        EventSink.sendEvent(new Event(Event.EventType.GENERIC_MESSAGE, null, null, "",
             "Hello, I am an example event"));
     }
 }
