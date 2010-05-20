@@ -14,12 +14,15 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import java.io.File;
 import java.util.HashSet;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.SimpleString;
 import org.hornetq.api.core.TransportConfiguration;
@@ -57,7 +60,9 @@ public class HornetqContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
+        
         if (hornetqServer == null) {
+            
             Configuration config = new ConfigurationImpl();
 
             HashSet<TransportConfiguration> transports =
@@ -76,9 +81,12 @@ public class HornetqContextListener implements ServletContextListener {
             config.setCreateBindingsDir(true);
             config.setCreateJournalDir(true);
 
-            config.setBindingsDirectory("/tmp/hornetq/bindings");
-            config.setJournalDirectory("/tmp/hornetq/journal");
-            config.setLargeMessagesDirectory("/tmp/hornetq/largemsgs");
+            Config candlepinConfig = new Config();
+            String baseDir = candlepinConfig.getString(ConfigProperties.HORNETQ_BASE_DIR);
+            
+            config.setBindingsDirectory(new File(baseDir, "bindings").toString());
+            config.setJournalDirectory(new File(baseDir, "journal").toString());
+            config.setLargeMessagesDirectory(new File(baseDir, "largemsgs").toString());
 
             hornetqServer = new HornetQServerImpl(config);
         }
@@ -86,7 +94,8 @@ public class HornetqContextListener implements ServletContextListener {
             hornetqServer.start();
         }
         catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to start hornetq message server - " + e);
+            throw new RuntimeException(e);
         }
 
         cleanupOldQueues();
@@ -127,7 +136,6 @@ public class HornetqContextListener implements ServletContextListener {
         }
         catch (HornetQException e) {
             log.error("Problem cleaning old message queues - " + e);
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
