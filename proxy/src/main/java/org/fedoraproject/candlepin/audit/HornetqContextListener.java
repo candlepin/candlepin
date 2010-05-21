@@ -17,9 +17,6 @@ package org.fedoraproject.candlepin.audit;
 import java.io.File;
 import java.util.HashSet;
 
-import javax.servlet.ServletContextEvent;
-import javax.ws.rs.ext.Provider;
-
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
@@ -42,7 +39,6 @@ import com.google.inject.Injector;
  * HornetqContextListener - Invoked from our core CandlepinContextListener, thus
  * doesn't actually implement ServletContextListener.
  */
-@Provider
 public class HornetqContextListener {
     
     private static  Logger log = Logger.getLogger(HornetqContextListener.class);
@@ -50,7 +46,7 @@ public class HornetqContextListener {
     private HornetQServer hornetqServer;
     private EventSource eventSource;
     
-    public void contextDestroyed(ServletContextEvent arg0) {
+    public void contextDestroyed() {
         if (hornetqServer != null) {
             eventSource.shutDown();
             try {
@@ -62,7 +58,7 @@ public class HornetqContextListener {
         }
     }
 
-    public void contextInitialized(Injector injector, ServletContextEvent arg0) {
+    public void contextInitialized(Injector injector) {
         
         Config candlepinConfig = new Config();
         if (hornetqServer == null) {
