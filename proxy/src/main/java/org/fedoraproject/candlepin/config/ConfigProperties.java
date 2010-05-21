@@ -30,7 +30,8 @@ public class ConfigProperties {
     public static final String CA_CERT = "candlepin.ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
     
-    public static final String HORNETQ_BASE_DIR = "candlepin.hornetq.base_dir"; 
+    public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
+    public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -40,6 +41,8 @@ public class ConfigProperties {
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
                 
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
+                this.put(AUDIT_LISTENERS, "org.fedoraproject.candlepin.audit.ExampleListener," + 
+                    "org.fedoraproject.candlepin.audit.OtherExampleListener");
             }
         };
 }

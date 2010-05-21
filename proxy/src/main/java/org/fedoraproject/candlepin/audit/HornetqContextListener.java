@@ -61,6 +61,7 @@ public class HornetqContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
         
+        Config candlepinConfig = new Config();
         if (hornetqServer == null) {
             
             Configuration config = new ConfigurationImpl();
@@ -81,7 +82,6 @@ public class HornetqContextListener implements ServletContextListener {
             config.setCreateBindingsDir(true);
             config.setCreateJournalDir(true);
 
-            Config candlepinConfig = new Config();
             String baseDir = candlepinConfig.getString(ConfigProperties.HORNETQ_BASE_DIR);
             
             config.setBindingsDirectory(new File(baseDir, "bindings").toString());
@@ -100,9 +100,18 @@ public class HornetqContextListener implements ServletContextListener {
 
         cleanupOldQueues();
         
+        String [] listeners = candlepinConfig.getStringArray(ConfigProperties.AUDIT_LISTENERS);
         eventSource = new EventSource();
-        eventSource.registerListener(new OtherExampleListener());
-        eventSource.registerListener(new ExampleListener());
+        for (int i = 0; i < listeners.length; i++) {
+            try {
+                Class clazz = this.getClass().getClassLoader().loadClass(listeners[i]);
+                EventListener listener = (EventListener) clazz.newInstance();
+                eventSource.registerListener(listener);
+            }
+            catch (Exception e) {
+                log.warn("Unable to load audit listener " + listeners[i]);
+            }
+        }
     }
 
     /**
