@@ -288,6 +288,9 @@ begin
         features = parts.join(":")
     end
     task.cucumber_opts << " #{features}" if not features.nil?
+    
+    # Add in our ruby client lib
+    task.libs << '../client/ruby'
   end
 
   Cucumber::Rake::Task.new do |task|
