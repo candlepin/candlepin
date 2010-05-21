@@ -40,24 +40,27 @@ public class EventFactory {
 
     public Event consumerCreated(Principal principal, Consumer newConsumer) {
         ObjectMapper mapper = new ObjectMapper();
-        String newEntityJson = null;
+        String newEntityJson = "";
         // TODO: Throw an auditing exception here
 
-        try {
-            newEntityJson = mapper.writeValueAsString(newConsumer);
-        }
-        catch (JsonGenerationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (JsonMappingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        // Drop data on consumer we do not want serialized, Jackson doesn't seem to
+        // care about XmlTransient annotations when used here:
+//
+//        try {
+//            newEntityJson = mapper.writeValueAsString(newConsumer);
+//        }
+//        catch (JsonGenerationException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//        catch (JsonMappingException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//        catch (IOException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
 
         Event e = new Event(EventType.CONSUMER_CREATED, principal, newConsumer.getId(),
             null, newEntityJson);

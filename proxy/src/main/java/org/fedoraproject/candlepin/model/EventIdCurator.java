@@ -20,6 +20,8 @@ import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import com.wideplay.warp.persist.Transactional;
+
 /**
  * EventIdCurator - Interface to request a unique event ID.
  */
@@ -37,6 +39,7 @@ public class EventIdCurator extends AbstractHibernateCurator<EventId> {
      *
      * @return next available serial number.
      */
+    @Transactional
     public Long getNextEventId() {
         EventId eventId = new EventId();
         create(eventId);

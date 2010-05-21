@@ -20,8 +20,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -67,7 +65,6 @@ public class AdminResource {
     @Path("init")
     @AllowRoles(roles = {Role.NO_AUTH})
     public String initialize() {
-        messageTry();
         log.debug("Called initialize()");
 
         // First, determine if we've already setup the DB and if so, do *nothing*!
@@ -101,8 +98,4 @@ public class AdminResource {
         return "Initialized!";
     }
     
-    private void messageTry() {
-        EventSink.sendEvent(new Event(Event.EventType.GENERIC_MESSAGE, null, null, "",
-            "Hello, I am an example event"));
-    }
 }

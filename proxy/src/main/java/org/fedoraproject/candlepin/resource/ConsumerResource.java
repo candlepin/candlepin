@@ -196,6 +196,7 @@ public class ConsumerResource {
 
             if (log.isDebugEnabled()) {
                 log.debug("Generated identity cert: " + idCert);
+                log.debug("Created consumer: " + consumer);
             }
 
             if (idCert == null) {

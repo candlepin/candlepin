@@ -302,7 +302,7 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
 
     @Override
     public String toString() {
-        return "Consumer [type = " + this.getType() + ", getName() = " +
+        return "Consumer [id = " + getId() + ", type = " + getType() + ", getName() = " +
             getName() + "]";
     }
 

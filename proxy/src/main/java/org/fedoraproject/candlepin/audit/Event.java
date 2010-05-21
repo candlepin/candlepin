@@ -147,6 +147,6 @@ public class Event implements Persisted {
 
     public String toString() {
         return "Event [" + "id=" + getId() + ", type=" + getType() + ", time=" +
-            getTimestamp() + "]";
+            getTimestamp() + ", entity=" + getEntityId() + "]";
     }
 }
