@@ -30,7 +30,6 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
