@@ -133,6 +133,9 @@ public class HornetqContextListener implements ServletContextListener {
                         queues[i], msgCount));
                 }
             }
+
+            session.stop();
+            session.close();
         }
         catch (HornetQException e) {
             log.error("Problem cleaning old message queues - " + e);
