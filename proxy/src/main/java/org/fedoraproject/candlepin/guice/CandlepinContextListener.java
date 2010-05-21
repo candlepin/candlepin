@@ -40,6 +40,7 @@ import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 
 import org.fedoraproject.candlepin.audit.HornetqContextListener;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener;
 
 /**
  * Customized Candlepin version of {@link GuiceResteasyBootstrapServletContextListener}.
@@ -53,6 +54,7 @@ import org.fedoraproject.candlepin.audit.HornetqContextListener;
 public class CandlepinContextListener extends
         GuiceResteasyBootstrapServletContextListener {
     private HornetqContextListener hornetqListener;
+    private PinsetterContextListener pinsetterListener;
     
     // a bit of application-initialization code. Not sure if this is the best spot for it.
     static {
@@ -79,10 +81,14 @@ public class CandlepinContextListener extends
         hornetqListener = injector.getInstance(HornetqContextListener.class);
         hornetqListener.contextInitialized(injector, event);
         
+        pinsetterListener = new PinsetterContextListener();
+        pinsetterListener.contextInitialized(event);
+        
     }
     
     public void contextDestroyed(ServletContextEvent event) {
         hornetqListener.contextDestroyed(event);
+        pinsetterListener.contextDestroyed(event);
     }
     
     /**
