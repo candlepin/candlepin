@@ -18,6 +18,7 @@ import java.io.File;
 import java.util.HashSet;
 
 import javax.servlet.ServletContextEvent;
+import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
@@ -41,6 +42,7 @@ import com.google.inject.Injector;
  * HornetqContextListener - Invoked from our core CandlepinContextListener, thus
  * doesn't actually implement ServletContextListener.
  */
+@Provider
 public class HornetqContextListener {
     
     private static  Logger log = Logger.getLogger(HornetqContextListener.class);
