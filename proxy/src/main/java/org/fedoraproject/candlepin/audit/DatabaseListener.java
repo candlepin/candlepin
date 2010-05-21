@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.EventCurator;
 
 import com.google.inject.Inject;
@@ -24,6 +25,7 @@ import com.google.inject.Inject;
 public class DatabaseListener implements EventListener {
 
     private EventCurator eventCurator;
+    private static Logger log = Logger.getLogger(DatabaseListener.class);
 
     @Inject
     public DatabaseListener(EventCurator eventCurator) {
@@ -32,15 +34,7 @@ public class DatabaseListener implements EventListener {
 
     @Override
     public void onEvent(Event event) {
-        System.out.println(this.toString() + "I GOT A MESSAGE");
-        System.out.flush();
-        try {
-            Thread.sleep(10);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("  message = " + event);
+        log.debug("Received event: " + event);
         eventCurator.create(event);
     }
 

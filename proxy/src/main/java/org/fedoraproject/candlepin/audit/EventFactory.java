@@ -14,10 +14,6 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import java.io.IOException;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.audit.Event.EventType;
 import org.fedoraproject.candlepin.auth.Principal;

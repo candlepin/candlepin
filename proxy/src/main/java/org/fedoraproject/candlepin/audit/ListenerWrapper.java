@@ -14,6 +14,12 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import java.io.IOException;
+
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.MessageHandler;
@@ -24,6 +30,7 @@ import org.hornetq.api.core.client.MessageHandler;
 public class ListenerWrapper implements MessageHandler {
 
     private EventListener listener;
+    private static Logger log = Logger.getLogger(ListenerWrapper.class);
     
     public ListenerWrapper(EventListener listener) {
         this.listener = listener;
@@ -31,8 +38,26 @@ public class ListenerWrapper implements MessageHandler {
     
     @Override
     public void onMessage(ClientMessage msg) {
-        listener.onEvent(new Event(Event.EventType.GENERIC_MESSAGE, null, null, "",
-            msg.getBodyBuffer().readString()));
+        String body = msg.getBodyBuffer().readString();
+        log.debug("Got event: " + body);
+        ObjectMapper mapper = new ObjectMapper();
+        Event event;
+        try {
+            event = mapper.readValue(body, Event.class);
+            listener.onEvent(event);
+        }
+        catch (JsonParseException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        catch (JsonMappingException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         try {
             msg.acknowledge();
         }

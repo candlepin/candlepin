@@ -18,8 +18,6 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -47,7 +45,7 @@ public class Event implements Persisted {
 
     // Uniquely identifies the event:
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
+//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
     private Long id;
 
     @Column(nullable = false)
@@ -68,6 +66,9 @@ public class Event implements Persisted {
     // Both old/new may be null for creation/deletion events.
     private String oldEntity;
     private String newEntity;
+
+    public Event() {
+    }
 
     public Event(EventType type, Principal principal,
         Long entityId, String oldEntity, String newEntity) {
@@ -138,11 +139,6 @@ public class Event implements Persisted {
     }
     public void setNewEntity(String newEntity) {
         this.newEntity = newEntity;
-    }
-
-    // TODO: Remove:
-    public String getMessage() {
-        return newEntity;
     }
 
     public String toString() {

@@ -23,7 +23,7 @@ public class OtherExampleListener implements EventListener {
     @Override
     public void onEvent(Event event) {
         System.out.println(this.toString() + "I GOT A MESSAGE TOO");
-        System.out.println("  message = " + event.getMessage());
+        System.out.println("  message = " + event);
     }
 
 }

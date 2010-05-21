@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.audit;
 
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.hornetq.api.core.TransportConfiguration;
@@ -32,7 +33,7 @@ import com.google.inject.Inject;
  */
 public class EventSink {
     
-    private static  Logger log = Logger.getLogger(EventSink.class);
+    private static Logger log = Logger.getLogger(EventSink.class);
     private EventFactory eventFactory;
 
     @Inject
@@ -55,7 +56,9 @@ public class EventSink {
             
             ClientMessage message = session.createMessage(true);
             
-            message.getBodyBuffer().writeString(event.getMessage());
+            ObjectMapper mapper = new ObjectMapper();
+            String eventString = mapper.writeValueAsString(event);
+            message.getBodyBuffer().writeString(eventString);
             
             producer.send(message);
             session.close();
