@@ -64,7 +64,9 @@ public class Event implements Persisted {
     private Long entityId;
 
     // Both old/new may be null for creation/deletion events.
+    @Column(columnDefinition = "TEXT")
     private String oldEntity;
+    @Column(columnDefinition = "TEXT")
     private String newEntity;
 
     public Event() {

@@ -14,7 +14,14 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.AnnotationIntrospector;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.audit.Event.EventType;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -35,28 +42,36 @@ public class EventFactory {
     }
 
     public Event consumerCreated(Principal principal, Consumer newConsumer) {
+        
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+            
         ObjectMapper mapper = new ObjectMapper();
+        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
+        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+
         String newEntityJson = "";
         // TODO: Throw an auditing exception here
 
         // Drop data on consumer we do not want serialized, Jackson doesn't seem to
         // care about XmlTransient annotations when used here:
-//
-//        try {
-//            newEntityJson = mapper.writeValueAsString(newConsumer);
-//        }
-//        catch (JsonGenerationException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        catch (JsonMappingException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        catch (IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
+
+        try {
+            newEntityJson = mapper.writeValueAsString(newConsumer);
+        }
+        catch (JsonGenerationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (JsonMappingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         Event e = new Event(EventType.CONSUMER_CREATED, principal, newConsumer.getId(),
             null, newEntityJson);

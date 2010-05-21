@@ -28,6 +28,7 @@ RESTEASY = [group('jaxrs-api',
 JACKSON = [group('jackson-core-lgpl', 
                  'jackson-mapper-lgpl', 
                  'jackson-jaxrs',
+                 'jackson-xc',
                  :under => 'org.codehaus.jackson',
                  :version => '1.4.1')]
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
