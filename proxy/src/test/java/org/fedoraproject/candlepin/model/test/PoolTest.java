@@ -19,6 +19,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -29,6 +30,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -161,27 +163,46 @@ public class PoolTest extends DatabaseTestFixture {
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
         poolCurator.create(pool);
+        
         assertNotNull(pool.getCreated());
-        assertNotNull(pool.getUpdated());
     }
-
-    /**
-     * After updating an existing pool object, test is made to determine whether
-     * the updated value has changed and created date has not changed.
-     */
+    
     @Test
-    public void testUpdationTimestamp() {
+    public void testInitialUpdateTimestamp() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
         Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
-        poolCurator.create(pool);
-        Date created = (Date) pool.getCreated().clone();
+        pool = poolCurator.create(pool);
+        
+        assertNotNull(pool.getUpdated());
+    }
+
+    /**
+     * After updating an existing pool object, test is made to determine whether
+     * the updated value has changed
+     */
+    @Test
+    public void testSubsequentUpdateTimestamp() {
+        Product newProduct = TestUtil.createProduct();
+        productCurator.create(newProduct);
+        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+            TestUtil.createDate(2011, 3, 30),
+            TestUtil.createDate(2022, 11, 29));
+        
+        pool = poolCurator.create(pool);
+        
+        // set updated to 10 minutes ago
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, -10);
+        pool.setUpdated(calendar.getTime());
+        
         Date updated = (Date) pool.getUpdated().clone();
         pool.setQuantity(23L);
         pool = poolCurator.merge(pool);
-        assertTrue(created.getTime() == pool.getCreated().getTime());
+        
         assertFalse(updated.getTime() == pool.getUpdated().getTime());
     }
+    
 }

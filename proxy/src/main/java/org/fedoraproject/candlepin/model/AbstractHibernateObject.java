@@ -38,22 +38,32 @@ public abstract class AbstractHibernateObject implements Persisted {
 
     @PrePersist
     protected void onCreate() {
-        created = new Date();
-        updated = created;
+        Date now = new Date();
+        
+        setCreated(now);
+        setUpdated(now);
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updated = new Date();
+        setUpdated(new Date());
     }
 
     @Column(nullable = false, unique = true)
     public Date getCreated() {
         return created;
     }
+    
+    public void setCreated(Date created) {
+        this.created = created;
+    }
 
     @Column(nullable = false, unique = true)
     public Date getUpdated() {
         return updated;
+    }
+    
+    public void setUpdated(Date updated) {
+        this.updated = updated;
     }
 }
