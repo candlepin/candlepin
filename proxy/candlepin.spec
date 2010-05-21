@@ -79,6 +79,8 @@ unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbo
 # /var/lib dir for hornetq state
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
 
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/log/%{name}
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -89,16 +91,19 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,jboss,jboss,-)
 %{_localstatedir}/lib/jbossas/server/production/deploy/%{name}*
 %{_localstatedir}/lib/%{name}
+%{_localstatedir}/log/%{name}
 
 %files tomcat5
 %defattr(644,tomcat,tomcat,775)
 %{_localstatedir}/lib/tomcat5/webapps/%{name}*
 %{_localstatedir}/lib/%{name}
+%{_localstatedir}/log/%{name}
 
 %files tomcat6
 %defattr(644,tomcat,tomcat,775)
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 %{_localstatedir}/lib/%{name}
+%{_localstatedir}/log/%{name}
 
 %changelog
 * Tue May 11 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.13-1
