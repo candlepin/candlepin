@@ -27,11 +27,14 @@ import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18nManager;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 
+import org.fedoraproject.candlepin.audit.HornetqContextListener;
 
 /**
  * Customized Candlepin version of {@link GuiceResteasyBootstrapServletContextListener}.
@@ -66,8 +69,22 @@ public class CandlepinContextListener extends
         final ModuleProcessor processor = new ModuleProcessor(registry, providerFactory);
 
         processor.process(getModules());
+        
+        Injector injector = Guice.createInjector(getModules());
+        
+        HornetqContextListener l = injector.getInstance(
+            HornetqContextListener.class);
+        l.contextInitialized(injector, event);
+        
     }
-
+    
+    public void contextDestroyed(ServletContextEvent event) {
+        Injector injector = Guice.createInjector(getModules());
+        HornetqContextListener l = injector.getInstance(
+            HornetqContextListener.class);
+        l.contextDestroyed(event);
+    }
+    
     /**
      * Returns a list of Guice modules to initialize.
      * @return a list of Guice modules to initialize.

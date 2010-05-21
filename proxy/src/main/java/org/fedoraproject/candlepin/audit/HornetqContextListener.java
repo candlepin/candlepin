@@ -18,7 +18,6 @@ import java.io.File;
 import java.util.HashSet;
 
 import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
@@ -36,16 +35,19 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.impl.HornetQServerImpl;
 
+import com.google.inject.Injector;
+
 /**
- * HornetqContextListener
+ * HornetqContextListener - Invoked from our core CandlepinContextListener, thus
+ * doesn't actually implement ServletContextListener.
  */
-public class HornetqContextListener implements ServletContextListener {
+public class HornetqContextListener {
+    
     private static  Logger log = Logger.getLogger(HornetqContextListener.class);
     
     private HornetQServer hornetqServer;
     private EventSource eventSource;
     
-    @Override
     public void contextDestroyed(ServletContextEvent arg0) {
         if (hornetqServer != null) {
             eventSource.shutDown();
@@ -58,8 +60,7 @@ public class HornetqContextListener implements ServletContextListener {
         }
     }
 
-    @Override
-    public void contextInitialized(ServletContextEvent arg0) {
+    public void contextInitialized(Injector injector, ServletContextEvent arg0) {
         
         Config candlepinConfig = new Config();
         if (hornetqServer == null) {
@@ -106,8 +107,8 @@ public class HornetqContextListener implements ServletContextListener {
         for (int i = 0; i < listeners.length; i++) {
             try {
                 Class clazz = this.getClass().getClassLoader().loadClass(listeners[i]);
-                EventListener listener = (EventListener) clazz.newInstance();
-                eventSource.registerListener(listener);
+                
+                eventSource.registerListener((EventListener) injector.getInstance(clazz));
             }
             catch (Exception e) {
                 log.warn("Unable to load audit listener " + listeners[i]);
