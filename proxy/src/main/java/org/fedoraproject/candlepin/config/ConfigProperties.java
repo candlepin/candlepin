@@ -43,8 +43,6 @@ public class ConfigProperties {
                 
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
                 this.put(AUDIT_LISTENERS,
-                    "org.fedoraproject.candlepin.audit.ExampleListener," + 
-                    "org.fedoraproject.candlepin.audit.OtherExampleListener," +
                     "org.fedoraproject.candlepin.audit.DatabaseListener," +
                     "org.fedoraproject.candlepin.audit.LoggingListener,");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
