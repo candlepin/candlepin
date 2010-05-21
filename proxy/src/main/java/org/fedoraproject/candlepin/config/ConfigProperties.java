@@ -41,7 +41,8 @@ public class ConfigProperties {
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
                 
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
-                this.put(AUDIT_LISTENERS, "org.fedoraproject.candlepin.audit.ExampleListener," + 
+                this.put(AUDIT_LISTENERS,
+                    "org.fedoraproject.candlepin.audit.ExampleListener," + 
                     "org.fedoraproject.candlepin.audit.OtherExampleListener");
             }
         };

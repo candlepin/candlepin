@@ -100,7 +100,8 @@ public class HornetqContextListener implements ServletContextListener {
 
         cleanupOldQueues();
         
-        String [] listeners = candlepinConfig.getStringArray(ConfigProperties.AUDIT_LISTENERS);
+        String [] listeners =
+            candlepinConfig.getStringArray(ConfigProperties.AUDIT_LISTENERS);
         eventSource = new EventSource();
         for (int i = 0; i < listeners.length; i++) {
             try {
