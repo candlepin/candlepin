@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.audit;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
@@ -23,14 +25,19 @@ import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 
+import com.google.inject.Inject;
+
 /**
- * EventSink
+ * EventSink - Reliably dispatches events to all configured listeners.
  */
 public class EventSink {
-    private static  Logger log = Logger.getLogger(HornetqContextListener.class);
     
-    private EventSink() {
-        
+    private static  Logger log = Logger.getLogger(EventSink.class);
+    private EventFactory eventFactory;
+
+    @Inject
+    public EventSink(EventFactory eventFactory) {
+        this.eventFactory = eventFactory;
     }
     
     public static void sendEvent(Event event) {
@@ -58,4 +65,9 @@ public class EventSink {
         }
     }
     
+    public void emitConsumerCreated(Principal principal, Consumer newConsumer) {
+        Event e = eventFactory.consumerCreated(principal, newConsumer);
+        EventSink.sendEvent(e);
+    }
+
 }
