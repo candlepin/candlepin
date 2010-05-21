@@ -30,10 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "CandlepinObject")
 public abstract class AbstractHibernateObject implements Persisted {
 
-    @XmlElement
     private Date created;
-
-    @XmlElement
     private Date updated;
 
     @PrePersist
@@ -49,6 +46,7 @@ public abstract class AbstractHibernateObject implements Persisted {
         setUpdated(new Date());
     }
 
+    @XmlElement
     @Column(nullable = false, unique = true)
     public Date getCreated() {
         return created;
@@ -58,6 +56,7 @@ public abstract class AbstractHibernateObject implements Persisted {
         this.created = created;
     }
 
+    @XmlElement
     @Column(nullable = false, unique = true)
     public Date getUpdated() {
         return updated;
