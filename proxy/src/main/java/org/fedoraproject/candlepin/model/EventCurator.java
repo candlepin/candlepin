@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+
 import org.fedoraproject.candlepin.audit.Event;
 
 /**

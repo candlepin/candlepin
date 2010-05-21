@@ -29,7 +29,7 @@ public class ExampleListener implements EventListener {
         catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("  message = " + event.getMessage());
+        System.out.println("  event = " + event);
     }
 
 }

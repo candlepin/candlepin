@@ -140,7 +140,13 @@ public class Event implements Persisted {
         this.newEntity = newEntity;
     }
 
+    // TODO: Remove:
     public String getMessage() {
         return newEntity;
+    }
+
+    public String toString() {
+        return "Event [" + "id=" + getId() + ", type=" + getType() + ", time=" +
+            getTimestamp() + "]";
     }
 }

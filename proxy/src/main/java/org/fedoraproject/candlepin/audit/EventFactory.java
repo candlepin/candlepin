@@ -22,11 +22,21 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.audit.Event.EventType;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.EventIdCurator;
+
+import com.google.inject.Inject;
 
 /**
  * EventFactory
  */
 public class EventFactory {
+
+    private EventIdCurator eventIdCurator;
+
+    @Inject
+    public EventFactory(EventIdCurator eventIdCurator) {
+        this.eventIdCurator = eventIdCurator;
+    }
 
     public Event consumerCreated(Principal principal, Consumer newConsumer) {
         ObjectMapper mapper = new ObjectMapper();
@@ -51,6 +61,8 @@ public class EventFactory {
 
         Event e = new Event(EventType.CONSUMER_CREATED, principal, newConsumer.getId(),
             null, newEntityJson);
+        // TODO: Move somewhere more widespread:
+        e.setId(eventIdCurator.getNextEventId());
         return e;
     }
 }
