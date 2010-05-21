@@ -15,10 +15,11 @@
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -318,7 +319,15 @@ public class ProductTest extends DatabaseTestFixture {
     public void testCreationDate() {
         Product prod = new Product("test-label", "test-product-name");
         productCurator.create(prod);
+        
         assertNotNull(prod.getCreated());
+    }
+    
+    @Test
+    public void testInitialUpdate() {
+        Product prod = new Product("test-label", "test-product-name");
+        productCurator.create(prod);
+        
         assertNotNull(prod.getUpdated());
     }
 
@@ -326,16 +335,19 @@ public class ProductTest extends DatabaseTestFixture {
      * Test whether the product updation date is updated when merging.
      */
     @Test
-    public void testUpdationDate() {
+    public void testSubsequentUpdate() {
         Product prod = new Product("test-label", "test-product-name");
         productCurator.create(prod);
-        long created = prod.getCreated().getTime();
+        
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -2);
+        prod.setUpdated(calendar.getTime());
+        
         long updated = prod.getUpdated().getTime();
 
         prod.setName("test-changed-name");
-        this.productCurator.merge(prod);
-        assertTrue(prod.getCreated().getTime() == created);
-        assertFalse(prod.getUpdated().getTime() == updated);
+        prod = this.productCurator.merge(prod);
+        assertTrue(prod.getUpdated().getTime() > updated);
     }
 
 }
