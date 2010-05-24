@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.13
+Version: 0.0.14
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -95,6 +95,90 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/tomcat6/webapps/%{name}*
 
 %changelog
+* Mon May 24 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.14-1
+- remove unused import (jesusr@redhat.com)
+- add @return tag, fix typo (jesusr@redhat.com)
+- Add product_hash interfaces (morazi@redhat.com)
+- Adding ruby client lib to be used by cuke tests. (jharris@redhat.com)
+- Ruby lib move. (jharris@redhat.com)
+- Putting explicit update timestamp in product test too. (jharris@redhat.com)
+- Moving xml annotation to allow for setter methods. (jharris@redhat.com)
+- Checkstyle for zeus. (jharris@redhat.com)
+- Changing pool update timestamp test to explicitly set the initial update
+  time. (jharris@redhat.com)
+- cuke: Minor test cleanup. (dgoodwin@redhat.com)
+- added role checks on RulesResource and RuleCurator (ddolguik@redhat.com)
+- checkstyle fixups (jbowes@redhat.com)
+- add JACKSON to genschema dep (jesusr@redhat.com)
+- Add a few more test cases to cover productCurator.update and the childContent
+  blkUpdate methods (alikins@redhat.com)
+- added ability to pass attributes during product creation. by default,
+  atributte with the name of the product is created (ddolguik@redhat.com)
+- no longer relying on a concrete implementation of List interface in
+  select_pool_global() (ddolguik@redhat.com)
+- added test for pool selection when multiple rules match (ddolguik@redhat.com)
+- best pool selection now relies on product attributes instead of product
+  names. (ddolguik@redhat.com)
+- changed entitlement rules to use product attributes instead of product names
+  (ddolguik@redhat.com)
+- Removing StatusResourceTest. (dgoodwin@redhat.com)
+- First draft of Event model. (dgoodwin@redhat.com)
+- corrected checkstyle errors. (anadathu@redhat.com)
+- refractored base classes to extend AbstractHibernateObject.java
+  (anadathu@redhat.com)
+- refractored model objects to include AbstractHibernateObject as base class.
+  (anadathu@redhat.com)
+- Adding a system principle for super admin rights for system calls
+  (calfonso@redhat.com)
+- Added an owner lookup / creation during authentication (calfonso@redhat.com)
+- Change product parent/child relationship to many-to-many (jbowes@redhat.com)
+- Add test for bind by token when pool already exists. (dgoodwin@redhat.com)
+- Fixing owner param for subscription api call. (jharris@redhat.com)
+- Adding an owner to the api for getting subscriptions for a token
+  (calfonso@redhat.com)
+- Removing consumer check from the Principal. (jharris@redhat.com)
+- cuke: Fix failures from merge. (dgoodwin@redhat.com)
+- Create pools during bind by token if a new subscription is returned.
+  (dgoodwin@redhat.com)
+- cuke: Add tests for token sub to pool changes. (dgoodwin@redhat.com)
+- Cleanup tokens when deleting an owner. (dgoodwin@redhat.com)
+- Drop Subscription attributes foreign key. (dgoodwin@redhat.com)
+- cuke: Drop unused Satellite cert steps. (dgoodwin@redhat.com)
+- cuke: Add more assumptions on use of the test owner. (dgoodwin@redhat.com)
+- fix checkstyle (jbowes@redhat.com)
+- add a listall boolean param to GET /pools (jbowes@redhat.com)
+- cuke: add basic test for listing all pools as a consumer (jbowes@redhat.com)
+- fixed failing ConsumerResource tests (ddolguik@redhat.com)
+- added access control tests for EntitlementCurator (ddolguik@redhat.com)
+- added access control tests for PoolCurator#listAvailableEntitlementPools
+  (ddolguik@redhat.com)
+- cuke: fix up entitlement access control (jbowes@redhat.com)
+- Adding in product definitions for entitlement and unregister functional
+  tests. (jharris@redhat.com)
+- rename shouldGrantAcessTo -> shouldGrantAccessTo (jesusr@redhat.com)
+- removed an unused variable (ddolguik@redhat.com)
+- access control inteceptor now verifies if find() return a null before
+  attempting validation (ddolguik@redhat.com)
+- access control interceptor now verifies that the object returned by find()
+  implements AccessControlEnforced interface. (ddolguik@redhat.com)
+- enabled access control interceptor in all tests in
+  ConsumerCuratorAccessControlTest (ddolguik@redhat.com)
+- added access control around AbstractHibernateCurator#find
+  (ddolguik@redhat.com)
+- added lower-level tests to verify access control for Entitlements for list
+  operations (ddolguik@redhat.com)
+- checkstyle fixes (alikins@redhat.com)
+- apicrawler: print out return type (jbowes@redhat.com)
+- apicrawler: print out query param type (jbowes@redhat.com)
+- apicrawler: eliminate duplicate /'s (jbowes@redhat.com)
+- cuke: Rename current owner var to match current consumer.
+  (dgoodwin@redhat.com)
+- added access control for entitlements (ddolguik@redhat.com)
+- Getting the unbind feature back in shape. (jharris@redhat.com)
+- added access control around CosumerResource#getEntitlementCertificates() & a
+  bunch of @Transactional & @AccessControlSecured annotations on methods in
+  ConsumerCurator and EntitlementCertificateCurator (ddolguik@redhat.com)
+
 * Tue May 11 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.13-1
 - fix jboss deployment (jesusr@redhat.com)
 - checkstyle fix for OwnerResource (jbowes@redhat.com)
