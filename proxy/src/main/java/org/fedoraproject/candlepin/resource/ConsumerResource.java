@@ -314,13 +314,13 @@ public class ConsumerResource {
      * @param productId Product identifying label.
      * @return Entitled object
      */
-    private List<Entitlement> bindByProduct(String productId, Consumer consumer) {
+    private List<Entitlement> bindByProduct(String productHash, Consumer consumer) {
 
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        Product p = productAdapter.getProductById(productId);
+        Product p = productAdapter.getProductByHash(productHash, consumer.getOwner());
         if (p == null) {
             throw new BadRequestException(
-                i18n.tr("No such product: {0}", productId));
+                i18n.tr("No such product: {0}", productHash));
         }
 
         entitlementList.add(createEntitlement(consumer, p));
