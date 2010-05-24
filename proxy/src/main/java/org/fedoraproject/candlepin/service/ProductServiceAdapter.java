@@ -59,10 +59,10 @@ public interface ProductServiceAdapter {
     Product createProduct(Product product);
     
     /**
-     * Query an engineering product by it's hash
+     * Query an engineering product by its hash
      * @param productHash
      * @param owner
-     * @return
+     * @return engineering product by its hash
      */
     Product getProductByHash(String productHash, Owner owner);
     
