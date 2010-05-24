@@ -27,8 +27,10 @@ public class ContentTest extends DatabaseTestFixture {
 
     @Test
     public void testContent() {
-        Content content =  new Content("test_content", "test_vendor", 
-                                "test_url", "test_gpg_url", "1");
+        Long  contentHash = Math.abs(Long.valueOf("test-content".hashCode()));
+        Content content = new Content("test-content", contentHash, 
+                            "test-content-label", "yum", "test-vendor",
+                             "test-content-url", "test-gpg-url");
         
         contentCurator.create(content);
         
@@ -40,8 +42,10 @@ public class ContentTest extends DatabaseTestFixture {
     
     @Test
     public void testContentFoo() {
-        Content content = new Content("test_content", "test_vendor", 
-            "test_url", "test_gpg_url", "1");
+        Long  contentHash = Math.abs(Long.valueOf("test-content".hashCode()));
+        Content content = new Content("test-content", contentHash, 
+                            "test-content-label", "yum", "test-vendor",
+                             "test-content-url", "test-gpg-url");
            
             
     }

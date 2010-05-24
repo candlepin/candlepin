@@ -195,6 +195,8 @@ public class DefaultEntitlementCertServiceAdapter extends
     public List<X509ExtensionWrapper> contentExtensions(Product product) {
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
         Set<Content> content = product.getContent();
+        Set<Content> enabledContent = product.getEnabledContent();
+        
         for (Content con : content) {
             log.debug("contentset: " + con.getName() + " " + 
                     con.getType() + " " + con.getContentUrl());
@@ -219,9 +221,10 @@ public class DefaultEntitlementCertServiceAdapter extends
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY),
                     false, new DERUTF8String(con.getGpgUrl())));
+            
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED),
-                    false, new DERUTF8String(con.getEnabled())));
+                    false, new DERUTF8String((enabledContent.contains(con) ? "0" : "1")  )));
         }
         return toReturn;
     }    

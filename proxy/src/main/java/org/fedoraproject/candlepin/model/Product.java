@@ -138,6 +138,8 @@ public class Product extends AbstractHibernateObject {
         setType(type);
         setChildProducts(childProducts);
         setContent(content);
+        // FIXME
+        setEnabledContent(content);
     }
 
     protected Product() {
@@ -386,7 +388,8 @@ public class Product extends AbstractHibernateObject {
      * @return the enabledContent
      */
     public Set<Content> getEnabledContent() {
-        return enabledContent;
+//        return enabledContent;
+        return content;
     }
 
  
