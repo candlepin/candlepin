@@ -25,6 +25,7 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Persisted;
@@ -139,12 +140,15 @@ public class Event implements Persisted {
         this.entityId = entityId;
     }
 
+    @XmlTransient
     public String getOldEntity() {
         return oldEntity;
     }
     public void setOldEntity(String oldEntity) {
         this.oldEntity = oldEntity;
     }
+
+    @XmlTransient
     public String getNewEntity() {
         return newEntity;
     }
