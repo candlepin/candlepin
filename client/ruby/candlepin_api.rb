@@ -168,7 +168,6 @@ class Candlepin
     def create_content(name, hash, label, type, vendor,
                        contentUrl, gpgUrl)
       content = {
-        'content' => {
           'name' => name,
           'hash' => hash,
           'label' => label,
@@ -176,7 +175,6 @@ class Candlepin
           'vendor' => vendor,
           'contentUrl' => contentUrl,
           'gpgUrl' => gpgUrl
-        }
       }
       post("/content", content)
     end
