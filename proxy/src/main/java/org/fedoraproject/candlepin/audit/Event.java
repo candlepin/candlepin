@@ -19,9 +19,13 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Persisted;
@@ -35,6 +39,8 @@ import org.fedoraproject.candlepin.model.Persisted;
 @Entity
 @Table(name = "cp_event")
 @SequenceGenerator(name = "seq_event", sequenceName = "seq_event", allocationSize = 1)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event implements Persisted {
 
     /**
@@ -64,10 +70,13 @@ public class Event implements Persisted {
     @Column(nullable = false)
     private Long entityId;
 
-    // Both old/new may be null for creation/deletion events.
-    @Lob
+    // Both old/new may be null for creation/deletion events. These are marked
+    // Transient as we decided we do not necessarily want to store the object state
+    // in our Events table. The Event passing through the message queue will still
+    // carry them.
+    @Transient
     private String oldEntity;
-    @Lob
+    @Transient
     private String newEntity;
 
     public Event() {
@@ -131,12 +140,15 @@ public class Event implements Persisted {
         this.entityId = entityId;
     }
 
+    @XmlTransient
     public String getOldEntity() {
         return oldEntity;
     }
     public void setOldEntity(String oldEntity) {
         this.oldEntity = oldEntity;
     }
+
+    @XmlTransient
     public String getNewEntity() {
         return newEntity;
     }

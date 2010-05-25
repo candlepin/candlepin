@@ -16,6 +16,7 @@ RESTEASY = [group('jaxrs-api',
                   'resteasy-jaxrs',
                   'resteasy-jaxb-provider', 
                   'resteasy-guice', 
+                  'resteasy-atom-provider',
                   :under => 'org.jboss.resteasy',
                   :version => '1.2.1.GA'), 
             'javax.persistence:persistence-api:jar:1.0',
@@ -29,6 +30,7 @@ JACKSON = [group('jackson-core-lgpl',
                  'jackson-xc',
                  :under => 'org.codehaus.jackson',
                  :version => '1.5.2')]
+SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
 LOG4J = 'log4j:log4j:jar:1.2.14'
 HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
@@ -137,7 +139,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ
+      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB
  
   #
   # testing

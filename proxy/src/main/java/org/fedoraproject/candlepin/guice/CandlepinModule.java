@@ -38,6 +38,7 @@ import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
 import org.fedoraproject.candlepin.resource.ContentResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
+import org.fedoraproject.candlepin.resource.AtomFeedResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
@@ -80,6 +81,8 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);
+        bind(AtomFeedResource.class);
+        bind(ConsumerTypeResource.class);        
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
