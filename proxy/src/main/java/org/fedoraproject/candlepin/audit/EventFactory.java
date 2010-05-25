@@ -22,7 +22,6 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
-import org.fedoraproject.candlepin.audit.Event.EventType;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EventIdCurator;
@@ -73,8 +72,8 @@ public class EventFactory {
             e.printStackTrace();
         }
 
-        Event e = new Event(EventType.CONSUMER_CREATED, principal, newConsumer.getId(),
-            null, newEntityJson);
+        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, principal,
+            newConsumer.getId(), null, newEntityJson);
         // TODO: Move somewhere more widespread:
         e.setId(eventIdCurator.getNextEventId());
         return e;
