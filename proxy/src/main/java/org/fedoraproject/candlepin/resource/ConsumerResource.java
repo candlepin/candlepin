@@ -232,23 +232,6 @@ public class ConsumerResource {
     }
 
     /**
-     * Returns the product whose id matches pid, from the consumer, cid.
-     * 
-     * @param cid
-     *            Consumer ID to affect
-     * @param pid
-     *            Product ID to remove from Consumer.
-     * @return the product whose id matches pid, from the consumer, cid.
-     */
-    @GET
-    @Path("{consumer_uuid}/products/{product_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Product getProduct(@PathParam("consumer_uuid") String cid,
-        @PathParam("product_id") String pid) {
-        return null;
-    }
-
-    /**
      * Return the entitlement certificate for the given consumer.
      * 
      * @param consumerUuid UUID of the consumer
