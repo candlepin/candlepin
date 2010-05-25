@@ -82,21 +82,26 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
             InputStreamReader inStream = new InputStreamReader(
                     new FileInputStream(this.caKeyPath));
             PEMReader reader = null;
-
-            if (this.caKeyPassword != null) {
-                reader = new PEMReader(inStream, this);
+    
+            try {
+                if (this.caKeyPassword != null) {
+                    reader = new PEMReader(inStream, this);
+                }
+                else {
+                    reader = new PEMReader(inStream);
+                }
+    
+                KeyPair caKeyPair = (KeyPair) reader.readObject();
+    
+                if (caKeyPair == null) {
+                    throw new GeneralSecurityException("Reading CA private key failed");
+                }
+    
+                return caKeyPair.getPrivate();
             }
-            else {
-                reader = new PEMReader(inStream);
+            finally {
+                reader.close();
             }
-
-            KeyPair caKeyPair = (KeyPair) reader.readObject();
-
-            if (caKeyPair == null) {
-                throw new GeneralSecurityException("Reading CA private key failed");
-            }
-
-            return caKeyPair.getPrivate();
         }
 
         return null;
