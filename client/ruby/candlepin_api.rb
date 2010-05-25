@@ -179,6 +179,11 @@ class Candlepin
     def list_products
       get("/products")
     end
+
+    def create_content(name, hash, label, type, vendor,
+                       contentUrl, gpgUrl)
+      
+    end
     
     def create_product(label, name, hash, version = 1, variant = 'ALL', 
 		       arch='ALL', type='SVC',childProducts=[], attributes = {})
