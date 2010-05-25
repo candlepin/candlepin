@@ -1,3 +1,4 @@
+
 Then /^I can create a content called "([^\"]*)"$/ do |content_name|
   create_content content_name
 end
@@ -15,8 +16,12 @@ end
 
 
 def create_content(content_name)
-  @candlepin.create_content(content_name, content_name.hash.abs,
-                            content_name, 'yum', 'test-vendor',
-                            '/path/to/test/content/' + content_name,
-                            'path/to/gpg/' + content_name)
+  @content = @candlepin.create_content(content_name, content_name.hash.abs,
+                                       content_name, 'yum', 'test-vendor',
+                                       '/path/to/test/content/' + content_name,
+                                       'path/to/gpg/' + content_name)
+end
+
+Then /^I add a content "([^\"]*)" to a product "([^\"]*)"$/ do |content, product|
+  @candlepin.add_content_to_product(@product['id'], @content['id'], true)
 end
