@@ -25,6 +25,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -58,6 +59,21 @@ public class ContentResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Content> list() {
         return contentCurator.listAll();
+        
+    }
+    
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("/id/{content_id}")
+    public Content getContent(@PathParam("contend_id") Long contentId) {
+        Content content = contentCurator.find(contentId);
+        
+        if (content == null) {
+            throw new BadRequestException(  
+                i18n.tr("Content with id {0} could not be found", contentId));
+        }
+        
+        return content;
         
     }
     
