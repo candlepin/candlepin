@@ -167,7 +167,26 @@ class Candlepin
 
     def create_content(name, hash, label, type, vendor,
                        contentUrl, gpgUrl)
-      
+      content = {
+        'content' => {
+          'name' => name,
+          'hash' => hash,
+          'label' => label,
+          'type' => type,
+          'vendor' => vendor,
+          'contentUrl' => contentUrl,
+          'gpgUrl' => gpgUrl
+        }
+      }
+      post("/content", content)
+    end
+
+    def list_content
+      get("/content")
+    end
+
+    def get_content(content_id)
+      get("/content/id/#{content_id}")
     end
     
     def create_product(label, name, hash, version = 1, variant = 'ALL', 
