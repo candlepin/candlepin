@@ -19,9 +19,9 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Persisted;
@@ -64,10 +64,13 @@ public class Event implements Persisted {
     @Column(nullable = false)
     private Long entityId;
 
-    // Both old/new may be null for creation/deletion events.
-    @Lob
+    // Both old/new may be null for creation/deletion events. These are marked
+    // Transient as we decided we do not necessarily want to store the object state
+    // in our Events table. The Event passing through the message queue will still
+    // carry them.
+    @Transient
     private String oldEntity;
-    @Lob
+    @Transient
     private String newEntity;
 
     public Event() {
