@@ -31,6 +31,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 
@@ -235,6 +236,7 @@ public class Product extends AbstractHibernateObject {
         return attributes;
     }
     
+    @XmlTransient
     public Set<String> getAttributeNames() {
         Set<String> toReturn = new HashSet<String>();
         if (attributes == null) {

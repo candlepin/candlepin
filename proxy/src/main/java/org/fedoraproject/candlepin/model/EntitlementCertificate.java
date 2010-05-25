@@ -99,6 +99,7 @@ public class EntitlementCertificate extends AbstractHibernateObject
         this.serial = serialNumber;
     }
 
+    @XmlTransient
     public void setKey(byte[] key) {
         this.key = key;
     }
@@ -117,6 +118,7 @@ public class EntitlementCertificate extends AbstractHibernateObject
         this.key = key.getBytes();        
     }    
 
+    @XmlTransient
     public void setCert(byte[] cert) {
         this.cert = cert;
     }

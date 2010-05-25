@@ -34,6 +34,8 @@ public class ConfigProperties {
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
 
+    public static final String PRETTY_PRINT = "candlepin.pretty_print";
+
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
             private static final long serialVersionUID = 1L;
@@ -46,6 +48,8 @@ public class ConfigProperties {
                     "org.fedoraproject.candlepin.audit.DatabaseListener," +
                     "org.fedoraproject.candlepin.audit.LoggingListener,");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
+
+                this.put(PRETTY_PRINT, "false");
             }
         };
 }

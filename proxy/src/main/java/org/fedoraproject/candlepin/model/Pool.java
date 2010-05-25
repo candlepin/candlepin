@@ -224,6 +224,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     /**
      * @return owner of the pool.
      */
+    @XmlTransient
     public Owner getOwner() {
         return owner;
     }

@@ -8,7 +8,7 @@ end
 Then /^the first pool's product names have "([^\"]*)"$/ do |product_name|
   products = []
   @candlepin.get_pools do |pool|
-	products.push(pool['pool']['productname'])
+	products.push(pool['productname'])
  	#pool['pool']['productName'].should == product_name
   end
   products.include?(product_name)
@@ -26,7 +26,7 @@ end
 Then /^I see (\d*) available entitlements$/ do |num_entitlements|
   available = 0
   @found_pools.each do |pool|
-      available += pool['pool']['quantity'] - pool['pool']['consumed']
+      available += pool['quantity'] - pool['consumed']
   end
   available.should == num_entitlements.to_i
 end

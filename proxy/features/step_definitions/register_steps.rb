@@ -14,26 +14,22 @@ def register_consumer(consumer)
                            cert=@consumer['idCert']['cert'],
                            key=@consumer['idCert']['key'])
     @consumer_cp.consumer = @consumer
-    @consumers[consumer[:consumer][:name]] = @consumer_cp
+    @consumers[consumer[:name]] = @consumer_cp
 end
 
 When /I register a consumer "(\w+)"$/ do |consumer_name|
     consumer = {
-        :consumer => {
-            :type => {:label => :system},
-            :name => consumer_name,
-        }
+        :type => :system,
+        :name => consumer_name,
     }
     register_consumer(consumer)
 end
 
 When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
     consumer = {
-        :consumer => {
-            :type => {:label => :system},
-            :name => consumer_name,
-            :uuid => uuid
-        }
+        :type => :system,
+        :name => consumer_name,
+        :uuid => uuid
     }
     register_consumer(consumer)
 end
@@ -42,10 +38,8 @@ Given /^I am a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|
   # This will register with the user you are logged in as
   Given "I am logged in as \"#{@username}\"" 
   consumer = {
-      :consumer => {
-          :type => {:label => type},
-          :name => consumer_name,
-      }
+      :type => type,
+      :name => consumer_name,
   }
   register_consumer(consumer)
 end

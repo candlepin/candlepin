@@ -5,7 +5,7 @@ Then /^I should be able to view my consumer data$/ do
   consumer_uuid = @consumer['uuid']
 
   consumer = @current_consumer_cp.get_consumer(consumer_uuid)
-  consumer['consumer']['uuid'].should == consumer_uuid
+  consumer['uuid'].should == consumer_uuid
 end
 
 Then /^I should not be able to view consumer "([^\"]*)"$/ do |consumer_name|

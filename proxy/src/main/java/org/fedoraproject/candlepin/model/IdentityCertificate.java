@@ -83,6 +83,7 @@ public class IdentityCertificate extends AbstractHibernateObject{
         return key;
     }
 
+    @XmlTransient
     public void setKey(byte[] key) {
         this.key = key;
     }
@@ -101,6 +102,7 @@ public class IdentityCertificate extends AbstractHibernateObject{
         return cert;
     }
 
+    @XmlTransient
     public void setCert(byte[] cert) {
         this.cert = cert;
     }
