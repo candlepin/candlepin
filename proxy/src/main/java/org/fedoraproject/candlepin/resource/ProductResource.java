@@ -21,6 +21,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Role;
@@ -29,6 +30,7 @@ import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
@@ -113,13 +115,17 @@ public class ProductResource {
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     @Path("/{product_uuid}/content/{content_id}")
     public Product addContent(@PathParam("product_uuid") String pid,
-                              @PathParam("content_id") Long cid) {
+                              @PathParam("content_id") Long cid, 
+                              @QueryParam("enabled") Boolean enabled) {
         Product product = prodAdapter.getProductById(pid);
         
         Content content = contentCurator.find(cid);
         
         product.addContent(content);
-        return product;
+        if (enabled) {
+            product.addEnabledContent(content);
+        }
+        return prodAdapter.createProduct(product);
         
     }
     
