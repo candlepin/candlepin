@@ -14,24 +14,33 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import java.lang.reflect.Type;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+import javax.ws.rs.ext.Provider;
 
+import org.jboss.resteasy.plugins.guice.GuiceResourceFactory;
 import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
-import org.jboss.resteasy.plugins.guice.ModuleProcessor;
 import org.jboss.resteasy.spi.Registry;
+import org.jboss.resteasy.spi.ResourceFactory;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.util.GetRestful;
 import org.xnap.commons.i18n.I18nManager;
 
+import com.google.inject.Binding;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 
+import org.fedoraproject.candlepin.audit.HornetqContextListener;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener;
 
 /**
  * Customized Candlepin version of {@link GuiceResteasyBootstrapServletContextListener}.
@@ -44,6 +53,8 @@ import com.wideplay.warp.persist.UnitOfWork;
  */
 public class CandlepinContextListener extends
         GuiceResteasyBootstrapServletContextListener {
+    private HornetqContextListener hornetqListener;
+    private PinsetterContextListener pinsetterListener;
     
     // a bit of application-initialization code. Not sure if this is the best spot for it.
     static {
@@ -63,11 +74,23 @@ public class CandlepinContextListener extends
         final ResteasyProviderFactory providerFactory =
                 (ResteasyProviderFactory) context.getAttribute(
                     ResteasyProviderFactory.class.getName());
-        final ModuleProcessor processor = new ModuleProcessor(registry, providerFactory);
 
-        processor.process(getModules());
+        Injector injector = Guice.createInjector(getModules());
+        processInjector(registry, providerFactory, injector);
+
+        hornetqListener = injector.getInstance(HornetqContextListener.class);
+        hornetqListener.contextInitialized(injector);
+        
+        pinsetterListener = new PinsetterContextListener();
+        pinsetterListener.contextInitialized();
+        
     }
-
+    
+    public void contextDestroyed(ServletContextEvent event) {
+        hornetqListener.contextDestroyed();
+        pinsetterListener.contextDestroyed();
+    }
+    
     /**
      * Returns a list of Guice modules to initialize.
      * @return a list of Guice modules to initialize.
@@ -85,5 +108,27 @@ public class CandlepinContextListener extends
         modules.add(new CandlepinFilterModule());
 
         return modules;
+    }
+ 
+    /**
+     * This is what RESTEasy's ModuleProcessor does, but we need the injector afterwards.
+     * @param injector - guice injector
+     */
+    private void processInjector(Registry registry,
+        ResteasyProviderFactory providerFactory, Injector injector) {
+        for (final Binding<?> binding : injector.getBindings().values()) {
+            final Type type = binding.getKey().getTypeLiteral().getType();
+            if (type instanceof Class) {
+                final Class<?> beanClass = (Class) type;
+                if (GetRestful.isRootResource(beanClass)) {
+                    final ResourceFactory resourceFactory =
+                        new GuiceResourceFactory(binding.getProvider(), beanClass);
+                    registry.addResourceFactory(resourceFactory);
+                }
+                if (beanClass.isAnnotationPresent(Provider.class)) {
+                    providerFactory.registerProviderInstance(binding.getProvider().get());
+                }
+            }
+        }
     }
 }

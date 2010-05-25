@@ -133,12 +133,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * with separately from this event.
      *
      * @param owner Owner to be refreshed.
-     * @return List of subscription IDs which provide access to this product.
      */
-    public List<Long> refreshPools(Owner owner) {
+    public void refreshPools(Owner owner) {
         log.debug("Refreshing pools");
         
-        List<Long> validSubscriptionIds = new LinkedList<Long>();
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
         
         if (log.isDebugEnabled()) {
@@ -167,13 +165,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         
         for (Subscription sub : subs) {
-            validSubscriptionIds.add(sub.getId());
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                createPool(subToPoolMap, sub);
+                createPoolForSubscription(sub);
             }
             else {
-                updatePool(subToPoolMap, sub);
+                Pool existingPool = subToPoolMap.get(sub.getId());
+                updatePoolForSubscription(existingPool, sub);
             }
+            subToPoolMap.remove(sub.getId());
         }
     
         // de-activate pools whose subscription disappeared:
@@ -181,7 +180,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             deactivatePool(entry.getValue());
         }
         
-        return validSubscriptionIds;
     }
 
     /**
@@ -302,9 +300,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return subToPoolMap.containsKey(id);
     }
 
-    private void updatePool(Map<Long, Pool> subToPoolMap, Subscription sub) {
+    public void updatePoolForSubscription(Pool existingPool, Subscription sub) {
         log.debug("Found existing pool for sub: " + sub.getId());
-        Pool existingPool = subToPoolMap.get(sub.getId());
         
         // TODO: We're just updating the pool always now, would be much
         // better if we could check some kind of last modified date to
@@ -313,21 +310,21 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         existingPool.setStartDate(sub.getStartDate());
         existingPool.setEndDate(sub.getEndDate());
         merge(existingPool);
-        subToPoolMap.remove(sub.getId());
+
     }
 
-    private void createPool(Map<Long, Pool> subToPoolMap, Subscription sub) {
+    public void createPoolForSubscription(Subscription sub) {
         log.debug("Creating new pool for new sub: " + sub.getId());
         Pool newPool = new Pool(sub.getOwner(), sub.getProductId(),
                 sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
         newPool.setSubscriptionId(sub.getId());
         create(newPool);
-        subToPoolMap.remove(sub.getId());
+        log.debug("   new pool: " + newPool);
     }
 
     private void deactivatePool(Pool pool) {
         if (log.isDebugEnabled()) {
-            log.debug("Subscription disappeared for pool: " + pool);
+            log.info("Subscription disappeared for pool: " + pool);
         }
         pool.setActiveSubscription(Boolean.FALSE);
         merge(pool);
@@ -345,4 +342,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .list();
     }
     
+    public Pool lookupBySubscriptionId(Long subId) {
+        return (Pool) currentSession().createCriteria(Pool.class)
+        .add(Restrictions.eq("subscriptionId", subId)).uniqueResult();
+    }
 }

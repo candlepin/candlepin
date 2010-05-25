@@ -1,6 +1,6 @@
 # ENV Variables
-CANDLEPIN_HOME=/home/bkearney/code/candlepin/client/java
-REPO=/home/bkearney/.m2/repository
+CANDLEPIN_HOME=`dirname $0`
+REPO=$HOME/.m2/repository
 
 #Classpath
 CLASSPATH=$CANDLEPIN_HOME/target/classes:$CANDLEPIN_HOME/target/candlepin-client-0.0.4.jar

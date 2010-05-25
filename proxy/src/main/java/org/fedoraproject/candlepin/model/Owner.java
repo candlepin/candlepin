@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents the owner of entitlements.
@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "cp_owner")
 @SequenceGenerator(name = "seq_owner", sequenceName = "seq_owner", allocationSize = 1)
-public class Owner implements Persisted, Serializable {
+public class Owner extends AbstractHibernateObject implements Serializable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_owner")
@@ -60,6 +60,7 @@ public class Owner implements Persisted, Serializable {
     
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
+    @XmlTransient
     private Set<Pool> entitlementPools;
     
     /**

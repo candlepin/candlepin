@@ -70,7 +70,8 @@ import org.hibernate.annotations.ParamDef;
             "inner join cp_entitlement e on c.entitlement_id = e.id " +
                 "and c.owner_id = :owner_id)")
 })
-public class EntitlementCertificate implements Persisted, AccessControlEnforced {
+public class EntitlementCertificate extends AbstractHibernateObject
+    implements AccessControlEnforced {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, 
                     generator = "seq_ent_cert")
@@ -98,6 +99,7 @@ public class EntitlementCertificate implements Persisted, AccessControlEnforced 
         this.serial = serialNumber;
     }
 
+    @XmlTransient
     public void setKey(byte[] key) {
         this.key = key;
     }
@@ -116,6 +118,7 @@ public class EntitlementCertificate implements Persisted, AccessControlEnforced 
         this.key = key.getBytes();        
     }    
 
+    @XmlTransient
     public void setCert(byte[] cert) {
         this.cert = cert;
     }

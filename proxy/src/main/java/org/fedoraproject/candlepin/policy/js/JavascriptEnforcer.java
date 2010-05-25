@@ -15,8 +15,14 @@
 package org.fedoraproject.candlepin.policy.js;
 
 import java.io.Reader;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -26,6 +32,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -47,6 +54,7 @@ public class JavascriptEnforcer implements Enforcer {
 
     private ScriptEngine jsEngine;
     private I18n i18n;
+    private final Map<String, Set<Rule>> attributesToRules;
 
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
@@ -73,8 +81,13 @@ public class JavascriptEnforcer implements Enforcer {
 
         try {
             this.jsEngine.eval(rulesReader);
+            attributesToRules = parseAttributeMappings(
+                (String) ((Invocable) this.jsEngine).invokeFunction("attribute_mappings"));
         }
         catch (ScriptException ex) {
+            throw new RuleParseException(ex);
+        }
+        catch (NoSuchMethodException ex) {
             throw new RuleParseException(ex);
         }
     }
@@ -95,40 +108,25 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     private PreEntHelper runPre(Consumer consumer, Pool pool) {
-        Invocable inv = (Invocable) jsEngine;
-        String productId = pool.getProductId();
         PreEntHelper preHelper = new PreEntHelper();
 
         // Provide objects for the script:
+        Product product = prodAdapter.getProductById(pool.getProductId());
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("product", new ReadOnlyProduct(prodAdapter
-            .getProductById(productId)));
+        jsEngine.put("product", new ReadOnlyProduct(product));
         jsEngine.put("pool", new ReadOnlyEntitlementPool(pool));
         jsEngine.put("pre", preHelper);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + pool.getProductId());
-        try {
-            inv.invokeFunction(PRE_PREFIX + productId);
-            log.debug("Ran rule: " + PRE_PREFIX + productId);
+        List<Rule> matchingRules 
+            = rulesForAttributes(product.getAttributeNames(), attributesToRules);
+        
+        if (matchingRules.isEmpty()) {
+            invokeGlobalPreRule();
         }
-        catch (NoSuchMethodException e) {
-            // No method for this product, try to find a global function, if
-            // neither exists this is ok and we'll just carry on.
-            try {
-                inv.invokeFunction(GLOBAL_PRE_FUNCTION);
-                log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
-            }
-            catch (NoSuchMethodException ex) {
-                // This is fine, I hope...
-                log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
-            }
-            catch (ScriptException ex) {
-                throw new RuleExecutionException(ex);
-            }
-        }
-        catch (ScriptException e) {
-            throw new RuleExecutionException(e);
+        else {
+            callPreRules(matchingRules);
         }
         return preHelper;
     }
@@ -142,71 +140,63 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     private void runPost(PostEntHelper postHelper, Entitlement ent) {
-        Invocable inv = (Invocable) jsEngine;
         Pool pool = ent.getPool();
         Consumer c = ent.getConsumer();
-        String productId = pool.getProductId();
 
         // Provide objects for the script:
+        Product product = prodAdapter.getProductById(pool.getProductId());
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
-        jsEngine.put("product", new ReadOnlyProduct(prodAdapter
-            .getProductById(productId)));
+        jsEngine.put("product", new ReadOnlyProduct(product));
         jsEngine.put("post", postHelper);
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
 
         log.debug("Running post-entitlement rules for: " + c.getUuid() +
             " product: " + pool.getProductId());
 
-        try {
-            inv.invokeFunction(POST_PREFIX + productId);
-            log.debug("Ran rule: " + POST_PREFIX + productId);
+        List<Rule> matchingRules 
+            = rulesForAttributes(product.getAttributeNames(), attributesToRules);
+        if (matchingRules.isEmpty()) {
+            invokeGlobalPostRule();
         }
-        catch (NoSuchMethodException e) {
-            // No method for this product, try to find a global function, if
-            // neither exists this is ok and we'll just carry on.
-            try {
-                inv.invokeFunction(GLOBAL_POST_FUNCTION);
-            }
-            catch (NoSuchMethodException ex) {
-                // This is fine, I hope...
-                log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
-            }
-            catch (ScriptException ex) {
-                throw new RuleExecutionException(ex);
-            }
-
-        }
-        catch (ScriptException e) {
-            throw new RuleExecutionException(e);
+        else {
+            callPostRules(matchingRules);
         }
     }
 
-    public Pool selectBestPool(Consumer consumer, String productId,
-        List<Pool> pools) {
-
+    public Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools) {
         Invocable inv = (Invocable) jsEngine;
 
         log.info("Selecting best entitlement pool for product: " + productId);
-        List<ReadOnlyEntitlementPool> readOnlyPools =
-            new LinkedList<ReadOnlyEntitlementPool>();
-        for (Pool p : pools) {
-            log.info("   " + p);
-            readOnlyPools.add(new ReadOnlyEntitlementPool(p));
-        }
+        List<ReadOnlyEntitlementPool> readOnlyPools 
+            = ReadOnlyEntitlementPool.fromCollection(pools);
 
         // Provide objects for the script:
         jsEngine.put("pools", readOnlyPools);
-
+        
+        Product product = prodAdapter.getProductById(productId);
+        List<Rule> matchingRules 
+            = rulesForAttributes(product.getAttributeNames(), attributesToRules);
+        
         ReadOnlyEntitlementPool result = null;
-        try {
-            result = (ReadOnlyEntitlementPool) inv
-                .invokeFunction(SELECT_POOL_PREFIX + productId);
-            log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
-                productId);
+        boolean foundMatchingRule = false;
+        for (Rule rule : matchingRules) {
+            try {
+                result = (ReadOnlyEntitlementPool) inv.invokeFunction(
+                    SELECT_POOL_PREFIX + rule.getRuleName());
+                foundMatchingRule = true;
+                log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
+                    productId);
+                break;
+            }
+            catch (NoSuchMethodException e) {
+                // continue on to the next rule in the list.
+            }
+            catch (ScriptException e) {
+                throw new RuleExecutionException(e);
+            }
         }
-        catch (NoSuchMethodException e) {
-            // No method for this product, try to find a global function, if
-            // neither exists this is ok and we'll just carry on.
+        
+        if (!foundMatchingRule) {
             try {
                 result = (ReadOnlyEntitlementPool) inv
                     .invokeFunction(GLOBAL_SELECT_POOL_FUNCTION);
@@ -223,10 +213,7 @@ public class JavascriptEnforcer implements Enforcer {
                 throw new RuleExecutionException(ex);
             }
         }
-        catch (ScriptException e) {
-            throw new RuleExecutionException(e);
-        }
-
+        
         if (pools.size() > 0 && result == null) {
             throw new RuleExecutionException(
                 "Rule did not select a pool for product: " + productId);
@@ -255,5 +242,226 @@ public class JavascriptEnforcer implements Enforcer {
             return pools.get(0);
         }
         return null;
+    }
+    
+    public List<Rule> rulesForAttributes(Set<String> attributes, 
+            Map<String, Set<Rule>> rules) {
+        
+        Set<Rule> possibleMatches = new HashSet<Rule>();
+        for (String attribute : attributes) {
+            if (rules.containsKey(attribute)) {
+                possibleMatches.addAll(rules.get(attribute));
+            }
+        }
+        
+        List<Rule> matches = new LinkedList<Rule>();
+        for (Rule rule : possibleMatches) {
+            if (attributes.containsAll(rule.getAttributes())) {
+                matches.add(rule);
+            }
+        }
+        
+        Collections.sort(matches, new RuleOrderComparator());
+        return matches;
+    }
+    
+    public Map<String, Set<Rule>> parseAttributeMappings(String mappings) {
+        Map<String, Set<Rule>> toReturn = new HashMap<String, Set<Rule>>();
+        if (mappings.trim().isEmpty()) {
+            return toReturn;
+        }
+        
+        String[] separatedMappings = mappings.split(",");
+
+        for (String mapping : separatedMappings) {
+            Rule rule = parseRule(mapping);
+            for (String attribute : rule.getAttributes()) {
+                if (!toReturn.containsKey(attribute)) {
+                    toReturn.put(attribute, 
+                        new HashSet<Rule>(Collections.singletonList(rule)));
+                }
+                toReturn.get(attribute).add(rule);
+            }
+        }
+        return toReturn;
+    }
+    
+    public Rule parseRule(String toParse) {
+        String[] tokens = toParse.split(":");
+        
+        if (tokens.length < 3) {
+            throw new IllegalArgumentException(
+                i18n.tr(
+                    "'{0}' Should contain name, priority and at least one attribute",
+                    toParse)
+            );
+        }
+        
+        Set<String> attributes = new HashSet<String>();
+        for (int i = 2; i < tokens.length; i++) {
+            attributes.add(tokens[i].trim());
+        }
+        
+        try {
+            return new Rule(tokens[0].trim(), Integer.parseInt(tokens[1]), attributes);
+        } 
+        catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                i18n.tr("second parameter should be the priority number.", e));
+        }
+    }
+    
+    private void callPreRules(List<Rule> matchingRules) {
+        Invocable inv = (Invocable) jsEngine;
+        for (Rule rule : matchingRules) {
+            try {
+                inv.invokeFunction(PRE_PREFIX + rule.getRuleName());
+                log.debug("Ran rule: " + PRE_PREFIX + rule.getRuleName());
+            }
+            catch (NoSuchMethodException e) {
+                invokeGlobalPreRule();
+            }
+            catch (ScriptException e) {
+                throw new RuleExecutionException(e);
+            }
+        }
+    }
+
+    private void callPostRules(List<Rule> matchingRules) {
+        Invocable inv = (Invocable) jsEngine;
+        for (Rule rule : matchingRules) {
+            try {
+                inv.invokeFunction(POST_PREFIX + rule.getRuleName());
+                log.debug("Ran rule: " + POST_PREFIX + rule.getRuleName());
+            }
+            catch (NoSuchMethodException e) {
+                invokeGlobalPostRule();
+            }
+            catch (ScriptException e) {
+                throw new RuleExecutionException(e);
+            }
+        }
+    }
+
+    private void invokeGlobalPreRule() {
+        Invocable inv = (Invocable) jsEngine;
+        // No method for this product, try to find a global function, if
+        // neither exists this is ok and we'll just carry on.
+        try {
+            inv.invokeFunction(GLOBAL_PRE_FUNCTION);
+            log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
+        }
+        catch (NoSuchMethodException ex) {
+            // This is fine, I hope...
+            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
+        }
+        catch (ScriptException ex) {
+            throw new RuleExecutionException(ex);
+        }
+    }
+
+    private void invokeGlobalPostRule() {
+        Invocable inv = (Invocable) jsEngine;
+        // No method for this product, try to find a global function, if
+        // neither exists this is ok and we'll just carry on.
+        try {
+            inv.invokeFunction(GLOBAL_POST_FUNCTION);
+            log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
+        }
+        catch (NoSuchMethodException ex) {
+            // This is fine, I hope...
+            log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
+        }
+        catch (ScriptException ex) {
+            throw new RuleExecutionException(ex);
+        }
+    }
+    
+    /**
+     * RuleOrderComparator
+     */
+    public static class RuleOrderComparator implements Comparator<Rule> {
+        @Override
+        public int compare(Rule o1, Rule o2) {
+            return new Integer(o2.getOrder()).compareTo(new Integer(o1.getOrder()));
+        }
+    }
+    
+    /**
+     * Rule
+     */
+    public static class Rule {
+        private final String ruleName;
+        private final int order;
+        private final Set<String> attributes;
+        
+        public Rule(String ruleName, int order, Set<String> attributes) {
+            this.ruleName = ruleName;
+            this.order = order;
+            this.attributes = attributes;
+        }
+
+        public String getRuleName() {
+            return ruleName;
+        }
+
+        public int getOrder() {
+            return order;
+        }
+
+        public Set<String> getAttributes() {
+            return attributes;
+        }
+        
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result +
+                ((attributes == null) ? 0 : attributes.hashCode());
+            result = prime * result + order;
+            result = prime * result +
+                ((ruleName == null) ? 0 : ruleName.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            
+            Rule other = (Rule) obj;
+            if (attributes == null) {
+                if (other.attributes != null) {
+                    return false;
+                }
+            }
+            else if (!attributes.equals(other.attributes)) {
+                return false;
+            }
+            if (order != other.order) {
+                return false;
+            }
+            if (ruleName == null) {
+                if (other.ruleName != null) {
+                    return false;
+                }
+            }
+            else if (!ruleName.equals(other.ruleName)) {
+                return false;
+            }
+            return true;
+        }
+        
+        public String toString() {
+            return "'" + ruleName + "':" + order + ":" + attributes.toString();
+        }
     }
 }

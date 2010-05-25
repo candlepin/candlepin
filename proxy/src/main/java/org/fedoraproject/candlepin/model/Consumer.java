@@ -80,7 +80,7 @@ import org.hibernate.annotations.ParamDef;
 })
 @Table(name = "cp_consumer")
 @SequenceGenerator(name = "seq_consumer", sequenceName = "seq_consumer", allocationSize = 1)
-public class Consumer implements Persisted, AccessControlEnforced {
+public class Consumer extends AbstractHibernateObject implements AccessControlEnforced {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer")
@@ -251,6 +251,7 @@ public class Consumer implements Persisted, AccessControlEnforced {
     /**
      * @return child consumers.
      */
+    @XmlTransient
     public Set<Consumer> getChildConsumers() {
         return childConsumers;
     }
@@ -302,7 +303,7 @@ public class Consumer implements Persisted, AccessControlEnforced {
 
     @Override
     public String toString() {
-        return "Consumer [type = " + this.getType() + ", getName() = " +
+        return "Consumer [id = " + getId() + ", type = " + getType() + ", getName() = " +
             getName() + "]";
     }
 
@@ -352,6 +353,7 @@ public class Consumer implements Persisted, AccessControlEnforced {
     /**
      * @return Returns the entitlements.
      */
+    @XmlTransient
     public Set<Entitlement> getEntitlements() {
         return entitlements;
     }

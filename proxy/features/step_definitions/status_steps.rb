@@ -8,12 +8,12 @@ end
 
 Then /^status should be known$/ do ||
     json = @candlepin.get_status()
-    json['status']['release'].should_not == "Unknown"
-    json['status']['release'].should_not == "${hash}"
-    json['status']['version'].should_not == "Unknown"
-    json['status']['version'].should_not == "${version}"
+    json['release'].should_not == "Unknown"
+    json['release'].should_not == "${hash}"
+    json['version'].should_not == "Unknown"
+    json['version'].should_not == "${version}"
 
     # Try a cast on the release to be sure, it should be an integer I think:
-    release = json['status']['release'].to_i() 
+    release = json['release'].to_i() 
 end
 

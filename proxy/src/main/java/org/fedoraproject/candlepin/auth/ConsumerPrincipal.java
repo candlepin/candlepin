@@ -29,15 +29,6 @@ public class ConsumerPrincipal extends Principal {
 
         this.consumer = consumer;
     }
-
-    @Override
-    public boolean canAccessConsumer(Consumer other) {
-        if (this.consumer != null) {
-            return this.consumer.equals(other);
-        }
-
-        return false;
-    }
     
     public Consumer consumer() {
         return consumer;

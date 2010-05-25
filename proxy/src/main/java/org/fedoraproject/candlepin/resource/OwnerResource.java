@@ -42,6 +42,8 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.model.SubscriptionToken;
+import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
@@ -58,6 +60,7 @@ public class OwnerResource {
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
     private SubscriptionCurator subscriptionCurator;
+    private SubscriptionTokenCurator subscriptionTokenCurator;
     private UserServiceAdapter userService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
@@ -66,11 +69,15 @@ public class OwnerResource {
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator, 
-        SubscriptionCurator subscriptionCurator, ConsumerCurator consumerCurator, 
+        SubscriptionCurator subscriptionCurator,
+        SubscriptionTokenCurator subscriptionTokenCurator,
+        ConsumerCurator consumerCurator,
         I18n i18n, UserServiceAdapter userService, Entitler entitler) {
+
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
         this.subscriptionCurator = subscriptionCurator;
+        this.subscriptionTokenCurator = subscriptionTokenCurator;
         this.consumerCurator = consumerCurator;
         this.userService = userService;
         this.i18n = i18n;
@@ -141,6 +148,10 @@ public class OwnerResource {
             log.info("Deleting consumer: " + c);
             entitler.revokeAllEntitlements(c);
             consumerCurator.delete(c);
+        }
+        for (SubscriptionToken token : subscriptionTokenCurator.listByOwner(owner)) {
+            log.info("Deleting subscription token: " + token);
+            subscriptionTokenCurator.delete(token);
         }
         for (Subscription s : subscriptionCurator.listByOwner(owner)) {
             log.info("Deleting subscription: " + s);

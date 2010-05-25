@@ -18,17 +18,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -129,57 +128,8 @@ public class PoolTest extends DatabaseTestFixture {
                 .getEntitlements().size());
     }
 
-    @Test
-    public void concurrentCreationOfEntitlementsShouldWorkIfUnderMaxMemberLimit()
-        throws Exception {
-        Long numAvailEntitlements = new Long(2);
-
-        Product newProduct = TestUtil.createProduct();
-        productCurator.create(newProduct);
-
-        Pool consumerPool = createPoolAndSub(owner, newProduct
-                .getId(), numAvailEntitlements, TestUtil
-                .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool = poolCurator.create(consumerPool);
-
-        Entitler anotherEntitler = injector.getInstance(Entitler.class);
-
-        entitler.entitle(consumer, newProduct);
-        anotherEntitler.entitle(consumer, newProduct);
-
-        assertFalse(poolCurator.find(consumerPool.getId())
-                .entitlementsAvailable());
-    }
-
-    @Test
-    public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit()
-        throws Exception {
-        Long numAvailEntitlements = new Long(1);
-
-        Product newProduct = TestUtil.createProduct();
-        productCurator.create(newProduct);
-
-        Pool consumerPool = createPoolAndSub(owner, newProduct
-                .getId(), numAvailEntitlements, TestUtil
-                .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool = poolCurator.create(consumerPool);
-
-        Entitler anotherEntitler = injector.getInstance(Entitler.class);
-
-        Entitlement e1 = entitler.entitle(consumer, newProduct);
-        assertNotNull(e1);
-        try {
-            @SuppressWarnings("unused")
-            Entitlement e2 = anotherEntitler.entitle(consumer, newProduct);
-            fail();
-        }
-        catch (EntitlementRefusedException e) {
-            // expected
-        }
-    }
-
     // test subscription product changed exception
-    
+
     @Test
     public void testLookupPoolsProvidingProduct() {
         Product parentProduct = TestUtil.createProduct();
@@ -199,4 +149,59 @@ public class PoolTest extends DatabaseTestFixture {
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
     }
+
+    /**
+     * After creating a new pool object, test is made to determine whether
+     * the created and updated values are present and not null.
+     */
+    @Test
+    public void testCreationTimestamp() {
+        Product newProduct = TestUtil.createProduct();
+        productCurator.create(newProduct);
+        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+            TestUtil.createDate(2011, 3, 30),
+            TestUtil.createDate(2022, 11, 29));
+        poolCurator.create(pool);
+        
+        assertNotNull(pool.getCreated());
+    }
+    
+    @Test
+    public void testInitialUpdateTimestamp() {
+        Product newProduct = TestUtil.createProduct();
+        productCurator.create(newProduct);
+        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+            TestUtil.createDate(2011, 3, 30),
+            TestUtil.createDate(2022, 11, 29));
+        pool = poolCurator.create(pool);
+        
+        assertNotNull(pool.getUpdated());
+    }
+
+    /**
+     * After updating an existing pool object, test is made to determine whether
+     * the updated value has changed
+     */
+    @Test
+    public void testSubsequentUpdateTimestamp() {
+        Product newProduct = TestUtil.createProduct();
+        productCurator.create(newProduct);
+        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+            TestUtil.createDate(2011, 3, 30),
+            TestUtil.createDate(2022, 11, 29));
+        
+        pool = poolCurator.create(pool);
+        
+        // set updated to 10 minutes ago
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, -10);
+        pool.setUpdated(calendar.getTime());
+        
+        Date updated = (Date) pool.getUpdated().clone();
+        pool.setQuantity(23L);
+        pool = poolCurator.merge(pool);
+        
+        assertFalse(updated.getTime() == pool.getUpdated().getTime());
+    }
+    
 }

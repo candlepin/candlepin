@@ -6,6 +6,6 @@ Feature: Entitlement Pools have Product Name
     Scenario: First pool available has the correct name
         Given an owner admin "test_owner"
         And I am logged in as "test_owner"
-        And owner "test_owner" has 2 entitlements for "virtualization_host"
+        And test owner has 2 entitlements for "virtualization_host"
         And I am a consumer "consumer"
         Then the first pool's product names have "virtualization_host"

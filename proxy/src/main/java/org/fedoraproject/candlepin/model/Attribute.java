@@ -48,7 +48,7 @@ import org.hibernate.annotations.ForeignKey;
 @SequenceGenerator(name = "seq_attribute", sequenceName = "seq_attribute",
         allocationSize = 1)
 @Embeddable
-public class Attribute  implements Persisted {
+public class Attribute  extends AbstractHibernateObject{
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_attribute")

@@ -15,13 +15,17 @@
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
@@ -99,23 +103,6 @@ public class ProductTest extends DatabaseTestFixture {
         assertEquals(2, result.getChildProducts().size());
     }
 
-    @Test(expected = PersistenceException.class)
-    public void childHasSingleParentOnly() {
-        beginTransaction();
-
-        Product parent1 = new Product("parent-product1", "Parent Product 1");
-        Product child1 = new Product("child-product1", "Child Product 1");
-        Product parent2 = new Product("parent-product2", "Parent Product 2");
-
-        parent1.addChildProduct(child1);
-        parent2.addChildProduct(child1); // should cause the failure
-
-        entityManager().persist(child1);
-        entityManager().persist(parent1);
-        entityManager().persist(parent2);
-        commitTransaction();
-    }
-
     @Test
     @SuppressWarnings("unchecked")
     public void testCascading() {
@@ -141,7 +128,79 @@ public class ProductTest extends DatabaseTestFixture {
                 "name", child1.getName()).getResultList();
         assertEquals(0, results.size());
     }
+    
+    @Test
+    public void testUpdate() {
+        Product product = new Product("test-product", "Test Product");
+        Product updatedProduct = productCurator.update(product);
+     
+        assertEquals(product.getId(), updatedProduct.getId());
+        assertEquals(product.getName(), updatedProduct.getName());
+    }
 
+    @Test
+    public void testProductFullConstructor() {
+        Set<Product> products = new HashSet<Product>();
+        Product prod = new Product("cp_test-label", "Test Product", "variant",
+            "version", "arch", new Long(1111111), "SVC", products);
+        productCurator.create(prod);
+
+        Product lookedUp = productCurator.find(prod.getId());
+    }
+
+    @Test
+    public void testProductChildProducts() {
+        Set<Product> childProducts = new HashSet<Product>();
+        Set<Product> products = new HashSet<Product>();
+        String parentLabel = "cp_test_parent_product";
+        String childLabel = "cp_test_child_product";
+
+        Product childProd = new Product(childLabel, "Test Child Product",
+            "variant", "version", "arch", Math.abs(Long.valueOf(parentLabel
+                .hashCode())), "SVC", products);
+
+        childProducts.add(childProd);
+        Product parentProd = new Product(parentLabel, "Test Parent Product",
+            "variant", "version", "arch", Math.abs(Long.valueOf(childLabel
+                .hashCode())), "MKT", childProducts);
+
+        productCurator.create(parentProd);
+        
+        Set<Product> testProducts = new HashSet<Product>();
+        Product lookedUp = productCurator.find(parentProd.getId());
+        assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
+        assertEquals(parentProd.getAllChildProducts(testProducts), lookedUp
+            .getAllChildProducts(testProducts));
+    }
+
+    
+    @Test
+    public void testBlkUpdate() {
+        Set<Product> childProducts = new HashSet<Product>();
+        Set<Product> products = new HashSet<Product>();
+        String parentLabel = "cp_test_parent_product";
+        String childLabel = "cp_test_child_product";
+
+        Product childProd = new Product(childLabel, "Test Child Product",
+            "variant", "version", "arch", Math.abs(Long.valueOf(parentLabel
+                .hashCode())), "SVC", products);
+
+        childProducts.add(childProd);
+        Product parentProd = new Product(parentLabel, "Test Parent Product",
+            "variant", "version", "arch", Math.abs(Long.valueOf(childLabel
+                .hashCode())), "MKT", null);
+        
+        productCurator.create(parentProd);
+        parentProd.setChildProducts(childProducts);
+        productCurator.update(parentProd);
+        
+        Set<Product> testProducts = new HashSet<Product>();
+        Product lookedUp = productCurator.find(parentProd.getId());
+        assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
+        assertEquals(parentProd.getAllChildProducts(testProducts), lookedUp
+            .getAllChildProducts(testProducts));
+    }
+    
     @Test
     public void testEquality() {
         assertEquals(new Product("label", "name"), new Product("label", "name"));
@@ -250,6 +309,45 @@ public class ProductTest extends DatabaseTestFixture {
         testing = testing.getChildAttribute("channelfamilylabel0");
         testing = testing.getChildAttribute("channels");
         assertEquals(3, testing.getChildAttributes().size());
+    }
+
+    /**
+     *Test whether the creation date of the product variable is set properly
+     *when persisted for the first time.
+     */
+    @Test
+    public void testCreationDate() {
+        Product prod = new Product("test-label", "test-product-name");
+        productCurator.create(prod);
+        
+        assertNotNull(prod.getCreated());
+    }
+    
+    @Test
+    public void testInitialUpdate() {
+        Product prod = new Product("test-label", "test-product-name");
+        productCurator.create(prod);
+        
+        assertNotNull(prod.getUpdated());
+    }
+
+    /**
+     * Test whether the product updation date is updated when merging.
+     */
+    @Test
+    public void testSubsequentUpdate() {
+        Product prod = new Product("test-label", "test-product-name");
+        productCurator.create(prod);
+        
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -2);
+        prod.setUpdated(calendar.getTime());
+        
+        long updated = prod.getUpdated().getTime();
+
+        prod.setName("test-changed-name");
+        prod = this.productCurator.merge(prod);
+        assertTrue(prod.getUpdated().getTime() > updated);
     }
 
 }

@@ -24,12 +24,14 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 
@@ -44,7 +46,7 @@ import org.hibernate.annotations.ForeignKey;
 @Entity
 @Table(name = "cp_product")
 @SequenceGenerator(name = "seq_product", sequenceName = "seq_product", allocationSize = 1)
-public class Product implements Persisted {
+public class Product extends AbstractHibernateObject {
    
     // Product ID is stored as a string. Could be a product OID or label.
     @Id
@@ -86,7 +88,7 @@ public class Product implements Persisted {
 
     // NOTE: we need a product "type" so we can tell what class of
     //       product we are... 
-    @OneToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
+    @ManyToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
             fetch = FetchType.EAGER)
     @ForeignKey(name = "fk_product_product_id",
                 inverseName = "fk_product_child_product_id")
@@ -232,6 +234,19 @@ public class Product implements Persisted {
      */
     public Set<Attribute> getAttributes() {
         return attributes;
+    }
+    
+    @XmlTransient
+    public Set<String> getAttributeNames() {
+        Set<String> toReturn = new HashSet<String>();
+        if (attributes == null) {
+            return toReturn;
+        }
+        
+        for (Attribute attribute : attributes) {
+            toReturn.add(attribute.getName());
+        }
+        return toReturn;
     }
 
     /**

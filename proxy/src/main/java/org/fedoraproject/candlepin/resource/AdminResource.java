@@ -65,7 +65,6 @@ public class AdminResource {
     @Path("init")
     @AllowRoles(roles = {Role.NO_AUTH})
     public String initialize() {
-        
         log.debug("Called initialize()");
 
         // First, determine if we've already setup the DB and if so, do *nothing*!
@@ -98,4 +97,5 @@ public class AdminResource {
 
         return "Initialized!";
     }
+    
 }

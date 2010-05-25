@@ -76,7 +76,7 @@ public class LoggingFilter implements Filter {
             log.debug("====Response====");
             log.debug("Status: " + lResponse.getStatus());
             log.debug("Response Body:" + lResponse.getResponseBody());
-
+            lResponse.getWriter().close();
         }
         else {
             chain.doFilter(request, response);

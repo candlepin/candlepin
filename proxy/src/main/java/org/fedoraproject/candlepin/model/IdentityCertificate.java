@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_id_cert")
 @SequenceGenerator(name = "seq_id_cert", sequenceName = "seq_id_cert", allocationSize = 1)
-public class IdentityCertificate implements Persisted {
+public class IdentityCertificate extends AbstractHibernateObject{
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_id_cert")
@@ -83,6 +83,7 @@ public class IdentityCertificate implements Persisted {
         return key;
     }
 
+    @XmlTransient
     public void setKey(byte[] key) {
         this.key = key;
     }
@@ -101,6 +102,7 @@ public class IdentityCertificate implements Persisted {
         return cert;
     }
 
+    @XmlTransient
     public void setCert(byte[] cert) {
         this.cert = cert;
     }

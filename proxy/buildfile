@@ -15,21 +15,20 @@ require "buildr/java/emma"
 RESTEASY = [group('jaxrs-api', 
                   'resteasy-jaxrs',
                   'resteasy-jaxb-provider', 
-                  'resteasy-jettison-provider', 
                   'resteasy-guice', 
                   :under => 'org.jboss.resteasy',
                   :version => '1.2.1.GA'), 
             'javax.persistence:persistence-api:jar:1.0',
             'xalan:xalan:jar:2.6.0',
             'org.scannotation:scannotation:jar:1.0.2',
-            'org.codehaus.jettison:jettison:jar:1.1',
             'commons-httpclient:commons-httpclient:jar:3.1']
 
 JACKSON = [group('jackson-core-lgpl', 
                  'jackson-mapper-lgpl', 
                  'jackson-jaxrs',
+                 'jackson-xc',
                  :under => 'org.codehaus.jackson',
-                 :version => '1.4.1')]
+                 :version => '1.5.2')]
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
 LOG4J = 'log4j:log4j:jar:1.2.14'
 HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
@@ -75,6 +74,12 @@ GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet',
            'javax.servlet:servlet-api:jar:2.5']
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
+HORNETQ = [group('hornetq-core',
+                 'hornetq-core-client',
+#                 'hornetq-resources', #Native libs for libaio
+                 :under=>'org.hornetq',
+                 :version=>'2.0.0.GA'),
+            'org.jboss.netty:netty:jar:3.1.5.GA']
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
@@ -131,7 +136,8 @@ define "candlepin" do
   # building
   #
   compile.options.target = '1.6'
-  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS
+  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
+      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ
  
   #
   # testing
@@ -163,7 +169,7 @@ define "candlepin" do
   
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
-          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, RESTEASY]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, RESTEASY, JACKSON]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
       
         ant.schema :destdir=>'target/schemagen' do
           ant.classpath :path=>_('target/classes')
@@ -288,6 +294,9 @@ begin
         features = parts.join(":")
     end
     task.cucumber_opts << " #{features}" if not features.nil?
+    
+    # Add in our ruby client lib
+    task.libs << '../client/ruby'
   end
 
   Cucumber::Rake::Task.new do |task|

@@ -14,31 +14,19 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-
 /**
  * PinsetterContextListener
- * @version $Rev$
  */
-public class PinsetterContextListener implements ServletContextListener {
+public class PinsetterContextListener {
     private PinsetterKernel pk;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void contextDestroyed(ServletContextEvent sceIn) {
+    public void contextDestroyed() {
         if (pk != null) {
             pk.shutdown();
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void contextInitialized(ServletContextEvent sceIn) {
+    public void contextInitialized() {
         System.out.println("ctx initialized");
         try {
             if (pk == null) {

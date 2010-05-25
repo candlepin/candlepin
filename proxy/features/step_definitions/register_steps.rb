@@ -1,16 +1,6 @@
 require 'spec/expectations'
 require 'candlepin_api'
 
-Given /^I have username "(\w+)"$/ do |username|
-    # Not using username right now
-    @username = username
-end
-
-Given /^I have password "(\w+)"$/ do |password|
-    # Not using password right now
-    @password = password
-end
-
 Given /^I am a consumer "([^\"]*)"$/ do |consumer_name|
   # This will register with the user you are logged in as
   Given "I am logged in as \"#{@username}\"" 
@@ -24,26 +14,22 @@ def register_consumer(consumer)
                            cert=@consumer['idCert']['cert'],
                            key=@consumer['idCert']['key'])
     @consumer_cp.consumer = @consumer
-    @consumers[consumer[:consumer][:name]] = @consumer_cp
+    @consumers[consumer[:name]] = @consumer_cp
 end
 
 When /I register a consumer "(\w+)"$/ do |consumer_name|
     consumer = {
-        :consumer => {
-            :type => {:label => :system},
-            :name => consumer_name,
-        }
+        :type => :system,
+        :name => consumer_name,
     }
     register_consumer(consumer)
 end
 
 When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
     consumer = {
-        :consumer => {
-            :type => {:label => :system},
-            :name => consumer_name,
-            :uuid => uuid
-        }
+        :type => :system,
+        :name => consumer_name,
+        :uuid => uuid
     }
     register_consumer(consumer)
 end
@@ -52,10 +38,8 @@ Given /^I am a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|
   # This will register with the user you are logged in as
   Given "I am logged in as \"#{@username}\"" 
   consumer = {
-      :consumer => {
-          :type => {:label => type},
-          :name => consumer_name,
-      }
+      :type => type,
+      :name => consumer_name,
   }
   register_consumer(consumer)
 end
@@ -65,7 +49,7 @@ Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uui
     When "I register a consumer \"#{consumer_name}\" with uuid \"#{uuid}\""
 end
 
-Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ do |uuid|
+Then /^registering another consumer with uuid "([^\"]*)" causes a bad request$/ do |uuid|
     consumer = {
         :consumer => {
             :type => {:label => :system},
@@ -85,7 +69,7 @@ Then /^Registering another Consumer with uuid "([^\"]*)" causes a bad request$/ 
 
 end
 
-Then /^Searching for a Consumer with uuid "([^\"]*)" causes a not found$/ do |uuid|
+Then /^searching for a consumer with uuid "([^\"]*)" causes a not found$/ do |uuid|
 
     lambda {@candlepin.get_consumer(uuid)}.should raise_error
     begin
@@ -97,7 +81,7 @@ Then /^Searching for a Consumer with uuid "([^\"]*)" causes a not found$/ do |uu
 
 end
 
-When /I Revoke All My Entitlements/ do
+When /I revoke all my entitlements/ do
     @consumer_cp.revoke_all_entitlements
 end
 

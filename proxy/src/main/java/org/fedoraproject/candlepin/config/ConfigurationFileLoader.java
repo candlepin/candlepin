@@ -37,8 +37,14 @@ class ConfigurationFileLoader {
         throws IOException {
 
         if (configurationFile.canRead()) {
-            return loadConfiguration(
-                new BufferedInputStream(new FileInputStream(configurationFile)));
+            BufferedInputStream bis = new BufferedInputStream(
+                new FileInputStream(configurationFile));
+            try {
+                return loadConfiguration(bis);
+            }
+            finally {
+                bis.close();
+            }
         }
         return new HashMap<String, String>();
     }

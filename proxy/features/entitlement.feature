@@ -8,8 +8,8 @@ Feature: Consume an Entitlement
         And I am logged in as "test_owner"
         And product "virtualization_host" exists
         And product "monitoring" exists
-        And owner "test_owner" has 2 entitlements for "virtualization_host"
-        And owner "test_owner" has 4 entitlements for "monitoring"
+        And test owner has 2 entitlements for "virtualization_host"
+        And test owner has 4 entitlements for "monitoring"
 
     Scenario: An Exception is thrown When Consumer filters Entitlement by Invalid Product ID
         Given I am a consumer "consumer"
@@ -51,7 +51,7 @@ Feature: Consume an Entitlement
     Scenario: A Consumer has No Entitlements After Unregistering
         Given I am a consumer "some_machine"
         When I Consume an Entitlement for the "virtualization_host" Product
-        And I Revoke All My Entitlements
+        And I revoke all my entitlements
         Then I Have 0 Entitlements
 
     Scenario: Entitlement generates a certificate.
@@ -63,7 +63,7 @@ Feature: Consume an Entitlement
         Given I am a consumer "foo"
         When I Consume an Entitlement for the "monitoring" Product
         And I Consume an Entitlement for the "virtualization_host" Product
-        And I Revoke All My Entitlements
+        And I revoke all my entitlements
         Then I Have 0 Entitlements
 
     Scenario: A Consumer can filter Entitlements by Product ID

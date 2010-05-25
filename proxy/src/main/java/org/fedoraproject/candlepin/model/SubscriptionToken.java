@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "cp_subscription_token")
 @SequenceGenerator(name = "seq_subscription_token",
     sequenceName = "seq_subscription_token", allocationSize = 1)
-public class SubscriptionToken implements Persisted {
+public class SubscriptionToken extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,
@@ -45,6 +45,8 @@ public class SubscriptionToken implements Persisted {
     @Column(nullable = true, unique = true)
     private String token;
     
+    // TODO: Should this be bi-directional with a cascade? Subs/tokens could be outside
+    // our database, but it's unlikely one would be in the db and the other not.
     @ManyToOne
     @ForeignKey(name = "fk_subscription_token")
     @JoinColumn

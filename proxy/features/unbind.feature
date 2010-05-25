@@ -6,7 +6,7 @@ Feature: Unbind an entitlement
         Given an owner admin "test_owner"
         And I am logged in as "test_owner"
         And product "monitoring" exists
-        And owner "test_owner" has 4 entitlements for "monitoring"
+        And test owner has 4 entitlements for "monitoring"
 
     Scenario: Unbind a single entitlement
         Given I am a consumer "consumer"

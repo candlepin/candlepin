@@ -31,7 +31,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "cp_key_pair")
 @SequenceGenerator(name = "seq_keypair", sequenceName = "seq_keypair", allocationSize = 1)
-public class KeyPair implements Persisted {
+public class KeyPair extends AbstractHibernateObject{
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_keypair")

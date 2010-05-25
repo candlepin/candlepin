@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "cp_content")
 @SequenceGenerator(name = "seq_content", sequenceName = "seq_content", allocationSize = 1)
-public class Content implements Persisted {
+public class Content extends AbstractHibernateObject{
 
     // Product ID is stored as a string. Could be a product OID or label.
     @Id

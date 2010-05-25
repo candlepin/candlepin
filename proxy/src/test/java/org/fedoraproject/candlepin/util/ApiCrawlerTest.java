@@ -29,8 +29,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.schema.JsonSchema;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Rules;
+import org.fedoraproject.candlepin.model.Status;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
@@ -50,6 +56,7 @@ import org.junit.Test;
  */
 public class ApiCrawlerTest {
     private List<Class> resourceClasses;
+    private List<Class> modelClasses;
     
     public ApiCrawlerTest() {
         resourceClasses = new LinkedList<Class>();
@@ -65,10 +72,18 @@ public class ApiCrawlerTest {
         resourceClasses.add(StatusResource.class);
         resourceClasses.add(SubscriptionResource.class);
         resourceClasses.add(SubscriptionTokenResource.class);
+        
+        modelClasses = new LinkedList<Class>();
+        modelClasses.add(ConsumerType.class);
+        modelClasses.add(Status.class);
+        modelClasses.add(Rules.class);
     }
     
     @Test
     public void testApiCrawler() {
+        for (Class c : modelClasses) {
+            writeSchema(c);
+        }
         List<RestApiCall> allApiCalls = new LinkedList<RestApiCall>();
         for (Class c : resourceClasses) {
             allApiCalls.addAll(processClass(c));
@@ -80,6 +95,23 @@ public class ApiCrawlerTest {
         }
     }
     
+    /**
+     * @param class1
+     */
+    private void writeSchema(Class clazz) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+            JsonSchema schema = mapper.generateJsonSchema(clazz);
+            System.out.println(clazz.getSimpleName().toLowerCase());
+            System.out.println(mapper.writeValueAsString(schema));
+            System.out.println("\n");
+        }
+        catch (Exception e) {
+            System.out.println("Unable to create json schema for " + clazz.toString());
+        }
+    }
+
     private List<RestApiCall> processClass(Class c) {
         Path a = (Path) c.getAnnotation(Path.class);
         String parentUrl = a.value();

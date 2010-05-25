@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.service.impl;
 
 import java.util.List;
 
-
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -66,5 +66,11 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         }
         return prodCurator.find(product.getId());
     }
+
+    @Override
+    public Product getProductByHash(String productHash, Owner owner) {
+        return getProductById(productHash);
+    }
+    
 
 }

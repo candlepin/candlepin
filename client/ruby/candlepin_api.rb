@@ -54,16 +54,9 @@ class Candlepin
             use_credentials(username, password)
         end
 
-        @consumer = post('/consumers', consumer)['consumer']
+        @consumer = post('/consumers', consumer)
 
         return @consumer
-
-#        identity_cert = @consumer['idCert']['cert']
-#        identity_key = @consumer['idCert']['key']
-#        @identity_certificate = OpenSSL::X509::Certificate.new(identity_cert)
-#        @identity_key = OpenSSL::PKey::RSA.new(identity_key)
-
-#        create_ssl_client
     end
 
     def get_owners
@@ -76,10 +69,8 @@ class Candlepin
 
     def create_owner(owner_name)
         owner = {
-          'owner' => {
             'key' => owner_name,
             'displayName' => owner_name
-          }
         }
 
         post('/owners', owner)
@@ -91,10 +82,8 @@ class Candlepin
 
     def create_user(owner_id, login, password)
       user = {
-        'user' => {
           'login' => login,
           'password' => password
-        }
       }
 
       post("/owners/#{owner_id}/users", user)
@@ -110,9 +99,7 @@ class Candlepin
 
     def create_consumer_type(type_label)
         consumer_type =  {
-          'consumertype' => {
-            'label' => type_label
-          }
+          'label' => type_label
         }
 
         post('/consumertypes', consumer_type)
@@ -131,12 +118,12 @@ class Candlepin
       path << "consumer=#{params[:consumer]}&" if params[:consumer]
       path << "owner=#{params[:owner]}&" if params[:owner]
       path << "product=#{params[:product]}&" if params[:product]
+      path << "listall=#{params[:listall]}&" if params[:listall]
       return get(path)
     end
     
     def create_pool(product_id, owner_id, start_date, end_date, quantity = 100)
       pool = {
-        'pool' => {
           'activeSubscription' => false,
           'quantity' => quantity,
           'consumed' => 0,
@@ -146,7 +133,6 @@ class Candlepin
           'owner' => {
             'id' => owner_id
           }          
-        }
       }
       
       post('/pools', pool)
@@ -175,10 +161,6 @@ class Candlepin
         delete("/consumers/#{@uuid}/entitlements")
     end
 
-    def consume_product(product)
-        post("/consumers/#{@uuid}/entitlements?product=#{product}")
-    end
-    
     def list_products
       get("/products")
     end
@@ -186,23 +168,32 @@ class Candlepin
     def create_product(label, name, hash, version = 1, variant = 'ALL', 
 		       arch='ALL', type='SVC',childProducts=[], attributes = {})
       product = {
-        'product' => {
-          'name' => name,
-          'label' => name,
-          'hash' => hash,
-          'arch' => arch,
-          'id' => name,
-          'version' => version,
-          'variant' => variant,
-	  'type' => type,
-	  'childProducts' => childProducts
-        }
+        'name' => name,
+        'label' => name,
+        'hash' => hash,
+        'arch' => arch,
+        'id' => name,
+        'version' => version,
+        'variant' => variant,
+        'type' => type,
+        'childProducts' => childProducts,
+        'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
+
       }
-      return post("/products", product)
+      post("/products", product)
     end
     
+    # TODO: Should we change these to bind to better match terminology?
     def consume_pool(pool)
         post("/consumers/#{@uuid}/entitlements?pool=#{pool}")
+    end
+
+    def consume_product(product)
+        post("/consumers/#{@uuid}/entitlements?product=#{product}")
+    end
+
+    def consume_token(token)
+        post("/consumers/#{@uuid}/entitlements?token=#{token}")
     end
 
     def list_entitlements(product_id = nil)

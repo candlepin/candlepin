@@ -29,7 +29,7 @@ import javax.persistence.Table;
 @Table(name = "cp_serial_generator")
 @SequenceGenerator(name = "seq_certificate_serial", sequenceName = "seq_certificate_serial",
         allocationSize = 1)
-public class CertificateSerial implements Persisted {
+public class CertificateSerial extends AbstractHibernateObject{
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator =

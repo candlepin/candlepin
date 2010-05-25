@@ -25,7 +25,11 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
+import org.fedoraproject.candlepin.model.CuratorException;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.xnap.commons.i18n.I18n;
@@ -56,6 +60,7 @@ public class RulesResource {
      * @param rulesBuffer rules to upload.
      * @return a copy of the uploaded rules.
      */
+    @AllowRoles(roles = Role.SUPER_ADMIN)
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON,
@@ -85,15 +90,19 @@ public class RulesResource {
      * @return a the rules as a string.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN,
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, 
         MediaType.APPLICATION_XML })
     public String get() {
-        String rules = rulesCurator.getRules().getRules();
-        if ((rules != null) && (rules.length() > 0)) {
-            return Base64.encodeBase64String(rules.getBytes());
-        }
-        else {
+        try {
+            String rules = rulesCurator.getRules().getRules();
+            if ((rules != null) && (rules.length() > 0)) {
+                return Base64.encodeBase64String(rules.getBytes());
+            }
             return "";
+        } 
+        catch (CuratorException e) {
+            log.error("couldn't read rules file", e);
+            throw new ServiceUnavailableException(i18n.tr("couldn't read rules file"));
         }
     }
 }

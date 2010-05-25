@@ -72,7 +72,7 @@ import org.hibernate.annotations.ParamDef;
 @Table(name = "cp_pool")
 @SequenceGenerator(name = "seq_pool",
         sequenceName = "seq_pool", allocationSize = 1)
-public class Pool implements Persisted, AccessControlEnforced {
+public class Pool extends AbstractHibernateObject implements AccessControlEnforced {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_pool")
@@ -224,6 +224,7 @@ public class Pool implements Persisted, AccessControlEnforced {
     /**
      * @return owner of the pool.
      */
+    @XmlTransient
     public Owner getOwner() {
         return owner;
     }
@@ -366,7 +367,8 @@ public class Pool implements Persisted, AccessControlEnforced {
     }
 
     public String toString() {
-        return "EntitlementPool [id = " + getId() + ", product = " + getProductId() +
+        return "EntitlementPool [id = " + getId() + ", owner = " + owner.getId() +
+            ", product = " + getProductId() +
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }

@@ -34,8 +34,8 @@ Feature: Register a Consumer
     Scenario: Reuse a UUID during registration
         Given I am logged in as "bill"
         When I register a consumer "my_machine" with uuid "special_uuid"
-        Then Registering another Consumer with uuid "special_uuid" causes a bad request
+        Then registering another consumer with uuid "special_uuid" causes a bad request
         
     Scenario: Getting a consumer that does not exist should return a Not Found
         Given I am logged in as "bill"
-        Then Searching for a Consumer with uuid "jar_jar_binks" causes a not found     
+        Then searching for a consumer with uuid "jar_jar_binks" causes a not found

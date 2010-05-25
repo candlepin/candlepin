@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.service;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 
 /**
@@ -56,5 +57,13 @@ public interface ProductServiceAdapter {
      *         support new product creation
      */
     Product createProduct(Product product);
+    
+    /**
+     * Query an engineering product by its hash
+     * @param productHash
+     * @param owner
+     * @return engineering product by its hash
+     */
+    Product getProductByHash(String productHash, Owner owner);
     
 }

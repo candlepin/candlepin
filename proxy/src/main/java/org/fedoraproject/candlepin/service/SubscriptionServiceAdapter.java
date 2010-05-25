@@ -70,10 +70,11 @@ public interface SubscriptionServiceAdapter {
 
     /**
      * Return a subscription for the given token.
+     * @param owner the owner
      * @param token token for subscription.
      * @return a subscription for the given token.
      */
-    List<Subscription> getSubscriptionForToken(String token);
+    List<Subscription> getSubscriptionForToken(Owner owner, String token);
     
     /**
      * Lookup a specific subscription.

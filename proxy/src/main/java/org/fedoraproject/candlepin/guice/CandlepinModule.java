@@ -44,6 +44,7 @@ import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
+import org.fedoraproject.candlepin.resteasy.JsonProvider;
 import org.fedoraproject.candlepin.resteasy.interceptor.AuthInterceptor;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -94,6 +95,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
+        bind(JsonProvider.class);
 
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control

@@ -29,6 +29,12 @@ public class ConfigProperties {
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
+    
+    public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
+    public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
+    public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
+
+    public static final String PRETTY_PRINT = "candlepin.pretty_print";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -36,6 +42,14 @@ public class ConfigProperties {
             {
                 this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
+                
+                this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
+                this.put(AUDIT_LISTENERS,
+                    "org.fedoraproject.candlepin.audit.DatabaseListener," +
+                    "org.fedoraproject.candlepin.audit.LoggingListener,");
+                this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
+
+                this.put(PRETTY_PRINT, "false");
             }
         };
 }
