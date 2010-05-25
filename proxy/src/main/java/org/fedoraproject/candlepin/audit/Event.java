@@ -22,6 +22,9 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Persisted;
@@ -35,6 +38,8 @@ import org.fedoraproject.candlepin.model.Persisted;
 @Entity
 @Table(name = "cp_event")
 @SequenceGenerator(name = "seq_event", sequenceName = "seq_event", allocationSize = 1)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event implements Persisted {
 
     /**
