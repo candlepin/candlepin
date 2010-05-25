@@ -1,0 +1,140 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'json'
+require 'yaml'
+require 'candlepin_api'
+
+CONFIG_FILE = File.expand_path('~/.cp.conf')
+
+# Represents the configuration, primarily for
+# authentication, so that multiple invocations
+# don't have to constantly pass credentials via
+# the command line
+class CandlepinConfig
+  
+  def initialize
+    if File.exists? CONFIG_FILE
+      @config = YAML.load_file(CONFIG_FILE)
+    else
+      # create the default config
+      @config = {}
+      create_profile('admin', username='admin', password='admin')
+      set_profile('admin')
+      write
+    end
+  end
+
+  def set_profile(profile_name)
+    @config['profile'] = profile_name
+  end
+
+  def create_profile(name, username=nil, password=nil, 
+                     cert=nil, key=nil, host='localhost',
+                     port=8443)
+    @config[name] = {
+      'username' => username,
+      'password' => password,
+      'cert' => cert,
+      'key' => key,
+      'host' => host,
+      'port' => port
+    }
+  end
+
+  def write
+    File.open(CONFIG_FILE, 'w') do |file|
+      YAML.dump(@config, file)
+    end
+  end
+
+  # Creates the CandlepinCLI to use
+  def create_cli
+    profile = @config[@config['profile']]
+    cp = Candlepin.new(username=profile['username'],
+                       password=profile['password'],
+                       cert=profile['cert'],
+                       key=profile['key'],
+                       host=profile['host'],
+                       port=profile['port'])
+
+    CandlepinCLI.new(cp)
+  end
+
+end
+
+# Wrapper class for the base Candlepin lib that
+# will introspect an instance for currently defined
+# methods, allowing command line invocation of those
+# methods
+class CandlepinCLI
+
+  def initialize(cp)
+    @cp = cp
+  end
+
+  def commands
+    @cp.public_methods(false).sort.each do |method|
+      yield method if callable_name? method
+    end
+  end
+
+  def is_method?(method_name)
+    @cp.public_methods(false).include? method_name and callable_name? method_name
+  end
+
+  def call(method_name, args)
+    @cp.send(method_name, *args)
+  end
+
+  private
+
+  def callable_name?(method_name)
+    method_name[-1] != ?=
+  end
+end
+
+config = CandlepinConfig.new
+cli = config.create_cli
+
+if ARGV.empty? or ARGV[0] == '--help'
+  puts '=========== Commands ============'
+  puts
+
+  cli.commands do |command|
+    puts command
+  end
+else
+  if cli.is_method? ARGV[0]
+    val = cli.call(ARGV[0], ARGV[1..-1])
+
+    # This is all really sloppy - this should be refactored!
+    if ARGV[0] == 'register'
+      
+      config.create_profile(val['name'], 
+                            nil,
+                            nil,
+                            val['idCert']['cert'],
+                            val['idCert']['key'])
+      # Do we want to do this?
+      config.set_profile val['name']
+      config.write
+    elsif ARGV[0] == 'create_user'
+      config.create_profile(val['login'],
+                            val['login'],
+                            val['password'])
+      config.set_profile val['login']
+      config.write
+    end
+
+    begin
+      puts JSON.pretty_generate(val)
+    rescue JSON::GeneratorError
+      # Can't be jsonified...
+      puts val
+    end
+  else
+    puts "#{ARGV[0]} is not a valid command!"
+  end
+end
+
