@@ -12,18 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
-
-
-import org.fedoraproject.candlepin.audit.Event;
+package org.fedoraproject.candlepin.audit;
 
 /**
- * AttributeCurator
+ * EventListener
  */
-public class EventCurator extends AbstractHibernateCurator<Event> {
-
-    protected EventCurator() {
-        super(Event.class);
-    }
-
+public interface EventListener {
+    void onEvent(Event e);
 }

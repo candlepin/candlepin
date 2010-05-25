@@ -12,18 +12,30 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.audit;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.EventCurator;
 
-import org.fedoraproject.candlepin.audit.Event;
+import com.google.inject.Inject;
 
 /**
- * AttributeCurator
+ * DatabaseListener
  */
-public class EventCurator extends AbstractHibernateCurator<Event> {
+public class DatabaseListener implements EventListener {
 
-    protected EventCurator() {
-        super(Event.class);
+    private EventCurator eventCurator;
+    private static Logger log = Logger.getLogger(DatabaseListener.class);
+
+    @Inject
+    public DatabaseListener(EventCurator eventCurator) {
+        this.eventCurator = eventCurator;
+    }
+
+    @Override
+    public void onEvent(Event event) {
+        log.debug("Received event: " + event);
+        eventCurator.create(event);
     }
 
 }

@@ -17,15 +17,9 @@ package org.fedoraproject.candlepin.audit;
 import java.util.Date;
 
 import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -41,19 +35,18 @@ import org.fedoraproject.candlepin.model.Persisted;
 @Entity
 @Table(name = "cp_event")
 @SequenceGenerator(name = "seq_event", sequenceName = "seq_event", allocationSize = 1)
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "entitytype", discriminatorType = DiscriminatorType.STRING)
-@DiscriminatorValue("none")
 public class Event implements Persisted {
 
     /**
      * Type - Constant representing the type of this event.
      */
-    public enum EventType { ConsumerCreated, ConsumerModified, ConsumerUpdated };
+    public enum EventType { GENERIC_MESSAGE, CONSUMER_CREATED, CONSUMER_MODIFIED,
+        CONSUMER_UPDATED
+    };
 
     // Uniquely identifies the event:
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
+//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
     private Long id;
 
     @Column(nullable = false)
@@ -72,15 +65,23 @@ public class Event implements Persisted {
     private Long entityId;
 
     // Both old/new may be null for creation/deletion events.
+    @Lob
     private String oldEntity;
+    @Lob
     private String newEntity;
 
-    protected Event(EventType type, Principal principal,
+    public Event() {
+    }
+
+    public Event(EventType type, Principal principal,
         Long entityId, String oldEntity, String newEntity) {
         this.type = type;
 
         // TODO: toString good enough? Need something better?
-        this.principal = principal.toString();
+        // XXX: null principal is a hack. don't allow it.
+        if (principal != null) {
+            this.principal = principal.toString();
+        }
 
         this.entityId = entityId;
         this.oldEntity = oldEntity;
@@ -143,4 +144,8 @@ public class Event implements Persisted {
         this.newEntity = newEntity;
     }
 
+    public String toString() {
+        return "Event [" + "id=" + getId() + ", type=" + getType() + ", time=" +
+            getTimestamp() + ", entity=" + getEntityId() + "]";
+    }
 }

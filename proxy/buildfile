@@ -28,6 +28,7 @@ RESTEASY = [group('jaxrs-api',
 JACKSON = [group('jackson-core-lgpl', 
                  'jackson-mapper-lgpl', 
                  'jackson-jaxrs',
+                 'jackson-xc',
                  :under => 'org.codehaus.jackson',
                  :version => '1.4.1')]
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
@@ -75,6 +76,12 @@ GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet',
            'javax.servlet:servlet-api:jar:2.5']
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
+HORNETQ = [group('hornetq-core',
+                 'hornetq-core-client',
+#                 'hornetq-resources', #Native libs for libaio
+                 :under=>'org.hornetq',
+                 :version=>'2.0.0.GA'),
+            'org.jboss.netty:netty:jar:3.1.5.GA']
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
@@ -131,7 +138,8 @@ define "candlepin" do
   # building
   #
   compile.options.target = '1.6'
-  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS
+  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
+      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ
  
   #
   # testing

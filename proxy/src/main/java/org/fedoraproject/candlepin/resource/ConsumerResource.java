@@ -32,6 +32,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
@@ -81,6 +82,7 @@ public class ConsumerResource {
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
     private I18n i18n;
+    private EventSink sink;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -90,7 +92,8 @@ public class ConsumerResource {
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
-        I18n i18n) {
+        I18n i18n,
+        EventSink sink) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -102,6 +105,7 @@ public class ConsumerResource {
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
         this.i18n = i18n;
+        this.sink = sink;
     }
 
     /**
@@ -192,6 +196,7 @@ public class ConsumerResource {
 
             if (log.isDebugEnabled()) {
                 log.debug("Generated identity cert: " + idCert);
+                log.debug("Created consumer: " + consumer);
             }
 
             if (idCert == null) {
@@ -199,6 +204,7 @@ public class ConsumerResource {
                     "Error generating identity certificate.");
             }
 
+            sink.emitConsumerCreated(principal, consumer);
             return consumer;
         }
         catch (Exception e) {

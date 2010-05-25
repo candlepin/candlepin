@@ -134,6 +134,18 @@ function upload_products
     psql -U candlepin -f $CERTDIR/deploy.sql candlepin
 }
 
+function create_var_lib_candlepin
+{
+    sudo mkdir -p /var/lib/candlepin
+    sudo chown tomcat:tomcat /var/lib/candlepin
+}
+
+function create_var_log_candlepin
+{
+    sudo mkdir -p /var/log/candlepin
+    sudo chown tomcat:tomcat /var/log/candlepin
+}
+
 # Read in user defined variables
 if [ -f $HOME/.candlepinrc ] ; then
     source $HOME/.candlepinrc
@@ -198,6 +210,9 @@ update_keystore
 
 # update server.xml
 sudo python buildconf/scripts/update-server-xml.py $CONTAINER_CONF_DIR
+
+create_var_lib_candlepin
+create_var_log_candlepin
 
 # deploy the webapp
 deploy
