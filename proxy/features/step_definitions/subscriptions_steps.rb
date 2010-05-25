@@ -13,19 +13,20 @@ Given /^test owner has (\d+) entitlements for "([^\"]*)"$/ do |quantity, product
 end
 
 Given /^test owner has a subscription for "([^\"]*)" with quantity (\d+) and token "([^\"]*)"$/ do |product, quantity, token|
-    result = create_subscription(product, quantity)
-    sub = result['subscription']
+    sub = create_subscription(product, quantity)
 
     token_hash = {
-        'subscriptionToken' => {'token' => token,
-                                'subscription' => sub}}
+        'token' => token,
+        # XXX HACK
+        'subscription' => {:id => sub['id']}
+    }
     @candlepin.create_subscription_token(token_hash)
 
   # NOTE: do not refresh pools here, we just want a subscription created.
 end
 
 When /^I delete the subscription for product "([^\"]*)"$/ do |product|
-  subscription_id = @subscriptions[product]['subscription']['id']
+  subscription_id = @subscriptions[product]['id']
   
   @candlepin.delete_subscription(subscription_id)
 end
@@ -39,11 +40,10 @@ end
 # later if anything expects it to be there.
 def create_subscription(product, quantity)
   subscription = {
-    'subscription' => {'startDate' => '2007-07-13T00:00:00-04:00',
-      'endDate'   => '2012-07-13T00:00:00-04:00',
+      'startDate' => '2007-07-13',
+      'endDate'   => '2012-07-13',
       'quantity'  =>  quantity,
       'productId' => product
-    }
   }
 
   created = @candlepin.create_subscription(@test_owner['id'], subscription)

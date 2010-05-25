@@ -8,7 +8,7 @@ end
 
 Then /^I have Content "([^\"]*)"$/ do |content|
   contents = @candlepin.list_content()
-  found = contents.find {|item| item['content']['name'] == content}
+  found = contents.find {|item| item['name'] == content}
 #  puts(found.to_json)
 end
 

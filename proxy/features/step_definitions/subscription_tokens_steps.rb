@@ -3,11 +3,10 @@ require 'candlepin_api'
 
 Before do
     @subscription = {
-        'subscription' => {'startDate' => '2007-07-13T00:00:00-04:00',
-                           'endDate'   => '2010-07-13T00:00:00-04:00',
-                           'quantity'  =>  37,
-                           'productId' => 'provisioning'
-        }
+        'startDate' => '2007-07-13',
+        'endDate'   => '2010-07-13',
+        'quantity'  =>  37,
+        'productId' => 'provisioning'
     }
     @token_name = nil
 end
@@ -26,11 +25,11 @@ Given /^I have a subscription token called "([^\"]*)"$/ do |token_name|
     @token_name = token_name
     token_id = get_token_id(token_name)
     if not token_id
-        result = @candlepin.create_subscription(@test_owner['id'],
-                                                @subscription)
+        sub = @candlepin.create_subscription(@test_owner['id'], @subscription)
         token = {
-            'subscriptionToken' => {'token' => token_name,
-                                    'subscription' => result['subscription'] }}
+            'token' => token_name,
+            'subscription' => {:id => sub['id']}
+        }
         @candlepin.create_subscription_token(token)
     end
 end
@@ -44,9 +43,11 @@ end
 
 Then /^I can create a subscription token "([^\"]*)"$/ do |token_name|
     @token_name = token_name
-    result = @candlepin.create_subscription(@test_owner['id'], @subscription)
-    token = {'subscriptionToken' => {'token' => token_name,
-                                     'subscription' => result['subscription'] }}
+    sub = @candlepin.create_subscription(@test_owner['id'], @subscription)
+    token = {
+        'token' => token_name,
+        'subscription' => {:id => sub['id']}
+    }
     @candlepin.create_subscription_token(token)
 
     Given "there is no subscription token called \"#{@token_name}\"" 
@@ -60,10 +61,10 @@ end
 def get_token_id(token_name)
     tokens = @candlepin.get_subscription_tokens()
     matches = tokens.find_all{|token|
-        token['subscriptionToken']['token'] == token_name}
+        token['token'] == token_name}
 
     token_id = nil
-    token_id = matches[0]['subscriptionToken']['id'] if matches.length > 0
+    token_id = matches[0]['id'] if matches.length > 0
 
     return token_id
 end

@@ -251,6 +251,7 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     /**
      * @return child consumers.
      */
+    @XmlTransient
     public Set<Consumer> getChildConsumers() {
         return childConsumers;
     }
@@ -352,6 +353,7 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     /**
      * @return Returns the entitlements.
      */
+    @XmlTransient
     public Set<Entitlement> getEntitlements() {
         return entitlements;
     }
