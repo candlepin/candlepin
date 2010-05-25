@@ -32,6 +32,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -83,6 +85,7 @@ public class ConsumerResource {
     private EntitlementCertServiceAdapter entCertService;
     private I18n i18n;
     private EventSink sink;
+    private EventFactory eventFactory;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -93,7 +96,8 @@ public class ConsumerResource {
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
         I18n i18n,
-        EventSink sink) {
+        EventSink sink,
+        EventFactory eventFactory) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -106,6 +110,7 @@ public class ConsumerResource {
         this.entCertService = entCertServiceAdapter;
         this.i18n = i18n;
         this.sink = sink;
+        this.eventFactory = eventFactory;
     }
 
     /**
@@ -217,18 +222,22 @@ public class ConsumerResource {
      * delete the consumer.
      * 
      * @param uuid uuid of the consumer to delete.
+     * @param principal TODO
      */
     @DELETE
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @Transactional
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
+    public void deleteConsumer(@PathParam("consumer_uuid") String uuid,
+        @Context Principal principal) {
         log.debug("deleteing  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
         unbindAll(uuid);
+        Event event = eventFactory.consumerDeleted(principal, toDelete);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
+        sink.sendEvent(event);
     }
 
     /**

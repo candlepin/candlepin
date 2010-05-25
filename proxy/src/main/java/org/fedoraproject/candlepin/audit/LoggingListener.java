@@ -39,9 +39,9 @@ public class LoggingListener implements EventListener {
     @Override
     public void onEvent(Event e) {
         auditLog.info(String.format(
-            "%s - %d - %s on %d\nperformed by %s\n==OLD==\n%s\n==NEW==\n%s\n",
-            e.getTimestamp(), e.getId(), e.getType(), e.getEntityId(), e.getPrincipal(),
-            e.getOldEntity(), e.getNewEntity()));
+            "%s - %d - %s %s on %d\nperformed by %s\n==OLD==\n%s\n==NEW==\n%s\n",
+            e.getTimestamp(), e.getId(), e.getTarget(), e.getType(), e.getEntityId(),
+            e.getPrincipal(), e.getOldEntity(), e.getNewEntity()));
     }
 
 }

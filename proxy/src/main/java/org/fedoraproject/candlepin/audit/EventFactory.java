@@ -42,6 +42,26 @@ public class EventFactory {
 
     public Event consumerCreated(Principal principal, Consumer newConsumer) {
         
+        String newEntityJson = entityToJson(newConsumer);
+
+        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, principal,
+            newConsumer.getId(), null, newEntityJson);
+        // TODO: Move somewhere more widespread:
+        e.setId(eventIdCurator.getNextEventId());
+        return e;
+    }
+
+    public Event consumerDeleted(Principal principal, Consumer oldConsumer) {
+        String oldEntityJson = entityToJson(oldConsumer);
+
+        Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER, principal,
+            oldConsumer.getId(), oldEntityJson, null);
+        // TODO: Move somewhere more widespread:
+        e.setId(eventIdCurator.getNextEventId());
+        return e;
+    }
+
+    private String entityToJson(Consumer newConsumer) {
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
@@ -49,13 +69,13 @@ public class EventFactory {
         ObjectMapper mapper = new ObjectMapper();
         mapper.getSerializationConfig().setAnnotationIntrospector(pair);
         mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
-
+    
         String newEntityJson = "";
         // TODO: Throw an auditing exception here
-
+    
         // Drop data on consumer we do not want serialized, Jackson doesn't seem to
         // care about XmlTransient annotations when used here:
-
+    
         try {
             newEntityJson = mapper.writeValueAsString(newConsumer);
         }
@@ -71,11 +91,6 @@ public class EventFactory {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, principal,
-            newConsumer.getId(), null, newEntityJson);
-        // TODO: Move somewhere more widespread:
-        e.setId(eventIdCurator.getNextEventId());
-        return e;
+        return newEntityJson;
     }
 }

@@ -35,21 +35,22 @@ public class EventSink {
     
     private static Logger log = Logger.getLogger(EventSink.class);
     private EventFactory eventFactory;
+    private ClientSessionFactory factory;
 
     @Inject
     public EventSink(EventFactory eventFactory) {
         this.eventFactory = eventFactory;
+        
+        factory =  HornetQClient.createClientSessionFactory(
+            new TransportConfiguration(InVMConnectorFactory.class.getName()));
     }
     
-    public static void sendEvent(Event event) {
+    public void sendEvent(Event event) {
         if (log.isDebugEnabled()) {
             log.debug("Sending event - " + event);
         }
         
         try {
-            ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
-                new TransportConfiguration(InVMConnectorFactory.class.getName()));
-            
             ClientSession session = factory.createSession();
             
             ClientProducer producer = session.createProducer(EventSource.QUEUE_ADDRESS);
@@ -70,7 +71,6 @@ public class EventSink {
     
     public void emitConsumerCreated(Principal principal, Consumer newConsumer) {
         Event e = eventFactory.consumerCreated(principal, newConsumer);
-        EventSink.sendEvent(e);
+        sendEvent(e);
     }
-
 }
