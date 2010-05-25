@@ -18,10 +18,12 @@ import static org.jboss.resteasy.util.MediaTypeHelper.*;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
@@ -30,43 +32,46 @@ import org.jboss.resteasy.util.HttpHeaderNames;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-
 /**
  * BadRequestExceptionMapper
  */
 @Provider
-public class CandlepinExceptionMapper implements ExceptionMapper<CandlepinException> {
-    
-    private static final List<MediaType> DESIRED_RESPONSE_TYPES =
-        new LinkedList<MediaType>() {
-            {
-                add(MediaType.APPLICATION_JSON_TYPE);
-                add(MediaType.APPLICATION_XML_TYPE);
-                add(MediaType.TEXT_PLAIN_TYPE);
-            }
-        };
-    
-    @Inject private Injector injector;
-    
+public class CandlepinExceptionMapper implements
+    ExceptionMapper<CandlepinException> {
+
+    private static final List<MediaType> DESIRED_RESPONSE_TYPES = new LinkedList<MediaType>() {
+        {
+            add(MediaType.APPLICATION_JSON_TYPE);
+            add(MediaType.APPLICATION_XML_TYPE);
+            add(MediaType.TEXT_PLAIN_TYPE);
+        }
+    };
+
+    @Inject
+    private Injector injector;
+
     @Override
     public Response toResponse(CandlepinException exception) {
-        
-        HttpServletRequest request = injector.getInstance(HttpServletRequest.class);
-        
+
+        HttpServletRequest request = injector
+            .getInstance(HttpServletRequest.class);
+
         String header = request.getHeader(HttpHeaderNames.ACCEPT);
         MediaType responseMediaType = MediaType.APPLICATION_XML_TYPE;
-        if (header != null) {     
+        if (header != null) {
             List<MediaType> headerMediaTypes = parseHeader(header);
-            
-            responseMediaType = 
-                headerMediaTypes.size() == 0 ? 
-                MediaType.TEXT_PLAIN_TYPE : 
+
+            responseMediaType = headerMediaTypes.size() == 0 ? MediaType.TEXT_PLAIN_TYPE : 
                 getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
         }
-               
-        return Response.status(exception.httpReturnCode())
-            .entity(exception.message())
-            .type(responseMediaType)
-            .build();        
+
+        ResponseBuilder bldr = Response.status(exception.httpReturnCode())
+                .entity(exception.message()).type(responseMediaType);
+
+        for (Map.Entry<String, String> hdr : exception.headers().entrySet()) {
+            bldr.header(hdr.getKey(), hdr.getValue());
+        }
+
+        return bldr.build();
     }
 }
