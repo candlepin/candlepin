@@ -165,7 +165,7 @@ if [ "$JBOSS_HOME" != "" ]; then
         STOP="sudo /sbin/service jbossas stop"
         DEPLOY="$JBOSS_HOME/server/default/deploy/"
     fi
-    CONTAINER_CONF_DIR="/etc/tomcat6/conf"
+    CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
     CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
 else
     # use tomcat 6, if not specified
