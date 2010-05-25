@@ -29,6 +29,8 @@ public class LoggingResponseWrapper extends HttpServletResponseWrapper {
     protected StringBuffer buffer = new StringBuffer();
     protected HttpServletResponse realResponse;
     protected int status;
+    protected ServletOutputStream outputStream;
+    protected PrintWriter writer;
 
     public LoggingResponseWrapper(HttpServletResponse resp) {
         super(resp);
@@ -36,20 +38,25 @@ public class LoggingResponseWrapper extends HttpServletResponseWrapper {
     }
 
     public ServletOutputStream getOutputStream() throws java.io.IOException {
-        ServletOutputStream stream = new ServletOutputStream() {
+        if (outputStream == null) {
+            outputStream = new ServletOutputStream() {
+    
+                @Override
+                public void write(int b) throws IOException {
+                    buffer.append((char) b);
+                    realResponse.getOutputStream().write(b);
+                }
+            };
+        }
 
-            @Override
-            public void write(int b) throws IOException {
-                buffer.append((char) b);
-                realResponse.getOutputStream().write(b);
-            }
-        };
-
-        return stream;
+        return outputStream;
     }
 
     public PrintWriter getWriter() throws java.io.IOException {
-        return new PrintWriter(getOutputStream());
+        if (writer == null) {
+            writer = new PrintWriter(getOutputStream());
+        }
+        return writer;
     }
 
     public String getResponseBody() {
