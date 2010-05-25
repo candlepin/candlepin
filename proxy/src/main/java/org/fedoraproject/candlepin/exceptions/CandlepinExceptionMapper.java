@@ -39,13 +39,14 @@ import com.google.inject.Injector;
 public class CandlepinExceptionMapper implements
     ExceptionMapper<CandlepinException> {
 
-    private static final List<MediaType> DESIRED_RESPONSE_TYPES = new LinkedList<MediaType>() {
-        {
-            add(MediaType.APPLICATION_JSON_TYPE);
-            add(MediaType.APPLICATION_XML_TYPE);
-            add(MediaType.TEXT_PLAIN_TYPE);
-        }
-    };
+    private static final List<MediaType> DESIRED_RESPONSE_TYPES =
+        new LinkedList<MediaType>() {
+            {
+                add(MediaType.APPLICATION_JSON_TYPE);
+                add(MediaType.APPLICATION_XML_TYPE);
+                add(MediaType.TEXT_PLAIN_TYPE);
+            }
+        };
 
     @Inject
     private Injector injector;
