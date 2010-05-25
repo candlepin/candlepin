@@ -26,6 +26,8 @@ import javax.ws.rs.core.MediaType;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.xnap.commons.i18n.I18n;
@@ -42,6 +44,7 @@ public class ProductResource {
 
     //private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
+    private ContentCurator contentCurator;
     //private ProductCurator prodCurator;
     private I18n i18n;
 
@@ -53,8 +56,10 @@ public class ProductResource {
      */
     @Inject
     public ProductResource(ProductServiceAdapter prodAdapter, 
+                           ContentCurator contentCurator,
                            I18n i18n) {
         this.prodAdapter = prodAdapter;
+        this.contentCurator = contentCurator;
         this.i18n = i18n;
     }
 
@@ -102,4 +107,20 @@ public class ProductResource {
     public Product createProduct(Product product) {
         return prodAdapter.createProduct(product);
     }   
+    
+    @POST
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @Path("/{product_uuid}/content/{content_id}")
+    public Product addContent(@PathParam("product_uuid") String pid,
+                              @PathParam("content_id") Long cid) {
+        Product product = prodAdapter.getProductById(pid);
+        
+        Content content = contentCurator.find(cid);
+        
+        product.addContent(content);
+        return product;
+        
+    }
+    
 }

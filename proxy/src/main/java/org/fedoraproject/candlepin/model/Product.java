@@ -367,6 +367,13 @@ public class Product extends AbstractHibernateObject {
     public void setContent(Set<Content> content) {
         this.content = content;
     }
+    
+    public void addContent(Content content) {
+        if (this.content != null) {
+            this.content = new HashSet<Content>();
+        }
+        this.content.add(content);
+    }
 
     /**
      * @param enabledContent the enabledContent to set
@@ -375,7 +382,7 @@ public class Product extends AbstractHibernateObject {
         this.enabledContent = enabledContent;
     }
     
-    public void addEnabledCOntent(Content content) {
+    public void addEnabledContent(Content content) {
         if (this.enabledContent != null) {
             this.enabledContent = new HashSet<Content>();
         }
