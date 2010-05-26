@@ -45,7 +45,7 @@ public class EventFactory {
         String newEntityJson = entityToJson(newConsumer);
 
         Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, principal,
-            newConsumer.getId(), null, newEntityJson);
+            principal.getOwner().getId(), newConsumer.getId(), null, newEntityJson);
         // TODO: Move somewhere more widespread:
         e.setId(eventIdCurator.getNextEventId());
         return e;
@@ -55,7 +55,7 @@ public class EventFactory {
         String oldEntityJson = entityToJson(oldConsumer);
 
         Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER, principal,
-            oldConsumer.getId(), oldEntityJson, null);
+            oldConsumer.getOwner().getId(), oldConsumer.getId(), oldEntityJson, null);
         // TODO: Move somewhere more widespread:
         e.setId(eventIdCurator.getNextEventId());
         return e;

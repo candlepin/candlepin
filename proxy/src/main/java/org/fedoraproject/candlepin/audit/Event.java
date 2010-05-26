@@ -75,6 +75,9 @@ public class Event implements Persisted {
     // Uniquely identifies the entity's ID when combined with the event type.
     @Column(nullable = false)
     private Long entityId;
+    
+    @Column(nullable = false)
+    private Long ownerId;
 
     // Both old/new may be null for creation/deletion events. These are marked
     // Transient as we decided we do not necessarily want to store the object state
@@ -89,13 +92,14 @@ public class Event implements Persisted {
     }
 
     public Event(Type type, Target target, Principal principal,
-        Long entityId, String oldEntity, String newEntity) {
+        Long ownerId, Long entityId, String oldEntity, String newEntity) {
         this.type = type;
         this.target = target;
 
         // TODO: toString good enough? Need something better?
         this.principal = principal.toString();
-
+        this.ownerId = ownerId;
+        
         this.entityId = entityId;
         this.oldEntity = oldEntity;
         this.newEntity = newEntity;
@@ -144,6 +148,14 @@ public class Event implements Persisted {
         this.timestamp = timestamp;
     }
 
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
+    
     public Long getEntityId() {
         return entityId;
     }
