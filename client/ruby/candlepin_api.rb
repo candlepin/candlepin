@@ -168,8 +168,9 @@ class Candlepin
     product = {
       'name' => name,
       'label' => label,
+      'hash' => hash,
       'arch' => arch,
-      'id' => hash,
+      'id' => label,
       'version' => version,
       'variant' => variant,
       'type' => type,
