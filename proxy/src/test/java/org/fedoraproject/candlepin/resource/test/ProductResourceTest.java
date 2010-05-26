@@ -17,6 +17,8 @@ package org.fedoraproject.candlepin.resource.test;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
@@ -76,11 +78,12 @@ public class ProductResourceTest extends DatabaseTestFixture {
                              "test-content-url", "test-gpg-url");
         
         HashSet<Content> contentSet = new HashSet<Content>();
+        List<String> childProducts = new LinkedList<String>();
         
         contentSet.add(testContent);
         toSubmit.setContent(contentSet);
         
-        Product newProduct = productResource.createProduct(toSubmit);
+        productResource.createProduct(toSubmit, childProducts);
             
     }
     
