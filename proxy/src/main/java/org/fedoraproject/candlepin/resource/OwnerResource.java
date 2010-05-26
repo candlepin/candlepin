@@ -142,10 +142,13 @@ public class OwnerResource {
     @Path("/{owner_id}")    
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     //FIXME No way this is as easy as this :)
-    public void deleteOwner(@PathParam("owner_id") Long ownerId) {
+    public void deleteOwner(@PathParam("owner_id") Long ownerId, 
+            @Context Principal principal) {
         Owner owner = findOwner(ownerId);
         
         cleanupAndDelete(owner);
+        
+        sink.emitOwnerDeleted(principal, owner);
     }    
 
     private void cleanupAndDelete(Owner owner) {

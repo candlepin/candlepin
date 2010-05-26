@@ -29,4 +29,5 @@ public interface EventSink {
 
     void emitOwnerCreated(Principal principal, Owner newOwner);
 
+    void emitOwnerDeleted(Principal principal, Owner owner);
 }

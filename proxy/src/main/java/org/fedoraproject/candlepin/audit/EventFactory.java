@@ -69,6 +69,13 @@ public class EventFactory {
             newOwner.getId(), newOwner.getId(), null, newEntityJson);
         return e;
     }
+    
+    public Event ownerDeleted(Principal principal, Owner owner) {
+        String newEntityJson = entityToJson(owner);
+        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principal,
+            owner.getId(), owner.getId(), null, newEntityJson);
+        return e;
+    }
 
     private String entityToJson(Object entity) {
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();

@@ -34,6 +34,10 @@ public class EventSinkForTesting implements EventSink {
     }
 
     @Override
+    public void emitOwnerDeleted(Principal principal, Owner owner) {
+    }
+
+    @Override
     public void sendEvent(Event event) {
     }
 

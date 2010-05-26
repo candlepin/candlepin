@@ -79,4 +79,9 @@ public class EventSinkImpl implements EventSink {
         Event e = eventFactory.ownerCreated(principal, newOwner);
         sendEvent(e);
     }
+    
+    public void emitOwnerDeleted(Principal principal, Owner owner) {
+        Event e = eventFactory.ownerDeleted(principal, owner);
+        sendEvent(e);
+    }
 }
