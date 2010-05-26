@@ -32,6 +32,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -83,6 +85,7 @@ public class ConsumerResource {
     private EntitlementCertServiceAdapter entCertService;
     private I18n i18n;
     private EventSink sink;
+    private EventFactory eventFactory;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -93,7 +96,8 @@ public class ConsumerResource {
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
         I18n i18n,
-        EventSink sink) {
+        EventSink sink,
+        EventFactory eventFactory) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -106,6 +110,7 @@ public class ConsumerResource {
         this.entCertService = entCertServiceAdapter;
         this.i18n = i18n;
         this.sink = sink;
+        this.eventFactory = eventFactory;
     }
 
     /**
@@ -217,35 +222,22 @@ public class ConsumerResource {
      * delete the consumer.
      * 
      * @param uuid uuid of the consumer to delete.
+     * @param principal TODO
      */
     @DELETE
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @Transactional
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
-        log.debug("deleteing  consumer_uuid" + uuid);
+    public void deleteConsumer(@PathParam("consumer_uuid") String uuid,
+        @Context Principal principal) {
+        log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
         unbindAll(uuid);
+        Event event = eventFactory.consumerDeleted(principal, toDelete);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
-    }
-
-    /**
-     * Returns the product whose id matches pid, from the consumer, cid.
-     * 
-     * @param cid
-     *            Consumer ID to affect
-     * @param pid
-     *            Product ID to remove from Consumer.
-     * @return the product whose id matches pid, from the consumer, cid.
-     */
-    @GET
-    @Path("{consumer_uuid}/products/{product_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Product getProduct(@PathParam("consumer_uuid") String cid,
-        @PathParam("product_id") String pid) {
-        return null;
+        sink.sendEvent(event);
     }
 
     /**
@@ -441,7 +433,7 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productId) {
+        @QueryParam("product") String productId, @Context Principal principal) {
 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
@@ -458,19 +450,27 @@ public class ConsumerResource {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
             
                 if (token != null) {
-                    return bindByToken(token, consumer);
+                    entitlements = bindByToken(token, consumer);
                 }
-                if (productId != null) {
-                    return bindByProduct(productId, consumer);
+                else if (productId != null) {
+                    entitlements = bindByProduct(productId, consumer);
                 }
-        
-                entitlements = bindByPool(poolId, consumer);
+                else {
+                    entitlements = bindByPool(poolId, consumer);
+                }
             }
         } 
         catch (CandlepinException e) {
             log.debug(e.getMessage());
             throw e;
         }
+
+        // Trigger events:
+        for (Entitlement e : entitlements) {
+            Event event = eventFactory.entitlementCreated(principal, e);
+            sink.sendEvent(event);
+        }
+
         return entitlements;
     }
 

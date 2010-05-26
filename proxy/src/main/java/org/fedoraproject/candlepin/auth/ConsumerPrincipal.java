@@ -60,9 +60,8 @@ public class ConsumerPrincipal extends Principal {
     }
     
     public String toString() {
-        return "ConsumerPrincipal [uuid=" + consumer.getUuid() + ", roles=" + 
-            getRoles() + "]"; 
-         
+        return "ConsumerPrincipal [ownerId=" + getOwner().getId() +
+            ", uuid=" + consumer.getUuid() + ", roles=" + getRoles() + "]";
     }
 
 }

@@ -14,9 +14,16 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+
+import javax.script.ScriptEngineManager;
 
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -33,19 +40,11 @@ import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18nFactory;
-
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.Date;
-import java.util.Locale;
-
-import javax.script.ScriptEngineManager;
 
 /**
  * DefaultRulesTest
@@ -124,5 +123,56 @@ public class DefaultRulesTest {
         
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
+    }
+    
+    @Test
+    public void architectureALLShouldNotGenerateWarnings() {
+        Pool pool = setupTest("architecture", "ALL", "i686");
+        
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+    
+    @Test
+    public void architectureMismatchShouldGenerateWarning() {
+        Pool pool = setupTest("architecture", "x86_64", "i686");
+        
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+    
+    @Test
+    public void matchingNumberOfSocketsShouldNotGenerateWarning() {
+        Pool pool = setupTest("sockets", "2", "2");
+        
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    private Pool setupTest(
+            final String attributeName, String attributeValue, final String factValue) {
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(new Attribute(attributeName, attributeValue));
+        Pool pool = new Pool(owner, product.getId(), new Long(5),
+            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        
+        consumer.setFacts(new HashMap<String, String>() {
+            { put(attributeName, factValue); }
+        });
+        
+        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        return pool;
+    }
+    
+    @Test
+    public void exceedingNumberOfSocketsShouldGenerateWarning() {
+        Pool pool = setupTest("sockets", "2", "4");
+        
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
     }
 }

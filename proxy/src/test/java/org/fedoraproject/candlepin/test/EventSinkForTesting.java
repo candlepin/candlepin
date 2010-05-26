@@ -12,23 +12,33 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.audit;
+package org.fedoraproject.candlepin.test;
 
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 
 /**
- * EventSink
+ * EventSinkForTesting, a no-op class as we don't need hornetq at all.
  */
-public interface EventSink {
+public class EventSinkForTesting implements EventSink {
 
-    void sendEvent(Event event);
+    @Override
+    public void emitConsumerCreated(Principal principal, Consumer newConsumer) {
+    }
 
-    void emitConsumerCreated(Principal principal, Consumer newConsumer);
+    @Override
+    public void emitOwnerCreated(Principal principal, Owner newOwner) {
+    }
 
-    void emitOwnerCreated(Principal principal, Owner newOwner);
+    @Override
+    public void sendEvent(Event event) {
+    }
 
-    void emitPoolCreated(Principal principal, Pool newPool);
+    @Override
+    public void emitPoolCreated(Principal principal, Pool newPool) {
+    }
 }

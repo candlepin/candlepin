@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
@@ -174,13 +175,13 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotCreatePoolsDirectly() {
-        setupPrincipal(owner1, Role.OWNER_ADMIN);
+        Principal principal = setupPrincipal(owner1, Role.OWNER_ADMIN);
         
         securityInterceptor.enable();
         crudInterceptor.enable();
 
         poolResource.createPool(
-            TestUtil.createEntitlementPool(owner1, TestUtil.createProduct()));
+            TestUtil.createEntitlementPool(owner1, TestUtil.createProduct()), principal);
     }
     
     @Test

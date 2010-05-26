@@ -21,11 +21,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.xnap.commons.i18n.I18n;
@@ -40,9 +43,8 @@ import com.google.inject.Inject;
 @Path("/products")
 public class ProductResource {
 
-    //private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
-    //private ProductCurator prodCurator;
+    private ContentCurator contentCurator;
     private I18n i18n;
 
     /**
@@ -53,8 +55,10 @@ public class ProductResource {
      */
     @Inject
     public ProductResource(ProductServiceAdapter prodAdapter, 
+                           ContentCurator contentCurator,
                            I18n i18n) {
         this.prodAdapter = prodAdapter;
+        this.contentCurator = contentCurator;
         this.i18n = i18n;
     }
 
@@ -99,7 +103,36 @@ public class ProductResource {
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
-    public Product createProduct(Product product) {
+    public Product createProduct(Product product, 
+        @QueryParam("childId") List<String> childIds) {
+        //TODO: Do the bulk lookup in the product adapter?
+        if (childIds != null) {
+            for (String childId : childIds) {
+                Product child = prodAdapter.getProductById(childId);
+                product.addChildProduct(child);
+            }
+        }
+        
         return prodAdapter.createProduct(product);
     }   
+    
+    @POST
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @Path("/{product_uuid}/content/{content_id}")
+    public Product addContent(@PathParam("product_uuid") String pid,
+                              @PathParam("content_id") Long cid, 
+                              @QueryParam("enabled") Boolean enabled) {
+        Product product = prodAdapter.getProductById(pid);
+        
+        Content content = contentCurator.find(cid);
+        
+        product.addContent(content);
+        if (enabled) {
+            product.addEnabledContent(content);
+        }
+        return prodAdapter.createProduct(product);
+        
+    }
+    
 }

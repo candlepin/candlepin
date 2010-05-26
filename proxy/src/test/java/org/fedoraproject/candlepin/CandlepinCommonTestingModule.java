@@ -18,6 +18,7 @@ import java.io.Reader;
 
 import javax.script.ScriptEngine;
 
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
@@ -55,6 +56,7 @@ import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceA
 import org.fedoraproject.candlepin.service.impl.stub.StubIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.EnforcerForTesting;
+import org.fedoraproject.candlepin.test.EventSinkForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
@@ -104,6 +106,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
+        bind(EventSink.class).to(EventSinkForTesting.class);
         
         SecurityInterceptor se = new SecurityInterceptor();
         requestInjection(se);

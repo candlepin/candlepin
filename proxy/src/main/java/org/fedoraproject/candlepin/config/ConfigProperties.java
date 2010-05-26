@@ -33,6 +33,7 @@ public class ConfigProperties {
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
+    public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
 
@@ -48,6 +49,7 @@ public class ConfigProperties {
                     "org.fedoraproject.candlepin.audit.DatabaseListener," +
                     "org.fedoraproject.candlepin.audit.LoggingListener,");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
+                this.put(AUDIT_LOG_VERBOSE, "false");
 
                 this.put(PRETTY_PRINT, "false");
             }

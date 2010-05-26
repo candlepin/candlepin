@@ -68,10 +68,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         
         product = new Product("a product", "a product", 
                               "variant", "version", "arch", 
-                              123L, "SVC", new HashSet<Product>());
+                              123L, "SVC", new HashSet<Product>(),
+                              new HashSet<Content>());
         
-        Content content = new Content(CONTENT_NAME, CONTENT_VENDOR, CONTENT_URL,
-            CONTENT_GPG_URL, CONTENT_ENABLED);
+        Content content = new Content(CONTENT_NAME, CONTENT_HASH,
+                                      CONTENT_LABEL, CONTENT_TYPE,
+                                      CONTENT_VENDOR, CONTENT_URL,
+                                      CONTENT_GPG_URL);
         content.setType(CONTENT_TYPE);
         content.setLabel(CONTENT_LABEL);
         content.setHash(CONTENT_HASH);
@@ -111,9 +114,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
             encodedContent.put(
                 ((DERUTF8String) ext.getAsn1Encodable()).getString(), ext);
         }
+       
+        
         
         return encodedContent.containsKey(CONTENT_LABEL) &&
-            encodedContent.containsKey(CONTENT_ENABLED) &&
+   //         encodedContent.containsKey(CONTENT_ENABLED) &&
             encodedContent.containsKey(CONTENT_GPG_URL) &&
             encodedContent.containsKey(CONTENT_URL) &&
             encodedContent.containsKey(CONTENT_VENDOR) &&

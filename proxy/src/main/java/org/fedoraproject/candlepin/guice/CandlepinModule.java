@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.guice;
 
 import java.util.Properties;
 
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
@@ -36,7 +38,9 @@ import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
+import org.fedoraproject.candlepin.resource.ContentResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
+import org.fedoraproject.candlepin.resource.AtomFeedResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
@@ -77,7 +81,9 @@ public class CandlepinModule extends AbstractModule {
         bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
-        bind(ConsumerTypeResource.class);        
+        bind(ConsumerTypeResource.class);
+        bind(ContentResource.class);
+        bind(AtomFeedResource.class);      
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
@@ -96,7 +102,8 @@ public class CandlepinModule extends AbstractModule {
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
         bind(JsonProvider.class);
-
+        bind(EventSink.class).to(EventSinkImpl.class);
+        
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(

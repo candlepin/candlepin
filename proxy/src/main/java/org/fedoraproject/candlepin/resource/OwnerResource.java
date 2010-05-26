@@ -25,9 +25,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.Entitler;
@@ -65,6 +70,8 @@ public class OwnerResource {
     private ConsumerCurator consumerCurator;
     private I18n i18n;
     private Entitler entitler;
+    private EventSink sink;
+    private EventFactory eventFactory;
     private static Logger log = Logger.getLogger(OwnerResource.class);
 
     @Inject
@@ -72,7 +79,8 @@ public class OwnerResource {
         SubscriptionCurator subscriptionCurator,
         SubscriptionTokenCurator subscriptionTokenCurator,
         ConsumerCurator consumerCurator,
-        I18n i18n, UserServiceAdapter userService, Entitler entitler) {
+        I18n i18n, UserServiceAdapter userService, Entitler entitler,
+        EventSink sink, EventFactory eventFactory) {
 
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
@@ -82,6 +90,8 @@ public class OwnerResource {
         this.userService = userService;
         this.i18n = i18n;
         this.entitler = entitler;
+        this.sink = sink;
+        this.eventFactory = eventFactory;
     }
 
     /**
@@ -111,13 +121,16 @@ public class OwnerResource {
 
     /**
      * Creates a new Owner
+     * @param principal TODO
      * @return the new owner
      */
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Owner createOwner(Owner owner) {
+    public Owner createOwner(Owner owner, @Context Principal principal) {
         Owner toReturn = ownerCurator.create(owner);
-
+     
+        sink.emitOwnerCreated(principal, owner);
+        
         if (toReturn != null) {
             return toReturn;
         }
@@ -133,10 +146,14 @@ public class OwnerResource {
     @Path("/{owner_id}")    
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     //FIXME No way this is as easy as this :)
-    public void deleteOwner(@PathParam("owner_id") Long ownerId) {
+    public void deleteOwner(@PathParam("owner_id") Long ownerId, 
+            @Context Principal principal) {
         Owner owner = findOwner(ownerId);
-        
+        Event e = eventFactory.ownerDeleted(principal, owner);
+
         cleanupAndDelete(owner);
+        
+        sink.sendEvent(e);
     }    
 
     private void cleanupAndDelete(Owner owner) {
