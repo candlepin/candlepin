@@ -16,11 +16,13 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.*;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
@@ -64,7 +66,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test    
     public void testSimpleDeleteOwner() {
         Long id = owner.getId();
-        ownerResource.deleteOwner(id, null);
+        ownerResource.deleteOwner(
+            id, 
+            new UserPrincipal("someuser", owner, new LinkedList<Role>()));
         owner = ownerCurator.find(id);
         assertTrue(owner == null);
     }

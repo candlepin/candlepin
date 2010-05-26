@@ -29,6 +29,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -69,6 +71,7 @@ public class OwnerResource {
     private I18n i18n;
     private Entitler entitler;
     private EventSink sink;
+    private EventFactory eventFactory;
     private static Logger log = Logger.getLogger(OwnerResource.class);
 
     @Inject
@@ -77,7 +80,7 @@ public class OwnerResource {
         SubscriptionTokenCurator subscriptionTokenCurator,
         ConsumerCurator consumerCurator,
         I18n i18n, UserServiceAdapter userService, Entitler entitler,
-        EventSink sink) {
+        EventSink sink, EventFactory eventFactory) {
 
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
@@ -88,6 +91,7 @@ public class OwnerResource {
         this.i18n = i18n;
         this.entitler = entitler;
         this.sink = sink;
+        this.eventFactory = eventFactory;
     }
 
     /**
@@ -145,10 +149,11 @@ public class OwnerResource {
     public void deleteOwner(@PathParam("owner_id") Long ownerId, 
             @Context Principal principal) {
         Owner owner = findOwner(ownerId);
-        
+        Event e = eventFactory.ownerDeleted(principal, owner);
+
         cleanupAndDelete(owner);
         
-        sink.emitOwnerDeleted(principal, owner);
+        sink.sendEvent(e);
     }    
 
     private void cleanupAndDelete(Owner owner) {
