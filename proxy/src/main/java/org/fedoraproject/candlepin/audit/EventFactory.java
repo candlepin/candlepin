@@ -71,9 +71,8 @@ public class EventFactory {
     }
     
     public Event ownerDeleted(Principal principal, Owner owner) {
-        String newEntityJson = entityToJson(owner);
         Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principal,
-            owner.getId(), owner.getId(), null, newEntityJson);
+            owner.getId(), owner.getId(), entityToJson(owner), null);
         return e;
     }
 
