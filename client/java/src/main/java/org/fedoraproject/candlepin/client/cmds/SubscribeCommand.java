@@ -16,8 +16,9 @@ package org.fedoraproject.candlepin.client.cmds;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.ArrayUtils;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
-
+import static org.apache.commons.lang.ArrayUtils.isEmpty;
 /**
  * RegisterCommand
  */
@@ -32,22 +33,54 @@ public class SubscribeCommand extends BaseCommand {
         return "Create an entitlement for this consumer.";
     }
 
+    @Override
     public Options getOptions() {
         Options opts = super.getOptions();
-        opts.addOption("p", "pool", true, "The pool id to subscribe to");
+        opts.addOption("p", "pool", true, "Subscription Pool Id");
+        opts.addOption("pr", "product", true, "product ID");
+        opts.addOption("r", "regtoken", true, "regtoken");
         return opts;
     }
 
+  
+    @Override
     public void execute(CommandLine cmdLine) {
-        String pool = cmdLine.getOptionValue("p");
-        boolean force = cmdLine.hasOption("f");
-        if ((pool == null)) {
-            System.err.println("Pool id needs to be provided");
+        String [] pools = cmdLine.getOptionValues("p");
+        String [] products = cmdLine.getOptionValues("pr");
+        String [] regTokens = cmdLine.getOptionValues("r");
+        if(!this.getClient().isRegistered()){
+        	System.out.println("This system is currently not registered.");
+        	return;
+        }
+        if (isEmpty(pools) && isEmpty(products) && isEmpty(regTokens)) {
+            System.err.println("Error: Need either --product or --regtoken, Try --help");
             return;
         }
         CandlepinConsumerClient client = this.getClient();
-
-        client.bindByPool(Long.decode(pool));
+        
+        try {
+			if(!isEmpty(pools)){
+				for(String pool: pools){
+					client.bindByPool(Long.decode(pool));
+				}
+			}
+			
+			if(!isEmpty(products)){
+				for(String product: products){
+					client.bindByProductId(product);
+				}
+			}
+			
+			if(!isEmpty(regTokens)){
+				for(String token: regTokens){
+					client.bindByRegNumber(token);
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("Unable to subscribe!");
+			e.printStackTrace();
+			return;
+		}
         client.updateEntitlementCertificates();
     }
 

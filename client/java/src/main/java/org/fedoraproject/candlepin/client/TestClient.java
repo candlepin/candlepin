@@ -35,14 +35,14 @@ public class TestClient {
             // This seems like a hack.
 
             System.setProperty("javax.net.ssl.trustStore",
-                "/home/bkearney/tomcat6/conf/keystore");
+                Constants.KEY_STORE_HOME);
             Security.addProvider(new BouncyCastleProvider());
             // this initialization only needs to be done once per VM
-            String host = "https://localhost:8443/candlepin";
+            String host = Constants.DEFAULT_SERVER;
             CandlepinConsumerClient client = new CandlepinConsumerClient(host);
             System.out.println("Should not be registered: " +
                 client.isRegistered());
-            String uuid = client.register("bk", "password", "Fred2", "system");
+            String uuid = client.register("admin", "admin", "Fred2", "system");
             System.out.println("UUID returned from Register: " + uuid);
             System.out.println("UUID from the getUUID call : " +
                 client.getUUID());

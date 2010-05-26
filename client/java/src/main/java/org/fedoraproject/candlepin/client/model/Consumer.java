@@ -14,23 +14,45 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * Consumer
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Consumer {
+public class Consumer extends TimeStampedEntity{
 
     protected String name;
     protected ConsumerType type;
     protected String uuid;
     protected IdentityCertificate idCert;
+    private Consumer parent;
+    private Long id;
+ 
+    public Long getId() {
+		return id;
+	}
 
-    public String getName() {
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Consumer getParent() {
+		return parent;
+	}
+
+	public void setParent(Consumer parent) {
+		this.parent = parent;
+	}
+
+	public String getName() {
         return name;
     }
 
@@ -46,6 +68,7 @@ public class Consumer {
         this.type = type;
     }
 
+    @JsonIgnore
     public void setType(String type) {
         this.type = new ConsumerType(type, null);
     }
@@ -65,4 +88,8 @@ public class Consumer {
     public void setIdCert(IdentityCertificate idCert) {
         this.idCert = idCert;
     }
+
+    @JsonIgnore
+    public void setFacts(Map<String, String> facts){}
+    
 }

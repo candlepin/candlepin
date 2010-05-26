@@ -15,14 +15,13 @@ COPYRIGHT = ""
 RESTEASY = [group('jaxrs-api', 
                   'resteasy-jaxrs',
                   'resteasy-jaxb-provider', 
-                  'resteasy-jettison-provider', 
+                  'resteasy-jackson-provider', 
                   'resteasy-guice', 
                   :under => 'org.jboss.resteasy',
                   :version => '1.2.1.GA'), 
             'javax.persistence:persistence-api:jar:1.0',
             'xalan:xalan:jar:2.6.0',
             'org.scannotation:scannotation:jar:1.0.2',
-            'org.codehaus.jettison:jettison:jar:1.1',
             'commons-httpclient:commons-httpclient:jar:3.1',
              'org.slf4j:slf4j-api:jar:1.5.8',
              'org.slf4j:slf4j-simple:jar:1.5.8',
@@ -42,7 +41,7 @@ COMMONS = ['commons-beanutils:commons-beanutils:jar:1.7.0',
            'commons-pool:commons-pool:jar:1.2',
            'commons-collections:commons-collections:jar:3.1',
            'commons-io:commons-io:jar:1.3.2',
-           'commons-logging:commons-logging:jar:1.1.1']
+           'commons-logging:commons-logging:jar:1.1.1', 'commons-lang:commons-lang:jar:2.5']
 JDOM = 'jdom:jdom:jar:1.0'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'

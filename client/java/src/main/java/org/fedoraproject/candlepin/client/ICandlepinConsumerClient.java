@@ -52,6 +52,8 @@ public interface ICandlepinConsumerClient {
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<Object> deleteConsumer(@PathParam("uuid") String uuid);
 
+    
+    
     @GET
     @Path("pools")
     @Produces(MediaType.APPLICATION_JSON)
@@ -64,7 +66,7 @@ public interface ICandlepinConsumerClient {
 
     @POST
     @Path("consumers/{uuid}/entitlements")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Entitlement>> bindByEntitlementID(
         @PathParam("uuid") String uuid, @QueryParam("pool") Long poolId);
 
@@ -73,4 +75,26 @@ public interface ICandlepinConsumerClient {
     @Produces(MediaType.APPLICATION_JSON)
     List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("uuid") String uuid);
+    
+    @POST
+    @Path("consumers/{uuid}/entitlements")
+    @Produces(MediaType.APPLICATION_JSON)
+    ClientResponse<List<Entitlement>> bindByProductId(
+    		@PathParam("uuid") String uuid, @QueryParam("product") String productId);
+    
+    @POST
+    @Path("consumers/{uuid}/entitlements")
+    @Produces(MediaType.APPLICATION_JSON)
+    ClientResponse<List<Entitlement>> bindByRegNumber(
+    		@PathParam("uuid") String uuid, @QueryParam("token") String regnum);
+    
+    @DELETE
+    @Path("consumers/{uuid}/certificates/{serialNo}")
+    ClientResponse<Void>  unBindBySerialNumber(
+    		@PathParam("uuid") String uuid, @PathParam("serialNo") String serialNumber);
+    
+    @DELETE 
+    @Path("consumers/{uuid}/entitlements/")
+    ClientResponse<Void> unBindAll(@PathParam("uuid") String uuid);
+    
 }
