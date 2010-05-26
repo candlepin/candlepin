@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource.test;
 
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.fedoraproject.candlepin.model.Product;
@@ -58,7 +59,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testCreateProductResource() {
         
         Product toSubmit = createProduct();
-        productResource.createProduct(toSubmit);
+        productResource.createProduct(toSubmit, new ArrayList<String>());
         
         
     }

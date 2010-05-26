@@ -84,7 +84,8 @@ class CandlepinCLI
   end
 
   def call(method_name, args)
-    @cp.send(method_name, *args)
+    real_args = args.collect { |arg| eval(arg) rescue arg }
+    @cp.send(method_name, *real_args)
   end
 
   private

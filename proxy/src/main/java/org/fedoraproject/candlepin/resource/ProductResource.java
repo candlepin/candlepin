@@ -21,6 +21,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Role;
@@ -40,9 +41,7 @@ import com.google.inject.Inject;
 @Path("/products")
 public class ProductResource {
 
-    //private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
-    //private ProductCurator prodCurator;
     private I18n i18n;
 
     /**
@@ -99,7 +98,16 @@ public class ProductResource {
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
-    public Product createProduct(Product product) {
+    public Product createProduct(Product product, 
+        @QueryParam("childId") List<String> childIds) {
+        //TODO: Do the bulk lookup in the product adapter?
+        if (childIds != null) {
+            for (String childId : childIds) {
+                Product child = prodAdapter.getProductById(childId);
+                product.addChildProduct(child);
+            }
+        }
+        
         return prodAdapter.createProduct(product);
     }   
 }
