@@ -59,12 +59,20 @@ public class ListCommand extends BaseCommand {
             	System.out.println("No availale subscription pools to list");
             	return;
             }
-            System.out.println(String.format("%-10s %-30s %-10s %-20s %-20s", "ID",
-                "Name", "Quantity", "Begin", "End"));
+            System.out.println("+-------------------------------------------+\n\tInstalled Product Status\n"
+            		+ "+-------------------------------------------+\n");
+          /*  System.out.println(String.format("%-10s %-60s %-10s %-20s %-20s", "ID",
+                "Name", "Quantity", "Begin", "End"));*/
             for (Pool pool : pools) {
-                System.out.printf("%-10d %-30s %-10s %-20tF %-20tF",
+            	System.out.printf("%-25s%s\n", "ProductName:", pool.getProductName());
+            //	System.out.printf("%-25s%s\n", "Status:", pool.getSourceEntitlement().);
+            	System.out.printf("%-25s%s\n", "Expires:", pool.getEndDate());
+            	System.out.printf("%-25s%d\n", "Subscription:", pool.getSubscriptionId());
+            	System.out.println("\n");
+     /*       	
+                System.out.printf("%-10d %-60s %-10s %-20tF %-20tF\n",
                     pool.getId(), pool.getProductName(), pool.getQuantity(), pool
-                        .getStartDate(), pool.getEndDate());
+                        .getStartDate(), pool.getEndDate());*/
             }
         } 
         else  {
@@ -73,10 +81,10 @@ public class ListCommand extends BaseCommand {
             	System.out.println("No Consumed subscription pools to list");
             	return;
             }
-            System.out.printf("%-10s %-30s %-20s %-20s", "Serial",
+            System.out.printf("%-10s %-30s %-20s %-20s\n", "Serial",
                 "Name", "Begin", "End");
             for (EntitlementCertificate cert : certs) {
-                System.out.printf("%-10s %-30s %-20tF %-20tF",
+                System.out.printf("%-10s %-30s %-20tF %-20tF\n",
                     cert.getSerial().toString(), cert.getProductName(), 
                     cert.getStartDate(), cert.getEndDate());
             }

@@ -79,9 +79,9 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
             TrustManagerFactory tmf = TrustManagerFactory
                 .getInstance("SunX509");
             KeyStore ks2 = KeyStore.getInstance(KeyStore.getDefaultType());
-            // ks2.load(null, null);
+            ks2.load(null, null);
             ks2.load(
-                new FileInputStream(Constants.KEY_STORE_HOME),
+                new FileInputStream(Constants.KEY_STORE_FILE),
                 passwd);
            // ks2.setCertificateEntry("candlepin_ca_crt", candlepinCert);
             tmf.init(ks2);
@@ -91,6 +91,7 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
             // SSLContext ctx = SSLContext.getInstance("SSL");
             ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(),
                 new SecureRandom());
+            
             return ctx;
         }
         catch (Exception e) {

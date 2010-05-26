@@ -21,7 +21,7 @@ public class UnSubscribeCommand extends BaseCommand {
 	@Override
 	public Options getOptions() {
 		Options opts = super.getOptions();
-		opts.addOption("s", "serial", true, "Certificate serial to unsubscribe");
+		opts.addOption("se", "serial", true, "Certificate serial to unsubscribe");
 		return opts;
 	}
 
@@ -32,9 +32,9 @@ public class UnSubscribeCommand extends BaseCommand {
 	        System.out.println("This system is currently not registered.");
 	       	return;
 		 }
-		 String serial = cmdLine.getOptionValue("s");
+		 String serial = cmdLine.getOptionValue("se");
 		OperationResult result = StringUtils.isEmpty(serial) ? client
-				.unBindAll() : client.unBindBySerialNumber(serial);
+				.unBindAll() : client.unBindBySerialNumber(Integer.parseInt(serial));
 		switch(result){
 			case NOT_A_FAILURE:
 				System.out.println("Unsubscribed successfully");

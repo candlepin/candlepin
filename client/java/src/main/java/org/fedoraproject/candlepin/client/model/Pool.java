@@ -15,17 +15,20 @@
 package org.fedoraproject.candlepin.client.model;
 
 import java.util.Date;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * Simple Pool Model
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Pool {
+public class Pool extends TimeStampedEntity{
     protected Long id;
     protected String productName;
     protected String productId;
@@ -33,6 +36,11 @@ public class Pool {
     protected Long consumed;
     protected Date startDate;
     protected Date endDate;
+    private Set<Attribute> attributes;
+    private boolean active;
+    private Long subscriptionId;
+    private Entitlement sourceEntitlement;
+    private boolean activeSubscription;
 
     public Long getId() {
         return id;
@@ -90,4 +98,46 @@ public class Pool {
         this.endDate = endDate;
     }
 
+	public Set<Attribute> getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(Set<Attribute> attributes) {
+		this.attributes = attributes;
+	}
+
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
+	public Long getSubscriptionId() {
+		return subscriptionId;
+	}
+
+	public void setSubscriptionId(Long subscriptionId) {
+		this.subscriptionId = subscriptionId;
+	}
+
+	@JsonIgnore
+	public void setUnlimited(boolean value){}
+
+	public Entitlement getSourceEntitlement() {
+		return sourceEntitlement;
+	}
+
+	public void setSourceEntitlement(Entitlement sourceEntitlement) {
+		this.sourceEntitlement = sourceEntitlement;
+	}
+
+	public boolean isActiveSubscription() {
+		return activeSubscription;
+	}
+
+	public void setActiveSubscription(boolean activeSubscription) {
+		this.activeSubscription = activeSubscription;
+	}
 }

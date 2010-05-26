@@ -43,6 +43,13 @@ public class FileUtil {
             file.delete();
         }
     }
+    
+
+    public static void removeFiles(File [] files) {
+        for (File file : files) {
+        	file.delete();
+        }
+    }
 
     public static void dumpToFile(String filename, String contents) {
         try {

@@ -56,6 +56,7 @@ public class CandlepinConsumerClient {
     private String entitlementDirName = dir + File.separator + "entitlements";
     private String certFileName = consumerDirName + File.separator + "cert.pem";
     private String keyFileName = consumerDirName + File.separator + "key.pem";
+ //   private String keyStoreFileName = consumerDirName + File.separator + "keystore";
 
     public CandlepinConsumerClient(String url) {
         this.url = url;
@@ -208,7 +209,7 @@ public class CandlepinConsumerClient {
         return client.bindByRegNumber(getUUID(), regNo).getEntity();
     }
     
-    public OperationResult unBindBySerialNumber(String serialNumber){
+    public OperationResult unBindBySerialNumber(int serialNumber){
     	try {
 			ICandlepinConsumerClient client = clientWithCert();
 			ClientResponse<Void> response = client.unBindBySerialNumber(getUUID(), serialNumber);
@@ -234,6 +235,10 @@ public class CandlepinConsumerClient {
     }
 
     public boolean updateEntitlementCertificates() {
+    	File entitlementDir = new File(entitlementDirName);
+    	if(entitlementDir.exists() && entitlementDir.isDirectory()){
+    		FileUtil.removeFiles(entitlementDir.listFiles());
+    	}
         FileUtil.mkdir(entitlementDirName);
         ICandlepinConsumerClient client = clientWithCert();
         List<EntitlementCertificate> certs = client
@@ -297,16 +302,21 @@ public class CandlepinConsumerClient {
         return url;
     }
 
-    protected ICandlepinConsumerClient clientWithCert() {
+    @SuppressWarnings("deprecation")
+	protected ICandlepinConsumerClient clientWithCert() {
         try {
-            Protocol customHttps = new Protocol("https",
-                new CustomSSLProtocolSocketFactory(certFileName, keyFileName),
-                8443);
-            Protocol.registerProtocol("https", customHttps);
+           
             HttpClient httpclient = new HttpClient();
+            /*AuthSSLProtocolSocketFactory factory = 
+            	 new AuthSSLProtocolSocketFactory(new URL("file:"+Constants.KEY_STORE_FILE), "password", 
+            			 new URL("file:/tmp/keygens/server.truststore"), "password");*/
+            CustomSSLProtocolSocketFactory factory  = new CustomSSLProtocolSocketFactory(certFileName, keyFileName);
             URL hostUrl = new URL(url);
+            Protocol customHttps = new Protocol("https", factory, 8443);
+                Protocol.registerProtocol("https", customHttps);
             httpclient.getHostConfiguration().setHost(hostUrl.getHost(),
                 hostUrl.getPort(), customHttps);
+            httpclient.getParams().setConnectionManagerTimeout(1000);
             ICandlepinConsumerClient client = ProxyFactory.create(
                 ICandlepinConsumerClient.class, url,
                 new ApacheHttpClientExecutor(httpclient));

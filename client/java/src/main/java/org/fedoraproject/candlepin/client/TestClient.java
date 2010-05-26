@@ -35,7 +35,7 @@ public class TestClient {
             // This seems like a hack.
 
             System.setProperty("javax.net.ssl.trustStore",
-                Constants.KEY_STORE_HOME);
+                Constants.KEY_STORE_FILE);
             Security.addProvider(new BouncyCastleProvider());
             // this initialization only needs to be done once per VM
             String host = Constants.DEFAULT_SERVER;

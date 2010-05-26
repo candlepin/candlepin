@@ -28,6 +28,7 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -165,7 +166,6 @@ public class PemUtil {
     public static Date getExtensionDate(X509Certificate cert, String oid,
         Date defaultValue) {
         byte[] value = cert.getExtensionValue(oid);
-
         if (value != null) {
             try {
                 String dateString =  X509ExtensionUtil.fromExtensionValue(value).toString();

@@ -17,9 +17,10 @@ package org.fedoraproject.candlepin.client.model;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.text.DateFormat;
-import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -33,20 +34,28 @@ import org.fedoraproject.candlepin.client.PemUtil;
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntitlementCertificate {
+public class EntitlementCertificate extends TimeStampedEntity{
     protected String key;
     protected String cert;
     protected BigInteger serial;
-
-    public EntitlementCertificate() {
-
-    }
+    protected Entitlement entitlement;
+    private X509Certificate x509Certificate;
+    
+    public EntitlementCertificate() {}
 
     public EntitlementCertificate(X509Certificate cert, PrivateKey privateKey) {
         try {
             this.cert = PemUtil.getPemEncoded(cert);
+            this.x509Certificate = cert;
             this.serial = cert.getSerialNumber();
             this.key = PemUtil.getPemEncoded(privateKey);
+            System.out.println(getProductID());
+            /*List<String> extensions = new ArrayList<String>(cert.getNonCriticalExtensionOIDs());
+            Collections.sort(extensions);
+            for (String s : extensions) {
+    			System.out.println(s + ": " + new String(cert.getExtensionValue(s)));
+    		}
+            System.out.println("\n");*/
         }
         catch (Exception e) {
             throw new ClientException(e);
@@ -99,4 +108,27 @@ public class EntitlementCertificate {
         return PemUtil.getExtensionDate(getX509Cert(),
             "1.3.6.1.4.1.2312.9.4.7", null);        
     }
+
+	public Entitlement getEntitlement() {
+		return entitlement;
+	}
+
+	public void setEntitlement(Entitlement entitlement) {
+		this.entitlement = entitlement;
+	}
+	
+	private static final String PROD_ID_BEGIN = "1.3.6.1.4.1.2312.9.1";
+	public int getProductID(){
+        System.out.println("\n");
+        Set<String> extensions = this.x509Certificate.getNonCriticalExtensionOIDs();
+        for (String s : extensions) {
+        	int index = s.indexOf(PROD_ID_BEGIN); 
+        	if(index != -1){
+        		String value = s.substring(index + PROD_ID_BEGIN.length()+1, s.indexOf(".", index + PROD_ID_BEGIN.length()+1));
+        		return Integer.parseInt(value); //System.out.println(value);
+        	}
+			//System.out.println(s + ": " + new String(this.x509Certificate.getExtensionValue(s)));
+		}
+        return -1;
+	}
 }

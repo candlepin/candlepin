@@ -91,7 +91,7 @@ public interface ICandlepinConsumerClient {
     @DELETE
     @Path("consumers/{uuid}/certificates/{serialNo}")
     ClientResponse<Void>  unBindBySerialNumber(
-    		@PathParam("uuid") String uuid, @PathParam("serialNo") String serialNumber);
+    		@PathParam("uuid") String uuid, @PathParam("serialNo") int serialNumber);
     
     @DELETE 
     @Path("consumers/{uuid}/entitlements/")

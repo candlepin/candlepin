@@ -14,11 +14,11 @@
  */
 package org.fedoraproject.candlepin.client.cmds;
 
+import static org.apache.commons.lang.ArrayUtils.isEmpty;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang.ArrayUtils;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
-import static org.apache.commons.lang.ArrayUtils.isEmpty;
 /**
  * RegisterCommand
  */
