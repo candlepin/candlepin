@@ -25,6 +25,7 @@ import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EventIdCurator;
+import org.fedoraproject.candlepin.model.Owner;
 
 import com.google.inject.Inject;
 
@@ -61,7 +62,17 @@ public class EventFactory {
         return e;
     }
 
-    private String entityToJson(Consumer newConsumer) {
+    public Event ownerCreated(Principal principal, Owner newOwner) {
+        String newEntityJson = entityToJson(newOwner);
+        
+        Event e = new Event(Event.Type.CREATED, Event.Target.OWNER, principal,
+            newOwner.getId(), newOwner.getId(), null, newEntityJson);
+        
+        e.setId(eventIdCurator.getNextEventId());
+        return e;
+    }
+
+    private String entityToJson(Object entity) {
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
@@ -77,7 +88,7 @@ public class EventFactory {
         // care about XmlTransient annotations when used here:
     
         try {
-            newEntityJson = mapper.writeValueAsString(newConsumer);
+            newEntityJson = mapper.writeValueAsString(entity);
         }
         catch (JsonGenerationException e) {
             // TODO Auto-generated catch block
