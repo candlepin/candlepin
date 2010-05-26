@@ -224,7 +224,8 @@ public class DefaultEntitlementCertServiceAdapter extends
             
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED),
-                    false, new DERUTF8String((enabledContent.contains(con) ? "0" : "1")  )));
+                    false,  new DERUTF8String(
+                        (enabledContent.contains(con) ? "0" : "1"))));
         }
         return toReturn;
     }    

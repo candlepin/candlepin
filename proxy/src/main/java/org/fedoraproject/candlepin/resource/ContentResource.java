@@ -28,7 +28,6 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -45,7 +44,6 @@ public class ContentResource {
     /**
      * default ctor
      * 
-     * @param prodAdapter
      *            Product Adapter used to interact with multiple services.
      */
     @Inject
@@ -69,7 +67,7 @@ public class ContentResource {
         Content content = contentCurator.find(contentId);
         
         if (content == null) {
-            throw new BadRequestException(  
+            throw new BadRequestException(
                 i18n.tr("Content with id {0} could not be found", contentId));
         }
         

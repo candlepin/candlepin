@@ -81,8 +81,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);
-        bind(AtomFeedResource.class);
-        bind(ConsumerTypeResource.class);        
+        bind(AtomFeedResource.class);      
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);

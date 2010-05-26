@@ -19,11 +19,9 @@ import java.util.HashSet;
 
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 
