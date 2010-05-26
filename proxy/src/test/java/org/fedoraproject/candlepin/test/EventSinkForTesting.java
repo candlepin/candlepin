@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * EventSinkForTesting, a no-op class as we don't need hornetq at all.
@@ -37,4 +38,7 @@ public class EventSinkForTesting implements EventSink {
     public void sendEvent(Event event) {
     }
 
+    @Override
+    public void emitPoolCreated(Principal principal, Pool newPool) {
+    }
 }

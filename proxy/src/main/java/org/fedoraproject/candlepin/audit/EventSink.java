@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.audit;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * EventSink
@@ -28,4 +29,6 @@ public interface EventSink {
     void emitConsumerCreated(Principal principal, Consumer newConsumer);
 
     void emitOwnerCreated(Principal principal, Owner newOwner);
+
+    void emitPoolCreated(Principal principal, Pool newPool);
 }

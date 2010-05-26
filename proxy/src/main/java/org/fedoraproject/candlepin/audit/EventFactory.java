@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 
 import com.google.inject.Inject;
 
@@ -67,6 +68,14 @@ public class EventFactory {
         String newEntityJson = entityToJson(newOwner);
         Event e = new Event(Event.Type.CREATED, Event.Target.OWNER, principal,
             newOwner.getId(), newOwner.getId(), null, newEntityJson);
+        return e;
+    }
+    
+    public Event poolCreated(Principal principal, Pool newPool) {
+        String newEntityJson = entityToJson(newPool);
+        Owner o = newPool.getOwner();
+        Event e = new Event(Event.Type.CREATED, Event.Target.POOL, principal,
+            o.getId(), newPool.getId(), null, newEntityJson);
         return e;
     }
     

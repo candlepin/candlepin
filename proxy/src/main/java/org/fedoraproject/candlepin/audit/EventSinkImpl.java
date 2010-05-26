@@ -19,6 +19,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
@@ -78,5 +79,10 @@ public class EventSinkImpl implements EventSink {
     public void emitOwnerCreated(Principal principal, Owner newOwner) {
         Event e = eventFactory.ownerCreated(principal, newOwner);
         sendEvent(e);
-    }    
+    }
+    
+    public void emitPoolCreated(Principal principal, Pool newPool) {
+        Event e = eventFactory.poolCreated(principal, newPool);
+        sendEvent(e);
+    }
 }

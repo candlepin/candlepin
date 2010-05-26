@@ -55,7 +55,7 @@ public class Event implements Persisted {
     /**
      * Target the type of entity operated on.
      */
-    public enum Target { CONSUMER, OWNER, ENTITLEMENT };
+    public enum Target { CONSUMER, OWNER, ENTITLEMENT, POOL };
     
     // Uniquely identifies the event:
     @Id

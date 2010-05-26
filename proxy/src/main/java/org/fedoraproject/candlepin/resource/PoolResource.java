@@ -23,8 +23,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -55,18 +58,21 @@ public class PoolResource {
     private OwnerCurator ownerCurator;
     private ProductServiceAdapter productServiceAdapter;
     private I18n i18n;
+    private EventSink eventSink;
 
     @Inject
     public PoolResource(
         PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         ProductServiceAdapter productServiceAdapter,
-        I18n i18n) {
+        I18n i18n,
+        EventSink eventSink) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.productServiceAdapter = productServiceAdapter;
         this.i18n = i18n;
+        this.eventSink = eventSink;
     }
 
     /**
@@ -137,7 +143,7 @@ public class PoolResource {
     
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Pool createPool(Pool pool) {
+    public Pool createPool(Pool pool, @Context Principal principal) {
         // BOOO! We assume that pool.owner is partially constructed
         // (alternatively: we only care about the id field) - take it any way you want.
         // passing owner URI instead would be spiffy (not to say RESTful).
@@ -152,6 +158,7 @@ public class PoolResource {
         Pool toReturn = poolCurator.create(pool);
         
         if (toReturn != null) {
+            eventSink.emitPoolCreated(principal, toReturn);
             return toReturn;
         }
 
