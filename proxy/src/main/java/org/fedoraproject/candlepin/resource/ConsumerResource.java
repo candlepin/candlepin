@@ -231,7 +231,7 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid,
         @Context Principal principal) {
-        log.debug("deleteing  consumer_uuid" + uuid);
+        log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
         unbindAll(uuid);
         Event event = eventFactory.consumerDeleted(principal, toDelete);
@@ -433,7 +433,7 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productId) {
+        @QueryParam("product") String productId, @Context Principal principal) {
 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
@@ -450,19 +450,27 @@ public class ConsumerResource {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
             
                 if (token != null) {
-                    return bindByToken(token, consumer);
+                    entitlements = bindByToken(token, consumer);
                 }
-                if (productId != null) {
-                    return bindByProduct(productId, consumer);
+                else if (productId != null) {
+                    entitlements = bindByProduct(productId, consumer);
                 }
-        
-                entitlements = bindByPool(poolId, consumer);
+                else {
+                    entitlements = bindByPool(poolId, consumer);
+                }
             }
         } 
         catch (CandlepinException e) {
             log.debug(e.getMessage());
             throw e;
         }
+
+        // Trigger events:
+        for (Entitlement e : entitlements) {
+            Event event = eventFactory.entitlementCreated(principal, e);
+            sink.sendEvent(event);
+        }
+
         return entitlements;
     }
 

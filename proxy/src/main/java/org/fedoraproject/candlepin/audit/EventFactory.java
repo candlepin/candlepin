@@ -24,7 +24,7 @@ import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.EventIdCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 
 import com.google.inject.Inject;
@@ -34,11 +34,8 @@ import com.google.inject.Inject;
  */
 public class EventFactory {
 
-    private EventIdCurator eventIdCurator;
-
     @Inject
-    public EventFactory(EventIdCurator eventIdCurator) {
-        this.eventIdCurator = eventIdCurator;
+    public EventFactory() {
     }
 
     public Event consumerCreated(Principal principal, Consumer newConsumer) {
@@ -47,8 +44,6 @@ public class EventFactory {
 
         Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, principal,
             principal.getOwner().getId(), newConsumer.getId(), null, newEntityJson);
-        // TODO: Move somewhere more widespread:
-        e.setId(eventIdCurator.getNextEventId());
         return e;
     }
 
@@ -57,18 +52,28 @@ public class EventFactory {
 
         Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER, principal,
             oldConsumer.getOwner().getId(), oldConsumer.getId(), oldEntityJson, null);
-        // TODO: Move somewhere more widespread:
-        e.setId(eventIdCurator.getNextEventId());
         return e;
+    }
+
+    public Event entitlementCreated(Principal principal, Entitlement e) {
+        String newJson = entityToJson(e);
+        Owner o = e.getOwner();
+        Event event = new Event(Event.Type.CREATED, Event.Target.ENTITLEMENT, principal,
+            o.getId(), e.getId(), null, newJson);
+        return event;
     }
 
     public Event ownerCreated(Principal principal, Owner newOwner) {
         String newEntityJson = entityToJson(newOwner);
-        
         Event e = new Event(Event.Type.CREATED, Event.Target.OWNER, principal,
             newOwner.getId(), newOwner.getId(), null, newEntityJson);
-        
-        e.setId(eventIdCurator.getNextEventId());
+        return e;
+    }
+    
+    public Event ownerDeleted(Principal principal, Owner owner) {
+        String newEntityJson = entityToJson(owner);
+        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principal,
+            owner.getId(), owner.getId(), null, newEntityJson);
         return e;
     }
 

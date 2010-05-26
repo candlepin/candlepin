@@ -18,6 +18,10 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -51,17 +55,19 @@ public class Event implements Persisted {
     /**
      * Target the type of entity operated on.
      */
-    public enum Target { CONSUMER, OWNER };
+    public enum Target { CONSUMER, OWNER, ENTITLEMENT };
     
     // Uniquely identifies the event:
     @Id
-//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
     private Long id;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Type type;
     
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Target target;
 
     // String representation of the principal. We probably should not be reconstructing

@@ -202,11 +202,16 @@ class Candlepin
       'version' => version,
       'variant' => variant,
       'type' => type,
-      'childProducts' => childProducts,
       'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
     }
 
-    post("/products", product)
+    if not childProducts.empty?
+      childIds = '?childId=' + childProducts.join('&childId=')
+    else
+      childIds = ''
+    end
+
+    post("/products#{childIds}", product)
   end
   
   # TODO: Should we change these to bind to better match terminology?
