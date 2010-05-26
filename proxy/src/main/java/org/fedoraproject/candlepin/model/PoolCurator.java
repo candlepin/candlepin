@@ -270,12 +270,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
                 PreEntHelper helper = enforcer.pre(c, p);
-                if (helper.getResult().isSuccessful()) {
+                if (helper.getResult().isSuccessful() && 
+                        !helper.getResult().hasWarnings()) {
                     newResults.add(p);
                 }
                 else {
                     log.info("Omitting pool due to failed rule check: " + p.getId());
                     log.info(helper.getResult().getErrors());
+                    log.info(helper.getResult().getWarnings());
                 }
             }
             results = newResults;
