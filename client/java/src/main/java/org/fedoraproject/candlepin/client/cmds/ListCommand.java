@@ -18,9 +18,11 @@ import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.BooleanUtils;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.client.model.Pool;
+import org.fedoraproject.candlepin.client.model.ProductCertificate;
 
 /**
  * RegisterCommand
@@ -61,33 +63,40 @@ public class ListCommand extends BaseCommand {
             }
             System.out.println("+-------------------------------------------+\n\tInstalled Product Status\n"
             		+ "+-------------------------------------------+\n");
-          /*  System.out.println(String.format("%-10s %-60s %-10s %-20s %-20s", "ID",
-                "Name", "Quantity", "Begin", "End"));*/
             for (Pool pool : pools) {
             	System.out.printf("%-25s%s\n", "ProductName:", pool.getProductName());
-            //	System.out.printf("%-25s%s\n", "Status:", pool.getSourceEntitlement().);
+            	System.out.printf("%-25s%s\n", "Product SKU:", pool.getProductId());
+            	System.out.printf("%-25s%s\n", "PoolId:", pool.getId());
+            	System.out.printf("%-25s%d\n", "quantity:", pool.getQuantity());
             	System.out.printf("%-25s%s\n", "Expires:", pool.getEndDate());
-            	System.out.printf("%-25s%d\n", "Subscription:", pool.getSubscriptionId());
             	System.out.println("\n");
-     /*       	
-                System.out.printf("%-10d %-60s %-10s %-20tF %-20tF\n",
-                    pool.getId(), pool.getProductName(), pool.getQuantity(), pool
-                        .getStartDate(), pool.getEndDate());*/
             }
-        } 
-        else  {
+        }else if(cmdLine.hasOption("c")){
             List<EntitlementCertificate> certs = client.getCurrentEntitlementCertificates();
             if(certs.isEmpty()){
             	System.out.println("No Consumed subscription pools to list");
             	return;
             }
-            System.out.printf("%-10s %-30s %-20s %-20s\n", "Serial",
-                "Name", "Begin", "End");
             for (EntitlementCertificate cert : certs) {
-                System.out.printf("%-10s %-30s %-20tF %-20tF\n",
-                    cert.getSerial().toString(), cert.getProductName(), 
-                    cert.getStartDate(), cert.getEndDate());
+            	System.out.printf("%-25s%s\n", "Name:", cert.getProductName());
+            	System.out.printf("%-25s%s\n", "SerialNumber:", cert.getSerial());
+            	System.out.printf("%-25s%s\n", "Active:", BooleanUtils.toStringTrueFalse(cert.isValid()));
+            	System.out.printf("%-25s%s\n", "Begins:", cert.getStartDate());
+            	System.out.printf("%-25s%s\n", "Ends:", cert.getEndDate());
+            	System.out.println("\n");
             }
+        }else{
+        	//get product certificates and list them out.
+        	List<ProductCertificate> productCertificates = client.getInstalledProductCertificates();
+        	for(ProductCertificate pc: productCertificates){
+        		System.out.printf("%-25s%s\n", "ProductName:", pc.getProductName());
+            	System.out.printf("%-25s%s\n", "Status:", pc.isInstalled()? "Installed": "Not Installed");
+            	System.out.printf("%-25s%s\n", "Expires:", pc.getEndDate());
+            	System.out.printf("%-25s%s\n", "Subscription:", pc.isInstalled()? 
+            			pc.getEntitlementCertificate().getSerial():"");
+            	System.out.println("\n");
+        	}
+        	
         }
 
     }

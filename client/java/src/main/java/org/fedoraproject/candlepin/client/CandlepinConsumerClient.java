@@ -16,13 +16,17 @@ package org.fedoraproject.candlepin.client;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.Response;
@@ -35,6 +39,7 @@ import org.fedoraproject.candlepin.client.model.Consumer;
 import org.fedoraproject.candlepin.client.model.Entitlement;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.client.model.Pool;
+import org.fedoraproject.candlepin.client.model.ProductCertificate;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClientExecutor;
@@ -56,6 +61,7 @@ public class CandlepinConsumerClient {
     private String entitlementDirName = dir + File.separator + "entitlements";
     private String certFileName = consumerDirName + File.separator + "cert.pem";
     private String keyFileName = consumerDirName + File.separator + "key.pem";
+    private String productDirName = dir + File.separator + "products";
  //   private String keyStoreFileName = consumerDirName + File.separator + "keystore";
 
     public CandlepinConsumerClient(String url) {
@@ -279,6 +285,37 @@ public class CandlepinConsumerClient {
         catch (Exception e) {
             throw new ClientException(e);
         }
+    }
+    
+    public List<ProductCertificate> getInstalledProductCertificates(){
+    	File file = new File(productDirName);
+    	if(file.exists() && file.isDirectory()){
+    		File [] prodCerts = file.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.endsWith(".pem");
+				}
+			});
+    		if(prodCerts.length == 0)
+    			return Collections.emptyList();
+    		
+    		List<EntitlementCertificate> entitlementCerts = this.getCurrentEntitlementCertificates();
+    		Map<Integer, EntitlementCertificate> map = new HashMap<Integer, EntitlementCertificate>();
+    		for(EntitlementCertificate certificate: entitlementCerts)
+    			map.put(certificate.getProductID(), certificate);
+    		
+    		List<ProductCertificate> productCertificates = new ArrayList<ProductCertificate>();
+    		for(File certificate: prodCerts){
+    			ProductCertificate pc = new ProductCertificate(
+    					PemUtil.readCert(certificate.getAbsolutePath()));
+    			EntitlementCertificate ec = map.get(pc.getProductID());
+   				pc.setEntitlementCertificate(ec!=null ? ec:null);
+   				productCertificates.add(pc);
+    		}
+    		
+    		return productCertificates;
+    	}else
+    		return Collections.emptyList();
     }
 
     public void generatePKCS12Certificates(String password) {

@@ -116,7 +116,6 @@ function update_tomcat_conf
 
 function upload_products
 {
-  IMPORTDIR=/home/ajay/programming/java/candlepin_products/cp_product_utils
     if [ -z "$IMPORTDIR" ]; then
 	echo
 	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
