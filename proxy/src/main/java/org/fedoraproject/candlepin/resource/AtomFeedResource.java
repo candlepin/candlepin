@@ -57,7 +57,7 @@ public class AtomFeedResource {
         List<Event> events = eventCurator.listMostRecent(ATOM_FEED_LIMIT);
         for (Event e : events) {
             Entry entry = new Entry();
-            entry.setTitle(e.getType().toString());
+            entry.setTitle(e.getTarget().toString() + " " + e.getType().toString());
             entry.setPublished(e.getTimestamp());
 
             Content content = new Content();

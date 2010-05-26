@@ -45,7 +45,6 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -180,12 +179,13 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         fail("No exception was thrown");
     }    
     
-    @Ignore // TODO: implement 'delete' functionality
     public void testDeleteResource() {
         Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME,
                 owner, standardSystemType));
-        //consumerResource.delete(created.getUuid());
-        
+        consumerResource.deleteConsumer(consumer.getUuid(), 
+            new UserPrincipal("someuser", owner,
+                Collections.singletonList(Role.OWNER_ADMIN)));
+
         assertNull(consumerCurator.find(created.getId()));
     }
     
@@ -319,13 +319,17 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        consumerResource.deleteConsumer(consumer.getUuid());
+        consumerResource.deleteConsumer(consumer.getUuid(), 
+            new UserPrincipal("someuser", owner,
+                Collections.singletonList(Role.OWNER_ADMIN)));
     }
     
     @Test
     public void consumerCanDeleteSelf() {
         setupPrincipal(new ConsumerPrincipal(consumer));
-        consumerResource.deleteConsumer(consumer.getUuid());
+        consumerResource.deleteConsumer(consumer.getUuid(), 
+            new UserPrincipal("someuser", owner,
+                Collections.singletonList(Role.OWNER_ADMIN)));
         assertEquals(null, consumerCurator.lookupByUuid(consumer.getUuid()));
     }
     

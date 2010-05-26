@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.exceptions;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.ws.rs.core.Response.Status;
 
 
@@ -38,5 +41,9 @@ public abstract class CandlepinException extends RuntimeException {
     
     public Status httpReturnCode() {
         return returnCode;
+    }
+    
+    public Map<String, String> headers() {
+        return new HashMap<String, String>();
     }
 }

@@ -46,17 +46,23 @@ public class Event implements Persisted {
     /**
      * Type - Constant representing the type of this event.
      */
-    public enum EventType { GENERIC_MESSAGE, CONSUMER_CREATED, CONSUMER_MODIFIED,
-        CONSUMER_UPDATED
-    };
+    public enum Type { CREATED, MODIFIED, DELETED };
 
+    /**
+     * Target the type of entity operated on.
+     */
+    public enum Target { CONSUMER, OWNER };
+    
     // Uniquely identifies the event:
     @Id
 //    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
     private Long id;
 
     @Column(nullable = false)
-    private EventType type;
+    private Type type;
+    
+    @Column(nullable = false)
+    private Target target;
 
     // String representation of the principal. We probably should not be reconstructing
     // any stored principal object.
@@ -82,15 +88,13 @@ public class Event implements Persisted {
     public Event() {
     }
 
-    public Event(EventType type, Principal principal,
+    public Event(Type type, Target target, Principal principal,
         Long entityId, String oldEntity, String newEntity) {
         this.type = type;
+        this.target = target;
 
         // TODO: toString good enough? Need something better?
-        // XXX: null principal is a hack. don't allow it.
-        if (principal != null) {
-            this.principal = principal.toString();
-        }
+        this.principal = principal.toString();
 
         this.entityId = entityId;
         this.oldEntity = oldEntity;
@@ -108,14 +112,22 @@ public class Event implements Persisted {
         this.id = id;
     }
 
-    public EventType getType() {
+    public Type getType() {
         return type;
     }
 
-    public void setType(EventType type) {
+    public void setType(Type type) {
         this.type = type;
     }
 
+    public Target getTarget() {
+        return target;
+    }
+
+    public void setTarget(Target target) {
+        this.target = target;
+    }
+    
     public String getPrincipal() {
         return principal;
     }
