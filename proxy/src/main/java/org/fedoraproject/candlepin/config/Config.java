@@ -180,7 +180,7 @@ public class Config {
         return value.split(",");
     }
     
-    private boolean getBoolean(String s) {
+    public boolean getBoolean(String s) {
         if (s == null) {
             return false;
         }

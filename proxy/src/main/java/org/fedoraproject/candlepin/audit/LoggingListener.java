@@ -29,19 +29,29 @@ public class LoggingListener implements EventListener {
     private static Logger auditLog =
         Logger.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
     
+    private boolean verbose;
+    
     public LoggingListener() throws IOException {
+        Config config = new Config();
+        
         auditLog.addAppender(new FileAppender(new PatternLayout("%m"),
-            new Config().getString(ConfigProperties.AUDIT_LOG_FILE)));
+            config.getString(ConfigProperties.AUDIT_LOG_FILE)));
         // Keep these messages in audit.log only
         auditLog.setAdditivity(false);
+        
+        verbose = config.getBoolean(ConfigProperties.AUDIT_LOG_VERBOSE);
     }
     
     @Override
     public void onEvent(Event e) {
         auditLog.info(String.format(
-            "%s - %d - %s %s on %d\nperformed by %s\n==OLD==\n%s\n==NEW==\n%s\n",
+            "%s - %d - %s %s on %d owner %d performed by %s\n",
             e.getTimestamp(), e.getId(), e.getTarget(), e.getType(), e.getEntityId(),
-            e.getPrincipal(), e.getOldEntity(), e.getNewEntity()));
+            e.getOwnerId(), e.getPrincipal()));
+        if (verbose) {
+            auditLog.info(String.format("==OLD==\n%s\n==NEW==\n%s\n\n", e.getOldEntity(),
+                e.getNewEntity()));
+        }
     }
 
 }

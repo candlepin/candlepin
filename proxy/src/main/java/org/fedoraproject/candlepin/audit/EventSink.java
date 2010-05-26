@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Owner;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
@@ -71,6 +72,14 @@ public class EventSink {
     
     public void emitConsumerCreated(Principal principal, Consumer newConsumer) {
         Event e = eventFactory.consumerCreated(principal, newConsumer);
+        sendEvent(e);
+    }
+
+    /**
+     * 
+     */
+    public void emitOwnerCreated(Principal principal, Owner newOwner) {
+        Event e = eventFactory.ownerCreated(principal, newOwner);
         sendEvent(e);
     }
 }
