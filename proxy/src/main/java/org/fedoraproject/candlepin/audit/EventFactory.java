@@ -24,6 +24,7 @@ import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EventIdCurator;
 import org.fedoraproject.candlepin.model.Owner;
 
@@ -60,6 +61,15 @@ public class EventFactory {
         // TODO: Move somewhere more widespread:
         e.setId(eventIdCurator.getNextEventId());
         return e;
+    }
+
+    public Event entitlementCreated(Principal principal, Entitlement e) {
+        String newJson = entityToJson(e);
+        Owner o = e.getOwner();
+        Event event = new Event(Event.Type.CREATED, Event.Target.ENTITLEMENT, principal,
+            o.getId(), e.getId(), null, newJson);
+        event.setId(eventIdCurator.getNextEventId());
+        return event;
     }
 
     public Event ownerCreated(Principal principal, Owner newOwner) {
