@@ -148,14 +148,14 @@ public class OwnerResource {
     public void deleteOwner(@PathParam("owner_id") Long ownerId, 
             @Context Principal principal) {
         Owner owner = findOwner(ownerId);
-        Event e = eventFactory.ownerDeleted(principal, owner);
+        Event e = eventFactory.ownerDeleted(owner);
 
-        cleanupAndDelete(owner, principal);
+        cleanupAndDelete(owner);
         
         sink.sendEvent(e);
     }    
 
-    private void cleanupAndDelete(Owner owner, Principal principal) {
+    private void cleanupAndDelete(Owner owner) {
         log.info("Cleaning up owner: " + owner);
         for (User u : userService.listByOwner(owner)) {
             userService.deleteUser(u);
