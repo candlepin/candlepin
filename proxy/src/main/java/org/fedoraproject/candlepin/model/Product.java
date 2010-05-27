@@ -25,9 +25,11 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -101,11 +103,13 @@ public class Product extends AbstractHibernateObject {
     @JoinTable(name = "cp_product_attribute")
     private Set<Attribute> attributes;
 
-    @OneToMany(cascade = CascadeType.ALL)
+//    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_content")
     private Set<Content> content;
-    
-    @OneToMany(cascade = CascadeType.ALL)
+ 
+  
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_enabled_content")
     private Set<Content> enabledContent;
     
@@ -372,7 +376,9 @@ public class Product extends AbstractHibernateObject {
         if (this.content != null) {
             this.content = new HashSet<Content>();
         }
-        this.content.add(content);
+        if (!this.content.contains(content)) { 
+            this.content.add(content);
+        }
     }
 
     /**
@@ -386,9 +392,9 @@ public class Product extends AbstractHibernateObject {
         if (this.enabledContent != null) {
             this.enabledContent = new HashSet<Content>();
         }
-        
-        this.enabledContent.add(content);
-        
+        if (!this.enabledContent.contains(content)) { 
+            this.enabledContent.add(content);
+        }
     }
 
     /**
