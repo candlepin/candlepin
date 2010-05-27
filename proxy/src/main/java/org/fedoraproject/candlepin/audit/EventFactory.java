@@ -23,6 +23,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -34,64 +35,74 @@ import com.google.inject.Inject;
  * EventFactory
  */
 public class EventFactory {
+    private PrincipalProvider principalProvider;
 
     @Inject
-    public EventFactory() {
+    public EventFactory(PrincipalProvider principalProvider) {
+        this.principalProvider = principalProvider;
     }
 
-    public Event consumerCreated(Principal principal, Consumer newConsumer) {
+    public Event consumerCreated(Consumer newConsumer) {
         
         String newEntityJson = entityToJson(newConsumer);
-
-        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, principal,
-            principal.getOwner().getId(), newConsumer.getId(), null, newEntityJson);
+        Principal principal = principalProvider.get();
+        
+        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, 
+            principal, principal.getOwner().getId(), 
+            newConsumer.getId(), null, newEntityJson);
         return e;
     }
 
-    public Event consumerDeleted(Principal principal, Consumer oldConsumer) {
+    public Event consumerDeleted(Consumer oldConsumer) {
         String oldEntityJson = entityToJson(oldConsumer);
 
-        Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER, principal,
-            oldConsumer.getOwner().getId(), oldConsumer.getId(), oldEntityJson, null);
+        Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER, 
+            principalProvider.get(), oldConsumer.getOwner().getId(), 
+            oldConsumer.getId(), oldEntityJson, null);
         return e;
     }
 
-    public Event entitlementCreated(Principal principal, Entitlement e) {
+    public Event entitlementCreated(Entitlement e) {
         String newJson = entityToJson(e);
         Owner o = e.getOwner();
-        Event event = new Event(Event.Type.CREATED, Event.Target.ENTITLEMENT, principal,
-            o.getId(), e.getId(), null, newJson);
+        Event event = new Event(Event.Type.CREATED, Event.Target.ENTITLEMENT, 
+            principalProvider.get(), o.getId(), e.getId(), null, newJson);
         return event;
     }
     
-    public Event entitlementDeleted(Principal principal, Entitlement e) {
+    public Event entitlementDeleted(Entitlement e) {
         String json = entityToJson(e);
         Owner o = e.getOwner();
-        Event event = new Event(Event.Type.DELETED, Event.Target.ENTITLEMENT, principal,
-            o.getId(), e.getId(), json, null);
+        Event event = new Event(Event.Type.DELETED, Event.Target.ENTITLEMENT, 
+            principalProvider.get(), o.getId(), e.getId(), json, null);
         return event;
     }
 
-    public Event ownerCreated(Principal principal, Owner newOwner) {
+    public Event ownerCreated(Owner newOwner) {
         String newEntityJson = entityToJson(newOwner);
-        Event e = new Event(Event.Type.CREATED, Event.Target.OWNER, principal,
-            newOwner.getId(), newOwner.getId(), null, newEntityJson);
+        Event e = new Event(Event.Type.CREATED, Event.Target.OWNER, 
+            principalProvider.get(), newOwner.getId(), 
+            newOwner.getId(), null, newEntityJson);
         return e;
     }
     
-    public Event poolCreated(Principal principal, Pool newPool) {
+    public Event poolCreated(Pool newPool) {
         String newEntityJson = entityToJson(newPool);
         Owner o = newPool.getOwner();
-        Event e = new Event(Event.Type.CREATED, Event.Target.POOL, principal,
-            o.getId(), newPool.getId(), null, newEntityJson);
+        Event e = new Event(Event.Type.CREATED, Event.Target.POOL, 
+            principalProvider.get(), o.getId(), newPool.getId(), null, newEntityJson);
         return e;
     }
     
-    public Event poolQuantityChanged(Principal principal, Pool after) {
-        Owner o = after.getOwner();
-        Event e = new Event(Event.Type.QUANTITY_CHANGED, Event.Target.POOL, principal,
-            o.getId(), after.getId(), null, entityToJson(after));
+    public Event poolQuantityChangedFrom(Pool before) {
+        Owner o = before.getOwner();
+        Event e = new Event(Event.Type.MODIFIED, Event.Target.POOL, principalProvider.get(),
+            o.getId(), before.getId(), entityToJson(before), null);
         return e;
+    }
+    
+    public void poolQuantityChangedTo(Event e, Pool after) {
+        e.setNewEntity(entityToJson(after));
     }
     
     public Event ownerDeleted(Principal principal, Owner owner) {
@@ -99,7 +110,7 @@ public class EventFactory {
             owner.getId(), owner.getId(), entityToJson(owner), null);
         return e;
     }
-
+    
     private String entityToJson(Object entity) {
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();

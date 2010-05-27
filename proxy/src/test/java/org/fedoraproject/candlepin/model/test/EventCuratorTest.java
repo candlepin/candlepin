@@ -48,7 +48,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
 
         Principal p = setupPrincipal(owner, Role.OWNER_ADMIN);
         EventFactory eventFactory = injector.getInstance(EventFactory.class);
-        Event event = eventFactory.consumerCreated(p, newConsumer);
+        Event event = eventFactory.consumerCreated(newConsumer);
         eventCurator.create(event);
 
         Event lookedUp = eventCurator.find(event.getId());

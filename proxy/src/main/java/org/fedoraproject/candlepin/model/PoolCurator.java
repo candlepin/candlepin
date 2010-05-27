@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
@@ -45,15 +48,20 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;
     private Enforcer enforcer;
+    private EventSink sink;
+    private EventFactory eventFactory;
+    
 
     @Inject
     protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer, 
-        ProductServiceAdapter productAdapter) {
+        ProductServiceAdapter productAdapter, EventSink sink, EventFactory eventFactory) {
         
         super(Pool.class);
         this.subAdapter = subAdapter;
         this.productAdapter = productAdapter;
         this.enforcer = enforcer;
+        this.sink = sink;
+        this.eventFactory = eventFactory;
     }
     
     @Override
@@ -305,6 +313,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void updatePoolForSubscription(Pool existingPool, Subscription sub) {
         log.debug("Found existing pool for sub: " + sub.getId());
         
+        Event e = eventFactory.poolQuantityChangedFrom(existingPool);
         // TODO: We're just updating the pool always now, would be much
         // better if we could check some kind of last modified date to
         // determine if a change has taken place:
@@ -312,7 +321,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         existingPool.setStartDate(sub.getStartDate());
         existingPool.setEndDate(sub.getEndDate());
         merge(existingPool);
-
+        
+        eventFactory.poolQuantityChangedTo(e, existingPool);
+        sink.sendEvent(e);
     }
 
     public void createPoolForSubscription(Subscription sub) {

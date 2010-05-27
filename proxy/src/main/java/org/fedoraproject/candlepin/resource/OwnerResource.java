@@ -121,15 +121,14 @@ public class OwnerResource {
 
     /**
      * Creates a new Owner
-     * @param principal TODO
      * @return the new owner
      */
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Owner createOwner(Owner owner, @Context Principal principal) {
+    public Owner createOwner(Owner owner) {
         Owner toReturn = ownerCurator.create(owner);
      
-        sink.emitOwnerCreated(principal, owner);
+        sink.emitOwnerCreated(owner);
         
         if (toReturn != null) {
             return toReturn;
@@ -163,7 +162,7 @@ public class OwnerResource {
         }
         for (Consumer c : consumerCurator.listByOwner(owner)) {
             log.info("Deleting consumer: " + c);
-            entitler.revokeAllEntitlements(c, principal);
+            entitler.revokeAllEntitlements(c);
             consumerCurator.delete(c);
         }
         for (SubscriptionToken token : subscriptionTokenCurator.listByOwner(owner)) {

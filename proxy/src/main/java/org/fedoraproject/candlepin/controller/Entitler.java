@@ -160,14 +160,12 @@ public class Entitler {
         Entitlement e = new Entitlement(pool, consumer, new Date());
         consumer.addEntitlement(e);
 
-        Event poolQuantityChanged = null;
         if (preHelper.getGrantFreeEntitlement()) {
             log.info("Granting free entitlement.");
             e.setIsFree(Boolean.TRUE);
         }
         else {
             pool.bumpConsumed();
-            poolQuantityChanged = eventFactory.poolQuantityChanged(principal, pool);
         }
 
         enforcer.post(e);
@@ -175,10 +173,6 @@ public class Entitler {
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
         Pool mergedPool = epCurator.merge(pool);
-        
-        if (poolQuantityChanged != null) {
-            sink.sendEvent(poolQuantityChanged);
-        }
         
         Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId());
         if (sub == null) {
@@ -209,31 +203,27 @@ public class Entitler {
 
     // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional
-    public void revokeEntitlement(Entitlement entitlement, @Context Principal principal) {
-        Event poolQuantityChanged = null;
+    public void revokeEntitlement(Entitlement entitlement) {
         if (!entitlement.isFree()) {
             // put this entitlement back in the pool
             entitlement.getPool().dockConsumed();
-            poolQuantityChanged = 
-                eventFactory.poolQuantityChanged(principal, entitlement.getPool());
         }
 
         Consumer consumer = entitlement.getConsumer();
         consumer.removeEntitlement(entitlement);
 
-        Event event = eventFactory.entitlementDeleted(principal, entitlement); 
+        Event event = eventFactory.entitlementDeleted(entitlement); 
         
         epCurator.merge(entitlement.getPool());
-        sink.sendEvent(poolQuantityChanged);
         
         entitlementCurator.delete(entitlement);
         sink.sendEvent(event);
     }
 
     @Transactional
-    public void revokeAllEntitlements(Consumer consumer, @Context Principal principal) {
+    public void revokeAllEntitlements(Consumer consumer) {
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
-            revokeEntitlement(e, principal);
+            revokeEntitlement(e);
         }
     }
 

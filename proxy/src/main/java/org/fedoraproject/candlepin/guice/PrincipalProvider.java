@@ -14,28 +14,19 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
+import com.google.inject.Provider;
 
 /**
  *
  */
 public class PrincipalProvider implements Provider<Principal> {
 
-    private Principal principal;
-
-    @Inject
-    public PrincipalProvider(@Context HttpServletRequest request) {
-        principal = ResteasyProviderFactory.getContextData(Principal.class);
-    }
-
     @Override
     public Principal get() {
-        return principal;
+        return ResteasyProviderFactory.getContextData(Principal.class);
     }
 
 }
