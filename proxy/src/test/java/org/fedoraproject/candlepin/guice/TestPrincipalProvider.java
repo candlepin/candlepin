@@ -14,17 +14,17 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 
+import com.google.inject.Inject;
+
 /**
  *
  */
-public class TestPrincipalProvider implements Provider<Principal> {
+public class TestPrincipalProvider extends PrincipalProvider {
 
     private static final String OWNER_NAME = "Default-Owner";
 

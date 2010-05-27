@@ -85,9 +85,4 @@ public class EventSinkImpl implements EventSink {
         Event e = eventFactory.poolCreated(principal, newPool);
         sendEvent(e);
     }
-    
-    public void emitPoolQuantityChanged(Principal principal, Pool pool) {
-        Event e = eventFactory.poolQuantityChanged(principal, pool);
-        sendEvent(e);
-    }
 }

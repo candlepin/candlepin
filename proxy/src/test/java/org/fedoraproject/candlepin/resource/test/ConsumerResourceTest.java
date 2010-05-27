@@ -448,6 +448,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void bindByTokenPreExistingSubscription() {
+        setupPrincipal(owner, Role.CONSUMER);
+        
         Subscription sub = TestUtil.createSubscription(owner);
         Product prod = new Product(sub.getProductId(), sub.getProductId());
         productCurator.create(prod);

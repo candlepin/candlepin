@@ -23,6 +23,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -34,9 +35,11 @@ import com.google.inject.Inject;
  * EventFactory
  */
 public class EventFactory {
+    private PrincipalProvider principalProvider;
 
     @Inject
-    public EventFactory() {
+    public EventFactory(PrincipalProvider principalProvider) {
+        this.principalProvider = principalProvider;
     }
 
     public Event consumerCreated(Principal principal, Consumer newConsumer) {
@@ -87,11 +90,15 @@ public class EventFactory {
         return e;
     }
     
-    public Event poolQuantityChanged(Principal principal, Pool after) {
-        Owner o = after.getOwner();
-        Event e = new Event(Event.Type.QUANTITY_CHANGED, Event.Target.POOL, principal,
-            o.getId(), after.getId(), null, entityToJson(after));
+    public Event poolQuantityChangedFrom(Pool before) {
+        Owner o = before.getOwner();
+        Event e = new Event(Event.Type.MODIFIED, Event.Target.POOL, principalProvider.get(),
+            o.getId(), before.getId(), entityToJson(before), null);
         return e;
+    }
+    
+    public void poolQuantityChangedTo(Event e, Pool after) {
+        e.setNewEntity(entityToJson(after));
     }
     
     public Event ownerDeleted(Principal principal, Owner owner) {
@@ -99,7 +106,7 @@ public class EventFactory {
             owner.getId(), owner.getId(), entityToJson(owner), null);
         return e;
     }
-
+    
     private String entityToJson(Object entity) {
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
