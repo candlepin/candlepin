@@ -124,7 +124,6 @@ public class ProductResource {
                               @PathParam("content_id") Long cid, 
                               @QueryParam("enabled") Boolean enabled) {
         Product product = prodAdapter.getProductById(pid);
-        
         Content content = contentCurator.find(cid);
         
         product.addContent(content);

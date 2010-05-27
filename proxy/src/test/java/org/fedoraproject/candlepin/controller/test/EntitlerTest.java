@@ -14,7 +14,11 @@
  */
 package org.fedoraproject.candlepin.controller.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,8 +34,6 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
-import org.fedoraproject.candlepin.model.test.SpacewalkCertificateCuratorTest;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
@@ -41,9 +43,14 @@ import org.junit.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.redhat.rhn.common.cert.CertificateFactory;
 
 public class EntitlerTest extends DatabaseTestFixture {
+    
+    public static final String PRODUCT_MONITORING = "monitoring";
+    public static final String PRODUCT_PROVISIONING = "provisioning";
+    public static final String PRODUCT_VIRT_HOST = "virtualization_host";
+    public static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
+    public static final String PRODUCT_VIRT_GUEST = "virt_guest";
     
     private Product virtHost;
     private Product virtHostPlatform;
@@ -64,39 +71,35 @@ public class EntitlerTest extends DatabaseTestFixture {
         o = createOwner();
         ownerCurator.create(o);
         
-        String certString = SpacewalkCertificateCuratorTest.readCertificate(
-                "/certs/spacewalk-with-channel-families.cert");
-        spacewalkCertCurator.parseCertificate(CertificateFactory.read(certString), o);
+        //String certString = SpacewalkCertificateCuratorTest.readCertificate(
+        //        "/certs/spacewalk-with-channel-families.cert");
+        //spacewalkCertCurator.parseCertificate(CertificateFactory.read(certString), o);
 
-        List<Pool> pools = poolCurator.listByOwner(o);
-        assertTrue(pools.size() > 0);
+        //List<Pool> pools = poolCurator.listByOwner(o);
+        //assertTrue(pools.size() > 0);
         principal = injector.getInstance(Principal.class);
 
-        virtHost = productCurator
-                .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
-        virtHost.addAttribute(
-            new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST, ""));
-        assertNotNull(virtHost);
+        virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
+        virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, 
+            PRODUCT_VIRT_HOST_PLATFORM);
+        virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST);
+        monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING);
+        provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);        
         
-        virtHostPlatform = productCurator.lookupByLabel(
-                SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM);
-        virtHostPlatform.addAttribute(
-            new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM, ""));
+        virtHost.addAttribute(new Attribute(PRODUCT_VIRT_HOST, ""));
+        virtHostPlatform.addAttribute(new Attribute(PRODUCT_VIRT_HOST_PLATFORM, ""));
+        virtGuest.addAttribute(new Attribute(PRODUCT_VIRT_GUEST, ""));
+        monitoring.addAttribute(new Attribute(PRODUCT_MONITORING, ""));
+        provisioning.addAttribute(new Attribute(PRODUCT_PROVISIONING, ""));
         
-        virtGuest = productCurator.lookupByLabel(
-                SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
-        virtGuest.addAttribute(
-            new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST, ""));
+        productAdapter.createProduct(virtHost);
+        productAdapter.createProduct(virtHostPlatform);
+        productAdapter.createProduct(virtGuest);
+        productAdapter.createProduct(monitoring);
+        productAdapter.createProduct(provisioning);
         
-        monitoring = productCurator.lookupByLabel(
-                SpacewalkCertificateCurator.PRODUCT_MONITORING);
-        monitoring.addAttribute(
-            new Attribute(SpacewalkCertificateCurator.PRODUCT_MONITORING, ""));
+        //subCurator.create(new Subscription(o, virtHost.getId(), 500, new Date(), ))
         
-        provisioning = productCurator.lookupByLabel(
-                SpacewalkCertificateCurator.PRODUCT_PROVISIONING);
-        provisioning.addAttribute(
-            new Attribute(SpacewalkCertificateCurator.PRODUCT_PROVISIONING, ""));
         
         entitler = injector.getInstance(Entitler.class);
 
@@ -128,55 +131,44 @@ public class EntitlerTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
-        Pool virtHostPool = poolCurator.listByOwnerAndProduct(o,
-                virtHost).get(0);
+        Pool virtHostPool = poolCurator.listByOwnerAndProduct(o, virtHost).get(0);
         assertNotNull(virtHostPool);
     }
 
-    @Test
-    public void testVirtEntitleFailsIfAlreadyHasGuests() throws Exception {
+    @Test(expected = EntitlementRefusedException.class)
+    public void testVirtEntitleFailsIfAlreadyHasGuests() 
+        throws EntitlementRefusedException {
+        
         parentSystem.getFacts().put("total_guests", "10");
         consumerCurator.update(parentSystem);
-        try {
-            entitler.entitle(parentSystem, virtHost, 
-                new UserPrincipal("user", o, new LinkedList<Role>()));
-            fail();
-        }
-        catch (EntitlementRefusedException e) {
-            //expected
-        }
+        entitler.entitle(parentSystem, virtHost, 
+            new UserPrincipal("user", o, new LinkedList<Role>()));
+    }
 
-        try {
-            entitler.entitle(parentSystem, virtHostPlatform,
-                new UserPrincipal("user", o, new LinkedList<Role>()));
-            fail();
-        }
-        catch (EntitlementRefusedException e) {
-            //expected
-        }
+    @Test(expected = EntitlementRefusedException.class)
+    public void testVirtHostEntitleFailsIfAlreadyHasGuests() 
+        throws EntitlementRefusedException {
+        
+        parentSystem.getFacts().put("total_guests", "10");
+        consumerCurator.update(parentSystem);
+        entitler.entitle(parentSystem, virtHostPlatform,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
     }
     
-    @Test
+    @Test(expected = EntitlementRefusedException.class)
     public void testVirtEntitleFailsForVirtSystem() throws Exception {
         parentSystem.setType(guestType);
         consumerCurator.update(parentSystem);
-        try {
-            entitler.entitle(parentSystem, virtHost, 
-                new UserPrincipal("user", o, new LinkedList<Role>()));
-            fail();
-        }
-        catch (EntitlementRefusedException e) {
-            //expected
-        }
-
-        try {
-            entitler.entitle(parentSystem, virtHostPlatform,
-                new UserPrincipal("user", o, new LinkedList<Role>()));
-            fail();
-        }
-        catch (EntitlementRefusedException e) {
-            //expected
-        }
+        entitler.entitle(parentSystem, virtHost,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
+    }
+    
+    @Test(expected = EntitlementRefusedException.class)
+    public void testVirtHostEntitleFailsForVirtSystem() throws Exception {
+        parentSystem.setType(guestType);
+        consumerCurator.update(parentSystem);
+        entitler.entitle(parentSystem, virtHostPlatform,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
     }
     
     @Test

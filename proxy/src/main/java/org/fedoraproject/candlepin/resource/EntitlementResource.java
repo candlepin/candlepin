@@ -79,29 +79,6 @@ public class EntitlementResource {
                     id + "] not found");
         }
     }
-    
-    // Commenting this out, unused, questionable if this is even possible, more likely
-    // client tools would determine what product is installed. -- dgoodwin
-//    /**
-//     *  Entitles the given Consumer with best fit Product.
-//     *
-//     *  @param consumerUuid Consumer identifier to be entitled
-//     *  @return Entitlend object
-//     */
-//    @POST
-//    @Consumes({ MediaType.APPLICATION_JSON })
-//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    @Path("consumer/{consumer_uuid}/")
-//    public String entitle(@PathParam("consumer_uuid") String consumerUuid) {
-//
-//        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
-//
-//        // TODO: this is doing a NO-OP. Can we determine what products a consumer has
-//        // installed or should this be the client tools responsibility?
-//
-//        // FIXME: this is just a hardcoded cert...
-//        return CertGenerator.genCert().toString();
-//    }
 
     /**
      * Check to see if a given Consumer is entitled to given Product

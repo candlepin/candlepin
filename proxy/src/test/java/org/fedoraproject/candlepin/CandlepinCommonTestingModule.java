@@ -38,7 +38,6 @@ import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
@@ -76,7 +75,6 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(JPAInitializer.class).asEagerSingleton();
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
-        bind(CertificateResource.class);
         bind(ConsumerResource.class);
         bind(PoolResource.class);
         bind(EntitlementResource.class);
