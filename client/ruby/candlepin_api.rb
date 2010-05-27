@@ -117,12 +117,14 @@ class Candlepin
     return get(path)
   end
   
-  def create_pool(product_id, owner_id, start_date=nil, end_date=nil, quantity = 100)
+  def create_pool(product_id, owner_id,  subscription_id, 
+	          start_date=nil, end_date=nil, quantity = 100)
     start_date ||= Date.today
     end_date ||= Date.today + 365
 
     pool = {
       'activeSubscription' => false,
+      'subscriptionId' => subscription_id,
       'quantity' => quantity,
       'consumed' => 0,
       'startDate' => start_date,
