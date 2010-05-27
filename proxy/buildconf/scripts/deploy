@@ -114,6 +114,26 @@ function update_tomcat_conf
 	ruby -ne 'File.open($CONF_DIR/server.xml).readlines.gsub()'
 }
 
+function upload_products
+{
+    if [ -z "$IMPORTDIR" ]; then
+	echo
+	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	echo
+	echo "Please point IMPORTDIR to the location of the product import scripts"
+	echo "             These are in the cp_product_utils git repo             "
+	echo
+	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	return
+    fi
+    #BUILDDIR="buildconf/scripts/"
+    CERTDIR="$IMPORTDIR/product_certs"
+    # generates a sql script to import products and improrts it
+    rm -rf $CERTDIR/deploy.sql
+    $IMPORTDIR/import_product_certs.py $CERTDIR/*.pem > $CERTDIR/deploy.sql
+    psql -U candlepin -f $CERTDIR/deploy.sql candlepin
+}
+
 function create_var_lib_candlepin
 {
     sudo mkdir -p /var/lib/candlepin
@@ -204,3 +224,4 @@ echo "Initializing Candlepin..."
 wget -qO- http://localhost:8080/candlepin/admin/init
 
 #upload_sat_cert
+upload_products
