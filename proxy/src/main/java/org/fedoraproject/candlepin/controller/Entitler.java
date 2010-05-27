@@ -203,7 +203,7 @@ public class Entitler {
 
     // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional
-    public void revokeEntitlement(Entitlement entitlement, @Context Principal principal) {
+    public void revokeEntitlement(Entitlement entitlement) {
         if (!entitlement.isFree()) {
             // put this entitlement back in the pool
             entitlement.getPool().dockConsumed();
@@ -212,7 +212,7 @@ public class Entitler {
         Consumer consumer = entitlement.getConsumer();
         consumer.removeEntitlement(entitlement);
 
-        Event event = eventFactory.entitlementDeleted(principal, entitlement); 
+        Event event = eventFactory.entitlementDeleted(entitlement); 
         
         epCurator.merge(entitlement.getPool());
         
@@ -221,9 +221,9 @@ public class Entitler {
     }
 
     @Transactional
-    public void revokeAllEntitlements(Consumer consumer, @Context Principal principal) {
+    public void revokeAllEntitlements(Consumer consumer) {
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
-            revokeEntitlement(e, principal);
+            revokeEntitlement(e);
         }
     }
 

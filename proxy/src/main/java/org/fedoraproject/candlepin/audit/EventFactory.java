@@ -53,42 +53,44 @@ public class EventFactory {
         return e;
     }
 
-    public Event consumerDeleted(Principal principal, Consumer oldConsumer) {
+    public Event consumerDeleted(Consumer oldConsumer) {
         String oldEntityJson = entityToJson(oldConsumer);
 
-        Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER, principal,
-            oldConsumer.getOwner().getId(), oldConsumer.getId(), oldEntityJson, null);
+        Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER, 
+            principalProvider.get(), oldConsumer.getOwner().getId(), 
+            oldConsumer.getId(), oldEntityJson, null);
         return e;
     }
 
-    public Event entitlementCreated(Principal principal, Entitlement e) {
+    public Event entitlementCreated(Entitlement e) {
         String newJson = entityToJson(e);
         Owner o = e.getOwner();
-        Event event = new Event(Event.Type.CREATED, Event.Target.ENTITLEMENT, principal,
-            o.getId(), e.getId(), null, newJson);
+        Event event = new Event(Event.Type.CREATED, Event.Target.ENTITLEMENT, 
+            principalProvider.get(), o.getId(), e.getId(), null, newJson);
         return event;
     }
     
-    public Event entitlementDeleted(Principal principal, Entitlement e) {
+    public Event entitlementDeleted(Entitlement e) {
         String json = entityToJson(e);
         Owner o = e.getOwner();
-        Event event = new Event(Event.Type.DELETED, Event.Target.ENTITLEMENT, principal,
-            o.getId(), e.getId(), json, null);
+        Event event = new Event(Event.Type.DELETED, Event.Target.ENTITLEMENT, 
+            principalProvider.get(), o.getId(), e.getId(), json, null);
         return event;
     }
 
-    public Event ownerCreated(Principal principal, Owner newOwner) {
+    public Event ownerCreated(Owner newOwner) {
         String newEntityJson = entityToJson(newOwner);
-        Event e = new Event(Event.Type.CREATED, Event.Target.OWNER, principal,
-            newOwner.getId(), newOwner.getId(), null, newEntityJson);
+        Event e = new Event(Event.Type.CREATED, Event.Target.OWNER, 
+            principalProvider.get(), newOwner.getId(), 
+            newOwner.getId(), null, newEntityJson);
         return e;
     }
     
-    public Event poolCreated(Principal principal, Pool newPool) {
+    public Event poolCreated(Pool newPool) {
         String newEntityJson = entityToJson(newPool);
         Owner o = newPool.getOwner();
-        Event e = new Event(Event.Type.CREATED, Event.Target.POOL, principal,
-            o.getId(), newPool.getId(), null, newEntityJson);
+        Event e = new Event(Event.Type.CREATED, Event.Target.POOL, 
+            principalProvider.get(), o.getId(), newPool.getId(), null, newEntityJson);
         return e;
     }
     

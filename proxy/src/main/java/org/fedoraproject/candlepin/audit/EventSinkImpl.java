@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.audit;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -76,13 +75,13 @@ public class EventSinkImpl implements EventSink {
         sendEvent(e);
     }
 
-    public void emitOwnerCreated(Principal principal, Owner newOwner) {
-        Event e = eventFactory.ownerCreated(principal, newOwner);
+    public void emitOwnerCreated(Owner newOwner) {
+        Event e = eventFactory.ownerCreated(newOwner);
         sendEvent(e);
     }
     
-    public void emitPoolCreated(Principal principal, Pool newPool) {
-        Event e = eventFactory.poolCreated(principal, newPool);
+    public void emitPoolCreated(Pool newPool) {
+        Event e = eventFactory.poolCreated(newPool);
         sendEvent(e);
     }
 }
