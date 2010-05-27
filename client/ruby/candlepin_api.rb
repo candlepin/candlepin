@@ -187,8 +187,8 @@ class Candlepin
       get("/content/id/#{content_id}")
     end
 
-    def add_content_to_product(product_uuid, content_id, enabled=true) 
-      post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
+    def add_content_to_product(product_uuid, content_label, enabled=true) 
+      post("/products/#{product_uuid}/content/#{content_label}?enabled=#{enabled}")
     end
     
   def create_product(label, name, hash, version = 1, variant = 'ALL', 

@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.criterion.Restrictions;
+
+import com.wideplay.warp.persist.Transactional;
+
 /**
  * ContentCurator
  */
@@ -22,4 +26,13 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     protected ContentCurator() {
         super(Content.class);
     }
+    
+    @Transactional
+    public Content findByLabel(String label) {
+        return (Content) currentSession().createCriteria(Content.class)
+            .add(Restrictions.eq("label", label))
+            .uniqueResult();
+        
+    }
+    
 }
