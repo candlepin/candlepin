@@ -16,8 +16,12 @@ package org.fedoraproject.candlepin.controller.test;
 
 import static org.junit.Assert.*;
 
+import java.util.LinkedList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -53,6 +57,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     private Consumer parentSystem;
     private Consumer childVirtSystem;
     private Entitler entitler;
+    private Principal principal;
 
     @Before
     public void setUp() throws Exception {
@@ -65,6 +70,7 @@ public class EntitlerTest extends DatabaseTestFixture {
 
         List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
+        principal = injector.getInstance(Principal.class);
 
         virtHost = productCurator
                 .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
@@ -132,7 +138,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         parentSystem.getFacts().put("total_guests", "10");
         consumerCurator.update(parentSystem);
         try {
-            entitler.entitle(parentSystem, virtHost);
+            entitler.entitle(parentSystem, virtHost, 
+                new UserPrincipal("user", o, new LinkedList<Role>()));
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -140,7 +147,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         }
 
         try {
-            entitler.entitle(parentSystem, virtHostPlatform);
+            entitler.entitle(parentSystem, virtHostPlatform,
+                new UserPrincipal("user", o, new LinkedList<Role>()));
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -153,7 +161,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         parentSystem.setType(guestType);
         consumerCurator.update(parentSystem);
         try {
-            entitler.entitle(parentSystem, virtHost);
+            entitler.entitle(parentSystem, virtHost, 
+                new UserPrincipal("user", o, new LinkedList<Role>()));
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -161,7 +170,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         }
 
         try {
-            entitler.entitle(parentSystem, virtHostPlatform);
+            entitler.entitle(parentSystem, virtHostPlatform,
+                new UserPrincipal("user", o, new LinkedList<Role>()));
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -172,11 +182,13 @@ public class EntitlerTest extends DatabaseTestFixture {
     @Test
     public void testVirtSystemGetsWhatParentHasForFree() throws Exception {
         // Give parent virt host ent:
-        Entitlement e = entitler.entitle(parentSystem, virtHost);
+        Entitlement e = entitler.entitle(parentSystem, virtHost,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
         assertNotNull(e);
         
         // Give parent provisioning:
-        e = entitler.entitle(parentSystem, provisioning);
+        e = entitler.entitle(parentSystem, provisioning,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
         assertNotNull(e);
         
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
@@ -186,7 +198,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertEquals(new Long(1), provisioningCount);
         
         // Now guest requests monitoring, and should get it for "free":
-        e = entitler.entitle(childVirtSystem, provisioning);
+        e = entitler.entitle(childVirtSystem, provisioning,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
         assertNotNull(e);
         assertTrue(e.isFree());
         assertEquals(new Long(1), provisioningPool.getConsumed());
@@ -195,7 +208,8 @@ public class EntitlerTest extends DatabaseTestFixture {
     @Test
     public void testVirtSystemPhysicalEntitlement() throws Exception {
         // Give parent virt host ent:
-        Entitlement e = entitler.entitle(parentSystem, virtHost);
+        Entitlement e = entitler.entitle(parentSystem, virtHost,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
         assertNotNull(e);
         
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
@@ -204,7 +218,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         Long provisioningCount = new Long(provisioningPool.getConsumed());
         assertEquals(new Long(0), provisioningCount);
         
-        e = entitler.entitle(childVirtSystem, provisioning);
+        e = entitler.entitle(childVirtSystem, provisioning,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
         assertNotNull(e);
         assertFalse(e.isFree());
         // Should have resorted to consuming a physical entitlement, because the guest's
@@ -218,13 +233,15 @@ public class EntitlerTest extends DatabaseTestFixture {
                 monitoring).get(0);
         assertEquals(new Long(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
-            Entitlement e = entitler.entitle(parentSystem, monitoring);
+            Entitlement e = entitler.entitle(parentSystem, monitoring,
+                new UserPrincipal("user", o, new LinkedList<Role>()));
             assertNotNull(e);
         }
         
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         try {
-            entitler.entitle(parentSystem, monitoring);
+            entitler.entitle(parentSystem, monitoring,
+                new UserPrincipal("user", o, new LinkedList<Role>()));
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -235,8 +252,9 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Test
     public void testRevocation() throws Exception {
-        Entitlement e = entitler.entitle(parentSystem, monitoring);
-        entitler.revokeEntitlement(e);
+        Entitlement e = entitler.entitle(parentSystem, monitoring,
+            new UserPrincipal("user", o, new LinkedList<Role>()));
+        entitler.revokeEntitlement(e, principal);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
         assertTrue(entitlements.isEmpty());

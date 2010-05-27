@@ -21,8 +21,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
@@ -103,7 +106,8 @@ public class PoolTest extends DatabaseTestFixture {
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        entitler.entitle(consumer, newProduct);
+        entitler.entitle(consumer, newProduct, 
+            new UserPrincipal("user", owner, new LinkedList<Role>()));
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable());
@@ -122,7 +126,8 @@ public class PoolTest extends DatabaseTestFixture {
         consumerPool = poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
-        entitler.entitle(consumer, newProduct);
+        entitler.entitle(consumer, newProduct,
+            new UserPrincipal("user", owner, new LinkedList<Role>()));
 
         assertEquals(1, consumerCurator.find(consumer.getId())
                 .getEntitlements().size());

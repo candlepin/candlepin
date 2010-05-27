@@ -151,19 +151,19 @@ public class OwnerResource {
         Owner owner = findOwner(ownerId);
         Event e = eventFactory.ownerDeleted(principal, owner);
 
-        cleanupAndDelete(owner);
+        cleanupAndDelete(owner, principal);
         
         sink.sendEvent(e);
     }    
 
-    private void cleanupAndDelete(Owner owner) {
+    private void cleanupAndDelete(Owner owner, Principal principal) {
         log.info("Cleaning up owner: " + owner);
         for (User u : userService.listByOwner(owner)) {
             userService.deleteUser(u);
         }
         for (Consumer c : consumerCurator.listByOwner(owner)) {
             log.info("Deleting consumer: " + c);
-            entitler.revokeAllEntitlements(c);
+            entitler.revokeAllEntitlements(c, principal);
             consumerCurator.delete(c);
         }
         for (SubscriptionToken token : subscriptionTokenCurator.listByOwner(owner)) {

@@ -16,13 +16,17 @@ package org.fedoraproject.candlepin.client;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.Response;
@@ -35,6 +39,7 @@ import org.fedoraproject.candlepin.client.model.Consumer;
 import org.fedoraproject.candlepin.client.model.Entitlement;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.client.model.Pool;
+import org.fedoraproject.candlepin.client.model.ProductCertificate;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClientExecutor;
@@ -44,17 +49,24 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 /**
  * CandlepinConsumerClient
  */
+/**
+ * @author ajay
+ *
+ */
 public class CandlepinConsumerClient {
 
-    private String url;
-    private String dir = "/home/bkearney/.candlepin";
+    private String url = Constants.DEFAULT_SERVER;
+    private String dir = Constants.CANDLE_PIN_HOME_DIR;
     private String consumerDirName = dir + File.separator + "consumer";
     private String entitlementDirName = dir + File.separator + "entitlements";
     private String certFileName = consumerDirName + File.separator + "cert.pem";
     private String keyFileName = consumerDirName + File.separator + "key.pem";
+    private String productDirName = dir + File.separator + "products";
+ //   private String keyStoreFileName = consumerDirName + File.separator + "keystore";
 
     public CandlepinConsumerClient(String url) {
         this.url = url;
+        System.out.println("In constructor. url= "+this.url);
         RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
     }
 
@@ -105,22 +117,57 @@ public class CandlepinConsumerClient {
      * 
      * @return true if the registration succeeded
      */
-    public boolean registerExisting(String username, String password,
+    public OperationResult registerExisting(String username, String password,
         String uuid) {
         ICandlepinConsumerClient client = this.clientWithCredentials(username,
             password);
         if (isRegistered()) {
-            ClientResponse<Consumer> response = client.getConsumer(uuid);
-            if (response.getResponseStatus().equals(Response.Status.OK)) {
-                recordIdentity(response.getEntity());
-                return true;
-            }
-            else {
-                return false;
-            }
+            try {
+				ClientResponse<Consumer> response = client.getConsumer(uuid);
+				return evaluateResponse(response);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return OperationResult.UNKNOWN;
+			}
         }
-        return false;
+        return OperationResult.CLIENT_NOT_REGISTERED;
     }
+    
+    /**Register an existing consumer based on the uuid. 
+     * @param uuid - the consumer id
+     * @return true if customer exists else false.
+     */
+	public OperationResult registerExistingCustomerWithId(String uuid) {
+		try {
+			HttpClient httpclient = new HttpClient();
+			httpclient.getParams().setAuthenticationPreemptive(true);
+			ICandlepinConsumerClient client = ProxyFactory.create(
+					ICandlepinConsumerClient.class, url,
+					new ApacheHttpClientExecutor(httpclient));
+			ClientResponse<Consumer> cr = client.getConsumer(uuid);
+			return evaluateResponse(cr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return OperationResult.UNKNOWN;
+		}
+	}
+
+	/**
+	 * @param cr
+	 * @return
+	 */
+	private OperationResult evaluateResponse(ClientResponse<Consumer> cr) {
+		if (Response.Status.OK.equals(cr.getResponseStatus())) {
+			try {
+				recordIdentity(cr.getEntity());
+			} catch (ClientException e) {
+				return OperationResult.ERROR_WHILE_SAVING_CERTIFICATES;
+			}
+			return OperationResult.NOT_A_FAILURE;
+		} else {
+			return OperationResult.INVALID_UUID;
+		}
+	}
 
     /**
      * Remove he consumer from candlepin and all of the entitlements which the
@@ -157,8 +204,47 @@ public class CandlepinConsumerClient {
         ICandlepinConsumerClient client = clientWithCert();
         return client.bindByEntitlementID(getUUID(), poolId).getEntity();
     }
+    
+    public List<Entitlement> bindByProductId(String productId) {
+        ICandlepinConsumerClient client = clientWithCert();
+        return client.bindByProductId(getUUID(), productId).getEntity();
+    }
+    
+    public List<Entitlement> bindByRegNumber(String regNo) {
+        ICandlepinConsumerClient client = clientWithCert();
+        return client.bindByRegNumber(getUUID(), regNo).getEntity();
+    }
+    
+    public OperationResult unBindBySerialNumber(int serialNumber){
+    	try {
+			ICandlepinConsumerClient client = clientWithCert();
+			ClientResponse<Void> response = client.unBindBySerialNumber(getUUID(), serialNumber);
+			return response.getResponseStatus().equals(Response.Status.NO_CONTENT) 
+				? OperationResult.NOT_A_FAILURE: OperationResult.UNKNOWN; 
+		} catch (Exception e) {
+			e.printStackTrace();
+			return OperationResult.UNKNOWN;
+		}
+    	
+    }
+    
+    public OperationResult unBindAll(){
+    	try{
+    		ICandlepinConsumerClient client = clientWithCert();
+			ClientResponse<Void> response = client.unBindAll(getUUID());
+			return response.getResponseStatus().equals(Response.Status.NO_CONTENT) 
+			? OperationResult.NOT_A_FAILURE: OperationResult.UNKNOWN;
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		return OperationResult.UNKNOWN;
+    	}
+    }
 
     public boolean updateEntitlementCertificates() {
+    	File entitlementDir = new File(entitlementDirName);
+    	if(entitlementDir.exists() && entitlementDir.isDirectory()){
+    		FileUtil.removeFiles(entitlementDir.listFiles());
+    	}
         FileUtil.mkdir(entitlementDirName);
         ICandlepinConsumerClient client = clientWithCert();
         List<EntitlementCertificate> certs = client
@@ -200,6 +286,37 @@ public class CandlepinConsumerClient {
             throw new ClientException(e);
         }
     }
+    
+    public List<ProductCertificate> getInstalledProductCertificates(){
+    	File file = new File(productDirName);
+    	if(file.exists() && file.isDirectory()){
+    		File [] prodCerts = file.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.endsWith(".pem");
+				}
+			});
+    		if(prodCerts.length == 0)
+    			return Collections.emptyList();
+    		
+    		List<EntitlementCertificate> entitlementCerts = this.getCurrentEntitlementCertificates();
+    		Map<Integer, EntitlementCertificate> map = new HashMap<Integer, EntitlementCertificate>();
+    		for(EntitlementCertificate certificate: entitlementCerts)
+    			map.put(certificate.getProductID(), certificate);
+    		
+    		List<ProductCertificate> productCertificates = new ArrayList<ProductCertificate>();
+    		for(File certificate: prodCerts){
+    			ProductCertificate pc = new ProductCertificate(
+    					PemUtil.readCert(certificate.getAbsolutePath()));
+    			EntitlementCertificate ec = map.get(pc.getProductID());
+   				pc.setEntitlementCertificate(ec!=null ? ec:null);
+   				productCertificates.add(pc);
+    		}
+    		
+    		return productCertificates;
+    	}else
+    		return Collections.emptyList();
+    }
 
     public void generatePKCS12Certificates(String password) {
         try {
@@ -222,16 +339,21 @@ public class CandlepinConsumerClient {
         return url;
     }
 
-    protected ICandlepinConsumerClient clientWithCert() {
+    @SuppressWarnings("deprecation")
+	protected ICandlepinConsumerClient clientWithCert() {
         try {
-            Protocol customHttps = new Protocol("https",
-                new CustomSSLProtocolSocketFactory(certFileName, keyFileName),
-                443);
-            Protocol.registerProtocol("https", customHttps);
+           
             HttpClient httpclient = new HttpClient();
+            /*AuthSSLProtocolSocketFactory factory = 
+            	 new AuthSSLProtocolSocketFactory(new URL("file:"+Constants.KEY_STORE_FILE), "password", 
+            			 new URL("file:/tmp/keygens/server.truststore"), "password");*/
+            CustomSSLProtocolSocketFactory factory  = new CustomSSLProtocolSocketFactory(certFileName, keyFileName);
             URL hostUrl = new URL(url);
+            Protocol customHttps = new Protocol("https", factory, 8443);
+                Protocol.registerProtocol("https", customHttps);
             httpclient.getHostConfiguration().setHost(hostUrl.getHost(),
                 hostUrl.getPort(), customHttps);
+            httpclient.getParams().setConnectionManagerTimeout(1000);
             ICandlepinConsumerClient client = ProxyFactory.create(
                 ICandlepinConsumerClient.class, url,
                 new ApacheHttpClientExecutor(httpclient));
@@ -254,6 +376,7 @@ public class CandlepinConsumerClient {
         ICandlepinConsumerClient client = ProxyFactory.create(
             ICandlepinConsumerClient.class, url, new ApacheHttpClientExecutor(
                 httpclient));
+        System.out.println("url is " + url + " defserver= " + Constants.DEFAULT_SERVER);
         return client;
     }
 

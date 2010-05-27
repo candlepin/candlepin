@@ -26,6 +26,8 @@ import org.fedoraproject.candlepin.client.cmds.InfoCommand;
 import org.fedoraproject.candlepin.client.cmds.ListCommand;
 import org.fedoraproject.candlepin.client.cmds.RegisterCommand;
 import org.fedoraproject.candlepin.client.cmds.SubscribeCommand;
+import org.fedoraproject.candlepin.client.cmds.UnRegisterCommand;
+import org.fedoraproject.candlepin.client.cmds.UnSubscribeCommand;
 import org.fedoraproject.candlepin.client.cmds.UpdateCommand;
 
 /**
@@ -34,8 +36,6 @@ import org.fedoraproject.candlepin.client.cmds.UpdateCommand;
 public class CLIMain {
     protected HashMap<String, BaseCommand> cmds = new HashMap<String, BaseCommand>();
 
-    public static String DEFAULT_SERVER = "https://localhost:8443/candlepin";
-        
     protected CLIMain() {
         registerCommands();
     }
@@ -44,7 +44,8 @@ public class CLIMain {
         // First, create the client we will need to use
         try {
             Class[] commands = { RegisterCommand.class, InfoCommand.class,
-                ListCommand.class, SubscribeCommand.class, UpdateCommand.class };
+                ListCommand.class, SubscribeCommand.class, UnSubscribeCommand.class, 
+                UpdateCommand.class, UnRegisterCommand.class};
             for (Class cmdClass : commands) {
                 BaseCommand cmd = (BaseCommand) cmdClass.newInstance();
                 cmds.put(cmd.getName(), cmd);
@@ -84,7 +85,7 @@ public class CLIMain {
                 cmd.generateHelp();
                 return;
             }
-            String server = cmdLine.getOptionValue("s", CLIMain.DEFAULT_SERVER);
+            String server = cmdLine.getOptionValue("s", Constants.DEFAULT_SERVER);
             CandlepinConsumerClient client = new CandlepinConsumerClient(server);
             cmd.setClient(client);
             cmd.execute(cmdLine);
@@ -109,7 +110,7 @@ public class CLIMain {
 
     public static void main(String[] args) {
         System.setProperty("javax.net.ssl.trustStore",
-            "/home/bkearney/tomcat6/conf/keystore");
+            Constants.KEY_STORE_FILE);
         Security.addProvider(new BouncyCastleProvider());
 
         CLIMain cli = new CLIMain();

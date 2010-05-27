@@ -31,4 +31,6 @@ public interface EventSink {
     void emitOwnerCreated(Principal principal, Owner newOwner);
 
     void emitPoolCreated(Principal principal, Pool newPool);
+    
+    void emitPoolQuantityChanged(Principal principal, Pool pool);
 }

@@ -67,10 +67,10 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
         try {
             char[] passwd = "password".toCharArray();
             /* Load CA-Chain file */
-            CertificateFactory cf = CertificateFactory.getInstance("X509");
+            CertificateFactory cf = CertificateFactory.getInstance(Constants.X509);
             X509Certificate candlepinCert = (X509Certificate) cf
                 .generateCertificate(new FileInputStream(
-                    "/etc/candlepin/certs/candlepin-ca.crt"));
+                    Constants.CANDLE_PIN_CERTIFICATE_FILE));
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
             kmf.init(PemUtil.pemToKeystore(certificateFile, privateKeyFile,
@@ -79,11 +79,11 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
             TrustManagerFactory tmf = TrustManagerFactory
                 .getInstance("SunX509");
             KeyStore ks2 = KeyStore.getInstance(KeyStore.getDefaultType());
-            // ks2.load(null, null);
+            ks2.load(null, null);
             ks2.load(
-                new FileInputStream("/home/bkearney/tomcat6/conf/keystore"),
+                new FileInputStream(Constants.KEY_STORE_FILE),
                 passwd);
-            ks2.setCertificateEntry("candlepin_ca_crt", candlepinCert);
+           // ks2.setCertificateEntry("candlepin_ca_crt", candlepinCert);
             tmf.init(ks2);
 
             /* and provide them for the SSLContext */
@@ -91,6 +91,7 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
             // SSLContext ctx = SSLContext.getInstance("SSL");
             ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(),
                 new SecureRandom());
+            
             return ctx;
         }
         catch (Exception e) {

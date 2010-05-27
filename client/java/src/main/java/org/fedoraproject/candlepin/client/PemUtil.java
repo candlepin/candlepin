@@ -28,13 +28,12 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.bouncycastle.asn1.DERUTCTime;
-import org.bouncycastle.asn1.cms.Time;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
@@ -91,7 +90,7 @@ public class PemUtil {
 
     public static X509Certificate readCert(String certificateFile) {
         try {
-            CertificateFactory cf = CertificateFactory.getInstance("X509");
+            CertificateFactory cf = CertificateFactory.getInstance(Constants.X509);
             X509Certificate cert = (X509Certificate) cf
                 .generateCertificate(new FileInputStream(certificateFile));
             return cert;
@@ -103,7 +102,7 @@ public class PemUtil {
 
     public static X509Certificate createCert(String certData) {
         try {
-            CertificateFactory cf = CertificateFactory.getInstance("X509");
+            CertificateFactory cf = CertificateFactory.getInstance(Constants.X509);
             X509Certificate cert = (X509Certificate) cf
                 .generateCertificate(new ByteArrayInputStream(certData
                     .getBytes()));
@@ -167,7 +166,6 @@ public class PemUtil {
     public static Date getExtensionDate(X509Certificate cert, String oid,
         Date defaultValue) {
         byte[] value = cert.getExtensionValue(oid);
-
         if (value != null) {
             try {
                 String dateString =  X509ExtensionUtil.fromExtensionValue(value).toString();

@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+$VERBOSE = nil
 
 require 'rubygems'
 require 'json'
@@ -51,14 +52,13 @@ class CandlepinConfig
   # Creates the CandlepinCLI to use
   def create_cli
     profile = @config[@config['profile']]
-    cp = Candlepin.new(username=profile['username'],
-                       password=profile['password'],
-                       cert=profile['cert'],
-                       key=profile['key'],
-                       host=profile['host'],
-                       port=profile['port'])
-
-    CandlepinCLI.new(cp)
+    CandlepinCLI.new(username=profile['username'],
+                     password=profile['password'],
+                     cert=profile['cert'],
+                     key=profile['key'],
+                     host=profile['host'],
+                     port=profile['port'],
+                     self)
   end
 
 end
@@ -66,26 +66,56 @@ end
 # Wrapper class for the base Candlepin lib that
 # will introspect an instance for currently defined
 # methods, allowing command line invocation of those
-# methods
-class CandlepinCLI
+# methods.
+#
+# Also adds a little functionality to the base
+# Candlepin lib that are specific to the cli.
+class CandlepinCLI < Candlepin
+  
+  def initialize(username, password, cert, key,
+                 host, port, config)
+    super(username, password, cert, key, host, port)
+    @config = config
+  end
 
-  def initialize(cp)
-    @cp = cp
+  def register(name, type=:system, uuid=nil)
+    consumer = super
+
+    @config.create_profile(consumer['name'], 
+                           nil,
+                           nil,
+                           consumer['idCert']['cert'],
+                           consumer['idCert']['key'])
+    # Do we want to do this?
+    @config.set_profile(consumer['name'])
+    @config.write
+
+    return consumer
+  end
+
+  def create_user(owner_id, login, password)
+    user = super
+    login = user['login']
+
+    @config.create_profile(login,
+                           login,
+                           user['password'])
+    @config.set_profile(login)
+    @config.write
+
+    return user
   end
 
   def commands
-    @cp.public_methods(false).sort.each do |method|
+    # This is a little hacky...
+    cp = Candlepin.new('temp', 'temp')
+    cp.public_methods(false).sort.each do |method|
       yield method if callable_name? method
     end
   end
 
   def is_method?(method_name)
-    @cp.public_methods(false).include? method_name and callable_name? method_name
-  end
-
-  def call(method_name, args)
-    real_args = args.collect { |arg| eval(arg) rescue arg }
-    @cp.send(method_name, *real_args)
+    respond_to? method_name.intern and callable_name? method_name
   end
 
   private
@@ -93,10 +123,10 @@ class CandlepinCLI
   def callable_name?(method_name)
     method_name[-1] != ?=
   end
+  
 end
 
-config = CandlepinConfig.new
-cli = config.create_cli
+cli = CandlepinConfig.new.create_cli
 
 if ARGV.empty? or ARGV[0] == '--help'
   puts '=========== Commands ============'
@@ -106,27 +136,11 @@ if ARGV.empty? or ARGV[0] == '--help'
     puts command
   end
 else
-  if cli.is_method? ARGV[0]
-    val = cli.call(ARGV[0], ARGV[1..-1])
+  method_name = ARGV[0]
 
-    # This is all really sloppy - this should be refactored!
-    if ARGV[0] == 'register'
-      
-      config.create_profile(val['name'], 
-                            nil,
-                            nil,
-                            val['idCert']['cert'],
-                            val['idCert']['key'])
-      # Do we want to do this?
-      config.set_profile val['name']
-      config.write
-    elsif ARGV[0] == 'create_user'
-      config.create_profile(val['login'],
-                            val['login'],
-                            val['password'])
-      config.set_profile val['login']
-      config.write
-    end
+  if cli.is_method? method_name
+    args = ARGV[1..-1].collect { |arg| eval(arg) rescue arg }
+    val = cli.send(method_name, *args)
 
     begin
       puts JSON.pretty_generate(val)
@@ -135,7 +149,7 @@ else
       puts val
     end
   else
-    puts "#{ARGV[0]} is not a valid command!"
+    puts "#{method_name} is not a valid command!"
   end
 end
 

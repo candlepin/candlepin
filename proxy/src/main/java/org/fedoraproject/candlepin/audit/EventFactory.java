@@ -63,6 +63,14 @@ public class EventFactory {
             o.getId(), e.getId(), null, newJson);
         return event;
     }
+    
+    public Event entitlementDeleted(Principal principal, Entitlement e) {
+        String json = entityToJson(e);
+        Owner o = e.getOwner();
+        Event event = new Event(Event.Type.DELETED, Event.Target.ENTITLEMENT, principal,
+            o.getId(), e.getId(), json, null);
+        return event;
+    }
 
     public Event ownerCreated(Principal principal, Owner newOwner) {
         String newEntityJson = entityToJson(newOwner);
@@ -76,6 +84,13 @@ public class EventFactory {
         Owner o = newPool.getOwner();
         Event e = new Event(Event.Type.CREATED, Event.Target.POOL, principal,
             o.getId(), newPool.getId(), null, newEntityJson);
+        return e;
+    }
+    
+    public Event poolQuantityChanged(Principal principal, Pool after) {
+        Owner o = after.getOwner();
+        Event e = new Event(Event.Type.QUANTITY_CHANGED, Event.Target.POOL, principal,
+            o.getId(), after.getId(), null, entityToJson(after));
         return e;
     }
     

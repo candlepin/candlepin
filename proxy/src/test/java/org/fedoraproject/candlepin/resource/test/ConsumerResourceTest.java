@@ -266,19 +266,19 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(1, serials.size());
 
         consumerResource.unbindBySerial(consumer.getUuid(),
-            serials.get(0).getSerial().longValue());
+            serials.get(0).getSerial().longValue(), principal);
         assertEquals(0,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }
     
     @Test(expected = NotFoundException.class)
     public void unbindByInvalidSerialShouldFail() {
-        consumerResource.unbindBySerial(consumer.getUuid(), new Long("1234"));
+        consumerResource.unbindBySerial(consumer.getUuid(), new Long("1234"), principal);
     }
     
     @Test(expected = NotFoundException.class)
     public void unbindBySerialWithInvalidUuidShouldFail() {
-        consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"));
+        consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"), principal);
     }
     
     @Test

@@ -16,8 +16,11 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
+import java.util.LinkedList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -91,8 +94,10 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
 
-        entitler.entitle(consumer, newProduct);
-        anotherEntitler.entitle(consumer, newProduct);
+        entitler.entitle(consumer, newProduct, 
+            new UserPrincipal("user", owner, new LinkedList<Role>()));
+        anotherEntitler.entitle(consumer, newProduct,
+            new UserPrincipal("user", owner, new LinkedList<Role>()));
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable());
@@ -113,11 +118,13 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
 
-        Entitlement e1 = entitler.entitle(consumer, newProduct);
+        Entitlement e1 = entitler.entitle(consumer, newProduct, 
+            new UserPrincipal("user", owner, new LinkedList<Role>()));
         assertNotNull(e1);
 
         @SuppressWarnings("unused")
-        Entitlement e2 = anotherEntitler.entitle(consumer, newProduct);
+        Entitlement e2 = anotherEntitler.entitle(consumer, newProduct,
+            new UserPrincipal("user", owner, new LinkedList<Role>()));
     }
 
     @Override
