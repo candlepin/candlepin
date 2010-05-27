@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -57,14 +58,18 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
     private PKIUtility mockedPKI;
+    private X509ExtensionUtil extensionUtil;
     private Product product;
     private Subscription subscription;
 
     @Before
     public void setUp() {
         mockedPKI = mock(PKIUtility.class);
+        extensionUtil = new X509ExtensionUtil();
+        
         certServiceAdapter 
-            = new DefaultEntitlementCertServiceAdapter(mockedPKI, null, null);
+            = new DefaultEntitlementCertServiceAdapter(mockedPKI, 
+                extensionUtil, null, null);
         
         product = new Product("a product", "a product", 
                               "variant", "version", "arch", 
@@ -88,7 +93,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     
     @Test
     public void testContentExtentionCreation() {
-        List<X509ExtensionWrapper> content = certServiceAdapter.contentExtensions(product);
+        // AAAH!  This should be pulled out to its own test class!
+        List<X509ExtensionWrapper> content = extensionUtil.contentExtensions(product);
         assertTrue(isEncodedContentValid(content));
     }
 

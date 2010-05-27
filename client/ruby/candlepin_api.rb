@@ -165,36 +165,36 @@ class Candlepin
     get("/products")
   end
   
-    def create_content(name, hash, label, type, vendor,
-                       contentUrl, gpgUrl)
-      content = {
-          'name' => name,
-          'hash' => hash,
-          'label' => label,
-          'type' => type,
-          'vendor' => vendor,
-          'contentUrl' => contentUrl,
-          'gpgUrl' => gpgUrl
-      }
-      post("/content", content)
-    end
+  def create_content(name, hash, label, type, vendor,
+                     contentUrl, gpgUrl)
+    content = {
+      'name' => name,
+      'hash' => hash,
+      'label' => label,
+      'type' => type,
+      'vendor' => vendor,
+      'contentUrl' => contentUrl,
+      'gpgUrl' => gpgUrl
+    }
+    post("/content", content)
+  end
 
-    def list_content
-      get("/content")
-    end
+  def list_content
+    get("/content")
+  end
 
-    def get_content(content_id)
-      get("/content/id/#{content_id}")
-    end
+  def get_content(content_id)
+    get("/content/id/#{content_id}")
+  end
 
-    def add_content_to_product(product_uuid, content_id, enabled=true) 
-      post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
-    end
+  def add_content_to_product(product_uuid, content_id, enabled=true) 
+    post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
+  end
     
   def create_product(label, name, hash, version = 1, variant = 'ALL', 
                      arch='ALL', type='SVC',childProducts=[], attributes = {})
 
-      content_name = label + "_content"
+    content_name = label + "_content"
     product = {
       'name' => name,
       'label' => label,
@@ -214,6 +214,14 @@ class Candlepin
     end
 
     post("/products#{childIds}", product)
+  end
+
+  def get_product(product_id)
+    get("/products/#{product_id}")
+  end
+
+  def get_product_cert(product_id)
+    get("/products/#{product_id}/certificate")
   end
   
   # TODO: Should we change these to bind to better match terminology?
