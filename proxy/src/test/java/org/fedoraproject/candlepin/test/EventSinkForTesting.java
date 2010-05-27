@@ -27,7 +27,7 @@ import org.fedoraproject.candlepin.model.Pool;
 public class EventSinkForTesting implements EventSink {
 
     @Override
-    public void emitConsumerCreated(Principal principal, Consumer newConsumer) {
+    public void emitConsumerCreated(Consumer newConsumer) {
     }
 
     @Override

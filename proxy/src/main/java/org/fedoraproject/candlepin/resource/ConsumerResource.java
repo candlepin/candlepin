@@ -209,7 +209,7 @@ public class ConsumerResource {
                     "Error generating identity certificate.");
             }
 
-            sink.emitConsumerCreated(principal, consumer);
+            sink.emitConsumerCreated(consumer);
             return consumer;
         }
         catch (Exception e) {

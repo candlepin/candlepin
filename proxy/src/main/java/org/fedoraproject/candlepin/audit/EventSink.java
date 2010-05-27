@@ -26,7 +26,7 @@ public interface EventSink {
 
     void sendEvent(Event event);
 
-    void emitConsumerCreated(Principal principal, Consumer newConsumer);
+    void emitConsumerCreated(Consumer newConsumer);
 
     void emitOwnerCreated(Principal principal, Owner newOwner);
 

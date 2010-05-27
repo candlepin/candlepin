@@ -42,12 +42,14 @@ public class EventFactory {
         this.principalProvider = principalProvider;
     }
 
-    public Event consumerCreated(Principal principal, Consumer newConsumer) {
+    public Event consumerCreated(Consumer newConsumer) {
         
         String newEntityJson = entityToJson(newConsumer);
-
-        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, principal,
-            principal.getOwner().getId(), newConsumer.getId(), null, newEntityJson);
+        Principal principal = principalProvider.get();
+        
+        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, 
+            principal, principal.getOwner().getId(), 
+            newConsumer.getId(), null, newEntityJson);
         return e;
     }
 

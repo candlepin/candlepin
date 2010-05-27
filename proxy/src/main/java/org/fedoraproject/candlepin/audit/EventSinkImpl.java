@@ -71,8 +71,8 @@ public class EventSinkImpl implements EventSink {
         }
     }
     
-    public void emitConsumerCreated(Principal principal, Consumer newConsumer) {
-        Event e = eventFactory.consumerCreated(principal, newConsumer);
+    public void emitConsumerCreated(Consumer newConsumer) {
+        Event e = eventFactory.consumerCreated(newConsumer);
         sendEvent(e);
     }
 
