@@ -41,4 +41,8 @@ public class EventSinkForTesting implements EventSink {
     @Override
     public void emitPoolCreated(Principal principal, Pool newPool) {
     }
+
+    @Override
+    public void emitPoolQuantityChanged(Principal principal, Pool pool) {
+    }
 }

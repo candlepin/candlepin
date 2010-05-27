@@ -87,6 +87,13 @@ public class EventFactory {
         return e;
     }
     
+    public Event poolQuantityChanged(Principal principal, Pool after) {
+        Owner o = after.getOwner();
+        Event e = new Event(Event.Type.QUANTITY_CHANGED, Event.Target.POOL, principal,
+            o.getId(), after.getId(), null, entityToJson(after));
+        return e;
+    }
+    
     public Event ownerDeleted(Principal principal, Owner owner) {
         Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principal,
             owner.getId(), owner.getId(), entityToJson(owner), null);

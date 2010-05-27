@@ -312,7 +312,8 @@ public class ConsumerResource {
      * @param productId Product identifying label.
      * @return Entitled object
      */
-    private List<Entitlement> bindByProduct(String productHash, Consumer consumer) {
+    private List<Entitlement> bindByProduct(String productHash, Consumer consumer,
+            Principal principal) {
 
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         Product p = productAdapter.getProductByHash(productHash, consumer.getOwner());
@@ -321,16 +322,17 @@ public class ConsumerResource {
                 i18n.tr("No such product: {0}", productHash));
         }
 
-        entitlementList.add(createEntitlement(consumer, p));
+        entitlementList.add(createEntitlement(consumer, p, principal));
         return entitlementList;
         
     }
 
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlement(Consumer consumer, Product p) {
+    private Entitlement createEntitlement(Consumer consumer, Product p, 
+            Principal principal) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, p);
+            Entitlement e = entitler.entitle(consumer, p, principal);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -349,10 +351,11 @@ public class ConsumerResource {
         }
     }
 
-    private Entitlement createEntitlement(Consumer consumer, Pool pool) {
+    private Entitlement createEntitlement(Consumer consumer, Pool pool,
+            Principal principal) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, pool);
+            Entitlement e = entitler.entitle(consumer, pool, principal);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -378,7 +381,8 @@ public class ConsumerResource {
      * @param consumer Consumer to bind
      * @return token
      */
-    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer) {
+    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer,
+            Principal principal) {
         
         List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer.getOwner(), 
             registrationToken);
@@ -401,12 +405,13 @@ public class ConsumerResource {
             }
 
             Product p = productAdapter.getProductById(sub.getProductId());
-            entitlementList.add(createEntitlement(consumer, p));
+            entitlementList.add(createEntitlement(consumer, p, principal));
         }
         return entitlementList;
     }
 
-    private List<Entitlement> bindByPool(Long poolId, Consumer consumer) {
+    private List<Entitlement> bindByPool(Long poolId, Consumer consumer,
+            Principal principal) {
         Pool pool = poolCurator.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
@@ -415,7 +420,7 @@ public class ConsumerResource {
         }
 
         // Attempt to create an entitlement:
-        entitlementList.add(createEntitlement(consumer, pool));
+        entitlementList.add(createEntitlement(consumer, pool, principal));
         return entitlementList;
     }
 
@@ -450,13 +455,13 @@ public class ConsumerResource {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
             
                 if (token != null) {
-                    entitlements = bindByToken(token, consumer);
+                    entitlements = bindByToken(token, consumer, principal);
                 }
                 else if (productId != null) {
-                    entitlements = bindByProduct(productId, consumer);
+                    entitlements = bindByProduct(productId, consumer, principal);
                 }
                 else {
-                    entitlements = bindByPool(poolId, consumer);
+                    entitlements = bindByPool(poolId, consumer, principal);
                 }
             }
         } 

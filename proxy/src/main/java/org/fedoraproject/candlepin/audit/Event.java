@@ -50,7 +50,7 @@ public class Event implements Persisted {
     /**
      * Type - Constant representing the type of this event.
      */
-    public enum Type { CREATED, MODIFIED, DELETED };
+    public enum Type { CREATED, MODIFIED, DELETED, QUANTITY_CHANGED };
 
     /**
      * Target the type of entity operated on.

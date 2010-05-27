@@ -109,7 +109,8 @@ public class Entitler {
     // will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitle(Consumer consumer, Product product)
+    public Entitlement entitle(Consumer consumer, Product product,
+            @Context Principal principal)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
 
@@ -120,7 +121,7 @@ public class Entitler {
                 product.getName());
         }
 
-        return addEntitlement(consumer, pool);
+        return addEntitlement(consumer, pool, principal);
     }
 
     /**
@@ -139,13 +140,13 @@ public class Entitler {
      * @throws EntitlementRefusedException if entitlement is refused
      */
     @Transactional
-    public Entitlement entitle(Consumer consumer, Pool pool)
+    public Entitlement entitle(Consumer consumer, Pool pool, @Context Principal principal)
         throws EntitlementRefusedException {
 
-        return addEntitlement(consumer, pool);
+        return addEntitlement(consumer, pool, principal);
     }
 
-    private Entitlement addEntitlement(Consumer consumer, Pool pool)
+    private Entitlement addEntitlement(Consumer consumer, Pool pool, Principal principal)
         throws EntitlementRefusedException {
         PreEntHelper preHelper = enforcer.pre(consumer, pool);
         ValidationResult result = preHelper.getResult();
@@ -159,12 +160,14 @@ public class Entitler {
         Entitlement e = new Entitlement(pool, consumer, new Date());
         consumer.addEntitlement(e);
 
+        Event poolQuantityChanged = null;
         if (preHelper.getGrantFreeEntitlement()) {
             log.info("Granting free entitlement.");
             e.setIsFree(Boolean.TRUE);
         }
         else {
             pool.bumpConsumed();
+            poolQuantityChanged = eventFactory.poolQuantityChanged(principal, pool);
         }
 
         enforcer.post(e);
@@ -172,6 +175,10 @@ public class Entitler {
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
         Pool mergedPool = epCurator.merge(pool);
+        
+        if (poolQuantityChanged != null) {
+            sink.sendEvent(poolQuantityChanged);
+        }
         
         Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId());
         if (sub == null) {
@@ -203,9 +210,12 @@ public class Entitler {
     // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional
     public void revokeEntitlement(Entitlement entitlement, @Context Principal principal) {
+        Event poolQuantityChanged = null;
         if (!entitlement.isFree()) {
             // put this entitlement back in the pool
             entitlement.getPool().dockConsumed();
+            poolQuantityChanged = 
+                eventFactory.poolQuantityChanged(principal, entitlement.getPool());
         }
 
         Consumer consumer = entitlement.getConsumer();
@@ -214,8 +224,9 @@ public class Entitler {
         Event event = eventFactory.entitlementDeleted(principal, entitlement); 
         
         epCurator.merge(entitlement.getPool());
-        entitlementCurator.delete(entitlement);
+        sink.sendEvent(poolQuantityChanged);
         
+        entitlementCurator.delete(entitlement);
         sink.sendEvent(event);
     }
 
