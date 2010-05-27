@@ -144,6 +144,18 @@ public class DefaultRulesTest {
     }
     
     @Test
+    public void missingConsumerArchitectureShouldGenerateWarning() {
+        Pool pool = setupTest("architecture", "x86_64", "x86_64");
+        
+        // Get rid of the facts that setupTest set.
+        consumer.setFacts(new HashMap<String, String>());
+        
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+    
+    @Test
     public void matchingNumberOfSocketsShouldNotGenerateWarning() {
         Pool pool = setupTest("sockets", "2", "2");
         
@@ -152,6 +164,18 @@ public class DefaultRulesTest {
         assertFalse(result.hasWarnings());
     }
 
+    @Test
+    public void missingConsumerSocketsShouldGenerateWarning() {
+        Pool pool = setupTest("sockets", "2", "2");
+        
+        // Get rid of the facts that setupTest set.
+        consumer.setFacts(new HashMap<String, String>());
+        
+        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+    
     private Pool setupTest(
             final String attributeName, String attributeValue, final String factValue) {
         Product product = new Product("a-product", "A product for testing");
