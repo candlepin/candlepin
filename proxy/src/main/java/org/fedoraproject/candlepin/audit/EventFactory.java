@@ -63,6 +63,14 @@ public class EventFactory {
             o.getId(), e.getId(), null, newJson);
         return event;
     }
+    
+    public Event entitlementDeleted(Principal principal, Entitlement e) {
+        String json = entityToJson(e);
+        Owner o = e.getOwner();
+        Event event = new Event(Event.Type.DELETED, Event.Target.ENTITLEMENT, principal,
+            o.getId(), e.getId(), json, null);
+        return event;
+    }
 
     public Event ownerCreated(Principal principal, Owner newOwner) {
         String newEntityJson = entityToJson(newOwner);

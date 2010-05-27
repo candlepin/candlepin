@@ -17,7 +17,13 @@ package org.fedoraproject.candlepin.controller;
 import java.math.BigInteger;
 import java.util.Date;
 
+import javax.ws.rs.core.Context;
+
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -56,6 +62,8 @@ public class Entitler {
     private ProductServiceAdapter productAdapter;
     private EntitlementCertificateCurator entCertCurator;
     private CertificateSerialCurator serialCurator;
+    private EventFactory eventFactory;
+    private EventSink sink;
     
     @Inject
     protected Entitler(PoolCurator epCurator,
@@ -64,7 +72,9 @@ public class Entitler {
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter productAdapter,
-        CertificateSerialCurator serialCurator) {
+        CertificateSerialCurator serialCurator,
+        EventFactory eventFactory,
+        EventSink sink) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
@@ -75,6 +85,8 @@ public class Entitler {
         this.subAdapter = subAdapter;
         this.entCertCurator = entCertCurator;
         this.serialCurator = serialCurator;
+        this.eventFactory = eventFactory;
+        this.sink = sink;
     }
 
     /**
@@ -190,7 +202,7 @@ public class Entitler {
 
     // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional
-    public void revokeEntitlement(Entitlement entitlement) {
+    public void revokeEntitlement(Entitlement entitlement, @Context Principal principal) {
         if (!entitlement.isFree()) {
             // put this entitlement back in the pool
             entitlement.getPool().dockConsumed();
@@ -199,14 +211,18 @@ public class Entitler {
         Consumer consumer = entitlement.getConsumer();
         consumer.removeEntitlement(entitlement);
 
+        Event event = eventFactory.entitlementDeleted(principal, entitlement); 
+        
         epCurator.merge(entitlement.getPool());
         entitlementCurator.delete(entitlement);
+        
+        sink.sendEvent(event);
     }
 
     @Transactional
-    public void revokeAllEntitlements(Consumer consumer) {
+    public void revokeAllEntitlements(Consumer consumer, @Context Principal principal) {
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
-            revokeEntitlement(e);
+            revokeEntitlement(e, principal);
         }
     }
 

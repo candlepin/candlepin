@@ -22,8 +22,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -220,10 +222,10 @@ public class EntitlementResource {
      */
     @DELETE
     @Path("/{dbid}")
-    public void unbind(@PathParam("dbid") Long dbid) {
+    public void unbind(@PathParam("dbid") Long dbid, @Context Principal principal) {
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            entitler.revokeEntitlement(toDelete);
+            entitler.revokeEntitlement(toDelete, principal);
             return;
         }
         throw new NotFoundException(

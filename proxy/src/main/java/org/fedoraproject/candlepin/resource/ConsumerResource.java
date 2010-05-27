@@ -233,7 +233,7 @@ public class ConsumerResource {
         @Context Principal principal) {
         log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
-        unbindAll(uuid);
+        unbindAll(uuid, principal);
         Event event = eventFactory.consumerDeleted(principal, toDelete);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
@@ -514,7 +514,8 @@ public class ConsumerResource {
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public void unbindAll(@PathParam("consumer_uuid") String consumerUuid) {
+    public void unbindAll(@PathParam("consumer_uuid") String consumerUuid,
+        @Context Principal principal) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
         // CertificateCurator) to lookup by serialNumber
@@ -525,7 +526,7 @@ public class ConsumerResource {
                 i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
         }
 
-        entitler.revokeAllEntitlements(consumer);
+        entitler.revokeAllEntitlements(consumer, principal);
 
         // Need to parse off the value of subscriptionNumberArgs, probably
         // use comma separated see IntergerList in sparklines example in
@@ -544,13 +545,13 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/entitlements/{dbid}")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
-        @PathParam("dbid") Long dbid) {
+        @PathParam("dbid") Long dbid, @Context Principal principal) {
 
         verifyAndLookupConsumer(consumerUuid);
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            entitler.revokeEntitlement(toDelete);
+            entitler.revokeEntitlement(toDelete, principal);
             return;
         }
         throw new NotFoundException(
@@ -561,14 +562,14 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/certificates/{serial}")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid, 
-        @PathParam("serial") Long serial) {
+        @PathParam("serial") Long serial, @Context Principal principal) {
         
         verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator.findByCertificateSerial(
             new BigInteger(serial.toString()));
         
         if (toDelete != null) {
-            entitler.revokeEntitlement(toDelete);
+            entitler.revokeEntitlement(toDelete, principal);
             return;
         }
         throw new NotFoundException(

@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -53,6 +54,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     private Consumer parentSystem;
     private Consumer childVirtSystem;
     private Entitler entitler;
+    private Principal principal;
 
     @Before
     public void setUp() throws Exception {
@@ -65,6 +67,7 @@ public class EntitlerTest extends DatabaseTestFixture {
 
         List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
+        principal = injector.getInstance(Principal.class);
 
         virtHost = productCurator
                 .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
@@ -236,7 +239,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     @Test
     public void testRevocation() throws Exception {
         Entitlement e = entitler.entitle(parentSystem, monitoring);
-        entitler.revokeEntitlement(e);
+        entitler.revokeEntitlement(e, principal);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
         assertTrue(entitlements.isEmpty());
