@@ -105,8 +105,8 @@ public class EventFactory {
         e.setNewEntity(entityToJson(after));
     }
     
-    public Event ownerDeleted(Principal principal, Owner owner) {
-        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principal,
+    public Event ownerDeleted(Owner owner) {
+        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principalProvider.get(),
             owner.getId(), owner.getId(), entityToJson(owner), null);
         return e;
     }
