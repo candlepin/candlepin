@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Owner;
@@ -70,6 +71,15 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     public Product getProductByHash(String productHash, Owner owner) {
         return getProductById(productHash);
+    }
+
+    /* (non-Javadoc)
+     * @see org.fedoraproject.candlepin.service.ProductServiceAdapter#getProductNamesBySku(java.lang.String[])
+     */
+    @Override
+    public HashMap<String, String> getProductNamesByProductId(String[] ids) {
+        // TODO Auto-generated method stub
+        return null;
     }
     
 
