@@ -323,15 +323,13 @@ public class ConsumerResource {
         for (Pool p: ownerPools) {
             SubscriptionProductWrapper subWrapper = subAdapter.getSubscription(p.getSubscriptionId());
             
-            // Walk the tree of products and see if each one has the product hash
-            Product topLevelProduct = subWrapper.getProduct();
-            
             // TODO: getAllChildProduct algorithm should probably be reviewed
-            Set<Product> productSet = topLevelProduct.getAllChildProducts(new HashSet<Product>());
-            for (Product product: productSet) {
-                if (productAdapter.provides(product.getId(), productHash)) {
+            for (Product product: subWrapper.getProduct().getAllChildProducts(new HashSet<Product>())) {
+                Long thisProductHash = product.getHash();
+                if (thisProductHash.equals(Long.valueOf(productHash))) {
                     // Keep a list of the matched results
                     validPools.add(p);
+                    break;
                 }                
             }
         }
