@@ -138,12 +138,13 @@ public class ProductResource {
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
-    @Path("/{product_uuid}/content/{content_id}")
+    @Path("/{product_uuid}/content/{content_label}")
     public Product addContent(@PathParam("product_uuid") String pid,
-                              @PathParam("content_id") Long cid, 
+                              @PathParam("content_label") String contentLabel, 
                               @QueryParam("enabled") Boolean enabled) {
         Product product = prodAdapter.getProductById(pid);
-        Content content = contentCurator.find(cid);
+        
+        Content content = contentCurator.findByLabel(contentLabel);
         
         product.addContent(content);
         if (enabled) {

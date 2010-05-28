@@ -144,9 +144,9 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         
         Calendar future = Calendar.getInstance();
         future.add(Calendar.YEAR, 10);
-        
+       
         X509Certificate x509Cert = this.pki.createX509Certificate(
-            "CN=" + product.getName(), 
+            "CN=" + product.getLabel(), 
             extensions, new Date(), future.getTime(), 
             keyPair, serial);
         
