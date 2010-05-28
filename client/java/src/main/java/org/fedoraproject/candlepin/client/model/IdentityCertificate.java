@@ -46,12 +46,12 @@ public class IdentityCertificate extends TimeStampedEntity{
         this.cert = cert;
     }
 
-	public BigInteger getSerial() {
-		return serial;
-	}
+    public BigInteger getSerial() {
+        return serial;
+    }
 
-	public void setSerial(BigInteger serial) {
-		this.serial = serial;
-	}
+    public void setSerial(BigInteger serial) {
+        this.serial = serial;
+    }
 
 }

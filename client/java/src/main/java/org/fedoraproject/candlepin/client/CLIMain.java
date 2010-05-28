@@ -14,38 +14,50 @@
  */
 package org.fedoraproject.candlepin.client;
 
+import static java.lang.System.getProperty;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.Security;
 import java.util.HashMap;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.fedoraproject.candlepin.client.cmds.BaseCommand;
 import org.fedoraproject.candlepin.client.cmds.HelpCommand;
-import org.fedoraproject.candlepin.client.cmds.InfoCommand;
 import org.fedoraproject.candlepin.client.cmds.ListCommand;
 import org.fedoraproject.candlepin.client.cmds.RegisterCommand;
 import org.fedoraproject.candlepin.client.cmds.SubscribeCommand;
 import org.fedoraproject.candlepin.client.cmds.UnRegisterCommand;
 import org.fedoraproject.candlepin.client.cmds.UnSubscribeCommand;
-import org.fedoraproject.candlepin.client.cmds.UpdateCommand;
-
+import org.fedoraproject.candlepin.client.cmds.Utils;
 /**
  * ClientMain
  */
 public class CLIMain {
-    protected HashMap<String, BaseCommand> cmds = new HashMap<String, BaseCommand>();
+    /**
+     *
+     */
+    private HashMap<String, BaseCommand> cmds = new HashMap<String, BaseCommand>();
+    private Configuration config;
 
-    protected CLIMain() {
+
+    public CLIMain() {
         registerCommands();
     }
 
+    @SuppressWarnings("unchecked")
     protected void registerCommands() {
         // First, create the client we will need to use
         try {
-            Class[] commands = { RegisterCommand.class, InfoCommand.class,
-                ListCommand.class, SubscribeCommand.class, UnSubscribeCommand.class, 
-                UpdateCommand.class, UnRegisterCommand.class};
+            Class<? extends BaseCommand>[] commands = new Class[]{
+                RegisterCommand.class, ListCommand.class,
+                SubscribeCommand.class, UnSubscribeCommand.class,
+                UnRegisterCommand.class };
             for (Class cmdClass : commands) {
                 BaseCommand cmd = (BaseCommand) cmdClass.newInstance();
                 cmds.put(cmd.getName(), cmd);
@@ -85,9 +97,10 @@ public class CLIMain {
                 cmd.generateHelp();
                 return;
             }
-            String server = cmdLine.getOptionValue("s", Constants.DEFAULT_SERVER);
-            CandlepinConsumerClient client = new CandlepinConsumerClient(server);
-            cmd.setClient(client);
+            this.config = loadConfig(cmdLine);
+            System.setProperty("javax.net.ssl.trustStore",
+                config.getKeyStoreFileLocation());
+            cmd.setClient(new CandlepinConsumerClient(this.config));
             cmd.execute(cmdLine);
         }
         catch (ParseException e) {
@@ -97,11 +110,55 @@ public class CLIMain {
             this.handleClientException(e, cmd);
         }
     }
+
+    private Configuration loadConfig(CommandLine cmdLine) {
+        Properties pr = Utils.getDefaultProperties();
+        try {
+            String loc = cmdLine.getOptionValue("cfg");
+            File file = new File(StringUtils.defaultIfEmpty(loc,
+                Constants.DEFAULT_CONF_LOC));
+            //config file exists
+            if (file.exists() && file.canRead() && !file.isDirectory()) {
+                Properties conf = new Properties();
+                FileInputStream inputStream = new FileInputStream(file);
+                conf.load(inputStream);
+                pr = conf;
+            }
+            else {
+                /* config file not found. Try getting values from
+                 * from system environment*/
+                tryStoringSystemProperty(pr, Constants.SERVER_URL_KEY);
+                tryStoringSystemProperty(pr, Constants.CP_HOME_DIR);
+                tryStoringSystemProperty(pr, Constants.KEY_STORE_LOC);
+                tryStoringSystemProperty(pr, Constants.CP_CERT_LOC);
+            }
+        }
+        catch (IOException e) {
+            //cannot and should not happen since
+            //defaultValues.properties is within the jar file
+            e.printStackTrace();
+            System.exit(0);
+        }
+        return new Configuration(pr);
+    }
+
+    /**
+     * Try storing system property.
+     *
+     * @param properties the properties
+     * @param key the key
+     */
+    private void tryStoringSystemProperty(Properties properties, String key) {
+        String value = properties.getProperty(key);
+        properties.setProperty(key, StringUtils.defaultIfEmpty(
+            getProperty(key), value));
+    }
+
     
     protected void handleClientException(RuntimeException e, BaseCommand cmd) {
         if (e.getCause() != null) {
             if (e.getCause().getClass() == java.net.ConnectException.class) {
-                System.out.println("Error connecting to " + cmd.getClient().getUrl());
+                System.out.println("Error connecting to " + config.getServerURL());
                 return;
             }
         }
@@ -109,12 +166,11 @@ public class CLIMain {
     }
 
     public static void main(String[] args) {
-        System.setProperty("javax.net.ssl.trustStore",
-            Constants.KEY_STORE_FILE);
         Security.addProvider(new BouncyCastleProvider());
-
         CLIMain cli = new CLIMain();
         cli.execute(args);
 
     }
+
+
 }

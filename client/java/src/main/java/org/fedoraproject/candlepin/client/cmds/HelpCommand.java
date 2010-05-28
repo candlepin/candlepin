@@ -16,8 +16,10 @@ package org.fedoraproject.candlepin.client.cmds;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
+import org.fedoraproject.candlepin.client.Constants;
 
 /**
  * HelpCommand
@@ -50,6 +52,12 @@ public class HelpCommand extends BaseCommand {
             System.out.println(String.format("     %-15s %s", cmd.getName(),
                 cmd.getDescription()));
         }
+        Properties properties = Utils.getDefaultProperties();
+        System.out.println("\n\n---Default configuration values used---\n");
+        System.out.printf("\t%s=%s\n", Constants.CONFIG_LOCATION,
+            Constants.DEFAULT_CONF_LOC);
+        for (Object key : properties.keySet()) {
+            System.out.printf("\t%s=%s\n", key, properties.get(key));
+        }
     }
-
 }

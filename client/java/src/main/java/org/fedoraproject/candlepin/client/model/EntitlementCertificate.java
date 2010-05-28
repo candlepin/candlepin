@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
-import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -31,22 +30,23 @@ import org.fedoraproject.candlepin.client.PemUtil;
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntitlementCertificate extends AbstractCertificate{
+public class EntitlementCertificate extends AbstractCertificate {
     protected String key;
     protected String cert;
-    protected BigInteger serial;
     protected Entitlement entitlement;
 
     public EntitlementCertificate(X509Certificate cert, PrivateKey privateKey) {
-    	super(cert);
+        super(cert);
         try {
             this.cert = PemUtil.getPemEncoded(cert);
-            this.serial = cert.getSerialNumber();
             this.key = PemUtil.getPemEncoded(privateKey);
         }
         catch (Exception e) {
             throw new ClientException(e);
         }
+    }
+
+    public EntitlementCertificate() {
     }
 
     public String getKey() {
@@ -63,35 +63,24 @@ public class EntitlementCertificate extends AbstractCertificate{
 
     public void setCert(String cert) {
         this.cert = cert;
-    }
-
-    public BigInteger getSerial() {
-        return serial;
-    }
-
-    public void setSerial(BigInteger serial) {
-        this.serial = serial;
-    }
-
-    public X509Certificate getX509Cert() {
-        return PemUtil.createCert(cert);
+        this.setX509Certificate(PemUtil.createCert(cert));
     }
 
     public PrivateKey getPrivateKey() {
         return PemUtil.createPrivateKey(key);
     }
 
+    public Entitlement getEntitlement() {
+        return entitlement;
+    }
 
-	public Entitlement getEntitlement() {
-		return entitlement;
-	}
+    public void setEntitlement(Entitlement entitlement) {
+        this.entitlement = entitlement;
+    }
 
-	public void setEntitlement(Entitlement entitlement) {
-		this.entitlement = entitlement;
-	}
-	
-	public boolean isValid(){
-		Date currentDate = new Date();
-		return currentDate.after(getStartDate()) && currentDate.before(getEndDate());
-	}
+    public boolean isValid() {
+        Date currentDate = new Date();
+        return currentDate.after(getStartDate()) &&
+            currentDate.before(getEndDate());
+    }
 }

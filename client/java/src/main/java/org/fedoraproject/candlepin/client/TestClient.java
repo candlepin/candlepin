@@ -18,6 +18,7 @@ import java.security.Security;
 import java.util.List;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.fedoraproject.candlepin.client.cmds.Utils;
 import org.fedoraproject.candlepin.client.model.Entitlement;
 import org.fedoraproject.candlepin.client.model.Pool;
 
@@ -33,13 +34,12 @@ public class TestClient {
     public static void main(String[] args) {
         try {
             // This seems like a hack.
-
+            Configuration configuration = new Configuration(Utils.getDefaultProperties());
             System.setProperty("javax.net.ssl.trustStore",
-                Constants.KEY_STORE_FILE);
+                configuration.getKeyStoreFileLocation());
             Security.addProvider(new BouncyCastleProvider());
             // this initialization only needs to be done once per VM
-            String host = Constants.DEFAULT_SERVER;
-            CandlepinConsumerClient client = new CandlepinConsumerClient(host);
+            CandlepinConsumerClient client = new CandlepinConsumerClient(configuration);
             System.out.println("Should not be registered: " +
                 client.isRegistered());
             String uuid = client.register("admin", "admin", "Fred2", "system");

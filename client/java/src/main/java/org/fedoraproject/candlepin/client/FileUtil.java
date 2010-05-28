@@ -47,7 +47,7 @@ public class FileUtil {
 
     public static void removeFiles(File [] files) {
         for (File file : files) {
-        	file.delete();
+            file.delete();
         }
     }
 

@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
 /**
  * RegisterCommand
  */
-public class SubscribeCommand extends BaseCommand {
+public class SubscribeCommand extends PrivilegedCommand {
 
     @Override
     public String getName() {
@@ -44,43 +44,43 @@ public class SubscribeCommand extends BaseCommand {
 
   
     @Override
-    public void execute(CommandLine cmdLine) {
-        String [] pools = cmdLine.getOptionValues("p");
-        String [] products = cmdLine.getOptionValues("pr");
-        String [] regTokens = cmdLine.getOptionValues("r");
-        if(!this.getClient().isRegistered()){
-        	System.out.println("This system is currently not registered.");
-        	return;
-        }
-        if (isEmpty(pools) && isEmpty(products) && isEmpty(regTokens)) {
-            System.err.println("Error: Need either --product or --regtoken, Try --help");
+    protected void execute(CommandLine cmdLine, CandlepinConsumerClient client) {
+        String[] pools = cmdLine.getOptionValues("p");
+        String[] products = cmdLine.getOptionValues("pr");
+        String[] regTokens = cmdLine.getOptionValues("r");
+        if (!this.getClient().isRegistered()) {
+            System.out.println("This system is currently not registered.");
             return;
         }
-        CandlepinConsumerClient client = this.getClient();
-        
+        if (isEmpty(pools) && isEmpty(products) && isEmpty(regTokens)) {
+            System.err
+                .println("Error: Need either --product or --regtoken, Try --help");
+            return;
+        }
         try {
-			if(!isEmpty(pools)){
-				for(String pool: pools){
-					client.bindByPool(Long.decode(pool));
-				}
-			}
-			
-			if(!isEmpty(products)){
-				for(String product: products){
-					client.bindByProductId(product);
-				}
-			}
-			
-			if(!isEmpty(regTokens)){
-				for(String token: regTokens){
-					client.bindByRegNumber(token);
-				}
-			}
-		} catch (Exception e) {
-			System.err.println("Unable to subscribe!");
-			e.printStackTrace();
-			return;
-		}
+            if (!isEmpty(pools)) {
+                for (String pool : pools) {
+                    client.bindByPool(Long.decode(pool));
+                }
+            }
+
+            if (!isEmpty(products)) {
+                for (String product : products) {
+                    client.bindByProductId(product);
+                }
+            }
+
+            if (!isEmpty(regTokens)) {
+                for (String token : regTokens) {
+                    client.bindByRegNumber(token);
+                }
+            }
+        }
+        catch (Exception e) {
+            System.err.println("Unable to subscribe!");
+            e.printStackTrace();
+            return;
+        }
         client.updateEntitlementCertificates();
     }
 

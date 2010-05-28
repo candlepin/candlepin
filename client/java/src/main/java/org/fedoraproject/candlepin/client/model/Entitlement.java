@@ -29,7 +29,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Entitlement extends TimeStampedEntity{
+public class Entitlement extends TimeStampedEntity {
     private Long id;
     private Pool pool;
     private Date startDate;
@@ -37,42 +37,56 @@ public class Entitlement extends TimeStampedEntity{
     private Set<EntitlementCertificate> certificates = 
         new HashSet<EntitlementCertificate>();
     private Boolean free = Boolean.FALSE;
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public Pool getPool() {
-		return pool;
-	}
-	public void setPool(Pool pool) {
-		this.pool = pool;
-	}
-	public Date getStartDate() {
-		return startDate;
-	}
-	public void setStartDate(Date startDate) {
-		this.startDate = startDate;
-	}
-	public Set<EntitlementCertificate> getCertificates() {
-		return certificates;
-	}
-	public void setCertificates(Set<EntitlementCertificate> certificates) {
-		this.certificates = certificates;
-	}
-	public Boolean isFree() {
-		return free;
-	}
-	public void setFree(Boolean isFree) {
-		this.free = isFree;
-	}
-	public String getProductId() {
-		return productId;
-	}
-	public void setProductId(String productId) {
-		this.productId = productId;
-	}
-	@JsonIgnore
-	public void setIsFree(boolean bool){}
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Pool getPool() {
+        return pool;
+    }
+
+    public void setPool(Pool pool) {
+        this.pool = pool;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Set<EntitlementCertificate> getCertificates() {
+        return certificates;
+    }
+
+    public void setCertificates(Set<EntitlementCertificate> certificates) {
+        this.certificates = certificates;
+    }
+
+    public Boolean isFree() {
+        return free;
+    }
+
+    public void setFree(Boolean isFree) {
+        this.free = isFree;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    @JsonIgnore
+    public void setIsFree(boolean bool) {
+    }
 }

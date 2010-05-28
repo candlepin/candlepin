@@ -95,6 +95,7 @@ define "candlepin.client" do
   # building
   #
   resources.from _('po/classes')
+  resources.from _('src/main/resources')
   compile.options.target = '1.6'
   compile.with COMMONS, RESTEASY, LOG4J, BOUNCYCASTLE, JDOM, DOM4J, JACKSON, GETTEXT_COMMONS
  
@@ -113,7 +114,7 @@ define "candlepin.client" do
   #
   javadoc
 
-  package(:jar, :id=>'candlepin-client').clean.include 'target/classes/org/fedoraproject/candlepin/client', :path=>"org/fedoraproject/candlepin/"  
+  package(:jar, :id=>'candlepin-client')
   
 
   #

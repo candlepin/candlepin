@@ -80,18 +80,18 @@ public interface ICandlepinConsumerClient {
     @Path("consumers/{uuid}/entitlements")
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Entitlement>> bindByProductId(
-    		@PathParam("uuid") String uuid, @QueryParam("product") String productId);
+            @PathParam("uuid") String uuid, @QueryParam("product") String productId);
     
     @POST
     @Path("consumers/{uuid}/entitlements")
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Entitlement>> bindByRegNumber(
-    		@PathParam("uuid") String uuid, @QueryParam("token") String regnum);
+            @PathParam("uuid") String uuid, @QueryParam("token") String regnum);
     
     @DELETE
     @Path("consumers/{uuid}/certificates/{serialNo}")
     ClientResponse<Void>  unBindBySerialNumber(
-    		@PathParam("uuid") String uuid, @PathParam("serialNo") int serialNumber);
+            @PathParam("uuid") String uuid, @PathParam("serialNo") int serialNumber);
     
     @DELETE 
     @Path("consumers/{uuid}/entitlements/")

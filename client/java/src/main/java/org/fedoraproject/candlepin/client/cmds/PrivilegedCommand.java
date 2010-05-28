@@ -15,30 +15,12 @@
 package org.fedoraproject.candlepin.client.cmds;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
 
-// TODO: Auto-generated Javadoc
 /**
- * The Class UnRegisterCommand.
+ * PrivilegedCommand - command which can be executed only by registered customers.
  */
-public class UnRegisterCommand extends PrivilegedCommand {
-
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getDescription()
-     */
-    @Override
-    public String getDescription() {
-        return "unregister";
-    }
-
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getName()
-     */
-    @Override
-    public String getName() {
-        return "unregister";
-    }
+public abstract class PrivilegedCommand extends BaseCommand {
 
     /*
      * (non-Javadoc)
@@ -47,18 +29,14 @@ public class UnRegisterCommand extends PrivilegedCommand {
      * .commons.cli.CommandLine)
      */
     @Override
-    protected void execute(CommandLine cmdLine, CandlepinConsumerClient client) {
-        client.unRegister();
+    public final void execute(CommandLine cmdLine) {
+        CandlepinConsumerClient client = this.getClient();
+        if (!client.isRegistered()) {
+            System.out.println("This system is currently not registered.");
+            return;
+        }
+        this.execute(cmdLine, client);
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getOptions()
-     */
-    @Override
-    public Options getOptions() {
-        Options opts = super.getOptions();
-        opts.addOption("debug", true, "debug level"); //flag ignored.
-        return opts;
-    }
-
+    protected abstract void execute(CommandLine cmdLine, CandlepinConsumerClient client);
 }

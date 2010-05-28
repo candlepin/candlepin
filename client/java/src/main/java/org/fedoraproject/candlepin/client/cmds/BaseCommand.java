@@ -21,7 +21,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
-import org.fedoraproject.candlepin.client.Constants;
 
 /**
  * BaseCommand
@@ -39,16 +38,14 @@ public abstract class BaseCommand {
 
     public abstract String getDescription();
 
-    public void execute(CommandLine cmdLine) {
-
-    }
+    public abstract void execute(CommandLine cmdLine);
 
     public Options getOptions() {
         Options opts = new Options();
         opts.addOption("h", "help", false, "Module Help");
-        opts.addOption("s", "server", true, 
-            "Remote Candlepin Server to use. Default is " + Constants.DEFAULT_SERVER);        
         opts.addOption("d", "debug", true, "debug level");
+        opts.addOption("cfg", "configLoc",
+            true, "Location of candlepin client's config file.");
         return opts;
     }
 

@@ -27,7 +27,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Consumer extends TimeStampedEntity{
+public class Consumer extends TimeStampedEntity {
 
     protected String name;
     protected ConsumerType type;
@@ -35,24 +35,24 @@ public class Consumer extends TimeStampedEntity{
     protected IdentityCertificate idCert;
     private Consumer parent;
     private Long id;
- 
+
     public Long getId() {
-		return id;
-	}
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public Consumer getParent() {
-		return parent;
-	}
+    public Consumer getParent() {
+        return parent;
+    }
 
-	public void setParent(Consumer parent) {
-		this.parent = parent;
-	}
+    public void setParent(Consumer parent) {
+        this.parent = parent;
+    }
 
-	public String getName() {
+    public String getName() {
         return name;
     }
 
@@ -90,6 +90,7 @@ public class Consumer extends TimeStampedEntity{
     }
 
     @JsonIgnore
-    public void setFacts(Map<String, String> facts){}
-    
+    public void setFacts(Map<String, String> facts) {
+    }
+
 }

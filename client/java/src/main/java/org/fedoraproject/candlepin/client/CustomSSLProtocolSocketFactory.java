@@ -51,26 +51,27 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
     private SSLContext sslcontext = null;
     private String certificateFile;
     private String privateKeyFile;
-
+    private Configuration configuration;
     /**
      * Constructor for CustomSSLProtocolSocketFactory.
      */
     public CustomSSLProtocolSocketFactory(String certificateFile,
-        String privateKeyFile) {
+        String privateKeyFile, Configuration config) {
         super();
         this.certificateFile = certificateFile;
         this.privateKeyFile = privateKeyFile;
+        this.configuration = config;
     }
 
-    private static SSLContext createCustomSSLContext(String certificateFile,
+    private SSLContext createCustomSSLContext(String certificateFile,
         String privateKeyFile) {
         try {
-            char[] passwd = "password".toCharArray();
+            char[] passwd = configuration.getKeyStorePassword().toCharArray();
             /* Load CA-Chain file */
             CertificateFactory cf = CertificateFactory.getInstance(Constants.X509);
             X509Certificate candlepinCert = (X509Certificate) cf
                 .generateCertificate(new FileInputStream(
-                    Constants.CANDLE_PIN_CERTIFICATE_FILE));
+                    configuration.getCandlepinCertificateFile()));
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
             kmf.init(PemUtil.pemToKeystore(certificateFile, privateKeyFile,
@@ -81,9 +82,9 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
             KeyStore ks2 = KeyStore.getInstance(KeyStore.getDefaultType());
             ks2.load(null, null);
             ks2.load(
-                new FileInputStream(Constants.KEY_STORE_FILE),
+                new FileInputStream(configuration.getKeyStoreFileLocation()),
                 passwd);
-           // ks2.setCertificateEntry("candlepin_ca_crt", candlepinCert);
+            ks2.setCertificateEntry("candlepin_ca_crt", candlepinCert);
             tmf.init(ks2);
 
             /* and provide them for the SSLContext */
