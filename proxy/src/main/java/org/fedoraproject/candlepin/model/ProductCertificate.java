@@ -50,8 +50,6 @@ public class ProductCertificate extends AbstractCertificate {
         return id;
     }
     
-    // Note: Probably doesn't need to be many-to-one, but 
-    // trying to mirror the entitlement model...
     @ManyToOne
     @ForeignKey(name = "fk_cert_product")
     @JoinColumn(nullable = false)
