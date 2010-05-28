@@ -36,10 +36,18 @@ import com.google.inject.Inject;
  */
 public class EventFactory {
     private PrincipalProvider principalProvider;
+    private ObjectMapper mapper;
 
     @Inject
     public EventFactory(PrincipalProvider principalProvider) {
         this.principalProvider = principalProvider;
+        
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        mapper = new ObjectMapper();
+        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
+        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
     }
 
     public Event consumerCreated(Consumer newConsumer) {
@@ -112,14 +120,6 @@ public class EventFactory {
     }
     
     private String entityToJson(Object entity) {
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-            
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
-        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
-    
         String newEntityJson = "";
         // TODO: Throw an auditing exception here
     
