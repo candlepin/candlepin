@@ -175,12 +175,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Subscription sub : subs) {
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
                 createPoolForSubscription(sub);
+                subToPoolMap.remove(sub.getId());
             }
             else {
                 Pool existingPool = subToPoolMap.get(sub.getId());
                 updatePoolForSubscription(existingPool, sub);
+                subToPoolMap.remove(sub.getId());
             }
-            subToPoolMap.remove(sub.getId());
         }
     
         // de-activate pools whose subscription disappeared:
