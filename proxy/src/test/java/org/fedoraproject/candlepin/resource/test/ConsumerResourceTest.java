@@ -189,7 +189,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testEntitle() throws Exception {
-        //Entitlement result = 
         consumerResource.bind(
             consumer.getUuid(), null, null, product.getLabel(), principal);
         

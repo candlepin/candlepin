@@ -74,8 +74,11 @@ public class DefaultSubscriptionServiceAdapter implements
     @Override
     public SubscriptionProductWrapper getSubscription(Long subscriptionId) {
         SubscriptionProductWrapper wrapper = new SubscriptionProductWrapper();
-        wrapper.setSubscription(subCurator.lookupByOwnerAndId(subscriptionId));
-        wrapper.setProduct(null);
+        Subscription subscription = subCurator.lookupByOwnerAndId(subscriptionId);
+        if (subscription != null) {
+            wrapper.setSubscription(subscription);
+            wrapper.setProduct(prodAdapter.getProductById(subscription.getProductId()));
+        }
         
         return wrapper;
     }
