@@ -320,11 +320,13 @@ public class ConsumerResource {
         // product hashes
         List<Pool> validPools = new ArrayList<Pool>();
         List<Pool> ownerPools = poolCurator.listByOwner(consumer.getOwner());
-        for (Pool p: ownerPools) {
-            SubscriptionProductWrapper subWrapper = subAdapter.getSubscription(p.getSubscriptionId());
+        for (Pool p : ownerPools) {
+            SubscriptionProductWrapper subWrapper =
+                subAdapter.getSubscription(p.getSubscriptionId());
             
             // TODO: getAllChildProduct algorithm should probably be reviewed
-            for (Product product: subWrapper.getProduct().getAllChildProducts(new HashSet<Product>())) {
+            for (Product product :
+                subWrapper.getProduct().getAllChildProducts(new HashSet<Product>())) {
                 Long thisProductHash = product.getHash();
                 if (thisProductHash.equals(Long.valueOf(productHash))) {
                     // Keep a list of the matched results
