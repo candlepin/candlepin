@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import java.util.HashMap;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -100,6 +101,16 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return getProductById(productHash);
     }
 
+    @Override
+    public HashMap<String, String> getProductNamesByProductId(String[] ids) {
+        HashMap<String, String> names = new HashMap<String, String>();
+        for (String id : ids) { 
+            Product p = getProductById(id);
+            names.put(id, p.getName());
+        }
+        return names;
+    }
+    
     @Override
     public ProductCertificate getProductCertificate(Product product) {
         ProductCertificate cert = this.prodCertCurator.findForProduct(product);

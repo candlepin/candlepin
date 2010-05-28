@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 
 /**
@@ -82,6 +83,13 @@ public interface SubscriptionServiceAdapter {
      * @return Subscription whose id matches subscriptionId
      */
     Subscription getSubscription(Long subscriptionId);
+    
+    /**
+     * Lookup a specific subscription. 
+     * @param subscriptionId id of the subscription to return.
+     * @return Subscription whose id matches subscriptionId
+     */
+    Subscription getSubscription(Long subscriptionId, Product product);
     
     /**
      * Return all subscriptions.

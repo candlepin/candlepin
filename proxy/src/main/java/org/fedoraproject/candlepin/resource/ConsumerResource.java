@@ -438,6 +438,8 @@ public class ConsumerResource {
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
         @QueryParam("product") String productId, @Context Principal principal) {
 
+        // TODO : productId is NOT product hash in hosted candlepin
+        // TODO * * * * ** * * * ** * * * * * 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
             (poolId != null && productId != null) ||

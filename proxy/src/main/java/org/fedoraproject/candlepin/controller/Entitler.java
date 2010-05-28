@@ -174,14 +174,18 @@ public class Entitler {
         consumerCurator.update(consumer);
         Pool mergedPool = epCurator.merge(pool);
         
-        Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId());
+        Product prod = new Product(null, null);
+        Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId(), prod);
+        
         if (sub == null) {
             log.warn("Cannot generate entitlement certificate, no subscription for pool: " +
                 pool.getId());
             
         }
         else {
-            Product prod = productAdapter.getProductById(sub.getProductId());
+            if (null == prod.getLabel()) { 
+                prod = productAdapter.getProductById(sub.getProductId());
+            }
         
             // TODO: Assuming every entitlement = generate a cert, most likely we'll want
             // to know if this product entails granting a cert someday.

@@ -80,9 +80,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAll() {
         List<Pool> pools = super.listAll();
         
-        for (Pool pool : pools) {
-            addProductName(pool);
-        }
+        addProductNames(pools);
         
         return pools;
     }
@@ -262,13 +260,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = newResults;
         }
         
-        for (Pool p : results) {            
-            // enrich with the product name
-            // TODO:  probably should call out to the adapter 
-            //        once for all the ids we want instead of 
-            //        calling per product
-            addProductName(p);
-        }
+        addProductNames(results);
         
         // If querying for pools available to a specific consumer, we need
         // to do a rules pass to verify the entitlement will be granted.
@@ -295,13 +287,40 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return results;
     }
     
+    // set a single name, if its not already there
     private void addProductName(Pool pool) {
         if (pool != null) {
-            String id = pool.getProductId();
-            Product product = this.productAdapter.getProductById(id);
+            if (pool.getProductName() == null) { 
+                HashMap<String, String> names = this.productAdapter.
+                    getProductNamesByProductId(new String[] 
+                    { pool.getProductId() });
+                if (null != names) { 
+                    pool.setProductName(names.get(pool.getProductId()));
+                }
+            }
+        }
+    }
+    
+    // set a bunch of product names at once
+    private void addProductNames(List<Pool> pools) { 
+        if (pools != null && pools.size() > 0) { 
+            String[] productIds = new String[pools.size()];
+            int i = 0;
+            for (Pool p : pools) {            
+                // enrich with the product name
+                productIds[i] = p.getProductId();
+                i++;
+            }
             
-            if (product != null) {
-                pool.setProductName(product.getName());
+            // this will dramatically reduce response time for refreshing pools
+            HashMap<String, String> productNames = this.productAdapter.
+                getProductNamesByProductId(productIds);
+            
+            if (null != productNames) { 
+                // set the product name
+                for (Pool p : pools) { 
+                    p.setProductName(productNames.get(p.getProductId()));
+                } 
             }
         }
     }
