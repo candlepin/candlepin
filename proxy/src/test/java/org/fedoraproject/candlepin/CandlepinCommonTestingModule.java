@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
+import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
@@ -58,6 +59,7 @@ import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.EnforcerForTesting;
 import org.fedoraproject.candlepin.test.EventSinkForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
@@ -76,6 +78,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(JPAInitializer.class).asEagerSingleton();
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
+        bind(X509ExtensionUtil.class);
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
         bind(PoolResource.class);
@@ -105,6 +108,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(UserServiceAdapter.class).to(ConfigUserServiceAdapter.class);
         
         bind(I18n.class).toProvider(I18nProvider.class);
+        bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         bind(EventSink.class).to(EventSinkForTesting.class);
         

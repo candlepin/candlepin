@@ -254,7 +254,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     public void testRevocation() throws Exception {
         Entitlement e = entitler.entitle(parentSystem, monitoring,
             new UserPrincipal("user", o, new LinkedList<Role>()));
-        entitler.revokeEntitlement(e, principal);
+        entitler.revokeEntitlement(e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
         assertTrue(entitlements.isEmpty());

@@ -15,12 +15,25 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.util.HashMap;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
 
@@ -28,11 +41,26 @@ import com.google.inject.Inject;
  * Default implementation of the ProductserviceAdapter.
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
+    
+    private static Logger log = Logger.getLogger(DefaultProductServiceAdapter.class);
+    
     private ProductCurator prodCurator;
+    
+    // for product cert storage/generation - not sure if this should go in 
+    // a separate service?
+    private ProductCertificateCurator prodCertCurator;
+    private PKIUtility pki;
+    private X509ExtensionUtil extensionUtil;
 
     @Inject
-    public DefaultProductServiceAdapter(ProductCurator prodCurator) {
+    public DefaultProductServiceAdapter(ProductCurator prodCurator, 
+        ProductCertificateCurator prodCertCurator, PKIUtility pki, 
+        X509ExtensionUtil extensionUtil) {
+        
         this.prodCurator = prodCurator;
+        this.prodCertCurator = prodCertCurator;
+        this.pki = pki;
+        this.extensionUtil = extensionUtil;
     }
 
     @Override
@@ -73,13 +101,61 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return getProductById(productHash);
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.service.ProductServiceAdapter#getProductNamesBySku(java.lang.String[])
-     */
     @Override
     public HashMap<String, String> getProductNamesByProductId(String[] ids) {
-        // TODO Auto-generated method stub
-        return null;
+        HashMap<String, String> names = new HashMap<String, String>();
+        for (String id : ids) { 
+            Product p = getProductById(id);
+            names.put(id, p.getName());
+        }
+        return names;
+    }
+    
+    @Override
+    public ProductCertificate getProductCertificate(Product product) {
+        ProductCertificate cert = this.prodCertCurator.findForProduct(product);
+        
+        if (cert == null) {
+            // TODO:  Do something better with these exceptions!
+            try {
+                cert = createForProduct(product);
+                this.prodCertCurator.create(cert);
+            }
+            catch (GeneralSecurityException e) {
+                log.error("Error creating product certificate!", e);
+            }
+            catch (IOException e) {
+                log.error("Error creating product certificate!", e);
+            }
+        }
+        
+        return cert;
+    }
+    
+    private ProductCertificate createForProduct(Product product) 
+        throws GeneralSecurityException, IOException {
+        
+        KeyPair keyPair = pki.generateNewKeyPair();
+        
+        List<X509ExtensionWrapper> extensions = 
+            this.extensionUtil.productExtensions(product);
+        
+        BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
+        
+        Calendar future = Calendar.getInstance();
+        future.add(Calendar.YEAR, 10);
+        
+        X509Certificate x509Cert = this.pki.createX509Certificate(
+            "CN=" + product.getName(), 
+            extensions, new Date(), future.getTime(), 
+            keyPair, serial);
+        
+        ProductCertificate cert = new ProductCertificate();
+        cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
+        cert.setCert(this.pki.getPemEncoded(x509Cert));
+        cert.setProduct(product);
+        
+        return cert;
     }
     
 

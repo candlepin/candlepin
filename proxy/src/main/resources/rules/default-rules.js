@@ -13,8 +13,9 @@ function attribute_mappings() {
 }
 
 function pre_architecture() {
-	if ((product.getAttribute("architecture") != "ALL") && 
-			(product.getAttribute("architecture") != consumer.getFact("architecture"))) {
+	if ((product.getAttribute("architecture") != "ALL") &&
+			(!consumer.hasFact("architecture") ||
+			(product.getAttribute("architecture") != consumer.getFact("architecture")))) {
 		pre.addWarning("rulewarning.architecture.mismatch");
 	}
 }
@@ -23,7 +24,8 @@ function post_architecture() {
 }
 
 function pre_sockets() {
-	if (product.getAttribute("sockets") < consumer.getFact("sockets")) {
+	if (!consumer.hasFact("sockets") ||
+			(product.getAttribute("sockets") < consumer.getFact("sockets"))) {
 		pre.addWarning("rulewarning.unsupported.number.of.sockets");
 	}
 }

@@ -182,9 +182,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testDeleteResource() {
         Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME,
                 owner, standardSystemType));
-        consumerResource.deleteConsumer(consumer.getUuid(), 
-            new UserPrincipal("someuser", owner,
-                Collections.singletonList(Role.OWNER_ADMIN)));
+        consumerResource.deleteConsumer(consumer.getUuid());
 
         assertNull(consumerCurator.find(created.getId()));
     }
@@ -266,19 +264,19 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(1, serials.size());
 
         consumerResource.unbindBySerial(consumer.getUuid(),
-            serials.get(0).getSerial().longValue(), principal);
+            serials.get(0).getSerial().longValue());
         assertEquals(0,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }
     
     @Test(expected = NotFoundException.class)
     public void unbindByInvalidSerialShouldFail() {
-        consumerResource.unbindBySerial(consumer.getUuid(), new Long("1234"), principal);
+        consumerResource.unbindBySerial(consumer.getUuid(), new Long("1234"));
     }
     
     @Test(expected = NotFoundException.class)
     public void unbindBySerialWithInvalidUuidShouldFail() {
-        consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"), principal);
+        consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER, new Long("1234"));
     }
     
     @Test
@@ -319,18 +317,13 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        consumerResource.deleteConsumer(consumer.getUuid(), 
-            new UserPrincipal("someuser", owner,
-                Collections.singletonList(Role.OWNER_ADMIN)));
+        consumerResource.deleteConsumer(consumer.getUuid());
     }
     
     @Test
     public void consumerCanDeleteSelf() {
         setupPrincipal(new ConsumerPrincipal(consumer));
-        consumerResource.deleteConsumer(consumer.getUuid(), 
-            new UserPrincipal("someuser", owner,
-                Collections.singletonList(Role.OWNER_ADMIN)));
-        assertEquals(null, consumerCurator.lookupByUuid(consumer.getUuid()));
+        consumerResource.deleteConsumer(consumer.getUuid());
     }
     
     @Test
@@ -448,6 +441,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void bindByTokenPreExistingSubscription() {
+        setupPrincipal(owner, Role.CONSUMER);
+        
         Subscription sub = TestUtil.createSubscription(owner);
         Product prod = new Product(sub.getProductId(), sub.getProductId());
         productCurator.create(prod);

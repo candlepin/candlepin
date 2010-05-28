@@ -12,22 +12,28 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.audit;
+package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pool;
+import org.hibernate.criterion.Restrictions;
 
 /**
- * EventSink
+ * ProductCertificateCurator
  */
-public interface EventSink {
+public class ProductCertificateCurator 
+    extends AbstractHibernateCurator<ProductCertificate> {
 
-    void sendEvent(Event event);
+    /**
+     * @param entityType
+     */
+    public ProductCertificateCurator() {
+        super(ProductCertificate.class);
+    }
+    
+    public ProductCertificate findForProduct(Product product) {
+        return (ProductCertificate) currentSession()
+            .createCriteria(ProductCertificate.class)
+            .add(Restrictions.eq("product", product))
+            .uniqueResult();
+    }
 
-    void emitConsumerCreated(Consumer newConsumer);
-
-    void emitOwnerCreated(Owner newOwner);
-
-    void emitPoolCreated(Pool newPool);
 }

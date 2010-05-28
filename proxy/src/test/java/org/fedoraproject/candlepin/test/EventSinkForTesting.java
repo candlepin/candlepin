@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.test;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -27,11 +26,11 @@ import org.fedoraproject.candlepin.model.Pool;
 public class EventSinkForTesting implements EventSink {
 
     @Override
-    public void emitConsumerCreated(Principal principal, Consumer newConsumer) {
+    public void emitConsumerCreated(Consumer newConsumer) {
     }
 
     @Override
-    public void emitOwnerCreated(Principal principal, Owner newOwner) {
+    public void emitOwnerCreated(Owner newOwner) {
     }
 
     @Override
@@ -39,10 +38,6 @@ public class EventSinkForTesting implements EventSink {
     }
 
     @Override
-    public void emitPoolCreated(Principal principal, Pool newPool) {
-    }
-
-    @Override
-    public void emitPoolQuantityChanged(Principal principal, Pool pool) {
+    public void emitPoolCreated(Pool newPool) {
     }
 }

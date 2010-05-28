@@ -27,7 +27,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -70,18 +69,12 @@ import org.hibernate.annotations.ParamDef;
             "inner join cp_entitlement e on c.entitlement_id = e.id " +
                 "and c.owner_id = :owner_id)")
 })
-public class EntitlementCertificate extends AbstractHibernateObject
+public class EntitlementCertificate extends AbstractCertificate
     implements AccessControlEnforced {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, 
                     generator = "seq_ent_cert")
     private Long id;
-
-    @Column(nullable = false)
-    private byte[] key;
-
-    @Column(nullable = false)
-    private byte[] cert;
 
     @Column(nullable = false)
     private BigInteger serial;
@@ -97,44 +90,6 @@ public class EntitlementCertificate extends AbstractHibernateObject
 
     public void setSerial(BigInteger serialNumber) {
         this.serial = serialNumber;
-    }
-
-    @XmlTransient
-    public void setKey(byte[] key) {
-        this.key = key;
-    }
-
-    @XmlTransient
-    public byte[] getKey() {
-        return key;
-    }
-    
-    @XmlElement(name = "key")
-    public String getKeyAsString() {
-        return new String(key);
-    }
-    
-    public void setKeyAsString(String key) {
-        this.key = key.getBytes();        
-    }    
-
-    @XmlTransient
-    public void setCert(byte[] cert) {
-        this.cert = cert;
-    }
-
-    @XmlTransient
-    public byte[] getCert() {
-        return cert;
-    }
-    
-    @XmlElement(name = "cert")
-    public String getCertAsString() {
-        return new String(cert);
-    }
-    
-    public void setCertAsString(String cert) {
-        this.cert = cert.getBytes();        
     }
 
     @XmlTransient

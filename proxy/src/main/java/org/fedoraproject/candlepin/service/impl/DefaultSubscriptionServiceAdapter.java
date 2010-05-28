@@ -107,9 +107,6 @@ public class DefaultSubscriptionServiceAdapter implements
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.service.SubscriptionServiceAdapter#getSubscription(java.lang.Long, org.fedoraproject.candlepin.model.Product)
-     */
     @Override
     public Subscription getSubscription(Long subscriptionId, Product product) {
         return getSubscription(subscriptionId);

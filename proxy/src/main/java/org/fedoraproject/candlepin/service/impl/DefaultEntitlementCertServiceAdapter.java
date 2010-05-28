@@ -26,9 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
@@ -38,7 +36,7 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.util.OIDUtil;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
 
@@ -47,16 +45,22 @@ import com.google.inject.Inject;
  */
 public class DefaultEntitlementCertServiceAdapter extends 
     BaseEntitlementCertServiceAdapter {
+    
     private PKIUtility pki;
+    private X509ExtensionUtil extensionUtil;
     private KeyPairCurator keyPairCurator;
+    
     private static Logger log = Logger
         .getLogger(DefaultEntitlementCertServiceAdapter.class);
     
     @Inject
-    public DefaultEntitlementCertServiceAdapter(PKIUtility pki, 
-        EntitlementCertificateCurator entCertCurator, KeyPairCurator keyPairCurator) {
+    public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
+        X509ExtensionUtil extensionUtil,
+        EntitlementCertificateCurator entCertCurator, 
+        KeyPairCurator keyPairCurator) {
         
         this.pki = pki;
+        this.extensionUtil = extensionUtil;
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
     }
@@ -101,134 +105,17 @@ public class DefaultEntitlementCertServiceAdapter extends
         Set<Product> products = new HashSet<Product>();
         products.addAll(product.getAllChildProducts(products));
         for (Product childProduct : products) {
-            extensions.addAll(productExtensions(childProduct));
-            extensions.addAll(contentExtensions(childProduct));
+            extensions.addAll(extensionUtil.productExtensions(childProduct));
+            extensions.addAll(extensionUtil.contentExtensions(childProduct));
         }
 
-        extensions.addAll(subscriptionExtensions(sub));
-        extensions.addAll(consumerExtensions(consumer));
+        extensions.addAll(extensionUtil.subscriptionExtensions(sub));
+        extensions.addAll(extensionUtil.consumerExtensions(consumer));
         
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
             extensions, sub.getStartDate(), endDate, keyPair, serialNumber);
         return x509Cert;
     }
-    
-
-    public List<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
-        List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
-        
-        //1.3.6.1.4.1.2312.9.5.1 
-        // REDHAT_OID here seems wrong...
-        String consumerOid = OIDUtil.REDHAT_OID + "." + 
-                OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.SYSTEM_NAMESPACE_KEY);
-        toReturn.add(new X509ExtensionWrapper(consumerOid + "." + 
-                OIDUtil.SYSTEM_OIDS.get(OIDUtil.UUID_KEY),
-                false, new DERUTF8String(consumer.getUuid())));
-        
-        return toReturn;
-    }
-
-    public List<X509ExtensionWrapper> subscriptionExtensions(Subscription sub) {
-        List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
-        // Subscription/order info
-        //need the sub product name, not id here
-        // NOTE: order ~= subscriptio
-        //       entitlement == entitlement
-
-        String subscriptionOid = OIDUtil.REDHAT_OID + "." + 
-                OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
-        if (sub.getProductId() != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
-                    OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), 
-                    false, new DERUTF8String(sub.getProductId())));
-        }
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), 
-                false, new DERUTF8String(sub.getId().toString())));
-        //TODO: regnum? virtlimit/socketlimit?
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY),
-                false, new DERUTF8String(sub.getQuantity().toString())));
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "."  + 
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STARTDATE_KEY),
-                false, new DERUTF8String(sub.getStartDate().toString())));
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY),
-                false, new DERUTF8String(sub.getEndDate().toString())));
-        if (sub.getContractNumber() != null) {
-            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
-                false, new DERUTF8String(sub.getContractNumber())));
-        }
-      
-        return toReturn;
-    }
-        
-    public List<X509ExtensionWrapper> productExtensions(Product product) {
-        List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
-        
-        String productCertOid = OIDUtil.REDHAT_OID + "." + 
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
-        
-        String productOid = productCertOid  + "." + product.getHash().toString();
-        // 10.10.10 is the product hash, arbitrary number atm
-        // replace ith approriate hash for product, we can maybe get away with faking this
-        toReturn.add(new X509ExtensionWrapper(productOid + "." +
-                    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), 
-                    false, new DERUTF8String(product.getName())));
-        toReturn.add(new X509ExtensionWrapper(productOid + "." +
-                    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_DESC_KEY),
-                    false, new DERUTF8String(product.getVariant())));
-        // we don't have product attributes populated at the moment, so this doesnt work
-        //        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3",
-        //false, new DERUTF8String(product.getAttribute("arch").getValue()) ));
-        toReturn.add(new X509ExtensionWrapper(productOid + "." + 
-                    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY),
-                    false, new DERUTF8String(product.getArch())));
-        toReturn.add(new X509ExtensionWrapper(productOid + "." + 
-                    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY),
-                    false, new DERUTF8String(product.getVersion())));
-        
-        return toReturn;
-    }
-
-    public List<X509ExtensionWrapper> contentExtensions(Product product) {
-        List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
-        Set<Content> content = product.getContent();
-        Set<Content> enabledContent = product.getEnabledContent();
-        
-        for (Content con : content) {
-            log.debug("contentset: " + con.getName() + " " + 
-                    con.getType() + " " + con.getContentUrl());
-            String contentOid = OIDUtil.REDHAT_OID + "." +  
-                   OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + 
-                   "." + con.getHash().toString() + "." + 
-                   OIDUtil.CF_REPO_TYPE.get(con.getType());
-            toReturn.add(new X509ExtensionWrapper(contentOid, 
-                    false, new DERUTF8String(con.getType())));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
-                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY),
-                    false, new DERUTF8String(con.getName())));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
-                   OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_LABEL_KEY),
-                   false, new DERUTF8String(con.getLabel())));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
-                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_VENDOR_ID_KEY) ,
-                    false, new DERUTF8String(con.getVendor())));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
-                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_DOWNLOAD_URL_KEY) ,
-                    false, new DERUTF8String(con.getContentUrl()))); 
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
-                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY),
-                    false, new DERUTF8String(con.getGpgUrl())));
-            
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
-                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED),
-                    false,  new DERUTF8String(
-                        (enabledContent.contains(con) ? "0" : "1"))));
-        }
-        return toReturn;
-    }    
     
     private String createDN(Consumer consumer) {
         StringBuilder sb = new StringBuilder("CN=");

@@ -47,10 +47,12 @@ import org.fedoraproject.candlepin.model.Persisted;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event implements Persisted {
 
+    private static final long serialVersionUID = 1L;
+    
     /**
      * Type - Constant representing the type of this event.
      */
-    public enum Type { CREATED, MODIFIED, DELETED, QUANTITY_CHANGED };
+    public enum Type { CREATED, MODIFIED, DELETED };
 
     /**
      * Target the type of entity operated on.

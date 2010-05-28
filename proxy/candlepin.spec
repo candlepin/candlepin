@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.14
+Version: 0.0.15
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -106,6 +106,102 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/log/%{name}
 
 %changelog
+* Thu May 27 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.15-1
+- removed Principal parameter from EventFactory methods (ddolguik@redhat.com)
+- pool quantity change event emitted when quantity field changes (ddolguik@redhat.com)
+- Bring back the EventResource. (dgoodwin@redhat.com)
+- Call import_product.rb with path to import_products.json (alikins@redhat.com)
+- added event to emit on pool quantity changes (ddolguik@redhat.com)
+- This reverts commit 14eec6341636a6fc78e389bcc105c6795a1c5986. (bkearney@redhat.com)
+- audit: don't log event id (it's null now anyways) (jbowes@redhat.com)
+- Emit entitlement deletion events. (unbind) (dgoodwin@redhat.com)
+- an event is emitted on pool creation (ddolguik@redhat.com)
+- event is created now before the entity is deleted (during Delete Owner
+  operation) (ddolguik@redhat.com)
+- Turn default build level back to "INFO" so tests pass atm.  (alikins@redhat.com)
+- add the new childId's arg to createProduct (alikins@redhat.com)
+- Adding product creation to set childIds via query params.  (jharris@redhat.com)
+- added event for deletion of an owner (ddolguik@redhat.com)
+- added rules for 'architecture' and 'sockets' attributes (ddolguik@redhat.com)
+- PoolCurator#listAvailableEntitlementPools will not return pools that
+  triggered warnings during rules evaluation (ddolguik@redhat.com)
+- Drop concept of unique event IDs prior entering the queue.  (dgoodwin@redhat.com)
+- Dispatch entitlement event. (dgoodwin@redhat.com)
+- audit: hook up a testing eventsink (jbowes@redhat.com)
+- audit: store event type and target as strings in the db (jbowes@redhat.com)
+- Revert accidental commit of hash drop (jbowes@redhat.com)
+- Remove the product utils from deploy (bkearney@redhat.com)
+- clean up checkstyle issues (alikins@redhat.com)
+- audit: add owner created event (jbowes@redhat.com)
+- audit: change LoggingListener to not show entity details (configurable) (jbowes@redhat.com)
+- audit: add owner id to event (jbowes@redhat.com)
+- audit: hook up consumer delete notification (jbowes@redhat.com)
+- audit: split EventType enum into Type and Target (jbowes@redhat.com)
+- shouldn't hardcode /etc/tomcat in JBOSS section (jesusr@redhat.com)
+- fix formatting to appease checkstyle (jesusr@redhat.com)
+- Adding in first cut at ruby cli for debugging/data loading.  (jharris@redhat.com)
+- Add the ability for exceptions to set headers in the response. This allows me
+  to use basic auth from the browser (bkearney@redhat.com)
+- Add /atom feed for events. (dgoodwin@redhat.com)
+- Mark Event new/old object fields XmlTransient. (dgoodwin@redhat.com)
+- Expose Events over REST. (dgoodwin@redhat.com)
+- Fix test NPE. (dgoodwin@redhat.com)
+- Make Event JSON fields transient. (dgoodwin@redhat.com)
+- Format Principal sub-class toString() methods. (dgoodwin@redhat.com)
+- Add cuke test case for associated a Product and a Content (alikins@redhat.com)
+- Add query param for enabling/disabling the content product relation (alikins@redhat.com)
+- removed resource leak in LoggingResponseWrapper.java (ddolguik@redhat.com)
+- fixed a resource leak in CandlepinPKIReader.java (ddolguik@redhat.com)
+- fixed a resource leak in ConfigurationFileLoader (ddolguik@redhat.com)
+- Adjust for change to Jackson json encoding format (alikins@redhat.com)
+- Add method to associate a Content with a Product (alikins@redhat.com)
+- A few slices of Content for the cuke tests (alikins@redhat.com)
+- Add getContent to ContentResource (alikins@redhat.com)
+- ConsumerResource.getProduct() is never used (and just returned null). Remove.
+  (alikins@redhat.com)
+- Add ContentResource (alikins@redhat.com)
+- Check enabledContent contains the content before adding to entitlement cert
+  (alikins@redhat.com)
+- Remove "enabled" flag from Content model (alikins@redhat.com)
+- Add some content test cases and a Content curator (alikins@redhat.com)
+- attempt getting product->content uploading as a chunk (alikins@redhat.com)
+- make /var/log/candlepin on deploy (jbowes@redhat.com)
+- Store object state with @Lob so the db can choose (jbowes@redhat.com)
+- audit: hook up jackson for object state serialization (jbowes@redhat.com)
+- audit: remove old example listeners (jbowes@redhat.com)
+- Add an audit listener to write events to audit.log (jbowes@redhat.com)
+- Consumer creation events now being stored in database. (dgoodwin@redhat.com)
+- First draft of DatabaseListener. (dgoodwin@redhat.com)
+- oops, update candlepin listener to call the other listeners properly
+  (jbowes@redhat.com)
+- Don't pass ServletContextEvent to our listeners; they don't need it
+  (jbowes@redhat.com)
+- initialize pinsetter from the candlepin context, too (jbowes@redhat.com)
+- audit: reuse a single injector for event listeners and resteasy
+  (jbowes@redhat.com)
+- Guice up the event listeners. (dgoodwin@redhat.com)
+- Create events with unique IDs. (dgoodwin@redhat.com)
+- Hookup consumer creation event to the REST API. (dgoodwin@redhat.com)
+- checkstyle fixes (jbowes@redhat.com)
+- audit: allow for configurable listeners (jbowes@redhat.com)
+- hornetq: stop and close the queue reaper session (jbowes@redhat.com)
+- hornetq: teach the persistance directory to be configurable
+  (jbowes@redhat.com)
+- hornetq: silence cluster warning on startup (jbowes@redhat.com)
+- audit: split EventHub into Event[Source|Sink] (jbowes@redhat.com)
+- hornetq: clean up old empty queues on startup (jbowes@redhat.com)
+- Add EventFactory. (dgoodwin@redhat.com)
+- Move event code into the audit package, and use the existing event class
+  (jbowes@redhat.com)
+- hornetq: checkstyle cleanup (jbowes@redhat.com)
+- hornetq: use a seperate queue for each event listener (jbowes@redhat.com)
+- Get an embedded HornetQ server running (jbowes@redhat.com)
+- json: use jaxb bindings as well (but prefer jackson) (jbowes@redhat.com)
+- json: use iso8601 datetimes (jbowes@redhat.com)
+- guice: cleanup unused jackson config bits (jbowes@redhat.com)
+- apicrawler: print schema of some json (jbowes@redhat.com)
+- Switch to jackson for json (jbowes@redhat.com)
+
 * Mon May 24 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.14-1
 - remove unused import (jesusr@redhat.com)
 - add @return tag, fix typo (jesusr@redhat.com)
