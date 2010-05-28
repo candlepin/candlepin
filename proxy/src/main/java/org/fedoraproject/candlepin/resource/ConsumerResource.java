@@ -58,6 +58,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -320,13 +321,18 @@ public class ConsumerResource {
         List<Pool> validPools = new ArrayList<Pool>();
         List<Pool> ownerPools = poolCurator.listByOwner(consumer.getOwner());
         for (Pool p: ownerPools) {
-            Subscription sub = subAdapter.getSubscription(p.getSubscriptionId());
+            SubscriptionProductWrapper subWrapper = subAdapter.getSubscription(p.getSubscriptionId());
             
-            // Check for a match between the subscription and the Engineering
-            // product hash
-            if (productAdapter.provides(sub.getProductId(), productHash)) {
-                // Keep a list of the matched results
-                validPools.add(p);
+            // Walk the tree of products and see if each one has the product hash
+            Product topLevelProduct = subWrapper.getProduct();
+            
+            // TODO: getAllChildProduct algorithm should probably be reviewed
+            Set<Product> productSet = topLevelProduct.getAllChildProducts(new HashSet<Product>());
+            for (Product product: productSet) {
+                if (productAdapter.provides(product.getId(), productHash)) {
+                    // Keep a list of the matched results
+                    validPools.add(p);
+                }                
             }
         }
 
