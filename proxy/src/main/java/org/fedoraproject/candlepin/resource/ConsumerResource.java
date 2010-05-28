@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -312,17 +313,39 @@ public class ConsumerResource {
      */
     private List<Entitlement> bindByProduct(String productHash, Consumer consumer,
             Principal principal) {
+        
+        // Find all the owner pools to filter based on the pools
+        // that contain subscriptions with matching Engineering
+        // product hashes
+        List<Pool> validPools = new ArrayList<Pool>();
+        List<Pool> ownerPools = poolCurator.listByOwner(consumer.getOwner());
+        for (Pool p: ownerPools) {
+            Subscription sub = subAdapter.getSubscription(p.getSubscriptionId());
+            
+            // Check for a match between the subscription and the Engineering
+            // product hash
+            if (productAdapter.provides(sub.getProductId(), productHash)) {
+                // Keep a list of the matched results
+                validPools.add(p);
+            }
+        }
 
-        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        Product p = productAdapter.getProductByHash(productHash, consumer.getOwner());
-        if (p == null) {
+        if (validPools.isEmpty()) {
+            // TODO: Improve error message
+            // Should be something like "No subscriptions found for the given product"
             throw new BadRequestException(
                 i18n.tr("No such product: {0}", productHash));
         }
-
-        entitlementList.add(createEntitlement(consumer, p, principal));
-        return entitlementList;
         
+        // TODO: selectBestPool with javascript entitler
+        // This should filter the available list of pools down to a
+        // single pool that is the most applicable
+        Pool bestPool = validPools.get(0);
+        
+        // Now create the entitlements based on the pool
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
+        entitlementList.add(createEntitlement(consumer, bestPool, principal));
+        return entitlementList;
     }
 
     // TODO: Bleh, very duplicated methods here:
@@ -436,14 +459,14 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productId, @Context Principal principal) {
+        @QueryParam("product") String productHash, @Context Principal principal) {
 
         // TODO : productId is NOT product hash in hosted candlepin
         // TODO * * * * ** * * * ** * * * * * 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
-            (poolId != null && productId != null) ||
-            (token != null && productId != null)) {
+            (poolId != null && productHash != null) ||
+            (token != null && productHash != null)) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
         }
@@ -457,8 +480,8 @@ public class ConsumerResource {
                 if (token != null) {
                     entitlements = bindByToken(token, consumer, principal);
                 }
-                else if (productId != null) {
-                    entitlements = bindByProduct(productId, consumer, principal);
+                else if (productHash != null) {
+                    entitlements = bindByProduct(productHash, consumer, principal);
                 }
                 else {
                     entitlements = bindByPool(poolId, consumer, principal);
