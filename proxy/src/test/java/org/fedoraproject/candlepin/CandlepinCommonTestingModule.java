@@ -59,6 +59,7 @@ import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.EnforcerForTesting;
 import org.fedoraproject.candlepin.test.EventSinkForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
@@ -77,6 +78,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(JPAInitializer.class).asEagerSingleton();
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
+        bind(X509ExtensionUtil.class);
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
         bind(PoolResource.class);

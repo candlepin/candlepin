@@ -30,6 +30,8 @@ import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
@@ -54,7 +56,8 @@ public class ProductResource {
      *            Product Adapter used to interact with multiple services.
      */
     @Inject
-    public ProductResource(ProductServiceAdapter prodAdapter, 
+    public ProductResource(ProductServiceAdapter prodAdapter,
+                           ProductCertificateCurator productCertCurator,
                            ContentCurator contentCurator,
                            I18n i18n) {
         this.prodAdapter = prodAdapter;
@@ -92,6 +95,22 @@ public class ProductResource {
 
         throw new NotFoundException(
             i18n.tr("Product with UUID '{0}' could not be found", pid));
+    }
+    
+    @GET
+    @Path("/{product_uuid}/certificate")
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public ProductCertificate getProductCertificate(
+        @PathParam("product_uuid") String productId) {
+        
+        Product product = prodAdapter.getProductById(productId);
+        
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with UUID '{0}' could not be found", productId));
+        }
+        
+        return prodAdapter.getProductCertificate(product);
     }
     
     /**

@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
 
 /**
  * Product data may originate from a separate service outside Candlepin in some
@@ -65,5 +66,14 @@ public interface ProductServiceAdapter {
      * @return engineering product by its hash
      */
     Product getProductByHash(String productHash, Owner owner);
+    
+    /**
+     * Gets the certificate that defines the given product, creating one
+     * if necessary.
+     * 
+     * @param product
+     * @return the stored or created {@link ProductCertificate}
+     */
+    ProductCertificate getProductCertificate(Product product);
     
 }
