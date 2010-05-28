@@ -20,9 +20,9 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
@@ -72,8 +72,12 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public Subscription getSubscription(Long subscriptionId) {
-        return subCurator.lookupByOwnerAndId(subscriptionId);
+    public SubscriptionProductWrapper getSubscription(Long subscriptionId) {
+        SubscriptionProductWrapper wrapper = new SubscriptionProductWrapper();
+        wrapper.setSubscription(subCurator.lookupByOwnerAndId(subscriptionId));
+        wrapper.setProduct(null);
+        
+        return wrapper;
     }
 
     @Override
@@ -105,11 +109,6 @@ public class DefaultSubscriptionServiceAdapter implements
     @Override
     public boolean hasUnacceptedSubscriptionTerms(Owner owner) {
         return false;
-    }
-
-    @Override
-    public Subscription getSubscription(Long subscriptionId, Product product) {
-        return getSubscription(subscriptionId);
     }
 
 }

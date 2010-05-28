@@ -23,6 +23,7 @@ import java.util.List;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
@@ -76,12 +77,13 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void testGetSubscription() {
-        Subscription s = adapter.getSubscription(s1.getId());
+        SubscriptionProductWrapper wrapper = adapter.getSubscription(s1.getId());
+        Subscription s = wrapper.getSubscription();
         assertNotNull(s);
         assertEquals(new Long(100), s.getQuantity());
         
-        s = adapter.getSubscription(new Long(-15));
-        assertNull(s);
+        wrapper = adapter.getSubscription(new Long(-15));
+        assertNull(wrapper.getSubscription());
     }
     
     @Test

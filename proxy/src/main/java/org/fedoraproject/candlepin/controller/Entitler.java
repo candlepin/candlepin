@@ -36,6 +36,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -174,8 +175,10 @@ public class Entitler {
         consumerCurator.update(consumer);
         Pool mergedPool = epCurator.merge(pool);
         
-        Product prod = new Product(null, null);
-        Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId(), prod);
+        SubscriptionProductWrapper wrapper = subAdapter.
+            getSubscription(mergedPool.getSubscriptionId());
+        Product prod = wrapper.getProduct();
+        Subscription sub = wrapper.getSubscription();
         
         if (sub == null) {
             log.warn("Cannot generate entitlement certificate, no subscription for pool: " +
@@ -183,7 +186,7 @@ public class Entitler {
             
         }
         else {
-            if (null == prod.getLabel()) { 
+            if (null == prod || null == prod.getLabel()) { 
                 prod = productAdapter.getProductById(sub.getProductId());
             }
         
