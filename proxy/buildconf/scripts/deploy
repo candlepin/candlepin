@@ -128,7 +128,6 @@ function upload_products
     fi
 #    $IMPORTDIR/import_product_certs.py $CERTDIR/*.pem > $CERTDIR/deploy.sql
     $IMPORTDIR/import_product.rb  $IMPORTDIR/import_products.json
-    psql -U candlepin -f $CERTDIR/deploy.sql candlepin
 }
 
 function create_var_lib_candlepin
