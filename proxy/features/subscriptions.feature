@@ -4,6 +4,11 @@ Feature: Manipulate Subscriptions
 
     Background:
         Given an owner admin "testowner"
+        And I am logged in as "test_owner"
+        And product "some_product" exists
+        And product "another_product" exists
+        And product "one_more_product" exists
+        And product "monitoring" exists
 
     Scenario: List existing subscriptions
         Given test owner has 2 entitlements for "some_product"
