@@ -107,7 +107,7 @@ public class Entitler {
     // will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitle(Consumer consumer, Product product)
+    public Entitlement entitleByProduct(Consumer consumer, Product product)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
 
@@ -137,7 +137,7 @@ public class Entitler {
      * @throws EntitlementRefusedException if entitlement is refused
      */
     @Transactional
-    public Entitlement entitle(Consumer consumer, Pool pool)
+    public Entitlement entitleByPool(Consumer consumer, Pool pool)
         throws EntitlementRefusedException {
 
         return addEntitlement(consumer, pool);

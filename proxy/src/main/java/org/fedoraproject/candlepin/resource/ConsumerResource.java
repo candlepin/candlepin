@@ -348,15 +348,15 @@ public class ConsumerResource {
         
         // Now create the entitlements based on the pool
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        entitlementList.add(createEntitlement(consumer, bestPool));
+        entitlementList.add(createEntitlementByPool(consumer, bestPool));
         return entitlementList;
     }
 
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlement(Consumer consumer, Product p) {
+    private Entitlement createEntitlementByProduct(Consumer consumer, Product p) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, p);
+            Entitlement e = entitler.entitleByProduct(consumer, p);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -375,10 +375,10 @@ public class ConsumerResource {
         }
     }
 
-    private Entitlement createEntitlement(Consumer consumer, Pool pool) {
+    private Entitlement createEntitlementByPool(Consumer consumer, Pool pool) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, pool);
+            Entitlement e = entitler.entitleByPool(consumer, pool);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -427,7 +427,7 @@ public class ConsumerResource {
             }
 
             Product p = productAdapter.getProductById(sub.getProductId());
-            entitlementList.add(createEntitlement(consumer, p));
+            entitlementList.add(createEntitlementByProduct(consumer, p));
         }
         return entitlementList;
     }
@@ -441,7 +441,7 @@ public class ConsumerResource {
         }
 
         // Attempt to create an entitlement:
-        entitlementList.add(createEntitlement(consumer, pool));
+        entitlementList.add(createEntitlementByPool(consumer, pool));
         return entitlementList;
     }
 
