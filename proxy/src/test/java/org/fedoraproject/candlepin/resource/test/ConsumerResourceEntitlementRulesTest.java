@@ -73,20 +73,20 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         for (int i = 0; i < pool.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
             consumerCurator.create(c);
-            consumerResource.bind(c.getUuid(), null, null, product.getLabel(), principal);
+            consumerResource.bind(c.getUuid(), null, null, product.getLabel());
         }
         
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
         consumerCurator.create(c);
-        consumerResource.bind(c.getUuid(), null, null, product.getLabel(), principal);
+        consumerResource.bind(c.getUuid(), null, null, product.getLabel());
     }
     
     @Test(expected = RuntimeException.class)
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
         consumerResource.bind(consumer.getUuid(), null, null,
-            product.getLabel(), principal);
+            product.getLabel());
     }
     
     @Override

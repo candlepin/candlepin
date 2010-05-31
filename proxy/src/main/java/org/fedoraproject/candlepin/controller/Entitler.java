@@ -17,13 +17,10 @@ package org.fedoraproject.candlepin.controller;
 import java.math.BigInteger;
 import java.util.Date;
 
-import javax.ws.rs.core.Context;
-
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -110,8 +107,7 @@ public class Entitler {
     // will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitle(Consumer consumer, Product product,
-            @Context Principal principal)
+    public Entitlement entitle(Consumer consumer, Product product)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
 
@@ -122,7 +118,7 @@ public class Entitler {
                 product.getName());
         }
 
-        return addEntitlement(consumer, pool, principal);
+        return addEntitlement(consumer, pool);
     }
 
     /**
@@ -141,13 +137,13 @@ public class Entitler {
      * @throws EntitlementRefusedException if entitlement is refused
      */
     @Transactional
-    public Entitlement entitle(Consumer consumer, Pool pool, @Context Principal principal)
+    public Entitlement entitle(Consumer consumer, Pool pool)
         throws EntitlementRefusedException {
 
-        return addEntitlement(consumer, pool, principal);
+        return addEntitlement(consumer, pool);
     }
 
-    private Entitlement addEntitlement(Consumer consumer, Pool pool, Principal principal)
+    private Entitlement addEntitlement(Consumer consumer, Pool pool)
         throws EntitlementRefusedException {
         PreEntHelper preHelper = enforcer.pre(consumer, pool);
         ValidationResult result = preHelper.getResult();

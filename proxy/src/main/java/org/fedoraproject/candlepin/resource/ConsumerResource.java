@@ -312,8 +312,7 @@ public class ConsumerResource {
      * @param productId Product identifying label.
      * @return Entitled object
      */
-    private List<Entitlement> bindByProduct(String productHash, Consumer consumer,
-            Principal principal) {
+    private List<Entitlement> bindByProduct(String productHash, Consumer consumer) {
         
         // Find all the owner pools to filter based on the pools
         // that contain subscriptions with matching Engineering
@@ -361,16 +360,15 @@ public class ConsumerResource {
         
         // Now create the entitlements based on the pool
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        entitlementList.add(createEntitlement(consumer, bestPool, principal));
+        entitlementList.add(createEntitlement(consumer, bestPool));
         return entitlementList;
     }
 
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlement(Consumer consumer, Product p, 
-            Principal principal) {
+    private Entitlement createEntitlement(Consumer consumer, Product p) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, p, principal);
+            Entitlement e = entitler.entitle(consumer, p);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -389,11 +387,10 @@ public class ConsumerResource {
         }
     }
 
-    private Entitlement createEntitlement(Consumer consumer, Pool pool,
-            Principal principal) {
+    private Entitlement createEntitlement(Consumer consumer, Pool pool) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, pool, principal);
+            Entitlement e = entitler.entitle(consumer, pool);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -419,8 +416,7 @@ public class ConsumerResource {
      * @param consumer Consumer to bind
      * @return token
      */
-    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer,
-            Principal principal) {
+    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer) {
         
         List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer.getOwner(), 
             registrationToken);
@@ -443,13 +439,12 @@ public class ConsumerResource {
             }
 
             Product p = productAdapter.getProductById(sub.getProductId());
-            entitlementList.add(createEntitlement(consumer, p, principal));
+            entitlementList.add(createEntitlement(consumer, p));
         }
         return entitlementList;
     }
 
-    private List<Entitlement> bindByPool(Long poolId, Consumer consumer,
-            Principal principal) {
+    private List<Entitlement> bindByPool(Long poolId, Consumer consumer) {
         Pool pool = poolCurator.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
@@ -458,7 +453,7 @@ public class ConsumerResource {
         }
 
         // Attempt to create an entitlement:
-        entitlementList.add(createEntitlement(consumer, pool, principal));
+        entitlementList.add(createEntitlement(consumer, pool));
         return entitlementList;
     }
 
@@ -476,7 +471,7 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productHash, @Context Principal principal) {
+        @QueryParam("product") String productHash) {
 
         // TODO : productId is NOT product hash in hosted candlepin
         // TODO * * * * ** * * * ** * * * * * 
@@ -495,13 +490,13 @@ public class ConsumerResource {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
             
                 if (token != null) {
-                    entitlements = bindByToken(token, consumer, principal);
+                    entitlements = bindByToken(token, consumer);
                 }
                 else if (productHash != null) {
-                    entitlements = bindByProduct(productHash, consumer, principal);
+                    entitlements = bindByProduct(productHash, consumer);
                 }
                 else {
-                    entitlements = bindByPool(poolId, consumer, principal);
+                    entitlements = bindByPool(poolId, consumer);
                 }
             }
         } 

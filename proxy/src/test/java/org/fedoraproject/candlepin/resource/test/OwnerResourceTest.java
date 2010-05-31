@@ -195,8 +195,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         // Give those consumers entitlements:
-        entitler.entitle(c1, pool, 
-            new UserPrincipal("user", owner, new LinkedList<Role>()));
+        entitler.entitle(c1, pool);
 
         assertEquals(2, consumerCurator.listByOwner(owner).size());
         assertEquals(1, poolCurator.listByOwner(owner).size());
