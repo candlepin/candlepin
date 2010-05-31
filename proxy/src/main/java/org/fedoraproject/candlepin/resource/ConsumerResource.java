@@ -23,6 +23,7 @@ import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -312,7 +313,8 @@ public class ConsumerResource {
      * @param productId Product identifying label.
      * @return Entitled object
      */
-    private List<Entitlement> bindByProduct(String productHash, Consumer consumer) {
+    private List<Entitlement> bindByProduct(String productHash, Consumer consumer, 
+            Integer quantity) {
         
         // Find all the owner pools to filter based on the pools
         // that contain subscriptions with matching Engineering
@@ -360,15 +362,15 @@ public class ConsumerResource {
         
         // Now create the entitlements based on the pool
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        entitlementList.add(createEntitlementByPool(consumer, bestPool));
+        entitlementList.add(createEntitlement(consumer, bestPool, quantity));
         return entitlementList;
     }
 
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlementByProduct(Consumer consumer, Product p) {
+    private Entitlement createEntitlement(Consumer consumer, Product p, Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitleByProduct(consumer, p);
+            Entitlement e = entitler.entitle(consumer, p, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -387,10 +389,10 @@ public class ConsumerResource {
         }
     }
 
-    private Entitlement createEntitlementByPool(Consumer consumer, Pool pool) {
+    private Entitlement createEntitlement(Consumer consumer, Pool pool, Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitleByPool(consumer, pool);
+            Entitlement e = entitler.entitle(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -416,7 +418,8 @@ public class ConsumerResource {
      * @param consumer Consumer to bind
      * @return token
      */
-    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer) {
+    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer, 
+            Integer quantity) {
         
         List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer.getOwner(), 
             registrationToken);
@@ -439,12 +442,12 @@ public class ConsumerResource {
             }
 
             Product p = productAdapter.getProductById(sub.getProductId());
-            entitlementList.add(createEntitlementByProduct(consumer, p));
+            entitlementList.add(createEntitlement(consumer, p, quantity));
         }
         return entitlementList;
     }
 
-    private List<Entitlement> bindByPool(Long poolId, Consumer consumer) {
+    private List<Entitlement> bindByPool(Long poolId, Consumer consumer, Integer quantity) {
         Pool pool = poolCurator.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
@@ -453,7 +456,7 @@ public class ConsumerResource {
         }
 
         // Attempt to create an entitlement:
-        entitlementList.add(createEntitlementByPool(consumer, pool));
+        entitlementList.add(createEntitlement(consumer, pool, quantity));
         return entitlementList;
     }
 
@@ -471,7 +474,8 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productHash) {
+        @QueryParam("product") String productHash, 
+        @QueryParam("quantity") @DefaultValue("1") Integer quantity) {
 
         // TODO : productId is NOT product hash in hosted candlepin
         // TODO * * * * ** * * * ** * * * * * 
@@ -490,13 +494,13 @@ public class ConsumerResource {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
             
                 if (token != null) {
-                    entitlements = bindByToken(token, consumer);
+                    entitlements = bindByToken(token, consumer, quantity);
                 }
                 else if (productHash != null) {
-                    entitlements = bindByProduct(productHash, consumer);
+                    entitlements = bindByProduct(productHash, consumer, quantity);
                 }
                 else {
-                    entitlements = bindByPool(poolId, consumer);
+                    entitlements = bindByPool(poolId, consumer, quantity);
                 }
             }
         } 

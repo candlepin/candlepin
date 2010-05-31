@@ -78,7 +78,7 @@ public class DefaultRulesTest {
         Pool pool = new Pool(owner, product.getId(), new Long(5),
             TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
 
-        Entitlement e = new Entitlement(pool, consumer, new Date());
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
@@ -96,7 +96,7 @@ public class DefaultRulesTest {
         Pool pool = new Pool(owner, product.getId(), new Long(5),
             TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
 
-        Entitlement e = new Entitlement(pool, consumer, new Date());
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
@@ -114,7 +114,7 @@ public class DefaultRulesTest {
         Pool pool = new Pool(owner, product.getId(), new Long(0),
             TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
 
-        Entitlement e = new Entitlement(pool, consumer, new Date());
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
