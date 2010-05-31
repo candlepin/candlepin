@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,10 +35,12 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -97,9 +100,20 @@ public class EntitlerTest extends DatabaseTestFixture {
         productAdapter.createProduct(virtGuest);
         productAdapter.createProduct(monitoring);
         productAdapter.createProduct(provisioning);
+
+        subCurator.create(new Subscription(o, virtHost.getId(), 5L, new Date(),
+            TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, virtHostPlatform.getId(), 5L, new Date(),
+            TestUtil.createDate(3020, 12, 12), new Date()));
+
         
-        //subCurator.create(new Subscription(o, virtHost.getId(), 500, new Date(), ))
+        subCurator.create(new Subscription(o, monitoring.getId(), 5L, new Date(),
+            TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, provisioning.getId(), 5L, new Date(),
+            TestUtil.createDate(3020, 12, 12), new Date()));
+
         
+        poolCurator.refreshPools(o);
         
         entitler = injector.getInstance(Entitler.class);
 
@@ -117,13 +131,6 @@ public class EntitlerTest extends DatabaseTestFixture {
         parentSystem.addChildConsumer(childVirtSystem);
         
         consumerCurator.create(childVirtSystem);
-    }
-    
-    @Test
-    public void testGuestTypeCreated() {
-        // This guest product type should have been created just by parsing a sat cert
-        // with virt entitlements:
-        assertNotNull(virtGuest);
     }
 
     @Test
