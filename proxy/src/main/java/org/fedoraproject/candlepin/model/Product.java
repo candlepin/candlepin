@@ -48,7 +48,8 @@ import org.hibernate.annotations.ForeignKey;
 @SequenceGenerator(name = "seq_product", sequenceName = "seq_product", allocationSize = 1)
 public class Product extends AbstractHibernateObject {
    
-    // Product ID is stored as a string. Could be a product OID or label.
+    // Product ID is stored as a string.
+    // This is a subset of the product OID known as the hash.
     @Id
     private String id;
     
@@ -69,11 +70,6 @@ public class Product extends AbstractHibernateObject {
     @Column(nullable = true)
     private String arch;
     
-    // whatever numeric identifier we come up with for
-    // use in the cert's OID structure...
-    @Column(nullable = true, unique = true)
-    private Long hash;
-
     //FIXME: nullable just to bootstrap for now
     @Column(nullable = true)
     private String type;
@@ -126,17 +122,16 @@ public class Product extends AbstractHibernateObject {
         setName(name);
     }
     
-    public Product(String label, String name, String variant,
-                   String version, String arch, Long hash,
+    public Product(String hash, String label, String name,
+                   String variant, String version, String arch,
                    String type, Set<Product> childProducts,
                    Set<Content> content) {
-        setId(label);
+        setId(hash);
         setLabel(label);
         setName(name);
         setVariant(variant);
         setVersion(version);
         setArch(arch);
-        setHash(hash);
         setType(type);
         setChildProducts(childProducts);
         setContent(content);
@@ -304,20 +299,6 @@ public class Product extends AbstractHibernateObject {
     @Override
     public int hashCode() {
         return label.hashCode() * 31 + name.hashCode();
-    }
-
-    /**
-     * @param hash the hash to set
-     */
-    public void setHash(Long hash) {
-        this.hash = hash;
-    }
-
-    /**
-     * @return the hash
-     */
-    public Long getHash() {
-        return hash;
     }
 
     /**

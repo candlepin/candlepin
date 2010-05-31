@@ -71,9 +71,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
             = new DefaultEntitlementCertServiceAdapter(mockedPKI, 
                 extensionUtil, null, null);
         
-        product = new Product("a product", "a product", 
-                              "variant", "version", "arch", 
-                              123L, "SVC", new HashSet<Product>(),
+        product = new Product("a_product", "a product", 
+                              "a product", "variant", "version", 
+                              "arch", "SVC", new HashSet<Product>(),
                               new HashSet<Content>());
         
         Content content = new Content(CONTENT_NAME, CONTENT_HASH,

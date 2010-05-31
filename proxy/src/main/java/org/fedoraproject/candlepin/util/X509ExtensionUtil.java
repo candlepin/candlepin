@@ -86,7 +86,8 @@ public class X509ExtensionUtil {
         String productCertOid = OIDUtil.REDHAT_OID + "." + 
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
         
-        String productOid = productCertOid  + "." + product.getHash().toString();
+        // XXX need to deal with non hash style IDs
+        String productOid = productCertOid  + "." + product.getId();
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +

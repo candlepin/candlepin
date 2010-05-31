@@ -326,23 +326,11 @@ public class ConsumerResource {
             // TODO: getAllChildProduct algorithm should probably be reviewed
             for (Product product :
                 subWrapper.getProduct().getAllChildProducts(new HashSet<Product>())) {
-                // XXX: hack. we've got to stop using productHash, and just use productId.
-                try {
-                    Long thisProductHash = product.getHash();
-                    Long hashAsLong = Long.valueOf(productHash);
-
-                    if (thisProductHash.equals(hashAsLong)) {
-                        // Keep a list of the matched results
-                        validPools.add(p);
-                        break;
-                    }                
-                }
-                catch (NumberFormatException e) {
-                    if (product.getId().equals(productHash)) {
-                        validPools.add(p);
-                        break;
-                    }
-                }
+                if (product.getId().equals(productHash)) {
+                    // Keep a list of the matched results
+                    validPools.add(p);
+                    break;
+                }                
             }
         }
 

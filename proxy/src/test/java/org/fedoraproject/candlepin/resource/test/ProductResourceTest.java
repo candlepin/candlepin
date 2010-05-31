@@ -48,13 +48,11 @@ public class ProductResourceTest extends DatabaseTestFixture {
         String variant = "server";
         String version = "1.0";
         String arch = "ALL";
-        Long  hash = Math.abs(Long.valueOf(label.hashCode()));
         String type = "SVC";
         HashSet<Product> childProducts = null;
         HashSet<Content> content = null;
-        Product prod = new Product(label, name, variant,
-                                   version, arch, hash, 
-                                   type, childProducts,
+        Product prod = new Product(label, label, name,
+                variant, version, arch, type, childProducts,
                                    content);
         return prod;
         

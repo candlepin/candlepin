@@ -138,9 +138,6 @@ public class ProductTest extends DatabaseTestFixture {
         assertEquals(product.getId(), updatedProduct.getId());
         assertEquals(product.getName(), updatedProduct.getName());
     }
-
-    
-  
     
     @Test
     public void testEquality() {
@@ -298,7 +295,7 @@ public class ProductTest extends DatabaseTestFixture {
         Set<Content> content = new HashSet<Content>();
         Product prod = new Product("cp_test-label", "Test Product",
                                    "variant", "version", "arch",
-                                   new Long(1111111), "SVC", products, content);
+                                   null, "SVC", products, content);
         productCurator.create(prod);
        
         Product lookedUp = productCurator.find(prod.getId());
@@ -313,16 +310,12 @@ public class ProductTest extends DatabaseTestFixture {
         String parentLabel = "cp_test_parent_product";
         String childLabel = "cp_test_child_product";
 
-        Product childProd = new Product(childLabel, "Test Child Product",
-                        "variant", "version", "arch",       
-                        Math.abs(Long.valueOf(parentLabel.hashCode())), 
-                        "SVC", products, content);
+        Product childProd = new Product(childLabel, childLabel, "Test Child Product",
+                        "variant", "version", "arch", "SVC", products, content);
         
         childProducts.add(childProd);
-        Product parentProd = new Product(parentLabel, "Test Parent Product",
-                        "variant", "version", "arch",   
-                        Math.abs(Long.valueOf(childLabel.hashCode())),
-                        "MKT", childProducts, content);
+        Product parentProd = new Product(parentLabel, parentLabel, "Test Parent Product",
+                        "variant", "version", "arch", "MKT", childProducts, content);
       
         productCurator.create(parentProd);
         
@@ -342,14 +335,12 @@ public class ProductTest extends DatabaseTestFixture {
         String parentLabel = "cp_test_parent_product";
         String childLabel = "cp_test_child_product";
 
-        Product childProd = new Product(childLabel, "Test Child Product",
-            "variant", "version", "arch", Math.abs(Long.valueOf(parentLabel
-                .hashCode())), "SVC", products, content);
+        Product childProd = new Product(childLabel, childLabel, "Test Child Product",
+            "variant", "version", "arch", "SVC", products, content);
 
         childProducts.add(childProd);
-        Product parentProd = new Product(parentLabel, "Test Parent Product",
-            "variant", "version", "arch", Math.abs(Long.valueOf(childLabel
-                .hashCode())), "MKT", null, content);
+        Product parentProd = new Product(parentLabel, parentLabel, "Test Parent Product",
+            "variant", "version", "arch", "MKT", null, content);
         
         productCurator.create(parentProd);
         parentProd.setChildProducts(childProducts);
