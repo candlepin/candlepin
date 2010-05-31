@@ -135,7 +135,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         parentSystem.getFacts().put("total_guests", "10");
         consumerCurator.update(parentSystem);
         try {
-            entitler.entitle(parentSystem, virtHost);
+            entitler.entitleByProduct(parentSystem, virtHost);
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -143,7 +143,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         }
 
         try {
-            entitler.entitle(parentSystem, virtHostPlatform);
+            entitler.entitleByProduct(parentSystem, virtHostPlatform);
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -156,7 +156,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         parentSystem.setType(guestType);
         consumerCurator.update(parentSystem);
         try {
-            entitler.entitle(parentSystem, virtHost);
+            entitler.entitleByProduct(parentSystem, virtHost);
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -164,7 +164,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         }
 
         try {
-            entitler.entitle(parentSystem, virtHostPlatform);
+            entitler.entitleByProduct(parentSystem, virtHostPlatform);
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -175,11 +175,11 @@ public class EntitlerTest extends DatabaseTestFixture {
     @Test
     public void testVirtSystemGetsWhatParentHasForFree() throws Exception {
         // Give parent virt host ent:
-        Entitlement e = entitler.entitle(parentSystem, virtHost);
+        Entitlement e = entitler.entitleByProduct(parentSystem, virtHost);
         assertNotNull(e);
         
         // Give parent provisioning:
-        e = entitler.entitle(parentSystem, provisioning);
+        e = entitler.entitleByProduct(parentSystem, provisioning);
         assertNotNull(e);
         
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
@@ -189,7 +189,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertEquals(new Long(1), provisioningCount);
         
         // Now guest requests monitoring, and should get it for "free":
-        e = entitler.entitle(childVirtSystem, provisioning);
+        e = entitler.entitleByProduct(childVirtSystem, provisioning);
         assertNotNull(e);
         assertTrue(e.isFree());
         assertEquals(new Long(1), provisioningPool.getConsumed());
@@ -198,7 +198,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     @Test
     public void testVirtSystemPhysicalEntitlement() throws Exception {
         // Give parent virt host ent:
-        Entitlement e = entitler.entitle(parentSystem, virtHost);
+        Entitlement e = entitler.entitleByProduct(parentSystem, virtHost);
         assertNotNull(e);
         
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
@@ -207,7 +207,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         Long provisioningCount = new Long(provisioningPool.getConsumed());
         assertEquals(new Long(0), provisioningCount);
         
-        e = entitler.entitle(childVirtSystem, provisioning);
+        e = entitler.entitleByProduct(childVirtSystem, provisioning);
         assertNotNull(e);
         assertFalse(e.isFree());
         // Should have resorted to consuming a physical entitlement, because the guest's
@@ -221,13 +221,13 @@ public class EntitlerTest extends DatabaseTestFixture {
                 monitoring).get(0);
         assertEquals(new Long(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
-            Entitlement e = entitler.entitle(parentSystem, monitoring);
+            Entitlement e = entitler.entitleByProduct(parentSystem, monitoring);
             assertNotNull(e);
         }
         
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         try {
-            entitler.entitle(parentSystem, monitoring);
+            entitler.entitleByProduct(parentSystem, monitoring);
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -238,7 +238,7 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Test
     public void testRevocation() throws Exception {
-        Entitlement e = entitler.entitle(parentSystem, monitoring);
+        Entitlement e = entitler.entitleByProduct(parentSystem, monitoring);
         entitler.revokeEntitlement(e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);

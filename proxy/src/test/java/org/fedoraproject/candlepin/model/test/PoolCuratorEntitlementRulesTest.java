@@ -91,8 +91,8 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
 
-        entitler.entitle(consumer, newProduct);
-        anotherEntitler.entitle(consumer, newProduct);
+        entitler.entitleByProduct(consumer, newProduct);
+        anotherEntitler.entitleByProduct(consumer, newProduct);
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable());
@@ -113,11 +113,11 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
 
-        Entitlement e1 = entitler.entitle(consumer, newProduct);
+        Entitlement e1 = entitler.entitleByProduct(consumer, newProduct);
         assertNotNull(e1);
 
         @SuppressWarnings("unused")
-        Entitlement e2 = anotherEntitler.entitle(consumer, newProduct);
+        Entitlement e2 = anotherEntitler.entitleByProduct(consumer, newProduct);
     }
 
     @Override
