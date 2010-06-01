@@ -133,7 +133,7 @@ public class DatabaseTestFixture {
                     .buildModule()
             );
         }
-
+        
         injector.getInstance(EntityManagerFactory.class); 
         emf = injector.getProvider(EntityManagerFactory.class).get();
         

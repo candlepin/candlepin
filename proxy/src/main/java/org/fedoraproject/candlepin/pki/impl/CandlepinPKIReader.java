@@ -14,24 +14,24 @@
  */
 package org.fedoraproject.candlepin.pki.impl;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PasswordFinder;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.pki.PKIReader;
 
 import com.google.inject.Inject;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.security.KeyPair;
-import org.bouncycastle.openssl.PEMReader;
-import org.bouncycastle.openssl.PasswordFinder;
-import org.fedoraproject.candlepin.config.ConfigProperties;
 
 /**
  * The default {@link PKIReader} for Candlepin.  This reads the file paths for
