@@ -20,10 +20,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -102,12 +100,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         // oiduitl is busted at the moment, so do this manually
         List<X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
         
-        Set<Product> products = new HashSet<Product>();
-        products.addAll(product.getAllChildProducts(products));
-        for (Product childProduct : products) {
-            extensions.addAll(extensionUtil.productExtensions(childProduct));
-            extensions.addAll(extensionUtil.contentExtensions(childProduct));
-        }
+        addExtensionsForChildProducts(extensions, product);
 
         extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         extensions.addAll(extensionUtil.consumerExtensions(consumer));
@@ -115,6 +108,25 @@ public class DefaultEntitlementCertServiceAdapter extends
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
             extensions, sub.getStartDate(), endDate, keyPair, serialNumber);
         return x509Cert;
+    }
+    
+    /**
+     * Recursively add certificate extensions for this product, and all it's children.
+     * @param extensions Certificate extensions.
+     * @param product Product to recurse through.
+     */
+    private void addExtensionsForChildProducts(List<X509ExtensionWrapper> extensions, 
+        Product product) {
+        
+        // Add extensions for this product:
+        extensions.addAll(extensionUtil.productExtensions(product));
+        extensions.addAll(extensionUtil.contentExtensions(product));
+        
+        // Recurse for all child products:
+        for (Product childProduct : product.getChildProducts()) {
+            addExtensionsForChildProducts(extensions, childProduct);
+        }
+        
     }
     
     private String createDN(Consumer consumer) {

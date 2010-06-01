@@ -52,7 +52,6 @@ public class SubscriptionToken extends AbstractHibernateObject {
     @JoinColumn
     private Subscription subscription;
     
-    
     public Long getId() {
         return this.id;
     }

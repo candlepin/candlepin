@@ -161,24 +161,6 @@ public class Product extends AbstractHibernateObject {
         return childProducts;
     }
 
-    
-    public Set<Product> getAllChildProducts(Set<Product> products) {
-        products.add(this);
-        if ((childProducts == null) || (childProducts.isEmpty())) {
-            return products;
-        }
-        
-        for (Product childProduct : childProducts) {
-            Set<Product> ps = new HashSet<Product>();
-            ps = childProduct.getAllChildProducts(products);
-            for (Product p : ps) { 
-                products.add(p);
-            }
-        }
-        return products;
-    }   
-    
-
     /**
      * replaces all of the product children with the new set.
      * @param childProducts new child products.

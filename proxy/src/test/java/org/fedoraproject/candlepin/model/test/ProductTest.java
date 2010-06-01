@@ -299,7 +299,7 @@ public class ProductTest extends DatabaseTestFixture {
                                    null, "SVC", products, content);
         productCurator.create(prod);
        
-        Product lookedUp = productCurator.find(prod.getId());
+        productCurator.find(prod.getId());
     }
     
     @Test
@@ -323,8 +323,6 @@ public class ProductTest extends DatabaseTestFixture {
         Set<Product> testProducts = new HashSet<Product>();
         Product lookedUp = productCurator.find(parentProd.getId());
         assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
-        assertEquals(parentProd.getAllChildProducts(testProducts),
-                    lookedUp.getAllChildProducts(testProducts));
     }
     
     @Test
@@ -350,8 +348,6 @@ public class ProductTest extends DatabaseTestFixture {
         Set<Product> testProducts = new HashSet<Product>();
         Product lookedUp = productCurator.find(parentProd.getId());
         assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
-        assertEquals(parentProd.getAllChildProducts(testProducts), lookedUp
-            .getAllChildProducts(testProducts));
     }
     
     @Test
@@ -366,13 +362,4 @@ public class ProductTest extends DatabaseTestFixture {
         assertFalse(middle.provides(top.getId()));
     }
     
-//    @Test
-//    public void testGetAllChildProducts() {
-//        Product top = TestUtil.createProduct();
-//        Product middle = TestUtil.createProduct();
-//        Product bottom = TestUtil.createProduct();
-//        middle.addChildProduct(bottom);
-//        top.addChildProduct(middle);
-//        assertEquals(2, top.getAllChildProducts(new HashSet<Product>()).size());
-//    }
 }
