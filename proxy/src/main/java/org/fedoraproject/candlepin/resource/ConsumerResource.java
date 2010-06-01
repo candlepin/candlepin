@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,7 +57,6 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -307,48 +305,22 @@ public class ConsumerResource {
     }
 
     /**
-     * Entitles the given Consumer with the given Product.
+     * Entitles the given Consumer to the given Product.
      * 
-     * @param productId Product identifying label.
-     * @return Entitled object
+     * Will seek out pools which provide access to this product, either directly or as 
+     * a child, and select the best one based on a call to the rules engine.
+     * 
+     * @param productId Product ID.
+     * @return Entitlement object.
      */
     private List<Entitlement> bindByProduct(String productHash, Consumer consumer) {
-        
-        // Find all the owner pools to filter based on the pools
-        // that contain subscriptions with matching Engineering
-        // product hashes
-        List<Pool> validPools = new ArrayList<Pool>();
-        List<Pool> ownerPools = poolCurator.listByOwner(consumer.getOwner());
-        for (Pool p : ownerPools) {
-            SubscriptionProductWrapper subWrapper =
-                subAdapter.getSubscription(p.getSubscriptionId());
-            
-            // TODO: getAllChildProduct algorithm should probably be reviewed
-            for (Product product :
-                subWrapper.getProduct().getAllChildProducts(new HashSet<Product>())) {
-                if (product.getId().equals(productHash)) {
-                    // Keep a list of the matched results
-                    validPools.add(p);
-                    break;
-                }                
-            }
-        }
-
-        if (validPools.isEmpty()) {
-            // TODO: Improve error message
-            // Should be something like "No subscriptions found for the given product"
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
+        Product p = productAdapter.getProductByHash(productHash, consumer.getOwner());
+        if (p == null) {
             throw new BadRequestException(
                 i18n.tr("No such product: {0}", productHash));
         }
-        
-        // TODO: selectBestPool with javascript entitler
-        // This should filter the available list of pools down to a
-        // single pool that is the most applicable
-        Pool bestPool = validPools.get(0);
-        
-        // Now create the entitlements based on the pool
-        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        entitlementList.add(createEntitlementByPool(consumer, bestPool));
+        entitlementList.add(createEntitlementByProduct(consumer, p));
         return entitlementList;
     }
 
