@@ -49,7 +49,7 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
         Assert.assertEquals(product, cert.getProduct());
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void noHashCreation() {
         createCert(new Product("thin", "Not Much Here"));
     }

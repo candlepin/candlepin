@@ -33,7 +33,8 @@ public class CandlepinCommonTestConfig extends Config {
         
             properties.put(ConfigProperties.CA_CERT, cert);
             properties.put(ConfigProperties.CA_KEY, key);
-        } catch (URISyntaxException e) {
+        }
+        catch (URISyntaxException e) {
             throw new RuntimeException("Error loading cert/key resources!", e);
         }
         

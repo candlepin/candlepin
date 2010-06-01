@@ -88,7 +88,8 @@ public class X509ExtensionUtil {
         
         if (product.getHash() == null) {
             // TODO:  Should this be i18n-ified?
-            throw new IllegalArgumentException("Product requires a hash in order to generate a certificate.");
+            throw new IllegalArgumentException(
+                "Product requires a hash in order to generate a certificate.");
         }
         
         String productOid = productCertOid  + "." + product.getHash().toString();

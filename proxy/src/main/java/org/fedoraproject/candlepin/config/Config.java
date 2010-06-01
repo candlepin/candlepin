@@ -37,7 +37,8 @@ public class Config {
         this.configFile = new File(configFileName);
         
         // start with the default values
-        this.configuration = new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
+        this.configuration =
+            new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
 
         // override with user-specified values
         this.configuration.putAll(loadProperties());

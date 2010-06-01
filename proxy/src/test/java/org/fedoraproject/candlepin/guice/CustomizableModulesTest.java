@@ -36,13 +36,14 @@ public class CustomizableModulesTest {
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
     }
 
-    @Test(expected=RuntimeException.class)  // TODO:  We should probably be more specific...
+    // TODO:  We should probably be more specific...
+    @Test(expected = RuntimeException.class)  
     public void shouldFailWhenConfigurationContainsMissingClass()
         throws Exception {
-            Config config = new Config(getAbsolutePath(
-                "customizable_modules_with_missing_class.conf"));
+        Config config = new Config(getAbsolutePath(
+            "customizable_modules_with_missing_class.conf"));
             
-            new CustomizableModulesForTesting(config).load();
+        new CustomizableModulesForTesting(config).load();
     }
 
     public static class CustomizableModulesForTesting extends
