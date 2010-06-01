@@ -106,7 +106,12 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         HashMap<String, String> names = new HashMap<String, String>();
         for (String id : ids) { 
             Product p = getProductById(id);
-            names.put(id, p.getName());
+            if (p != null) {
+                names.put(id, p.getName());
+            }
+            else {
+                names.put(id, null);
+            }
         }
         return names;
     }
