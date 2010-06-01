@@ -66,8 +66,8 @@ public class JavascriptEnforcer implements Enforcer {
 
     @Inject
     public JavascriptEnforcer(DateSource dateSource,
-        @Named("RulesReader") Reader rulesReader, PreEntHelper preHelper,
-        PostEntHelper postHelper, ProductServiceAdapter prodAdapter,
+        @Named("RulesReader") Reader rulesReader,
+        ProductServiceAdapter prodAdapter,
         ScriptEngine jsEngine, I18n i18n) {
         this.dateSource = dateSource;
 
@@ -93,9 +93,9 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     @Override
-    public PreEntHelper pre(Consumer consumer, Pool entitlementPool) {
+    public PreEntHelper pre(Consumer consumer, Pool entitlementPool, Integer quantity) {
 
-        PreEntHelper preHelper = runPre(consumer, entitlementPool);
+        PreEntHelper preHelper = runPre(consumer, entitlementPool, quantity);
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
@@ -107,8 +107,8 @@ public class JavascriptEnforcer implements Enforcer {
         return preHelper;
     }
 
-    private PreEntHelper runPre(Consumer consumer, Pool pool) {
-        PreEntHelper preHelper = new PreEntHelper();
+    private PreEntHelper runPre(Consumer consumer, Pool pool, Integer quantity) {
+        PreEntHelper preHelper = new PreEntHelper(quantity);
 
         // Provide objects for the script:
         Product product = prodAdapter.getProductById(pool.getProductId());

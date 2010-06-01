@@ -95,7 +95,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         anotherEntitler.entitle(consumer, newProduct, new Integer("1"));
 
         assertFalse(poolCurator.find(consumerPool.getId())
-                .entitlementsAvailable());
+                .entitlementsAvailable(new Integer(1)));
     }
 
     @Test(expected = EntitlementRefusedException.class)

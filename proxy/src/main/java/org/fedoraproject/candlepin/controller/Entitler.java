@@ -145,7 +145,7 @@ public class Entitler {
 
     private Entitlement addEntitlement(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException {
-        PreEntHelper preHelper = enforcer.pre(consumer, pool);
+        PreEntHelper preHelper = enforcer.pre(consumer, pool, quantity);
         ValidationResult result = preHelper.getResult();
 
         if (!result.isSuccessful()) {

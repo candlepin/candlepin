@@ -38,10 +38,11 @@ public interface Enforcer {
      * This is run prior to granting an entitlement.
      *
      * @param consumer Consumer who wishes to consume an entitlement.
-     * @param enitlementPool Entitlement pool to consume from.
+     * @param entitlementPool Entitlement pool to consume from.
+     * @param quantity number of entitlements to consume.
      * @return TODO
      */
-    PreEntHelper pre(Consumer consumer, Pool enitlementPool);
+    PreEntHelper pre(Consumer consumer, Pool entitlementPool, Integer quantity);
 
     /**
      * Run post-entitlement actions.

@@ -73,13 +73,14 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         for (int i = 0; i < pool.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
             consumerCurator.create(c);
-            consumerResource.bind(c.getUuid(), null, null, product.getLabel(), null);
+            consumerResource.bind(
+                c.getUuid(), null, null, product.getLabel(), new Integer(1));
         }
         
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
         consumerCurator.create(c);
-        consumerResource.bind(c.getUuid(), null, null, product.getLabel(), null);
+        consumerResource.bind(c.getUuid(), null, null, product.getLabel(), new Integer(1));
     }
     
     @Test(expected = RuntimeException.class)

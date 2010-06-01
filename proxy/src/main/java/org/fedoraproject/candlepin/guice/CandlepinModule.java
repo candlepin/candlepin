@@ -98,8 +98,6 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(JavascriptEnforcer.class);
         bind(RulesResource.class);
         bind(AdminResource.class);
-        bind(PostEntHelper.class);
-        bind(PreEntHelper.class);
         bind(StatusResource.class);
         bind(CandlepinExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
