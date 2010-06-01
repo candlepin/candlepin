@@ -35,8 +35,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
-import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -63,8 +61,7 @@ public class DefaultRulesTest {
         InputStreamReader inputStreamReader = new InputStreamReader(url.openStream());
 
         enforcer = new JavascriptEnforcer(new DateSourceImpl(), inputStreamReader,
-            new PreEntHelper(), new PostEntHelper(), prodAdapter, 
-                new ScriptEngineManager().getEngineByName("JavaScript"), 
+            prodAdapter, new ScriptEngineManager().getEngineByName("JavaScript"), 
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
 
         owner = new Owner();
@@ -78,12 +75,12 @@ public class DefaultRulesTest {
         Pool pool = new Pool(owner, product.getId(), new Long(5),
             TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
 
-        Entitlement e = new Entitlement(pool, consumer, new Date());
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
 
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
 
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
@@ -96,12 +93,12 @@ public class DefaultRulesTest {
         Pool pool = new Pool(owner, product.getId(), new Long(5),
             TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
 
-        Entitlement e = new Entitlement(pool, consumer, new Date());
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
         
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
 
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
@@ -114,12 +111,12 @@ public class DefaultRulesTest {
         Pool pool = new Pool(owner, product.getId(), new Long(0),
             TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
 
-        Entitlement e = new Entitlement(pool, consumer, new Date());
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
 
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
@@ -129,7 +126,7 @@ public class DefaultRulesTest {
     public void architectureALLShouldNotGenerateWarnings() {
         Pool pool = setupTest("architecture", "ALL", "i686");
         
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -138,7 +135,7 @@ public class DefaultRulesTest {
     public void architectureMismatchShouldGenerateWarning() {
         Pool pool = setupTest("architecture", "x86_64", "i686");
         
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -150,7 +147,7 @@ public class DefaultRulesTest {
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<String, String>());
         
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -159,7 +156,7 @@ public class DefaultRulesTest {
     public void matchingNumberOfSocketsShouldNotGenerateWarning() {
         Pool pool = setupTest("sockets", "2", "2");
         
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -171,7 +168,7 @@ public class DefaultRulesTest {
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<String, String>());
         
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -195,7 +192,7 @@ public class DefaultRulesTest {
     public void exceedingNumberOfSocketsShouldGenerateWarning() {
         Pool pool = setupTest("sockets", "2", "4");
         
-        ValidationResult result = enforcer.pre(consumer, pool).getResult();
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }

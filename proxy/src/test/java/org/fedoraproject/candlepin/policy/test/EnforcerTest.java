@@ -76,7 +76,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
 
-        PreEntHelper preHelper = new PreEntHelper();
+        PreEntHelper preHelper = new PreEntHelper(new Integer(1));
         PostEntHelper postHelper = new PostEntHelper();
 
         Reader reader 
@@ -84,7 +84,7 @@ public class EnforcerTest extends DatabaseTestFixture {
                 getClass().getResourceAsStream("/rules/test-rules.js")));
         
         enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
-            reader, preHelper, postHelper, productAdapter,
+            reader, productAdapter,
             new ScriptEngineManager().getEngineByName("JavaScript"), i18n);
     }
     
@@ -204,7 +204,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         ValidationResult result = enforcer.pre(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, 
-                expiryDate(2010, 10, 10))).getResult();
+                expiryDate(2010, 10, 10)),
+            new Integer(1)).getResult();
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -218,7 +219,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         ValidationResult result = enforcer.pre(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 1, 
-                expiryDate(2010, 10, 10))).getResult();
+                expiryDate(2010, 10, 10)),
+            new Integer(1)).getResult();
         
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
@@ -233,7 +235,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         ValidationResult result = enforcer.pre(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
-                expiryDate(2000, 1, 1))).getResult();
+                expiryDate(2000, 1, 1)),
+            new Integer(1)).getResult();
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -249,7 +252,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         ValidationResult result = enforcer.pre(
             TestUtil.createConsumer(), 
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, 
-                expiryDate(2000, 1, 1))).getResult();
+                expiryDate(2000, 1, 1)),
+            new Integer(1)).getResult();
         
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());

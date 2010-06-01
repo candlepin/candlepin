@@ -5,6 +5,8 @@ Feature: Entitlement Certificates
     Background:
         Given an owner admin "test_owner"
         And I am logged in as "test_owner"
+        And product "virtualization_host" exists
+        And product "monitoring" exists
         And test owner has 2 entitlements for "virtualization_host"
         And test owner has 4 entitlements for "monitoring"
 

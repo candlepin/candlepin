@@ -107,7 +107,8 @@ public class Entitler {
     // will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitleByProduct(Consumer consumer, Product product)
+    public Entitlement entitleByProduct(Consumer consumer, Product product, 
+        Integer quantity)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
 
@@ -118,7 +119,7 @@ public class Entitler {
                 product.getName());
         }
 
-        return addEntitlement(consumer, pool);
+        return addEntitlement(consumer, pool, quantity);
     }
 
     /**
@@ -137,15 +138,15 @@ public class Entitler {
      * @throws EntitlementRefusedException if entitlement is refused
      */
     @Transactional
-    public Entitlement entitleByPool(Consumer consumer, Pool pool)
+    public Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException {
 
-        return addEntitlement(consumer, pool);
+        return addEntitlement(consumer, pool, quantity);
     }
 
-    private Entitlement addEntitlement(Consumer consumer, Pool pool)
+    private Entitlement addEntitlement(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException {
-        PreEntHelper preHelper = enforcer.pre(consumer, pool);
+        PreEntHelper preHelper = enforcer.pre(consumer, pool, quantity);
         ValidationResult result = preHelper.getResult();
 
         if (!result.isSuccessful()) {
@@ -154,7 +155,7 @@ public class Entitler {
             throw new EntitlementRefusedException(result);
         }
 
-        Entitlement e = new Entitlement(pool, consumer, new Date());
+        Entitlement e = new Entitlement(pool, consumer, new Date(), quantity);
         consumer.addEntitlement(e);
 
         if (preHelper.getGrantFreeEntitlement()) {

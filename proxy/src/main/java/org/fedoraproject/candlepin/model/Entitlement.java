@@ -87,6 +87,8 @@ import org.hibernate.annotations.ParamDef;
         allocationSize = 1)
 public class Entitlement extends AbstractHibernateObject implements AccessControlEnforced {
     
+    private static final long serialVersionUID = 1L;
+    
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_entitlement")
     private Long id;
@@ -121,6 +123,8 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     // TODO: Find a better way to represent this, we can't really clean it up properly 
     // like this.
     private Boolean isFree = Boolean.FALSE;
+    
+    private Integer quantity;
 
     /**
      * default ctor
@@ -148,11 +152,14 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
      * @param consumerIn consumer associated with the entitlement
      * @param startDateIn when the entitlement starts.
      */
-    public Entitlement(Pool poolIn, Consumer consumerIn, Date startDateIn) {
+    public Entitlement(Pool poolIn, Consumer consumerIn, Date startDateIn,
+            Integer quantityIn) {
         pool = poolIn;
         owner = consumerIn.getOwner();
         consumer = consumerIn;
         startDate = startDateIn;
+        quantity = quantityIn == null || quantityIn.intValue() < 1 ? 
+            new Integer(1) : quantityIn;
     }
     
     /**
@@ -241,6 +248,14 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
      */
     public void setIsFree(Boolean isFree) {
         this.isFree = isFree;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     @XmlTransient

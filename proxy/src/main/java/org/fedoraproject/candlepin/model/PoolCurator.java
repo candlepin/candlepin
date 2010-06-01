@@ -269,7 +269,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
-                PreEntHelper helper = enforcer.pre(c, p);
+                PreEntHelper helper = enforcer.pre(c, p, new Integer(1));
                 if (helper.getResult().isSuccessful() && 
                         !helper.getResult().hasWarnings()) {
                     newResults.add(p);
