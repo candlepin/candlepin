@@ -43,14 +43,6 @@ public interface ProductServiceAdapter {
     List<Product> getProducts();
     
     /**
-     * Check if the given product provides access to the specific Engineering product.
-     * @param productId 
-     * @param providesProductHash
-     * @return True if product provides subject product.
-     */
-    Boolean provides(String productId, String providesProductHash);
-    
-    /**
      * Creates a new {@link Product}.
      * 
      * @param product

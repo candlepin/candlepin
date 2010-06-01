@@ -237,22 +237,21 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return new ArrayList<Pool>();
         }
         
+
         // Filter for product we want:
         if (productId != null) {
 
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
+                // TODO: Performance hit:
+                Product poolProduct = productAdapter.getProductById(p.getProductId());
                 
-                if (p.getProductId().equals(productId)) {
-                    // Check for exact match:
-                    newResults.add(p);
-                }
-                else if (p.getSubscriptionId() == null && 
-                    productAdapter.provides(p.getProductId(), productId)) {
-                    // If not bound to a subscription, do fuzzy product checking:
+                // Provides will check if the products are a direct match, or if the
+                // desired product is provided by the product this pool is for:
+                if (poolProduct.provides(productId)) {
                     newResults.add(p);
                     if (log.isDebugEnabled()) {
-                        log.debug("Pool indirectly provides " + productId + 
+                        log.debug("Pool provides " + productId +
                             ": " + p);
                     }
                 }

@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
@@ -54,6 +55,9 @@ public class DefaultSubscriptionServiceAdapter implements
         // We need "fuzzy" product matching, so we need to list all subs for this owner
         // and then filter out products that do not match:
         for (Subscription sub : getSubscriptions(owner)) {
+
+            // TODO: Performance hit here, needs to be addressed:
+            Product subProduct = prodAdapter.getProductById(sub.getProductId());
             if (sub.getProductId().equals(productId)) {
                 subs.add(sub);
                 if (log.isDebugEnabled()) {
@@ -61,7 +65,7 @@ public class DefaultSubscriptionServiceAdapter implements
                 }
                 continue;
             }
-            else if (prodAdapter.provides(sub.getProductId(), productId)) {
+            else if (subProduct.provides(productId)) {
                 if (log.isDebugEnabled()) {
                     log.debug("   found provides: " + sub);
                 }

@@ -75,19 +75,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
-    public Boolean provides(String productId, String providesProductId) {
-        Product p = getProductById(productId);
-        Product queried = getProductById(providesProductId);
-        if ((p == null) || (p.getChildProducts() == null)) {
-            return Boolean.FALSE;
-        }
-        if (p.getChildProducts().contains(queried)) {
-            return Boolean.TRUE;
-        }
-        return Boolean.FALSE;
-    }
-
-    @Override
     public Product createProduct(Product product) {
         if ((prodCurator.find(product.getId()) == null)) {
             Product newProduct = prodCurator.create(product);
