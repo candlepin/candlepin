@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Test;
 
 public class ProductTest extends DatabaseTestFixture {
@@ -352,4 +353,26 @@ public class ProductTest extends DatabaseTestFixture {
         assertEquals(parentProd.getAllChildProducts(testProducts), lookedUp
             .getAllChildProducts(testProducts));
     }
+    
+    @Test
+    public void testRecursiveProvides() {
+        Product top = TestUtil.createProduct();
+        Product middle = TestUtil.createProduct();
+        Product bottom = TestUtil.createProduct();
+        middle.addChildProduct(bottom);
+        top.addChildProduct(middle);
+        assertTrue(middle.provides(bottom.getId()));
+        assertTrue(top.provides(bottom.getId()));
+        assertFalse(middle.provides(top.getId()));
+    }
+    
+//    @Test
+//    public void testGetAllChildProducts() {
+//        Product top = TestUtil.createProduct();
+//        Product middle = TestUtil.createProduct();
+//        Product bottom = TestUtil.createProduct();
+//        middle.addChildProduct(bottom);
+//        top.addChildProduct(middle);
+//        assertEquals(2, top.getAllChildProducts(new HashSet<Product>()).size());
+//    }
 }
