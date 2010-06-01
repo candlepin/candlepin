@@ -229,8 +229,10 @@ class Candlepin
     post("/consumers/#{@uuid}/entitlements?pool=#{pool}")
   end
 
-  def consume_product(product)
-    post("/consumers/#{@uuid}/entitlements?product=#{product}")
+  def consume_product(product, quantity = nil)
+    path = "/consumers/#{@uuid}/entitlements?product=#{product}"
+    path << "&quantity=#{quantity}" if quantity
+    post(path)
   end
 
   def consume_token(token)
