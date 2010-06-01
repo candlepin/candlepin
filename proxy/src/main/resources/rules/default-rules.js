@@ -24,8 +24,8 @@ function post_architecture() {
 }
 
 function pre_sockets() {
-	if (!consumer.hasFact("sockets") ||
-			(product.getAttribute("sockets") < consumer.getFact("sockets"))) {
+	if (!consumer.hasFact("cpu.cpu_sockets") ||
+			(product.getAttribute("sockets") < consumer.getFact("cpu.cpu_sockets"))) {
 		pre.addWarning("rulewarning.unsupported.number.of.sockets");
 	}
 }
