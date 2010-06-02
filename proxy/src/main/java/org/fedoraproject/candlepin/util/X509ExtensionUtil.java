@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.util;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.Set;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
@@ -79,6 +81,16 @@ public class X509ExtensionUtil {
       
         return toReturn;
     }
+    
+    public List<X509ExtensionWrapper> entitlementExtensions(Entitlement entitlement) {
+        String entitlementOid = OIDUtil.REDHAT_OID + "." + 
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
+        return Collections.singletonList(
+                   new X509ExtensionWrapper(entitlementOid + "." + 
+                       OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_USED),
+                       false, new DERUTF8String(entitlement.getQuantity().toString())));
+        
+    }
         
     public List<X509ExtensionWrapper> productExtensions(Product product) {
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
@@ -86,13 +98,8 @@ public class X509ExtensionUtil {
         String productCertOid = OIDUtil.REDHAT_OID + "." + 
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
         
-        if (product.getHash() == null) {
-            // TODO:  Should this be i18n-ified?
-            throw new IllegalArgumentException(
-                "Product requires a hash in order to generate a certificate.");
-        }
-        
-        String productOid = productCertOid  + "." + product.getHash().toString();
+        // XXX need to deal with non hash style IDs
+        String productOid = productCertOid  + "." + product.getId();
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +

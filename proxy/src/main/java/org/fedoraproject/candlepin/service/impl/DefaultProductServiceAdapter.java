@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
@@ -75,30 +74,12 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
-    public Boolean provides(String productId, String providesProductId) {
-        Product p = getProductById(productId);
-        Product queried = getProductById(providesProductId);
-        if ((p == null) || (p.getChildProducts() == null)) {
-            return Boolean.FALSE;
-        }
-        if (p.getChildProducts().contains(queried)) {
-            return Boolean.TRUE;
-        }
-        return Boolean.FALSE;
-    }
-
-    @Override
     public Product createProduct(Product product) {
         if ((prodCurator.find(product.getId()) == null)) {
             Product newProduct = prodCurator.create(product);
             return newProduct;
         }
         return prodCurator.find(product.getId());
-    }
-
-    @Override
-    public Product getProductByHash(String productHash, Owner owner) {
-        return getProductById(productHash);
     }
 
     @Override

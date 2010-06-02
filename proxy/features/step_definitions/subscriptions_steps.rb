@@ -43,7 +43,7 @@ def create_subscription(product, quantity)
       'startDate' => '2007-07-13',
       'endDate'   => '2012-07-13',
       'quantity'  =>  quantity,
-      'productId' => product
+      'productId' => product.hash.abs
   }
 
   created = @candlepin.create_subscription(@test_owner['id'], subscription)

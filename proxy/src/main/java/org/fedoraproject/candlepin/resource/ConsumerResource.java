@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,7 +58,6 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -308,69 +306,34 @@ public class ConsumerResource {
     }
 
     /**
-     * Entitles the given Consumer with the given Product.
+     * Entitles the given Consumer to the given Product.
      * 
-     * @param productId Product identifying label.
-     * @return Entitled object
+     * Will seek out pools which provide access to this product, either directly or as 
+     * a child, and select the best one based on a call to the rules engine.
+     * 
+     * @param productId Product ID.
+     * @return Entitlement object.
      */
-    private List<Entitlement> bindByProduct(String productHash, Consumer consumer, 
-            Integer quantity) {
-        
-        // Find all the owner pools to filter based on the pools
-        // that contain subscriptions with matching Engineering
-        // product hashes
-        List<Pool> validPools = new ArrayList<Pool>();
-        List<Pool> ownerPools = poolCurator.listByOwner(consumer.getOwner());
-        for (Pool p : ownerPools) {
-            SubscriptionProductWrapper subWrapper =
-                subAdapter.getSubscription(p.getSubscriptionId());
-            
-            // TODO: getAllChildProduct algorithm should probably be reviewed
-            for (Product product :
-                subWrapper.getProduct().getAllChildProducts(new HashSet<Product>())) {
-                // XXX: hack. we've got to stop using productHash, and just use productId.
-                try {
-                    Long thisProductHash = product.getHash();
-                    Long hashAsLong = Long.valueOf(productHash);
+    private List<Entitlement> bindByProduct(String productId, Consumer consumer, 
+        Integer quantity) {
+    
 
-                    if (thisProductHash.equals(hashAsLong)) {
-                        // Keep a list of the matched results
-                        validPools.add(p);
-                        break;
-                    }                
-                }
-                catch (NumberFormatException e) {
-                    if (product.getId().equals(productHash)) {
-                        validPools.add(p);
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (validPools.isEmpty()) {
-            // TODO: Improve error message
-            // Should be something like "No subscriptions found for the given product"
-            throw new BadRequestException(
-                i18n.tr("No such product: {0}", productHash));
-        }
-        
-        // TODO: selectBestPool with javascript entitler
-        // This should filter the available list of pools down to a
-        // single pool that is the most applicable
-        Pool bestPool = validPools.get(0);
-        
-        // Now create the entitlements based on the pool
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        entitlementList.add(createEntitlement(consumer, bestPool, quantity));
+        Product p = productAdapter.getProductById(productId);
+        if (p == null) {
+            throw new BadRequestException(
+                i18n.tr("No such product: {0}", productId));
+        }
+        entitlementList.add(createEntitlementByProduct(consumer, p, quantity));
         return entitlementList;
     }
 
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlement(Consumer consumer, Product p, Integer quantity) {
+    private Entitlement createEntitlementByProduct(Consumer consumer, Product p, 
+        Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, p, quantity);
+            Entitlement e = entitler.entitleByProduct(consumer, p, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -389,10 +352,11 @@ public class ConsumerResource {
         }
     }
 
-    private Entitlement createEntitlement(Consumer consumer, Pool pool, Integer quantity) {
+    private Entitlement createEntitlementByPool(Consumer consumer, Pool pool, 
+        Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, pool, quantity);
+            Entitlement e = entitler.entitleByPool(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -442,7 +406,7 @@ public class ConsumerResource {
             }
 
             Product p = productAdapter.getProductById(sub.getProductId());
-            entitlementList.add(createEntitlement(consumer, p, quantity));
+            entitlementList.add(createEntitlementByProduct(consumer, p, quantity));
         }
         return entitlementList;
     }
@@ -456,7 +420,7 @@ public class ConsumerResource {
         }
 
         // Attempt to create an entitlement:
-        entitlementList.add(createEntitlement(consumer, pool, quantity));
+        entitlementList.add(createEntitlementByPool(consumer, pool, quantity));
         return entitlementList;
     }
 
@@ -474,15 +438,13 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productHash, 
+        @QueryParam("product") String productId, 
         @QueryParam("quantity") @DefaultValue("1") Integer quantity) {
 
-        // TODO : productId is NOT product hash in hosted candlepin
-        // TODO * * * * ** * * * ** * * * * * 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
-            (poolId != null && productHash != null) ||
-            (token != null && productHash != null)) {
+            (poolId != null && productId != null) ||
+            (token != null && productId != null)) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
         }
@@ -496,8 +458,8 @@ public class ConsumerResource {
                 if (token != null) {
                     entitlements = bindByToken(token, consumer, quantity);
                 }
-                else if (productHash != null) {
-                    entitlements = bindByProduct(productHash, consumer, quantity);
+                else if (productId != null) {
+                    entitlements = bindByProduct(productId, consumer, quantity);
                 }
                 else {
                     entitlements = bindByPool(poolId, consumer, quantity);

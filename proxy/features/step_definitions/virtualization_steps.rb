@@ -1,6 +1,6 @@
 Then /^attempting to Consume an entitlement for the "([^\"]*)" product is forbidden$/ do |name|
     begin
-        @consumer_cp.consume_product(name)
+        @consumer_cp.consume_product(name.hash.abs)
     rescue RestClient::Exception => e
         e.message.should == "Forbidden"
         e.http_code.should == 403

@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.service;
 import java.util.HashMap;
 import java.util.List;
 
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 
@@ -43,14 +42,6 @@ public interface ProductServiceAdapter {
     List<Product> getProducts();
     
     /**
-     * Check if the given product provides access to the specific Engineering product.
-     * @param productId 
-     * @param providesProductHash
-     * @return True if product provides subject product.
-     */
-    Boolean provides(String productId, String providesProductHash);
-    
-    /**
      * Creates a new {@link Product}.
      * 
      * @param product
@@ -59,14 +50,6 @@ public interface ProductServiceAdapter {
      *         support new product creation
      */
     Product createProduct(Product product);
-    
-    /**
-     * Query an engineering product by its hash
-     * @param productHash
-     * @param owner
-     * @return engineering product by its hash
-     */
-    Product getProductByHash(String productHash, Owner owner);
     
     /**
      * given a list of skus, return a set of sku, name pairs

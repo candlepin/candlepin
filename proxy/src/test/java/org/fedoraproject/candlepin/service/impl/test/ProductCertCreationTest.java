@@ -41,8 +41,8 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     
     @Test
     public void validProduct() {
-        Product product = new Product("test", "Test Product", "Standard", "1", "x86_64",
-            110001L, "Base", null, null);
+        Product product = new Product("50", "test-product-label", 
+            "Test Product", "Standard", "1", "x86_64", "Base", null, null);
         ProductCertificate cert = createCert(product);
         
         
@@ -55,8 +55,8 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     }
     
     private ProductCertificate createDummyCert() {
-        Product product = new Product("test", "Test Product", "Standard", "1", "x86_64",
-            110001L, "Base", null, null);
+        Product product = new Product("50", "test-product-label", 
+            "Test Product", "Standard", "1", "x86_64", "Base", null, null);
 
         return createCert(product);
     }

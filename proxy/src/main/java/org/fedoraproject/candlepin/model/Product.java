@@ -48,7 +48,8 @@ import org.hibernate.annotations.ForeignKey;
 @SequenceGenerator(name = "seq_product", sequenceName = "seq_product", allocationSize = 1)
 public class Product extends AbstractHibernateObject {
    
-    // Product ID is stored as a string. Could be a product OID or label.
+    // Product ID is stored as a string.
+    // This is a subset of the product OID known as the hash.
     @Id
     private String id;
     
@@ -69,11 +70,6 @@ public class Product extends AbstractHibernateObject {
     @Column(nullable = true)
     private String arch;
     
-    // whatever numeric identifier we come up with for
-    // use in the cert's OID structure...
-    @Column(nullable = true, unique = true)
-    private Long hash;
-
     //FIXME: nullable just to bootstrap for now
     @Column(nullable = true)
     private String type;
@@ -117,26 +113,25 @@ public class Product extends AbstractHibernateObject {
      * 
      * Use this variant when creating a new object to persist.
      * 
-     * @param label Product label
+     * @param id Product label
      * @param name Human readable Product name
      */
-    public Product(String label, String name) {
-        setId(label);
-        setLabel(label);
+    public Product(String id, String name) {
+        setId(id);
+        setLabel(id);
         setName(name);
     }
     
-    public Product(String label, String name, String variant,
-                   String version, String arch, Long hash,
+    public Product(String id, String label, String name,
+                   String variant, String version, String arch,
                    String type, Set<Product> childProducts,
                    Set<Content> content) {
-        setId(label);
+        setId(id);
         setLabel(label);
         setName(name);
         setVariant(variant);
         setVersion(version);
         setArch(arch);
-        setHash(hash);
         setType(type);
         setChildProducts(childProducts);
         setContent(content);
@@ -165,24 +160,6 @@ public class Product extends AbstractHibernateObject {
     public Set<Product> getChildProducts() {
         return childProducts;
     }
-
-    
-    public Set<Product> getAllChildProducts(Set<Product> products) {
-        products.add(this);
-        if ((childProducts == null) || (childProducts.isEmpty())) {
-            return products;
-        }
-        
-        for (Product childProduct : childProducts) {
-            Set<Product> ps = new HashSet<Product>();
-            ps = childProduct.getAllChildProducts(products);
-            for (Product p : ps) { 
-                products.add(p);
-            }
-        }
-        return products;
-    }   
-    
 
     /**
      * replaces all of the product children with the new set.
@@ -307,20 +284,6 @@ public class Product extends AbstractHibernateObject {
     }
 
     /**
-     * @param hash the hash to set
-     */
-    public void setHash(Long hash) {
-        this.hash = hash;
-    }
-
-    /**
-     * @return the hash
-     */
-    public Long getHash() {
-        return hash;
-    }
-
-    /**
      * @param arch the arch to set
      */
     public void setArch(String arch) {
@@ -403,5 +366,32 @@ public class Product extends AbstractHibernateObject {
         return content;
     }
 
+    /**
+     * Return true if this product provides the requested product.
+     * This method also checks if this product is a direct match itself.
+     *
+     * @param desiredProductId Product we are looking for:
+     * @return True if product is provided, otherwise false.
+     */
+    public Boolean provides(String desiredProductId) {
+        // Check if I'm a direct match:
+        if (getId().equals(desiredProductId)) {
+            return Boolean.TRUE;
+        }
+        // No child products, can't be a match:
+        if (getChildProducts() == null) {
+            return Boolean.FALSE;
+        }
+
+        // Otherwise check if any of our child products provides:
+        for (Product child : getChildProducts()) {
+            if (child.provides(desiredProductId)) {
+                return Boolean.TRUE;
+            }
+        }
+
+        // Must not be a match:
+        return Boolean.FALSE;
+    }
  
 }

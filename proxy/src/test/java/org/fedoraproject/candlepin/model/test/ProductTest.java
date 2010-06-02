@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Test;
 
 public class ProductTest extends DatabaseTestFixture {
@@ -138,9 +139,6 @@ public class ProductTest extends DatabaseTestFixture {
         assertEquals(product.getId(), updatedProduct.getId());
         assertEquals(product.getName(), updatedProduct.getName());
     }
-
-    
-  
     
     @Test
     public void testEquality() {
@@ -298,10 +296,10 @@ public class ProductTest extends DatabaseTestFixture {
         Set<Content> content = new HashSet<Content>();
         Product prod = new Product("cp_test-label", "Test Product",
                                    "variant", "version", "arch",
-                                   new Long(1111111), "SVC", products, content);
+                                   null, "SVC", products, content);
         productCurator.create(prod);
        
-        Product lookedUp = productCurator.find(prod.getId());
+        productCurator.find(prod.getId());
     }
     
     @Test
@@ -313,24 +311,18 @@ public class ProductTest extends DatabaseTestFixture {
         String parentLabel = "cp_test_parent_product";
         String childLabel = "cp_test_child_product";
 
-        Product childProd = new Product(childLabel, "Test Child Product",
-                        "variant", "version", "arch",       
-                        Math.abs(Long.valueOf(parentLabel.hashCode())), 
-                        "SVC", products, content);
+        Product childProd = new Product(childLabel, childLabel, "Test Child Product",
+                        "variant", "version", "arch", "SVC", products, content);
         
         childProducts.add(childProd);
-        Product parentProd = new Product(parentLabel, "Test Parent Product",
-                        "variant", "version", "arch",   
-                        Math.abs(Long.valueOf(childLabel.hashCode())),
-                        "MKT", childProducts, content);
+        Product parentProd = new Product(parentLabel, parentLabel, "Test Parent Product",
+                        "variant", "version", "arch", "MKT", childProducts, content);
       
         productCurator.create(parentProd);
         
         Set<Product> testProducts = new HashSet<Product>();
         Product lookedUp = productCurator.find(parentProd.getId());
         assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
-        assertEquals(parentProd.getAllChildProducts(testProducts),
-                    lookedUp.getAllChildProducts(testProducts));
     }
     
     @Test
@@ -342,14 +334,12 @@ public class ProductTest extends DatabaseTestFixture {
         String parentLabel = "cp_test_parent_product";
         String childLabel = "cp_test_child_product";
 
-        Product childProd = new Product(childLabel, "Test Child Product",
-            "variant", "version", "arch", Math.abs(Long.valueOf(parentLabel
-                .hashCode())), "SVC", products, content);
+        Product childProd = new Product(childLabel, childLabel, "Test Child Product",
+            "variant", "version", "arch", "SVC", products, content);
 
         childProducts.add(childProd);
-        Product parentProd = new Product(parentLabel, "Test Parent Product",
-            "variant", "version", "arch", Math.abs(Long.valueOf(childLabel
-                .hashCode())), "MKT", null, content);
+        Product parentProd = new Product(parentLabel, parentLabel, "Test Parent Product",
+            "variant", "version", "arch", "MKT", null, content);
         
         productCurator.create(parentProd);
         parentProd.setChildProducts(childProducts);
@@ -358,7 +348,18 @@ public class ProductTest extends DatabaseTestFixture {
         Set<Product> testProducts = new HashSet<Product>();
         Product lookedUp = productCurator.find(parentProd.getId());
         assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
-        assertEquals(parentProd.getAllChildProducts(testProducts), lookedUp
-            .getAllChildProducts(testProducts));
     }
+    
+    @Test
+    public void testRecursiveProvides() {
+        Product top = TestUtil.createProduct();
+        Product middle = TestUtil.createProduct();
+        Product bottom = TestUtil.createProduct();
+        middle.addChildProduct(bottom);
+        top.addChildProduct(middle);
+        assertTrue(middle.provides(bottom.getId()));
+        assertTrue(top.provides(bottom.getId()));
+        assertFalse(middle.provides(top.getId()));
+    }
+    
 }

@@ -9,11 +9,11 @@ Before do
 end
 
 Given /^I have an entitlement named "([^\"]*)" for the "([^\"]*)" product$/ do |name, product|
-  @entitlements[name] = @consumer_cp.consume_product(product)
+  @entitlements[name] = @consumer_cp.consume_product(product.hash.abs)
 end
 
 When /I Consume an Entitlement for the "([^\"]*)" Product/ do |product|
-    @consumer_cp.consume_product(product)
+    @consumer_cp.consume_product(product.hash.abs)
 end
 
 When /I Consume an Entitlement for the "([^\"]*)" Product With a Quantity of "(\d+)" / do |product, quantity|
@@ -39,7 +39,7 @@ Then /^I Have an Entitlement for the "([^\"]*)" Product$/ do |product_id|
         entitlement['pool']['productId']
     end
 
-    product_ids.should include(product_id)
+    product_ids.should include(product_id.hash.abs.to_s)
 end
 
 # need a test for a Pool created with a productid that doesn't exist...
@@ -56,7 +56,7 @@ When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
 end
 
 Then /^I Get (\d+) Entitlement When I Filter by Product ID "([^\"]*)"$/ do |entitlement_size, product_id|
-  @consumer_cp.list_entitlements(product_id).length.should == entitlement_size.to_i
+  @consumer_cp.list_entitlements(product_id.hash.abs).length.should == entitlement_size.to_i
 end
 
 Then /^I Get an Exception If I Filter by Product ID "(\w+)"$/ do |product_id|
@@ -84,7 +84,7 @@ end
 When /^I try to consume an Entitlement for the "([^\"]*)" Product again$/ do |product|
 
   begin
-    @consumer_cp.consume_product(product)
+    @consumer_cp.consume_product(product.hash.abs)
   rescue RestClient::Exception => e
       @consume_exception = e
   end
