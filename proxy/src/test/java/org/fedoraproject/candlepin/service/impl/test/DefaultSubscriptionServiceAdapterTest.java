@@ -90,19 +90,19 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     public void testGetSubscriptionByBadToken() {
         List<Subscription> s = adapter.getSubscriptionForToken(owner, "NotARealToken");
         
-        //assertNull(s);
         assertEquals(s.size(), 0);
     }
     
     @Test
-    public void testGetSubscriptionByRegnum() {
-        
-        
+    public void testGetSubscriptionByToken() {
         SubscriptionToken st = createSubscriptionToken();
-        List<Subscription> s = adapter.getSubscriptionForToken(owner, 
-            "this_is_a_test_token");
+        List<Subscription> subs = adapter.getSubscriptionForToken(owner, 
+            st.getToken());
+        assertEquals(1, subs.size());
         
-        assertEquals(s.get(0).getProductId(), st.getSubscription().getProductId());
+        Subscription sub = subs.get(0);
+        assertEquals(sub.getProductId(), st.getSubscription().getProductId());
+        assertEquals(1, sub.getTokens().size());
     }
     
     

@@ -16,9 +16,7 @@ package org.fedoraproject.candlepin.guice;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Set;
 
@@ -31,26 +29,21 @@ public class CustomizableModulesTest {
 
     @Test
     public void shouldLoadAndParseConfigurationFile() throws Exception {
-        Set<Module> loaded = new CustomizableModulesForTesting(
-            new CandlepinConfigurationForTesting(
-                "customizable_modules_test.conf")).load();
+        Config config = new Config(getAbsolutePath("customizable_modules_test.conf"));
+        Set<Module> loaded = new CustomizableModulesForTesting(config).load();
 
         assertEquals(1, loaded.size());
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
     }
 
-    @Test
+    // TODO:  We should probably be more specific...
+    @Test(expected = RuntimeException.class)  
     public void shouldFailWhenConfigurationContainsMissingClass()
         throws Exception {
-        try {
-            new CustomizableModulesForTesting(
-                new CandlepinConfigurationForTesting(
-                    "customizable_modules_with_missing_class.conf")).load();
-            fail();
-        }
-        catch (RuntimeException e) {
-            assertTrue(e.getCause() instanceof ClassNotFoundException);
-        }
+        Config config = new Config(getAbsolutePath(
+            "customizable_modules_with_missing_class.conf"));
+            
+        new CustomizableModulesForTesting(config).load();
     }
 
     public static class CustomizableModulesForTesting extends
@@ -66,14 +59,8 @@ public class CustomizableModulesTest {
             return config;
         }
     }
-
-    public static class CandlepinConfigurationForTesting extends Config {
-
-        public CandlepinConfigurationForTesting(String fileName)
-            throws URISyntaxException {
-            CONFIG_FILE = new File(getClass().getResource(fileName)
-                .toURI());
-            initializeMap();
-        }
+    
+    private String getAbsolutePath(String fileName) throws URISyntaxException {
+        return getClass().getResource(fileName).toURI().getPath();
     }
 }

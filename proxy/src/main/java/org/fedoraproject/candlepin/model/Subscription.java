@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -25,6 +26,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -71,6 +73,9 @@ public class Subscription extends AbstractHibernateObject {
     @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
     private Set<Attribute> attributes;
     
+    @OneToMany(mappedBy = "subscription")
+    private Set<SubscriptionToken> tokens;
+    
     private Date modified;
 
     public Subscription() {
@@ -84,6 +89,8 @@ public class Subscription extends AbstractHibernateObject {
         this.startDate = startDateIn;
         this.endDate = endDateIn;
         this.modified = modified;
+        
+        this.tokens = new HashSet<SubscriptionToken>();
     }
     
     public String toString() {
@@ -220,6 +227,14 @@ public class Subscription extends AbstractHibernateObject {
         this.contractNumber = contractNumber;
     }
 
+    public Set<SubscriptionToken> getTokens() {
+        return tokens;
+    }
+
+    public void setTokens(Set<SubscriptionToken> tokens) {
+        this.tokens = tokens;
+    }
+    
 }
 
 

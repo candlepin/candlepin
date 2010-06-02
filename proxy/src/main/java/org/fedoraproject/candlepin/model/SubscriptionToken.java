@@ -26,6 +26,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * SubscriptionToken
@@ -45,8 +46,6 @@ public class SubscriptionToken extends AbstractHibernateObject {
     @Column(nullable = true, unique = true)
     private String token;
     
-    // TODO: Should this be bi-directional with a cascade? Subs/tokens could be outside
-    // our database, but it's unlikely one would be in the db and the other not.
     @ManyToOne
     @ForeignKey(name = "fk_subscription_token")
     @JoinColumn
@@ -72,6 +71,7 @@ public class SubscriptionToken extends AbstractHibernateObject {
     /**
      * @return the subscription
      */
+    @XmlTransient
     public Subscription getSubscription() {
         return subscription;
     }

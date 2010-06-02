@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.15
+Version: 0.0.16
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -106,6 +106,52 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/log/%{name}
 
 %changelog
+* Wed Jun 02 2010 jesus m rodriguez <jmrodri@gmail.com> 0.0.16-1
+- Adding exception class to wrap HTTP 202 * This exception is intended to be
+  used for non error state messages. (calfonso@redhat.com)
+- checkstyle fixes (jbowes@redhat.com)
+- in default-rules.js changed the name of the consumer fact from sockets to
+  cpu.cpu_sockets (ddolguik@redhat.com)
+- Adding product cert unit tests and refactoring config system.  (jharris@redhat.com)
+- added a test for consumption of an entitlement with a quantity greater than 1
+  (ddolguik@redhat.com)
+- Entitler now uses quantity parameter passed from bind calls (ddolguik@redhat.com)
+- introduced quantity parameter in ConsumerResource#bind call (ddolguik@redhat.com)
+- cuke: fix entitlement_certificates when run on its own (jbowes@redhat.com)
+- cuke: get pool feature working (jbowes@redhat.com)
+- cuke: get subscriptions feature passing (jbowes@redhat.com)
+- Rename some methods for clarity. (dgoodwin@redhat.com)
+- removed Principal from the parameters in ConsumerReource#bind call (and
+  related curator methods) (ddolguik@redhat.com)
+- audit: don't make a new json serializer for each event (jbowes@redhat.com)
+- Adding unit tests for ProductCertificateCurator (jharris@redhat.com)
+- get unit tests passing (jbowes@redhat.com)
+- checkstyle fixups (jbowes@redhat.com)
+- Fixing the product id and hash lookups on bind by product (calfonso@redhat.com)
+- Iterating across all product for Engineering product hashes (calfonso@redhat.com)
+- Implementing bind by product.  Doing some general refactoring to clean up the
+  use of product id versus product hashes.  Product id's should only refer to
+  SKUs.  Product hashes are the Engineering product hashes. Engineering product
+  hashes can map to many SKUs. (calfonso@redhat.com)
+- adding a subscription production wrapper for calls to the subscription
+  product. the products at entitlement binding time can only be fully realized
+  by looking at the subscription object instead of querying the product
+  directly. (jomara@redhat.com)
+- Checkstyle fixes. (alikins@redhat.com)
+- Remove psql import call from deploy, it's not needed anymore (alikins@redhat.com)
+- Change CN name to use product.getLabel() intead of product.getName() (alikins@redhat.com)
+- refactoring various service adapter code for clarity, performance, and
+  logical soundness (jomara@redhat.com)
+- Changing the refresh logic to account for map entries that need to be removed (mhicks@redhat.com)
+- Getting a first cut of product cert generation. (jharris@redhat.com)
+- rules: check for existance of consumer facts before reading them
+  (jbowes@redhat.com)
+- audit: get principal from provider for ownerDeleted (jbowes@redhat.com)
+- Change content cuke tests to use new add_content_to_product by label (alikins@redhat.com)
+- Product -> Content model needs to be ManyToMany (alikins@redhat.com)
+- Change the REST api for associating content with a product to work by
+  content label. (alikins@redhat.com)
+
 * Thu May 27 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.15-1
 - removed Principal parameter from EventFactory methods (ddolguik@redhat.com)
 - pool quantity change event emitted when quantity field changes (ddolguik@redhat.com)

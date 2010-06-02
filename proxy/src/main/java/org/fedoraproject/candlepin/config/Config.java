@@ -24,12 +24,24 @@ import java.util.TreeMap;
  * Defines the default Candlepin configuration
  */
 public class Config {
-    public static final File CONFIG_DIR = new File("/etc/candlepin");
-    protected File CONFIG_FILE = new File(CONFIG_DIR, "candlepin.conf");
-    protected static TreeMap<String, String> configuration = null;
+    private static final String CONFIG_FILE_NAME = "/etc/candlepin/candlepin.conf";
+    
+    protected File configFile;
+    protected TreeMap<String, String> configuration = null;
 
     public Config() {
-        loadConfiguration();
+        this(CONFIG_FILE_NAME);
+    }
+    
+    public Config(String configFileName) {
+        this.configFile = new File(configFileName);
+        
+        // start with the default values
+        this.configuration =
+            new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
+
+        // override with user-specified values
+        this.configuration.putAll(loadProperties());
     }
     
     /**
@@ -114,24 +126,9 @@ public class Config {
         return getBoolean(ConfigProperties.PRETTY_PRINT);
     }
 
-
-    protected synchronized void loadConfiguration() {
-        if (configuration == null) {
-            initializeMap();
-        }
-    }
-
-    protected void initializeMap() {
-        // start with the default values
-        configuration = new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
-
-        // override with user-specified values
-        configuration.putAll(loadProperties());
-    }
-
     protected Map<String, String> loadProperties() {
         try {
-            return new ConfigurationFileLoader().loadProperties(CONFIG_FILE);
+            return new ConfigurationFileLoader().loadProperties(this.configFile);
         }
         catch (IOException e) {
             throw new RuntimeException("Problem loading candlepin configuration file.", e);

@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
+import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
@@ -79,6 +80,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(X509ExtensionUtil.class);
+        bind(Config.class).to(CandlepinCommonTestConfig.class);
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
         bind(PoolResource.class);
@@ -96,7 +98,6 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             DefaultSubscriptionServiceAdapter.class);
         bind(IdentityCertServiceAdapter.class).to(
             StubIdentityCertServiceAdapter.class);
-        bind(Config.class);
         bind(EntitlementCertServiceAdapter.class).to(
             StubEntitlementCertServiceAdapter.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);

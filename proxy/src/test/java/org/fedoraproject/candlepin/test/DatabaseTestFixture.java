@@ -133,7 +133,7 @@ public class DatabaseTestFixture {
                     .buildModule()
             );
         }
-
+        
         injector.getInstance(EntityManagerFactory.class); 
         emf = injector.getProvider(EntityManagerFactory.class).get();
         
@@ -240,13 +240,14 @@ public class DatabaseTestFixture {
     protected SubscriptionToken createSubscriptionToken() {
         Subscription sub = createSubscription();
        
-        SubscriptionToken st = new SubscriptionToken();
-        st.setToken("this_is_a_test_token");
+        SubscriptionToken token = new SubscriptionToken();
+        token.setToken("this_is_a_test_token");
        
-        st.setSubscription(sub);
-        subTokenCurator.create(st);
-        return st;
-        
+        token.setSubscription(sub);
+        sub.getTokens().add(token);
+        subCurator.create(sub);
+        subTokenCurator.create(token);
+        return token;
     }
     
     protected Entitlement createEntitlement(Owner owner, Consumer consumer, 
