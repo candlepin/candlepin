@@ -14,7 +14,7 @@ function attribute_mappings() {
 
 function pre_architecture() {
 	if ((product.getAttribute("architecture") != "ALL") &&
-			(!consumer.hasFact("architecture") ||
+			(!consumer.hasFact("cpu.architecture") ||
 			(product.getAttribute("architecture") != consumer.getFact("cpu.architecture")))) {
 		pre.addWarning("rulewarning.architecture.mismatch");
 	}
