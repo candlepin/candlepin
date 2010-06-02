@@ -79,8 +79,11 @@ public class ContentResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public Content createContent(Content content) {
+        Content lookedUp  = contentCurator.find(content.getId());
+        if (lookedUp != null) {
+            return lookedUp;
+        }
         return contentCurator.create(content);
-        
     }
     
     

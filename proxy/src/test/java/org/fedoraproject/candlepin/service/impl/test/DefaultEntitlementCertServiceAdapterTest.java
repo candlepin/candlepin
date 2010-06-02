@@ -49,7 +49,7 @@ import org.mockito.ArgumentMatcher;
 public class DefaultEntitlementCertServiceAdapterTest {
 
     private static final String CONTENT_LABEL = "label";
-    private static final long CONTENT_HASH = 1234L;
+    private static final long CONTENT_ID = 1234L;
     private static final String CONTENT_TYPE = "type";
     private static final String CONTENT_ENABLED = "enabled";
     private static final String CONTENT_GPG_URL = "gpgUrl";
@@ -78,13 +78,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
                               "variant", "version", "arch", 
                               "SVC", new HashSet<Product>(), new HashSet<Content>());
         
-        Content content = new Content(CONTENT_NAME, CONTENT_HASH,
+        Content content = new Content(CONTENT_NAME, CONTENT_ID,
                                       CONTENT_LABEL, CONTENT_TYPE,
                                       CONTENT_VENDOR, CONTENT_URL,
                                       CONTENT_GPG_URL);
         content.setType(CONTENT_TYPE);
         content.setLabel(CONTENT_LABEL);
-        content.setHash(CONTENT_HASH);
+        content.setId(CONTENT_ID);
         
         subscription = new Subscription(null, "productId", 1L, new Date(), new Date(),
             new Date());

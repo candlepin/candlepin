@@ -129,7 +129,7 @@ public class X509ExtensionUtil {
         for (Content con : content) {
             String contentOid = OIDUtil.REDHAT_OID + "." +  
                    OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + 
-                   "." + con.getHash().toString() + "." + 
+                   "." + con.getId().toString() + "." + 
                    OIDUtil.CF_REPO_TYPE.get(con.getType());
             toReturn.add(new X509ExtensionWrapper(contentOid, 
                     false, new DERUTF8String(con.getType())));

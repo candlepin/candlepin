@@ -35,24 +35,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 @SequenceGenerator(name = "seq_content", sequenceName = "seq_content", allocationSize = 1)
 public class Content extends AbstractHibernateObject{
 
-    // Product ID is stored as a string. Could be a product OID or label.
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_content")
+//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_content")
     private Long id;
     
     @Column(nullable = false)
     private String type;
     
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String label;
     
     // Description?
     
     @Column(nullable = false)
     private String name;
-    
-    @Column(nullable = true)
-    private Long hash;
     
     @Column(nullable = false)
     private String vendor;
@@ -73,11 +69,11 @@ public class Content extends AbstractHibernateObject{
  //   private Content Content;
     
     
-    public Content(String name, Long hash, String label, String type,
+    public Content(String name, Long id, String label, String type,
                     String vendor, String contentUrl,
                     String gpgUrl) {
         setName(name);
-        setHash(hash);
+        setId(id);
         setLabel(label);
         setType(type);
         setVendor(vendor);
@@ -139,20 +135,6 @@ public class Content extends AbstractHibernateObject{
     }
     public void setType(String type) {
         this.type = type;
-    }
-
-    /**
-     * @param hash the hash to set
-     */
-    public void setHash(Long hash) {
-        this.hash = hash;
-    }
-
-    /**
-     * @return the hash
-     */
-    public Long getHash() {
-        return hash;
     }
 
 }

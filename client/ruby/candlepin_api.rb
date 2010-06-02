@@ -165,11 +165,11 @@ class Candlepin
     get("/products")
   end
   
-  def create_content(name, hash, label, type, vendor,
+  def create_content(name, id, label, type, vendor,
                      contentUrl, gpgUrl)
     content = {
       'name' => name,
-      'hash' => hash,
+      'id' => id,
       'label' => label,
       'type' => type,
       'vendor' => vendor,
@@ -187,8 +187,8 @@ class Candlepin
     get("/content/id/#{content_id}")
   end
 
-    def add_content_to_product(product_uuid, content_label, enabled=true) 
-      post("/products/#{product_uuid}/content/#{content_label}?enabled=#{enabled}")
+    def add_content_to_product(product_uuid, content_id, enabled=true) 
+      post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
     end
     
   # TODO: label is unused here, needs to be dropped across the board.

@@ -23,5 +23,5 @@ def create_content(content_name)
 end
 
 Then /^I add a content "([^\"]*)" to a product "([^\"]*)"$/ do |content, product|
-  @candlepin.add_content_to_product(@product['id'], @content['label'], true)
+  @candlepin.add_content_to_product(@product['id'], @content['id'], true)
 end
