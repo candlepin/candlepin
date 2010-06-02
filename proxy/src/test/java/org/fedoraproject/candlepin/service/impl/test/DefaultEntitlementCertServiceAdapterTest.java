@@ -32,6 +32,7 @@ import java.util.Map;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -55,12 +56,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String CONTENT_URL = "contentUrl";
     private static final String CONTENT_VENDOR = "vendor";
     private static final String CONTENT_NAME = "name";
+    private static final String ENTITLEMENT_QUANTITY = "10";
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
     private PKIUtility mockedPKI;
     private X509ExtensionUtil extensionUtil;
     private Product product;
     private Subscription subscription;
+    private Entitlement entitlement;
 
     @Before
     public void setUp() {
@@ -88,6 +91,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new Date());
         subscription.setId(1L);
         
+        entitlement = new Entitlement();
+        entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
+        
         product.setContent(Collections.singleton(content));
     }
     
@@ -103,11 +109,24 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws Exception {
         
         certServiceAdapter.createX509Certificate(mock(Consumer.class),
-            subscription, product, mock(Date.class), new BigInteger("1234"),
+            entitlement, subscription, product, mock(Date.class), new BigInteger("1234"),
             keyPair());
         
         verify(mockedPKI).createX509Certificate(any(String.class), 
             argThat(new ListContainsContentExtensions()), 
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class));
+    }
+    
+    @Test
+    public void entitlementQuantityShouldBeAddedDuringCertificateGeneration() 
+        throws Exception {
+        
+        certServiceAdapter.createX509Certificate(mock(Consumer.class),
+            entitlement, subscription, product, mock(Date.class), new BigInteger("1234"),
+            keyPair());
+        
+        verify(mockedPKI).createX509Certificate(any(String.class), 
+            argThat(new ListContainsEntitlementExtensions()), 
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class));
     }
     
@@ -176,6 +195,25 @@ public class DefaultEntitlementCertServiceAdapterTest {
         
         public boolean matches(Object list) {
             return isEncodedContentValid((List) list);
+        }
+    }
+    
+    class ListContainsEntitlementExtensions 
+        extends ArgumentMatcher<List<X509ExtensionWrapper>> {
+        
+        public boolean matches(Object list) {
+            Map<String, X509ExtensionWrapper> encodedContent 
+                = new HashMap<String, X509ExtensionWrapper>();
+
+        
+            for (X509ExtensionWrapper ext : (List<X509ExtensionWrapper>) list) {
+                encodedContent.put(ext.getOid(), ext);
+            }
+            
+            return encodedContent.containsKey("1.3.6.1.4.1.2312.9.4.13") &&
+                ((DERUTF8String) 
+                    encodedContent.get("1.3.6.1.4.1.2312.9.4.13").getAsn1Encodable())
+               .toString().equals(ENTITLEMENT_QUANTITY);
         }
     }
 }

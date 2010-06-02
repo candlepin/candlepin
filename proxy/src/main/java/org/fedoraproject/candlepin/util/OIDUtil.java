@@ -39,6 +39,7 @@ public final class OIDUtil {
     public static final String ORDER_NAME_KEY = "Name";
     public static final String ORDER_NUMBER_KEY = "Order Number";
     public static final String ORDER_CONTRACT_NUMBER_KEY = "Contract Number";
+    public static final String ORDER_QUANTITY_USED = "Quantity Used";
     public static final String ORDER_SKU_KEY = "SKU";
     public static final String ORDER_SUBSCRIPTION_NUMBER_KEY = "Subscription Number";
     public static final String ORDER_QUANTITY_KEY = "Quantity";
@@ -116,6 +117,7 @@ public final class OIDUtil {
         ORDER_OIDS.put(ORDER_SOCKETLIMIT_KEY, "10");
         ORDER_OIDS.put(ORDER_OPTIONCODE_KEY, "11");
         ORDER_OIDS.put(ORDER_CONTRACT_NUMBER_KEY, "12");
+        ORDER_OIDS.put(ORDER_QUANTITY_USED, "13");
 
         // load order product oids
         ORDER_PRODUCT_OIDS.put(OP_NAME_KEY, "1");

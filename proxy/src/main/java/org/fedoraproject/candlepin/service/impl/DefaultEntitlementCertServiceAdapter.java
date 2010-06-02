@@ -78,7 +78,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         
-        X509Certificate x509Cert = createX509Certificate(consumer, sub,
+        X509Certificate x509Cert = createX509Certificate(consumer, entitlement, sub,
             product, endDate, serialNumber, keyPair);
         
         EntitlementCertificate cert = new EntitlementCertificate();
@@ -95,14 +95,16 @@ public class DefaultEntitlementCertServiceAdapter extends
     }
 
     public X509Certificate createX509Certificate(Consumer consumer,
-        Subscription sub, Product product, Date endDate, BigInteger serialNumber,
-        KeyPair keyPair) throws GeneralSecurityException, IOException {
+        Entitlement ent, Subscription sub, Product product, Date endDate, 
+        BigInteger serialNumber, KeyPair keyPair) 
+        throws GeneralSecurityException, IOException {
         // oiduitl is busted at the moment, so do this manually
         List<X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
         
         addExtensionsForChildProducts(extensions, product);
 
         extensions.addAll(extensionUtil.subscriptionExtensions(sub));
+        extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(consumer));
         
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
