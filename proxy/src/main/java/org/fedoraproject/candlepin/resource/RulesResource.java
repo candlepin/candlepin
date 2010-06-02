@@ -41,7 +41,7 @@ import com.google.inject.Inject;
  */
 @Path("/rules")
 public class RulesResource {
-    private static Logger log = Logger.getLogger(CertificateResource.class);
+    private static Logger log = Logger.getLogger(RulesResource.class);
     private RulesCurator rulesCurator;
     private I18n i18n;
 

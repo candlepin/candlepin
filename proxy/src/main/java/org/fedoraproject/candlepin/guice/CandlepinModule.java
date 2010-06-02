@@ -34,7 +34,6 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
-import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
 import org.fedoraproject.candlepin.resource.ContentResource;
@@ -80,7 +79,6 @@ public class CandlepinModule extends AbstractModule {
         bind(PKIUtility.class).to(CandlepinPKIUtility.class).asEagerSingleton();
         bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
         bind(X509ExtensionUtil.class);
-        bind(CertificateResource.class);
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);
