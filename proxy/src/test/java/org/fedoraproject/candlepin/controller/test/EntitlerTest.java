@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 import java.util.Date;
 import java.util.List;
 
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -64,7 +63,6 @@ public class EntitlerTest extends DatabaseTestFixture {
     private Consumer parentSystem;
     private Consumer childVirtSystem;
     private Entitler entitler;
-    private Principal principal;
 
     @Before
     public void setUp() throws Exception {
@@ -77,7 +75,6 @@ public class EntitlerTest extends DatabaseTestFixture {
 
         //List<Pool> pools = poolCurator.listByOwner(o);
         //assertTrue(pools.size() > 0);
-        principal = injector.getInstance(Principal.class);
 
         virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
         virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, 
@@ -146,14 +143,6 @@ public class EntitlerTest extends DatabaseTestFixture {
         parentSystem.getFacts().put("total_guests", "10");
         consumerCurator.update(parentSystem);
         entitler.entitleByProduct(parentSystem, virtHost, new Integer("1"));
-    }
-
-    @Test(expected = EntitlementRefusedException.class)
-            entitler.entitleByProduct(parentSystem, virtHostPlatform, new Integer("1"));
-        throws EntitlementRefusedException {
-        
-        parentSystem.getFacts().put("total_guests", "10");
-        consumerCurator.update(parentSystem);
     }
     
     @Test(expected = EntitlementRefusedException.class)
