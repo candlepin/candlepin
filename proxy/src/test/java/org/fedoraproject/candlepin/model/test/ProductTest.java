@@ -294,9 +294,9 @@ public class ProductTest extends DatabaseTestFixture {
     public void testProductFullConstructor() {
         Set<Product> products = new HashSet<Product>();
         Set<Content> content = new HashSet<Content>();
-        Product prod = new Product("cp_test-label", "Test Product",
-                                   "variant", "version", "arch",
-                                   null, "SVC", products, content);
+        Product prod = new Product("cp_test-label", "variant",
+                                   "version", "arch", null,
+                                   "SVC", products, content);
         productCurator.create(prod);
        
         productCurator.find(prod.getId());
@@ -311,12 +311,12 @@ public class ProductTest extends DatabaseTestFixture {
         String parentLabel = "cp_test_parent_product";
         String childLabel = "cp_test_child_product";
 
-        Product childProd = new Product(childLabel, childLabel, "Test Child Product",
-                        "variant", "version", "arch", "SVC", products, content);
+        Product childProd = new Product(childLabel, "Test Child Product", "variant",
+                        "version", "arch", "SVC", products, content);
         
         childProducts.add(childProd);
-        Product parentProd = new Product(parentLabel, parentLabel, "Test Parent Product",
-                        "variant", "version", "arch", "MKT", childProducts, content);
+        Product parentProd = new Product(parentLabel, "Test Parent Product", "variant",
+                        "version", "arch", "MKT", childProducts, content);
       
         productCurator.create(parentProd);
         
@@ -334,12 +334,12 @@ public class ProductTest extends DatabaseTestFixture {
         String parentLabel = "cp_test_parent_product";
         String childLabel = "cp_test_child_product";
 
-        Product childProd = new Product(childLabel, childLabel, "Test Child Product",
-            "variant", "version", "arch", "SVC", products, content);
+        Product childProd = new Product(childLabel, "Test Child Product", "variant",
+            "version", "arch", "SVC", products, content);
 
         childProducts.add(childProd);
-        Product parentProd = new Product(parentLabel, parentLabel, "Test Parent Product",
-            "variant", "version", "arch", "MKT", null, content);
+        Product parentProd = new Product(parentLabel, "Test Parent Product", "variant",
+            "version", "arch", "MKT", null, content);
         
         productCurator.create(parentProd);
         parentProd.setChildProducts(childProducts);

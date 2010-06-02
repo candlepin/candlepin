@@ -54,9 +54,6 @@ public class Product extends AbstractHibernateObject {
     private String id;
     
     @Column(nullable = false, unique = true)
-    private String label;
-    
-    @Column(nullable = false, unique = true)
     private String name;
     
     // Server, Client, Cloud, whatever...
@@ -118,16 +115,13 @@ public class Product extends AbstractHibernateObject {
      */
     public Product(String id, String name) {
         setId(id);
-        setLabel(id);
         setName(name);
     }
     
-    public Product(String id, String label, String name,
-                   String variant, String version, String arch,
-                   String type, Set<Product> childProducts,
-                   Set<Content> content) {
+    public Product(String id, String name, String variant,
+                   String version, String arch, String type,
+                   Set<Product> childProducts, Set<Content> content) {
         setId(id);
-        setLabel(label);
         setName(name);
         setVariant(variant);
         setVersion(version);
@@ -180,23 +174,9 @@ public class Product extends AbstractHibernateObject {
         this.childProducts.add(p);
     }
     
-    /**
-     * @return the product label
-     */
-    public String getLabel() {
-        return label;
-    }
-
-    /**
-     * @param labelIn product label
-     */
-    public void setLabel(String labelIn) {
-        label = labelIn;
-    }
-
     @Override
     public String toString() {
-        return "Product [label = " + label + "]";
+        return "Product [id = " + id + ", name = " + name + "]";
     }
     
     /**
@@ -274,13 +254,13 @@ public class Product extends AbstractHibernateObject {
         Product another = (Product) anObject;
 
         return
-            label.equals(another.getLabel()) &&
+            id.equals(another.getId()) &&
             name.equals(another.getName());
     }
 
     @Override
     public int hashCode() {
-        return label.hashCode() * 31 + name.hashCode();
+        return id.hashCode() * 31 + name.hashCode();
     }
 
     /**

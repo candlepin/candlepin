@@ -40,14 +40,6 @@ public class ReadOnlyProduct {
     }
    
     /**
-     * Return the product label
-     * @return the product label
-     */
-    public String getLabel() {
-        return product.getLabel();
-    }
-   
-    /**
      * Return the product name
      * @return the product name
      */

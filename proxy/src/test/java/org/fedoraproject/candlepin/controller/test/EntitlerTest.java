@@ -70,27 +70,27 @@ public class EntitlerTest extends DatabaseTestFixture {
         principal = injector.getInstance(Principal.class);
 
         virtHost = productCurator
-                .lookupByLabel(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
+                .lookupById(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST);
         virtHost.addAttribute(
             new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST, ""));
         assertNotNull(virtHost);
         
-        virtHostPlatform = productCurator.lookupByLabel(
+        virtHostPlatform = productCurator.lookupById(
                 SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM);
         virtHostPlatform.addAttribute(
             new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_HOST_PLATFORM, ""));
         
-        virtGuest = productCurator.lookupByLabel(
+        virtGuest = productCurator.lookupById(
                 SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST);
         virtGuest.addAttribute(
             new Attribute(SpacewalkCertificateCurator.PRODUCT_VIRT_GUEST, ""));
         
-        monitoring = productCurator.lookupByLabel(
+        monitoring = productCurator.lookupById(
                 SpacewalkCertificateCurator.PRODUCT_MONITORING);
         monitoring.addAttribute(
             new Attribute(SpacewalkCertificateCurator.PRODUCT_MONITORING, ""));
         
-        provisioning = productCurator.lookupByLabel(
+        provisioning = productCurator.lookupById(
                 SpacewalkCertificateCurator.PRODUCT_PROVISIONING);
         provisioning.addAttribute(
             new Attribute(SpacewalkCertificateCurator.PRODUCT_PROVISIONING, ""));

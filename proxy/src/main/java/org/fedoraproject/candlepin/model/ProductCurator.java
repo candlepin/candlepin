@@ -56,20 +56,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
     
     /**
-     * Looking a product based on label. This should seldom be used, generally we 
-     * refer to products by their ID.
-     * 
-     * @param label product label to lookup
-     * @return the Product which matches the given label.
-     */
-    @Transactional
-    public Product lookupByLabel(String label) {
-        return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.eq("label", label))
-            .uniqueResult();
-    }
-    
-    /**
      * @param updated Product to update
      * @return the updated Product
      */
@@ -88,7 +74,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             existingProduct.setContent(bulkContentUpdate(updated.getContent()));
 //            existingProduct.setContent(updated.getContent());
         }
-        existingProduct.setLabel(updated.getLabel());
+        existingProduct.setId(updated.getId());
         existingProduct.setName(updated.getName());
         save(existingProduct);
         flush();

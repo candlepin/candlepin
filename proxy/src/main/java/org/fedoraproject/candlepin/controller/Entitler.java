@@ -183,7 +183,7 @@ public class Entitler {
             
         }
         else {
-            if (null == prod || null == prod.getLabel()) { 
+            if (null == prod || null == prod.getId()) { 
                 prod = productAdapter.getProductById(sub.getProductId());
             }
         

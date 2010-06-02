@@ -191,13 +191,12 @@ class Candlepin
       post("/products/#{product_uuid}/content/#{content_label}?enabled=#{enabled}")
     end
     
-  def create_product(label, name, hash, version = 1, variant = 'ALL', 
+  # TODO: label is unused here, needs to be dropped across the board.
+  def create_product(name, hash, version = 1, variant = 'ALL', 
                      arch='ALL', type='SVC',childProducts=[], attributes = {})
 
-    content_name = label + "_content"
     product = {
       'name' => name,
-      'label' => label,
       'arch' => arch,
       'id' => hash,
       'version' => version,
