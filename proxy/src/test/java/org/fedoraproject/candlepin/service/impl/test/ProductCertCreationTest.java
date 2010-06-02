@@ -45,7 +45,6 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
             "Standard", "1", "x86_64", "Base", null, null);
         ProductCertificate cert = createCert(product);
         
-        
         Assert.assertEquals(product, cert.getProduct());
     }
     
