@@ -314,15 +314,15 @@ public class ConsumerResource {
      * @param productId Product ID.
      * @return Entitlement object.
      */
-    private List<Entitlement> bindByProduct(String productHash, Consumer consumer, 
+    private List<Entitlement> bindByProduct(String productId, Consumer consumer, 
         Integer quantity) {
     
 
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        Product p = productAdapter.getProductByHash(productHash, consumer.getOwner());
+        Product p = productAdapter.getProductById(productId);
         if (p == null) {
             throw new BadRequestException(
-                i18n.tr("No such product: {0}", productHash));
+                i18n.tr("No such product: {0}", productId));
         }
         entitlementList.add(createEntitlementByProduct(consumer, p, quantity));
         return entitlementList;
@@ -438,15 +438,13 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productHash, 
+        @QueryParam("product") String productId, 
         @QueryParam("quantity") @DefaultValue("1") Integer quantity) {
 
-        // TODO : productId is NOT product hash in hosted candlepin
-        // TODO * * * * ** * * * ** * * * * * 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
-            (poolId != null && productHash != null) ||
-            (token != null && productHash != null)) {
+            (poolId != null && productId != null) ||
+            (token != null && productId != null)) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
         }
@@ -460,8 +458,8 @@ public class ConsumerResource {
                 if (token != null) {
                     entitlements = bindByToken(token, consumer, quantity);
                 }
-                else if (productHash != null) {
-                    entitlements = bindByProduct(productHash, consumer, quantity);
+                else if (productId != null) {
+                    entitlements = bindByProduct(productId, consumer, quantity);
                 }
                 else {
                     entitlements = bindByPool(poolId, consumer, quantity);

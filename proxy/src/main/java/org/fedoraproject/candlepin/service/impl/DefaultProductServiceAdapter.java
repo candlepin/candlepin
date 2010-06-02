@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
@@ -81,11 +80,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
             return newProduct;
         }
         return prodCurator.find(product.getId());
-    }
-
-    @Override
-    public Product getProductByHash(String productHash, Owner owner) {
-        return getProductById(productHash);
     }
 
     @Override
