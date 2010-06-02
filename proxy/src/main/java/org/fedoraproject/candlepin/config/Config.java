@@ -29,10 +29,20 @@ public class Config {
     protected File configFile;
     protected TreeMap<String, String> configuration = null;
 
+    /**
+     * Creates a new <code>Config</code> instance using the default config file:
+     * <code>/etc/candlepin/candlepin.conf</code>
+     */
     public Config() {
         this(CONFIG_FILE_NAME);
     }
     
+    /**
+     * Creates a new <code>Config</code> instance using the
+     * file name to override values defined in {@link ConfigProperties}.
+     * 
+     * @param configFileName the file that contains the configuration values
+     */
     public Config(String configFileName) {
         this.configFile = new File(configFileName);
         
