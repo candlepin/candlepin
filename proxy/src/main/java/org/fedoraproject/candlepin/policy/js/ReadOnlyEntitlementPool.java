@@ -41,8 +41,8 @@ public class ReadOnlyEntitlementPool {
      * 
      * @return true if there are available entitlements remaining.
      */
-    public Boolean entitlementsAvailable() {
-        return entPool.entitlementsAvailable();
+    public Boolean entitlementsAvailable(Integer quantityToConsume) {
+        return entPool.entitlementsAvailable(quantityToConsume);
     }
 
     public Long getId() {

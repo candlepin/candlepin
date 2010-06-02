@@ -2,46 +2,33 @@ require 'spec/expectations'
 require 'candlepin_api'
 
 Given /^I am a consumer "([^\"]*)"$/ do |consumer_name|
-  # This will register with the user you are logged in as
-  Given "I am logged in as \"#{@username}\"" 
+  Given "I am logged in as \"#{@username}\""
   When "I register a consumer \"#{consumer_name}\""
 end
 
-def register_consumer(consumer)
-    @consumer = @current_owner_cp.register(consumer)
+def set_consumer(created_consumer)
+    @consumer = created_consumer
     @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
     @consumer_cp = connect(username=nil, password=nil,
                            cert=@consumer['idCert']['cert'],
                            key=@consumer['idCert']['key'])
     @consumer_cp.consumer = @consumer
-    @consumers[consumer[:name]] = @consumer_cp
+    @consumers[created_consumer['name']] = @consumer_cp
 end
 
 When /I register a consumer "(\w+)"$/ do |consumer_name|
-    consumer = {
-        :type => :system,
-        :name => consumer_name,
-    }
-    register_consumer(consumer)
+  set_consumer(@current_owner_cp.register(consumer_name))
 end
 
 When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name, uuid|
-    consumer = {
-        :type => :system,
-        :name => consumer_name,
-        :uuid => uuid
-    }
-    register_consumer(consumer)
+  set_consumer(@current_owner_cp.register(consumer_name, :system, uuid))
 end
 
 Given /^I am a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|
   # This will register with the user you are logged in as
   Given "I am logged in as \"#{@username}\"" 
-  consumer = {
-      :type => type,
-      :name => consumer_name,
-  }
-  register_consumer(consumer)
+
+  set_consumer(@current_owner_cp.register(consumer_name, type))
 end
 
 
@@ -50,16 +37,9 @@ Given /^Consumer "([^\"]*)" exists with uuid "([^\"]*)"$/ do |consumer_name, uui
 end
 
 Then /^registering another consumer with uuid "([^\"]*)" causes a bad request$/ do |uuid|
-    consumer = {
-        :consumer => {
-            :type => {:label => :system},
-            :name => "any name",
-            :uuid => uuid
-        }
-    }
 
     begin
-        @candlepin.register(consumer, @username, @password)
+      @candlepin.register('any name', uuid=uuid)
     rescue RestClient::Exception => e
         e.message.should == "Bad Request"
         e.http_code.should == 400

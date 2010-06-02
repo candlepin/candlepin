@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -42,10 +43,12 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     private Pool pool;
     
     private ConsumerResource consumerResource;
+    private Principal principal;
     private Owner owner;
 
     @Before
     public void setUp() {
+        principal = injector.getInstance(Principal.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
         
         standardSystemType = consumerTypeCurator.create(
@@ -70,20 +73,21 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         for (int i = 0; i < pool.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
             consumerCurator.create(c);
-            consumerResource.bind(c.getUuid(), null, null, product.getLabel());
+            consumerResource.bind(
+                c.getUuid(), null, null, product.getLabel(), new Integer(1));
         }
         
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
         consumerCurator.create(c);
-        consumerResource.bind(c.getUuid(), null, null, product.getLabel());
+        consumerResource.bind(c.getUuid(), null, null, product.getLabel(), new Integer(1));
     }
     
     @Test(expected = RuntimeException.class)
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
         consumerResource.bind(consumer.getUuid(), null, null,
-            product.getLabel());
+            product.getLabel(), null);
     }
     
     @Override

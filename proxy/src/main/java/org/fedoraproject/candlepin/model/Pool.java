@@ -297,12 +297,12 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
      * if 'consumed' is less than the 'quantity'.
      * @return true if entitlements are available.
      */
-    public boolean entitlementsAvailable() {
+    public boolean entitlementsAvailable(Integer quantityToConsume) {
         if (isUnlimited()) {
             return true;
         }
 
-        if (getConsumed() < getQuantity()) {
+        if (getConsumed() + quantityToConsume.intValue() <= getQuantity()) {
             return true;
         }
         return false;

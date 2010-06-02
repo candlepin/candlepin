@@ -35,8 +35,8 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
-    public PreEntHelper pre(Consumer consumer, Pool enitlementPool) {
-        return new PreEntHelper();
+    public PreEntHelper pre(Consumer consumer, Pool enitlementPool, Integer quantity) {
+        return new PreEntHelper(new Integer(1));
     }
 
     @Override

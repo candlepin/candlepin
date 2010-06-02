@@ -18,6 +18,9 @@ import java.math.BigInteger;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -30,6 +33,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -56,6 +60,8 @@ public class Entitler {
     private ProductServiceAdapter productAdapter;
     private EntitlementCertificateCurator entCertCurator;
     private CertificateSerialCurator serialCurator;
+    private EventFactory eventFactory;
+    private EventSink sink;
     
     @Inject
     protected Entitler(PoolCurator epCurator,
@@ -64,7 +70,9 @@ public class Entitler {
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter productAdapter,
-        CertificateSerialCurator serialCurator) {
+        CertificateSerialCurator serialCurator,
+        EventFactory eventFactory,
+        EventSink sink) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
@@ -75,6 +83,8 @@ public class Entitler {
         this.subAdapter = subAdapter;
         this.entCertCurator = entCertCurator;
         this.serialCurator = serialCurator;
+        this.eventFactory = eventFactory;
+        this.sink = sink;
     }
 
     /**
@@ -97,7 +107,7 @@ public class Entitler {
     // will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitle(Consumer consumer, Product product)
+    public Entitlement entitle(Consumer consumer, Product product, Integer quantity)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
 
@@ -108,7 +118,7 @@ public class Entitler {
                 product.getName());
         }
 
-        return addEntitlement(consumer, pool);
+        return addEntitlement(consumer, pool, quantity);
     }
 
     /**
@@ -127,15 +137,15 @@ public class Entitler {
      * @throws EntitlementRefusedException if entitlement is refused
      */
     @Transactional
-    public Entitlement entitle(Consumer consumer, Pool pool)
+    public Entitlement entitle(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException {
 
-        return addEntitlement(consumer, pool);
+        return addEntitlement(consumer, pool, quantity);
     }
 
-    private Entitlement addEntitlement(Consumer consumer, Pool pool)
+    private Entitlement addEntitlement(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException {
-        PreEntHelper preHelper = enforcer.pre(consumer, pool);
+        PreEntHelper preHelper = enforcer.pre(consumer, pool, quantity);
         ValidationResult result = preHelper.getResult();
 
         if (!result.isSuccessful()) {
@@ -144,7 +154,7 @@ public class Entitler {
             throw new EntitlementRefusedException(result);
         }
 
-        Entitlement e = new Entitlement(pool, consumer, new Date());
+        Entitlement e = new Entitlement(pool, consumer, new Date(), quantity);
         consumer.addEntitlement(e);
 
         if (preHelper.getGrantFreeEntitlement()) {
@@ -161,14 +171,20 @@ public class Entitler {
         consumerCurator.update(consumer);
         Pool mergedPool = epCurator.merge(pool);
         
-        Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId());
+        SubscriptionProductWrapper wrapper = subAdapter.
+            getSubscription(mergedPool.getSubscriptionId());
+        Product prod = wrapper.getProduct();
+        Subscription sub = wrapper.getSubscription();
+        
         if (sub == null) {
             log.warn("Cannot generate entitlement certificate, no subscription for pool: " +
                 pool.getId());
             
         }
         else {
-            Product prod = productAdapter.getProductById(sub.getProductId());
+            if (null == prod || null == prod.getLabel()) { 
+                prod = productAdapter.getProductById(sub.getProductId());
+            }
         
             // TODO: Assuming every entitlement = generate a cert, most likely we'll want
             // to know if this product entails granting a cert someday.
@@ -199,8 +215,12 @@ public class Entitler {
         Consumer consumer = entitlement.getConsumer();
         consumer.removeEntitlement(entitlement);
 
+        Event event = eventFactory.entitlementDeleted(entitlement); 
+        
         epCurator.merge(entitlement.getPool());
+        
         entitlementCurator.delete(entitlement);
+        sink.sendEvent(event);
     }
 
     @Transactional

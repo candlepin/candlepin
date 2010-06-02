@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -32,6 +34,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -55,6 +59,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -83,6 +88,7 @@ public class ConsumerResource {
     private EntitlementCertServiceAdapter entCertService;
     private I18n i18n;
     private EventSink sink;
+    private EventFactory eventFactory;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -93,7 +99,8 @@ public class ConsumerResource {
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
         I18n i18n,
-        EventSink sink) {
+        EventSink sink,
+        EventFactory eventFactory) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -106,6 +113,7 @@ public class ConsumerResource {
         this.entCertService = entCertServiceAdapter;
         this.i18n = i18n;
         this.sink = sink;
+        this.eventFactory = eventFactory;
     }
 
     /**
@@ -204,7 +212,7 @@ public class ConsumerResource {
                     "Error generating identity certificate.");
             }
 
-            sink.emitConsumerCreated(principal, consumer);
+            sink.emitConsumerCreated(consumer);
             return consumer;
         }
         catch (Exception e) {
@@ -224,28 +232,13 @@ public class ConsumerResource {
     @Transactional
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
-        log.debug("deleteing  consumer_uuid" + uuid);
+        log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
         unbindAll(uuid);
+        Event event = eventFactory.consumerDeleted(toDelete);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
-    }
-
-    /**
-     * Returns the product whose id matches pid, from the consumer, cid.
-     * 
-     * @param cid
-     *            Consumer ID to affect
-     * @param pid
-     *            Product ID to remove from Consumer.
-     * @return the product whose id matches pid, from the consumer, cid.
-     */
-    @GET
-    @Path("{consumer_uuid}/products/{product_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Product getProduct(@PathParam("consumer_uuid") String cid,
-        @PathParam("product_id") String pid) {
-        return null;
+        sink.sendEvent(event);
     }
 
     /**
@@ -320,25 +313,64 @@ public class ConsumerResource {
      * @param productId Product identifying label.
      * @return Entitled object
      */
-    private List<Entitlement> bindByProduct(String productHash, Consumer consumer) {
+    private List<Entitlement> bindByProduct(String productHash, Consumer consumer, 
+            Integer quantity) {
+        
+        // Find all the owner pools to filter based on the pools
+        // that contain subscriptions with matching Engineering
+        // product hashes
+        List<Pool> validPools = new ArrayList<Pool>();
+        List<Pool> ownerPools = poolCurator.listByOwner(consumer.getOwner());
+        for (Pool p : ownerPools) {
+            SubscriptionProductWrapper subWrapper =
+                subAdapter.getSubscription(p.getSubscriptionId());
+            
+            // TODO: getAllChildProduct algorithm should probably be reviewed
+            for (Product product :
+                subWrapper.getProduct().getAllChildProducts(new HashSet<Product>())) {
+                // XXX: hack. we've got to stop using productHash, and just use productId.
+                try {
+                    Long thisProductHash = product.getHash();
+                    Long hashAsLong = Long.valueOf(productHash);
 
-        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        Product p = productAdapter.getProductByHash(productHash, consumer.getOwner());
-        if (p == null) {
+                    if (thisProductHash.equals(hashAsLong)) {
+                        // Keep a list of the matched results
+                        validPools.add(p);
+                        break;
+                    }                
+                }
+                catch (NumberFormatException e) {
+                    if (product.getId().equals(productHash)) {
+                        validPools.add(p);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (validPools.isEmpty()) {
+            // TODO: Improve error message
+            // Should be something like "No subscriptions found for the given product"
             throw new BadRequestException(
                 i18n.tr("No such product: {0}", productHash));
         }
-
-        entitlementList.add(createEntitlement(consumer, p));
-        return entitlementList;
         
+        // TODO: selectBestPool with javascript entitler
+        // This should filter the available list of pools down to a
+        // single pool that is the most applicable
+        Pool bestPool = validPools.get(0);
+        
+        // Now create the entitlements based on the pool
+        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
+        entitlementList.add(createEntitlement(consumer, bestPool, quantity));
+        return entitlementList;
     }
 
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlement(Consumer consumer, Product p) {
+    private Entitlement createEntitlement(Consumer consumer, Product p, Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, p);
+            Entitlement e = entitler.entitle(consumer, p, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -357,10 +389,10 @@ public class ConsumerResource {
         }
     }
 
-    private Entitlement createEntitlement(Consumer consumer, Pool pool) {
+    private Entitlement createEntitlement(Consumer consumer, Pool pool, Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitle(consumer, pool);
+            Entitlement e = entitler.entitle(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -386,7 +418,8 @@ public class ConsumerResource {
      * @param consumer Consumer to bind
      * @return token
      */
-    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer) {
+    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer, 
+            Integer quantity) {
         
         List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer.getOwner(), 
             registrationToken);
@@ -409,12 +442,12 @@ public class ConsumerResource {
             }
 
             Product p = productAdapter.getProductById(sub.getProductId());
-            entitlementList.add(createEntitlement(consumer, p));
+            entitlementList.add(createEntitlement(consumer, p, quantity));
         }
         return entitlementList;
     }
 
-    private List<Entitlement> bindByPool(Long poolId, Consumer consumer) {
+    private List<Entitlement> bindByPool(Long poolId, Consumer consumer, Integer quantity) {
         Pool pool = poolCurator.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
@@ -423,7 +456,7 @@ public class ConsumerResource {
         }
 
         // Attempt to create an entitlement:
-        entitlementList.add(createEntitlement(consumer, pool));
+        entitlementList.add(createEntitlement(consumer, pool, quantity));
         return entitlementList;
     }
 
@@ -441,12 +474,15 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productId) {
+        @QueryParam("product") String productHash, 
+        @QueryParam("quantity") @DefaultValue("1") Integer quantity) {
 
+        // TODO : productId is NOT product hash in hosted candlepin
+        // TODO * * * * ** * * * ** * * * * * 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
-            (poolId != null && productId != null) ||
-            (token != null && productId != null)) {
+            (poolId != null && productHash != null) ||
+            (token != null && productHash != null)) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
         }
@@ -458,19 +494,27 @@ public class ConsumerResource {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
             
                 if (token != null) {
-                    return bindByToken(token, consumer);
+                    entitlements = bindByToken(token, consumer, quantity);
                 }
-                if (productId != null) {
-                    return bindByProduct(productId, consumer);
+                else if (productHash != null) {
+                    entitlements = bindByProduct(productHash, consumer, quantity);
                 }
-        
-                entitlements = bindByPool(poolId, consumer);
+                else {
+                    entitlements = bindByPool(poolId, consumer, quantity);
+                }
             }
         } 
         catch (CandlepinException e) {
             log.debug(e.getMessage());
             throw e;
         }
+
+        // Trigger events:
+        for (Entitlement e : entitlements) {
+            Event event = eventFactory.entitlementCreated(e);
+            sink.sendEvent(event);
+        }
+
         return entitlements;
     }
 

@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin.client.model;
 /**
  * ConsumerType
  */
-public class ConsumerType {
+public class ConsumerType extends TimeStampedEntity{
     protected Long id;
     protected String label;
 
@@ -29,6 +29,17 @@ public class ConsumerType {
         this.label = label;
         this.id = id;
     }
+    
+    /**
+     * ConsumerType constructor with label
+     * 
+     * @param labelIn
+     *            to set
+     */
+    public ConsumerType(String labelIn) {
+        this.label = labelIn;
+    }
+
 
     public Long getId() {
         return id;

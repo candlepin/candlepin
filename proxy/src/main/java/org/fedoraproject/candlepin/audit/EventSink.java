@@ -14,63 +14,20 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.ClientProducer;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
-
-import com.google.inject.Inject;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
- * EventSink - Reliably dispatches events to all configured listeners.
+ * EventSink
  */
-public class EventSink {
-    
-    private static Logger log = Logger.getLogger(EventSink.class);
-    private EventFactory eventFactory;
+public interface EventSink {
 
-    @Inject
-    public EventSink(EventFactory eventFactory) {
-        this.eventFactory = eventFactory;
-    }
-    
-    public static void sendEvent(Event event) {
-        if (log.isDebugEnabled()) {
-            log.debug("Sending event - " + event);
-        }
-        
-        try {
-            ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
-                new TransportConfiguration(InVMConnectorFactory.class.getName()));
-            
-            ClientSession session = factory.createSession();
-            
-            ClientProducer producer = session.createProducer(EventSource.QUEUE_ADDRESS);
-            
-            ClientMessage message = session.createMessage(true);
-            
-            ObjectMapper mapper = new ObjectMapper();
-            String eventString = mapper.writeValueAsString(event);
-            message.getBodyBuffer().writeString(eventString);
-            
-            producer.send(message);
-            session.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    
-    public void emitConsumerCreated(Principal principal, Consumer newConsumer) {
-        Event e = eventFactory.consumerCreated(principal, newConsumer);
-        EventSink.sendEvent(e);
-    }
+    void sendEvent(Event event);
 
+    void emitConsumerCreated(Consumer newConsumer);
+
+    void emitOwnerCreated(Owner newOwner);
+
+    void emitPoolCreated(Pool newPool);
 }

@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.guice;
 
 import java.util.Properties;
 
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
@@ -30,13 +32,14 @@ import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
-import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.resource.AdminResource;
+import org.fedoraproject.candlepin.resource.AtomFeedResource;
 import org.fedoraproject.candlepin.resource.CertificateResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
+import org.fedoraproject.candlepin.resource.ContentResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
+import org.fedoraproject.candlepin.resource.EventResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
@@ -48,6 +51,7 @@ import org.fedoraproject.candlepin.resteasy.JsonProvider;
 import org.fedoraproject.candlepin.resteasy.interceptor.AuthInterceptor;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
@@ -75,9 +79,13 @@ public class CandlepinModule extends AbstractModule {
         bind(Config.class);
         bind(PKIUtility.class).to(CandlepinPKIUtility.class).asEagerSingleton();
         bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
+        bind(X509ExtensionUtil.class);
         bind(CertificateResource.class);
         bind(ConsumerResource.class);
-        bind(ConsumerTypeResource.class);        
+        bind(ConsumerTypeResource.class);
+        bind(ContentResource.class);
+        bind(AtomFeedResource.class);
+        bind(EventResource.class);
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
@@ -88,15 +96,14 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(JavascriptEnforcer.class);
         bind(RulesResource.class);
         bind(AdminResource.class);
-        bind(PostEntHelper.class);
-        bind(PreEntHelper.class);
         bind(StatusResource.class);
         bind(CandlepinExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
         bind(JsonProvider.class);
-
+        bind(EventSink.class).to(EventSinkImpl.class);
+        
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(

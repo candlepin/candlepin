@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
@@ -46,6 +47,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.SpacewalkCertificateCurator;
@@ -80,6 +82,7 @@ public class DatabaseTestFixture {
     
     protected OwnerCurator ownerCurator;
     protected ProductCurator productCurator;
+    protected ProductCertificateCurator productCertificateCurator;
     protected ProductServiceAdapter productAdapter;
     protected SubscriptionServiceAdapter subAdapter;
     protected ConsumerCurator consumerCurator;
@@ -94,6 +97,7 @@ public class DatabaseTestFixture {
     protected EventCurator eventCurator;
     protected SubscriptionCurator subCurator;
     protected SubscriptionTokenCurator subTokenCurator;
+    protected ContentCurator contentCurator;
     protected WorkManager unitOfWork;
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
@@ -129,12 +133,13 @@ public class DatabaseTestFixture {
                     .buildModule()
             );
         }
-
+        
         injector.getInstance(EntityManagerFactory.class); 
         emf = injector.getProvider(EntityManagerFactory.class).get();
         
         ownerCurator = injector.getInstance(OwnerCurator.class);
         productCurator = injector.getInstance(ProductCurator.class);
+        productCertificateCurator = injector.getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
         eventCurator = injector.getInstance(EventCurator.class);
 
@@ -147,6 +152,7 @@ public class DatabaseTestFixture {
         rulesCurator = injector.getInstance(RulesCurator.class);
         subCurator = injector.getInstance(SubscriptionCurator.class);
         subTokenCurator = injector.getInstance(SubscriptionTokenCurator.class);
+        contentCurator = injector.getInstance(ContentCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
         entitler = injector.getInstance(Entitler.class);
         

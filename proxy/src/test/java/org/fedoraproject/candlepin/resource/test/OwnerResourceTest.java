@@ -14,19 +14,21 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import java.util.List;
-
-import org.fedoraproject.candlepin.model.Subscription;
 import static org.junit.Assert.*;
 
+import java.util.LinkedList;
+import java.util.List;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -64,7 +66,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test    
     public void testSimpleDeleteOwner() {
         Long id = owner.getId();
-        ownerResource.deleteOwner(id);
+        ownerResource.deleteOwner(
+            id, 
+            new UserPrincipal("someuser", owner, new LinkedList<Role>()));
         owner = ownerCurator.find(id);
         assertTrue(owner == null);
     }
@@ -191,13 +195,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         // Give those consumers entitlements:
-        entitler.entitle(c1, pool);
+        entitler.entitle(c1, pool, new Integer(1));
 
         assertEquals(2, consumerCurator.listByOwner(owner).size());
         assertEquals(1, poolCurator.listByOwner(owner).size());
         assertEquals(1, entitlementCurator.listByOwner(owner).size());
 
-        ownerResource.deleteOwner(owner.getId());
+        ownerResource.deleteOwner(owner.getId(), null);
 
         assertEquals(0, consumerCurator.listByOwner(owner).size());
         assertNull(consumerCurator.lookupByUuid(c1.getUuid()));
@@ -268,11 +272,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testOwnerAdminCannotDelete() {
-        setupPrincipal(owner, Role.OWNER_ADMIN);
+        Principal principal = setupPrincipal(owner, Role.OWNER_ADMIN);
 
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        ownerResource.deleteOwner(owner.getId());
+        ownerResource.deleteOwner(owner.getId(), principal);
     }
 }

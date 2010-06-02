@@ -61,7 +61,10 @@ public class UserPrincipal extends Principal {
     }
 
     public String toString() {
-        return "UserPrincipal [username=" + username + ", roles=" + 
+        Long ownerId = getOwner() != null ? getOwner().getId() : null;
+        
+        return "UserPrincipal [ownerId=" + ownerId +
+            ", username=" + username + ", roles=" +
             getRoles() + "]"; 
          
     }

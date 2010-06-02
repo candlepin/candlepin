@@ -16,14 +16,14 @@ package org.fedoraproject.candlepin.client;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.math.BigInteger;
+import java.io.FilenameFilter;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
@@ -31,10 +31,12 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.fedoraproject.candlepin.client.cmds.Utils;
 import org.fedoraproject.candlepin.client.model.Consumer;
 import org.fedoraproject.candlepin.client.model.Entitlement;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.client.model.Pool;
+import org.fedoraproject.candlepin.client.model.ProductCertificate;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClientExecutor;
@@ -46,15 +48,9 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
  */
 public class CandlepinConsumerClient {
 
-    private String url;
-    private String dir = "/home/bkearney/.candlepin";
-    private String consumerDirName = dir + File.separator + "consumer";
-    private String entitlementDirName = dir + File.separator + "entitlements";
-    private String certFileName = consumerDirName + File.separator + "cert.pem";
-    private String keyFileName = consumerDirName + File.separator + "key.pem";
-
-    public CandlepinConsumerClient(String url) {
-        this.url = url;
+    private Configuration config;
+    public CandlepinConsumerClient(Configuration config) {
+        this.config = config;
         RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
     }
 
@@ -74,9 +70,9 @@ public class CandlepinConsumerClient {
      */
     public String getUUID() {
         String uuid = null;
-        File certFile = new File(certFileName);
+        File certFile = new File(this.config.getCertificateFilePath());
         if (certFile.exists()) {
-            uuid = PemUtil.extractUUID(certFileName);
+            uuid = PemUtil.extractUUID(this.config.getCertificateFilePath());
         }
         return uuid;
     }
@@ -105,21 +101,60 @@ public class CandlepinConsumerClient {
      * 
      * @return true if the registration succeeded
      */
-    public boolean registerExisting(String username, String password,
+    public OperationResult registerExisting(String username, String password,
         String uuid) {
         ICandlepinConsumerClient client = this.clientWithCredentials(username,
             password);
         if (isRegistered()) {
-            ClientResponse<Consumer> response = client.getConsumer(uuid);
-            if (response.getResponseStatus().equals(Response.Status.OK)) {
-                recordIdentity(response.getEntity());
-                return true;
+            try {
+                ClientResponse<Consumer> response = client.getConsumer(uuid);
+                return evaluateResponse(response);
             }
-            else {
-                return false;
+            catch (Exception e) {
+                e.printStackTrace();
+                return OperationResult.UNKNOWN;
             }
         }
-        return false;
+        return OperationResult.CLIENT_NOT_REGISTERED;
+    }
+    
+    /**Register an existing consumer based on the uuid. 
+     * @param uuid - the consumer id
+     * @return true if customer exists else false.
+     */
+    public OperationResult registerExistingCustomerWithId(String uuid) {
+        try {
+            HttpClient httpclient = new HttpClient();
+            httpclient.getParams().setAuthenticationPreemptive(true);
+            ICandlepinConsumerClient client = ProxyFactory.create(
+                    ICandlepinConsumerClient.class, this.config.getServerURL(),
+                    new ApacheHttpClientExecutor(httpclient));
+            ClientResponse<Consumer> cr = client.getConsumer(uuid);
+            return evaluateResponse(cr);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return OperationResult.UNKNOWN;
+        }
+    }
+
+    /**
+     * @param cr
+     * @return
+     */
+    private OperationResult evaluateResponse(ClientResponse<Consumer> cr) {
+        if (Response.Status.OK.equals(cr.getResponseStatus())) {
+            try {
+                recordIdentity(cr.getEntity());
+            }
+            catch (ClientException e) {
+                return OperationResult.ERROR_WHILE_SAVING_CERTIFICATES;
+            }
+            return OperationResult.NOT_A_FAILURE;
+        }
+        else {
+            return OperationResult.INVALID_UUID;
+        }
     }
 
     /**
@@ -157,20 +192,65 @@ public class CandlepinConsumerClient {
         ICandlepinConsumerClient client = clientWithCert();
         return client.bindByEntitlementID(getUUID(), poolId).getEntity();
     }
+    
+    public List<Entitlement> bindByProductId(String productId) {
+        ICandlepinConsumerClient client = clientWithCert();
+        return client.bindByProductId(getUUID(), productId).getEntity();
+    }
+    
+    public List<Entitlement> bindByRegNumber(String regNo) {
+        ICandlepinConsumerClient client = clientWithCert();
+        return client.bindByRegNumber(getUUID(), regNo).getEntity();
+    }
+    
+    public OperationResult unBindBySerialNumber(int serialNumber) {
+        try {
+            ICandlepinConsumerClient client = clientWithCert();
+            ClientResponse<Void> response = client.unBindBySerialNumber(
+                getUUID(), serialNumber);
+            return response.getResponseStatus().equals(
+                Response.Status.NO_CONTENT) ? OperationResult.NOT_A_FAILURE :
+                    OperationResult.UNKNOWN;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return OperationResult.UNKNOWN;
+        }
+
+    }
+
+    public OperationResult unBindAll() {
+        try {
+            ICandlepinConsumerClient client = clientWithCert();
+            ClientResponse<Void> response = client.unBindAll(getUUID());
+            if (response.getResponseStatus().equals(Response.Status.NO_CONTENT)) {
+                return OperationResult.NOT_A_FAILURE;
+            }
+            else {
+                return OperationResult.UNKNOWN;
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return OperationResult.UNKNOWN;
+        }
+    }
 
     public boolean updateEntitlementCertificates() {
-        FileUtil.mkdir(entitlementDirName);
+        File entitlementDir = new File(config.getEntitlementDirPath());
+        if (entitlementDir.exists() && entitlementDir.isDirectory()) {
+            FileUtil.removeFiles(entitlementDir.listFiles());
+        }
+        FileUtil.mkdir(config.getEntitlementDirPath());
         ICandlepinConsumerClient client = clientWithCert();
         List<EntitlementCertificate> certs = client
             .getEntitlementCertificates(getUUID());
-        Set<BigInteger> certSerials = new java.util.HashSet<BigInteger>();
-        // EntitlementCertificate
         for (EntitlementCertificate cert : certs) {
-            String entCertFileName = entitlementDirName + File.separator +
-                cert.getSerial() + "-cert.pem";
-            String entKeyFileName = entitlementDirName + File.separator +
-                cert.getSerial() + "-key.pem";
-            FileUtil.dumpToFile(entCertFileName, cert.getCert());
+            String entCertFileName = config.getEntitlementDirPath() +
+                File.separator + cert.getSerial() + "-cert.pem";
+            String entKeyFileName = config.getEntitlementDirPath() +
+                File.separator + cert.getSerial() + "-key.pem";
+            FileUtil.dumpToFile(entCertFileName, cert.getX509CertificateAsPem());
             FileUtil.dumpToFile(entKeyFileName, cert.getKey());
         }
         return true;
@@ -178,20 +258,24 @@ public class CandlepinConsumerClient {
 
     public List<EntitlementCertificate> getCurrentEntitlementCertificates() {
         try {
-            FileUtil.mkdir(entitlementDirName);
-            List<EntitlementCertificate> certs = new ArrayList<EntitlementCertificate>();
-            File entitlementDir = new File(entitlementDirName);
-            for (File file : entitlementDir.listFiles()) {
+            FileUtil.mkdir(config.getEntitlementDirPath());
+            File[] entitlementDirs = new File(config.getEntitlementDirPath())
+                .listFiles(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return name.endsWith("-cert.pem");
+                    }
+                });
+
+            List<EntitlementCertificate> certs = Utils.newList();
+            for (File file : entitlementDirs) {
                 String filename = file.getAbsolutePath();
-                if (filename.endsWith("-cert.pem")) {
-                    String eKeyFileName = filename.replace("-cert.pem",
-                        "-key.pem");
-                    X509Certificate cert = PemUtil.readCert(filename);
-                    PrivateKey key = PemUtil.readPrivateKey(eKeyFileName);
-                    EntitlementCertificate entCert = new EntitlementCertificate(
-                        cert, key);
-                    certs.add(entCert);
-                }
+                String eKeyFileName = filename.replace("-cert.pem", "-key.pem");
+                X509Certificate cert = PemUtil.readCert(filename);
+                PrivateKey key = PemUtil.readPrivateKey(eKeyFileName);
+                EntitlementCertificate entCert = new EntitlementCertificate(
+                    cert, key);
+                certs.add(entCert);
             }
 
             return certs;
@@ -201,13 +285,47 @@ public class CandlepinConsumerClient {
         }
     }
 
+    public List<ProductCertificate> getInstalledProductCertificates() {
+        File file = new File(this.config.getProductDirPath());
+        if (file.exists() && file.isDirectory()) {
+            File[] prodCerts = file.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith(".pem");
+                }
+            });
+            if (prodCerts.length == 0) {
+                return Collections.emptyList();
+            }
+            List<EntitlementCertificate> entitlementCerts = this
+                .getCurrentEntitlementCertificates();
+            Map<Integer, EntitlementCertificate> map = Utils.newMap();
+            for (EntitlementCertificate certificate : entitlementCerts) {
+                map.put(certificate.getProductID(), certificate);
+            }
+            List<ProductCertificate> productCertificates = Utils.newList();
+            for (File certificate : prodCerts) {
+                ProductCertificate pc = new ProductCertificate(PemUtil
+                    .readCert(certificate.getAbsolutePath()));
+                EntitlementCertificate ec = map.get(pc.getProductID());
+                pc.setEntitlementCertificate(ec != null ? ec : null);
+                productCertificates.add(pc);
+            }
+
+            return productCertificates;
+        }
+        else {
+            return Collections.emptyList();
+        }
+    }
+
     public void generatePKCS12Certificates(String password) {
         try {
             List<EntitlementCertificate> certs = getCurrentEntitlementCertificates();
             for (EntitlementCertificate cert : certs) {
                 KeyStore store = PKCS12Util.createPKCS12Keystore(cert
-                    .getX509Cert(), cert.getPrivateKey(), null);
-                File p12File = new File(entitlementDirName + File.separator +
+                    .getX509Certificate(), cert.getPrivateKey(), null);
+                File p12File = new File(config.getEntitlementDirPath() + File.separator +
                     cert.getSerial() + ".p12");
                 store.store(new FileOutputStream(p12File), password
                     .toCharArray());
@@ -218,22 +336,20 @@ public class CandlepinConsumerClient {
         }
     }
     
-    public String getUrl() {
-        return url;
-    }
-
     protected ICandlepinConsumerClient clientWithCert() {
         try {
-            Protocol customHttps = new Protocol("https",
-                new CustomSSLProtocolSocketFactory(certFileName, keyFileName),
-                443);
-            Protocol.registerProtocol("https", customHttps);
             HttpClient httpclient = new HttpClient();
-            URL hostUrl = new URL(url);
+            CustomSSLProtocolSocketFactory factory  =
+                new CustomSSLProtocolSocketFactory(
+                    config.getCertificateFilePath(), config.getKeyFilePath(), config);
+            URL hostUrl = new URL(config.getServerURL());
+            Protocol customHttps = new Protocol("https", factory, 8443);
+            Protocol.registerProtocol("https", customHttps);
             httpclient.getHostConfiguration().setHost(hostUrl.getHost(),
                 hostUrl.getPort(), customHttps);
+            httpclient.getParams().setConnectionManagerTimeout(1000);
             ICandlepinConsumerClient client = ProxyFactory.create(
-                ICandlepinConsumerClient.class, url,
+                ICandlepinConsumerClient.class, config.getServerURL(),
                 new ApacheHttpClientExecutor(httpclient));
             return client;
         }
@@ -252,20 +368,21 @@ public class CandlepinConsumerClient {
         httpclient.getState().setCredentials(AuthScope.ANY, creds);
 
         ICandlepinConsumerClient client = ProxyFactory.create(
-            ICandlepinConsumerClient.class, url, new ApacheHttpClientExecutor(
-                httpclient));
+            ICandlepinConsumerClient.class, config.getServerURL(),
+            new ApacheHttpClientExecutor(httpclient));
         return client;
     }
 
     protected void recordIdentity(Consumer aConsumer) {
-        FileUtil.mkdir(consumerDirName);
-        FileUtil.dumpToFile(certFileName, aConsumer.getIdCert().getCert());
-        FileUtil.dumpToFile(keyFileName, aConsumer.getIdCert().getKey());
+        FileUtil.mkdir(config.getConsumerDirPath());
+        FileUtil.dumpToFile(config.getCertificateFilePath(),
+            aConsumer.getIdCert().getCert());
+        FileUtil.dumpToFile(config.getKeyFilePath(), aConsumer.getIdCert().getKey());
     }
 
     protected void removeFiles() {
-        String[] files = { certFileName, keyFileName };
-        FileUtil.removeFiles(files);
+        FileUtil.removeFiles(new String[]{ config.getCertificateFilePath(),
+            config.getKeyFilePath() });
     }
 
 }

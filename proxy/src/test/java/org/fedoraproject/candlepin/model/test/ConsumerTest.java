@@ -229,7 +229,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
     
     private Entitlement createEntitlement(Pool pool, Consumer c) {
-        Entitlement e = new Entitlement(pool, c, pool.getStartDate());
+        Entitlement e = new Entitlement(pool, c, pool.getStartDate(), new Integer("1"));
         return e;
     }
     

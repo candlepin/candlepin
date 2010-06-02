@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
@@ -71,8 +72,15 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public Subscription getSubscription(Long subscriptionId) {
-        return subCurator.lookupByOwnerAndId(subscriptionId);
+    public SubscriptionProductWrapper getSubscription(Long subscriptionId) {
+        SubscriptionProductWrapper wrapper = new SubscriptionProductWrapper();
+        Subscription subscription = subCurator.lookupByOwnerAndId(subscriptionId);
+        if (subscription != null) {
+            wrapper.setSubscription(subscription);
+            wrapper.setProduct(prodAdapter.getProductById(subscription.getProductId()));
+        }
+        
+        return wrapper;
     }
 
     @Override

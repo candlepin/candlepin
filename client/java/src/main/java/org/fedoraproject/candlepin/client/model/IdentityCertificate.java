@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
+import java.math.BigInteger;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -23,9 +25,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class IdentityCertificate {
+public class IdentityCertificate extends TimeStampedEntity{
     protected String key;
     protected String cert;
+    private BigInteger serial;
 
     public String getKey() {
         return key;
@@ -41,6 +44,14 @@ public class IdentityCertificate {
 
     public void setCert(String cert) {
         this.cert = cert;
+    }
+
+    public BigInteger getSerial() {
+        return serial;
+    }
+
+    public void setSerial(BigInteger serial) {
+        this.serial = serial;
     }
 
 }

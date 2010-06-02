@@ -25,6 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -55,18 +56,21 @@ public class PoolResource {
     private OwnerCurator ownerCurator;
     private ProductServiceAdapter productServiceAdapter;
     private I18n i18n;
+    private EventSink eventSink;
 
     @Inject
     public PoolResource(
         PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         ProductServiceAdapter productServiceAdapter,
-        I18n i18n) {
+        I18n i18n,
+        EventSink eventSink) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.productServiceAdapter = productServiceAdapter;
         this.i18n = i18n;
+        this.eventSink = eventSink;
     }
 
     /**
@@ -152,6 +156,7 @@ public class PoolResource {
         Pool toReturn = poolCurator.create(pool);
         
         if (toReturn != null) {
+            eventSink.emitPoolCreated(toReturn);
             return toReturn;
         }
 

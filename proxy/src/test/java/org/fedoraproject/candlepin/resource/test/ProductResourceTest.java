@@ -15,8 +15,12 @@
 package org.fedoraproject.candlepin.resource.test;
 
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -47,8 +51,11 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Long  hash = Math.abs(Long.valueOf(label.hashCode()));
         String type = "SVC";
         HashSet<Product> childProducts = null;
+        HashSet<Content> content = null;
         Product prod = new Product(label, name, variant,
-                version, arch, hash, type, childProducts);
+                                   version, arch, hash, 
+                                   type, childProducts,
+                                   content);
         return prod;
         
     }
@@ -58,9 +65,27 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testCreateProductResource() {
         
         Product toSubmit = createProduct();
-        productResource.createProduct(toSubmit);
-        
+        productResource.createProduct(toSubmit, new ArrayList<String>());
         
     }
+    
+    @Test
+    public void testCreateProductWithContent() {
+        Product toSubmit = createProduct();
+        Long  contentHash = Math.abs(Long.valueOf("test-content".hashCode()));
+        Content testContent = new Content("test-content", contentHash, 
+                            "test-content-label", "yum", "test-vendor",
+                             "test-content-url", "test-gpg-url");
+        
+        HashSet<Content> contentSet = new HashSet<Content>();
+        List<String> childProducts = new LinkedList<String>();
+        
+        contentSet.add(testContent);
+        toSubmit.setContent(contentSet);
+        
+        productResource.createProduct(toSubmit, childProducts);
+            
+    }
+    
     
 }

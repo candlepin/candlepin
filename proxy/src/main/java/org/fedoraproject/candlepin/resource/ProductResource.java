@@ -21,12 +21,17 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
@@ -40,9 +45,8 @@ import com.google.inject.Inject;
 @Path("/products")
 public class ProductResource {
 
-    //private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
-    //private ProductCurator prodCurator;
+    private ContentCurator contentCurator;
     private I18n i18n;
 
     /**
@@ -52,9 +56,12 @@ public class ProductResource {
      *            Product Adapter used to interact with multiple services.
      */
     @Inject
-    public ProductResource(ProductServiceAdapter prodAdapter, 
+    public ProductResource(ProductServiceAdapter prodAdapter,
+                           ProductCertificateCurator productCertCurator,
+                           ContentCurator contentCurator,
                            I18n i18n) {
         this.prodAdapter = prodAdapter;
+        this.contentCurator = contentCurator;
         this.i18n = i18n;
     }
 
@@ -90,6 +97,22 @@ public class ProductResource {
             i18n.tr("Product with UUID '{0}' could not be found", pid));
     }
     
+    @GET
+    @Path("/{product_uuid}/certificate")
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public ProductCertificate getProductCertificate(
+        @PathParam("product_uuid") String productId) {
+        
+        Product product = prodAdapter.getProductById(productId);
+        
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with UUID '{0}' could not be found", productId));
+        }
+        
+        return prodAdapter.getProductCertificate(product);
+    }
+    
     /**
      * 
      * @param product
@@ -99,7 +122,36 @@ public class ProductResource {
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
-    public Product createProduct(Product product) {
+    public Product createProduct(Product product, 
+        @QueryParam("childId") List<String> childIds) {
+        //TODO: Do the bulk lookup in the product adapter?
+        if (childIds != null) {
+            for (String childId : childIds) {
+                Product child = prodAdapter.getProductById(childId);
+                product.addChildProduct(child);
+            }
+        }
+        
         return prodAdapter.createProduct(product);
     }   
+    
+    @POST
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @Path("/{product_uuid}/content/{content_label}")
+    public Product addContent(@PathParam("product_uuid") String pid,
+                              @PathParam("content_label") String contentLabel, 
+                              @QueryParam("enabled") Boolean enabled) {
+        Product product = prodAdapter.getProductById(pid);
+        
+        Content content = contentCurator.findByLabel(contentLabel);
+        
+        product.addContent(content);
+        if (enabled) {
+            product.addEnabledContent(content);
+        }
+        return prodAdapter.createProduct(product);
+        
+    }
+    
 }

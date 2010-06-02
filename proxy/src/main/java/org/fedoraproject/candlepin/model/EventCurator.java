@@ -15,7 +15,11 @@
 package org.fedoraproject.candlepin.model;
 
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.audit.Event;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Order;
 
 /**
  * AttributeCurator
@@ -24,6 +28,17 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
 
     protected EventCurator() {
         super(Event.class);
+    }
+
+    /**
+     * Query events, most recent first.
+     * @return List of events.
+     */
+    public List<Event> listMostRecent(int limit) {
+        Criteria crit = currentSession().createCriteria(Event.class);
+        crit.setMaxResults(limit);
+        crit.addOrder(Order.desc("timestamp"));
+        return crit.list();
     }
 
 }

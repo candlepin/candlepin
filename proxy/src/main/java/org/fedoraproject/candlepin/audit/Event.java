@@ -18,10 +18,18 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Persisted;
@@ -35,22 +43,34 @@ import org.fedoraproject.candlepin.model.Persisted;
 @Entity
 @Table(name = "cp_event")
 @SequenceGenerator(name = "seq_event", sequenceName = "seq_event", allocationSize = 1)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event implements Persisted {
 
+    private static final long serialVersionUID = 1L;
+    
     /**
      * Type - Constant representing the type of this event.
      */
-    public enum EventType { GENERIC_MESSAGE, CONSUMER_CREATED, CONSUMER_MODIFIED,
-        CONSUMER_UPDATED
-    };
+    public enum Type { CREATED, MODIFIED, DELETED };
 
+    /**
+     * Target the type of entity operated on.
+     */
+    public enum Target { CONSUMER, OWNER, ENTITLEMENT, POOL };
+    
     // Uniquely identifies the event:
     @Id
-//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
     private Long id;
 
     @Column(nullable = false)
-    private EventType type;
+    @Enumerated(EnumType.STRING)
+    private Type type;
+    
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Target target;
 
     // String representation of the principal. We probably should not be reconstructing
     // any stored principal object.
@@ -63,26 +83,31 @@ public class Event implements Persisted {
     // Uniquely identifies the entity's ID when combined with the event type.
     @Column(nullable = false)
     private Long entityId;
+    
+    @Column(nullable = false)
+    private Long ownerId;
 
-    // Both old/new may be null for creation/deletion events.
-    @Lob
+    // Both old/new may be null for creation/deletion events. These are marked
+    // Transient as we decided we do not necessarily want to store the object state
+    // in our Events table. The Event passing through the message queue will still
+    // carry them.
+    @Transient
     private String oldEntity;
-    @Lob
+    @Transient
     private String newEntity;
 
     public Event() {
     }
 
-    public Event(EventType type, Principal principal,
-        Long entityId, String oldEntity, String newEntity) {
+    public Event(Type type, Target target, Principal principal,
+        Long ownerId, Long entityId, String oldEntity, String newEntity) {
         this.type = type;
+        this.target = target;
 
         // TODO: toString good enough? Need something better?
-        // XXX: null principal is a hack. don't allow it.
-        if (principal != null) {
-            this.principal = principal.toString();
-        }
-
+        this.principal = principal.toString();
+        this.ownerId = ownerId;
+        
         this.entityId = entityId;
         this.oldEntity = oldEntity;
         this.newEntity = newEntity;
@@ -99,14 +124,22 @@ public class Event implements Persisted {
         this.id = id;
     }
 
-    public EventType getType() {
+    public Type getType() {
         return type;
     }
 
-    public void setType(EventType type) {
+    public void setType(Type type) {
         this.type = type;
     }
 
+    public Target getTarget() {
+        return target;
+    }
+
+    public void setTarget(Target target) {
+        this.target = target;
+    }
+    
     public String getPrincipal() {
         return principal;
     }
@@ -123,6 +156,14 @@ public class Event implements Persisted {
         this.timestamp = timestamp;
     }
 
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
+    
     public Long getEntityId() {
         return entityId;
     }
@@ -131,12 +172,15 @@ public class Event implements Persisted {
         this.entityId = entityId;
     }
 
+    @XmlTransient
     public String getOldEntity() {
         return oldEntity;
     }
     public void setOldEntity(String oldEntity) {
         this.oldEntity = oldEntity;
     }
+
+    @XmlTransient
     public String getNewEntity() {
         return newEntity;
     }

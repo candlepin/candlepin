@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -57,21 +58,28 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
     private PKIUtility mockedPKI;
+    private X509ExtensionUtil extensionUtil;
     private Product product;
     private Subscription subscription;
 
     @Before
     public void setUp() {
         mockedPKI = mock(PKIUtility.class);
+        extensionUtil = new X509ExtensionUtil();
+        
         certServiceAdapter 
-            = new DefaultEntitlementCertServiceAdapter(mockedPKI, null, null);
+            = new DefaultEntitlementCertServiceAdapter(mockedPKI, 
+                extensionUtil, null, null);
         
         product = new Product("a product", "a product", 
                               "variant", "version", "arch", 
-                              123L, "SVC", new HashSet<Product>());
+                              123L, "SVC", new HashSet<Product>(),
+                              new HashSet<Content>());
         
-        Content content = new Content(CONTENT_NAME, CONTENT_VENDOR, CONTENT_URL,
-            CONTENT_GPG_URL, CONTENT_ENABLED);
+        Content content = new Content(CONTENT_NAME, CONTENT_HASH,
+                                      CONTENT_LABEL, CONTENT_TYPE,
+                                      CONTENT_VENDOR, CONTENT_URL,
+                                      CONTENT_GPG_URL);
         content.setType(CONTENT_TYPE);
         content.setLabel(CONTENT_LABEL);
         content.setHash(CONTENT_HASH);
@@ -85,7 +93,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     
     @Test
     public void testContentExtentionCreation() {
-        List<X509ExtensionWrapper> content = certServiceAdapter.contentExtensions(product);
+        // AAAH!  This should be pulled out to its own test class!
+        List<X509ExtensionWrapper> content = extensionUtil.contentExtensions(product);
         assertTrue(isEncodedContentValid(content));
     }
 
@@ -111,9 +120,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
             encodedContent.put(
                 ((DERUTF8String) ext.getAsn1Encodable()).getString(), ext);
         }
+       
+        
         
         return encodedContent.containsKey(CONTENT_LABEL) &&
-            encodedContent.containsKey(CONTENT_ENABLED) &&
+   //         encodedContent.containsKey(CONTENT_ENABLED) &&
             encodedContent.containsKey(CONTENT_GPG_URL) &&
             encodedContent.containsKey(CONTENT_URL) &&
             encodedContent.containsKey(CONTENT_VENDOR) &&

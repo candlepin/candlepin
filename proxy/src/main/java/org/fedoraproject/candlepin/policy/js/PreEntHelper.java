@@ -26,8 +26,10 @@ public class PreEntHelper {
     
     private Boolean grantFreeEntitlement = Boolean.FALSE;
     private ValidationResult result;
+    private Integer quantityToConsume;
    
-    public PreEntHelper() {
+    public PreEntHelper(Integer quantityToConsume) {
+        this.quantityToConsume = quantityToConsume;
         result = new ValidationResult();
     }
    
@@ -85,7 +87,7 @@ public class PreEntHelper {
      * @param entPool read-only entitlement pool to be checked.
      */
     public void checkQuantity(ReadOnlyEntitlementPool entPool) {
-        if (!entPool.entitlementsAvailable()) {
+        if (!entPool.entitlementsAvailable(quantityToConsume)) {
             result.addError("rulefailed.no.entitlements.available");
         }
     }

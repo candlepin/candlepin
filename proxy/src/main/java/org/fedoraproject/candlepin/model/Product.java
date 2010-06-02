@@ -101,12 +101,16 @@ public class Product extends AbstractHibernateObject {
     @JoinTable(name = "cp_product_attribute")
     private Set<Attribute> attributes;
 
-    @OneToMany(cascade = CascadeType.ALL)
+//    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_content")
     private Set<Content> content;
-    
-    
  
+  
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "cp_product_enabled_content")
+    private Set<Content> enabledContent;
+    
    
     /**
      * Constructor
@@ -124,7 +128,8 @@ public class Product extends AbstractHibernateObject {
     
     public Product(String label, String name, String variant,
                    String version, String arch, Long hash,
-                   String type, Set<Product> childProducts) {
+                   String type, Set<Product> childProducts,
+                   Set<Content> content) {
         setId(label);
         setLabel(label);
         setName(name);
@@ -134,6 +139,9 @@ public class Product extends AbstractHibernateObject {
         setHash(hash);
         setType(type);
         setChildProducts(childProducts);
+        setContent(content);
+        // FIXME
+        setEnabledContent(content);
     }
 
     protected Product() {
@@ -361,5 +369,39 @@ public class Product extends AbstractHibernateObject {
     public void setContent(Set<Content> content) {
         this.content = content;
     }
+    
+    public void addContent(Content content) {
+        if (this.content != null) {
+            this.content = new HashSet<Content>();
+        }
+        if (!this.content.contains(content)) { 
+            this.content.add(content);
+        }
+    }
 
+    /**
+     * @param enabledContent the enabledContent to set
+     */
+    public void setEnabledContent(Set<Content> enabledContent) {
+        this.enabledContent = enabledContent;
+    }
+    
+    public void addEnabledContent(Content content) {
+        if (this.enabledContent != null) {
+            this.enabledContent = new HashSet<Content>();
+        }
+        if (!this.enabledContent.contains(content)) { 
+            this.enabledContent.add(content);
+        }
+    }
+
+    /**
+     * @return the enabledContent
+     */
+    public Set<Content> getEnabledContent() {
+//        return enabledContent;
+        return content;
+    }
+
+ 
 }

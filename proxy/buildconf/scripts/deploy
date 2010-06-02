@@ -126,12 +126,8 @@ function upload_products
 	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	return
     fi
-    #BUILDDIR="buildconf/scripts/"
-    CERTDIR="$IMPORTDIR/product_certs"
-    # generates a sql script to import products and improrts it
-    rm -rf $CERTDIR/deploy.sql
-    $IMPORTDIR/import_product_certs.py $CERTDIR/*.pem > $CERTDIR/deploy.sql
-    psql -U candlepin -f $CERTDIR/deploy.sql candlepin
+#    $IMPORTDIR/import_product_certs.py $CERTDIR/*.pem > $CERTDIR/deploy.sql
+    $IMPORTDIR/import_product.rb  $IMPORTDIR/import_products.json
 }
 
 function create_var_lib_candlepin
@@ -165,7 +161,7 @@ if [ "$JBOSS_HOME" != "" ]; then
         STOP="sudo /sbin/service jbossas stop"
         DEPLOY="$JBOSS_HOME/server/default/deploy/"
     fi
-    CONTAINER_CONF_DIR="/etc/tomcat6/conf"
+    CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
     CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
 else
     # use tomcat 6, if not specified

@@ -16,6 +16,16 @@ When /I Consume an Entitlement for the "([^\"]*)" Product/ do |product|
     @consumer_cp.consume_product(product)
 end
 
+When /I Consume an Entitlement for the "([^\"]*)" Product With a Quantity of "(\d+)" / do |product, quantity|
+    @consumer_cp.consume_product(product, quantity)
+end
+
+Then /I Have (\d+) Entitlement[s]? With a Quantity of "(\d+)"/ do |entitlement_size, quantity|
+    entitlements = @consumer_cp.list_entitlements
+    entitlements.length.should == entitlement_size.to_i
+    entitlements[0].quantity.should == 10
+end
+
 Then /I Have (\d+) Entitlement[s]?/ do |entitlement_size|
     @consumer_cp.list_entitlements.length.should == entitlement_size.to_i
 end

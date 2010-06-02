@@ -14,10 +14,7 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -89,7 +86,7 @@ public class PoolTest extends DatabaseTestFixture {
                 .getId(), new Long(-1), TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         poolCurator.create(unlimitedPool);
-        assertTrue(unlimitedPool.entitlementsAvailable());
+        assertTrue(unlimitedPool.entitlementsAvailable(new Integer(1)));
     }
 
     @Test
@@ -103,10 +100,10 @@ public class PoolTest extends DatabaseTestFixture {
                 .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        entitler.entitle(consumer, newProduct);
+        entitler.entitle(consumer, newProduct, new Integer("1"));
 
         assertFalse(poolCurator.find(consumerPool.getId())
-                .entitlementsAvailable());
+                .entitlementsAvailable(new Integer(1)));
     }
 
     @Test
@@ -122,7 +119,7 @@ public class PoolTest extends DatabaseTestFixture {
         consumerPool = poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
-        entitler.entitle(consumer, newProduct);
+        entitler.entitle(consumer, newProduct, new Integer("1"));
 
         assertEquals(1, consumerCurator.find(consumer.getId())
                 .getEntitlements().size());

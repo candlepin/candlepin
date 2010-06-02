@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
@@ -45,15 +48,20 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;
     private Enforcer enforcer;
+    private EventSink sink;
+    private EventFactory eventFactory;
+    
 
     @Inject
     protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer, 
-        ProductServiceAdapter productAdapter) {
+        ProductServiceAdapter productAdapter, EventSink sink, EventFactory eventFactory) {
         
         super(Pool.class);
         this.subAdapter = subAdapter;
         this.productAdapter = productAdapter;
         this.enforcer = enforcer;
+        this.sink = sink;
+        this.eventFactory = eventFactory;
     }
     
     @Override
@@ -72,9 +80,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAll() {
         List<Pool> pools = super.listAll();
         
-        for (Pool pool : pools) {
-            addProductName(pool);
-        }
+        addProductNames(pools);
         
         return pools;
     }
@@ -167,12 +173,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Subscription sub : subs) {
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
                 createPoolForSubscription(sub);
+                subToPoolMap.remove(sub.getId());
             }
             else {
                 Pool existingPool = subToPoolMap.get(sub.getId());
                 updatePoolForSubscription(existingPool, sub);
+                subToPoolMap.remove(sub.getId());
             }
-            subToPoolMap.remove(sub.getId());
         }
     
         // de-activate pools whose subscription disappeared:
@@ -253,13 +260,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = newResults;
         }
         
-        for (Pool p : results) {            
-            // enrich with the product name
-            // TODO:  probably should call out to the adapter 
-            //        once for all the ids we want instead of 
-            //        calling per product
-            addProductName(p);
-        }
+        addProductNames(results);
         
         // If querying for pools available to a specific consumer, we need
         // to do a rules pass to verify the entitlement will be granted.
@@ -269,13 +270,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
-                PreEntHelper helper = enforcer.pre(c, p);
-                if (helper.getResult().isSuccessful()) {
+                PreEntHelper helper = enforcer.pre(c, p, new Integer(1));
+                if (helper.getResult().isSuccessful() && 
+                        !helper.getResult().hasWarnings()) {
                     newResults.add(p);
                 }
                 else {
                     log.info("Omitting pool due to failed rule check: " + p.getId());
                     log.info(helper.getResult().getErrors());
+                    log.info(helper.getResult().getWarnings());
                 }
             }
             results = newResults;
@@ -284,13 +287,40 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return results;
     }
     
+    // set a single name, if its not already there
     private void addProductName(Pool pool) {
         if (pool != null) {
-            String id = pool.getProductId();
-            Product product = this.productAdapter.getProductById(id);
+            if (pool.getProductName() == null) { 
+                HashMap<String, String> names = this.productAdapter.
+                    getProductNamesByProductId(new String[] 
+                    { pool.getProductId() });
+                if (null != names) { 
+                    pool.setProductName(names.get(pool.getProductId()));
+                }
+            }
+        }
+    }
+    
+    // set a bunch of product names at once
+    private void addProductNames(List<Pool> pools) { 
+        if (pools != null && pools.size() > 0) { 
+            String[] productIds = new String[pools.size()];
+            int i = 0;
+            for (Pool p : pools) {            
+                // enrich with the product name
+                productIds[i] = p.getProductId();
+                i++;
+            }
             
-            if (product != null) {
-                pool.setProductName(product.getName());
+            // this will dramatically reduce response time for refreshing pools
+            HashMap<String, String> productNames = this.productAdapter.
+                getProductNamesByProductId(productIds);
+            
+            if (null != productNames) { 
+                // set the product name
+                for (Pool p : pools) { 
+                    p.setProductName(productNames.get(p.getProductId()));
+                } 
             }
         }
     }
@@ -303,6 +333,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void updatePoolForSubscription(Pool existingPool, Subscription sub) {
         log.debug("Found existing pool for sub: " + sub.getId());
         
+        Event e = eventFactory.poolQuantityChangedFrom(existingPool);
         // TODO: We're just updating the pool always now, would be much
         // better if we could check some kind of last modified date to
         // determine if a change has taken place:
@@ -310,7 +341,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         existingPool.setStartDate(sub.getStartDate());
         existingPool.setEndDate(sub.getEndDate());
         merge(existingPool);
-
+        
+        eventFactory.poolQuantityChangedTo(e, existingPool);
+        sink.sendEvent(e);
     }
 
     public void createPoolForSubscription(Subscription sub) {

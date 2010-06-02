@@ -6,7 +6,32 @@
 // the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
 // func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
 function attribute_mappings() {
-	return "virtualization_host:1:virtualization_host, virtualization_host_platform:1:virtualization_host_platform";
+	return "virtualization_host:1:virtualization_host, " +
+			"virtualization_host_platform:1:virtualization_host_platform, " +
+			"architecture:1:architecture, " +
+			"sockets:1:sockets";
+}
+
+function pre_architecture() {
+	if ((product.getAttribute("architecture") != "ALL") &&
+			(!consumer.hasFact("architecture") ||
+			(product.getAttribute("architecture") != consumer.getFact("architecture")))) {
+		pre.addWarning("rulewarning.architecture.mismatch");
+	}
+}
+
+function post_architecture() {
+}
+
+function pre_sockets() {
+	if (!consumer.hasFact("cpu.cpu_sockets") ||
+			(product.getAttribute("sockets") < consumer.getFact("cpu.cpu_sockets"))) {
+		pre.addWarning("rulewarning.unsupported.number.of.sockets");
+	}
+}
+
+function post_sockets() {
+	
 }
 
 // Checks common for both virt host and virt platform entitlements:
