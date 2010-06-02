@@ -143,7 +143,6 @@ public class ProductResource {
                               @PathParam("content_label") String contentLabel, 
                               @QueryParam("enabled") Boolean enabled) {
         Product product = prodAdapter.getProductById(pid);
-        
         Content content = contentCurator.findByLabel(contentLabel);
         
         product.addContent(content);

@@ -153,6 +153,15 @@ public class DefaultRulesTest {
     }
     
     @Test
+    public void fewerThanMaximumNumberOfSocketsShouldNotGenerateWarning() {
+        Pool pool = setupTest("sockets", "128", "cpu.cpu_sockets", "2");
+        
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+    
+    @Test
     public void matchingNumberOfSocketsShouldNotGenerateWarning() {
         Pool pool = setupTest("sockets", "2", "cpu.cpu_sockets", "2");
         

@@ -29,6 +29,6 @@ fi
 GENDB=1 IMPORTDIR=$IMPORTDIR buildconf/scripts/deploy
 
 # run cucumber functional tests
-buildr cucumber
+#buildr cucumber
 
 
