@@ -113,20 +113,20 @@ public class Product extends AbstractHibernateObject {
      * 
      * Use this variant when creating a new object to persist.
      * 
-     * @param label Product label
+     * @param id Product label
      * @param name Human readable Product name
      */
-    public Product(String label, String name) {
-        setId(label);
-        setLabel(label);
+    public Product(String id, String name) {
+        setId(id);
+        setLabel(id);
         setName(name);
     }
     
-    public Product(String hash, String label, String name,
+    public Product(String id, String label, String name,
                    String variant, String version, String arch,
                    String type, Set<Product> childProducts,
                    Set<Content> content) {
-        setId(hash);
+        setId(id);
         setLabel(label);
         setName(name);
         setVariant(variant);
