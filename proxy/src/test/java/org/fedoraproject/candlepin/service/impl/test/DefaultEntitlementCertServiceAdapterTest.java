@@ -75,9 +75,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 extensionUtil, null, null);
         
         product = new Product("a_product", "a product", 
-                              "a product", "variant", "version", 
-                              "arch", "SVC", new HashSet<Product>(),
-                              new HashSet<Content>());
+                              "variant", "version", "arch", 
+                              "SVC", new HashSet<Product>(), new HashSet<Content>());
         
         Content content = new Content(CONTENT_NAME, CONTENT_HASH,
                                       CONTENT_LABEL, CONTENT_TYPE,

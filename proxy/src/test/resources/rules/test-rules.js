@@ -85,7 +85,7 @@ function pre_global() {
 	if (consumer.getType() == "virt_system" && consumer.getParent() != null) {
 		if ((consumer.getParent().hasEntitlement("virtualization_host") ||
 				consumer.getParent().hasEntitlement("virtualization_host_platform")) &&
-				consumer.getParent().hasEntitlement(product.getLabel())) {
+				consumer.getParent().hasEntitlement(product.getId())) {
 			pre.grantFreeEntitlement();
 		}
 
