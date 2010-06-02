@@ -89,4 +89,18 @@ public class Entitlement extends TimeStampedEntity {
     @JsonIgnore
     public void setIsFree(boolean bool) {
     }
+    
+    private EntitlementCertificate entitlementCertificate;
+
+    @JsonIgnore
+    public EntitlementCertificate getEntitlementCertificate() {
+        return entitlementCertificate;
+    }
+
+    @JsonIgnore
+    public void setEntitlementCertificate(EntitlementCertificate entitlement) {
+        this.entitlementCertificate = entitlement;
+    }
+    
+    
 }

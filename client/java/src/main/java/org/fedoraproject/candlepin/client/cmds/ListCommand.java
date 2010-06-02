@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.client.cmds;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -22,12 +23,17 @@ import org.apache.commons.lang.BooleanUtils;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.client.model.Pool;
+import org.fedoraproject.candlepin.client.model.Product;
 import org.fedoraproject.candlepin.client.model.ProductCertificate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * RegisterCommand
  */
 public class ListCommand extends PrivilegedCommand {
+    
+    private static final Logger L = LoggerFactory.getLogger(ListCommand.class);
 
     @Override
     public String getName() {
@@ -49,61 +55,150 @@ public class ListCommand extends PrivilegedCommand {
 
     protected final void execute(CommandLine cmdLine, CandlepinConsumerClient client) {
         if (cmdLine.hasOption("a")) {
-            List<Pool> pools = client.listPools();
-            if (pools.isEmpty()) {
-                System.out.println("No availale subscription pools to list");
-                return;
-            }
-            System.out.println("+-------------------------------------------" +
-                "+\n\tInstalled Product Status\n" +
-                "+-------------------------------------------+\n");
+            printAvailableProducts(client);
+        }
+        if (cmdLine.hasOption("c")) {
+            printConsumedProducts(client);
+        }
+        if (!cmdLine.hasOption("a") && !cmdLine.hasOption("c")) {
+            printInstalledProductsStatus(client);
+        }
 
-            for (Pool pool : pools) {
-                System.out.printf("%-25s%s\n", "ProductName:", pool
-                    .getProductName());
-                System.out.printf("%-25s%s\n", "Product SKU:", pool
-                    .getProductId());
-                System.out.printf("%-25s%s\n", "PoolId:", pool.getId());
-                System.out.printf("%-25s%d\n", "quantity:", pool.getQuantity());
-                System.out.printf("%-25s%s\n", "Expires:", pool.getEndDate());
-                System.out.println("\n");
+    }
+
+    /**
+     * @param client
+     */
+    private void printInstalledProductsStatus(CandlepinConsumerClient client) {
+        L.info("Printing out already installed products on this system");
+        // get product certificates and list them out.
+        List<ProductCertificate> productCertificates = client
+            .getInstalledProductCertificates();
+        List<EntitlementCertificate> entitlementCertificates = client
+            .getCurrentEntitlementCertificates();
+        L.info("ProductCertificates #{} & EntitlementCertificates #{}",
+            productCertificates.size(), entitlementCertificates.size());
+        if (productCertificates.isEmpty() && entitlementCertificates.isEmpty()) {
+            System.out.println("No installed Products to list");
+            return;
+        }
+        
+        toConsoleAndLogs("+-------------------------------------------" +
+            "+\n\tInstalled Product Status\n" +
+            "+-------------------------------------------+\n");
+        Set<Product> productsInEntitlementCerts = Utils.newSet();
+        Set<Product> listedProducts = Utils.newSet();
+        
+        for (EntitlementCertificate certificate : entitlementCertificates) {
+            for (Product product : certificate.getProducts()) {
+                productsInEntitlementCerts.add(product);
             }
         }
-        else if (cmdLine.hasOption("c")) {
-            List<EntitlementCertificate> certs = client
-                .getCurrentEntitlementCertificates();
-            if (certs.isEmpty()) {
-                System.out.println("No Consumed subscription pools to list");
-                return;
+        
+        for (ProductCertificate pc : productCertificates) {
+            for (Product product : pc.getProducts()) {
+                L.debug("Examining product within ProductCertificate #{} {}",
+                    pc.getSerial(), product);
+                if (listedProducts.contains(product)) { 
+                    //already printed out product. skip it.
+                    continue;
+                }
+                if (productsInEntitlementCerts.contains(product.getHash())) {
+                    String status = pc.isValid() ? "Subscribed" : "Expired"; 
+                    printProductDetails(product.getName(), status, 
+                        pc.getEndDate().toString(), pc.getSerial().toString());
+                }
+                else {
+                    //product not subscribed yet.
+                    printProductDetails(product.getName(), "Not Subscribed", "", "");
+                }
+              
+                listedProducts.add(product);
             }
-            for (EntitlementCertificate cert : certs) {
-                System.out.printf("%-25s%s\n", "Name:", cert.getProductName());
-                System.out.printf("%-25s%s\n", "SerialNumber:", cert
+        }
+
+        for (EntitlementCertificate certificate : entitlementCertificates) {
+            for (Product product : certificate.getProducts()) {
+                L.debug("Examining product within EntitlementCertificate #{} {}",
+                    certificate.getSerial(), product);
+                if (listedProducts.contains(product)) {
+                    continue;
+                }
+                printProductDetails(product.getName(), "Not Installed",
+                    certificate.getEndDate().toString(), certificate
+                        .getSerial().toString());
+                listedProducts.add(product);
+            }
+        }
+    }
+
+    private void printProductDetails(String productName, String status,
+        String expDate, String serial) {
+        toConsoleAndLogs("%-25s%s\n", "ProductName:", productName);
+        toConsoleAndLogs("%-25s%s\n", "Status:", status);
+        toConsoleAndLogs("%-25s%s\n", "Expires:", expDate);
+        toConsoleAndLogs("%-25s%s\n", "Subscription:", serial);
+        toConsoleAndLogs("\n");
+    }
+
+    /**
+     * @param client
+     */
+    private void printAvailableProducts(CandlepinConsumerClient client) {
+        List<Pool> pools = client.listPools();
+        if (pools.isEmpty()) {
+            toConsoleAndLogs("No Availale subscription pools to list");
+            return;
+        }
+        toConsoleAndLogs("+-------------------------------------------" +
+            "+\n\tAvailable Subscriptions\n" +
+            "+-------------------------------------------+\n");
+
+        for (Pool pool : pools) {
+            toConsoleAndLogs("%-25s%s\n", "ProductName:", pool
+                .getProductName());
+            toConsoleAndLogs("%-25s%s\n", "Product SKU:", pool
+                .getProductId());
+            toConsoleAndLogs("%-25s%s\n", "PoolId:", pool.getId());
+            toConsoleAndLogs("%-25s%d\n", "quantity:", pool.getQuantity());
+            toConsoleAndLogs("%-25s%s\n", "Expires:", pool.getEndDate());
+            System.out.println("\n");
+        }
+    }
+
+    /**
+     * @param client
+     */
+    private void printConsumedProducts(CandlepinConsumerClient client) {
+        List<EntitlementCertificate> certs = client
+            .getCurrentEntitlementCertificates();
+        if (certs.isEmpty()) {
+            System.out.println("No Consumed subscription pools to list");
+            return;
+        }
+        System.out.println("+-------------------------------------------" +
+            "+\n\tConsumed Product Subscriptions\n" +
+            "+-------------------------------------------+\n");
+        for (EntitlementCertificate cert : certs) {
+            for (Product product : cert.getProducts()) {
+                toConsoleAndLogs("%-25s%s\n", "Name:", product.getName());
+                toConsoleAndLogs("%-25s%s\n", "SerialNumber:", cert
                     .getSerial());
-                System.out.printf("%-25s%s\n", "Active:", BooleanUtils
+                toConsoleAndLogs("%-25s%s\n", "Active:", BooleanUtils
                     .toStringTrueFalse(cert.isValid()));
-                System.out.printf("%-25s%s\n", "Begins:", cert.getStartDate());
-                System.out.printf("%-25s%s\n", "Ends:", cert.getEndDate());
+                toConsoleAndLogs("%-25s%s\n", "Begins:", cert.getStartDate());
+                toConsoleAndLogs("%-25s%s\n", "Ends:", cert.getEndDate());
                 System.out.println("\n");
             }
         }
-        else {
-            // get product certificates and list them out.
-            List<ProductCertificate> productCertificates = client
-                .getInstalledProductCertificates();
-            for (ProductCertificate pc : productCertificates) {
-                System.out.printf("%-25s%s\n", "ProductName:", pc
-                    .getProductName());
-                System.out.printf("%-25s%s\n", "Status:",
-                    pc.isInstalled() ? "Installed" : "Not Installed");
-                System.out.printf("%-25s%s\n", "Expires:", pc.getEndDate());
-                System.out.printf("%-25s%s\n", "Subscription:", pc
-                    .isInstalled() ? pc.getEntitlementCertificate().getSerial() : "");
-                System.out.println("\n");
-            }
-
+    }
+    
+    private void toConsoleAndLogs(String msg, Object ... args) {
+        if (args.length > 0) {
+            msg = String.format(msg, args);
         }
-
+        System.out.print(msg);
+        L.debug(msg);
     }
 
 }

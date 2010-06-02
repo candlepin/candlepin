@@ -31,13 +31,13 @@ import org.fedoraproject.candlepin.client.model.Entitlement;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.client.model.Pool;
 import org.jboss.resteasy.client.ClientResponse;
-
+  
 /**
  * CandlepinClient
  */
 public interface ICandlepinConsumerClient {
 
-    @POST
+    @POST  
     @Path("consumers")
     @Consumes(MediaType.APPLICATION_JSON)
     Consumer register(Consumer aConsumer);
@@ -50,19 +50,19 @@ public interface ICandlepinConsumerClient {
     @DELETE
     @Path("consumers/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    ClientResponse<Object> deleteConsumer(@PathParam("uuid") String uuid);
+    ClientResponse<Void> deleteConsumer(@PathParam("uuid") String uuid);
 
     
     
     @GET
     @Path("pools")
     @Produces(MediaType.APPLICATION_JSON)
-    List<Pool> listPools();
+    ClientResponse<List<Pool>> listPools();
 
     @GET
     @Path("pools")
     @Produces(MediaType.APPLICATION_JSON)
-    List<Pool> listPools(@QueryParam("consumer") String uuid);
+    ClientResponse<List<Pool>> listPools(@QueryParam("consumer") String uuid);
 
     @POST
     @Path("consumers/{uuid}/entitlements")
@@ -73,7 +73,7 @@ public interface ICandlepinConsumerClient {
     @GET
     @Path("consumers/{uuid}/certificates")
     @Produces(MediaType.APPLICATION_JSON)
-    List<EntitlementCertificate> getEntitlementCertificates(
+    ClientResponse<List<EntitlementCertificate>> getEntitlementCertificates(
         @PathParam("uuid") String uuid);
     
     @POST

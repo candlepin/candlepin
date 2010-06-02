@@ -14,13 +14,18 @@
  */
 package org.fedoraproject.candlepin.client;
 
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
 /**
  * ClientException
  */
 public class ClientException extends RuntimeException {
 
     private static final long serialVersionUID = -7217728552039510992L;
-
+    
+    private Response.Status status;
+    
     public ClientException() {
         super();
     }
@@ -35,6 +40,19 @@ public class ClientException extends RuntimeException {
 
     public ClientException(Throwable cause) {
         super(cause);
+    }
+
+    public ClientException(Status status) {
+        this.status = status;
+    }
+    
+    public ClientException(Status status, String message) {
+        this(message);
+        this.status = status;
+    }
+
+    public Response.Status getStatus() {
+        return status;
     }
 
 }

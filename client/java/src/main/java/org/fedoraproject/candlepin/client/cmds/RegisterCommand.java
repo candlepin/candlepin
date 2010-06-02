@@ -14,16 +14,25 @@
  */
 package org.fedoraproject.candlepin.client.cmds;
 
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
+import java.util.List;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.StringUtils;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
-import org.fedoraproject.candlepin.client.OperationResult;
-import static org.apache.commons.lang.StringUtils.*;
+import org.fedoraproject.candlepin.client.model.Product;
+import org.fedoraproject.candlepin.client.model.ProductCertificate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * RegisterCommand.
  */
 public class RegisterCommand extends BaseCommand {
+
+    private static final Logger L = LoggerFactory.getLogger(RegisterCommand.class);
 
     /*
      * (non-Javadoc)
@@ -52,7 +61,7 @@ public class RegisterCommand extends BaseCommand {
         opts.addOption("p", "password", true, "Specify a password");
         opts.addOption("id", "consumerid", true,
             "Register to an Existing consumer");
-        opts.addOption("a", "autosubscribe", true,
+        opts.addOption("a", "autosubscribe", false,
             "Automatically subscribe this system to compatible subscriptions.");
         opts.addOption("f", "force", false,
             "Register the system even if it is already registered");
@@ -72,6 +81,7 @@ public class RegisterCommand extends BaseCommand {
         boolean force = cmdLine.hasOption("f");
         boolean bothUserPassPresent = isNotEmpty(username) &&
             isNotEmpty(password);
+        boolean autosubscribe = StringUtils.isNotEmpty(cmdLine.getOptionValue("a"));
         if (!bothUserPassPresent && consumerId == null) {
             System.err
                 .println("Error: username and password or " +
@@ -80,7 +90,7 @@ public class RegisterCommand extends BaseCommand {
         }
         else if (bothUserPassPresent && consumerId != null) {
             System.err
-                .println("Error1: username and password or" +
+                .println("Error: username and password or" +
                     " consumerid are required, not both. try --help.\n");
             return;
         }
@@ -93,52 +103,50 @@ public class RegisterCommand extends BaseCommand {
         }
         // register based on client id. Go ahead with invocation
         if (consumerId != null) {
-            OperationResult reason = this.client
-                .registerExistingCustomerWithId(consumerId);
-            printMsgs(consumerId, reason);
+            this.client.registerExistingCustomerWithId(consumerId);
+            autoSubscribe(autosubscribe);
             return;
         }
         else {
             // register with username and password.
-            try {
-                String uuid = client.register(username, password, "JavaClient",
-                    "system");
-                System.out.println("Registered with UUID: " + uuid);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                printMsgs(consumerId, OperationResult.UNKNOWN);
-            }
+            String uuid = client.register(username, password, "JavaClient",
+                "system");
+            System.out.println("Registered with UUID: " + uuid);
+            autoSubscribe(autosubscribe);
 
         }
 
     }
 
-    /**
-     * Prints the msgs.
-     *
-     * @param consumerId the consumer id
-     * @param reason the reason
-     */
-    private void printMsgs(String consumerId, OperationResult reason) {
-        switch (reason) {
-            case NOT_A_FAILURE:
-                System.out
-                    .println("Registered with UUID: " + this.client.getUUID());
-                break;
-            case ERROR_WHILE_SAVING_CERTIFICATES:
-                System.err
-                    .println("Error while trying to save certificate and keys to disk.");
-                break;
-            case INVALID_UUID:
-                System.err
-                    .println("Unable to register with consumer " + consumerId);
-                break;
-            default:
-                System.err.println("Registration failed due to unknown reason." +
-                    " Please try again.");
-                break;
+    private void autoSubscribe(boolean subscribeAutomatically) {
+        if (this.client.isRegistered()) {
+            L.info("Trying to autosubscribe products for customer: {}",
+                this.client.getUUID());
+            List<ProductCertificate> productCertificates = this.client
+                .getInstalledProductCertificates();
+            for (ProductCertificate pc : productCertificates) {
+                for (Product product : pc.getProducts()) {
+                    try {
+                        System.out.printf("\nTrying to bind product %s : %d", 
+                            product.getName(), product.getHash());
+                        L.info("Trying to bind product: {}", product);
+                        this.client.bindByProductId(String.valueOf(product
+                            .getHash()));
+                        System.out.printf(
+                            "\nAutomatically subscribed the machine to product %s",
+                            product.getName());
+                        L.info("Automagically binded product: {}", product);
+                    }
+                    catch (Exception e) {
+                        System.out.printf(
+                                "\nWarning: Unable to auto subscribe the machine to %s",
+                                product.getName());
+                        L.warn("Unable to autosubscribe the machine to {}", product);
+                    }
+                }
+            }
         }
     }
 
+   
 }

@@ -17,9 +17,12 @@ package org.fedoraproject.candlepin.client.cmds;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.SystemUtils;
 import org.fedoraproject.candlepin.client.Constants;
@@ -63,5 +66,27 @@ public final class Utils {
     private static void replaceSystemPropertyValues(Properties properties, String key) {
         properties.setProperty(key,
             String.format(properties.getProperty(key), SystemUtils.USER_HOME));
+    }
+
+    public static <T> Set<T> newSet() {
+        return new HashSet<T>();
+    }
+    
+
+    /**
+     * To string.
+     * 
+     * @param <K> the key type
+     * @param <V> the value type
+     * @param msg the msg
+     * @return the string
+     */
+    public static <K, V> String toStr(Map<K, V> msg) {
+        StringBuilder builder = new StringBuilder("\n---- Begin Map-----\n");
+        for (Entry<K, V> entry : msg.entrySet()) {
+            builder.append(entry.getKey().toString()).append("=").append(
+                entry.getValue().toString()).append("\n");
+        }
+        return builder.append("---- End Map -----\n").toString();
     }
 }

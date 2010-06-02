@@ -18,13 +18,15 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.StringUtils;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
-import org.fedoraproject.candlepin.client.OperationResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Class UnSubscribeCommand.
  */
 public class UnSubscribeCommand extends PrivilegedCommand {
 
+    private static final Logger L = LoggerFactory.getLogger(UnSubscribeCommand.class);
     /* (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getDescription()
      */
@@ -47,7 +49,7 @@ public class UnSubscribeCommand extends PrivilegedCommand {
     @Override
     public Options getOptions() {
         Options opts = super.getOptions();
-        opts.addOption("se", "serial", true, "Certificate serial to unsubscribe");
+        opts.addOption("s", "serial", true, "Certificate serial to unsubscribe");
         return opts;
     }
 
@@ -59,18 +61,15 @@ public class UnSubscribeCommand extends PrivilegedCommand {
      */
     @Override
     protected void execute(CommandLine cmdLine, CandlepinConsumerClient client) {
-        String serial = cmdLine.getOptionValue("se");
-        OperationResult result = StringUtils.isEmpty(serial) ? client
-            .unBindAll() : client
-            .unBindBySerialNumber(Integer.parseInt(serial));
-        switch (result) {
-            case NOT_A_FAILURE:
-                System.out.println("Unsubscribed successfully");
-                break;
-            default:
-                System.err.println("Unable to perform unsubscribe!");
+        String serial = cmdLine.getOptionValue("s");
+        if (StringUtils.isEmpty(serial)) {
+            L.warn("Unsubscribing all entitlements for customer: {}", client.getUUID());
+            client.unBindAll();
         }
-
+        else {
+            client.unBindBySerialNumber(Integer.parseInt(serial));
+        }
+        System.out.println("Unsubscribed successfully");
         client.updateEntitlementCertificates();
     }
 }

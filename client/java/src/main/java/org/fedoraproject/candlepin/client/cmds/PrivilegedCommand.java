@@ -16,12 +16,15 @@ package org.fedoraproject.candlepin.client.cmds;
 
 import org.apache.commons.cli.CommandLine;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * PrivilegedCommand - command which can be executed only by registered customers.
  */
 public abstract class PrivilegedCommand extends BaseCommand {
 
+    private static final Logger L = LoggerFactory.getLogger(PrivilegedCommand.class);
     /*
      * (non-Javadoc)
      * @see
@@ -32,6 +35,7 @@ public abstract class PrivilegedCommand extends BaseCommand {
     public final void execute(CommandLine cmdLine) {
         CandlepinConsumerClient client = this.getClient();
         if (!client.isRegistered()) {
+            L.info("System not registered currently!");
             System.out.println("This system is currently not registered.");
             return;
         }

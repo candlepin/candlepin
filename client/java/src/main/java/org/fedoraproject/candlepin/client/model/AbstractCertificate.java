@@ -17,10 +17,8 @@ package org.fedoraproject.candlepin.client.model;
 import java.math.BigInteger;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.fedoraproject.candlepin.client.Constants;
 import org.fedoraproject.candlepin.client.PemUtil;
 
 /**
@@ -28,51 +26,72 @@ import org.fedoraproject.candlepin.client.PemUtil;
  */
 public class AbstractCertificate extends TimeStampedEntity {
 
+
+    /** The x509 certificate. */
     private X509Certificate x509Certificate;
+    
+    /** The serial. */
     private BigInteger serial;
+    
+    /**
+     * Instantiates a new abstract certificate.
+     * 
+     * @param certificate the certificate
+     */
     public AbstractCertificate(X509Certificate certificate) {
         this.setX509Certificate(certificate);
     }
 
+    /**
+     * Instantiates a new abstract certificate.
+     */
     public AbstractCertificate() {
     }
-    @JsonIgnore
-    public String getProductName() {
-        return PemUtil.getExtensionValue(x509Certificate,
-            Constants.PROD_NAME_EXTN_VAL, "Unknown");
-    }
-
+    
+    /**
+     * Gets the start date.
+     * 
+     * @return the start date
+     */
     public Date getStartDate() {
         return this.x509Certificate.getNotBefore();
     }
 
+    /**
+     * Gets the end date.
+     * 
+     * @return the end date
+     */
     public Date getEndDate() {
         return this.x509Certificate.getNotAfter();
     }
-    @JsonIgnore
-    public int getProductID() {
-        Set<String> extensions = this.x509Certificate.getNonCriticalExtensionOIDs();
-        for (String s : extensions) {
-            int index = s.indexOf(Constants.PROD_ID_BEGIN);
-            if (index != -1) {
-                String value = s.substring(index + Constants.PROD_ID_BEGIN.length() + 1,
-                    s.indexOf(".", index + Constants.PROD_ID_BEGIN.length() + 1));
-                return Integer.parseInt(value);
-            }
-        }
-        return -1;
-    }
 
+
+    /**
+     * Gets the x509 certificate.
+     * 
+     * @return the x509 certificate
+     */
     @JsonIgnore
     public X509Certificate getX509Certificate() {
         return x509Certificate;
     }
 
+    /**
+     * Sets the x509 certificate.
+     * 
+     * @param x509Certificate the new x509 certificate
+     */
     @JsonIgnore
     public void setX509Certificate(X509Certificate x509Certificate) {
         this.x509Certificate = x509Certificate;
     }
 
+    /**
+     * Gets the serial.
+     * 
+     * @return the serial
+     */
     @JsonIgnore
     public BigInteger getSerial() {
         if (this.serial != null) {
@@ -81,10 +100,20 @@ public class AbstractCertificate extends TimeStampedEntity {
         return this.getX509Certificate().getSerialNumber();
     }
 
+    /**
+     * Sets the serial.
+     * 
+     * @param bg the new serial
+     */
     public void setSerial(BigInteger bg) {
         this.serial = bg;
     }
 
+    /**
+     * Gets the x509 certificate as pem.
+     * 
+     * @return the x509 certificate as pem
+     */
     @JsonIgnore
     public String getX509CertificateAsPem() {
         try {
@@ -93,5 +122,12 @@ public class AbstractCertificate extends TimeStampedEntity {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    public boolean isValid() {
+        Date currentDate = new Date();
+        return currentDate.after(getStartDate()) &&
+            currentDate.before(getEndDate());
     }
 }

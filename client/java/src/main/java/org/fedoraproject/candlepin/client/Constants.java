@@ -26,7 +26,6 @@ public final class Constants {
     }
 
     /** The PRO d_ nam e_ ext n_ val. */
-    public static final String PROD_NAME_EXTN_VAL = "1.3.6.1.4.1.2312.9.4.1";
 
     /** The STAR t_ date. */
     public static final String START_DATE = "1.3.6.1.4.1.2312.9.4.6";
@@ -35,7 +34,12 @@ public final class Constants {
     public static final String END_DATE = "1.3.6.1.4.1.2312.9.4.7";
 
     /** The PRO d_ i d_ begin. */
-    public static final String PROD_ID_BEGIN = "1.3.6.1.4.1.2312.9.1";
+    public static final String PRODUCT_NAMESPACE = "1.3.6.1.4.1.2312.9.1";
+    public static final String CONTENT_NAMESPACE = "1.3.6.1.4.1.2312.9.2";
+    public static final String ROLE_ENTITLEMENT_NAMESPACE = "1.3.6.1.4.1.2312.9.3";
+    public static final String ORDER_NAMESPACE = "1.3.6.1.4.1.2312.9.4";
+    public static final String SYSTEM_NAMESPACE = "1.3.6.1.4.1.2312.9.5";
+    
     public static final String X509 = "X509";
     public static final String SERVER_URL_KEY = "serverURL";
     public static final String CP_HOME_DIR = "candlePinHomeDirectory";
@@ -48,4 +52,6 @@ public final class Constants {
     public static final String DEFAULT_CONF_LOC = SystemUtils.USER_HOME +
         "/.candlepin/candlepin.conf";
     public static final String DEFAULT_KEY_STORE_PASSWD = "password";
+
+    public static final Object ERR_DISPLAY_MSG = "displayMessage";
 }

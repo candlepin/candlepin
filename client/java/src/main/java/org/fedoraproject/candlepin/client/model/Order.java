@@ -14,54 +14,48 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
-import java.util.Date;
-
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.math.NumberUtils;
 
 /**
- * The Class TimeStampedEntity.
+ * Order
  */
-public abstract class TimeStampedEntity {
+public class Order {
 
-    /** The created. */
-    private Date created, updated;
-
+    private Extensions ex;
     /**
-     * Gets the created.
-     * @return the created
+     * @param extensions
      */
-    public final Date getCreated() {
-        return created;
+    public Order(Extensions extensions) {
+        this.ex = extensions;
     }
 
-    /**
-     * Sets the created.
-     * @param createdDt
-     *            the new created
-     */
-    public final void setCreated(Date createdDt) {
-        this.created = createdDt;
-    }
-
-    /**
-     * Gets the updated.
-     * @return the updated
-     */
-    public final Date getUpdated() {
-        return updated;
-    }
-
-    /**
-     * Sets the updated.
-     * @param up
-     *            the new updated
-     */
-    public final void setUpdated(Date up) {
-        this.updated = up;
+    public String getName() {
+        return ex.getValue("1");
     }
     
+    public int getOrderNumber() {
+        return NumberUtils.toInt(ex.getValue("2"), -1);
+    }
+    
+    public String getSku() {
+        return ex.getValue("3");
+    }
+    
+    public String getRegnum() {
+        return ex.getValue("4");
+    }
+    
+    public int getQuantity() {
+        return NumberUtils.toInt(ex.getValue("5"), -1);
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
         return ReflectionToStringBuilder.reflectionToString(this);
     }
+    
 }

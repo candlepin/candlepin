@@ -21,6 +21,7 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.fedoraproject.candlepin.client.cmds.Utils;
 import org.fedoraproject.candlepin.client.model.Consumer;
 import org.fedoraproject.candlepin.client.model.Entitlement;
@@ -42,13 +44,19 @@ import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClientExecutor;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-
+import org.jboss.resteasy.util.GenericType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * CandlepinConsumerClient
  */
 public class CandlepinConsumerClient {
 
+ 
     private Configuration config;
+    static final Logger L = LoggerFactory
+        .getLogger(CandlepinConsumerClient.class);
+    
     public CandlepinConsumerClient(Configuration config) {
         this.config = config;
         RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
@@ -56,7 +64,6 @@ public class CandlepinConsumerClient {
 
     /**
      * Returns true if the client is already registered
-     * 
      * @return true if registered
      */
     public boolean isRegistered() {
@@ -65,7 +72,6 @@ public class CandlepinConsumerClient {
 
     /**
      * Returns the UUID for the consumer, or null if not registered.
-     * 
      * @return the UUID of the consumer
      */
     public String getUUID() {
@@ -80,11 +86,12 @@ public class CandlepinConsumerClient {
     /**
      * Registers a consumer with a provided name and type. The credentials are
      * user for authentication.
-     * 
      * @return The UUID of the new consumer.
      */
     public String register(String username, String password, String name,
         String type) {
+        L.debug("Trying to register consumer with user:{} pass:{}",
+            username, password);
         ICandlepinConsumerClient client = this.clientWithCredentials(username,
             password);
         Consumer cons = new Consumer();
@@ -99,222 +106,202 @@ public class CandlepinConsumerClient {
      * Register to an existing consumer. The credentials are user for
      * authentication.
      * 
-     * @return true if the registration succeeded
+     * @param username the username
+     * @param password the password
+     * @param uuid the uuid
+     * @return true, if successful
      */
-    public OperationResult registerExisting(String username, String password,
-        String uuid) {
+    public boolean registerExisting(String username, String password, String uuid) {
         ICandlepinConsumerClient client = this.clientWithCredentials(username,
             password);
-        if (isRegistered()) {
-            try {
-                ClientResponse<Consumer> response = client.getConsumer(uuid);
-                return evaluateResponse(response);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                return OperationResult.UNKNOWN;
-            }
+        ClientResponse<Consumer> response = client.getConsumer(uuid);
+        if (!response.getResponseStatus().getFamily().equals(
+            Response.Status.Family.SUCCESSFUL)) {
+            throw new ClientException(response.getResponseStatus().toString());
         }
-        return OperationResult.CLIENT_NOT_REGISTERED;
-    }
-    
-    /**Register an existing consumer based on the uuid. 
-     * @param uuid - the consumer id
-     * @return true if customer exists else false.
-     */
-    public OperationResult registerExistingCustomerWithId(String uuid) {
-        try {
-            HttpClient httpclient = new HttpClient();
-            httpclient.getParams().setAuthenticationPreemptive(true);
-            ICandlepinConsumerClient client = ProxyFactory.create(
-                    ICandlepinConsumerClient.class, this.config.getServerURL(),
-                    new ApacheHttpClientExecutor(httpclient));
-            ClientResponse<Consumer> cr = client.getConsumer(uuid);
-            return evaluateResponse(cr);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return OperationResult.UNKNOWN;
-        }
+        return true;
     }
 
     /**
-     * @param cr
-     * @return
+     * Register an existing consumer based on the uuid.
+     * 
+     * @param uuid - the consumer id
      */
-    private OperationResult evaluateResponse(ClientResponse<Consumer> cr) {
-        if (Response.Status.OK.equals(cr.getResponseStatus())) {
-            try {
-                recordIdentity(cr.getEntity());
-            }
-            catch (ClientException e) {
-                return OperationResult.ERROR_WHILE_SAVING_CERTIFICATES;
-            }
-            return OperationResult.NOT_A_FAILURE;
-        }
-        else {
-            return OperationResult.INVALID_UUID;
-        }
+    public void registerExistingCustomerWithId(String uuid) {
+        L.debug("Trying to register existing customer.uuid={}", uuid);
+        HttpClient httpclient = new HttpClient();
+        httpclient.getParams().setAuthenticationPreemptive(true);
+        ICandlepinConsumerClient client = ProxyFactory.create(
+            ICandlepinConsumerClient.class, this.config.getServerURL(),
+            new ApacheHttpClientExecutor(httpclient));
+        getSafeResult(client.getConsumer(uuid));
     }
 
     /**
      * Remove he consumer from candlepin and all of the entitlements which the
      * conumser have subscribed to.
      * 
-     * @return True if the consumr is no longer registered.
      */
-    public boolean unRegister() {
+    public void unRegister() {
         ICandlepinConsumerClient client = clientWithCert();
-        boolean success = false;
         if (isRegistered()) {
-            ClientResponse<Object> response = client.deleteConsumer(getUUID());
-            success = (response.getResponseStatus()
-                .equals(Response.Status.NO_CONTENT));
-            if (success) {
-                removeFiles();
-            }
+            getSafeResult(client.deleteConsumer(getUUID()));
+            removeFiles();
         }
-        return success;
     }
 
     /**
      * List the pools which the consumer could subscribe to
-     * 
      * @return the list of exception
      */
     public List<Pool> listPools() {
         ICandlepinConsumerClient client = clientWithCert();
-        List<Pool> pools = client.listPools(getUUID());
-        return pools;
+        return getSafeResult(client.listPools(getUUID()));
     }
-
+    
     public List<Entitlement> bindByPool(Long poolId) {
+        L.debug("bindByPool(poolId={})", poolId);
         ICandlepinConsumerClient client = clientWithCert();
-        return client.bindByEntitlementID(getUUID(), poolId).getEntity();
+        return getSafeResult(client
+            .bindByEntitlementID(getUUID(), poolId));
     }
     
     public List<Entitlement> bindByProductId(String productId) {
+        L.debug("bindByProductId(productId={})", productId);
         ICandlepinConsumerClient client = clientWithCert();
-        return client.bindByProductId(getUUID(), productId).getEntity();
+        return getSafeResult(client.bindByProductId(
+            getUUID(), productId));
     }
     
+    /**
+     * Gets the safe result.
+     * @param <T> the generic type
+     * @param response the response
+     * @return the safe result
+     */
+    private <T> T getSafeResult(ClientResponse<T> response) {
+        switch (response.getResponseStatus().getFamily()) {
+            case CLIENT_ERROR:
+                Map<String, String> msg = response
+                    .getEntity(new GenericType<Map<String, String>>() {
+                    });
+                L.warn("Operation failure. Status = {}. Response from server: {}",
+                    ReflectionToStringBuilder.reflectionToString(response
+                        .getResponseStatus()), Utils.toStr(msg));
+                throw new ClientException(response.getResponseStatus(), msg
+                    .get(Constants.ERR_DISPLAY_MSG));
+            default:
+                return response.getEntity();
+        }
+    }
+
+
     public List<Entitlement> bindByRegNumber(String regNo) {
+        L.debug("bindByRegNumber(regNo={})", regNo);
         ICandlepinConsumerClient client = clientWithCert();
-        return client.bindByRegNumber(getUUID(), regNo).getEntity();
+        return getSafeResult(client.bindByRegNumber(
+            getUUID(), regNo));
     }
     
-    public OperationResult unBindBySerialNumber(int serialNumber) {
-        try {
-            ICandlepinConsumerClient client = clientWithCert();
-            ClientResponse<Void> response = client.unBindBySerialNumber(
-                getUUID(), serialNumber);
-            return response.getResponseStatus().equals(
-                Response.Status.NO_CONTENT) ? OperationResult.NOT_A_FAILURE :
-                    OperationResult.UNKNOWN;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return OperationResult.UNKNOWN;
-        }
-
+    public void unBindBySerialNumber(int serialNumber) {
+        L.debug("unBindBySerialNumber(serialNumber={})", serialNumber);
+        ICandlepinConsumerClient client = clientWithCert();
+        getSafeResult(client.unBindBySerialNumber(getUUID(),
+            serialNumber));
     }
 
-    public OperationResult unBindAll() {
-        try {
-            ICandlepinConsumerClient client = clientWithCert();
-            ClientResponse<Void> response = client.unBindAll(getUUID());
-            if (response.getResponseStatus().equals(Response.Status.NO_CONTENT)) {
-                return OperationResult.NOT_A_FAILURE;
-            }
-            else {
-                return OperationResult.UNKNOWN;
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return OperationResult.UNKNOWN;
-        }
+    public void unBindAll() {
+        L.debug("Unbinding all for customer {}", getUUID());
+        ICandlepinConsumerClient client = clientWithCert();
+        getSafeResult(client.unBindAll(getUUID()));
     }
 
     public boolean updateEntitlementCertificates() {
+        L.debug("updating current entitlement certificates of the customer {}", getUUID());
         File entitlementDir = new File(config.getEntitlementDirPath());
         if (entitlementDir.exists() && entitlementDir.isDirectory()) {
+            L.debug("Removing files : {}", Arrays.toString(entitlementDir.list()));
             FileUtil.removeFiles(entitlementDir.listFiles());
+            L.debug("Successfully removed files inside directory: {}", entitlementDir);
         }
         FileUtil.mkdir(config.getEntitlementDirPath());
         ICandlepinConsumerClient client = clientWithCert();
-        List<EntitlementCertificate> certs = client
-            .getEntitlementCertificates(getUUID());
+        List<EntitlementCertificate> certs = getSafeResult(client
+            .getEntitlementCertificates(getUUID()));
+        L.info("Retrieved #{} entitlement certificates", certs.size());
+        
         for (EntitlementCertificate cert : certs) {
             String entCertFileName = config.getEntitlementDirPath() +
                 File.separator + cert.getSerial() + "-cert.pem";
             String entKeyFileName = config.getEntitlementDirPath() +
                 File.separator + cert.getSerial() + "-key.pem";
+            L.debug("Writing to file: {} data: {}", entCertFileName,
+                cert.getX509CertificateAsPem());
             FileUtil.dumpToFile(entCertFileName, cert.getX509CertificateAsPem());
+            L.debug("Writing to file: {} data: {}", entKeyFileName,
+                cert.getKey());
             FileUtil.dumpToFile(entKeyFileName, cert.getKey());
         }
         return true;
     }
 
     public List<EntitlementCertificate> getCurrentEntitlementCertificates() {
-        try {
-            FileUtil.mkdir(config.getEntitlementDirPath());
-            File[] entitlementDirs = new File(config.getEntitlementDirPath())
-                .listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.endsWith("-cert.pem");
-                    }
-                });
-
-            List<EntitlementCertificate> certs = Utils.newList();
-            for (File file : entitlementDirs) {
-                String filename = file.getAbsolutePath();
-                String eKeyFileName = filename.replace("-cert.pem", "-key.pem");
-                X509Certificate cert = PemUtil.readCert(filename);
-                PrivateKey key = PemUtil.readPrivateKey(eKeyFileName);
-                EntitlementCertificate entCert = new EntitlementCertificate(
-                    cert, key);
-                certs.add(entCert);
-            }
-
-            return certs;
+        File entitlementDir = new File(config.getEntitlementDirPath());
+        if (!entitlementDir.isDirectory() || !entitlementDir.canRead()) {
+            L.info("Directory: {} could not be read. Returning empty list",
+                entitlementDir.getAbsolutePath());
+            return Collections.emptyList();
         }
-        catch (Exception e) {
-            throw new ClientException(e);
+        
+        File[] entitlementDirs = entitlementDir
+            .listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith("-cert.pem");
+                }
+            });
+        L.debug("Number of entitlement certificates = #{}",
+            entitlementDir.length());
+        
+        List<EntitlementCertificate> certs = Utils.newList();
+        for (File file : entitlementDirs) {
+            String filename = file.getAbsolutePath();
+            String eKeyFileName = filename.replace("-cert.pem", "-key.pem");
+            X509Certificate cert = PemUtil.readCert(filename);
+            PrivateKey key = PemUtil.readPrivateKey(eKeyFileName);
+            EntitlementCertificate entCert = new EntitlementCertificate(cert,
+                key);
+            certs.add(entCert);
+            L.debug("Read entitlement & key certificate: {}",
+                filename, eKeyFileName);
         }
+        return certs;
     }
 
     public List<ProductCertificate> getInstalledProductCertificates() {
         File file = new File(this.config.getProductDirPath());
+        L.info("Trying to read product certificates from dir: {}", file);
         if (file.exists() && file.isDirectory()) {
             File[] prodCerts = file.listFiles(new FilenameFilter() {
-                @Override
                 public boolean accept(File dir, String name) {
                     return name.endsWith(".pem");
                 }
             });
+            L.debug("Number of product certificates = #{}", prodCerts.length);
             if (prodCerts.length == 0) {
                 return Collections.emptyList();
-            }
-            List<EntitlementCertificate> entitlementCerts = this
-                .getCurrentEntitlementCertificates();
-            Map<Integer, EntitlementCertificate> map = Utils.newMap();
-            for (EntitlementCertificate certificate : entitlementCerts) {
-                map.put(certificate.getProductID(), certificate);
             }
             List<ProductCertificate> productCertificates = Utils.newList();
             for (File certificate : prodCerts) {
                 ProductCertificate pc = new ProductCertificate(PemUtil
                     .readCert(certificate.getAbsolutePath()));
-                EntitlementCertificate ec = map.get(pc.getProductID());
-                pc.setEntitlementCertificate(ec != null ? ec : null);
                 productCertificates.add(pc);
+                L.debug("Read product certificate: {}", certificate);
             }
-
             return productCertificates;
         }
         else {
+            L.info("Product certificates directory: {} could not be read.", file);
             return Collections.emptyList();
         }
     }
@@ -356,7 +343,6 @@ public class CandlepinConsumerClient {
         catch (Exception e) {
             throw new ClientException(e);
         }
-
     }
 
     protected ICandlepinConsumerClient clientWithCredentials(String username,
@@ -374,13 +360,18 @@ public class CandlepinConsumerClient {
     }
 
     protected void recordIdentity(Consumer aConsumer) {
+        L.debug("Recording identity of consumer: {}", aConsumer);
         FileUtil.mkdir(config.getConsumerDirPath());
+        L.debug("Dumping certificate[{}] and key files[{}]",
+            config.getCertificateFilePath(), config.getKeyFilePath());
         FileUtil.dumpToFile(config.getCertificateFilePath(),
             aConsumer.getIdCert().getCert());
         FileUtil.dumpToFile(config.getKeyFilePath(), aConsumer.getIdCert().getKey());
     }
 
     protected void removeFiles() {
+        L.debug("Removing files: {} & {}", config.getCertificateFilePath(),
+            config.getKeyFilePath());
         FileUtil.removeFiles(new String[]{ config.getCertificateFilePath(),
             config.getKeyFilePath() });
     }

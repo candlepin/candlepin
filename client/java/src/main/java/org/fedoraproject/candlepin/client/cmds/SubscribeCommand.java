@@ -57,29 +57,22 @@ public class SubscribeCommand extends PrivilegedCommand {
                 .println("Error: Need either --product or --regtoken, Try --help");
             return;
         }
-        try {
-            if (!isEmpty(pools)) {
-                for (String pool : pools) {
-                    client.bindByPool(Long.decode(pool));
-                }
-            }
-
-            if (!isEmpty(products)) {
-                for (String product : products) {
-                    client.bindByProductId(product);
-                }
-            }
-
-            if (!isEmpty(regTokens)) {
-                for (String token : regTokens) {
-                    client.bindByRegNumber(token);
-                }
+        if (!isEmpty(pools)) {
+            for (String pool : pools) {
+                client.bindByPool(Long.decode(pool));
             }
         }
-        catch (Exception e) {
-            System.err.println("Unable to subscribe!");
-            e.printStackTrace();
-            return;
+
+        if (!isEmpty(products)) {
+            for (String product : products) {
+                client.bindByProductId(product);
+            }
+        }
+
+        if (!isEmpty(regTokens)) {
+            for (String token : regTokens) {
+                client.bindByRegNumber(token);
+            }
         }
         client.updateEntitlementCertificates();
     }

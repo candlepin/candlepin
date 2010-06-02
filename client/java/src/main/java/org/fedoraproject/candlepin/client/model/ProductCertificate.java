@@ -15,6 +15,11 @@
 package org.fedoraproject.candlepin.client.model;
 
 import java.security.cert.X509Certificate;
+import java.util.List;
+import java.util.Set;
+
+import org.fedoraproject.candlepin.client.Constants;
+import org.fedoraproject.candlepin.client.cmds.Utils;
 
 /**
  * The Class ProductCertificate.
@@ -29,33 +34,38 @@ public class ProductCertificate extends AbstractCertificate {
     public ProductCertificate(final X509Certificate certificate) {
         super(certificate);
     }
+    
+    public ProductCertificate() {
+    }
 
-    /** The entitlement certificate. */
-    private EntitlementCertificate entitlementCertificate;
-
-    /**
-     * Checks if is installed.
-     * @return true, if is installed
-     */
-    public final boolean isInstalled() {
-        return entitlementCertificate != null;
+    public List<Product> getProducts() {
+        List<Product> products = Utils.newList();
+        Extensions extensions = new Extensions(getX509Certificate(),
+            Constants.PRODUCT_NAMESPACE);
+        for (String productHash : findUniqueHashes(extensions,
+            Constants.PRODUCT_NAMESPACE)) {
+            products.add(new Product(extensions.branch(productHash), productHash));
+        }
+        return products;
+    }
+    
+    public Product getProduct() {
+        return getProducts().get(0);
     }
 
     /**
-     * Gets the entitlement certificate.
-     * @return the entitlement certificate
+     * @param extensions
+     * @return
      */
-    public final EntitlementCertificate getEntitlementCertificate() {
-        return entitlementCertificate;
+    protected Set<String> findUniqueHashes(Extensions extensions, String namespace) {
+        Set<String> matches = extensions.find(".*1");
+        Set<String> hashes = Utils.newSet();
+        for (String match : matches) {
+            String hash = match.substring(namespace.length() + 1, match
+                .indexOf(".", namespace.length() + 1));
+            hashes.add(hash);
+        }
+        return hashes;
     }
 
-    /**
-     * Sets the entitlement certificate.
-     * @param cert
-     *            the new entitlement certificate
-     */
-    public final void setEntitlementCertificate(
-            final EntitlementCertificate cert) {
-        this.entitlementCertificate = cert;
-    }
 }

@@ -16,24 +16,26 @@ package org.fedoraproject.candlepin.client.model;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.Date;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.fedoraproject.candlepin.client.ClientException;
+import org.fedoraproject.candlepin.client.Constants;
 import org.fedoraproject.candlepin.client.PemUtil;
+import org.fedoraproject.candlepin.client.cmds.Utils;
 
 /**
  * Simple Entitlement Certificate Model
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntitlementCertificate extends AbstractCertificate {
+public class EntitlementCertificate extends ProductCertificate {
     protected String key;
     protected String cert;
-    protected Entitlement entitlement;
 
     public EntitlementCertificate(X509Certificate cert, PrivateKey privateKey) {
         super(cert);
@@ -70,17 +72,52 @@ public class EntitlementCertificate extends AbstractCertificate {
         return PemUtil.createPrivateKey(key);
     }
 
-    public Entitlement getEntitlement() {
-        return entitlement;
+    public List<Entitlement> getEntitlements() {
+        List<Entitlement> entitlements = Utils.newList();
+        entitlements.addAll(getContentEntitlements());
+        entitlements.addAll(getRoleEntitlements());
+        return entitlements;
     }
 
+    public List<Content> getContentEntitlements() {
+        List<Content> contents = Utils.newList();
+        Extensions extensions = new Extensions(getX509Certificate(),
+            Constants.CONTENT_NAMESPACE);
+        for (String hash : findUniqueHashes(extensions, Constants.CONTENT_NAMESPACE)) {
+            Content content = new Content(extensions.branch(hash), hash);
+            content.setEntitlementCertificate(this);
+            contents.add(content);
+        }
+        return contents;
+    }
+
+
+    public List<Role> getRoleEntitlements() {
+        List<Role> roles = Utils.newList();
+        Extensions extensions = new Extensions(getX509Certificate(),
+            Constants.ROLE_ENTITLEMENT_NAMESPACE);
+        for (String subBranch : findUniqueHashes(extensions,
+            Constants.ROLE_ENTITLEMENT_NAMESPACE)) {
+            Role role = new Role(extensions.branch(subBranch), subBranch);
+            role.setEntitlementCertificate(this);
+            roles.add(role);
+        }
+        return roles;
+    }
+
+    public Order getOrder() {
+        Extensions extensions = new Extensions(getX509Certificate(),
+            Constants.ORDER_NAMESPACE);
+        if (extensions.getValue("1") == null) {
+            return null;
+        }
+        else {
+            return new Order(extensions);
+        }
+    }
+    
+    @JsonIgnore
     public void setEntitlement(Entitlement entitlement) {
-        this.entitlement = entitlement;
-    }
-
-    public boolean isValid() {
-        Date currentDate = new Date();
-        return currentDate.after(getStartDate()) &&
-            currentDate.before(getEndDate());
+        
     }
 }

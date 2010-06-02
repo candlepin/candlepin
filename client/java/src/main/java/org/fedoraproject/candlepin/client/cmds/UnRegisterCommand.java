@@ -17,13 +17,15 @@ package org.fedoraproject.candlepin.client.cmds;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class UnRegisterCommand.
  */
 public class UnRegisterCommand extends PrivilegedCommand {
 
+    private static final Logger L = LoggerFactory.getLogger(UnRegisterCommand.class);
     /* (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getDescription()
      */
@@ -48,6 +50,7 @@ public class UnRegisterCommand extends PrivilegedCommand {
      */
     @Override
     protected void execute(CommandLine cmdLine, CandlepinConsumerClient client) {
+        L.info("Unregistering customer: {}", client.getUUID());
         client.unRegister();
     }
 
