@@ -87,8 +87,8 @@ public class DefaultIdentityCertServiceAdapter implements
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
             startDate, endDate, keyPair, serialNumber);
         
-        identityCert.setCert(pki.getPemEncoded(x509cert));
-        identityCert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
+        identityCert.setCert(new String(pki.getPemEncoded(x509cert)));
+        identityCert.setKey(new String(pki.getPemEncoded(keyPair.getPrivate())));
         identityCert.setSerial(x509cert.getSerialNumber());
         identityCert.setConsumer(consumer);
         consumer.setIdCert(identityCert);

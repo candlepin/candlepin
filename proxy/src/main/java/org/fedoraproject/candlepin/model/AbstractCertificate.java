@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.model;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 

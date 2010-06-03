@@ -197,7 +197,7 @@ public class OwnerResource {
         Owner owner = findOwner(ownerId);
 
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
-        for (Pool pool : owner.getEntitlementPools()) {
+        for (Pool pool : owner.getPools()) {
             toReturn.addAll(poolCurator.entitlementsIn(pool));
         }
 

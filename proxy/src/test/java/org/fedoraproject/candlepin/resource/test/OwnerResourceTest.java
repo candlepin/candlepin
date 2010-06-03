@@ -60,7 +60,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testCreateOwner() {
         assertNotNull(owner);
         assertNotNull(ownerCurator.find(owner.getId()));
-        assertTrue(owner.getEntitlementPools().size() == 0);
+        assertTrue(owner.getPools().size() == 0);
     }
     
     @Test    

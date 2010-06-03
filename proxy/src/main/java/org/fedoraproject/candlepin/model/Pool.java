@@ -81,6 +81,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @ManyToOne
     @ForeignKey(name = "fk_pool_owner")
     @JoinColumn(nullable = false)
+    @XmlTransient    
     private Owner owner;
     
     private Boolean activeSubscription = Boolean.TRUE;
@@ -224,7 +225,6 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     /**
      * @return owner of the pool.
      */
-    @XmlTransient
     public Owner getOwner() {
         return owner;
     }
@@ -232,7 +232,6 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     /**
      * @param owner changes the owner of the pool.
      */
-    @XmlTransient
     public void setOwner(Owner owner) {
         this.owner = owner;
     }
