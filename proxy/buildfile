@@ -6,7 +6,8 @@ RELEASE_NUMBER = `grep Release: candlepin.spec`.split()[1]
 GROUP = "candlepin"
 COPYRIGHT = ""
 
-require "buildr/java/emma"
+require 'buildr/java/emma'
+require 'net/http'
 
 #############################################################################
 # DEPENDENCIES
@@ -288,6 +289,17 @@ task :deploy do
   `buildconf/scripts/deploy`
 end
 
+task :deploy_check do
+  begin
+    Net::HTTP.get_response('localhost', '/candlepin/admin/init', 8080) do |http|
+      Rake::Task[:deploy].invoke if http.code != '200'
+    end
+  rescue
+    # Http request failed
+    Rake::Task[:deploy].invoke
+  end
+end
+
 #==========================================================================
 # Cucumber testing
 #==========================================================================
@@ -324,9 +336,9 @@ begin
   end
 
   # Make sure candlepin is deployed before running functional tests
-  task :cucumber => :deploy
-  task 'cucumber:dots' => :deploy
-  task 'cucumber:html' => :deploy
+  task :cucumber => :deploy_check
+  task 'cucumber:dots' => :deploy_check
+  task 'cucumber:html' => :deploy_check
 
 rescue LoadError
   desc 'Cucumber buildr task not available'
