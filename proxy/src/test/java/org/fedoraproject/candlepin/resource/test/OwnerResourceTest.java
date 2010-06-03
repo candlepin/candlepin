@@ -19,6 +19,8 @@ import static org.junit.Assert.*;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -32,6 +34,8 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.jboss.resteasy.plugins.providers.atom.Entry;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,6 +49,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private OwnerResource ownerResource;
     private Owner owner;
     private Product product;
+    private EventFactory eventFactory;
 
     @Before
     public void setUp() {
@@ -54,6 +59,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner);
         product = TestUtil.createProduct();
         productCurator.create(product);
+        eventFactory = injector.getInstance(EventFactory.class);
     }
 
     @Test
@@ -278,5 +284,74 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         
         ownerResource.deleteOwner(owner.getId(), principal);
+    }
+    
+    private Event createConsumerCreatedEvent(Owner o) {
+        // Rather than run through an entire call to ConsumerResource, we'll fake the 
+        // events in the db:
+        setupPrincipal(o, Role.OWNER_ADMIN);
+        Consumer consumer = TestUtil.createConsumer(o);
+        Event e1 = eventFactory.consumerCreated(consumer);
+        eventCurator.create(e1);
+        return e1;
+    }
+    
+    @Test
+    public void testOwnersAtomFeed() {
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        Event e1 = createConsumerCreatedEvent(owner);
+        
+        // Make an event from another owner:
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+        createConsumerCreatedEvent(owner2);
+        
+        // Make sure we're acting as the correct owner admin:
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        
+        Feed feed = new Feed(); // TODO
+        assertEquals(1, feed.getEntries().size());
+        Entry entry = feed.getEntries().get(0);
+        assertEquals(e1.getTimestamp(), entry.getPublished());
+    }
+    
+    @Test
+    public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        // Or more specifically, gets no results, the call will not error out
+        // because he has the correct role.
+        Event e1 = createConsumerCreatedEvent(owner);
+        
+        // Make an event from another owner:
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+        createConsumerCreatedEvent(owner2);
+        
+        // Make sure we're acting as the correct owner admin:
+        // Try to list events for another owner:
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        Feed feed = new Feed(); // TODO
+        
+        assertEquals(1, feed.getEntries().size());
+        Entry entry = feed.getEntries().get(0);
+        assertEquals(e1.getTimestamp(), entry.getPublished());
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void testConsumerRoleCannotAccessOwnerAtomFeed() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+        setupPrincipal(new ConsumerPrincipal(c));
+        
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        // TODO:
+//        Feed feed = ownerResource.getOwner(owner.getId());
     }
 }
