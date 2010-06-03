@@ -34,40 +34,36 @@ public abstract class AbstractCertificate extends AbstractHibernateObject {
     private byte[] cert;
     
     @XmlTransient
-    public void setKey(byte[] key) {
+    public void setKeyAsBytes(byte[] key) {
         this.key = key;
     }
 
-    @XmlTransient
-    public byte[] getKey() {
+    public byte[] getKeyAsBytes() {
         return key;
     }
     
-    @XmlElement(name = "key")
-    public String getKeyAsString() {
+    public String getKey() {
         return new String(key);
     }
     
-    public void setKeyAsString(String key) {
+    public void setKey(String key) {
         this.key = key.getBytes();        
     }    
 
     @XmlTransient
-    public void setCert(byte[] cert) {
+    public void setCertAsBytes(byte[] cert) {
         this.cert = cert;
     }
 
-    @XmlTransient
-    public byte[] getCert() {
+    public byte[] getCertAsBytes() {
         return cert;
     }
     
-    @XmlElement(name = "cert")
-    public String getCertAsString() {
+    public String getCert() {
         return new String(cert);
     }
     
-    public void setCertAsString(String cert) {
+    public void setCert(String cert) {
         this.cert = cert.getBytes();        
     }
     

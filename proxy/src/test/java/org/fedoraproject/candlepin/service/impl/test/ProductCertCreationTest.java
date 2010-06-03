@@ -29,14 +29,14 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     public void hasCert() {
         ProductCertificate cert = createDummyCert();
         
-        Assert.assertTrue(cert.getCert().length > 0);
+        Assert.assertTrue(cert.getCert().length() > 0);
     }
     
     @Test
     public void hasKey() {
         ProductCertificate cert = createDummyCert();
         
-        Assert.assertTrue(cert.getKey().length > 0);
+        Assert.assertTrue(cert.getKey().length() > 0);
     }
     
     @Test

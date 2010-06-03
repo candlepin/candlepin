@@ -58,14 +58,14 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
         
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serialNumber);
-        cert.setKey("---- STUB KEY -----".getBytes());
-        cert.setCert("---- STUB CERT -----".getBytes());
+        cert.setKeyAsBytes("---- STUB KEY -----".getBytes());
+        cert.setCertAsBytes("---- STUB CERT -----".getBytes());
         cert.setEntitlement(entitlement);
         entitlement.getCertificates().add(cert);
         
         log.debug("Generated cert: " + serialNumber);
-        log.debug("Key: " + cert.getKeyAsString());
-        log.debug("Cert: " + cert.getCertAsString());
+        log.debug("Key: " + cert.getKey());
+        log.debug("Cert: " + cert.getCert());
         entCertCurator.create(cert);
         
         return cert;

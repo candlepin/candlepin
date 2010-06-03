@@ -83,13 +83,13 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(new BigInteger(serialNumber.toString()));
-        cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCert(this.pki.getPemEncoded(x509Cert));
+        cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
+        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
         cert.setEntitlement(entitlement);
         
         log.debug("Generated cert serial number: " + serialNumber);
-        log.debug("Key: " + cert.getKeyAsString());
-        log.debug("Cert: " + cert.getCertAsString());
+        log.debug("Key: " + cert.getKey());
+        log.debug("Cert: " + cert.getCert());
         
         return cert;
     }

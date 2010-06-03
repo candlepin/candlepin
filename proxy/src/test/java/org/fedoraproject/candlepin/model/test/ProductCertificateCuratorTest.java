@@ -51,8 +51,8 @@ public class ProductCertificateCuratorTest extends DatabaseTestFixture {
     public void validFindForProduct() {
         ProductCertificate cert = new ProductCertificate();
         cert.setProduct(product);
-        cert.setKeyAsString("key");
-        cert.setCertAsString("cert");
+        cert.setKey("key");
+        cert.setCert("cert");
         
         productCertificateCurator.create(cert);
         
