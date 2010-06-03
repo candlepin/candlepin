@@ -23,6 +23,8 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -44,6 +46,8 @@ import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.jboss.resteasy.plugins.providers.atom.Entry;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -66,6 +70,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private ConsumerResource consumerResource;
     private Principal principal;
     private Owner owner;
+    private EventFactory eventFactory;
 
     @Before
     public void setUp() {
@@ -91,6 +96,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         fullPool.setConsumed(new Long(10));
         poolCurator.create(fullPool);
+        eventFactory = injector.getInstance(EventFactory.class);
     }
     
     @Test
@@ -458,6 +464,74 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(sub.getId(), ents.get(0).getPool().getSubscriptionId());
         assertEquals(1, poolCurator.listByOwnerAndProduct(owner,
             prod).size());
+    }
+
+    private Event createConsumerCreatedEvent(Owner o) {
+        // Rather than run through an entire call to ConsumerResource, we'll fake the 
+        // events in the db:
+        setupPrincipal(o, Role.OWNER_ADMIN);
+        Consumer consumer = TestUtil.createConsumer(o);
+        consumerCurator.create(consumer);
+        Event e1 = eventFactory.consumerCreated(consumer);
+        eventCurator.create(e1);
+        return e1;
+    }
+    
+    @Test
+    public void testConsumersAtomFeed() {
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        Event e1 = createConsumerCreatedEvent(owner);
+        Consumer c = consumerCurator.find(e1.getEntityId());
+        
+        // Make a second consumer event:
+        createConsumerCreatedEvent(owner);
+        
+        // Make an event for another owner:
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+        createConsumerCreatedEvent(owner2);
+        
+        // Make sure we're acting as the correct owner admin:
+        setupPrincipal(owner, Role.OWNER_ADMIN);
+        
+        Feed feed = new Feed(); // TODO
+        assertEquals(1, feed.getEntries().size());
+        Entry entry = feed.getEntries().get(0);
+        assertEquals(e1.getTimestamp(), entry.getPublished());
+    }
+    
+    @Test
+    public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        // Or more specifically, gets no results, the call will not error out
+        // because he has the correct role.
+        Event e1 = createConsumerCreatedEvent(owner);
+        
+        // Make an event from another owner:
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        Feed feed = new Feed(); // TODO
+        
+        assertEquals(0, feed.getEntries().size());
+    }
+    
+    @Test(expected = ForbiddenException.class)
+    public void testConsumerRoleCannotAccessOwnerAtomFeed() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+        setupPrincipal(new ConsumerPrincipal(c));
+        
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        // TODO:
+//        Feed feed = ownerResource.getOwner(owner.getId());
     }
 
 }

@@ -324,21 +324,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Or more specifically, gets no results, the call will not error out
         // because he has the correct role.
-        Event e1 = createConsumerCreatedEvent(owner);
+        createConsumerCreatedEvent(owner);
         
-        // Make an event from another owner:
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
-        createConsumerCreatedEvent(owner2);
-        
-        // Make sure we're acting as the correct owner admin:
-        // Try to list events for another owner:
         setupPrincipal(owner2, Role.OWNER_ADMIN);
         Feed feed = new Feed(); // TODO
-        
-        assertEquals(1, feed.getEntries().size());
-        Entry entry = feed.getEntries().get(0);
-        assertEquals(e1.getTimestamp(), entry.getPublished());
+        assertEquals(0, feed.getEntries().size());
     }
     
     @Test(expected = ForbiddenException.class)
