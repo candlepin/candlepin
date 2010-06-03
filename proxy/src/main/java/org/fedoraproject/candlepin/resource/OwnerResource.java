@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -41,6 +42,7 @@ import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
@@ -52,6 +54,7 @@ import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -73,14 +76,17 @@ public class OwnerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private static Logger log = Logger.getLogger(OwnerResource.class);
+    private EventAdapter eventAdapter;
+    private EventCurator eventCurator;
 
     @Inject
-    public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator, 
+    public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
         SubscriptionCurator subscriptionCurator,
         SubscriptionTokenCurator subscriptionTokenCurator,
-        ConsumerCurator consumerCurator,
-        I18n i18n, UserServiceAdapter userService, Entitler entitler,
-        EventSink sink, EventFactory eventFactory) {
+        ConsumerCurator consumerCurator, I18n i18n,
+        UserServiceAdapter userService, Entitler entitler, EventSink sink,
+        EventFactory eventFactory, EventAdapter adapter,
+        EventCurator eventCurator) {
 
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
@@ -92,6 +98,8 @@ public class OwnerResource {
         this.entitler = entitler;
         this.sink = sink;
         this.eventFactory = eventFactory;
+        this.eventAdapter = adapter;
+        this.eventCurator = eventCurator;
     }
 
     /**
@@ -257,6 +265,16 @@ public class OwnerResource {
 
         return newSubscription;
     }
+    private static final int FEED_LIMIT = 1000;
+
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    @Path("{owner_id}/atom")
+    public Feed createOwnerFeed(@PathParam("owner_id") long ownerId) {
+        log.debug("Hello World!");
+        return this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
+            ownerId));
+    }
     
     @GET
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -301,4 +319,7 @@ public class OwnerResource {
         
         poolCurator.refreshPools(owner);
     }
+
+
+
 }

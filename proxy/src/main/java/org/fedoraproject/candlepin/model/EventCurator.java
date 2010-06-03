@@ -20,6 +20,7 @@ import java.util.List;
 import org.fedoraproject.candlepin.audit.Event;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * AttributeCurator
@@ -32,13 +33,28 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
 
     /**
      * Query events, most recent first.
+     *
      * @return List of events.
      */
+    @SuppressWarnings("unchecked")
     public List<Event> listMostRecent(int limit) {
-        Criteria crit = currentSession().createCriteria(Event.class);
-        crit.setMaxResults(limit);
-        crit.addOrder(Order.desc("timestamp"));
+        Criteria crit = createEventCriteria(limit);
         return crit.list();
+    }
+
+    /**
+     * @param limit
+     * @return
+     */
+    private Criteria createEventCriteria(int limit) {
+        return currentSession().createCriteria(Event.class)
+            .setMaxResults(limit).addOrder(Order.desc("timestamp"));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Event> listMostRecent(int limit, long ownerId) {
+        return createEventCriteria(limit).add(
+            Restrictions.eq("ownerId", ownerId)).list();
     }
 
 }
