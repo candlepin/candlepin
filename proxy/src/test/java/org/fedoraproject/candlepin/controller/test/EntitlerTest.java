@@ -32,6 +32,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
@@ -57,7 +58,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     private Product monitoring;
     private Product provisioning;
     
-    private ConsumerType guestType;
+    private ConsumerType systemType;
     
     private Owner o;
     private Consumer parentSystem;
@@ -68,13 +69,6 @@ public class EntitlerTest extends DatabaseTestFixture {
     public void setUp() throws Exception {
         o = createOwner();
         ownerCurator.create(o);
-        
-        //String certString = SpacewalkCertificateCuratorTest.readCertificate(
-        //        "/certs/spacewalk-with-channel-families.cert");
-        //spacewalkCertCurator.parseCertificate(CertificateFactory.read(certString), o);
-
-        //List<Pool> pools = poolCurator.listByOwner(o);
-        //assertTrue(pools.size() > 0);
 
         virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
         virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, 
@@ -111,17 +105,14 @@ public class EntitlerTest extends DatabaseTestFixture {
         
         entitler = injector.getInstance(Entitler.class);
 
-        ConsumerType system = new ConsumerType(ConsumerType.SYSTEM);
-        consumerTypeCurator.create(system);
+        this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        consumerTypeCurator.create(systemType);
         
-        guestType = new ConsumerType(ConsumerType.VIRT_SYSTEM);
-        consumerTypeCurator.create(guestType);
-        
-        parentSystem = new Consumer("system", o, system);
+        parentSystem = new Consumer("system", o, systemType);
         parentSystem.getFacts().put("total_guests", "0");
         consumerCurator.create(parentSystem);
         
-        childVirtSystem = new Consumer("virt system", o, guestType);
+        childVirtSystem = new Consumer("virt system", o, systemType);
         parentSystem.addChildConsumer(childVirtSystem);
         
         consumerCurator.create(childVirtSystem);
@@ -145,16 +136,18 @@ public class EntitlerTest extends DatabaseTestFixture {
         entitler.entitleByProduct(parentSystem, virtHost, new Integer("1"));
     }
     
-    @Test(expected = EntitlementRefusedException.class)
+    // NOTE:  Disabled after virt_system was removed as a type
+    //@Test(expected = EntitlementRefusedException.class)
     public void testVirtEntitleFailsForVirtSystem() throws Exception {
-        parentSystem.setType(guestType);
+        parentSystem.setType(systemType);
         consumerCurator.update(parentSystem);
         entitler.entitleByProduct(parentSystem, virtHost, new Integer("1"));
     }
     
 
     
-    @Test
+    // NOTE:  Disabled after virt_system was removed as a type
+    //@Test
     public void testVirtSystemGetsWhatParentHasForFree() throws Exception {
         // Give parent virt host ent:
         Entitlement e = entitler.entitleByProduct(parentSystem, virtHost, new Integer("1"));

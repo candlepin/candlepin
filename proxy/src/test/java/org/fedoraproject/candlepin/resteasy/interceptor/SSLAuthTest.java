@@ -20,20 +20,20 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.security.Principal;
+import java.security.cert.X509Certificate;
+
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
-
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.security.Principal;
-import java.security.cert.X509Certificate;
 
 public class SSLAuthTest {
 
@@ -67,7 +67,7 @@ public class SSLAuthTest {
     public void correctUserName() throws Exception {
         Owner owner = new Owner("test owner");
         Consumer consumer = new Consumer("machine_name", owner,
-                new ConsumerType(ConsumerType.SYSTEM));
+                new ConsumerType(ConsumerTypeEnum.SYSTEM));
         ConsumerPrincipal expected = new ConsumerPrincipal(consumer);
 
         String dn = "CN=machine_name, OU=someguy@itcenter.org, " +

@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
@@ -68,21 +69,20 @@ public class AdminResource {
         log.debug("Called initialize()");
 
         // First, determine if we've already setup the DB and if so, do *nothing*!
-        ConsumerType systemType = consumerTypeCurator.lookupByLabel(ConsumerType.SYSTEM);
+        ConsumerType systemType = consumerTypeCurator.lookupByLabel(
+            ConsumerTypeEnum.SYSTEM.getLabel());
         if (systemType != null) {
             log.info("Database already initialized.");
             return "Already initialized.";
         }
         log.info("Initializing Candlepin database.");
 
-        ConsumerType system = new ConsumerType(ConsumerType.SYSTEM);
-        consumerTypeCurator.create(system);
-        log.debug("Created: " + system);
+        for (ConsumerTypeEnum type : ConsumerTypeEnum.values()) {
+            ConsumerType created = new ConsumerType(type); 
+            consumerTypeCurator.create(created);
+            log.debug("Created: " + created);
+        }
 
-        ConsumerType virtSystem = new ConsumerType(ConsumerType.VIRT_SYSTEM);
-        consumerTypeCurator.create(virtSystem);
-        log.debug("Created: " + virtSystem);
-        
         log.info("Creating Admin owner.");
         Owner adminOwner = ownerCurator.create(new Owner("admin"));
         
