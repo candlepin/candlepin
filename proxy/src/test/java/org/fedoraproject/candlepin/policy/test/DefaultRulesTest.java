@@ -14,8 +14,9 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -32,6 +33,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
@@ -66,7 +68,7 @@ public class DefaultRulesTest {
 
         owner = new Owner();
         consumer = new Consumer("test consumer", owner,
-            new ConsumerType(ConsumerType.SYSTEM));
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
     }
     
     @Test

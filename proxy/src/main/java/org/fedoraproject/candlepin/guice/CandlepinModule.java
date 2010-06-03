@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.guice;
 
 import java.util.Properties;
 
+import org.fedoraproject.candlepin.audit.EventAdapter;
+import org.fedoraproject.candlepin.audit.EventAdapterImpl;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -54,6 +56,7 @@ import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.wideplay.warp.persist.jpa.JpaUnit;
@@ -101,7 +104,7 @@ public class CandlepinModule extends AbstractModule {
         bind(AuthInterceptor.class);
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
-        
+        bind(EventAdapter.class).to(EventAdapterImpl.class).in(Scopes.SINGLETON);
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(

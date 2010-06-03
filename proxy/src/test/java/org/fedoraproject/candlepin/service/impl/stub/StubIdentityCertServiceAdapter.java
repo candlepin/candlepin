@@ -32,8 +32,8 @@ public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapte
 
         // totally arbitrary
         idCert.setId(43L);
-        idCert.setKey("uh0876puhapodifbvj094".getBytes());
-        idCert.setCert("hpj-08ha-w4gpoknpon*)&^%#".getBytes());
+        idCert.setKey("uh0876puhapodifbvj094");
+        idCert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         idCert.setSerial(new BigInteger(new Integer(random.nextInt(1000000)).toString()));
 
         // TODO: Should probably be saved to the database even if it is a stub...

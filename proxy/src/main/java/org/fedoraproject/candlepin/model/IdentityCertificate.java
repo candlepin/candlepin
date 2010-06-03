@@ -27,7 +27,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -39,17 +38,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_id_cert")
 @SequenceGenerator(name = "seq_id_cert", sequenceName = "seq_id_cert", allocationSize = 1)
-public class IdentityCertificate extends AbstractHibernateObject{
+public class IdentityCertificate extends AbstractCertificate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_id_cert")
     private Long id;
-
-    @Column(nullable = false)
-    private byte[] key;
-
-    @Column(nullable = false)
-    private byte[] cert;
 
     @Column(nullable = false)
     private BigInteger serial;
@@ -63,53 +56,6 @@ public class IdentityCertificate extends AbstractHibernateObject{
 
     public void setSerial(BigInteger serialNumber) {
         this.serial = serialNumber;
-    }
-
-    @XmlElement(name = "key")
-    public String getKeyAsString() {
-        if (key != null) {
-            return new String(key);
-        }
-
-        return "";
-    }
-
-    public void setKeyAsString(String key) {
-        this.key = key.getBytes();
-    }
-
-    @XmlTransient
-    public byte[] getKey() {
-        return key;
-    }
-
-    @XmlTransient
-    public void setKey(byte[] key) {
-        this.key = key;
-    }
-
-    @XmlElement(name = "cert")
-    public String getCertAsString() {
-        if (cert != null) {
-            return new String(cert);
-        }
-
-        return "";
-    }
-
-    @XmlTransient
-    public byte[] getCert() {
-        return cert;
-    }
-
-    @XmlTransient
-    public void setCert(byte[] cert) {
-        this.cert = cert;
-    }
-
-    // Keep this so that the XML will unmarshall.
-    public void setCertAsString(String cert) {
-        this.cert = cert.getBytes();
     }
 
     @XmlTransient

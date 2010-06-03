@@ -264,8 +264,8 @@ public class DatabaseTestFixture {
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert, 
             BigInteger serial) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
-        toReturn.setKey(key.getBytes());
-        toReturn.setCert(cert.getBytes());
+        toReturn.setKeyAsBytes(key.getBytes());
+        toReturn.setCertAsBytes(cert.getBytes());
         toReturn.setSerial(serial);
         return toReturn;
     }

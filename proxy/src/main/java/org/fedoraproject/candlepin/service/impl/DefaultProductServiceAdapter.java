@@ -137,8 +137,8 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
             keyPair, serial);
         
         ProductCertificate cert = new ProductCertificate();
-        cert.setKey(pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCert(this.pki.getPemEncoded(x509Cert));
+        cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
+        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
         cert.setProduct(product);
         
         return cert;

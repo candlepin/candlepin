@@ -28,7 +28,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -60,15 +59,14 @@ public class Owner extends AbstractHibernateObject implements Serializable {
     
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
-    @XmlTransient
-    private Set<Pool> entitlementPools;
+    private Set<Pool> pools;
     
     /**
      * Default constructor
      */
     public Owner() {
         consumers = new HashSet<Consumer>();
-        entitlementPools = new HashSet<Pool>();
+        pools = new HashSet<Pool>();
     }
     
     /**
@@ -82,7 +80,7 @@ public class Owner extends AbstractHibernateObject implements Serializable {
         this.displayName = displayName;
         
         consumers = new HashSet<Consumer>();
-        entitlementPools = new HashSet<Pool>();
+        pools = new HashSet<Pool>();
     }
 
     /**
@@ -146,15 +144,15 @@ public class Owner extends AbstractHibernateObject implements Serializable {
     /**
      * @return the entitlementPools
      */
-    @XmlElement(name = "pool")
-    public Set<Pool> getEntitlementPools() {
-        return entitlementPools;
+    @XmlTransient
+    public Set<Pool> getPools() {
+        return pools;
     }
     /**
      * @param entitlementPools the entitlementPools to set
      */
-    public void setEntitlementPools(Set<Pool> entitlementPools) {
-        this.entitlementPools = entitlementPools;
+    public void setPools(Set<Pool> entitlementPools) {
+        this.pools = entitlementPools;
     }
     
     /**
@@ -173,10 +171,10 @@ public class Owner extends AbstractHibernateObject implements Serializable {
      */
     public void addEntitlementPool(Pool pool) {
         pool.setOwner(this);
-        if (this.entitlementPools ==  null) {
-            this.entitlementPools = new HashSet<Pool>();
+        if (this.pools ==  null) {
+            this.pools = new HashSet<Pool>();
         }
-        this.entitlementPools.add(pool);
+        this.pools.add(pool);
     }
 
     /**
