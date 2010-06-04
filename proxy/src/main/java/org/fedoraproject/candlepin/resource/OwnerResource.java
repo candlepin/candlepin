@@ -269,8 +269,9 @@ public class OwnerResource {
     @Path("{owner_id}/atom")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public Feed getOwnerAtomFeed(@PathParam("owner_id") long ownerId) {
+        Owner o = findOwner(ownerId);
         return this.eventCurator.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
-            ownerId));
+            o));
     }
     
     @GET
