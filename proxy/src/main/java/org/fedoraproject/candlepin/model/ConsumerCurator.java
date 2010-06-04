@@ -68,14 +68,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .uniqueResult();
     }
     
+    @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
     public List<Consumer> listByOwner(Owner owner) {
         return (List<Consumer>) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("owner", owner)).list();
     }
-
-    
     
     /**
      * @param updatedConsumer updated Consumer values.

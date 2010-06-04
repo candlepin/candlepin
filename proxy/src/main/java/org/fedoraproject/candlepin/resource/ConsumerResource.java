@@ -58,6 +58,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -144,7 +145,7 @@ public class ConsumerResource {
     /**
      * Create a Consumer
      * 
-     * @param in Consumer metadata encapsulated in a ConsumerInfo.
+     * @param consumer Consumer metadata
      * @return newly created Consumer
      * @throws BadRequestException generic exception type for web services We
      *         are calling this "registerConsumer" in the api discussions
@@ -153,51 +154,56 @@ public class ConsumerResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public Consumer create(Consumer in, @Context Principal principal)
+    public Consumer create(Consumer consumer, @Context Principal principal)
         throws BadRequestException {
         // API:registerConsumer
 
         ConsumerType type = consumerTypeCurator.lookupByLabel(
-            in.getType().getLabel());
+            consumer.getType().getLabel());
 
         if (type == null) {
             throw new BadRequestException(
-                i18n.tr("No such consumer type: {0}", in.getType().getLabel()) 
+                i18n.tr("No such consumer type: {0}", consumer.getType().getLabel()) 
             );
         }
 
-        // copy the incoming consumer to avoid modifying the reference.
-        Consumer copy = new Consumer(in);
-        copy.setOwner(principal.getOwner());
-        copy.setType(type); // the type comes in without
+        String username = getCurrentUsername(principal);
+        
+        // TODO:  Refactor out type specific checks?
+        if (type.isType(ConsumerTypeEnum.PERSON)) {
+            Consumer existing = consumerCurator.lookupByName(username);
+            
+            if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
+                // TODO:  This is not the correct error code for this situation!
+                throw new BadRequestException(
+                    i18n.tr("User {0} has already registered a personal consumer"));
+            }
+            
+            // otherwise, this is a personal consumer - set the name to match the username
+            consumer.setName(username);
+        }
+        
+        consumer.setOwner(principal.getOwner());
+        consumer.setType(type);
 
         if (log.isDebugEnabled()) {
-            if (copy.getType() != null) {
-                log.debug("Got consumerTypeLabel of: " + copy.getType().getLabel());
-            }
+            log.debug("Got consumerTypeLabel of: " + type.getLabel());
             log.debug("got metadata: ");
-            log.debug(copy.getFacts());
+            log.debug(consumer.getFacts());
 
-            for (String key : copy.getFacts().keySet()) {
-                log.debug("   " + key + " = " + copy.getFact(key));
+            for (String key : consumer.getFacts().keySet()) {
+                log.debug("   " + key + " = " + consumer.getFact(key));
             }
         }
 
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("my consumer: " + copy);
-            }
-
-            Consumer consumer = consumerCurator.create(copy);
+            consumer = consumerCurator.create(consumer);
             IdentityCertificate idCert = null;
 
             // This is pretty bad - I'm still not convinced that
             // the id cert actually needs the username at all
-            if (principal instanceof UserPrincipal) {
-                UserPrincipal user = (UserPrincipal) principal;
-
-                idCert = identityCertService.generateIdentityCert(consumer,
-                        user.getUsername());
+            if (username != null) {
+                idCert = identityCertService.generateIdentityCert(consumer, username);
             }
 
             if (log.isDebugEnabled()) {
@@ -215,8 +221,18 @@ public class ConsumerResource {
         }
         catch (Exception e) {
             log.error("Problem creating consumer:", e);
-            throw new BadRequestException(i18n.tr("Problem creating consumer {0}", in));
+            throw new BadRequestException(
+                i18n.tr("Problem creating consumer {0}", consumer));
         }
+    }
+    
+    private String getCurrentUsername(Principal principal) {
+        if (principal instanceof UserPrincipal) {
+            UserPrincipal user = (UserPrincipal) principal;
+            return user.getUsername();
+        }
+        
+        return null;
     }
 
     /**

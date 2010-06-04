@@ -122,6 +122,10 @@ public class ConsumerType extends AbstractHibernateObject{
     public void setLabel(String labelIn) {
         label = labelIn;
     }
+    
+    public boolean isType(ConsumerTypeEnum type) {
+        return this.label.equals(type.label);
+    }
 
     /**
      * {@inheritDoc}
