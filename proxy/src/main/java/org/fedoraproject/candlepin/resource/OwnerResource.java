@@ -30,7 +30,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -76,7 +75,6 @@ public class OwnerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private static Logger log = Logger.getLogger(OwnerResource.class);
-    private EventAdapter eventAdapter;
     private EventCurator eventCurator;
     private static final int FEED_LIMIT = 1000;
     
@@ -86,7 +84,7 @@ public class OwnerResource {
         SubscriptionTokenCurator subscriptionTokenCurator,
         ConsumerCurator consumerCurator, I18n i18n,
         UserServiceAdapter userService, Entitler entitler, EventSink sink,
-        EventFactory eventFactory, EventAdapter adapter,
+        EventFactory eventFactory, 
         EventCurator eventCurator) {
 
         this.ownerCurator = ownerCurator;
@@ -99,7 +97,6 @@ public class OwnerResource {
         this.entitler = entitler;
         this.sink = sink;
         this.eventFactory = eventFactory;
-        this.eventAdapter = adapter;
         this.eventCurator = eventCurator;
     }
 
@@ -271,8 +268,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_XML)
     @Path("{owner_id}/atom")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
-    public Feed createOwnerFeed(@PathParam("owner_id") long ownerId) {
-        return this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
+    public Feed getOwnerAtomFeed(@PathParam("owner_id") long ownerId) {
+        return this.eventCurator.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
             ownerId));
     }
     

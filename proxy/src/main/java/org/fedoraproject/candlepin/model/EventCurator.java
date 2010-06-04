@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 
+import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.audit.Event;
@@ -22,6 +23,9 @@ import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.jboss.resteasy.plugins.providers.atom.Content;
+import org.jboss.resteasy.plugins.providers.atom.Entry;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
 
 /**
  * AttributeCurator
@@ -66,5 +70,34 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
         return createEventCriteria(limit).add(
             Restrictions.eq("entityId", consumer.getId())).list();
     }
+    
+    /**
+     * Convert the given list of Events into an Atom feed.
+     * 
+     * @param events List of events.
+     * @return Atom feed for these events.
+     */
+    public Feed toFeed(List<Event> events) {
+        Feed feed = new Feed();
+        feed.setUpdated(new Date());
+        for (Event e : events) {
+            Entry entry = new Entry();
+            entry.setTitle(e.getTarget().toString() + " " + e.getType().toString());
+            entry.setPublished(e.getTimestamp());
+
+            Content content = new Content();
+            content.setJAXBObject(e);
+            entry.setContent(content);
+            feed.getEntries().add(entry);
+        }
+        // Use the most recent event as the feed's published time. Assumes events do not
+        // get modified, if they do then the feed published date could be inaccurate.
+        if (events.size() > 0) {
+            feed.setUpdated(events.get(0).getTimestamp());
+        }
+
+        return feed;
+    }
+
 
 }

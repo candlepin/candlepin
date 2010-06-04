@@ -313,7 +313,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Make sure we're acting as the correct owner admin:
         setupPrincipal(owner, Role.OWNER_ADMIN);
         
-        Feed feed = ownerResource.createOwnerFeed(owner.getId());
+        Feed feed = ownerResource.getOwnerAtomFeed(owner.getId());
         assertEquals(1, feed.getEntries().size());
         Entry entry = feed.getEntries().get(0);
         assertEquals(e1.getTimestamp(), entry.getPublished());
@@ -332,7 +332,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createConsumerCreatedEvent(owner);
         
         setupPrincipal(owner2, Role.OWNER_ADMIN);
-        Feed feed = ownerResource.createOwnerFeed(owner.getId());
+        Feed feed = ownerResource.getOwnerAtomFeed(owner.getId());
         System.out.println(feed);
         assertEquals(0, feed.getEntries().size());
     }
@@ -347,6 +347,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        ownerResource.createOwnerFeed(owner.getId());
+        ownerResource.getOwnerAtomFeed(owner.getId());
     }
 }

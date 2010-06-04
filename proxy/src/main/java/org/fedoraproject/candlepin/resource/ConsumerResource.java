@@ -34,7 +34,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -90,7 +89,6 @@ public class ConsumerResource {
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
-    private EventAdapter eventAdapter;
     private EventCurator eventCurator;
     private static final int FEED_LIMIT = 1000;
     
@@ -105,7 +103,6 @@ public class ConsumerResource {
         I18n i18n,
         EventSink sink,
         EventFactory eventFactory,
-        EventAdapter eventAdapter,
         EventCurator eventCurator) {
 
         this.consumerCurator = consumerCurator;
@@ -120,7 +117,6 @@ public class ConsumerResource {
         this.i18n = i18n;
         this.sink = sink;
         this.eventFactory = eventFactory;
-        this.eventAdapter = eventAdapter;
         this.eventCurator = eventCurator;
     }
 
@@ -596,9 +592,9 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_XML)
     @Path("{consumer_uuid}/atom")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
-    public Feed createOwnerFeed(@PathParam("consumer_uuid") String consumerUuid) {
+    public Feed getConsumerAtomFeed(@PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        return this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
+        return this.eventCurator.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
             consumer));
     }
 }
