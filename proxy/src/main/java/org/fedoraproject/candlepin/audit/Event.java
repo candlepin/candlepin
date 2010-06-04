@@ -32,7 +32,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.model.AccessControlEnforced;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Persisted;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ParamDef;
 
 /**
  * Event - Base class for Candlepin events.
@@ -45,7 +53,18 @@ import org.fedoraproject.candlepin.model.Persisted;
 @SequenceGenerator(name = "seq_event", sequenceName = "seq_event", allocationSize = 1)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Event implements Persisted {
+@FilterDefs({
+    @FilterDef(
+        name = "Event_OWNER_FILTER", 
+        parameters = @ParamDef(name = "owner_id", type = "long")
+    )
+})
+@Filters({
+    @Filter(name = "Event_OWNER_FILTER", 
+        condition = "ownerId = :owner_id"
+    )
+})
+public class Event implements Persisted, AccessControlEnforced {
 
     private static final long serialVersionUID = 1L;
     
@@ -191,5 +210,27 @@ public class Event implements Persisted {
     public String toString() {
         return "Event [" + "id=" + getId() + ", type=" + getType() + ", time=" +
             getTimestamp() + ", entity=" + getEntityId() + "]";
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.fedoraproject.candlepin.model.AccessControlEnforced#shouldGrantAccessTo
+     * (org.fedoraproject.candlepin.model.Owner)
+     */
+    @Override
+    public boolean shouldGrantAccessTo(Owner owner) {
+        return this.ownerId == owner.getId();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.fedoraproject.candlepin.model.AccessControlEnforced#shouldGrantAccessTo
+     * (org.fedoraproject.candlepin.model.Consumer)
+     */
+    @Override
+    public boolean shouldGrantAccessTo(Consumer consumer) {
+        return false;
     }
 }

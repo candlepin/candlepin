@@ -18,6 +18,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.List;
 
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
@@ -54,6 +55,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
     
     // TODO: Pass in actual Owner object for better overloading:
     @SuppressWarnings("unchecked")
+    @EnforceAccessControl
     public List<Event> listMostRecent(int limit, long ownerId) {
         return createEventCriteria(limit).add(
             Restrictions.eq("ownerId", ownerId)).list();

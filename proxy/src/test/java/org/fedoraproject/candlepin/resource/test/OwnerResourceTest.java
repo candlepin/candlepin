@@ -332,7 +332,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createConsumerCreatedEvent(owner);
         
         setupPrincipal(owner2, Role.OWNER_ADMIN);
-        Feed feed = ownerResource.createOwnerFeed(owner2.getId());
+        Feed feed = ownerResource.createOwnerFeed(owner.getId());
+        System.out.println(feed);
         assertEquals(0, feed.getEntries().size());
     }
     
