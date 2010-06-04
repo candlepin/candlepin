@@ -78,7 +78,8 @@ public class OwnerResource {
     private static Logger log = Logger.getLogger(OwnerResource.class);
     private EventAdapter eventAdapter;
     private EventCurator eventCurator;
-
+    private static final int FEED_LIMIT = 1000;
+    
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
         SubscriptionCurator subscriptionCurator,
@@ -265,14 +266,12 @@ public class OwnerResource {
 
         return newSubscription;
     }
-    private static final int FEED_LIMIT = 1000;
 
     @GET
     @Produces(MediaType.APPLICATION_XML)
     @Path("{owner_id}/atom")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public Feed createOwnerFeed(@PathParam("owner_id") long ownerId) {
-        log.debug("Hello World!");
         return this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
             ownerId));
     }

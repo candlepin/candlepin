@@ -34,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -53,6 +54,7 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -64,6 +66,7 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -87,7 +90,10 @@ public class ConsumerResource {
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
-
+    private EventAdapter eventAdapter;
+    private EventCurator eventCurator;
+    private static final int FEED_LIMIT = 1000;
+    
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
@@ -98,7 +104,9 @@ public class ConsumerResource {
         EntitlementCertServiceAdapter entCertServiceAdapter,
         I18n i18n,
         EventSink sink,
-        EventFactory eventFactory) {
+        EventFactory eventFactory,
+        EventAdapter eventAdapter,
+        EventCurator eventCurator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -112,6 +120,8 @@ public class ConsumerResource {
         this.i18n = i18n;
         this.sink = sink;
         this.eventFactory = eventFactory;
+        this.eventAdapter = eventAdapter;
+        this.eventCurator = eventCurator;
     }
 
     /**
@@ -580,5 +590,15 @@ public class ConsumerResource {
         throw new NotFoundException(
             i18n.tr("Entitlement Certificate with serial number {0} could not be found.", 
                 serial));
+    }
+    
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    @Path("{consumer_uuid}/atom")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    public Feed createOwnerFeed(@PathParam("consumer_uuid") String consumerUuid) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        return this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
+            consumer));
     }
 }

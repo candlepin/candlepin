@@ -480,6 +480,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testConsumersAtomFeed() {
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+        
         securityInterceptor.enable();
         crudInterceptor.enable();
 
@@ -490,14 +493,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         createConsumerCreatedEvent(owner);
         
         // Make an event for another owner:
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
         createConsumerCreatedEvent(owner2);
         
         // Make sure we're acting as the correct owner admin:
         setupPrincipal(owner, Role.OWNER_ADMIN);
         
-        Feed feed = new Feed(); // TODO
+        Feed feed = consumerResource.createOwnerFeed(c.getUuid());
         assertEquals(1, feed.getEntries().size());
         Entry entry = feed.getEntries().get(0);
         assertEquals(e1.getTimestamp(), entry.getPublished());
@@ -505,18 +506,19 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+        
         securityInterceptor.enable();
         crudInterceptor.enable();
 
         // Or more specifically, gets no results, the call will not error out
         // because he has the correct role.
         Event e1 = createConsumerCreatedEvent(owner);
+        Consumer c = consumerCurator.find(e1.getEntityId());
         
-        // Make an event from another owner:
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
         setupPrincipal(owner2, Role.OWNER_ADMIN);
-        Feed feed = new Feed(); // TODO
+        Feed feed = consumerResource.createOwnerFeed(c.getUuid());
         
         assertEquals(0, feed.getEntries().size());
     }
@@ -531,8 +533,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        // TODO:
-//        Feed feed = ownerResource.getOwner(owner.getId());
+        consumerResource.createOwnerFeed(c.getUuid());
     }
 
 }
