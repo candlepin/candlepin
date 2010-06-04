@@ -201,6 +201,12 @@ public class ConsumerResource {
                 log.debug("   " + key + " = " + consumer.getFact(key));
             }
         }
+        
+        String parentUuid = consumer.getFact("parent");
+        if (parentUuid != null) {
+            Consumer parent = consumerCurator.lookupByUuid(parentUuid);            
+            consumer.setParent(parent);
+        }
 
         try {
             consumer = consumerCurator.create(consumer);

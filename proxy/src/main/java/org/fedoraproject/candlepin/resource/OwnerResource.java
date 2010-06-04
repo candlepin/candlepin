@@ -173,8 +173,16 @@ public class OwnerResource {
         }
         for (Consumer c : consumerCurator.listByOwner(owner)) {
             log.info("Deleting consumer: " + c);
+            
             entitler.revokeAllEntitlements(c);
-            consumerCurator.delete(c);
+            
+            // need to check if this has been removed due to a 
+            // parent being deleted
+            // TODO:  There has to be a more efficient way to do this...
+            c = consumerCurator.find(c.getId());
+            if (c != null) {
+                consumerCurator.delete(c);
+            }
         }
         for (SubscriptionToken token : subscriptionTokenCurator.listByOwner(owner)) {
             log.info("Deleting subscription token: " + token);

@@ -24,8 +24,17 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
   set_consumer(@current_owner_cp.register(consumer_name, :system, uuid))
 end
 
+When /^I register a consumer with parent "([^\"]*)" and uuid "([^\"]*)"$/ do |parent, uuid|
+  facts = {:parent => parent}
+  set_consumer(@current_owner_cp.register(uuid, :system, uuid, facts))
+end
+
 When /^I register a personal consumer$/ do
   set_consumer(@current_owner_cp.register(nil, :person))
+end
+
+Given /^I have registered a personal consumer with uuid "([^\"]*)"$/ do |uuid|
+  set_consumer(@current_owner_cp.register(nil, :person, uuid))
 end
 
 Given /^I am a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|
@@ -92,6 +101,11 @@ end
 
 Then /the "([^\"]*)" on my identity certificate's subject is "([^\"]*)"$/ do |subject_property, expected|
     subject_value(@x509_cert, subject_property).should == expected
+end
+
+Then /^consumer "([^\"]*)" has parent consumer "([^\"]*)"$/ do |child_uuid, parent_uuid|
+  child = @current_owner_cp.get_consumer(child_uuid)
+  child['parent']['uuid'].should == parent_uuid
 end
 
 # Grabs the value of a key=value pair in the identity cert's subject

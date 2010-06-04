@@ -38,10 +38,11 @@ class Candlepin
 
   end
 
-  def register(name, type=:system, uuid=nil)
+  def register(name, type=:system, uuid=nil, facts={})
     consumer = {
       :type => {:label => type},
-      :name => name
+      :name => name,
+      :facts => facts
     }
 
     consumer[:uuid] = uuid if not uuid.nil?
