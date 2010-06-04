@@ -224,8 +224,10 @@ public class DatabaseTestFixture {
     }
     
     protected Subscription createSubscription() {
+        Product p = TestUtil.createProduct();
+        productCurator.create(p);
         Subscription sub = new Subscription(createOwner(), 
-                                            TestUtil.createProduct(),        
+                                            p,        
                                             new Long(1000), 
                                             TestUtil.createDate(2000, 1, 1),
                                             TestUtil.createDate(2010, 1, 1), 

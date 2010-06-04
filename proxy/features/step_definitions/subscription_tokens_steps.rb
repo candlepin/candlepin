@@ -2,11 +2,12 @@ require 'spec/expectations'
 require 'candlepin_api'
 
 Before do
+    p = @candlepin.create_product('provisioning', 1234, 1)
     @subscription = {
         'startDate' => '2007-07-13',
         'endDate'   => '2010-07-13',
         'quantity'  =>  37,
-        'productId' => 'provisioning'
+        'product' => { 'id' => p['id'] }
     }
     @token_name = nil
 end

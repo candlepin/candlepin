@@ -39,11 +39,13 @@ end
 # NOTE: product may not exist in the db, which works for now but could cause problems
 # later if anything expects it to be there.
 def create_subscription(product, quantity)
+  
+  p = @candlepin.get_product(product.hash.abs)
   subscription = {
       'startDate' => '2007-07-13',
       'endDate'   => '2012-07-13',
       'quantity'  =>  quantity,
-      'productId' => product.hash.abs
+      'product' => { 'id' => p['id'] }
   }
 
   created = @candlepin.create_subscription(@test_owner['id'], subscription)

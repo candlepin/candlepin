@@ -61,7 +61,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(firstEntitlement);
         
         Product product1 = TestUtil.createProduct();
-        productCurator.create(product);
+        productCurator.create(product1);
 
         Pool secondPool = createPoolAndSub(
             owner, product1, 1L, dateSource.currentDate(), dateSource.currentDate());

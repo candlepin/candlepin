@@ -194,6 +194,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void passValidationEnoughNumberOfEntitlementsIsAvailableAndNotExpired() {
         Product product = new Product("a-product", "A product for testing");
+        productCurator.create(product);
+        
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
         
         ValidationResult result = enforcer.pre(
@@ -209,6 +211,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void shouldFailValidationWhenNoEntitlementsAreAvailable() {
         Product product = new Product("a-product", "A product for testing");
+        productCurator.create(product);
+        
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
         ValidationResult result = enforcer.pre(
@@ -225,6 +229,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void shouldFailWhenEntitlementsAreExpired() {
         Product product = new Product("a-product", "A product for testing");
+        productCurator.create(product);
+        
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
         ValidationResult result = enforcer.pre(
@@ -242,6 +248,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void testRuleFailsWhenConsumerDoesntHaveFact() {
         Product product = new Product("a-product", "A product for testing");
         product.addAttribute(new Attribute(PRODUCT_CPULIMITED, "2"));
+        productCurator.create(product);
+        
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
         
         ValidationResult result = enforcer.pre(

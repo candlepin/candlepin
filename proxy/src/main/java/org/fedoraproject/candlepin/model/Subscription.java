@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,8 +27,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -59,8 +56,9 @@ public class Subscription extends AbstractHibernateObject {
     @JoinColumn(nullable = false)
     private Owner owner;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
-    @PrimaryKeyJoinColumn
+    @ManyToOne
+    @ForeignKey(name = "fk_subscription_product")
+    @JoinColumn(nullable = false)
     private Product product;
 
     @Column(nullable = false)
@@ -96,6 +94,18 @@ public class Subscription extends AbstractHibernateObject {
         this.modified = modified;
         
         this.tokens = new HashSet<SubscriptionToken>();
+    }
+    
+    public Subscription(Subscription from) {
+        this.owner = from.owner;
+        this.product = from.product;
+        this.quantity = from.quantity;
+        this.startDate = from.startDate;
+        this.endDate = from.endDate;
+        this.modified = from.modified;
+        this.tokens = from.getTokens() == null ? 
+            new HashSet<SubscriptionToken>() : 
+            new HashSet<SubscriptionToken>(from.getTokens());
     }
     
     public String toString() {

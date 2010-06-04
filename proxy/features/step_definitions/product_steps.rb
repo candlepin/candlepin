@@ -41,7 +41,7 @@ def create_product(product_name)
   id = get_product_id(product_name)
   @product = @candlepin.create_product(product_name, id, 1,
                                        'ALL', 'ALL', 'SVC', [],
-                                       {'virtualization_host' => 'virtualization_host'})
+                                       {'virtualization_host' => 'virtualization_host'})                                       
 end
 
 def get_product_id(product_name)

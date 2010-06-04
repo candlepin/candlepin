@@ -83,13 +83,13 @@ public class TestUtil {
     }
     
 
-    public static Subscription createSubscription() {
+    public static Subscription createSubscription(Product product) {
         Owner owner = new Owner("Test Owner " + randomInt());
-        return createSubscription(owner);
+        return createSubscription(owner, product);
     }
-    public static Subscription createSubscription(Owner owner) {
+    public static Subscription createSubscription(Owner owner, Product product) {
         Subscription sub = new Subscription(owner,
-            createProduct(), new Long(1000), createDate(2000, 1, 1),
+            product, new Long(1000), createDate(2000, 1, 1),
             createDate(2050, 1, 1), createDate(2000, 1, 1));
         return sub;
     }

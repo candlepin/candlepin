@@ -425,8 +425,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void bindByTokenNewSubscription() {
-        Subscription sub = TestUtil.createSubscription(owner);
-        Product prod = new Product(sub.getProduct().getId(), sub.getProduct().getName());
+        Product prod = TestUtil.createProduct();
+        productCurator.create(prod);
+
+        Subscription sub = TestUtil.createSubscription(owner, prod);
 
         SubscriptionToken token = TestUtil.createSubscriptionToken();
         token.setSubscription(sub);
@@ -444,8 +446,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void bindByTokenPreExistingSubscription() {
         setupPrincipal(owner, Role.CONSUMER);
         
-        Subscription sub = TestUtil.createSubscription(owner);
-        Product prod = new Product(sub.getProduct().getId(), sub.getProduct().getName());
+        Product prod = TestUtil.createProduct();
+        productCurator.create(prod);
+        
+        Subscription sub = TestUtil.createSubscription(owner, prod);
 
         SubscriptionToken token = TestUtil.createSubscriptionToken();
         token.setSubscription(sub);

@@ -46,6 +46,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
@@ -76,10 +77,13 @@ public class OwnerResource {
     private EventFactory eventFactory;
     private static Logger log = Logger.getLogger(OwnerResource.class);
     private EventCurator eventCurator;
+    private ProductCurator productCurator;
     private static final int FEED_LIMIT = 1000;
     
+
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
+        ProductCurator productCurator,
         SubscriptionCurator subscriptionCurator,
         SubscriptionTokenCurator subscriptionTokenCurator,
         ConsumerCurator consumerCurator, I18n i18n,
@@ -88,6 +92,7 @@ public class OwnerResource {
         EventCurator eventCurator) {
 
         this.ownerCurator = ownerCurator;
+        this.productCurator = productCurator;
         this.poolCurator = poolCurator;
         this.subscriptionCurator = subscriptionCurator;
         this.subscriptionTokenCurator = subscriptionTokenCurator;
@@ -258,10 +263,11 @@ public class OwnerResource {
     public Subscription createSubscription(@PathParam("owner_id") Long ownerId, 
         Subscription subscription) {
         
-        subscription.setOwner(findOwner(ownerId));
-        Subscription newSubscription = subscriptionCurator.create(subscription);
-
-        return newSubscription;
+        Subscription copy = new Subscription(subscription);
+        copy.setOwner(findOwner(ownerId));
+        copy.setProduct(productCurator.find(subscription.getProduct().getId()));
+        Subscription s = subscriptionCurator.create(copy);
+        return s;
     }
 
     @GET
@@ -317,7 +323,4 @@ public class OwnerResource {
         
         poolCurator.refreshPools(owner);
     }
-
-
-
 }
