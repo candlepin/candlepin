@@ -206,7 +206,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testAddEntitlements() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(createOwner(), newProduct.getId(),
+        Pool pool = createPoolAndSub(createOwner(), newProduct,
             new Long(1000), TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         entityManager().persist(pool.getOwner());

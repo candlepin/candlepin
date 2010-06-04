@@ -22,7 +22,9 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.hibernate.criterion.DetachedCriteria;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,8 +44,14 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
         consumer = createConsumer(owner);
         consumerCurator.create(consumer);
         
+        Product product1 = TestUtil.createProduct();
+        productCurator.create(product1);
+        Product product2 = TestUtil.createProduct();
+        productCurator.create(product2);
+        
         Pool firstPool = createPoolAndSub(
-            owner, "some_product", 1L, dateSource.currentDate(), dateSource.currentDate());
+            owner, product1, 1L, dateSource.currentDate(), 
+            dateSource.currentDate());
         poolCurator.create(firstPool);
         
         Entitlement firstEntitlement = 
@@ -51,7 +59,7 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
         entitlementCurator.create(firstEntitlement);
         
         Pool secondPool = createPoolAndSub(
-            owner, "other_product", 1L, dateSource.currentDate(), dateSource.currentDate());
+            owner, product2, 1L, dateSource.currentDate(), dateSource.currentDate());
         poolCurator.create(secondPool);
         
         Entitlement secondEntitlement = 

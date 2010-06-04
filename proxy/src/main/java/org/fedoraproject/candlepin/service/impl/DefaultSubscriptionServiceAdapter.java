@@ -23,7 +23,6 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
@@ -57,8 +56,8 @@ public class DefaultSubscriptionServiceAdapter implements
         for (Subscription sub : getSubscriptions(owner)) {
 
             // TODO: Performance hit here, needs to be addressed:
-            Product subProduct = prodAdapter.getProductById(sub.getProductId());
-            if (sub.getProductId().equals(productId)) {
+            Product subProduct = prodAdapter.getProductById(sub.getProduct().getId());
+            if (sub.getProduct().getId().equals(productId)) {
                 subs.add(sub);
                 if (log.isDebugEnabled()) {
                     log.debug("   found: " + sub);
@@ -76,15 +75,8 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public SubscriptionProductWrapper getSubscription(Long subscriptionId) {
-        SubscriptionProductWrapper wrapper = new SubscriptionProductWrapper();
-        Subscription subscription = subCurator.lookupByOwnerAndId(subscriptionId);
-        if (subscription != null) {
-            wrapper.setSubscription(subscription);
-            wrapper.setProduct(prodAdapter.getProductById(subscription.getProductId()));
-        }
-        
-        return wrapper;
+    public Subscription getSubscription(Long subscriptionId) {
+        return subCurator.lookupByOwnerAndId(subscriptionId);
     }
 
     @Override

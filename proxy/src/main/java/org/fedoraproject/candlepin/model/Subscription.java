@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -27,6 +28,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -56,7 +59,9 @@ public class Subscription extends AbstractHibernateObject {
     @JoinColumn(nullable = false)
     private Owner owner;
 
-    private String productId;
+    @OneToOne(cascade = CascadeType.PERSIST)
+    @PrimaryKeyJoinColumn
+    private Product product;
 
     @Column(nullable = false)
     private Long quantity;
@@ -81,10 +86,10 @@ public class Subscription extends AbstractHibernateObject {
     public Subscription() {
     }
 
-    public Subscription(Owner ownerIn, String productIdIn, Long maxMembersIn,
+    public Subscription(Owner ownerIn, Product productIn, Long maxMembersIn,
             Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
-        this.productId = productIdIn;
+        this.product = productIn;
         this.quantity = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -94,7 +99,7 @@ public class Subscription extends AbstractHibernateObject {
     }
     
     public String toString() {
-        return "Subscription [id = " + getId() + ", product = " + getProductId() +
+        return "Subscription [id = " + getId() + ", product = " + getProduct().getId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
 
@@ -127,17 +132,17 @@ public class Subscription extends AbstractHibernateObject {
     }
 
     /**
-     * @return the product id associated with this subscription.
+     * @return the product associated with this subscription.
      */
-    public String getProductId() {
-        return productId;
+    public Product getProduct() {
+        return product;
     }
 
     /**
-     * @param productId The product id associated with this subscription.
+     * @param product The product associated with this subscription.
      */
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     /**
@@ -234,7 +239,4 @@ public class Subscription extends AbstractHibernateObject {
     public void setTokens(Set<SubscriptionToken> tokens) {
         this.tokens = tokens;
     }
-    
 }
-
-

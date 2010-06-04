@@ -23,7 +23,9 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,8 +46,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer = createConsumer(owner);
         consumerCurator.create(consumer);
         
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+        
         Pool firstPool = createPoolAndSub(
-            owner, "some_product", 1L, dateSource.currentDate(), dateSource.currentDate());
+            owner, product, 1L, dateSource.currentDate(), dateSource.currentDate());
         poolCurator.create(firstPool);
         
         EntitlementCertificate firstCertificate 
@@ -55,8 +60,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         firstEntitlement = createEntitlement(owner, null, firstPool, firstCertificate);
         entitlementCurator.create(firstEntitlement);
         
+        Product product1 = TestUtil.createProduct();
+        productCurator.create(product);
+
         Pool secondPool = createPoolAndSub(
-            owner, "other_product", 1L, dateSource.currentDate(), dateSource.currentDate());
+            owner, product1, 1L, dateSource.currentDate(), dateSource.currentDate());
         poolCurator.create(secondPool);
         
         EntitlementCertificate secondCertificate 

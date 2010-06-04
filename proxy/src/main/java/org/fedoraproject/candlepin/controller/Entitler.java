@@ -33,13 +33,11 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -57,7 +55,6 @@ public class Entitler {
     private static Logger log = Logger.getLogger(Entitler.class);
     private EntitlementCertServiceAdapter entCertAdapter;
     private SubscriptionServiceAdapter subAdapter;
-    private ProductServiceAdapter productAdapter;
     private EntitlementCertificateCurator entCertCurator;
     private CertificateSerialCurator serialCurator;
     private EventFactory eventFactory;
@@ -69,7 +66,6 @@ public class Entitler {
         EntitlementCertificateCurator entCertCurator,
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter productAdapter,
         CertificateSerialCurator serialCurator,
         EventFactory eventFactory,
         EventSink sink) {
@@ -79,7 +75,6 @@ public class Entitler {
         this.consumerCurator = consumerCurator;
         this.enforcer = enforcer;
         this.entCertAdapter = entCertAdapter;
-        this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
         this.entCertCurator = entCertCurator;
         this.serialCurator = serialCurator;
@@ -172,10 +167,7 @@ public class Entitler {
         consumerCurator.update(consumer);
         Pool mergedPool = epCurator.merge(pool);
         
-        SubscriptionProductWrapper wrapper = subAdapter.
-            getSubscription(mergedPool.getSubscriptionId());
-        Product prod = wrapper.getProduct();
-        Subscription sub = wrapper.getSubscription();
+        Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId());
         
         if (sub == null) {
             log.warn("Cannot generate entitlement certificate, no subscription for pool: " +
@@ -183,15 +175,11 @@ public class Entitler {
             
         }
         else {
-            if (null == prod || null == prod.getId()) { 
-                prod = productAdapter.getProductById(sub.getProductId());
-            }
-        
             // TODO: Assuming every entitlement = generate a cert, most likely we'll want
             // to know if this product entails granting a cert someday.
             try {
                 EntitlementCertificate cert = this.entCertAdapter.
-                    generateEntitlementCert(consumer, e, sub, prod,
+                    generateEntitlementCert(consumer, e, sub, sub.getProduct(),
                     sub.getEndDate(), new BigInteger(
                         serialCurator.getNextSerial().toString()));
                 e.getCertificates().add(cert);

@@ -89,7 +89,7 @@ public class TestUtil {
     }
     public static Subscription createSubscription(Owner owner) {
         Subscription sub = new Subscription(owner,
-            createProduct().getId(), new Long(1000), createDate(2000, 1, 1),
+            createProduct(), new Long(1000), createDate(2000, 1, 1),
             createDate(2050, 1, 1), createDate(2000, 1, 1));
         return sub;
     }

@@ -55,10 +55,10 @@ public class X509ExtensionUtil {
 
         String subscriptionOid = OIDUtil.REDHAT_OID + "." + 
                 OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
-        if (sub.getProductId() != null) {
+        if (sub.getProduct().getId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
                     OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), 
-                    false, new DERUTF8String(sub.getProductId())));
+                    false, new DERUTF8String(sub.getProduct().getId())));
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + 
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), 

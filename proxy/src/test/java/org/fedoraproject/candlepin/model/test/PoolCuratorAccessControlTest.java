@@ -53,7 +53,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
 
     @Test
     public void shouldReturnPoolsBelongingToTheOwnerWhenFilterIsEnabled() {
-        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         
@@ -76,7 +76,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void shouldReturnPoolsBelongingToConsumersOwnerWhenFilterIsEnabled() {
-        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         
@@ -104,10 +104,10 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotDeleteAnotherOwnersPools() {
-        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
-        Pool pool2 = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool2 = createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool2);
         
@@ -124,10 +124,10 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void ownerAdminCanDeletePools() {
-        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
-        Pool pool2 = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool2 = createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool2);
         
@@ -142,7 +142,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotUpdateAnotherOwnersPools() {
-        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
@@ -160,7 +160,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
 
     @Test
     public void ownerAdminCanUpdatePools() {
-        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         
@@ -182,7 +182,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         setupPrincipal(owner2, Role.OWNER_ADMIN);
         crudInterceptor.enable();
 
-        createPoolAndSub(owner, product.getId(), new Long(100),
+        createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
     }
     
@@ -191,7 +191,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         setupPrincipal(owner, Role.OWNER_ADMIN);
         crudInterceptor.enable();
         
-        createPoolAndSub(owner, product.getId(), new Long(100),
+        createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         
         assertEquals(1, poolCurator.listAll().size());
@@ -199,7 +199,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void consumerCanSeePoolsOfItsOwner() {
-        createPoolAndSub(owner, product.getId(), new Long(100),
+        createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2009, 3, 2), TestUtil.createDate(2055, 3, 2));
         
         setupPrincipal(new ConsumerPrincipal(consumer));
@@ -211,7 +211,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void consumerCannotSeePoolsOfOtherOwners() {
-        createPoolAndSub(owner, product.getId(), new Long(100),
+        createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2009, 3, 2), TestUtil.createDate(2055, 3, 2));
         
         setupPrincipal(new ConsumerPrincipal(createConsumer(createOwner())));
@@ -223,7 +223,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void ownerCanSeeOwnPools() {
-        createPoolAndSub(owner, product.getId(), new Long(100),
+        createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2009, 3, 2), TestUtil.createDate(2055, 3, 2));
         
         setupPrincipal(owner, Role.OWNER_ADMIN);
@@ -235,7 +235,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void ownerCannotSeeOtherOwnersPools() {
-        createPoolAndSub(owner, product.getId(), new Long(100),
+        createPoolAndSub(owner, product, new Long(100),
             TestUtil.createDate(2009, 3, 2), TestUtil.createDate(2055, 3, 2));
         
         setupPrincipal(createOwner(), Role.OWNER_ADMIN);

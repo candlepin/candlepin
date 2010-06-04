@@ -95,11 +95,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        pool = createPoolAndSub(owner, product.getId(), new Long(10),
+        pool = createPoolAndSub(owner, product, new Long(10),
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(pool);
 
-        fullPool = createPoolAndSub(owner, product.getId(), new Long(10),
+        fullPool = createPoolAndSub(owner, product, new Long(10),
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         fullPool.setConsumed(new Long(10));
         poolCurator.create(fullPool);
@@ -426,8 +426,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void bindByTokenNewSubscription() {
         Subscription sub = TestUtil.createSubscription(owner);
-        Product prod = new Product(sub.getProductId(), sub.getProductId());
-        productCurator.create(prod);
+        Product prod = new Product(sub.getProduct().getId(), sub.getProduct().getName());
 
         SubscriptionToken token = TestUtil.createSubscriptionToken();
         token.setSubscription(sub);
@@ -446,8 +445,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Role.CONSUMER);
         
         Subscription sub = TestUtil.createSubscription(owner);
-        Product prod = new Product(sub.getProductId(), sub.getProductId());
-        productCurator.create(prod);
+        Product prod = new Product(sub.getProduct().getId(), sub.getProduct().getName());
 
         SubscriptionToken token = TestUtil.createSubscriptionToken();
         token.setSubscription(sub);

@@ -67,7 +67,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         p.addAttribute(new Attribute(CPU_LIMITED_PRODUCT, ""));
         productCurator.create(p);
 
-        Pool pool = createPoolAndSub(owner, p.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, p, new Long(100),
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -84,9 +84,9 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct
-                .getId(), numAvailEntitlements, TestUtil
-                .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
+        Pool consumerPool = createPoolAndSub(owner, newProduct, 
+            numAvailEntitlements, TestUtil.createDate(2009, 11, 30), 
+            TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);
@@ -106,9 +106,8 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct
-                .getId(), numAvailEntitlements, TestUtil
-                .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
+        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements, 
+            TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
         Entitler anotherEntitler = injector.getInstance(Entitler.class);

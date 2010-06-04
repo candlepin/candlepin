@@ -19,7 +19,6 @@ import java.util.List;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 
 /**
  * Subscription data may originate from a separate service outside Candlepin
@@ -82,7 +81,7 @@ public interface SubscriptionServiceAdapter {
      * @param subscriptionId id of the subscription to return.
      * @return Subscription whose id matches subscriptionId
      */
-    SubscriptionProductWrapper getSubscription(Long subscriptionId);
+    Subscription getSubscription(Long subscriptionId);
     
     /**
      * Return all subscriptions.

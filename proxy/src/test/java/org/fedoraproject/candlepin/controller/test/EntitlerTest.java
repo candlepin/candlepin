@@ -89,15 +89,15 @@ public class EntitlerTest extends DatabaseTestFixture {
         productAdapter.createProduct(monitoring);
         productAdapter.createProduct(provisioning);
 
-        subCurator.create(new Subscription(o, virtHost.getId(), 5L, new Date(),
+        subCurator.create(new Subscription(o, virtHost, 5L, new Date(),
             TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, virtHostPlatform.getId(), 5L, new Date(),
+        subCurator.create(new Subscription(o, virtHostPlatform, 5L, new Date(),
             TestUtil.createDate(3020, 12, 12), new Date()));
 
         
-        subCurator.create(new Subscription(o, monitoring.getId(), 5L, new Date(),
+        subCurator.create(new Subscription(o, monitoring, 5L, new Date(),
             TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, provisioning.getId(), 5L, new Date(),
+        subCurator.create(new Subscription(o, provisioning, 5L, new Date(),
             TestUtil.createDate(3020, 12, 12), new Date()));
 
         

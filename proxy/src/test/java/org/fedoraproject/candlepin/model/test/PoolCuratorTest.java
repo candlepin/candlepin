@@ -50,7 +50,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolNotYetActive() {
-        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, product, new Long(100),
                 TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
@@ -62,7 +62,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolExpired() {
-        Pool pool = createPoolAndSub(owner, product.getId(), new Long(100),
+        Pool pool = createPoolAndSub(owner, product, new Long(100),
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
@@ -76,7 +76,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product p = new Product("someProduct", "An Extremely Great Product");
         productCurator.create(p);
         
-        Pool pool = createPoolAndSub(owner, p.getId(), 100L,
+        Pool pool = createPoolAndSub(owner, p, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
         
@@ -91,7 +91,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product p = new Product("another", "A Great Operating System");
         productCurator.create(p);
         
-        Pool pool = createPoolAndSub(owner, p.getId(), 25L,
+        Pool pool = createPoolAndSub(owner, p, 25L,
             TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
@@ -104,7 +104,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product p = new Product("another", "A Great Operating System");
         productCurator.create(p);
         
-        Pool pool = createPoolAndSub(owner, p.getId(), 25L,
+        Pool pool = createPoolAndSub(owner, p, 25L,
             TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
         pool = poolCurator.listAll().get(0);

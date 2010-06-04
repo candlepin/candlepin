@@ -47,6 +47,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
@@ -197,10 +198,10 @@ public class DatabaseTestFixture {
      * Create an entitlement pool and matching subscription.
      * @return an entitlement pool and matching subscription.
      */
-    protected Pool createPoolAndSub(Owner owner, String productId, Long quantity,
+    protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
         Date startDate, Date endDate) {
-        Pool p = new Pool(owner, productId, quantity, startDate, endDate);
-        Subscription sub = new Subscription(owner, productId, quantity, startDate,
+        Pool p = new Pool(owner, product.getId(), quantity, startDate, endDate);
+        Subscription sub = new Subscription(owner, product, quantity, startDate,
             endDate, TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
@@ -224,7 +225,7 @@ public class DatabaseTestFixture {
     
     protected Subscription createSubscription() {
         Subscription sub = new Subscription(createOwner(), 
-                                            TestUtil.createProduct().getId(),        
+                                            TestUtil.createProduct(),        
                                             new Long(1000), 
                                             TestUtil.createDate(2000, 1, 1),
                                             TestUtil.createDate(2010, 1, 1), 

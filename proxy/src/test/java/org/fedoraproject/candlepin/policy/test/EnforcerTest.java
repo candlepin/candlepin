@@ -40,8 +40,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
-import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -75,9 +73,6 @@ public class EnforcerTest extends DatabaseTestFixture {
         consumer = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
-
-        PreEntHelper preHelper = new PreEntHelper(new Integer(1));
-        PostEntHelper postHelper = new PostEntHelper();
 
         Reader reader 
             = new BufferedReader(new InputStreamReader(
@@ -262,21 +257,23 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolLongestExpiry() {
-        Pool pool1 = createPoolAndSub(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(new Attribute(LONGEST_EXPIRY_PRODUCT, ""));
+        productCurator.create(product);
+
+        Pool pool1 = createPoolAndSub(owner, product, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2050, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
+        Pool pool2 = createPoolAndSub(owner, product, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2051, 02, 26));
-        Pool desired = createPoolAndSub(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
+        Pool desired = createPoolAndSub(owner, product, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2060, 02, 26));
-        Pool pool3 = createPoolAndSub(owner, LONGEST_EXPIRY_PRODUCT, new Long(5),
+        Pool pool3 = createPoolAndSub(owner, product, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2055, 02, 26));
         
-        Product product = new Product("a-product", "A product for testing");
-        product.addAttribute(new Attribute(LONGEST_EXPIRY_PRODUCT, ""));
         when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
         
@@ -290,18 +287,20 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolMostAvailable() {
-        Pool pool1 = createPoolAndSub(owner, HIGHEST_QUANTITY_PRODUCT, new Long(5),
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(new Attribute(HIGHEST_QUANTITY_PRODUCT, ""));
+        productCurator.create(product);
+
+        Pool pool1 = createPoolAndSub(owner, product, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2050, 02, 26));
-        Pool desired = createPoolAndSub(owner, HIGHEST_QUANTITY_PRODUCT, new Long(500),
+        Pool desired = createPoolAndSub(owner, product, new Long(500),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2051, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, HIGHEST_QUANTITY_PRODUCT, new Long(5),
+        Pool pool2 = createPoolAndSub(owner, product, new Long(5),
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2060, 02, 26));
         
-        Product product = new Product("a-product", "A product for testing");
-        product.addAttribute(new Attribute(HIGHEST_QUANTITY_PRODUCT, ""));
         when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
         
@@ -315,16 +314,18 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     @Test
     public void shouldUseHighestPriorityRule() {
-        Pool pool1 = createPoolAndSub(owner, "a-product", new Long(5),
-            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-        Pool desired = createPoolAndSub(owner, "a-product", new Long(5),
-            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2051, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, "a-product", new Long(500),
-            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2020, 02, 26));
-        
         Product product = new Product("a-product", "A product for testing");
         product.addAttribute(new Attribute(HIGHEST_QUANTITY_PRODUCT, ""));
         product.addAttribute(new Attribute(LONGEST_EXPIRY_PRODUCT, ""));
+        productCurator.create(product);
+        
+        Pool pool1 = createPoolAndSub(owner, product, new Long(5),
+            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
+        Pool desired = createPoolAndSub(owner, product, new Long(5),
+            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2051, 02, 26));
+        Pool pool2 = createPoolAndSub(owner, product, new Long(500),
+            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2020, 02, 26));
+        
         when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
         
@@ -347,11 +348,14 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test(expected = RuleExecutionException.class)
     public void testSelectBestPoolBadRule() {
-        Pool pool1 = createPoolAndSub(owner, BAD_RULE_PRODUCT, new Long(5), TestUtil
-            .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-
         Product product = new Product("a-product", "A product for testing");
         product.addAttribute(new Attribute(BAD_RULE_PRODUCT, ""));
+        productCurator.create(product);
+
+        
+        Pool pool1 = createPoolAndSub(owner, product, new Long(5), TestUtil
+            .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
+
         when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
 
@@ -361,18 +365,21 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void testSelectBestPoolDefaultRule() {
-        Pool pool1 = createPoolAndSub(owner, NO_RULE_PRODUCT, new Long(5), TestUtil
+        Product product = new Product("a-product", "A product for testing");
+        productCurator.create(product);
+
+        Pool pool1 = createPoolAndSub(owner, product, new Long(5), TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, NO_RULE_PRODUCT, new Long(5), TestUtil
+        Pool pool2 = createPoolAndSub(owner, product, new Long(5), TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2060, 02, 26));
         
-        when(this.productAdapter.getProductById(NO_RULE_PRODUCT))
-            .thenReturn(new Product(NO_RULE_PRODUCT, NO_RULE_PRODUCT));
+        when(this.productAdapter.getProductById("a-product"))
+            .thenReturn(product);
     
         List<Pool> availablePools 
             = Arrays.asList(new Pool[] {pool1, pool2});
 
-        Pool result = enforcer.selectBestPool(consumer, NO_RULE_PRODUCT, availablePools);
+        Pool result = enforcer.selectBestPool(consumer, product.getId(), availablePools);
         assertEquals(pool1.getId(), result.getId());
     }
     
@@ -394,7 +401,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     private Pool entitlementPoolWithMembersAndExpiration(Owner theOwner, Product product,
         final int currentMembers, final int maxMembers, Date expiry) {
-        Pool p = createPoolAndSub(theOwner, product.getId(),
+        Pool p = createPoolAndSub(theOwner, product, 
             new Long(maxMembers), new Date(), expiry);
         p.setConsumed(new Long(currentMembers));
         return p;

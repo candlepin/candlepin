@@ -84,7 +84,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
 
-        Subscription sub = new Subscription(owner, prod.getId().toString(),
+        Subscription sub = new Subscription(owner, prod,
                 new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
@@ -107,12 +107,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testRefreshPoolsWithChangedSubscriptions() {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(createOwner(), prod.getId(),
+        Pool pool = createPoolAndSub(createOwner(), prod,
             new Long(1000), TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
 
-        Subscription sub = new Subscription(owner, prod.getId().toString(),
+        Subscription sub = new Subscription(owner, prod,
                 new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
@@ -138,7 +138,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
 
-        Subscription sub = new Subscription(owner, prod.getId().toString(),
+        Subscription sub = new Subscription(owner, prod,
                 new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
@@ -168,13 +168,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod2 = TestUtil.createProduct();
         productCurator.create(prod2);
         
-        Subscription sub = new Subscription(owner, prod.getId().toString(),
+        Subscription sub = new Subscription(owner, prod,
             new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
                     .createDate(3000, 2, 9),
                     TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
 
-        Subscription sub2 = new Subscription(owner, prod2.getId().toString(),
+        Subscription sub2 = new Subscription(owner, prod2,
                 new Long(800), TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));

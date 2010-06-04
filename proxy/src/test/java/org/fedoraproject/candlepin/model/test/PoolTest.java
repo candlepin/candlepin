@@ -44,7 +44,7 @@ public class PoolTest extends DatabaseTestFixture {
 
         prod = TestUtil.createProduct();
         productCurator.create(prod);
-        pool = createPoolAndSub(createOwner(), prod.getId(),
+        pool = createPoolAndSub(createOwner(), prod,
             new Long(1000), TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         owner = pool.getOwner();
@@ -72,7 +72,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     public void testMultiplePoolsForOwnerProductAllowed() {
         Pool duplicatePool = createPoolAndSub(owner,
-                prod.getId(), new Long(-1), TestUtil.createDate(2009, 11, 30),
+                prod, new Long(-1), TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         // Just need to see no exception is thrown.
         poolCurator.create(duplicatePool);
@@ -82,8 +82,8 @@ public class PoolTest extends DatabaseTestFixture {
     public void testUnlimitedPool() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        Pool unlimitedPool = createPoolAndSub(owner, newProduct
-                .getId(), new Long(-1), TestUtil.createDate(2009, 11, 30),
+        Pool unlimitedPool = createPoolAndSub(owner, newProduct,
+                new Long(-1), TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         poolCurator.create(unlimitedPool);
         assertTrue(unlimitedPool.entitlementsAvailable(new Integer(1)));
@@ -95,9 +95,9 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
 
         productCurator.create(newProduct);
-        Pool consumerPool = createPoolAndSub(owner, newProduct
-                .getId(), numAvailEntitlements, TestUtil
-                .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
+        Pool consumerPool = createPoolAndSub(owner, newProduct, 
+                numAvailEntitlements, TestUtil.createDate(2009, 11, 30), 
+                TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
         entitler.entitleByProduct(consumer, newProduct, new Integer("1"));
@@ -113,9 +113,8 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct
-                .getId(), numAvailEntitlements, TestUtil
-                .createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
+        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements, 
+                TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
@@ -155,7 +154,7 @@ public class PoolTest extends DatabaseTestFixture {
     public void testCreationTimestamp() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+        Pool pool = createPoolAndSub(owner, newProduct, 1L,
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
         poolCurator.create(pool);
@@ -167,7 +166,7 @@ public class PoolTest extends DatabaseTestFixture {
     public void testInitialUpdateTimestamp() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+        Pool pool = createPoolAndSub(owner, newProduct, 1L,
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
         pool = poolCurator.create(pool);
@@ -183,7 +182,7 @@ public class PoolTest extends DatabaseTestFixture {
     public void testSubsequentUpdateTimestamp() {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(owner, newProduct.getId(), 1L,
+        Pool pool = createPoolAndSub(owner, newProduct, 1L,
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
         

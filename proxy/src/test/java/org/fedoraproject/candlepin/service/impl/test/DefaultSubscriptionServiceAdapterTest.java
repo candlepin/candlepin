@@ -14,16 +14,13 @@
  */
 package org.fedoraproject.candlepin.service.impl.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionProductWrapper;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
@@ -51,7 +48,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
         
-        s1 = new Subscription(owner, parentProduct.getId().toString(), new Long(100), 
+        s1 = new Subscription(owner, parentProduct, new Long(100), 
                 TestUtil.createDate(2010, 2, 8), TestUtil.createDate(2050, 2, 8),
                 TestUtil.createDate(2010, 2, 1));
         subCurator.create(s1);
@@ -77,13 +74,12 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void testGetSubscription() {
-        SubscriptionProductWrapper wrapper = adapter.getSubscription(s1.getId());
-        Subscription s = wrapper.getSubscription();
+        Subscription s = adapter.getSubscription(s1.getId());
         assertNotNull(s);
         assertEquals(new Long(100), s.getQuantity());
         
-        wrapper = adapter.getSubscription(new Long(-15));
-        assertNull(wrapper.getSubscription());
+        s = adapter.getSubscription(new Long(-15));
+        assertNull(s);
     }
     
     @Test
@@ -101,7 +97,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         assertEquals(1, subs.size());
         
         Subscription sub = subs.get(0);
-        assertEquals(sub.getProductId(), st.getSubscription().getProductId());
+        assertEquals(sub.getProduct(), st.getSubscription().getProduct());
         assertEquals(1, sub.getTokens().size());
     }
     
