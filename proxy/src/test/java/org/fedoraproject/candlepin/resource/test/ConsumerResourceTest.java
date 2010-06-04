@@ -486,13 +486,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
+        // Make a consumer, we'll look for this creation event:
         Event e1 = createConsumerCreatedEvent(owner);
         Consumer c = consumerCurator.find(e1.getEntityId());
-        
-        // Make a second consumer event:
+
+        // Make another consumer in this org, we do *not* want to see this in the results:
         createConsumerCreatedEvent(owner);
         
-        // Make an event for another owner:
+        // Create another consumer in a different org, again do not want to see this:
         createConsumerCreatedEvent(owner2);
         
         // Make sure we're acting as the correct owner admin:
@@ -512,19 +513,17 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        // Or more specifically, gets no results, the call will not error out
-        // because he has the correct role.
         Event e1 = createConsumerCreatedEvent(owner);
         Consumer c = consumerCurator.find(e1.getEntityId());
         
+        // Should see no results:
         setupPrincipal(owner2, Role.OWNER_ADMIN);
         Feed feed = consumerResource.createOwnerFeed(c.getUuid());
-        
         assertEquals(0, feed.getEntries().size());
     }
     
     @Test(expected = ForbiddenException.class)
-    public void testConsumerRoleCannotAccessOwnerAtomFeed() {
+    public void testConsumerRoleCannotAccessAtomFeed() {
         Consumer c = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
