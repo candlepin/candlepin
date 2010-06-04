@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 import java.math.BigInteger;
 import java.util.Collections;
@@ -26,7 +25,6 @@ import java.util.List;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -42,6 +40,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -51,6 +50,8 @@ import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.internal.Lists;
+
 /**
  * ConsumerResourceTest
  */
@@ -59,29 +60,35 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private static final String METADATA_VALUE = "jsontestname";
     private static final String METADATA_NAME = "name";
     private static final String CONSUMER_NAME = "consumer name";
+    private static final String USER_NAME = "testing user";
     private static final String NON_EXISTENT_CONSUMER = "i don't exist";
     
     private ConsumerType standardSystemType;
+    private ConsumerType personType;
     private Consumer consumer;
     private Product product;
     private Pool pool;
     private Pool fullPool;
     
     private ConsumerResource consumerResource;
-    private Principal principal;
+    private UserPrincipal principal;
     private Owner owner;
     private EventFactory eventFactory;
 
     @Before
     public void setUp() {
-        principal = injector.getInstance(Principal.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
         
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
+        
+        personType = consumerTypeCurator.create(
+            new ConsumerType(ConsumerTypeEnum.PERSON));
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
         
+        principal = new UserPrincipal(USER_NAME, owner, 
+            Lists.newArrayList(Role.OWNER_ADMIN));
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
         
@@ -154,7 +161,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
     }
     
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testCreateConsumerWithUUID() {
         String uuid = "Jar Jar Binks";
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
@@ -165,9 +172,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer submitted  = consumerResource.create(toSubmit, 
             new UserPrincipal("someuser", owner,
                 Collections.singletonList(Role.OWNER_ADMIN)));
-        assertNull(toSubmit.getId());
         assertNotNull(submitted);
-        assertNotNull(submitted);
+        assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
         assertNotNull(consumerCurator.lookupByUuid(uuid));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
@@ -175,14 +181,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals("The Uuids do not match", uuid, submitted.getUuid());
         
         //The second post should fail because of constraint failures
-        try {
-            consumerResource.create(toSubmit, principal);
-        } 
-        catch (BadRequestException e) {
-            // Good
-            return;
-        }
-        fail("No exception was thrown");
+        toSubmit.setId(null);
+        consumerResource.create(toSubmit, principal);
     }    
     
     public void testDeleteResource() {
@@ -464,6 +464,24 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(sub.getId(), ents.get(0).getPool().getSubscriptionId());
         assertEquals(1, poolCurator.listByOwnerAndProduct(owner,
             prod).size());
+    }
+    
+    @Test
+    public void personalNameOverride() {
+        Consumer personal = TestUtil.createConsumer(personType, owner);        
+        personal = consumerResource.create(personal, principal);
+        
+        // Not sure if this should be hard-coded to default
+        assertEquals(USER_NAME, personal.getName());
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void onlyOnePersonalConsumer() {
+        Consumer personal = TestUtil.createConsumer(personType, owner);        
+        consumerResource.create(personal, principal);
+        
+        personal = TestUtil.createConsumer(personType, owner);
+        consumerResource.create(personal, principal);
     }
 
     private Event createConsumerCreatedEvent(Owner o) {

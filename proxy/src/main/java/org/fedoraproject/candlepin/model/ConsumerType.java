@@ -44,10 +44,36 @@ public class ConsumerType extends AbstractHibernateObject{
 
     @Column(nullable = false, unique = true)
     private String label;
-
-    // Constants
-    public static final String SYSTEM = "system"; // physical system
-    public static final String VIRT_SYSTEM = "virt_system";
+    
+    /**
+     * Initial DB values that are part of a "basic" install
+     * 
+     * ConsumerTypeEnum
+     */
+    public enum ConsumerTypeEnum {
+        SYSTEM    ("system"), 
+        PERSON    ("person"),
+        DOMAIN    ("domain"),
+        CANDLEPIN ("candlepin");
+        
+        private final String label;
+        
+        ConsumerTypeEnum(String label) {
+            this.label = label;
+        }
+        
+        /**
+         * @return the label
+         */
+        public String getLabel() {
+            return this.label;
+        }
+        
+        @Override
+        public String toString() {
+            return getLabel();
+        }
+    }
 
     /**
      * default ctor
@@ -55,6 +81,10 @@ public class ConsumerType extends AbstractHibernateObject{
     public ConsumerType() {
     }
 
+    public ConsumerType(ConsumerTypeEnum type) {
+        this(type.getLabel());
+    }
+    
     /**
      * ConsumerType constructor with label
      * 
@@ -91,6 +121,10 @@ public class ConsumerType extends AbstractHibernateObject{
      */
     public void setLabel(String labelIn) {
         label = labelIn;
+    }
+    
+    public boolean isType(ConsumerTypeEnum type) {
+        return this.label.equals(type.label);
     }
 
     /**

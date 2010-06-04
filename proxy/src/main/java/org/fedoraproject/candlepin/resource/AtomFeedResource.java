@@ -14,19 +14,16 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.model.EventCurator;
-import org.jboss.resteasy.plugins.providers.atom.Content;
-import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 
 import com.google.inject.Inject;
@@ -41,38 +38,18 @@ public class AtomFeedResource {
     private static final int ATOM_FEED_LIMIT = 1000;
 
     private EventCurator eventCurator;
-
+    private EventAdapter adapter;
     @Inject
-    public AtomFeedResource(EventCurator eventCurator) {
+    public AtomFeedResource(EventCurator eventCurator, EventAdapter adapter) {
         this.eventCurator = eventCurator;
+        this.adapter = adapter;
     }
 
     @GET
     @Produces("application/atom+xml")
     public Feed getFeed() {
-
-        Feed feed = new Feed();
-        feed.setUpdated(new Date());
-
         List<Event> events = eventCurator.listMostRecent(ATOM_FEED_LIMIT);
-        for (Event e : events) {
-            Entry entry = new Entry();
-            entry.setTitle(e.getTarget().toString() + " " + e.getType().toString());
-            entry.setPublished(e.getTimestamp());
-
-            Content content = new Content();
-            content.setJAXBObject(e);
-            entry.setContent(content);
-            feed.getEntries().add(entry);
-        }
-
-        // Use the most recent event as the feed's published time. Assumes events do not
-        // get modified, if they do then the feed published date could be inaccurate.
-        if (events.size() > 0) {
-            feed.setUpdated(events.get(0).getTimestamp());
-        }
-
-        return feed;
+        return this.adapter.toFeed(events);
     }
 
 }

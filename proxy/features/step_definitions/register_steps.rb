@@ -24,6 +24,10 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
   set_consumer(@current_owner_cp.register(consumer_name, :system, uuid))
 end
 
+When /^I register a personal consumer$/ do
+  set_consumer(@current_owner_cp.register(nil, :person))
+end
+
 Given /^I am a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|
   # This will register with the user you are logged in as
   Given "I am logged in as \"#{@username}\"" 
@@ -49,6 +53,17 @@ Then /^registering another consumer with uuid "([^\"]*)" causes a bad request$/ 
 
 end
 
+Then /^I should not be able to register a new personal consumer$/ do
+  begin
+    When "I register a personal consumer"
+  rescue RestClient::Exception => e
+    e.http_code.should == 400   # I think this is the wrong error code
+  else
+    assert(fail, "Excepted exception was not raised")
+  end
+
+end
+
 Then /^searching for a consumer with uuid "([^\"]*)" causes a not found$/ do |uuid|
 
     lambda {@candlepin.get_consumer(uuid)}.should raise_error
@@ -70,12 +85,12 @@ Then /^my consumer should have an identity certificate$/ do
     @consumer['idCert']['key'][0, 3].should eql('---')
 end
 
-Then /the (\w+) on my identity certificate's subject is my consumer's UUID/ do |subject_property|
+Then /the "([^\"]*)" on my identity certificate's subject is my consumer's UUID/ do |subject_property|
     uuid = @consumer['uuid']
     subject_value(@x509_cert, subject_property).should == uuid
 end
 
-Then /the (\w+) on my identity certificate's subject is (\w+)$/ do |subject_property, expected|
+Then /the "([^\"]*)" on my identity certificate's subject is "([^\"]*)"$/ do |subject_property, expected|
     subject_value(@x509_cert, subject_property).should == expected
 end
 

@@ -120,10 +120,13 @@ public class DefaultEntitlementCertServiceAdapter extends
     private void addExtensionsForChildProducts(List<X509ExtensionWrapper> extensions, 
         Product product) {
         
-        // Add extensions for this product:
-        extensions.addAll(extensionUtil.productExtensions(product));
-        extensions.addAll(extensionUtil.contentExtensions(product));
-        
+        // Add extensions for this product, unless it is a MKT product,
+        // then we just want the childProducts
+        if (!product.getType().equals("MKT")) {
+            extensions.addAll(extensionUtil.productExtensions(product));
+            extensions.addAll(extensionUtil.contentExtensions(product));
+        }
+            
         // Recurse for all child products:
         for (Product childProduct : product.getChildProducts()) {
             addExtensionsForChildProducts(extensions, childProduct);

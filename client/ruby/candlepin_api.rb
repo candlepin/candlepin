@@ -38,10 +38,6 @@ class Candlepin
 
   end
 
-  def upload_satellite_certificate(certificate)
-    post('/certificates', Base64.encode64(certificate).gsub(/\n/, ""))
-  end
-
   def register(name, type=:system, uuid=nil)
     consumer = {
       :type => {:label => type},

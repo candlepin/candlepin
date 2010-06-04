@@ -14,22 +14,22 @@ Feature: Register a Consumer
     Scenario: Correct UID on Identity Certificate
         Given I am logged in as "bill"
         And I register a consumer "some_box"
-        Then the UID on my identity certificate's subject is my consumer's UUID
+        Then the "UID" on my identity certificate's subject is my consumer's UUID
 
     Scenario: Correct CN on Identity Certificate
         Given I am logged in as "bill"
         And I register a consumer "kitt_the_car"
-        Then the CN on my identity certificate's subject is kitt_the_car
+        Then the "CN" on my identity certificate's subject is "kitt_the_car"
 
     Scenario: Correct OU on Identity Certificate
         Given I am logged in as "bill"
         And I register a consumer "foo"
-        Then the OU on my identity certificate's subject is bill
+        Then the "OU" on my identity certificate's subject is "bill"
 
     Scenario: Register with explicit UUID
         Given I am logged in as "bill"
         When I register a consumer "my_machine" with uuid "special_uuid"
-        Then the UID on my identity certificate's subject is special_uuid
+        Then the "UID" on my identity certificate's subject is "special_uuid"
 
     Scenario: Reuse a UUID during registration
         Given I am logged in as "bill"

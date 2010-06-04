@@ -39,8 +39,7 @@ public class TestUtil {
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
-        Consumer c = new Consumer("Test Consumer " + randomInt(), owner, type);
-        return c;
+        return new Consumer("Test Consumer " + randomInt(), owner, type);
     }
 
     /**
