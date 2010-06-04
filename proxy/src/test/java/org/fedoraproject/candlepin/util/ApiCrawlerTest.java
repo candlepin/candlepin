@@ -38,6 +38,7 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.Status;
 import org.fedoraproject.candlepin.resource.AdminResource;
+import org.fedoraproject.candlepin.resource.AtomFeedResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
@@ -60,6 +61,7 @@ public class ApiCrawlerTest {
     public ApiCrawlerTest() {
         resourceClasses = new LinkedList<Class>();
         resourceClasses.add(AdminResource.class);
+        resourceClasses.add(AtomFeedResource.class);        
         resourceClasses.add(ConsumerResource.class);
         resourceClasses.add(ConsumerTypeResource.class);
         resourceClasses.add(EntitlementResource.class);
