@@ -51,7 +51,6 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
         return currentSession().createCriteria(Event.class)
             .setMaxResults(limit).addOrder(Order.desc("timestamp"));
     }
-
     
     // TODO: Pass in actual Owner object for better overloading:
     @SuppressWarnings("unchecked")
@@ -62,6 +61,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
     }
 
     @SuppressWarnings("unchecked")
+    @EnforceAccessControl
     public List<Event> listMostRecent(int limit, Consumer consumer) {
         return createEventCriteria(limit).add(
             Restrictions.eq("entityId", consumer.getId())).list();
