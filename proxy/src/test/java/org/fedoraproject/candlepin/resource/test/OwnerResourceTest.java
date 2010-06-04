@@ -291,6 +291,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // events in the db:
         setupPrincipal(o, Role.OWNER_ADMIN);
         Consumer consumer = TestUtil.createConsumer(o);
+        consumerTypeCurator.create(consumer.getType());
+        consumerCurator.create(consumer);
         Event e1 = eventFactory.consumerCreated(consumer);
         eventCurator.create(e1);
         return e1;
@@ -298,20 +300,20 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testOwnersAtomFeed() {
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+        
         securityInterceptor.enable();
         crudInterceptor.enable();
 
         Event e1 = createConsumerCreatedEvent(owner);
-        
         // Make an event from another owner:
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
         createConsumerCreatedEvent(owner2);
         
         // Make sure we're acting as the correct owner admin:
         setupPrincipal(owner, Role.OWNER_ADMIN);
         
-        Feed feed = new Feed(); // TODO
+        Feed feed = ownerResource.createOwnerFeed(owner.getId());
         assertEquals(1, feed.getEntries().size());
         Entry entry = feed.getEntries().get(0);
         assertEquals(e1.getTimestamp(), entry.getPublished());
@@ -329,7 +331,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
         setupPrincipal(owner2, Role.OWNER_ADMIN);
-        Feed feed = new Feed(); // TODO
+        Feed feed = ownerResource.createOwnerFeed(owner2.getId());
         assertEquals(0, feed.getEntries().size());
     }
     
@@ -343,7 +345,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        // TODO:
-//        Feed feed = ownerResource.getOwner(owner.getId());
+        ownerResource.createOwnerFeed(owner.getId());
     }
 }

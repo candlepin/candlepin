@@ -270,6 +270,7 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_XML)
     @Path("{owner_id}/atom")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
     public Feed createOwnerFeed(@PathParam("owner_id") long ownerId) {
         log.debug("Hello World!");
         return this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,

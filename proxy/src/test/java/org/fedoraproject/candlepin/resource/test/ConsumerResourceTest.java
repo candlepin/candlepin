@@ -471,6 +471,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // events in the db:
         setupPrincipal(o, Role.OWNER_ADMIN);
         Consumer consumer = TestUtil.createConsumer(o);
+        consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
         Event e1 = eventFactory.consumerCreated(consumer);
         eventCurator.create(e1);
