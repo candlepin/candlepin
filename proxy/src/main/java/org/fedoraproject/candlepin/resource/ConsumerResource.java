@@ -589,7 +589,7 @@ public class ConsumerResource {
     }
     
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces("application/atom+xml")
     @Path("{consumer_uuid}/atom")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public Feed getConsumerAtomFeed(@PathParam("consumer_uuid") String consumerUuid) {

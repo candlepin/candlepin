@@ -15,7 +15,10 @@
 package org.fedoraproject.candlepin.audit;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.model.EventCurator;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import com.google.inject.Inject;
 
@@ -34,6 +37,10 @@ public class DatabaseListener implements EventListener {
 
     @Override
     public void onEvent(Event event) {
+        // We're outside of a web request here, need to create this event and satisfy the 
+        // access control interceptor.
+        Principal systemPrincipal = new SystemPrincipal();
+        ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
         log.debug("Received event: " + event);
         eventCurator.create(event);
     }

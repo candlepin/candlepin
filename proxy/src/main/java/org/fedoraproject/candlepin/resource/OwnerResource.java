@@ -265,7 +265,7 @@ public class OwnerResource {
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces("application/atom+xml")
     @Path("{owner_id}/atom")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public Feed getOwnerAtomFeed(@PathParam("owner_id") long ownerId) {
