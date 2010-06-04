@@ -321,6 +321,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+        
         securityInterceptor.enable();
         crudInterceptor.enable();
 
@@ -328,8 +331,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // because he has the correct role.
         createConsumerCreatedEvent(owner);
         
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
         setupPrincipal(owner2, Role.OWNER_ADMIN);
         Feed feed = ownerResource.createOwnerFeed(owner2.getId());
         assertEquals(0, feed.getEntries().size());
