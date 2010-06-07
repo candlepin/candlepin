@@ -46,26 +46,43 @@ public class PemUtil {
 
     }
 
-    public static KeyStore pemToKeystore(String certificateFile,
+    public static KeyStore fileToKeystore(String certificateFile,
         String privateKeyFile, String password) {
-        try {
-            X509Certificate cert = readCert(certificateFile);
-            Certificate[] certs = { cert };
+        return pemToKeyStore(FileUtil.readAll(certificateFile), FileUtil
+            .readAll(privateKeyFile), password);
+    }
 
+    public static KeyStore pemToKeyStore(String certificate, String key, String password) {
+        try {
+            X509Certificate cert = PemUtil.createCert(certificate);
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
             ks.setCertificateEntry("certificate", cert);
-            ks.setKeyEntry("privateKey", readPrivateKey(privateKeyFile),
-                password.toCharArray(), certs);
+            ks.setKeyEntry("privateKey", readPrivateKeyFromStr(key),
+                password.toCharArray(), new Certificate[] {cert});
             return ks;
         }
         catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ClientException(e);
+        }
+    }
+
+    public static PrivateKey readPrivateKeyFromStr(String privateKeyFileContent) {
+        try {
+            return ((KeyPair) new PEMReader(new StringReader(privateKeyFileContent))
+                .readObject()).getPrivate();
+        }
+        catch (Exception e) {
+            throw new ClientException(e);
         }
     }
 
     public static String extractUUID(String certificateFile) {
         X509Certificate cert = readCert(certificateFile);
+        return extractUUID(cert);
+    }
+
+    public static String extractUUID(X509Certificate cert) {
         String name = cert.getSubjectDN().getName();
         int location = name.indexOf("UID=");
         if (location > 0) {

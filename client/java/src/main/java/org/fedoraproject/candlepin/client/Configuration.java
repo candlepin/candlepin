@@ -85,25 +85,11 @@ public final class Configuration {
                 .append(File.separator).append("consumer").toString();
     }
 
-    /**
-     * Gets the certificate file name.
-     *
-     * @return the certificate file name
-     */
-    public String getCertificateFilePath() {
-        return new StringBuilder().append(getConsumerDirPath())
-                .append(File.separator).append("cert.pem").toString();
+    public String getConsumerIdentityFilePath() {
+        return new StringBuilder().append(getConsumerDirPath()).append(
+            File.separator).append("identity.pem").toString();
     }
 
-    /**
-     * Gets the key file name.
-     *
-     * @return the key file name
-     */
-    public String getKeyFilePath() {
-        return new StringBuilder().append(getConsumerDirPath()).append(
-            File.separator).append("key.pem").toString();
-    }
 
     /**
      * Gets the entitlement directory name.

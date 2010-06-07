@@ -49,22 +49,16 @@ import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
 
     private SSLContext sslcontext = null;
-    private String certificateFile;
-    private String privateKeyFile;
     private Configuration configuration;
     /**
      * Constructor for CustomSSLProtocolSocketFactory.
      */
-    public CustomSSLProtocolSocketFactory(String certificateFile,
-        String privateKeyFile, Configuration config) {
+    public CustomSSLProtocolSocketFactory(Configuration config) {
         super();
-        this.certificateFile = certificateFile;
-        this.privateKeyFile = privateKeyFile;
         this.configuration = config;
     }
 
-    private SSLContext createCustomSSLContext(String certificateFile,
-        String privateKeyFile) {
+    private SSLContext createCustomSSLContext() {
         try {
             char[] passwd = configuration.getKeyStorePassword().toCharArray();
             /* Load CA-Chain file */
@@ -74,8 +68,9 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
                     configuration.getCandlepinCertificateFile()));
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(PemUtil.pemToKeystore(certificateFile, privateKeyFile,
-                "password"), passwd);
+            String[] keyCert = FileUtil.readKeyAndCert(configuration
+                .getConsumerIdentityFilePath());
+            kmf.init(PemUtil.pemToKeyStore(keyCert[1], keyCert[0], "password"), passwd);
 
             TrustManagerFactory tmf = TrustManagerFactory
                 .getInstance("SunX509");
@@ -103,8 +98,7 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
 
     private SSLContext getSSLContext() {
         if (this.sslcontext == null) {
-            this.sslcontext = createCustomSSLContext(certificateFile,
-                privateKeyFile);
+            this.sslcontext = createCustomSSLContext();
         }
         return this.sslcontext;
     }

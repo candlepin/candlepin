@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.fedoraproject.candlepin.client.PemUtil;
 
 /**
  * Consumer
@@ -74,8 +75,9 @@ public class Consumer extends TimeStampedEntity {
         this.type = new ConsumerType(type, null);
     }
 
+    @JsonIgnore
     public String getUuid() {
-        return uuid;
+        return PemUtil.extractUUID(PemUtil.createCert(this.idCert.getCert()));
     }
 
     public void setUuid(String uuid) {

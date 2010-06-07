@@ -19,8 +19,6 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.net.URL;
 import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -76,9 +74,11 @@ public class CandlepinConsumerClient {
      */
     public String getUUID() {
         String uuid = null;
-        File certFile = new File(this.config.getCertificateFilePath());
-        if (certFile.exists()) {
-            uuid = PemUtil.extractUUID(this.config.getCertificateFilePath());
+        File file = new File(config.getConsumerIdentityFilePath());
+        if (file.exists()) {
+            String[] keyAndCert = FileUtil.readKeyAndCert(this.config
+                .getConsumerIdentityFilePath());
+            uuid = PemUtil.extractUUID(PemUtil.createCert(keyAndCert[1]));
         }
         return uuid;
     }
@@ -231,16 +231,12 @@ public class CandlepinConsumerClient {
         L.info("Retrieved #{} entitlement certificates", certs.size());
         
         for (EntitlementCertificate cert : certs) {
-            String entCertFileName = config.getEntitlementDirPath() +
-                File.separator + cert.getSerial() + "-cert.pem";
-            String entKeyFileName = config.getEntitlementDirPath() +
-                File.separator + cert.getSerial() + "-key.pem";
-            L.debug("Writing to file: {} data: {}", entCertFileName,
-                cert.getX509CertificateAsPem());
-            FileUtil.dumpToFile(entCertFileName, cert.getX509CertificateAsPem());
-            L.debug("Writing to file: {} data: {}", entKeyFileName,
-                cert.getKey());
-            FileUtil.dumpToFile(entKeyFileName, cert.getKey());
+            String fileName = config.getEntitlementDirPath() + File.separator +
+                cert.getSerial() + ".pem";
+            FileUtil.dumpKeyAndCert(cert.getKey(), cert
+                .getX509CertificateAsPem(), fileName);
+            L.debug("Wrote key: {}, cert: {}",
+                cert.getKey(), cert.getX509CertificateAsPem());
         }
         return true;
     }
@@ -257,23 +253,21 @@ public class CandlepinConsumerClient {
             .listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.endsWith("-cert.pem");
+                    return name.matches("(\\d)+.pem");
                 }
             });
         L.debug("Number of entitlement certificates = #{}",
-            entitlementDir.length());
+            entitlementDir.list().length);
         
         List<EntitlementCertificate> certs = Utils.newList();
         for (File file : entitlementDirs) {
-            String filename = file.getAbsolutePath();
-            String eKeyFileName = filename.replace("-cert.pem", "-key.pem");
-            X509Certificate cert = PemUtil.readCert(filename);
-            PrivateKey key = PemUtil.readPrivateKey(eKeyFileName);
-            EntitlementCertificate entCert = new EntitlementCertificate(cert,
-                key);
+            String [] keyCert = FileUtil.readKeyAndCert(file.getAbsolutePath());
+            EntitlementCertificate entCert = new EntitlementCertificate(PemUtil
+                .createCert(keyCert[1]), PemUtil
+                .readPrivateKeyFromStr(keyCert[0]));
             certs.add(entCert);
             L.debug("Read entitlement & key certificate: {}",
-                filename, eKeyFileName);
+                file);
         }
         return certs;
     }
@@ -327,8 +321,7 @@ public class CandlepinConsumerClient {
         try {
             HttpClient httpclient = new HttpClient();
             CustomSSLProtocolSocketFactory factory  =
-                new CustomSSLProtocolSocketFactory(
-                    config.getCertificateFilePath(), config.getKeyFilePath(), config);
+                new CustomSSLProtocolSocketFactory(config);
             URL hostUrl = new URL(config.getServerURL());
             Protocol customHttps = new Protocol("https", factory, 8443);
             Protocol.registerProtocol("https", customHttps);
@@ -359,21 +352,23 @@ public class CandlepinConsumerClient {
         return client;
     }
 
-    protected void recordIdentity(Consumer aConsumer) {
-        L.debug("Recording identity of consumer: {}", aConsumer);
+    protected void recordIdentity(Consumer cons) {
+        L.debug("Recording identity of consumer: {}", cons);
         FileUtil.mkdir(config.getConsumerDirPath());
-        L.debug("Dumping certificate[{}] and key files[{}]",
-            config.getCertificateFilePath(), config.getKeyFilePath());
-        FileUtil.dumpToFile(config.getCertificateFilePath(),
-            aConsumer.getIdCert().getCert());
-        FileUtil.dumpToFile(config.getKeyFilePath(), aConsumer.getIdCert().getKey());
+
+        L.debug("Dumping key & certificate to file: {}",
+            config.getConsumerIdentityFilePath());
+
+        FileUtil.dumpKeyAndCert(cons.getIdCert().getKey(), cons.getIdCert().getCert(),
+            config.getConsumerIdentityFilePath());
     }
 
     protected void removeFiles() {
-        L.debug("Removing files: {} & {}", config.getCertificateFilePath(),
-            config.getKeyFilePath());
-        FileUtil.removeFiles(new String[]{ config.getCertificateFilePath(),
-            config.getKeyFilePath() });
+        L.debug("Removing file: {}", config.getConsumerIdentityFilePath());
+        if (!new File(config.getConsumerIdentityFilePath()).delete()) {
+            L.warn("Failed to remove identity file: {} ", config
+                .getConsumerIdentityFilePath());
+        }
     }
 
 }
