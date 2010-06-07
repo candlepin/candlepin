@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.audit;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -37,6 +39,7 @@ public class EventSinkImpl implements EventSink {
     private static Logger log = Logger.getLogger(EventSinkImpl.class);
     private EventFactory eventFactory;
     private ClientSessionFactory factory;
+    private int largeMsgSize;
 
     @Inject
     public EventSinkImpl(EventFactory eventFactory) {
@@ -44,6 +47,9 @@ public class EventSinkImpl implements EventSink {
         
         factory =  HornetQClient.createClientSessionFactory(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
+
+        largeMsgSize = new Config().getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+        factory.setMinLargeMessageSize(largeMsgSize);
     }
     
     public void sendEvent(Event event) {

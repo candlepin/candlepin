@@ -31,6 +31,8 @@ public class ConfigProperties {
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
     
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
+    public static final String HORNETQ_LARGE_MSG_SIZE =
+        "candlepin.audit.hornetq.large_msg_size";
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
@@ -45,6 +47,7 @@ public class ConfigProperties {
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
                 
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
+                this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());
                 this.put(AUDIT_LISTENERS,
                     "org.fedoraproject.candlepin.audit.DatabaseListener," +
                     "org.fedoraproject.candlepin.audit.LoggingListener,");

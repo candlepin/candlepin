@@ -195,4 +195,8 @@ public class Config {
         
         return value.equals("true") || value.equals("on") || value.equals("1");
     }
+    
+    public int getInt(String s) {
+        return new Integer(getString(s));
+    }
 }
