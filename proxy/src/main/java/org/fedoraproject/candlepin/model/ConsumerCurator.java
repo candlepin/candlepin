@@ -57,6 +57,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Candlepin supports the notion of a user being a consumer. When in effect
+     * a consumer will exist in the system who is tied to a particular user.
+     *
+     * @param user User
+     * @return Consumer for this user if one exists, null otherwise.
+     */
+    public Consumer lookupUserConsumer(String username) {
+        // TODO: For now we are using consumer.name = user.login. This is a little
+        // dangerous as it can lead to dangling references or false hits. Probably
+        // want to make this an explicit part of the schema:
+        return lookupByName(username);
+    }
+
+    /**
      * Lookup the Consumer by its uuid.
      * @param uuid Consumer uuid sought.
      * @return Consumer whose uuid matches the given value, or null otherwise.

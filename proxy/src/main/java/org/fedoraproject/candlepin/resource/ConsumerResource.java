@@ -177,7 +177,7 @@ public class ConsumerResource {
         
         // TODO:  Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON)) {
-            Consumer existing = consumerCurator.lookupByName(username);
+            Consumer existing = consumerCurator.lookupUserConsumer(username);
             
             if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
                 // TODO:  This is not the correct error code for this situation!
