@@ -41,5 +41,4 @@ client/java/.project
 client/java/.classpath
 proxy/buildconf/scripts/product_certs/*
 proxy/buildconf/scripts/gen_products*
-proxy/buildconf/scripts/import_product*
 
