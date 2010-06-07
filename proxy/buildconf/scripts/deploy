@@ -120,14 +120,15 @@ function upload_products
 	echo
 	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	echo
-	echo "Please point IMPORTDIR to the location of the product import scripts"
-	echo "             These are in the cp_product_utils git repo             "
+	echo "Please point IMPORTDIR to the location of the product data "
 	echo
 	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	return
     fi
 #    $IMPORTDIR/import_product_certs.py $CERTDIR/*.pem > $CERTDIR/deploy.sql
-    $IMPORTDIR/import_product.rb  $IMPORTDIR/import_products.json
+    if [ "$IMPORTDIR" != "" ]; then
+	`dirname $0`/import_products.rb  $IMPORTDIR/import_products.json
+    fi
 }
 
 function create_var_lib_candlepin
