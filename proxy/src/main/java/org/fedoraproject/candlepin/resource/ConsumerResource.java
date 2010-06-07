@@ -433,7 +433,7 @@ public class ConsumerResource {
                 poolCurator.updatePoolForSubscription(pool, sub);
             }
 
-            Product p = productAdapter.getProductById(sub.getProduct().getId());
+            Product p = sub.getProduct();
             entitlementList.add(createEntitlementByProduct(consumer, p, quantity));
         }
         return entitlementList;
