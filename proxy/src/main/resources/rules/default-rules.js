@@ -45,10 +45,11 @@ function post_sockets() {
 function virtualization_common() {
     pre_global();
 
+// XXX: this check is bad, as we don't do virt based on consumer type anymore
 	// Can only be given to a physical system:
-	if (consumer.getType() != "system") {
-		pre.addError("rulefailed.virt.ents.only.for.physical.systems");
-	}
+//	if (consumer.getType() != "system") {
+//		pre.addError("rulefailed.virt.ents.only.for.physical.systems");
+//	}
 
 	// Host must not have any guests currently (could be changed but for simplicities sake):
 //	if (consumer.hasFact("total_guests") && parseInt(consumer.getFact("total_guests")) > 0) {

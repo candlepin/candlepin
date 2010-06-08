@@ -37,11 +37,23 @@ Then /^the certificate for "([^\"]*)" has extension "([^\"]*)" with value "([^\"
   value.should == expected_value
 end
 
-def create_product(product_name)
+Given /^product "([^\"]*)" exists with the following attributes:$/ do |product_name, table|
+      # table is a Cucumber::Ast::Table
+  attrs = {}
+  table.hashes.each do |row|
+      attrs[row['Name']] = row['Value']
+  end
+  create_product(product_name, attrs)
+end
+
+def create_product(product_name, attrs=nil)
   id = get_product_id(product_name)
+  if attrs.nil?
+      attrs = {'virtualization_host' => 'virtualization_host' }
+  end
   @product = @candlepin.create_product(product_name, id, 1,
                                        'ALL', 'ALL', 'SVC', [],
-                                       {'virtualization_host' => 'virtualization_host'})                                       
+                                       attrs)
 end
 
 def get_product_id(product_name)
