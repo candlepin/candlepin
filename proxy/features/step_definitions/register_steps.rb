@@ -25,7 +25,6 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
 end
 
 When /^I register a consumer with parent "([^\"]*)" and uuid "([^\"]*)"$/ do |parent, uuid|
-  facts = {:parent => parent}
   set_consumer(@current_owner_cp.register(uuid, :system, uuid, facts))
 end
 

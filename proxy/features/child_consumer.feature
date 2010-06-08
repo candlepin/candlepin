@@ -7,6 +7,6 @@ Feature: Register a Child Consumer
     Given an owner admin "Bobby"
     And I am logged in as "Bobby"
     And I have registered a personal consumer with uuid "bobby-consumer"
-    When I register a consumer with parent "bobby-consumer" and uuid "bobbys-system"
+    When I register a consumer "bobbys-system" with uuid "bobbys-system"
     Then consumer "bobbys-system" has parent consumer "bobby-consumer"
     
