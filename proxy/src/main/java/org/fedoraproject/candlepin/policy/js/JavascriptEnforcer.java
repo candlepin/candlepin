@@ -464,4 +464,5 @@ public class JavascriptEnforcer implements Enforcer {
             return "'" + ruleName + "':" + order + ":" + attributes.toString();
         }
     }
+
 }

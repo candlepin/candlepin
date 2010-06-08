@@ -40,6 +40,8 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -75,6 +77,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private Owner owner;
     private EventFactory eventFactory;
 
+    private UserCurator userCurator;
+    private User someuser;
+
     @Before
     public void setUp() {
         consumerResource = injector.getInstance(ConsumerResource.class);
@@ -87,6 +92,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
         
+        userCurator = injector.getInstance(UserCurator.class);
+        someuser = userCurator.create(new User(owner, USER_NAME, "dontcare"));
+
         principal = new UserPrincipal(USER_NAME, owner, 
             Lists.newArrayList(Role.OWNER_ADMIN));
         consumer = TestUtil.createConsumer(standardSystemType, owner);
@@ -104,6 +112,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         fullPool.setConsumed(new Long(10));
         poolCurator.create(fullPool);
         eventFactory = injector.getInstance(EventFactory.class);
+
     }
     
     @Test
@@ -149,9 +158,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testCreateConsumer() {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
-
         Consumer submitted  = consumerResource.create(toSubmit, 
-            new UserPrincipal("someuser", owner,
+            new UserPrincipal(someuser.getLogin(), owner,
                 Collections.singletonList(Role.OWNER_ADMIN)));
         
         assertNotNull(submitted);
@@ -169,9 +177,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.setUuid(uuid);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);        
 
-        Consumer submitted  = consumerResource.create(toSubmit, 
-            new UserPrincipal("someuser", owner,
-                Collections.singletonList(Role.OWNER_ADMIN)));
+        Consumer submitted = consumerResource.create(toSubmit, principal);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -181,8 +187,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals("The Uuids do not match", uuid, submitted.getUuid());
         
         //The second post should fail because of constraint failures
-        toSubmit.setId(null);
-        consumerResource.create(toSubmit, principal);
+        Consumer anotherToSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        anotherToSubmit.setUuid(uuid);
+        anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
+        anotherToSubmit.setId(null);
+        consumerResource.create(anotherToSubmit, principal);
     }    
     
     public void testDeleteResource() {
@@ -237,7 +246,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted  = consumerResource.create(toSubmit, 
-            new UserPrincipal("someuser", owner,
+            new UserPrincipal(someuser.getLogin(), owner,
                 Collections.singletonList(Role.OWNER_ADMIN)));
 
         assertNotNull(submitted);
@@ -251,7 +260,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNull(type.getId());
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, null, type);
         submitted = consumerResource.create(nulltypeid, 
-            new UserPrincipal("someuser", owner,
+            new UserPrincipal(someuser.getLogin(), owner,
                 Collections.singletonList(Role.OWNER_ADMIN)));
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());

@@ -68,4 +68,5 @@ public interface Enforcer {
      */
     Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools)
         throws RuleExecutionException;
+
 }

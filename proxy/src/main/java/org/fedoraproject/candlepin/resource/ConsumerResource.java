@@ -59,7 +59,10 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.policy.ConsumerParentStrategy;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -87,10 +90,12 @@ public class ConsumerResource {
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
+    private UserCurator userCurator;
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
     private EventCurator eventCurator;
+    private ConsumerParentStrategy consumerParentStrategy;
     private static final int FEED_LIMIT = 1000;
     
     @Inject
@@ -104,7 +109,9 @@ public class ConsumerResource {
         I18n i18n,
         EventSink sink,
         EventFactory eventFactory,
-        EventCurator eventCurator) {
+        EventCurator eventCurator,
+        ConsumerParentStrategy consumerParentStrategy,
+        UserCurator userCurator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -119,6 +126,8 @@ public class ConsumerResource {
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
+        this.consumerParentStrategy = consumerParentStrategy;
+        this.userCurator = userCurator;
     }
 
     /**
@@ -173,11 +182,11 @@ public class ConsumerResource {
             );
         }
 
-        String username = getCurrentUsername(principal);
+        User user = getCurrentUsername(principal);
         
         // TODO:  Refactor out type specific checks?
-        if (type.isType(ConsumerTypeEnum.PERSON)) {
-            Consumer existing = consumerCurator.lookupUserConsumer(username);
+        if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
+            Consumer existing = consumerCurator.lookupUsersConsumer(user);
             
             if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
                 // TODO:  This is not the correct error code for this situation!
@@ -186,7 +195,7 @@ public class ConsumerResource {
             }
             
             // otherwise, this is a personal consumer - set the name to match the username
-            consumer.setName(username);
+            consumer.setName(user.getLogin());
         }
         
         consumer.setOwner(principal.getOwner());
@@ -202,9 +211,9 @@ public class ConsumerResource {
             }
         }
         
-        String parentUuid = consumer.getFact("parent");
-        if (parentUuid != null) {
-            Consumer parent = consumerCurator.lookupByUuid(parentUuid);            
+        // Check if this new consumer should be a child of another consumer:
+        Consumer parent = consumerParentStrategy.getParent(consumer, user);
+        if (parent != null) {
             consumer.setParent(parent);
         }
 
@@ -214,8 +223,9 @@ public class ConsumerResource {
 
             // This is pretty bad - I'm still not convinced that
             // the id cert actually needs the username at all
-            if (username != null) {
-                idCert = identityCertService.generateIdentityCert(consumer, username);
+            if (user != null) {
+                idCert = identityCertService.generateIdentityCert(consumer,
+                    user.getLogin());
             }
 
             if (log.isDebugEnabled()) {
@@ -238,10 +248,10 @@ public class ConsumerResource {
         }
     }
     
-    private String getCurrentUsername(Principal principal) {
+    private User getCurrentUsername(Principal principal) {
         if (principal instanceof UserPrincipal) {
             UserPrincipal user = (UserPrincipal) principal;
-            return user.getUsername();
+            return userCurator.findByLogin(user.getUsername());
         }
         
         return null;
