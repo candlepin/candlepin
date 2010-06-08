@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
@@ -27,11 +28,15 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 
+
 /**
  * X509ExtensionUtil
  */
 public class X509ExtensionUtil {
 
+    
+    private static Logger log = Logger.getLogger(X509ExtensionUtil.class);
+    
     public List<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
         
@@ -100,6 +105,8 @@ public class X509ExtensionUtil {
         
         // XXX need to deal with non hash style IDs
         String productOid = productCertOid  + "." + product.getId();
+        log.debug("product: " + product);
+        log.debug(product.getAttributes().toString());
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
@@ -107,16 +114,16 @@ public class X509ExtensionUtil {
                     false, new DERUTF8String(product.getName())));
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
                     OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_DESC_KEY),
-                    false, new DERUTF8String(product.getVariant())));
+                    false, new DERUTF8String(product.getAttributeValue("variant"))));
         // we don't have product attributes populated at the moment, so this doesnt work
         //        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3",
         //false, new DERUTF8String(product.getAttribute("arch").getValue()) ));
         toReturn.add(new X509ExtensionWrapper(productOid + "." + 
                     OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY),
-                    false, new DERUTF8String(product.getArch())));
+                    false, new DERUTF8String(product.getAttributeValue("arch"))));
         toReturn.add(new X509ExtensionWrapper(productOid + "." + 
                     OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY),
-                    false, new DERUTF8String(product.getVersion())));
+                    false, new DERUTF8String(product.getAttributeValue("version"))));
         
         return toReturn;
     }

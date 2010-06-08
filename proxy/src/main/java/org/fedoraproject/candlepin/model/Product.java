@@ -55,30 +55,8 @@ public class Product extends AbstractHibernateObject {
     
     @Column(nullable = false, unique = true)
     private String name;
-    
-    // Server, Client, Cloud, whatever...
-    @Column(nullable = true)
-    private String variant;
-    
-    @Column(nullable = true)
-    private String version;
-    
-    // suppose we could have an arch table
-    @Column(nullable = true)
-    private String arch;
-    
-    //FIXME: nullable just to bootstrap for now
-    @Column(nullable = true)
-    private String type;
- 
-    public String getType() {
-        return type;
-    }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
+    
     // NOTE: we need a product "type" so we can tell what class of
     //       product we are... 
     @ManyToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
@@ -123,22 +101,25 @@ public class Product extends AbstractHibernateObject {
                    Set<Product> childProducts, Set<Content> content) {
         setId(id);
         setName(name);
-        setVariant(variant);
-        setVersion(version);
-        setArch(arch);
-        setType(type);
         setChildProducts(childProducts);
         setContent(content);
         // FIXME
         setEnabledContent(content);
+        setAttribute("version", version);
+        setAttribute("variant", variant);
+        setAttribute("type", type);
+        setAttribute("arch", arch);
     }
 
+    
     protected Product() {
     }
 
+   
     /** {@inheritDoc} */
     public String getId() {
         return id;
+        
     }
 
     /**
@@ -148,6 +129,8 @@ public class Product extends AbstractHibernateObject {
         this.id = id;
     }
 
+  
+    
     /**
      * @return set of child products.
      */
@@ -193,11 +176,25 @@ public class Product extends AbstractHibernateObject {
     public void setName(String name) {
         this.name = name;
     }
+    
+    public void setAttribute(String key, String value) {
+        Attribute existing = getAttribute(key);
+        if (existing != null) {
+            existing.setValue(value);
+        }
+        else {
+            addAttribute(new Attribute(key, value));
+        }
+    }
+
 
     /**
      * @return the Product attributes
      */
     public Set<Attribute> getAttributes() {
+        if (attributes == null) {
+            return null;
+        }
         return attributes;
     }
     
@@ -234,6 +231,9 @@ public class Product extends AbstractHibernateObject {
     }
     
     public Attribute getAttribute(String key) {
+        if (attributes == null) {
+            return null;
+        }
         for (Attribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a;
@@ -241,6 +241,20 @@ public class Product extends AbstractHibernateObject {
         }
         return null;
     }
+    
+
+    public String getAttributeValue(String key) {
+        if (attributes == null) {
+            return null;
+        }
+        for (Attribute a : attributes) {
+            if (a.getName().equals(key)) {
+                return a.getValue();
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public boolean equals(Object anObject) {
@@ -263,48 +277,7 @@ public class Product extends AbstractHibernateObject {
         return id.hashCode() * 31 + name.hashCode();
     }
 
-    /**
-     * @param arch the arch to set
-     */
-    public void setArch(String arch) {
-        this.arch = arch;
-    }
-
-    /**
-     * @return the arch
-     */
-    public String getArch() {
-        return arch;
-    }
-
-    /**
-     * @param version the version to set
-     */
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    /**
-     * @return the version
-     */
-    public String getVersion() {
-        return version;
-    }
-
-    /**
-     * @param variant the variant to set
-     */
-    public void setVariant(String variant) {
-        this.variant = variant;
-    }
-
-    /**
-     * @return the variant
-     */
-    public String getVariant() {
-        return variant;
-    }
-
+  
     public Set<Content> getContent() {
         return content;
     }

@@ -295,7 +295,7 @@ public class ProductTest extends DatabaseTestFixture {
         Set<Product> products = new HashSet<Product>();
         Set<Content> content = new HashSet<Content>();
         Product prod = new Product("cp_test-label", "variant",
-                                   "version", "arch", null,
+                                   "version", "arch", "",
                                    "SVC", products, content);
         productCurator.create(prod);
        
