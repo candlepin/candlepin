@@ -105,8 +105,6 @@ public class X509ExtensionUtil {
         
         // XXX need to deal with non hash style IDs
         String productOid = productCertOid  + "." + product.getId();
-        log.debug("product: " + product);
-        log.debug(product.getAttributes().toString());
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
