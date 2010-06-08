@@ -102,7 +102,7 @@ public class CLIMain {
             this.config = loadConfig(cmdLine);
             System.setProperty("javax.net.ssl.trustStore",
                 config.getKeyStoreFileLocation());
-            cmd.setClient(new CandlepinConsumerClient(this.config));
+            cmd.setClient(new DefaultCandlepinClientFacade(this.config));
             cmd.execute(cmdLine);
         }
         catch (ParseException e) {

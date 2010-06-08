@@ -15,12 +15,13 @@
 package org.fedoraproject.candlepin.client.cmds;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.BooleanUtils;
-import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.client.CandlepinClientFacade;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.client.model.Pool;
 import org.fedoraproject.candlepin.client.model.Product;
@@ -53,7 +54,7 @@ public class ListCommand extends PrivilegedCommand {
         return opts;
     }
 
-    protected final void execute(CommandLine cmdLine, CandlepinConsumerClient client) {
+    protected final void execute(CommandLine cmdLine, CandlepinClientFacade client) {
         if (cmdLine.hasOption("a")) {
             printAvailableProducts(client);
         }
@@ -69,7 +70,7 @@ public class ListCommand extends PrivilegedCommand {
     /**
      * @param client
      */
-    private void printInstalledProductsStatus(CandlepinConsumerClient client) {
+    private void printInstalledProductsStatus(CandlepinClientFacade client) {
         L.info("Printing out already installed products on this system");
         // get product certificates and list them out.
         List<ProductCertificate> productCertificates = client
@@ -86,12 +87,12 @@ public class ListCommand extends PrivilegedCommand {
         toConsoleAndLogs("+-------------------------------------------" +
             "+\n\tInstalled Product Status\n" +
             "+-------------------------------------------+\n");
-        Set<Product> productsInEntitlementCerts = Utils.newSet();
+        Map<Product, EntitlementCertificate> prodToEntitlementMap = Utils.newMap();
         Set<Product> listedProducts = Utils.newSet();
         
         for (EntitlementCertificate certificate : entitlementCertificates) {
             for (Product product : certificate.getProducts()) {
-                productsInEntitlementCerts.add(product);
+                prodToEntitlementMap.put(product, certificate);
             }
         }
         
@@ -103,14 +104,15 @@ public class ListCommand extends PrivilegedCommand {
                     //already printed out product. skip it.
                     continue;
                 }
-                if (productsInEntitlementCerts.contains(product.getHash())) {
+                if (prodToEntitlementMap.get(product) != null) {
                     String status = pc.isValid() ? "Subscribed" : "Expired"; 
                     printProductDetails(product.getName(), status, 
-                        pc.getEndDate().toString(), pc.getSerial().toString());
+                        pc.getEndDate().toString(), pc.getSerial().toString(),
+                        prodToEntitlementMap.get(product).getOrder().getUsedQuantity());
                 }
                 else {
                     //product not subscribed yet.
-                    printProductDetails(product.getName(), "Not Subscribed", "", "");
+                    printProductDetails(product.getName(), "Not Subscribed", "", "", 0);
                 }
               
                 listedProducts.add(product);
@@ -126,14 +128,14 @@ public class ListCommand extends PrivilegedCommand {
                 }
                 printProductDetails(product.getName(), "Not Installed",
                     certificate.getEndDate().toString(), certificate
-                        .getSerial().toString());
+                        .getSerial().toString(), certificate.getOrder().getQuantity());
                 listedProducts.add(product);
             }
         }
     }
 
     private void printProductDetails(String productName, String status,
-        String expDate, String serial) {
+        String expDate, String serial, int quantity) {
         toConsoleAndLogs("%-25s%s\n", "ProductName:", productName);
         toConsoleAndLogs("%-25s%s\n", "Status:", status);
         toConsoleAndLogs("%-25s%s\n", "Expires:", expDate);
@@ -144,7 +146,7 @@ public class ListCommand extends PrivilegedCommand {
     /**
      * @param client
      */
-    private void printAvailableProducts(CandlepinConsumerClient client) {
+    private void printAvailableProducts(CandlepinClientFacade client) {
         List<Pool> pools = client.listPools();
         if (pools.isEmpty()) {
             toConsoleAndLogs("No Availale subscription pools to list");
@@ -169,7 +171,7 @@ public class ListCommand extends PrivilegedCommand {
     /**
      * @param client
      */
-    private void printConsumedProducts(CandlepinConsumerClient client) {
+    private void printConsumedProducts(CandlepinClientFacade client) {
         List<EntitlementCertificate> certs = client
             .getCurrentEntitlementCertificates();
         if (certs.isEmpty()) {

@@ -50,6 +50,10 @@ public class Order {
         return NumberUtils.toInt(ex.getValue("5"), -1);
     }
     
+    public int getUsedQuantity() {
+        return NumberUtils.toInt(ex.getValue("13").trim(), -1);
+    }
+
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */

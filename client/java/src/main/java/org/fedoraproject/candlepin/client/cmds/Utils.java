@@ -24,7 +24,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.SystemUtils;
+import org.fedoraproject.candlepin.client.ClientException;
 import org.fedoraproject.candlepin.client.Constants;
 
 /**
@@ -71,7 +73,26 @@ public final class Utils {
     public static <T> Set<T> newSet() {
         return new HashSet<T>();
     }
-    
+
+    public static int[] toInt(String[] strs) {
+        int[] ints = new int[ArrayUtils.nullToEmpty(strs).length];
+        for (int i = 0; i < ints.length; i++) {
+            try {
+                ints[i] = Integer.parseInt(strs[i].trim());
+            }
+            catch (NumberFormatException e) {
+                throw new ClientException("{" + strs[i] + "} is not a number");
+            }
+        }
+        return ints;
+    }
+
+    public static int getSafeInt(int[] quantity, int index, int i) {
+        if (quantity.length - 1 < index) {
+            return i;
+        }
+        return quantity[index];
+    }
 
     /**
      * To string.

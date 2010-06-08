@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.client.cmds;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.client.CandlepinClientFacade;
 
 /**
  * RegisterCommand
@@ -45,7 +45,7 @@ public class UpdateCommand extends BaseCommand {
     }
 
     public void execute(CommandLine cmdLine) {
-        CandlepinConsumerClient client = this.getClient();
+        CandlepinClientFacade client = this.getClient();
 
         client.updateEntitlementCertificates();
         if (cmdLine.hasOption("p")) {

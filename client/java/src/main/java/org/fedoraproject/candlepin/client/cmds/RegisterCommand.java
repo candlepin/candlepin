@@ -21,7 +21,7 @@ import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.StringUtils;
-import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.client.CandlepinClientFacade;
 import org.fedoraproject.candlepin.client.model.Product;
 import org.fedoraproject.candlepin.client.model.ProductCertificate;
 import org.slf4j.Logger;
@@ -94,7 +94,7 @@ public class RegisterCommand extends BaseCommand {
                     " consumerid are required, not both. try --help.\n");
             return;
         }
-        CandlepinConsumerClient client = this.getClient();
+        CandlepinClientFacade client = this.getClient();
 
         if (client.isRegistered() && !force) {
             System.out
@@ -131,7 +131,7 @@ public class RegisterCommand extends BaseCommand {
                             product.getName(), product.getHash());
                         L.info("Trying to bind product: {}", product);
                         this.client.bindByProductId(String.valueOf(product
-                            .getHash()));
+                            .getHash()), 1);
                         System.out.printf(
                             "\nAutomatically subscribed the machine to product %s",
                             product.getName());
