@@ -208,4 +208,34 @@ public class DefaultRulesTest {
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
+    
+    @Test
+    public void correctConsumerTypeShouldNotGenerateError() {
+        Pool pool = setupProductWithRequiresConsumerTypeAttribute();
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.DOMAIN));
+        
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+    
+    @Test
+    public void mismatchingConsumerTypeShouldGenerateError() {
+        Pool pool = setupProductWithRequiresConsumerTypeAttribute();
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
+        
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
+        assertTrue(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    private Pool setupProductWithRequiresConsumerTypeAttribute() {
+        Product product = new Product("a-product", "A product for testing");
+        product.addAttribute(
+            new Attribute("requires_consumer_type", ConsumerTypeEnum.DOMAIN.toString()));
+        Pool pool = new Pool(owner, product.getId(), new Long(5),
+            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        return pool;
+    }
 }

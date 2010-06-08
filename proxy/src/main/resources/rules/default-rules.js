@@ -9,7 +9,14 @@ function attribute_mappings() {
 	return "virtualization_host:1:virtualization_host, " +
 			"virtualization_host_platform:1:virtualization_host_platform, " +
 			"architecture:1:architecture, " +
-			"sockets:1:sockets";
+			"sockets:1:sockets, " +
+			"requires_consumer_type:1:requires_consumer_type";
+}
+
+function pre_requires_consumer_type() {
+	if (product.getAttribute("requires_consumer_type") != consumer.getType()) {
+		pre.addError("rulewarning.consumer.type.mismatch");
+	}
 }
 
 function pre_architecture() {
