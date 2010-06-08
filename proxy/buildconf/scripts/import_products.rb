@@ -68,15 +68,18 @@ data['products'].each do |product|
 					product[4], product[5], product[6], product[7], 
 					attrs)
           pp product_ret
-	  subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 'quantity' => 10,
-                                                   'startDate' => '2007-07-13',
-                                                   'contractNumber' => contract_number,
-                                                   'endDate' => '2012-07-13'})
-          # go ahead and create a token for each subscription, the token itself is just a random int
-          token = cp.create_subscription_token({'token' => rand(10000000000), 
-                                                 'subscription' => {'id' => subscription['id']}})
-  
-          contract_number += 1
+
+	  #FIXME: only create subscriptions for MKT/config sku's
+          if attrs['type'] == 'MKT':
+              subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 'quantity' => 10,
+                                                       'startDate' => '2007-07-13',
+                                                       'contractNumber' => contract_number,
+                                                       'endDate' => '2012-07-13'})
+            # go ahead and create a token for each subscription, the token itself is just a random int
+            token = cp.create_subscription_token({'token' => rand(10000000000), 
+                                                   'subscription' => {'id' => subscription['id']}})
+            contract_number += 1
+          end
 
           start =  Date.new
 	  enddate = Date.new + 365
