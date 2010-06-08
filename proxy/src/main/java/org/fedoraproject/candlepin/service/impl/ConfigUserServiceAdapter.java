@@ -195,8 +195,14 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public User findByLogin(String login) {
-        throw new UnsupportedOperationException(
-            "This implementation does not support finding users by login!");
+        if (userPasswords.isEmpty()) {
+            return new User(getOwner(login), login, null);
+        }
+        else if (userPasswords.containsKey(login)) {
+            return new User(getOwner(login), login, userPasswords.get(login));
+        }
+        
+        return null;
     }
 
 }
