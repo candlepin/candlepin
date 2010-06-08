@@ -105,26 +105,27 @@ public class X509ExtensionUtil {
         
         // XXX need to deal with non hash style IDs
         String productOid = productCertOid  + "." + product.getId();
-        log.debug("product: " + product);
-        log.debug(product.getAttributes().toString());
         // 10.10.10 is the product hash, arbitrary number atm
         // replace ith approriate hash for product, we can maybe get away with faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
-                    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), 
-                    false, new DERUTF8String(product.getName())));
-        toReturn.add(new X509ExtensionWrapper(productOid + "." +
-                    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_DESC_KEY),
-                    false, new DERUTF8String(product.getAttributeValue("variant"))));
-        // we don't have product attributes populated at the moment, so this doesnt work
-        //        extensions.add(new X509ExtensionWrapper("1.3.6.1.4.1.2312.9.1.101010.3",
-        //false, new DERUTF8String(product.getAttribute("arch").getValue()) ));
-        toReturn.add(new X509ExtensionWrapper(productOid + "." + 
-                    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY),
-                    false, new DERUTF8String(product.getAttributeValue("arch"))));
-        toReturn.add(new X509ExtensionWrapper(productOid + "." + 
-                    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY),
-                    false, new DERUTF8String(product.getAttributeValue("version"))));
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), 
+            false, new DERUTF8String(product.getName())));
         
+        if (product.getAttribute("variant") != null) {
+            toReturn.add(new X509ExtensionWrapper(productOid + "." +
+                OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_DESC_KEY),
+                false, new DERUTF8String(product.getAttributeValue("variant"))));
+        }
+        if (product.getAttribute("arch") != null) {
+            toReturn.add(new X509ExtensionWrapper(productOid + "." + 
+                OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY),
+                false, new DERUTF8String(product.getAttributeValue("arch"))));
+        }
+        if (product.getAttribute("version") != null) {
+            toReturn.add(new X509ExtensionWrapper(productOid + "." + 
+                OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY),
+                false, new DERUTF8String(product.getAttributeValue("version"))));
+        }
         return toReturn;
     }
 
