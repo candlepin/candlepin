@@ -60,7 +60,6 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.ConsumerParentStrategy;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
@@ -68,6 +67,7 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.xnap.commons.i18n.I18n;
@@ -90,7 +90,7 @@ public class ConsumerResource {
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
-    private UserCurator userCurator;
+    private UserServiceAdapter userService;
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
@@ -111,7 +111,7 @@ public class ConsumerResource {
         EventFactory eventFactory,
         EventCurator eventCurator,
         ConsumerParentStrategy consumerParentStrategy,
-        UserCurator userCurator) {
+        UserServiceAdapter userService) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -127,7 +127,7 @@ public class ConsumerResource {
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
         this.consumerParentStrategy = consumerParentStrategy;
-        this.userCurator = userCurator;
+        this.userService = userService;
     }
 
     /**
@@ -251,7 +251,7 @@ public class ConsumerResource {
     private User getCurrentUsername(Principal principal) {
         if (principal instanceof UserPrincipal) {
             UserPrincipal user = (UserPrincipal) principal;
-            return userCurator.findByLogin(user.getUsername());
+            return userService.findByLogin(user.getUsername());
         }
         
         return null;

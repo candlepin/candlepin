@@ -193,4 +193,10 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
         return new LinkedList<User>();
     }
 
+    @Override
+    public User findByLogin(String login) {
+        throw new UnsupportedOperationException(
+            "This implementation does not support finding users by login!");
+    }
+
 }
