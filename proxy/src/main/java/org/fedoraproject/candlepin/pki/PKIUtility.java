@@ -34,8 +34,11 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.List;
 
+import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.jce.X509Principal;
@@ -102,6 +105,9 @@ public class PKIUtility {
         certGen.addExtension(X509Extensions.SubjectKeyIdentifier, false,
             new SubjectKeyIdentifierStructure(clientKeyPair.getPublic()));
 
+        certGen.addExtension(X509Extensions.ExtendedKeyUsage, false, 
+            new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
+        
         if (extensions != null) {
             for (X509ExtensionWrapper wrapper : extensions) {
                 certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
