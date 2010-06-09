@@ -20,7 +20,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.client.CandlepinClientFacade;
 
 /**
  * BaseCommand
@@ -28,7 +28,7 @@ import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
 public abstract class BaseCommand {
 
     protected Options options = null;
-    protected CandlepinConsumerClient client;
+    protected CandlepinClientFacade client;
 
     public BaseCommand() {
         options = getOptions();
@@ -61,11 +61,11 @@ public abstract class BaseCommand {
             options);
     }
 
-    public CandlepinConsumerClient getClient() {
+    public CandlepinClientFacade getClient() {
         return client;
     }
 
-    public void setClient(CandlepinConsumerClient client) {
+    public void setClient(CandlepinClientFacade client) {
         this.client = client;
     }
 }

@@ -94,5 +94,10 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         return userCurator.findByOwner(owner);
     }
 
+    @Override
+    public User findByLogin(String login) {
+        return userCurator.findByLogin(login);
+    }
+
 
 }

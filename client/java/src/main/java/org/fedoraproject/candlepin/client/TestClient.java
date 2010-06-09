@@ -39,7 +39,7 @@ public class TestClient {
                 configuration.getKeyStoreFileLocation());
             Security.addProvider(new BouncyCastleProvider());
             // this initialization only needs to be done once per VM
-            CandlepinConsumerClient client = new CandlepinConsumerClient(configuration);
+            CandlepinClientFacade client = new DefaultCandlepinClientFacade(configuration);
             System.out.println("Should not be registered: " +
                 client.isRegistered());
             String uuid = client.register("admin", "admin", "Fred2", "system");
@@ -56,7 +56,7 @@ public class TestClient {
                 client.registerExisting("bk", "password", uuid));
             System.out.println("Register Garbage should fail: " +
                 client.registerExisting("bk", "password", "99"));
-            List<Entitlement> ents = client.bindByPool(6L);
+            List<Entitlement> ents = client.bindByPool(6L, 1);
             System.out.println(ents.size());
             // System.out.println("Unregister should pass: " +
             // client.unRegister());

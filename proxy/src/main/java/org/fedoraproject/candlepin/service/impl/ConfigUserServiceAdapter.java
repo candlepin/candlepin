@@ -193,4 +193,16 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
         return new LinkedList<User>();
     }
 
+    @Override
+    public User findByLogin(String login) {
+        if (userPasswords.isEmpty()) {
+            return new User(getOwner(login), login, null);
+        }
+        else if (userPasswords.containsKey(login)) {
+            return new User(getOwner(login), login, userPasswords.get(login));
+        }
+        
+        return null;
+    }
+
 }

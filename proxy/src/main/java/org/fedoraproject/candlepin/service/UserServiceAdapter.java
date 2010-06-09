@@ -43,5 +43,7 @@ public interface UserServiceAdapter {
     void deleteUser(User user);
     
     List<User> listByOwner(Owner owner);
+    
+    User findByLogin(String login);
    
 }

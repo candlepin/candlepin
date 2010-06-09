@@ -15,7 +15,7 @@
 package org.fedoraproject.candlepin.client.cmds;
 
 import org.apache.commons.cli.CommandLine;
-import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.client.CandlepinClientFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public abstract class PrivilegedCommand extends BaseCommand {
      */
     @Override
     public final void execute(CommandLine cmdLine) {
-        CandlepinConsumerClient client = this.getClient();
+        CandlepinClientFacade client = this.getClient();
         if (!client.isRegistered()) {
             L.info("System not registered currently!");
             System.out.println("This system is currently not registered.");
@@ -42,5 +42,5 @@ public abstract class PrivilegedCommand extends BaseCommand {
         this.execute(cmdLine, client);
     }
 
-    protected abstract void execute(CommandLine cmdLine, CandlepinConsumerClient client);
+    protected abstract void execute(CommandLine cmdLine, CandlepinClientFacade client);
 }

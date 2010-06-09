@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin.client.cmds;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.StringUtils;
-import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.client.CandlepinClientFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +60,7 @@ public class UnSubscribeCommand extends PrivilegedCommand {
      * .commons.cli.CommandLine)
      */
     @Override
-    protected void execute(CommandLine cmdLine, CandlepinConsumerClient client) {
+    protected void execute(CommandLine cmdLine, CandlepinClientFacade client) {
         String serial = cmdLine.getOptionValue("s");
         if (StringUtils.isEmpty(serial)) {
             L.warn("Unsubscribing all entitlements for customer: {}", client.getUUID());

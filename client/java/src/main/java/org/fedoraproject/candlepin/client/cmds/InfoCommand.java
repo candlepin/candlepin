@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.fedoraproject.candlepin.client.CandlepinClientFacade;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 
 /**
@@ -41,7 +41,7 @@ public class InfoCommand extends BaseCommand {
     }
 
     public void execute(CommandLine cmdLine) {
-        CandlepinConsumerClient client = this.getClient();
+        CandlepinClientFacade client = this.getClient();
 
         if (client.isRegistered()) {
             System.out.println("Registered as consumer: " + client.getUUID());

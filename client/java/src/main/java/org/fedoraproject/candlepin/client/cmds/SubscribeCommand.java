@@ -18,7 +18,9 @@ import static org.apache.commons.lang.ArrayUtils.isEmpty;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.fedoraproject.candlepin.client.CandlepinConsumerClient;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.SystemUtils;
+import org.fedoraproject.candlepin.client.CandlepinClientFacade;
 /**
  * RegisterCommand
  */
@@ -39,39 +41,61 @@ public class SubscribeCommand extends PrivilegedCommand {
         opts.addOption("p", "pool", true, "Subscription Pool Id");
         opts.addOption("pr", "product", true, "product ID");
         opts.addOption("r", "regtoken", true, "regtoken");
+        opts.addOption("q", "quantity", true,
+            "The quantities of pool/product/regtoken used");
+        opts.addOption("eid", "emailId", true,
+            "email address which will receive confirmation e-mail " +
+            "(applies for only --regtoken)");
+        opts.addOption("l", "lang", true, "Preferred language of email" +
+            "(applies for only --regtoken)");
         return opts;
     }
 
   
+
     @Override
-    protected void execute(CommandLine cmdLine, CandlepinConsumerClient client) {
+    protected void execute(CommandLine cmdLine, CandlepinClientFacade client) {
         String[] pools = cmdLine.getOptionValues("p");
         String[] products = cmdLine.getOptionValues("pr");
         String[] regTokens = cmdLine.getOptionValues("r");
+        int [] quantity = Utils.toInt(cmdLine.getOptionValues("q"));
+        String emailId = cmdLine.getOptionValue("eid");
+        String defLang = StringUtils.defaultIfEmpty(
+            cmdLine.getOptionValue("l"), SystemUtils.USER_LANGUAGE);
+        int iter = 0;
         if (!this.getClient().isRegistered()) {
             System.out.println("This system is currently not registered.");
             return;
         }
         if (isEmpty(pools) && isEmpty(products) && isEmpty(regTokens)) {
-            System.err
-                .println("Error: Need either --product or --regtoken, Try --help");
+            System.err.println("Error: Need either --product or --pool" +
+                " or --regtoken, Try --help");
             return;
         }
         if (!isEmpty(pools)) {
             for (String pool : pools) {
-                client.bindByPool(Long.decode(pool));
+                client.bindByPool(Long.decode(pool.trim()), Utils.getSafeInt(
+                    quantity, iter++, 1));
             }
         }
 
         if (!isEmpty(products)) {
             for (String product : products) {
-                client.bindByProductId(product);
+                client.bindByProductId(product, Utils.getSafeInt(
+                    quantity, iter++, 1));
             }
         }
 
         if (!isEmpty(regTokens)) {
             for (String token : regTokens) {
-                client.bindByRegNumber(token);
+                if (StringUtils.isNotBlank(emailId)) {
+                    client.bindByRegNumber(token, Utils.getSafeInt(quantity,
+                        iter++, 1), emailId, defLang);
+                }
+                else {
+                    client.bindByRegNumber(token, Utils.getSafeInt(quantity,
+                        iter++, 1));
+                }
             }
         }
         client.updateEntitlementCertificates();
