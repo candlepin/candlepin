@@ -146,6 +146,7 @@ public class EnforcerTest extends DatabaseTestFixture {
                 {
                     add(rule("func5", 5, "attr1"));
                     add(rule("func1", 2, "attr1"));
+                    add(rule("global", 0, new String[0]));
                 }
             },
             orderedAndFilteredRules
@@ -181,6 +182,7 @@ public class EnforcerTest extends DatabaseTestFixture {
                     add(rule("func5", 5, "attr1", "attr2", "attr3"));
                     add(rule("func3", 3, "attr3"));
                     add(rule("func1", 2, "attr1", "attr2"));
+                    add(rule("global", 0, new String[0]));
                 } 
             },
             orderedAndFilteredRules

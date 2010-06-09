@@ -261,6 +261,9 @@ public class JavascriptEnforcer implements Enforcer {
             }
         }
         
+        // Always run the global rule, and run it first
+        matches.add(new Rule("global", 0, new HashSet<String>()));
+        
         Collections.sort(matches, new RuleOrderComparator());
         return matches;
     }
