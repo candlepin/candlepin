@@ -47,10 +47,11 @@ public interface Enforcer {
     /**
      * Run post-entitlement actions.
      *
+     * @param postEntHelper A post entitlement helper.
      * @param ent The entitlement that was just granted.
      * @return post-entitlement processor
      */
-    PostEntHelper post(Entitlement ent);
+    PostEntHelper post(PostEntHelper postEntHelper, Entitlement ent);
 
     /**
      * Select the best entitlement pool available for the given product ID.

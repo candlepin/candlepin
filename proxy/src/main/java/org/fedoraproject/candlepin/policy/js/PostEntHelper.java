@@ -14,27 +14,53 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
+
+import com.google.inject.Inject;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
  * post entitlement javascript functions allowing them to perform a specific set
  * of operations we support.
- * 
- * NOTE: Currently unused, keeping it around and wired up in case we do once rule
- * execution becomes better understood.
  */
 public class PostEntHelper {
-
-    /**
-     * Separated from constructor because these objects are not something Guice
-     * can inject. Must be called before the post helper is passed in to the
-     * Javascript engine.
-     *
-     * @param ent Entitlement just created.
+    
+    private Entitlement ent;
+    private PoolCurator poolCurator;
+    
+    @Inject
+    public PostEntHelper(PoolCurator poolCurator) {
+        this.poolCurator = poolCurator;
+    }
+    
+    /*
+     * Separate init step for args guice cannot inject.
      */
     public void init(Entitlement ent) {
-        //this.ent = ent;
+        this.ent = ent;
+    }
+    
+    /**
+    * Create an entitlement pool for a product and limit it to a particular
+    * consumer.
+    *
+    * @param productId Label of the product the pool is for.
+    * @param quantity Number of entitlements for this pool. Use a negative
+    * number for an unlimited pool.
+    */
+    public void createConsumerPool(String productId, Long quantity) {
+
+        Consumer c = ent.getConsumer();
+        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, quantity,
+            ent.getPool().getStartDate(), ent.getPool().getEndDate());
+
+        // TODO: Fill this out once we have consumer specific pools again.
+        // consumerSpecificPool.setConsumer(c);
+        consumerSpecificPool.setSourceEntitlement(ent);
+        poolCurator.create(consumerSpecificPool);
     }
 
 }

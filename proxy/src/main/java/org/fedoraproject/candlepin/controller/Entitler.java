@@ -36,6 +36,7 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -59,6 +60,7 @@ public class Entitler {
     private CertificateSerialCurator serialCurator;
     private EventFactory eventFactory;
     private EventSink sink;
+    private PostEntHelper postEntHelper;
     
     @Inject
     protected Entitler(PoolCurator epCurator,
@@ -68,7 +70,8 @@ public class Entitler {
         SubscriptionServiceAdapter subAdapter,
         CertificateSerialCurator serialCurator,
         EventFactory eventFactory,
-        EventSink sink) {
+        EventSink sink,
+        PostEntHelper postEntHelper) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
@@ -80,6 +83,7 @@ public class Entitler {
         this.serialCurator = serialCurator;
         this.eventFactory = eventFactory;
         this.sink = sink;
+        this.postEntHelper = postEntHelper;
     }
 
     /**
@@ -161,7 +165,8 @@ public class Entitler {
             pool.bumpConsumed();
         }
 
-        enforcer.post(e);
+        postEntHelper.init(e);
+        enforcer.post(postEntHelper, e);
 
         entitlementCurator.create(e);
         consumerCurator.update(consumer);

@@ -132,11 +132,9 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     @Override
-    public PostEntHelper post(Entitlement ent) {
-        PostEntHelper postHelper = new PostEntHelper();
-        postHelper.init(ent);
-        runPost(postHelper, ent);
-        return postHelper;
+    public PostEntHelper post(PostEntHelper postEntHelper, Entitlement ent) {
+        runPost(postEntHelper, ent);
+        return postEntHelper;
     }
 
     private void runPost(PostEntHelper postHelper, Entitlement ent) {

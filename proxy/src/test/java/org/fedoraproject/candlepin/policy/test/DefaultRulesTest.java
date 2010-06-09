@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
+import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -54,6 +55,7 @@ public class DefaultRulesTest {
     @Mock private ProductServiceAdapter prodAdapter;
     private Owner owner;
     private Consumer consumer;
+    @Mock private PostEntHelper postEntHelper;
 
     @Before
     public void createEnforcer() throws Exception {

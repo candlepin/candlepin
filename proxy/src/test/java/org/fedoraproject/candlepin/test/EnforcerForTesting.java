@@ -30,8 +30,8 @@ import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 public class EnforcerForTesting implements Enforcer {
 
     @Override
-    public PostEntHelper post(Entitlement ent) {
-        return new PostEntHelper();
+    public PostEntHelper post(PostEntHelper postEntHelper, Entitlement ent) {
+        return postEntHelper;
     }
 
     @Override
