@@ -132,6 +132,7 @@ public class Owner extends AbstractHibernateObject implements Serializable {
     /**
      * @return the consumers
      */
+    @XmlTransient
     public Set<Consumer> getConsumers() {
         return consumers;
     }
