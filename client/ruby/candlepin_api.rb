@@ -192,13 +192,18 @@ class Candlepin
   def create_product(name, hash, version = 1, variant = 'ALL', 
                      arch='ALL', type='SVC',childProducts=[], attributes = {})
 
+    attributes['arch'] = arch
+    attributes['version'] = version
+    attributes['variant'] = variant
+    attributes['type'] = type
+
     product = {
       'name' => name,
-      'arch' => arch,
+#      'arch' => arch,
       'id' => hash,
-      'version' => version,
-      'variant' => variant,
-      'type' => type,
+#      'version' => version,
+#      'variant' => variant,
+#      'type' => type,
       'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
     }
 

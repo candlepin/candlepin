@@ -128,7 +128,7 @@ public class DefaultRulesTest {
     
     @Test
     public void architectureALLShouldNotGenerateWarnings() {
-        Pool pool = setupTest("architecture", "ALL", null, "i686");
+        Pool pool = setupTest("arch", "ALL", "arch", "i686");
         
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
@@ -137,7 +137,7 @@ public class DefaultRulesTest {
     
     @Test
     public void architectureMismatchShouldGenerateWarning() {
-        Pool pool = setupTest("architecture", "x86_64", "cpu.architecture", "i686");
+        Pool pool = setupTest("arch", "x86_64", "cpu.architecture", "i686");
         
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
@@ -146,7 +146,7 @@ public class DefaultRulesTest {
     
     @Test
     public void missingConsumerArchitectureShouldGenerateWarning() {
-        Pool pool = setupTest("architecture", "x86_64", "cpu.architecture", "x86_64");
+        Pool pool = setupTest("arch", "x86_64", "cpu.architecture", "x86_64");
         
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<String, String>());

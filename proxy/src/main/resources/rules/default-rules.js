@@ -8,7 +8,7 @@
 function attribute_mappings() {
 	return "virtualization_host:1:virtualization_host, " +
 			"virtualization_host_platform:1:virtualization_host_platform, " +
-			"architecture:1:architecture, " +
+			"architecture:1:arch, " +
 			"sockets:1:sockets, " +
 			"requires_consumer_type:1:requires_consumer_type";
 }
@@ -20,9 +20,9 @@ function pre_requires_consumer_type() {
 }
 
 function pre_architecture() {
-	if ((product.getAttribute("architecture") != "ALL") &&
+	if ((product.getAttribute("arch") != "ALL") &&
 			(!consumer.hasFact("cpu.architecture") ||
-			(product.getAttribute("architecture") != consumer.getFact("cpu.architecture")))) {
+			(product.getAttribute("arch") != consumer.getFact("cpu.architecture")))) {
 		pre.addWarning("rulewarning.architecture.mismatch");
 	}
 }
