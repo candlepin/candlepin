@@ -15,7 +15,7 @@ function attribute_mappings() {
 
 function pre_requires_consumer_type() {
 	if (product.getAttribute("requires_consumer_type") != consumer.getType()) {
-		pre.addError("rulewarning.consumer.type.mismatch");
+		pre.addError("rulefailed.consumer.type.mismatch");
 	}
 }
 
@@ -43,7 +43,6 @@ function post_sockets() {
 
 // Checks common for both virt host and virt platform entitlements:
 function virtualization_common() {
-    pre_global();
 
 // XXX: this check is bad, as we don't do virt based on consumer type anymore
 	// Can only be given to a physical system:
@@ -62,7 +61,6 @@ function pre_virtualization_host() {
 }
 
 function post_virtualization_host() {
-	post_global();
 }
 
 
@@ -71,8 +69,7 @@ function pre_virtualization_host_platform() {
 }
 
 function post_virtualization_host_platform() {
-	// unlimited guests:
-	post_global();
+	// unlimited guests;
 }
 
 function pre_global() {
@@ -80,6 +77,11 @@ function pre_global() {
 		pre.addError("rulefailed.consumer.already.has.product");
 	}
 
+	// domain consumers can only consume products for domains
+	if (consumer.getType() == "domain" && product.getAttribute("requires_consumer_type") != "domain") {
+		pre.addError("rulefailed.consumer.type.mismatch");
+	}
+	
 	// Support free entitlements for guests, if their parent has virt host or
 	// platform,
 	// and is entitled to the product the guest is requesting:

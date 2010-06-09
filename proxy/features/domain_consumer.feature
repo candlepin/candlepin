@@ -14,10 +14,10 @@ Feature: Limit products to a domain consumer type
         And test owner has 4 entitlements for "domain_product"
 
 
-    Scenario: A domain consumer can consume non domain specific products
+    Scenario: A domain consumer cannot consume non domain specific products
         Given I am a consumer "guest_consumer" of type "domain"
-        When I Consume an Entitlement for the "monitoring" Product
-        Then I Have 1 Entitlement
+        Then attempting to Consume an entitlement for the "monitoring" product is forbidden
+        And I Have 0 Entitlements
 
     Scenario: A domain consumer can consume domain specific products
         Given I am a consumer "guest_consumer" of type "domain"
