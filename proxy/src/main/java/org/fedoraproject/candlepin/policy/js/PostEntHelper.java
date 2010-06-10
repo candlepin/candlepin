@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -63,8 +62,8 @@ public class PostEntHelper {
         Consumer c = ent.getConsumer();
         Pool consumerSpecificPool = new Pool(c.getOwner(), productId, q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate());
-//        consumerSpecificPool.setAttribute("user_restricted",
-//            c.getUsername());
+        consumerSpecificPool.setAttribute("user_restricted",
+            c.getUserName());
         consumerSpecificPool.setSourceEntitlement(ent);
         poolCurator.create(consumerSpecificPool);
     }
