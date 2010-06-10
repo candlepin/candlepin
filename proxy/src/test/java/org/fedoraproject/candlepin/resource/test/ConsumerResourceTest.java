@@ -210,6 +210,18 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
     
     @Test
+    public void testUsername() {
+        // not setting the username here - this should be set by
+        // examining the user principal
+        Consumer consumer = new Consumer(CONSUMER_NAME, null, 
+            null, standardSystemType);
+
+        consumer  = consumerResource.create(consumer, principal);
+        
+        assertEquals(USER_NAME, consumer.getUserName());
+    }
+    
+    @Test
     public void testEntitle() throws Exception {
         consumerResource.bind(
             consumer.getUuid(), null, null, product.getId(), null, null, null);

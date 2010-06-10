@@ -129,12 +129,6 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
     private Set<Entitlement> entitlements;
     
-    //@OneToOne(cascade = CascadeType.ALL)
-    //@JoinColumn(name = "consumer_fact_id")
-    //private ConsumerFacts facts;
-    // NOTE: Had to deviate from default EJB3 annotations here, doesn't seem
-    // possible to map strings without an unplesant hack:
-    // http://bit.ly/liststringjpa
     @MapKeyManyToMany(targetEntity = String.class)
     @CollectionOfElements(targetElement = String.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
