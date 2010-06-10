@@ -97,4 +97,13 @@ public interface SubscriptionServiceAdapter {
      */
     boolean hasUnacceptedSubscriptionTerms(Owner owner);
     
+    /**
+     * Sets email address/locale to use to send activation notification email
+     * 
+     * @param owner
+     * @param email
+     * @param emailLocale
+     */
+    void sendActivationEmailTo(Owner owner, String email, String emailLocale);
+    
 }

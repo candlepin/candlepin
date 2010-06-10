@@ -110,4 +110,8 @@ public class DefaultSubscriptionServiceAdapter implements
         return false;
     }
 
+    @Override
+    public void sendActivationEmailTo(Owner owner, String email,
+        String emailLocale) {
+    }
 }

@@ -422,7 +422,7 @@ public class ConsumerResource {
      * @return token
      */
     private List<Entitlement> bindByToken(String registrationToken, Consumer consumer, 
-            Integer quantity) {
+            Integer quantity, String email, String emailLocale) {
         
         List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer.getOwner(), 
             registrationToken);
@@ -447,6 +447,11 @@ public class ConsumerResource {
             Product p = sub.getProduct();
             entitlementList.add(createEntitlementByProduct(consumer, p, quantity));
         }
+        
+        if (email != null) {
+            subAdapter.sendActivationEmailTo(
+                consumer.getOwner(), email, emailLocale);
+        }
         return entitlementList;
     }
 
@@ -468,6 +473,8 @@ public class ConsumerResource {
      * 
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolId Entitlement pool id.
+     * @param email TODO
+     * @param emailLocale TODO
      * @return Entitlement.
      */
     @POST
@@ -478,7 +485,9 @@ public class ConsumerResource {
     public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") Long poolId, @QueryParam("token") String token,
         @QueryParam("product") String productId, 
-        @QueryParam("quantity") @DefaultValue("1") Integer quantity) {
+        @QueryParam("quantity") @DefaultValue("1") Integer quantity, 
+        @QueryParam("email") String email, 
+        @QueryParam("emailLocale") String emailLocale) {
 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
@@ -495,14 +504,15 @@ public class ConsumerResource {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
             
                 if (token != null) {
-                    entitlements = bindByToken(token, consumer, quantity);
+                    entitlements = 
+                        bindByToken(token, consumer, quantity, email, emailLocale);
                 }
                 else if (productId != null) {
                     entitlements = bindByProduct(productId, consumer, quantity);
                 }
                 else {
                     entitlements = bindByPool(poolId, consumer, quantity);
-                }
+                }                
             }
         } 
         catch (CandlepinException e) {
