@@ -42,6 +42,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     private ConsumerType consumerType;
     private static final String CONSUMER_TYPE_NAME = "test-consumer-type";
     private static final String CONSUMER_NAME = "Test Consumer";
+    private static final String USER_NAME = "user33908";
 
     @Before
     public void setUpTestObjects() {
@@ -57,7 +58,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);
-        consumer = new Consumer(CONSUMER_NAME, owner, consumerType);
+        consumer = new Consumer(CONSUMER_NAME, USER_NAME, owner, consumerType);
         consumer.setMetadataField("foo", "bar");
         consumer.setMetadataField("foo1", "bar1");
 
@@ -98,7 +99,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testMetadataInfo() {
-        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
         consumer2.setMetadataField("foo", "bar2");
         consumerCurator.create(consumer2);
 
@@ -139,7 +140,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testLookupByUuid() {
-        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
         consumerCurator.create(consumer2);
 
         Consumer lookedUp = consumerCurator.lookupByUuid(consumer2.getUuid());
@@ -148,11 +149,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerHierarchy() {
-        Consumer child1 = new Consumer("child1", owner, consumerType);
+        Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
         child1.setMetadataField("foo", "bar");
         consumerCurator.create(child1);
 
-        Consumer child2 = new Consumer("child2", owner, consumerType);
+        Consumer child2 = new Consumer("child2", USER_NAME, owner, consumerType);
         child2.setMetadataField("foo", "bar");
         consumerCurator.create(child2);
 
@@ -168,7 +169,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testChildDeleteNoCascade() {
         unitOfWork.beginWork();
 
-        Consumer child1 = new Consumer("child1", owner, consumerType);
+        Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
         child1.setMetadataField("foo", "bar");
         consumer.addChildConsumer(child1);
         consumerCurator.create(child1);
@@ -190,7 +191,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testParentDeleteCascadesToChildren() {
-        Consumer child1 = new Consumer("child1", owner, consumerType);
+        Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
         child1.setMetadataField("foo", "bar");
         consumer.addChildConsumer(child1);
         consumerCurator.create(child1);
@@ -252,7 +253,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testCopyConstructor() {
-        Consumer con1 = new Consumer("name", owner, consumerType);
+        Consumer con1 = new Consumer("name", USER_NAME, owner, consumerType);
         Consumer con2 = new Consumer(con1);
         assertNotNull(con2);
         assertEquals(con1, con2);
@@ -272,13 +273,13 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testNullType() {
-        Consumer c = new Consumer("name", owner, null);
+        Consumer c = new Consumer("name", USER_NAME, owner, null);
         assertNotNull(c);
     }
     
     @Test(expected = ForbiddenException.class)
     public void cannotDeleteConsumerOtherThanItself() {
-        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
         consumerCurator.create(consumer2);
         
         setupPrincipal(new ConsumerPrincipal(consumer2));
@@ -299,7 +300,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     
     @Test(expected = ForbiddenException.class)
     public void cannotUpdateOtherConsumer() {
-        Consumer consumer2 = new Consumer("consumer2", owner, consumerType);
+        Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
         consumerCurator.create(consumer2);
         
         setupPrincipal(new ConsumerPrincipal(consumer2));

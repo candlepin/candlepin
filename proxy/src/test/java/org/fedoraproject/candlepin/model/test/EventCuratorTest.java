@@ -41,7 +41,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() {
-        Consumer newConsumer = new Consumer("consumername", owner,
+        Consumer newConsumer = new Consumer("consumername", "user", owner,
             new ConsumerType("system"));
         consumerTypeCurator.create(newConsumer.getType());
         consumerCurator.create(newConsumer);

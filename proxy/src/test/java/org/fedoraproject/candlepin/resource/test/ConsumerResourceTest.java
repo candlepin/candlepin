@@ -156,7 +156,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateConsumer() {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, 
+            null, standardSystemType);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer submitted  = consumerResource.create(toSubmit, 
             new UserPrincipal(someuser.getLogin(), owner,
@@ -172,7 +173,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testCreateConsumerWithUUID() {
         String uuid = "Jar Jar Binks";
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, 
+            null, standardSystemType);
         assertNull(toSubmit.getId());
         toSubmit.setUuid(uuid);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);        
@@ -187,7 +189,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals("The Uuids do not match", uuid, submitted.getUuid());
         
         //The second post should fail because of constraint failures
-        Consumer anotherToSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        Consumer anotherToSubmit = new Consumer(CONSUMER_NAME, 
+            USER_NAME, null, standardSystemType);
         anotherToSubmit.setUuid(uuid);
         anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
@@ -195,7 +198,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }    
     
     public void testDeleteResource() {
-        Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME,
+        Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME, USER_NAME, 
                 owner, standardSystemType));
         consumerResource.deleteConsumer(consumer.getUuid());
 
@@ -241,7 +244,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRegisterWithConsumerId() {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, null, standardSystemType);
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, 
+            null, standardSystemType);
         toSubmit.setUuid("1023131");
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
@@ -258,7 +262,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // now pass in consumer type with null id just like the client would
         ConsumerType type = new ConsumerType(standardSystemType.getLabel());
         assertNull(type.getId());
-        Consumer nulltypeid = new Consumer(CONSUMER_NAME, null, type);
+        Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(nulltypeid, 
             new UserPrincipal(someuser.getLogin(), owner,
                 Collections.singletonList(Role.OWNER_ADMIN)));

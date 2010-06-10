@@ -198,6 +198,7 @@ public class ConsumerResource {
             consumer.setName(user.getLogin());
         }
         
+        consumer.setUserName(user.getLogin());
         consumer.setOwner(principal.getOwner());
         consumer.setType(type);
 

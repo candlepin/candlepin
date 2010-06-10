@@ -218,7 +218,7 @@ public class DatabaseTestFixture {
     protected Consumer createConsumer(Owner owner) {
         ConsumerType type = new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
         consumerTypeCurator.create(type);
-        Consumer c = new Consumer("test-consumer", owner, type);
+        Consumer c = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(c);
         return c;
     }

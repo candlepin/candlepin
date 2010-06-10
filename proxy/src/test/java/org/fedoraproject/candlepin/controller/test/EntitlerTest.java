@@ -108,11 +108,11 @@ public class EntitlerTest extends DatabaseTestFixture {
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
         
-        parentSystem = new Consumer("system", o, systemType);
+        parentSystem = new Consumer("system", "user", o, systemType);
         parentSystem.getFacts().put("total_guests", "0");
         consumerCurator.create(parentSystem);
         
-        childVirtSystem = new Consumer("virt system", o, systemType);
+        childVirtSystem = new Consumer("virt system", "user", o, systemType);
         parentSystem.addChildConsumer(childVirtSystem);
         
         consumerCurator.create(childVirtSystem);

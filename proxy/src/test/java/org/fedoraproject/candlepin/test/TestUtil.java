@@ -39,7 +39,7 @@ public class TestUtil {
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
-        return new Consumer("Test Consumer " + randomInt(), owner, type);
+        return new Consumer("Test Consumer " + randomInt(), "User", owner, type);
     }
 
     /**
@@ -59,7 +59,7 @@ public class TestUtil {
                 randomInt());
 
         Consumer consumer = new Consumer("testconsumer" + randomInt(),
-                owner, consumerType);
+            "User", owner, consumerType);
         consumer.setMetadataField("foo", "bar");
         consumer.setMetadataField("foo1", "bar1");
 

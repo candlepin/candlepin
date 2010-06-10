@@ -69,7 +69,7 @@ public class DefaultRulesTest {
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
 
         owner = new Owner();
-        consumer = new Consumer("test consumer", owner,
+        consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
     }
     
