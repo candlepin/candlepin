@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -44,21 +45,26 @@ public class PostEntHelper {
     }
     
     /**
-    * Create an entitlement pool for a product and limit it to a particular
-    * consumer.
+    * Create a pool for a product and limit it to consumers a particular user has
+    * registered.
     *
     * @param productId Label of the product the pool is for.
-    * @param quantity Number of entitlements for this pool. Use a negative
-    * number for an unlimited pool.
+    * @param quantity Number of entitlements for this pool, also accepts "unlimited".
     */
-    public void createConsumerPool(String productId, Long quantity) {
+    public void createUserRestrictedPool(String productId, String quantity) {
 
+        Long q = null;
+        if (quantity.equals("unlimited")) {
+            q = new Long(-1);
+        }
+        else {
+            q = Long.parseLong(quantity);
+        }
         Consumer c = ent.getConsumer();
-        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, quantity,
+        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate());
-
-        // TODO: Fill this out once we have consumer specific pools again.
-        // consumerSpecificPool.setConsumer(c);
+//        consumerSpecificPool.setAttribute("user_restricted",
+//            c.getUsername());
         consumerSpecificPool.setSourceEntitlement(ent);
         poolCurator.create(consumerSpecificPool);
     }

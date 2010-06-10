@@ -24,7 +24,7 @@ import org.fedoraproject.candlepin.model.Pool;
 /**
  * represents a read-only entitlement pool
  */
-public class ReadOnlyEntitlementPool {
+public class ReadOnlyPool {
 
     private Pool entPool;
 
@@ -32,13 +32,13 @@ public class ReadOnlyEntitlementPool {
      * @param entPool
      *            the read-write version of the EntitlementPool to copy.
      */
-    public ReadOnlyEntitlementPool(Pool entPool) {
+    public ReadOnlyPool(Pool entPool) {
         this.entPool = entPool;
     }
 
     /**
      * Returns true if there are available entitlements remaining.
-     * 
+     *
      * @return true if there are available entitlements remaining.
      */
     public Boolean entitlementsAvailable(Integer quantityToConsume) {
@@ -68,12 +68,17 @@ public class ReadOnlyEntitlementPool {
     public String getProductId() {
         return entPool.getProductId();
     }
-    
-    public static List<ReadOnlyEntitlementPool> fromCollection(Collection<Pool> pools) {
-        List<ReadOnlyEntitlementPool> toReturn 
-            = new ArrayList<ReadOnlyEntitlementPool>(pools.size());
+
+    public String getAttribute(String name) {
+        return entPool.getAttributeValue(name);
+    }
+
+
+    public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools) {
+        List<ReadOnlyPool> toReturn
+            = new ArrayList<ReadOnlyPool>(pools.size());
         for (Pool pool : pools) {
-            toReturn.add(new ReadOnlyEntitlementPool(pool));
+            toReturn.add(new ReadOnlyPool(pool));
         }
         return toReturn;
     }

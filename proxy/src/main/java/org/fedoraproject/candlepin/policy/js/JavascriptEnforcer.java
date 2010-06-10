@@ -36,6 +36,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
+import org.fedoraproject.candlepin.policy.ValidationWarning;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
@@ -100,9 +101,8 @@ public class JavascriptEnforcer implements Enforcer {
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
-                new ValidationError(i18n.tr("Entitlements for {0} expired on: {1}", 
+                new ValidationError(i18n.tr("Entitlements for {0} expired on: {1}",
                     entitlementPool.getProductId(), entitlementPool.getEndDate())));
-            return preHelper;
         }
 
         return preHelper;
@@ -110,13 +110,14 @@ public class JavascriptEnforcer implements Enforcer {
 
     /**
      * Both products and pools can carry attributes, we need to trigger rules for each.
+     * In this map, pool attributes will override product attributes, should the same
+     * key be set for both.
      *
      * @param product Product
      * @param pool Pool can be null.
-     * @return Map of all attribute names and values.
+     * @return Map of all attribute names and values. Pool attributes have priority.
      */
     private Map<String, String> getFlattenedAttributes(Product product, Pool pool) {
-        // TODO: What if both product and pool carry the same attribute?
         Map<String, String> allAttributes = new HashMap<String, String>();
         for (Attribute a : product.getAttributes()) {
             allAttributes.put(a.getName(), a.getValue());
@@ -135,14 +136,15 @@ public class JavascriptEnforcer implements Enforcer {
 
         // Provide objects for the script:
         Product product = prodAdapter.getProductById(pool.getProductId());
+        Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("product", new ReadOnlyProduct(product));
-        jsEngine.put("pool", new ReadOnlyEntitlementPool(pool));
+        jsEngine.put("pool", new ReadOnlyPool(pool));
         jsEngine.put("pre", preHelper);
+        jsEngine.put("attributes", allAttributes);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + pool.getProductId());
-        Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
@@ -152,6 +154,16 @@ public class JavascriptEnforcer implements Enforcer {
         else {
             callPreRules(matchingRules);
         }
+
+        if (log.isDebugEnabled()) {
+            for (ValidationError error : preHelper.getResult().getErrors()) {
+                log.debug("  Rule error: " + error.getResourceKey());
+            }
+            for (ValidationWarning warning : preHelper.getResult().getWarnings()) {
+                log.debug("  Rule warning: " + warning.getResourceKey());
+            }
+        }
+
         return preHelper;
     }
 
@@ -167,15 +179,16 @@ public class JavascriptEnforcer implements Enforcer {
 
         // Provide objects for the script:
         Product product = prodAdapter.getProductById(pool.getProductId());
+        Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
         jsEngine.put("product", new ReadOnlyProduct(product));
         jsEngine.put("post", postHelper);
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
+        jsEngine.put("attributes", allAttributes);
 
         log.debug("Running post-entitlement rules for: " + c.getUuid() +
             " product: " + pool.getProductId());
 
-        Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         if (matchingRules.isEmpty()) {
@@ -190,8 +203,8 @@ public class JavascriptEnforcer implements Enforcer {
         Invocable inv = (Invocable) jsEngine;
 
         log.info("Selecting best entitlement pool for product: " + productId);
-        List<ReadOnlyEntitlementPool> readOnlyPools 
-            = ReadOnlyEntitlementPool.fromCollection(pools);
+        List<ReadOnlyPool> readOnlyPools
+            = ReadOnlyPool.fromCollection(pools);
 
         // Provide objects for the script:
         jsEngine.put("pools", readOnlyPools);
@@ -201,11 +214,11 @@ public class JavascriptEnforcer implements Enforcer {
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
-        ReadOnlyEntitlementPool result = null;
+        ReadOnlyPool result = null;
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
-                result = (ReadOnlyEntitlementPool) inv.invokeFunction(
+                result = (ReadOnlyPool) inv.invokeFunction(
                     SELECT_POOL_PREFIX + rule.getRuleName());
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
@@ -222,7 +235,7 @@ public class JavascriptEnforcer implements Enforcer {
         
         if (!foundMatchingRule) {
             try {
-                result = (ReadOnlyEntitlementPool) inv
+                result = (ReadOnlyPool) inv
                     .invokeFunction(GLOBAL_SELECT_POOL_FUNCTION);
                 log.info("Excuted javascript rule: " +
                     GLOBAL_SELECT_POOL_FUNCTION);

@@ -66,6 +66,7 @@ public class ReadOnlyProduct {
         return toReturn;
     }
    
+    // We may want to drop this and force use of the flattened attributes list.
     /**
      * Return product attribute matching the given name.
      * @param name attribute name

@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.policy.test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
+import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -230,26 +231,43 @@ public class DefaultRulesTest {
         assertFalse(result.hasWarnings());
     }
 
+    private Pool setupProductWithRequiresConsumerTypeAttribute() {
+        Product product = new Product("a-product", "A product for testing");
+        product.setAttribute("requires_consumer_type", ConsumerTypeEnum.DOMAIN.toString());
+        Pool pool = new Pool(owner, product.getId(), new Long(5),
+            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        return pool;
+    }
+
     @Test
-    public void userLicenseCreatesSubPoolWhenConsumed() {
+    public void userLicensePassesPre() {
         Pool pool = setupUserLicensedSubscription();
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void userLicensePostCreatesSubPool() {
+        Pool pool = setupUserLicensedSubscription();
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
+        Entitlement e = new Entitlement(pool, consumer, new Date(), 1);
+
+        PostEntHelper postHelper = mock(PostEntHelper.class);
+        enforcer.post(postHelper, e);
+        verify(postHelper).createUserRestrictedPool(pool.getProductId(), "unlimited");
     }
 
     private Pool setupUserLicensedSubscription() {
         Product product = new Product("a-product", "A user licensed product");
         Pool pool = new Pool(owner, product.getId(), new Long(5),
             TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        pool.setAttribute("user_license", "unlimited");
+        pool.setAttribute("requires_consumer_type", ConsumerTypeEnum.PERSON.toString());
         when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
         return pool;
     }
 
-    private Pool setupProductWithRequiresConsumerTypeAttribute() {
-        Product product = new Product("a-product", "A product for testing");
-        product.addAttribute(
-            new Attribute("requires_consumer_type", ConsumerTypeEnum.DOMAIN.toString()));
-        Pool pool = new Pool(owner, product.getId(), new Long(5),
-            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
-        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
-        return pool;
-    }
 }

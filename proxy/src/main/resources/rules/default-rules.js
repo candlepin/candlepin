@@ -14,8 +14,13 @@ function attribute_mappings() {
 			"user_license:1:user_license";
 }
 
+function post_user_license() {
+	// Create a sub-pool for this user:
+	post.createUserRestrictedPool(product.getId(), attributes.get("user_license"));
+}
+
 function pre_requires_consumer_type() {
-	if (product.getAttribute("requires_consumer_type") != consumer.getType()) {
+	if (attributes.get("requires_consumer_type") != consumer.getType()) {
 		pre.addError("rulefailed.consumer.type.mismatch");
 	}
 }

@@ -86,7 +86,7 @@ public class PreEntHelper {
      *  
      * @param entPool read-only entitlement pool to be checked.
      */
-    public void checkQuantity(ReadOnlyEntitlementPool entPool) {
+    public void checkQuantity(ReadOnlyPool entPool) {
         if (!entPool.entitlementsAvailable(quantityToConsume)) {
             result.addError("rulefailed.no.entitlements.available");
         }
