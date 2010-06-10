@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -26,6 +27,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -35,7 +37,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.DateSource;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -116,7 +117,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @Column(nullable = true)
     private String productId;
 
-    @CollectionOfElements
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_entitlement_pool_attribute")
     private Set<Attribute> attributes = new HashSet<Attribute>();
     
