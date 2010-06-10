@@ -20,7 +20,7 @@ function pre_requires_consumer_type() {
 }
 
 function pre_architecture() {
-	if ((product.getAttribute("arch") != "ALL") &&
+	if ((product.getAttribute("arch").toUpperCase() != "ALL") &&
 			(!consumer.hasFact("cpu.architecture") ||
 			(product.getAttribute("arch") != consumer.getFact("cpu.architecture")))) {
 		pre.addWarning("rulewarning.architecture.mismatch");
