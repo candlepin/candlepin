@@ -37,7 +37,6 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -55,7 +54,6 @@ public class DefaultRulesTest {
     @Mock private ProductServiceAdapter prodAdapter;
     private Owner owner;
     private Consumer consumer;
-    @Mock private PostEntHelper postEntHelper;
 
     @Before
     public void createEnforcer() throws Exception {
@@ -189,6 +187,7 @@ public class DefaultRulesTest {
     private Pool setupTest(
             final String attributeName, String attributeValue,
             final String factName, final String factValue) {
+
         Product product = new Product("a-product", "A product for testing");
         product.addAttribute(new Attribute(attributeName, attributeValue));
         Pool pool = new Pool(owner, product.getId(), new Long(5),
@@ -229,6 +228,19 @@ public class DefaultRulesTest {
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void userLicenseCreatesSubPoolWhenConsumed() {
+        Pool pool = setupUserLicensedSubscription();
+    }
+
+    private Pool setupUserLicensedSubscription() {
+        Product product = new Product("a-product", "A user licensed product");
+        Pool pool = new Pool(owner, product.getId(), new Long(5),
+            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        return pool;
     }
 
     private Pool setupProductWithRequiresConsumerTypeAttribute() {

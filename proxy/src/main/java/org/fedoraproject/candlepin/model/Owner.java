@@ -136,12 +136,14 @@ public class Owner extends AbstractHibernateObject implements Serializable {
     public Set<Consumer> getConsumers() {
         return consumers;
     }
+
     /**
      * @param consumers the consumers to set
      */
     public void setConsumers(Set<Consumer> consumers) {
         this.consumers = consumers;
     }
+
     /**
      * @return the entitlementPools
      */

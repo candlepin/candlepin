@@ -236,7 +236,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("no results");
             return new ArrayList<Pool>();
         }
-        
 
         // Filter for product we want:
         if (productId != null) {

@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -117,7 +118,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
 
     @CollectionOfElements
     @JoinTable(name = "cp_entitlement_pool_attribute")
-    private Set<Attribute> attributes;
+    private Set<Attribute> attributes = new HashSet<Attribute>();
     
     private String productName;
 
@@ -267,19 +268,56 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         this.consumed--;
     }
 
-    /**
-     * @return attributes associated with the pool.
-     */
     public Set<Attribute> getAttributes() {
+        if (attributes == null) {
+            return new HashSet<Attribute>();
+        }
         return attributes;
     }
 
-    /**
-     * Replaces all of the attributes of this pool.
-     * @param attributes attributes to change.
-     */
     public void setAttributes(Set<Attribute> attributes) {
         this.attributes = attributes;
+    }
+
+    public void addAttribute(Attribute attrib) {
+        if (this.attributes == null) {
+            this.attributes = new HashSet<Attribute>();
+        }
+        this.attributes.add(attrib);
+    }
+
+    public void setAttribute(String key, String value) {
+        Attribute existing = getAttribute(key);
+        if (existing != null) {
+            existing.setValue(value);
+        }
+        else {
+            addAttribute(new Attribute(key, value));
+        }
+    }
+
+    public Attribute getAttribute(String key) {
+        if (attributes == null) {
+            return null;
+        }
+        for (Attribute a : attributes) {
+            if (a.getName().equals(key)) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+    public String getAttributeValue(String key) {
+        if (attributes == null) {
+            return null;
+        }
+        for (Attribute a : attributes) {
+            if (a.getName().equals(key)) {
+                return a.getValue();
+            }
+        }
+        return null;
     }
 
     /**

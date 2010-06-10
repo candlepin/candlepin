@@ -29,6 +29,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
@@ -107,6 +108,28 @@ public class JavascriptEnforcer implements Enforcer {
         return preHelper;
     }
 
+    /**
+     * Both products and pools can carry attributes, we need to trigger rules for each.
+     *
+     * @param product Product
+     * @param pool Pool can be null.
+     * @return Map of all attribute names and values.
+     */
+    private Map<String, String> getFlattenedAttributes(Product product, Pool pool) {
+        // TODO: What if both product and pool carry the same attribute?
+        Map<String, String> allAttributes = new HashMap<String, String>();
+        for (Attribute a : product.getAttributes()) {
+            allAttributes.put(a.getName(), a.getValue());
+        }
+        if (pool != null) {
+            for (Attribute a : pool.getAttributes()) {
+                allAttributes.put(a.getName(), a.getValue());
+            }
+
+        }
+        return allAttributes;
+    }
+
     private PreEntHelper runPre(Consumer consumer, Pool pool, Integer quantity) {
         PreEntHelper preHelper = new PreEntHelper(quantity);
 
@@ -119,8 +142,9 @@ public class JavascriptEnforcer implements Enforcer {
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + pool.getProductId());
+        Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         List<Rule> matchingRules 
-            = rulesForAttributes(product.getAttributeNames(), attributesToRules);
+            = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
         if (matchingRules.isEmpty()) {
             invokeGlobalPreRule();
@@ -151,8 +175,9 @@ public class JavascriptEnforcer implements Enforcer {
         log.debug("Running post-entitlement rules for: " + c.getUuid() +
             " product: " + pool.getProductId());
 
+        Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         List<Rule> matchingRules 
-            = rulesForAttributes(product.getAttributeNames(), attributesToRules);
+            = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         if (matchingRules.isEmpty()) {
             invokeGlobalPostRule();
         }
@@ -172,8 +197,9 @@ public class JavascriptEnforcer implements Enforcer {
         jsEngine.put("pools", readOnlyPools);
         
         Product product = prodAdapter.getProductById(productId);
+        Map<String, String> allAttributes = getFlattenedAttributes(product, null);
         List<Rule> matchingRules 
-            = rulesForAttributes(product.getAttributeNames(), attributesToRules);
+            = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
         ReadOnlyEntitlementPool result = null;
         boolean foundMatchingRule = false;

@@ -10,7 +10,8 @@ function attribute_mappings() {
 			"virtualization_host_platform:1:virtualization_host_platform, " +
 			"architecture:1:arch, " +
 			"sockets:1:sockets, " +
-			"requires_consumer_type:1:requires_consumer_type";
+			"requires_consumer_type:1:requires_consumer_type," +
+			"user_license:1:user_license";
 }
 
 function pre_requires_consumer_type() {

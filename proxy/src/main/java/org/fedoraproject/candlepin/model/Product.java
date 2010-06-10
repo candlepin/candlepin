@@ -70,7 +70,7 @@ public class Product extends AbstractHibernateObject {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_attribute")
-    private Set<Attribute> attributes;
+    private Set<Attribute> attributes = new HashSet<Attribute>();
 
 //    @OneToMany(cascade = CascadeType.ALL)
     @ManyToMany(cascade = CascadeType.ALL)
@@ -187,23 +187,13 @@ public class Product extends AbstractHibernateObject {
         }
     }
 
-
-    /**
-     * @return the Product attributes
-     */
     public Set<Attribute> getAttributes() {
-        if (attributes == null) {
-            return null;
-        }
         return attributes;
     }
     
     @XmlTransient
     public Set<String> getAttributeNames() {
         Set<String> toReturn = new HashSet<String>();
-        if (attributes == null) {
-            return toReturn;
-        }
         
         for (Attribute attribute : attributes) {
             toReturn.add(attribute.getName());
@@ -211,29 +201,15 @@ public class Product extends AbstractHibernateObject {
         return toReturn;
     }
 
-    /**
-     * Replaces all of the product attributes with the given set.
-     * @param attributes attributes which will replace the current set.
-     */
     public void setAttributes(Set<Attribute> attributes) {
         this.attributes = attributes;
     }
 
-    /**
-     * add an attribute to the product
-     * @param attrib attribute to be added.
-     */
     public void addAttribute(Attribute attrib) {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<Attribute>();
-        }
         this.attributes.add(attrib);
     }
     
     public Attribute getAttribute(String key) {
-        if (attributes == null) {
-            return null;
-        }
         for (Attribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a;
@@ -244,9 +220,6 @@ public class Product extends AbstractHibernateObject {
     
 
     public String getAttributeValue(String key) {
-        if (attributes == null) {
-            return null;
-        }
         for (Attribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a.getValue();
