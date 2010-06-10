@@ -144,39 +144,20 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
      * @param type the type
      */
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
+        this();
+        
         this.name = name;
         this.userName = userName;
         this.owner = owner;
         this.type = type;
-        
-        // This constructor is for creating a new Consumer in the DB, so we'll
-        // generate a UUID at this point.
-        this.uuid = Util.generateUUID();
-
-        this.facts = new HashMap<String, String>();
-        this.childConsumers = new HashSet<Consumer>();
-        this.entitlements = new HashSet<Entitlement>();
-    }
-
-    /**
-     * Copy constructor which copies the given consumer object.
-     * @param copyFrom Consumer to copy from
-     */
-    public Consumer(Consumer copyFrom) {
-        this(copyFrom.name, copyFrom.userName, copyFrom.owner, copyFrom.type);
-        if (copyFrom.uuid != null && copyFrom.uuid.length() > 0) {
-            uuid = copyFrom.uuid;
-        }
-        facts = new HashMap<String, String>(copyFrom.facts);
-        childConsumers = copyFrom.childConsumers;
-        entitlements = copyFrom.entitlements;
-        keyPair = copyFrom.keyPair;
     }
 
     /**
      * default ctor
      */
     public Consumer() {
+        // This constructor is for creating a new Consumer in the DB, so we'll
+        // generate a UUID at this point.
         this.uuid = Util.generateUUID();
         this.facts = new HashMap<String, String>();
         this.childConsumers = new HashSet<Consumer>();

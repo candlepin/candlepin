@@ -30,7 +30,6 @@ import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
-import org.fedoraproject.candlepin.policy.ConsumerParentStrategy;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.resource.AdminResource;
@@ -102,7 +101,6 @@ public class CandlepinModule extends AbstractModule {
         bind(AuthInterceptor.class);
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
-        bind(ConsumerParentStrategy.class);
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(

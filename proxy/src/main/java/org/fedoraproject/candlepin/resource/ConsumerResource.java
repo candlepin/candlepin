@@ -61,7 +61,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.fedoraproject.candlepin.policy.ConsumerParentStrategy;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -95,7 +94,6 @@ public class ConsumerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private EventCurator eventCurator;
-    private ConsumerParentStrategy consumerParentStrategy;
     private static final int FEED_LIMIT = 1000;
     
     @Inject
@@ -110,7 +108,6 @@ public class ConsumerResource {
         EventSink sink,
         EventFactory eventFactory,
         EventCurator eventCurator,
-        ConsumerParentStrategy consumerParentStrategy,
         UserServiceAdapter userService) {
 
         this.consumerCurator = consumerCurator;
@@ -126,7 +123,6 @@ public class ConsumerResource {
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
-        this.consumerParentStrategy = consumerParentStrategy;
         this.userService = userService;
     }
 
@@ -212,12 +208,6 @@ public class ConsumerResource {
             }
         }
         
-        // Check if this new consumer should be a child of another consumer:
-        Consumer parent = consumerParentStrategy.getParent(consumer, user);
-        if (parent != null) {
-            consumer.setParent(parent);
-        }
-
         try {
             consumer = consumerCurator.create(consumer);
             IdentityCertificate idCert = null;
