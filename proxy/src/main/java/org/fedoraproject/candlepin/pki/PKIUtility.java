@@ -34,7 +34,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.List;
 
-import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
