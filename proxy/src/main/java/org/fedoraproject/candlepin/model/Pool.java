@@ -120,11 +120,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     
     @CollectionOfElements(targetElement = String.class)
     @JoinTable(name = "pool_products", joinColumns = @JoinColumn(name = "pool_id"))
-//    @org.hibernate.annotations.IndexColumn(
-//        name = "POSITION", base = 1
-//    )
-//    @Column(name = "", nullable = false)
-    private Set<String> providedProductIds;
+    private Set<String> providedProductIds = new HashSet<String>();
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_entitlement_pool_attribute")
@@ -143,7 +139,6 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     public Pool(Owner ownerIn, String productIdIn, Long quantityIn,
             Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
-        this.providedProductIds = new HashSet<String>();
         this.productId = productIdIn;
         this.providedProductIds.add(productIdIn);
         this.quantity = quantityIn;

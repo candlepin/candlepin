@@ -60,6 +60,11 @@ public class Subscription extends AbstractHibernateObject {
     @ForeignKey(name = "fk_subscription_product")
     @JoinColumn(nullable = false)
     private Product product;
+    
+    @CollectionOfElements(targetElement = String.class)
+    @JoinTable(name = "subscription_products", joinColumns = 
+        @JoinColumn(name = "subscription_id"))
+    private Set<String> providedProductIds = new HashSet<String>();
 
     @Column(nullable = false)
     private Long quantity;
@@ -88,6 +93,7 @@ public class Subscription extends AbstractHibernateObject {
             Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
         this.product = productIn;
+        this.providedProductIds.add(productIn.getId());
         this.quantity = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -103,6 +109,7 @@ public class Subscription extends AbstractHibernateObject {
         this.startDate = from.startDate;
         this.endDate = from.endDate;
         this.modified = from.modified;
+        this.providedProductIds = from.providedProductIds;
         this.tokens = from.getTokens() == null ? 
             new HashSet<SubscriptionToken>() : 
             new HashSet<SubscriptionToken>(from.getTokens());
@@ -248,5 +255,13 @@ public class Subscription extends AbstractHibernateObject {
 
     public void setTokens(Set<SubscriptionToken> tokens) {
         this.tokens = tokens;
+    }
+    
+    public Set<String> getProvidedProductIds() {
+        return providedProductIds;
+    }
+
+    public void setProvidedProductIds(Set<String> providedProductIds) {
+        this.providedProductIds = providedProductIds;
     }
 }
