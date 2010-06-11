@@ -98,14 +98,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     
     
     /**
-     * Returns list of pools available for the consumer.
+     * Returns list of pools available to the consumer.
      *
      * @param c Consumer to filter
-     * @return pools owned by the given Owner.
+     * @return pools available to the consumer.
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listAvailableEntitlementPools(Consumer c) {
+    public List<Pool> listByConsumer(Consumer c) {
         return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true);
     }
     
@@ -186,7 +186,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
             deactivatePool(entry.getValue());
         }
-        
     }
 
     /**
@@ -268,7 +267,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
-                PreEntHelper helper = enforcer.pre(c, p, new Integer(1));
+                PreEntHelper helper = enforcer.pre(c, p, 1);
                 if (helper.getResult().isSuccessful() && 
                         !helper.getResult().hasWarnings()) {
                     newResults.add(p);

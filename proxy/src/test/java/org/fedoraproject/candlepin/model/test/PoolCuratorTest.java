@@ -55,7 +55,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer);
+            poolCurator.listByConsumer(consumer);
         assertEquals(0, results.size());
 
     }
@@ -67,7 +67,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer);
+            poolCurator.listByConsumer(consumer);
         assertEquals(0, results.size());
     }
 

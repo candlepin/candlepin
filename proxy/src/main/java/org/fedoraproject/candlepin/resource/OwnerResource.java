@@ -253,17 +253,6 @@ public class OwnerResource {
         return userService.createUser(user);
     }
     
-    @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("{owner_id}/users/{user_id}")
-    public User getUser(@PathParam("owner_id") Long ownerId, 
-        @PathParam("user_id") Long userId) {
-        
-        // TODO: Add another method to the user service API?
-        
-        return null;
-    }
-    
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

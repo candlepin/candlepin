@@ -5,21 +5,40 @@ Before do
     @found_pools = []
 end
 
-Then /^the first pool's product names have "([^\"]*)"$/ do |product_name|
-  products = []
-  @candlepin.get_pools do |pool|
-	products.push(pool['productname'])
- 	#pool['pool']['productName'].should == product_name
-  end
-  products.include?(product_name)
+Given /^I have a pool of quantity (\d+) for "([^\"]*)"$/ do |quantity, product|
+  p = @candlepin.get_product(product.hash.abs)
+    @candlepin.create_pool(p['id'], @test_owner['id'], nil)  
 end
 
-When /^I view all pools for my owner$/ do
+Given /^I have a pool of quantity (\d+) for "([^\"]*)" with a "([^\"]*)" attribute of "([^\"]*)"$/ do |quantity, product, attr_name, attr_val|
+  p = @candlepin.get_product(product.hash.abs)
+  
+  @candlepin.create_pool(p['id'], @test_owner['id'], nil, { attr_name => attr_val })
+end
+
+When /^I view all of my pools$/ do
   @found_pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid,
                                         :listall => true)
 end
 
-Then /^I see (\d*) pools$/ do |num_pools|
+When /^I view all pools for my owner$/ do
+  @found_pools = @candlepin.get_pools(:owner => @test_owner['id'])
+end
+
+Then /^I have access to a pool for product "([^\"]*)"$/ do |product_name|
+  pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid)
+  products = pools.collect { |pool| pool['productName'] }
+
+  products.should include(product_name)
+end
+
+Then /^I have access to (\d*) pools?$/ do |num_pools|
+  pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid)
+
+  pools.length.should == num_pools.to_i
+end
+
+Then /^I see (\d+) pools$/ do |num_pools|
   @found_pools.length.should == num_pools.to_i
 end
 

@@ -115,12 +115,18 @@ class Candlepin
   end
   
   def create_pool(product_id, owner_id,  subscription_id, 
-	          start_date=nil, end_date=nil, quantity = 100)
+	          attributes = {}, start_date=nil, end_date=nil, 
+                  quantity = 100)
     start_date ||= Date.today
     end_date ||= Date.today + 365
 
+    attribute_set = []
+    attributes.each_pair do |name, value|
+      attribute_set << { 'name' => name, 'value' => value }
+    end
+
     pool = {
-      'activeSubscription' => false,
+      'activeSubscription' => true,
       'subscriptionId' => subscription_id,
       'quantity' => quantity,
       'consumed' => 0,
@@ -129,7 +135,8 @@ class Candlepin
       'productId' => product_id,
       'owner' => { 
         'id' => owner_id
-      }          
+      },
+      'attributes' => attribute_set
     }
     
     post('/pools', pool)

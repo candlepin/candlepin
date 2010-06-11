@@ -174,7 +174,7 @@ public class PoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public Pool getProduct(@PathParam("pool_id") Long id) {
+    public Pool getPool(@PathParam("pool_id") Long id) {
         Pool toReturn = poolCurator.find(id);
 
         if (toReturn != null) {
