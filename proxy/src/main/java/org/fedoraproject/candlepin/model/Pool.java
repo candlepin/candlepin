@@ -37,6 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -116,23 +117,35 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     
     @Column(nullable = true)
     private String productId;
+    
+    @CollectionOfElements(targetElement = String.class)
+    @JoinTable(name = "pool_products", joinColumns = @JoinColumn(name = "pool_id"))
+//    @org.hibernate.annotations.IndexColumn(
+//        name = "POSITION", base = 1
+//    )
+//    @Column(name = "", nullable = false)
+    private Set<String> providedProductIds;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_entitlement_pool_attribute")
     private Set<Attribute> attributes = new HashSet<Attribute>();
     
+    // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
 
     /**
      * default ctor
      */
     public Pool() {
+        this.providedProductIds = new HashSet<String>();
     }
 
     public Pool(Owner ownerIn, String productIdIn, Long quantityIn,
             Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
+        this.providedProductIds = new HashSet<String>();
         this.productId = productIdIn;
+        this.providedProductIds.add(productIdIn);
         this.quantity = quantityIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -141,6 +154,19 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         this.consumed = new Long(0);
     }
     
+    public Pool(Owner ownerIn, Set<String> providedProductIds, Long quantityIn,
+        Date startDateIn, Date endDateIn) {
+        this.owner = ownerIn;
+        this.quantity = quantityIn;
+        this.startDate = startDateIn;
+        this.endDate = endDateIn;
+    
+        // Always assume none consumed if creating a new pool.
+        this.consumed = new Long(0);
+        this.providedProductIds = providedProductIds;
+        this.productId = providedProductIds.iterator().next();
+    }
+
     /** {@inheritDoc} */
     public Long getId() {
         return id;
@@ -419,5 +445,13 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @Override
     public boolean shouldGrantAccessTo(Consumer consumer) {
         return AccessControlValidator.shouldGrantAccess(this, consumer);
+    }
+
+    public Set<String> getProvidedProductIds() {
+        return providedProductIds;
+    }
+
+    public void setProvidedProductIds(Set<String> providedProductIds) {
+        this.providedProductIds = providedProductIds;
     }
 }

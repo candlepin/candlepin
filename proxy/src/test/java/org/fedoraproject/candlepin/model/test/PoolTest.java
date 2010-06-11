@@ -18,7 +18,9 @@ import static org.junit.Assert.*;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -33,7 +35,8 @@ import org.junit.Test;
 public class PoolTest extends DatabaseTestFixture {
 
     private Pool pool;
-    private Product prod;
+    private Product prod1;
+    private Product prod2;
     private Owner owner;
     private Consumer consumer;
     private Entitler entitler;
@@ -42,9 +45,16 @@ public class PoolTest extends DatabaseTestFixture {
     public void createObjects() {
         beginTransaction();
 
-        prod = TestUtil.createProduct();
-        productCurator.create(prod);
-        pool = createPoolAndSub(createOwner(), prod,
+        prod1 = TestUtil.createProduct();
+        prod2 = TestUtil.createProduct();
+        productCurator.create(prod1);
+        productCurator.create(prod2);
+        
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(prod1.getId());
+        providedProductIds.add(prod2.getId());
+        
+        pool = createPool(createOwner(), providedProductIds,
             new Long(1000), TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         owner = pool.getOwner();
@@ -53,7 +63,7 @@ public class PoolTest extends DatabaseTestFixture {
         entitler = injector.getInstance(Entitler.class);
 
         ownerCurator.create(owner);
-        productCurator.create(prod);
+        productCurator.create(prod1);
         poolCurator.create(pool);
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
@@ -67,12 +77,13 @@ public class PoolTest extends DatabaseTestFixture {
                 Pool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
-        assertEquals(prod.getId(), lookedUp.getProductId());
+        assertEquals(prod1.getId(), lookedUp.getProductId());
+        
     }
 
     public void testMultiplePoolsForOwnerProductAllowed() {
         Pool duplicatePool = createPoolAndSub(owner,
-                prod, new Long(-1), TestUtil.createDate(2009, 11, 30),
+                prod1, new Long(-1), TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         // Just need to see no exception is thrown.
         poolCurator.create(duplicatePool);

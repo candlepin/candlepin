@@ -18,6 +18,7 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -205,6 +206,28 @@ public class DatabaseTestFixture {
             endDate, TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
+        poolCurator.create(p);
+        return p;
+    }
+
+    /**
+     * Create an entitlement pool and matching subscription.
+     * @return an entitlement pool and matching subscription.
+     */
+    protected Pool createPool(Owner owner, Set<String> productIds, Long quantity,
+        Date startDate, Date endDate) {
+        Pool p = new Pool(owner, productIds, quantity, startDate, endDate);
+        poolCurator.create(p);
+        return p;
+    }
+
+    /**
+     * Create an entitlement pool and matching subscription.
+     * @return an entitlement pool and matching subscription.
+     */
+    protected Pool createPool(Owner owner, Set<String> productIds, Long quantity) {
+        Pool p = new Pool(owner, productIds, quantity, 
+            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2051, 02, 26));
         poolCurator.create(p);
         return p;
     }

@@ -16,7 +16,9 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
@@ -126,4 +128,19 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(1, results.size());
     }
     
+    @Test
+    public void testPoolProductIds() {
+        Product another = TestUtil.createProduct();
+        productCurator.create(another);
+        
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(product.getId());
+        providedProductIds.add(another.getId());
+        
+        Pool pool = createPool(owner, providedProductIds, new Long(5));
+        poolCurator.create(pool);
+        pool = poolCurator.find(pool.getId());
+        assertTrue(pool.getProvidedProductIds().contains(product.getId()));
+        assertTrue(pool.getProvidedProductIds().contains(another.getId()));
+    }
 }
