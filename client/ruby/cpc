@@ -95,7 +95,7 @@ class CandlepinCLI < Candlepin
 
   def create_user(owner_id, login, password)
     user = super
-    login = user['login']
+    login = user['username']
 
     @config.create_profile(login,
                            login,

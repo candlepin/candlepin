@@ -74,7 +74,7 @@ class Candlepin
 
   def create_user(owner_id, login, password)
     user = {
-      'login' => login,
+      'username' => login,
       'password' => password
     }
 
