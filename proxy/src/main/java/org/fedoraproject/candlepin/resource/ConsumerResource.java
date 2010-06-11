@@ -191,10 +191,10 @@ public class ConsumerResource {
             }
             
             // otherwise, this is a personal consumer - set the name to match the username
-            consumer.setName(user.getLogin());
+            consumer.setName(user.getUsername());
         }
         
-        consumer.setUserName(user.getLogin());
+        consumer.setUserName(user.getUsername());
         consumer.setOwner(principal.getOwner());
         consumer.setType(type);
 
@@ -216,7 +216,7 @@ public class ConsumerResource {
             // the id cert actually needs the username at all
             if (user != null) {
                 idCert = identityCertService.generateIdentityCert(consumer,
-                    user.getLogin());
+                    user.getUsername());
             }
 
             if (log.isDebugEnabled()) {

@@ -164,7 +164,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             null, standardSystemType);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer submitted  = consumerResource.create(toSubmit, 
-            new UserPrincipal(someuser.getLogin(), owner,
+            new UserPrincipal(someuser.getUsername(), owner,
                 Collections.singletonList(Role.OWNER_ADMIN)));
         
         assertNotNull(submitted);
@@ -268,7 +268,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted  = consumerResource.create(toSubmit, 
-            new UserPrincipal(someuser.getLogin(), owner,
+            new UserPrincipal(someuser.getUsername(), owner,
                 Collections.singletonList(Role.OWNER_ADMIN)));
 
         assertNotNull(submitted);
@@ -282,7 +282,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNull(type.getId());
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(nulltypeid, 
-            new UserPrincipal(someuser.getLogin(), owner,
+            new UserPrincipal(someuser.getUsername(), owner,
                 Collections.singletonList(Role.OWNER_ADMIN)));
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());

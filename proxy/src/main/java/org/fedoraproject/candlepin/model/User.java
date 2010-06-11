@@ -54,7 +54,7 @@ public class User extends AbstractHibernateObject{
     private Owner owner;
     
     @Column(nullable = false, unique = true)
-    private String login;
+    private String username;
 
     // TODO: Hash!
     private String password;
@@ -70,7 +70,7 @@ public class User extends AbstractHibernateObject{
     
     public User(Owner owner, String login, String password, boolean superAdmin) {
         this.owner = owner;
-        this.login = login;
+        this.username = login;
         this.password = password;
         this.superAdmin = superAdmin;
     }
@@ -90,16 +90,16 @@ public class User extends AbstractHibernateObject{
     }
 
     /**
-     * @return the login
+     * @return the username
      */
-    public String getLogin() {
-        return login;
+    public String getUsername() {
+        return username;
     }
     /**
-     * @param login the login to set
+     * @param username the login to set
      */
-    public void setLogin(String login) {
-        this.login = login;
+    public void setUsername(String username) {
+        this.username = username;
     }
     /**
      * @return the password
@@ -147,7 +147,7 @@ public class User extends AbstractHibernateObject{
      */
     public String toString() {
         return new Formatter().format("User :{login: %s, password: %s}",
-                login, password).toString();
+                username, password).toString();
     }
 
 }

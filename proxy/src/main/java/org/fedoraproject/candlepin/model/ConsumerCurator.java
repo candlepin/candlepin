@@ -67,7 +67,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // TODO: For now we are using consumer.name = user.login. This is a little
         // dangerous as it can lead to dangling references or false hits. Probably
         // want to make this an explicit part of the schema:
-        return lookupByName(user.getLogin());
+        return lookupByName(user.getUsername());
     }
 
     /**
