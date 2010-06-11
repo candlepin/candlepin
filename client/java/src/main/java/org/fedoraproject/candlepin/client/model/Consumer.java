@@ -103,4 +103,8 @@ public class Consumer extends TimeStampedEntity {
     public String toString() {
         return ReflectionToStringBuilder.reflectionToString(this);
     }
+
+    @JsonIgnore
+    public void setUsername(String username) {
+    }
 }

@@ -45,6 +45,7 @@ public class CandlepinExceptionMapper implements
                 add(MediaType.APPLICATION_JSON_TYPE);
                 add(MediaType.APPLICATION_XML_TYPE);
                 add(MediaType.TEXT_PLAIN_TYPE);
+                add(MediaType.APPLICATION_ATOM_XML_TYPE);
             }
         };
 
