@@ -43,10 +43,10 @@ public class SubscribeCommand extends PrivilegedCommand {
         opts.addOption("r", "regtoken", true, "regtoken");
         opts.addOption("q", "quantity", true,
             "The quantities of pool/product/regtoken used");
-        opts.addOption("eid", "emailId", true,
+        opts.addOption("e", "email", true,
             "email address which will receive confirmation e-mail " +
             "(applies for only --regtoken)");
-        opts.addOption("l", "lang", true, "Preferred language of email" +
+        opts.addOption("l", "locale", true, "Preferred locale of email" +
             "(applies for only --regtoken)");
         return opts;
     }
@@ -59,8 +59,8 @@ public class SubscribeCommand extends PrivilegedCommand {
         String[] products = cmdLine.getOptionValues("pr");
         String[] regTokens = cmdLine.getOptionValues("r");
         int [] quantity = Utils.toInt(cmdLine.getOptionValues("q"));
-        String emailId = cmdLine.getOptionValue("eid");
-        String defLang = StringUtils.defaultIfEmpty(
+        String email = cmdLine.getOptionValue("e");
+        String defLocale = StringUtils.defaultIfEmpty(
             cmdLine.getOptionValue("l"), SystemUtils.USER_LANGUAGE);
         int iter = 0;
         if (!this.getClient().isRegistered()) {
@@ -88,9 +88,9 @@ public class SubscribeCommand extends PrivilegedCommand {
 
         if (!isEmpty(regTokens)) {
             for (String token : regTokens) {
-                if (StringUtils.isNotBlank(emailId)) {
+                if (StringUtils.isNotBlank(email)) {
                     client.bindByRegNumber(token, Utils.getSafeInt(quantity,
-                        iter++, 1), emailId, defLang);
+                        iter++, 1), email, defLocale);
                 }
                 else {
                     client.bindByRegNumber(token, Utils.getSafeInt(quantity,

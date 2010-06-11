@@ -221,13 +221,13 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
      * (java.lang.String, int, java.lang.String, java.lang.String)
      */
     public List<Entitlement> bindByRegNumber(String regNo, int quantity,
-        String emailId, String defLang) {
-        L.debug("bindByRegNumber(regNo={}, quantity={}, emailId, defLang)",
+        String email, String defLocale) {
+        L.debug("bindByRegNumber(regNo={}, quantity={}, email, defLocale)",
             regNo, quantity);
-        L.debug("emailId={}, defLang={}", emailId, defLang);
+        L.debug("email={}, defLocale={}", email, defLocale);
         CandlepinConsumerClient client = clientWithCert();
         return getSafeResult(client.bindByRegNumber(getUUID(), regNo, quantity,
-            emailId, defLang));
+            email, defLocale));
     }
 
     /*

@@ -95,8 +95,8 @@ public interface CandlepinConsumerClient{
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Entitlement>> bindByRegNumber(
         @PathParam("uuid") String uuid, @QueryParam("token") String regnum,
-        @QueryParam("quantity") int quantity, @QueryParam("emailId") String emailId,
-        @QueryParam("lang") String defLang);
+        @QueryParam("quantity") int quantity, @QueryParam("email") String email,
+        @QueryParam("emailLocale") String defLocale);
 
     @DELETE
     @Path("consumers/{uuid}/certificates/{serialNo}")
