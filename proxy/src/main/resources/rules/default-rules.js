@@ -17,7 +17,8 @@ function attribute_mappings() {
 
 function post_user_license() {
 	// Create a sub-pool for this user
-	post.createUserRestrictedPool(product.getId(), attributes.get("user_license"));
+	post.createUserRestrictedPool(pool.getProvidedProductIds(),
+			attributes.get("user_license"));
 }
 
 function pre_user_restricted() {

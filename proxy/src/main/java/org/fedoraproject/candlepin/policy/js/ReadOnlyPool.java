@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Pool;
 
@@ -65,12 +66,12 @@ public class ReadOnlyPool {
         return entPool.getEndDate();
     }
 
-    public String getProductId() {
-        return entPool.getProductId();
-    }
-
     public String getAttribute(String name) {
         return entPool.getAttributeValue(name);
+    }
+
+    public Set<String> getProvidedProductIds() {
+        return entPool.getProvidedProductIds();
     }
 
 

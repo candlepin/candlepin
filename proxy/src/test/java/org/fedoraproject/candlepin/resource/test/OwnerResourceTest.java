@@ -197,7 +197,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerCurator.create(c2);
 
         // Create a pool for this owner:
-        Pool pool = TestUtil.createEntitlementPool(product, owner);
+        Pool pool = TestUtil.createEntitlementPool(owner, product);
         poolCurator.create(pool);
 
         // Give those consumers entitlements:

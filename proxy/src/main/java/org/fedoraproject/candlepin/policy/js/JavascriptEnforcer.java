@@ -102,7 +102,8 @@ public class JavascriptEnforcer implements Enforcer {
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
                 new ValidationError(i18n.tr("Entitlements for {0} expired on: {1}",
-                    entitlementPool.getProductId(), entitlementPool.getEndDate())));
+                    prodAdapter.getTopLevelProduct(entitlementPool.getProvidedProductIds()),
+                    entitlementPool.getEndDate())));
         }
 
         return preHelper;
@@ -135,7 +136,9 @@ public class JavascriptEnforcer implements Enforcer {
         PreEntHelper preHelper = new PreEntHelper(quantity);
 
         // Provide objects for the script:
-        Product product = prodAdapter.getProductById(pool.getProductId());
+        String topLevelProductId = prodAdapter.getTopLevelProduct(
+            pool.getProvidedProductIds());
+        Product product = prodAdapter.getProductById(topLevelProductId);
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("product", new ReadOnlyProduct(product));
@@ -144,7 +147,7 @@ public class JavascriptEnforcer implements Enforcer {
         jsEngine.put("attributes", allAttributes);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
-            " product: " + pool.getProductId());
+            " product: " + topLevelProductId);
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
@@ -178,16 +181,19 @@ public class JavascriptEnforcer implements Enforcer {
         Consumer c = ent.getConsumer();
 
         // Provide objects for the script:
-        Product product = prodAdapter.getProductById(pool.getProductId());
+        String topLevelProductId = prodAdapter.getTopLevelProduct(
+            pool.getProvidedProductIds());
+        Product product = prodAdapter.getProductById(topLevelProductId);
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
         jsEngine.put("product", new ReadOnlyProduct(product));
         jsEngine.put("post", postHelper);
+        jsEngine.put("pool", new ReadOnlyPool(pool));
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
         jsEngine.put("attributes", allAttributes);
 
         log.debug("Running post-entitlement rules for: " + c.getUuid() +
-            " product: " + pool.getProductId());
+            " product: " + topLevelProductId);
 
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);

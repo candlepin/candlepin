@@ -77,7 +77,7 @@ public class PoolTest extends DatabaseTestFixture {
                 Pool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
-        assertEquals(prod1.getId(), lookedUp.getProductId());
+        assertTrue(lookedUp.provides(prod1.getId()));
         
     }
 
@@ -145,9 +145,11 @@ public class PoolTest extends DatabaseTestFixture {
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
         
-        Pool pool = new Pool(owner, parentProduct.getId().toString(),
-            new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
-                    .createDate(3000, 2, 9));
+        Set<String> productIds = new HashSet<String>();
+        productIds.add(parentProduct.getId());
+        productIds.add(childProduct.getId());
+
+        Pool pool = TestUtil.createEntitlementPool(owner, productIds, 5);
         poolCurator.create(pool);
         
         

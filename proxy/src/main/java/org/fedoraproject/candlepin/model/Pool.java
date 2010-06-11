@@ -115,9 +115,6 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @Column(nullable = false)
     private Date endDate;
     
-    @Column(nullable = true)
-    private String productId;
-    
     @CollectionOfElements(targetElement = String.class)
     @JoinTable(name = "pool_products", joinColumns = @JoinColumn(name = "pool_id"))
     private Set<String> providedProductIds = new HashSet<String>();
@@ -129,26 +126,9 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
 
-    /**
-     * default ctor
-     */
     public Pool() {
-        this.providedProductIds = new HashSet<String>();
     }
 
-    public Pool(Owner ownerIn, String productIdIn, Long quantityIn,
-            Date startDateIn, Date endDateIn) {
-        this.owner = ownerIn;
-        this.productId = productIdIn;
-        this.providedProductIds.add(productIdIn);
-        this.quantity = quantityIn;
-        this.startDate = startDateIn;
-        this.endDate = endDateIn;
-        
-        // Always assume none consumed if creating a new pool.
-        this.consumed = new Long(0);
-    }
-    
     public Pool(Owner ownerIn, Set<String> providedProductIds, Long quantityIn,
         Date startDateIn, Date endDateIn) {
         this.owner = ownerIn;
@@ -158,8 +138,8 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     
         // Always assume none consumed if creating a new pool.
         this.consumed = new Long(0);
+
         this.providedProductIds = providedProductIds;
-        this.productId = providedProductIds.iterator().next();
     }
 
     /** {@inheritDoc} */
@@ -174,20 +154,6 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         this.id = id;
     }
 
-    /**
-     * @return the product id associated with this pool.
-     */
-    public String getProductId() {
-        return productId;
-    }
-
-    /**
-     * @param productId Id of product to be associated.
-     */
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-    
     /**
      * @return when the pool became active.
      */
@@ -427,7 +393,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
 
     public String toString() {
         return "EntitlementPool [id = " + getId() + ", owner = " + owner.getId() +
-            ", product = " + getProductId() +
+            ", products = " + getProvidedProductIds() +
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
@@ -448,5 +414,9 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
 
     public void setProvidedProductIds(Set<String> providedProductIds) {
         this.providedProductIds = providedProductIds;
+    }
+
+    public Boolean provides(String productId) {
+        return this.providedProductIds.contains(productId);
     }
 }

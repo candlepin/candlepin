@@ -199,6 +199,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         productCurator.create(product);
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.productAdapter.getTopLevelProduct(TestUtil.createSet("a-product")))
+            .thenReturn(product.getId());
         
         ValidationResult result = enforcer.pre(
             createConsumer(owner),
@@ -216,6 +218,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         productCurator.create(product);
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.productAdapter.getTopLevelProduct(TestUtil.createSet("a-product")))
+            .thenReturn(product.getId());
 
         ValidationResult result = enforcer.pre(
             createConsumer(owner),
@@ -234,6 +238,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         productCurator.create(product);
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.productAdapter.getTopLevelProduct(TestUtil.createSet("a-product")))
+            .thenReturn(product.getId());
 
         ValidationResult result = enforcer.pre(
             createConsumer(owner),
@@ -253,6 +259,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         productCurator.create(product);
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.productAdapter.getTopLevelProduct(TestUtil.createSet("a-product")))
+            .thenReturn(product.getId());
         
         ValidationResult result = enforcer.pre(
             TestUtil.createConsumer(), 

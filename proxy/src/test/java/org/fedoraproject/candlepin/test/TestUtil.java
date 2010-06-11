@@ -16,7 +16,9 @@ package org.fedoraproject.candlepin.test;
 
 import java.sql.Date;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -105,17 +107,23 @@ public class TestUtil {
     }
     
     public static Pool createEntitlementPool(Product product) {
-        return createEntitlementPool(product, new Owner("Test Owner " + randomInt()));
+        return createEntitlementPool(new Owner("Test Owner " + randomInt()), product);
     }
 
-    public static Pool createEntitlementPool(Product product, Owner owner) {
-        Pool pool = new Pool(owner, product.getId(), new Long(1000),
-                TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
-        return pool;
+    public static Pool createEntitlementPool(Owner owner, Product product) {
+        return createEntitlementPool(owner, product, 5);
+    }
+
+    public static Pool createEntitlementPool(Owner owner, Product product, int quantity) {
+        Set<String> productIds = new HashSet<String>();
+        productIds.add(product.getId());
+        return createEntitlementPool(owner, productIds, quantity);
     }
     
-    public static Pool createEntitlementPool(Owner owner, Product product) {
-        Pool pool = new Pool(owner, product.getId(), new Long(1000),
+    public static Pool createEntitlementPool(Owner owner, Set<String> productIds,
+        int quantity) {
+
+        Pool pool = new Pool(owner, productIds, new Long(quantity),
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
         return pool;
     }
@@ -151,4 +159,9 @@ public class TestUtil {
         return buf.toString();
     }
 
+    public static Set<String> createSet(String productId) {
+        Set<String> results = new HashSet<String>();
+        results.add(productId);
+        return results;
+    }
 }

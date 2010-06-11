@@ -120,9 +120,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         parent.addChildProduct(product);
         productCurator.create(parent);
         
-        Pool p = new Pool(owner, parent.getId(), new Long(5), 
-            TestUtil.createDate(2000, 3, 2), 
-            TestUtil.createDate(2040, 3, 2));
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(product.getId());
+        providedProductIds.add(parent.getId());
+
+        Pool p = TestUtil.createEntitlementPool(owner, providedProductIds, 5);
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product);
         assertEquals(1, results.size());

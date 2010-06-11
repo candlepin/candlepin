@@ -63,9 +63,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         Product anotherProduct = new Product("another_product", "another product");
         productCurator.create(anotherProduct);
         
-        Pool p = new Pool(anotherOwner, anotherProduct.getId(), new Long(5), 
-            TestUtil.createDate(2000, 3, 2), 
-            TestUtil.createDate(2040, 3, 2));
+        Pool p = TestUtil.createEntitlementPool(anotherOwner, anotherProduct);
         poolCurator.create(p);
 
         assertEquals(2, poolCurator.listAll().size());
@@ -86,9 +84,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         Product anotherProduct = new Product("another_product", "another product");
         productCurator.create(anotherProduct);
         
-        Pool p = new Pool(anotherOwner, anotherProduct.getId(), new Long(5), 
-            TestUtil.createDate(2000, 3, 2), 
-            TestUtil.createDate(2040, 3, 2));
+        Pool p = TestUtil.createEntitlementPool(anotherOwner, anotherProduct);
         poolCurator.create(p);
 
         assertEquals(2, poolCurator.listAll().size());

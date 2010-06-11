@@ -109,7 +109,7 @@ public class Subscription extends AbstractHibernateObject {
         this.startDate = from.startDate;
         this.endDate = from.endDate;
         this.modified = from.modified;
-        this.providedProductIds = from.providedProductIds;
+        this.providedProductIds.addAll(from.providedProductIds);
         this.tokens = from.getTokens() == null ? 
             new HashSet<SubscriptionToken>() : 
             new HashSet<SubscriptionToken>(from.getTokens());

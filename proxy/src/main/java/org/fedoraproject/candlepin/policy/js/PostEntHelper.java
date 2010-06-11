@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
@@ -50,7 +53,7 @@ public class PostEntHelper {
     * @param productId Label of the product the pool is for.
     * @param quantity Number of entitlements for this pool, also accepts "unlimited".
     */
-    public void createUserRestrictedPool(String productId, String quantity) {
+    public void createUserRestrictedPool(Set<String> productIds, String quantity) {
 
         Long q = null;
         if (quantity.equals("unlimited")) {
@@ -60,7 +63,9 @@ public class PostEntHelper {
             q = Long.parseLong(quantity);
         }
         Consumer c = ent.getConsumer();
-        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, q,
+        Set<String> productIdCopies = new HashSet<String>();
+        productIdCopies.addAll(productIds);
+        Pool consumerSpecificPool = new Pool(c.getOwner(), productIdCopies, q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate());
         consumerSpecificPool.setAttribute("user_restricted",
             c.getUsername());

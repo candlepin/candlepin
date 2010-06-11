@@ -55,6 +55,7 @@ public class DefaultRulesTest {
     @Mock private ProductServiceAdapter prodAdapter;
     private Owner owner;
     private Consumer consumer;
+    private String productId = "a-product";
 
     @Before
     public void createEnforcer() throws Exception {
@@ -74,14 +75,15 @@ public class DefaultRulesTest {
     
     @Test
     public void testBindForSameProductNotAllowed() {
-        Product product = new Product("a-product", "A product for testing");
-        Pool pool = new Pool(owner, product.getId(), new Long(5),
-            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        Product product = new Product(productId, "A product for testing");
+        Pool pool = TestUtil.createEntitlementPool(owner, product);
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
-        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
+            .thenReturn(productId);
 
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
 
@@ -91,15 +93,16 @@ public class DefaultRulesTest {
 
     @Test
     public void testBindFromSameProductAllowedWithMultiEntitlementAttribute() {
-        Product product = new Product("a-product", "A product for testing");
+        Product product = new Product(productId, "A product for testing");
         product.addAttribute(new Attribute("multi-entitlement", "yes"));
-        Pool pool = new Pool(owner, product.getId(), new Long(5),
-            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        Pool pool = TestUtil.createEntitlementPool(owner, product);
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
-        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
+            .thenReturn(productId);
         
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
 
@@ -110,14 +113,15 @@ public class DefaultRulesTest {
     
     @Test
     public void bindFromExhaustedPoolShouldFail() {
-        Product product = new Product("a-product", "A product for testing");
-        Pool pool = new Pool(owner, product.getId(), new Long(0),
-            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        Product product = new Product(productId, "A product for testing");
+        Pool pool = TestUtil.createEntitlementPool(owner, product, 0);
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
         consumer.addEntitlement(e);
         
-        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
+            .thenReturn(productId);
 
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         
@@ -189,16 +193,17 @@ public class DefaultRulesTest {
             final String attributeName, String attributeValue,
             final String factName, final String factValue) {
 
-        Product product = new Product("a-product", "A product for testing");
+        Product product = new Product(productId, "A product for testing");
         product.addAttribute(new Attribute(attributeName, attributeValue));
-        Pool pool = new Pool(owner, product.getId(), new Long(5),
-            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        Pool pool = TestUtil.createEntitlementPool(owner, product);
         
         consumer.setFacts(new HashMap<String, String>() {
             { put(factName, factValue); }
         });
         
-        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
+            .thenReturn(productId);
         return pool;
     }
     
@@ -232,11 +237,12 @@ public class DefaultRulesTest {
     }
 
     private Pool setupProductWithRequiresConsumerTypeAttribute() {
-        Product product = new Product("a-product", "A product for testing");
+        Product product = new Product(productId, "A product for testing");
         product.setAttribute("requires_consumer_type", ConsumerTypeEnum.DOMAIN.toString());
-        Pool pool = new Pool(owner, product.getId(), new Long(5),
-            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
-        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        Pool pool = TestUtil.createEntitlementPool(owner, product);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
+            .thenReturn(productId);
         return pool;
     }
 
@@ -257,16 +263,18 @@ public class DefaultRulesTest {
 
         PostEntHelper postHelper = mock(PostEntHelper.class);
         enforcer.post(postHelper, e);
-        verify(postHelper).createUserRestrictedPool(pool.getProductId(), "unlimited");
+        verify(postHelper).createUserRestrictedPool(pool.getProvidedProductIds(),
+            "unlimited");
     }
 
     private Pool setupUserLicensedPool() {
-        Product product = new Product("a-product", "A user licensed product");
-        Pool pool = new Pool(owner, product.getId(), new Long(5),
-            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        Product product = new Product(productId, "A user licensed product");
+        Pool pool = TestUtil.createEntitlementPool(owner, product);
         pool.setAttribute("user_license", "unlimited");
         pool.setAttribute("requires_consumer_type", ConsumerTypeEnum.PERSON.toString());
-        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
+            .thenReturn(productId);
         return pool;
     }
 
@@ -291,12 +299,15 @@ public class DefaultRulesTest {
     }
 
     private Pool setupUserRestrictedPool() {
-        Product product = new Product("a-product", "A user restricted product");
-        Pool pool = new Pool(owner, product.getId(), new Long(5),
-            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        Product product = new Product(productId, "A user restricted product");
+        Pool pool = TestUtil.createEntitlementPool(owner, product);
         pool.setAttribute("user_restricted", "bob");
-        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
+            .thenReturn(productId);
         return pool;
     }
+
+
 
 }

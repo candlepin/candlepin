@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.test;
 
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -201,7 +202,9 @@ public class DatabaseTestFixture {
      */
     protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
         Date startDate, Date endDate) {
-        Pool p = new Pool(owner, product.getId(), quantity, startDate, endDate);
+        Set<String> productIds = new HashSet<String>();
+        productIds.add(product.getId());
+        Pool p = new Pool(owner, productIds, quantity, startDate, endDate);
         Subscription sub = new Subscription(owner, product, quantity, startDate,
             endDate, TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);

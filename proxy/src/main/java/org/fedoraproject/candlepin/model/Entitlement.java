@@ -177,11 +177,12 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
         this.owner = ownerIn;
     }
 
+    // REMOVE
     /**
      * @return Returns the product.
      */
     public String getProductId() {
-        return this.pool.getProductId();
+        return this.pool.getProvidedProductIds().iterator().next();
     }
 
     /**
