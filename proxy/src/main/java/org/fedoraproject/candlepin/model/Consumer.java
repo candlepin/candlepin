@@ -94,7 +94,7 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     
     // Represents the username used to register this consumer
     @Column(nullable = false)
-    private String userName;
+    private String username;
     
     /* 
      * Because this object is used both as a Hibernate object, as well as a DTO to be
@@ -147,7 +147,7 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
         this();
         
         this.name = name;
-        this.userName = userName;
+        this.username = userName;
         this.owner = owner;
         this.type = type;
     }
@@ -217,15 +217,15 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     /**
      * @return the userName
      */
-    public String getUserName() {
-        return userName;
+    public String getUsername() {
+        return username;
     }
 
     /**
      * @param userName the userName to set
      */
     public void setUserName(String userName) {
-        this.userName = userName;
+        this.username = userName;
     }
 
     /**

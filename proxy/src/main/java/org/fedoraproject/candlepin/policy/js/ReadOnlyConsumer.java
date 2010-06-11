@@ -132,6 +132,6 @@ public class ReadOnlyConsumer {
     }
     
     public String getUsername() {
-        return consumer.getUserName();
+        return consumer.getUsername();
     }
 }

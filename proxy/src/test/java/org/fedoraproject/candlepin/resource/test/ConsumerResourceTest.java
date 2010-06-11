@@ -218,7 +218,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         consumer  = consumerResource.create(consumer, principal);
         
-        assertEquals(USER_NAME, consumer.getUserName());
+        assertEquals(USER_NAME, consumer.getUsername());
     }
     
     @Test
