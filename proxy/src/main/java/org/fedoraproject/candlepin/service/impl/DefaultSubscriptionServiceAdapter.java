@@ -80,7 +80,8 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public List<Subscription> getSubscriptionForToken(Owner owner, String token) {
+    public List<Subscription> getSubscriptionForToken(Owner owner, String token,
+        String email, String emailLocale) {
         return subCurator.listBySubscriptionTokenID(token);
     }
 
@@ -108,10 +109,5 @@ public class DefaultSubscriptionServiceAdapter implements
     @Override
     public boolean hasUnacceptedSubscriptionTerms(Owner owner) {
         return false;
-    }
-
-    @Override
-    public void sendActivationEmailTo(Owner owner, String email,
-        String emailLocale) {
     }
 }
