@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.16
+Version: 0.0.17
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -106,6 +106,112 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Jun 11 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.17-1
+- Adding email and locale to the bind by regtoken api (calfonso@redhat.com)
+- Trace displayed when using invalid user name or password for consumer atom
+  caused because, MediaType.APPLICATION_ATOM_XML_TYPE was not added to
+  CandlepinExceptionMapper's desired response types. (anadathu@redhat.com)
+- Ruby/hibernate login -> username fixes. (dgoodwin@redhat.com)
+- Refactor User.login to User.username. (dgoodwin@redhat.com)
+- Switch userName to username. (dgoodwin@redhat.com)
+- Add javascript rule for user restricted pools. (dgoodwin@redhat.com)
+- Correct Pool.attributes matching to match Product. (dgoodwin@redhat.com)
+- Checkstyle fix. (dgoodwin@redhat.com)
+- Pulling out consumer parent logic and trimming Consumer some. (jharris@redhat.com)
+- Create a sub-pool for user license subscriptions. (dgoodwin@redhat.com)
+- Begin usage of Pool attributes for triggering rules. (dgoodwin@redhat.com)
+- Adding basic username test to consumer (jharris@redhat.com)
+- email address and locale are being submitted to subscription adapter when
+  bind by token is used (and email and locale were provided) (ddolguik@redhat.com)
+- Adding username when registering a new consumer. (jharris@redhat.com)
+- Fixing checkstyle errors (calfonso@redhat.com)
+- Adding XMLTransient on Owner.getConsumers (calfonso@redhat.com)
+- Adding the extended key usage for web authentication (calfonso@redhat.com)
+- toUpperCase to avoid arch mismatch (morazi@redhat.com)
+- Adding in a check_all buildr task. (jharris@redhat.com)
+- Enable creation of a consumer-specific pool after entitlement.  (dgoodwin@redhat.com)
+- Make unit tests use "arch" as the attribute.  (alikins@redhat.com)
+- Only create subscriptions for mkt products on product import (alikins@redhat.com)
+- If we haven't populated the arch/variant/version attributes, dont include
+  them. (alikins@redhat.com)
+- Move the arch,type,variant,and version attribs from the Product to attributes
+  table (alikins@redhat.com)
+- If we haven't populated the arch/variant/version attributes, dont include
+  them. (alikins@redhat.com)
+- Change rules to look for "arch" product attribute.  (alikins@redhat.com)
+- Update ruby api and product import script to use the new format for Product (alikins@redhat.com)
+- Move the arch,type,variant,and version attribs from the Product to attributes
+  table (alikins@redhat.com)
+- domain consumers can only consume domain products (jbowes@redhat.com)
+- rules: always run the global rule (jbowes@redhat.com)
+- Fixing ConsumerResource unit test. (jharris@redhat.com)
+- Refactoring consumer resource to use service adapter to lookup users (jomara@redhat.com)
+- cuke: add tests for domain consumer type (jbowes@redhat.com)
+- added a rule to limit IPA products to domains (ddolguik@redhat.com)
+- Remove setting of parent fact from cuke tests. (dgoodwin@redhat.com)
+- Detect consumer parent/child relationships on child's register.  (dgoodwin@redhat.com)
+- Add Consumer curator method to find a consumer bound to a specific user.
+  (dgoodwin@redhat.com)
+- fixed a ridiculous bit where the product id from the retrived product was
+  used to retrieve it again (ddolguik@redhat.com)
+- Use the import_products.rb from candlepin to optionally import product
+  information. (alikins@redhat.com)
+- Adding cuke tests for consumer parent/child relationships.  (jharris@redhat.com)
+- fixed a whole slew of broken tests (after the inclusion of product into
+  subscription) (ddolguik@redhat.com)
+- removed SubscriptionProductWrapper; Subscription now has one-to-one mapping
+  to Product (ddolguik@redhat.com)
+- Bumping checkstyle max params to a method from 12 to 15.  (dgoodwin@redhat.com)
+- Make EventCurator.listMostRecent a little more type safe.  (dgoodwin@redhat.com)
+- Fix owner/consumer atom feeds. (dgoodwin@redhat.com)
+- Owner/consumer atom feed code cleanup. (dgoodwin@redhat.com)
+- Enable access control on consumer atom feed. (dgoodwin@redhat.com)
+- Fixed junit testcases in OwnerResourceTest (anadathu@redhat.com)
+- Adding cuke tests for registering as a person consumer type.  (jharris@redhat.com)
+- Fix unintentional ForbiddenException. (dgoodwin@redhat.com)
+- Minor test updates. (dgoodwin@redhat.com)
+- Adding in single person type check plus unit tests. (jharris@redhat.com)
+- Add consumer specific atom feed. (dgoodwin@redhat.com)
+- Update Owner atom feed tests. (dgoodwin@redhat.com)
+- Add the atom resource to the API generation (bkearney@redhat.com)
+- Changing to cuke buildr tasks to be a little more discretionary about calling
+  deploy. (jharris@redhat.com)
+- When generating ent certs, skip creating an extention for any MKT products.  (alikins@redhat.com)
+- Refactoring consumer types. (jharris@redhat.com)
+- added createOwnerFeed to OwnerResource.java (anadathu@redhat.com)
+- More consumer/owner atom feed tests. (dgoodwin@redhat.com)
+- added createOwnerFeed to OwnerResource.java (anadathu@redhat.com)
+- added createOwnerFeed to OwnerResource.java (anadathu@redhat.com)
+- Add some tests for owner specific atom feeds. (dgoodwin@redhat.com)
+- XML Serialization Fixes (bkearney@redhat.com)
+- Make the string version of the cert and key be primary, byte secondary (bkearney@redhat.com)
+- Adding deploy task to wrap the deploy script. (jharris@redhat.com)
+- Turn upload_products back on. Wasn't supposed to be disabled in the first
+  place. (alikins@redhat.com)
+- Adding functional tests for product cert creation. (jharris@redhat.com)
+- Shut up checkstyle (alikins@redhat.com)
+- Update Rules and rules test cases to use consumer fact consumer uses.  (alikins@redhat.com)
+- De-hash Content. Make the id be the content hash.  (alikins@redhat.com)
+- add missing bit from sat-cert-nuke merge (jbowes@redhat.com)
+- Drop Product.label. (dgoodwin@redhat.com)
+- fixed a bug in default-rules.js - sockets and cpu.cpu_sockets were compared
+  as strings, leading to 2 > 128. (ddolguik@redhat.com)
+- Make the socket compare cast to int. It was doing a string cmp before.  (alikins@redhat.com)
+- added entitlement quantity to the entitlement certificate (order namespace,
+  oid 13) (ddolguik@redhat.com)
+- Make Subscription -> Token relationship bi-directional. (dgoodwin@redhat.com)
+- Cleanup more product hash spread. (dgoodwin@redhat.com)
+- Remove a couple mentions of product hash. (dgoodwin@redhat.com)
+- Remove Product.getAllChildProducts. (dgoodwin@redhat.com)
+- Add a test for recursive Product.provides(). (dgoodwin@redhat.com)
+- Merge fuzzy product matching approaches. (dgoodwin@redhat.com)
+- Move ProductAdapter.provides() to Product class. (dgoodwin@redhat.com)
+- Rename some methods for clarity. (dgoodwin@redhat.com)
+- cuke: fix failing pool feature (jbowes@redhat.com)
+- Drop the product hash column and use it as id (jbowes@redhat.com)
+- Fix EntitlerTest (jbowes@redhat.com)
+- Getting started ripping out sat cert stuff. (jharris@redhat.com)
+
 * Wed Jun 02 2010 jesus m rodriguez <jmrodri@gmail.com> 0.0.16-1
 - Adding exception class to wrap HTTP 202 * This exception is intended to be
   used for non error state messages. (calfonso@redhat.com)
