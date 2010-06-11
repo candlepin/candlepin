@@ -116,7 +116,8 @@ public class ReadOnlyConsumer {
      * @return true if this Consumer has any entitlements for the given product
      * label
      */
-    //TODO Is this correct?
+    //TODO Is this correct? Do we need to check if the entitlement product provides 
+    // the requested product?
     public boolean hasEntitlement(String productId) {
         for (Entitlement e : consumer.getEntitlements()) {
             if (e.getProductId().equals(productId)) {
@@ -128,5 +129,9 @@ public class ReadOnlyConsumer {
 
     public boolean hasEntitlement(ReadOnlyProduct product) {
         return hasEntitlement(product.getId());
+    }
+    
+    public String getUsername() {
+        return consumer.getUserName();
     }
 }

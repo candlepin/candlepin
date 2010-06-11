@@ -242,7 +242,7 @@ public class DefaultRulesTest {
 
     @Test
     public void userLicensePassesPre() {
-        Pool pool = setupUserLicensedSubscription();
+        Pool pool = setupUserLicensedPool();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         assertFalse(result.hasErrors());
@@ -251,7 +251,7 @@ public class DefaultRulesTest {
 
     @Test
     public void userLicensePostCreatesSubPool() {
-        Pool pool = setupUserLicensedSubscription();
+        Pool pool = setupUserLicensedPool();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
         Entitlement e = new Entitlement(pool, consumer, new Date(), 1);
 
@@ -260,12 +260,41 @@ public class DefaultRulesTest {
         verify(postHelper).createUserRestrictedPool(pool.getProductId(), "unlimited");
     }
 
-    private Pool setupUserLicensedSubscription() {
+    private Pool setupUserLicensedPool() {
         Product product = new Product("a-product", "A user licensed product");
         Pool pool = new Pool(owner, product.getId(), new Long(5),
             TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
         pool.setAttribute("user_license", "unlimited");
         pool.setAttribute("requires_consumer_type", ConsumerTypeEnum.PERSON.toString());
+        when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
+        return pool;
+    }
+
+    @Test
+    public void userRestrictedPoolPassesPre() {
+        Pool pool = setupUserRestrictedPool();
+        consumer.setUserName("bob");
+        
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void userRestrictedPoolFailsPre() {
+        Pool pool = setupUserRestrictedPool();
+        consumer.setUserName("notbob");
+        
+        ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
+        assertTrue(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    private Pool setupUserRestrictedPool() {
+        Product product = new Product("a-product", "A user restricted product");
+        Pool pool = new Pool(owner, product.getId(), new Long(5),
+            TestUtil.createDate(200, 02, 26), TestUtil.createDate(2050, 02, 26));
+        pool.setAttribute("user_restricted", "bob");
         when(this.prodAdapter.getProductById("a-product")).thenReturn(product);
         return pool;
     }

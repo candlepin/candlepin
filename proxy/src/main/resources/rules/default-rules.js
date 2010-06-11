@@ -11,12 +11,19 @@ function attribute_mappings() {
 			"architecture:1:arch, " +
 			"sockets:1:sockets, " +
 			"requires_consumer_type:1:requires_consumer_type," +
-			"user_license:1:user_license";
+			"user_license:1:user_license," +
+			"user_restricted:1:user_restricted";
 }
 
 function post_user_license() {
 	// Create a sub-pool for this user:
 	post.createUserRestrictedPool(product.getId(), attributes.get("user_license"));
+}
+
+function pre_user_restricted() {
+	if (consumer.getUsername() != pool.getAttribute("user_restricted")) {
+		pre.addError("pool.not.available.to.user");
+	}
 }
 
 function pre_requires_consumer_type() {
