@@ -55,7 +55,6 @@ public class Product extends AbstractHibernateObject {
     
     @Column(nullable = false, unique = true)
     private String name;
-
     
     // NOTE: we need a product "type" so we can tell what class of
     //       product we are... 

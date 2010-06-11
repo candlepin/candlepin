@@ -144,8 +144,6 @@ public class EntitlerTest extends DatabaseTestFixture {
         entitler.entitleByProduct(parentSystem, virtHost, new Integer("1"));
     }
     
-
-    
     // NOTE:  Disabled after virt_system was removed as a type
     //@Test
     public void testVirtSystemGetsWhatParentHasForFree() throws Exception {

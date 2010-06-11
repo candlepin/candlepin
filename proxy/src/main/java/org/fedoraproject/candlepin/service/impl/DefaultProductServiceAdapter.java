@@ -23,6 +23,7 @@ import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Product;
@@ -142,6 +143,15 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         cert.setProduct(product);
         
         return cert;
+    }
+
+    /* (non-Javadoc)
+     * @see org.fedoraproject.candlepin.service.ProductServiceAdapter#getTopLevelProduct(java.util.Set)
+     */
+    @Override
+    public String getTopLevelProduct(Set<String> productIds) {
+        // TODO: push to javascript rules
+        return productIds.iterator().next();
     }
     
 

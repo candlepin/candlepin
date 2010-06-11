@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
@@ -66,4 +67,11 @@ public interface ProductServiceAdapter {
      * @return the stored or created {@link ProductCertificate}
      */
     ProductCertificate getProductCertificate(Product product);
+    
+    /**
+     * Return the top level product ID from the given set.
+     * @param productIds
+     * @return
+     */
+    String getTopLevelProduct(Set<String> productIds);
 }
