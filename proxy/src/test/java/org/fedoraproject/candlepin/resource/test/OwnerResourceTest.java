@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.*;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -84,7 +85,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
 
-        Subscription sub = new Subscription(owner, prod,
+        Subscription sub = new Subscription(owner, prod, new HashSet<Product>(),
                 new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
@@ -112,7 +113,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
 
-        Subscription sub = new Subscription(owner, prod,
+        Subscription sub = new Subscription(owner, prod, new HashSet<Product>(),
                 new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
@@ -138,7 +139,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
 
-        Subscription sub = new Subscription(owner, prod,
+        Subscription sub = new Subscription(owner, prod, new HashSet<Product>(),
                 new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
@@ -168,13 +169,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod2 = TestUtil.createProduct();
         productCurator.create(prod2);
         
-        Subscription sub = new Subscription(owner, prod,
+        Subscription sub = new Subscription(owner, prod, new HashSet<Product>(),
             new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
                     .createDate(3000, 2, 9),
                     TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
 
-        Subscription sub2 = new Subscription(owner, prod2,
+        Subscription sub2 = new Subscription(owner, prod2, new HashSet<Product>(),
                 new Long(800), TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));

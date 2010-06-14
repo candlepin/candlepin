@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import org.fedoraproject.candlepin.controller.Entitler;
@@ -89,16 +90,16 @@ public class EntitlerTest extends DatabaseTestFixture {
         productAdapter.createProduct(monitoring);
         productAdapter.createProduct(provisioning);
 
-        subCurator.create(new Subscription(o, virtHost, 5L, new Date(),
-            TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, virtHostPlatform, 5L, new Date(),
-            TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, virtHost, new HashSet<Product>(), 5L, 
+            new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, virtHostPlatform, new HashSet<Product>(), 
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
 
         
-        subCurator.create(new Subscription(o, monitoring, 5L, new Date(),
-            TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, provisioning, 5L, new Date(),
-            TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, monitoring, new HashSet<Product>(), 
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(), 5L, 
+            new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
 
         
         poolCurator.refreshPools(o);

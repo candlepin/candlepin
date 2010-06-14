@@ -86,8 +86,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content.setLabel(CONTENT_LABEL);
         content.setId(CONTENT_ID);
         
-        subscription = new Subscription(null, product, 1L, new Date(), new Date(),
-            new Date());
+        subscription = new Subscription(null, product, new HashSet<Product>(), 1L, 
+            new Date(), new Date(), new Date());
         subscription.setId(1L);
         
         entitlement = new Entitlement();

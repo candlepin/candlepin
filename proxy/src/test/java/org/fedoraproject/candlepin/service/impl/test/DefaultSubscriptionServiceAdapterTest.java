@@ -50,14 +50,12 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
         
-        s1 = new Subscription(owner, parentProduct, new Long(100), 
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(childProduct);
+        s1 = new Subscription(owner, parentProduct, providedProducts, new Long(100), 
                 TestUtil.createDate(2010, 2, 8), TestUtil.createDate(2050, 2, 8),
                 TestUtil.createDate(2010, 2, 1));
         
-        // TODO: Move to c-tor:
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(childProduct.getId());
-        s1.setProvidedProductIds(providedProductIds);
         
         subCurator.create(s1);
         

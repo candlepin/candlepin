@@ -90,8 +90,8 @@ public class TestUtil {
         return createSubscription(owner, product);
     }
     public static Subscription createSubscription(Owner owner, Product product) {
-        Subscription sub = new Subscription(owner,
-            product, new Long(1000), createDate(2000, 1, 1),
+        Subscription sub = new Subscription(owner, 
+            product, new HashSet<Product>(), new Long(1000), createDate(2000, 1, 1),
             createDate(2050, 1, 1), createDate(2000, 1, 1));
         return sub;
     }

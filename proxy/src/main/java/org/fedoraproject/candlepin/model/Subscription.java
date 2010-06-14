@@ -20,11 +20,13 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
@@ -61,10 +63,13 @@ public class Subscription extends AbstractHibernateObject {
     @JoinColumn(nullable = false)
     private Product product;
     
-    @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "subscription_products", joinColumns = 
-        @JoinColumn(name = "subscription_id"))
-    private Set<String> providedProductIds = new HashSet<String>();
+    @ManyToMany(targetEntity = Product.class, fetch = FetchType.EAGER)
+    @ForeignKey(name = "fk_product_id",
+            inverseName = "fk_subscription_id")
+    @JoinTable(name = "cp_subscription_products",
+        joinColumns = @JoinColumn(name = "subscription_id"),
+        inverseJoinColumns = @JoinColumn(name = "product_id"))
+    private Set<Product> providedProducts = new HashSet<Product>();
 
     @Column(nullable = false)
     private Long quantity;
@@ -89,11 +94,11 @@ public class Subscription extends AbstractHibernateObject {
     public Subscription() {
     }
 
-    public Subscription(Owner ownerIn, Product productIn, Long maxMembersIn,
-            Date startDateIn, Date endDateIn, Date modified) {
+    public Subscription(Owner ownerIn, Product productIn, Set<Product> providedProducts, 
+        Long maxMembersIn, Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
         this.product = productIn;
-        this.providedProductIds.add(productIn.getId());
+        this.providedProducts = providedProducts;
         this.quantity = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -109,7 +114,7 @@ public class Subscription extends AbstractHibernateObject {
         this.startDate = from.startDate;
         this.endDate = from.endDate;
         this.modified = from.modified;
-        this.providedProductIds.addAll(from.providedProductIds);
+        this.providedProducts.addAll(from.providedProducts);
         this.tokens = from.getTokens() == null ? 
             new HashSet<SubscriptionToken>() : 
             new HashSet<SubscriptionToken>(from.getTokens());
@@ -257,27 +262,32 @@ public class Subscription extends AbstractHibernateObject {
         this.tokens = tokens;
     }
     
-    public Set<String> getProvidedProductIds() {
-        return providedProductIds;
-    }
-
-    public void setProvidedProductIds(Set<String> providedProductIds) {
-        this.providedProductIds = providedProductIds;
-    }
-    
     /**
      * Check if this pool provides the given product ID.
-     * @param productId
+     * @param desiredProductId
      * @return
      */
-    public Boolean provides(String productId) {
+    public Boolean provides(String desiredProductId) {
         // Direct match?
-        if (this.product.getId() == productId) {
+        if (this.product.getId() == desiredProductId) {
             return true;
         }
         
         // Check provided products:
-        return this.providedProductIds.contains(productId);
+        for (Product p : providedProducts) {
+            if (p.getId().equals(desiredProductId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Set<Product> getProvidedProducts() {
+        return providedProducts;
+    }
+
+    public void setProvidedProducts(Set<Product> providedProducts) {
+        this.providedProducts = providedProducts;
     }
 
 }
