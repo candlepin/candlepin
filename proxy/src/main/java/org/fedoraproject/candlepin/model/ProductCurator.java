@@ -66,10 +66,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             existingProduct = create(updated);    
         }
         
-        if (updated.getChildProducts() != null) {
-            existingProduct.setChildProducts(bulkUpdate(updated.getChildProducts()));
-        }
-        
         if (updated.getContent() != null) {
             existingProduct.setContent(bulkContentUpdate(updated.getContent()));
 //            existingProduct.setContent(updated.getContent());

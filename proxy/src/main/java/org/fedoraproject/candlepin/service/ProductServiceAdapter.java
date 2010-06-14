@@ -68,10 +68,4 @@ public interface ProductServiceAdapter {
      */
     ProductCertificate getProductCertificate(Product product);
     
-    /**
-     * Return the top level product ID from the given set.
-     * @param productIds
-     * @return
-     */
-    String getTopLevelProduct(Set<String> productIds);
 }

@@ -145,14 +145,4 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return cert;
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.service.ProductServiceAdapter#getTopLevelProduct(java.util.Set)
-     */
-    @Override
-    public String getTopLevelProduct(Set<String> productIds) {
-        // TODO: push to javascript rules
-        return productIds.iterator().next();
-    }
-    
-
 }

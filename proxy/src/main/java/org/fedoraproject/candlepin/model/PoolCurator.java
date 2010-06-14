@@ -117,6 +117,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             Product p, boolean activeOnly) {
         String productId = (p == null) ? null : p.getId();
         Owner owner = o == null ? c.getOwner() : o;
+        // TODO: Yet another performance hit, we have a Product here, we toss it,
+        // pass in the ID, then look up the product again later...
         return listAvailableEntitlementPools(c, owner, productId, activeOnly);
     }
     
