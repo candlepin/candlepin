@@ -211,7 +211,7 @@ public class Product extends AbstractHibernateObject {
 
     @Override
     public int hashCode() {
-        return id.hashCode() * 31 + name.hashCode();
+        return id.hashCode() * 31;
     }
 
   

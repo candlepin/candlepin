@@ -14,8 +14,10 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -46,6 +48,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
@@ -274,6 +277,11 @@ public class OwnerResource {
         Subscription copy = new Subscription(subscription);
         copy.setOwner(findOwner(ownerId));
         copy.setProduct(productCurator.find(subscription.getProduct().getId()));
+        Set<Product> provided = new HashSet<Product>();
+        for (Product incoming : subscription.getProvidedProducts()) {
+            provided.add(productCurator.find(incoming.getId()));
+        }
+        copy.setProvidedProducts(provided);
         Subscription s = subscriptionCurator.create(copy);
         return s;
     }

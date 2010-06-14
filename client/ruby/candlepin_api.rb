@@ -190,7 +190,7 @@ class Candlepin
     
   # TODO: label is unused here, needs to be dropped across the board.
   def create_product(name, hash, version = 1, variant = 'ALL', 
-                     arch='ALL', type='SVC',childProducts=[], attributes = {})
+                     arch='ALL', type='SVC', attributes = {})
 
     attributes['arch'] = arch
     attributes['version'] = version
@@ -207,13 +207,7 @@ class Candlepin
       'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
     }
 
-    if not childProducts.empty?
-      childIds = '?childId=' + childProducts.join('&childId=')
-    else
-      childIds = ''
-    end
-
-    post("/products#{childIds}", product)
+    post("/products", product)
   end
 
   def get_product(product_id)

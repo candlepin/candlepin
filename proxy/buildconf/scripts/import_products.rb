@@ -65,13 +65,28 @@ data['products'].each do |product|
   
           pp attrs
 	  product_ret = cp.create_product(product[1], product[2],product[3],
-					product[4], product[5], product[6], product[7], 
+					product[4], product[5], product[6], 
 					attrs)
           pp product_ret
 
 	  #FIXME: only create subscriptions for MKT/config sku's
+          provided_products = Array.new()
+          product[7].each do |pid|
+              provided_products << {'id' => pid}
+          end
+
+          puts "\n"
+          puts "\n"
+          puts "\n"
+          puts provided_products
+          puts "\n"
+          puts "\n"
+          puts "\n"
+
           if attrs['type'] == 'MKT':
-              subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 'quantity' => 10,
+              subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 
+                                                     'providedProducts' => provided_products,
+                                                     'quantity' => 10,
                                                        'startDate' => '2007-07-13',
                                                        'contractNumber' => contract_number,
                                                        'endDate' => '2012-07-13'})
