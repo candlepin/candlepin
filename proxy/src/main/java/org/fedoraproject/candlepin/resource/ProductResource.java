@@ -122,15 +122,7 @@ public class ProductResource {
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
-    public Product createProduct(Product product, 
-        @QueryParam("childId") List<String> childIds) {
-        //TODO: Do the bulk lookup in the product adapter?
-        if (childIds != null) {
-            for (String childId : childIds) {
-                Product child = prodAdapter.getProductById(childId);
-                product.addChildProduct(child);
-            }
-        }
+    public Product createProduct(Product product) {
         
         return prodAdapter.createProduct(product);
     }   

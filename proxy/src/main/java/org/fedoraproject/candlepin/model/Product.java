@@ -58,14 +58,6 @@ public class Product extends AbstractHibernateObject {
     
     // NOTE: we need a product "type" so we can tell what class of
     //       product we are... 
-    @ManyToMany(targetEntity = Product.class, cascade = CascadeType.ALL,
-            fetch = FetchType.EAGER)
-    @ForeignKey(name = "fk_product_product_id",
-                inverseName = "fk_product_child_product_id")
-    @JoinTable(name = "cp_product_hierarchy",
-            joinColumns = @JoinColumn(name = "parent_product_id"),
-            inverseJoinColumns = @JoinColumn(name = "child_product_id"))
-    private Set<Product> childProducts;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_attribute")
@@ -100,7 +92,6 @@ public class Product extends AbstractHibernateObject {
                    Set<Product> childProducts, Set<Content> content) {
         setId(id);
         setName(name);
-        setChildProducts(childProducts);
         setContent(content);
         // FIXME
         setEnabledContent(content);
@@ -129,32 +120,6 @@ public class Product extends AbstractHibernateObject {
     }
 
   
-    
-    /**
-     * @return set of child products.
-     */
-    public Set<Product> getChildProducts() {
-        return childProducts;
-    }
-
-    /**
-     * replaces all of the product children with the new set.
-     * @param childProducts new child products.
-     */
-    public void setChildProducts(Set<Product> childProducts) {
-        this.childProducts = childProducts;
-    }
-
-    /**
-     * Add the given product as a child of this product.
-     * @param p child product to add.
-     */
-    public void addChildProduct(Product p) {
-        if (this.childProducts ==  null) {
-            this.childProducts = new HashSet<Product>();
-        }
-        this.childProducts.add(p);
-    }
     
     @Override
     public String toString() {

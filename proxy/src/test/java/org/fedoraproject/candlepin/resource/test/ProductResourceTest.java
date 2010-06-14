@@ -62,7 +62,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testCreateProductResource() {
         
         Product toSubmit = createProduct();
-        productResource.createProduct(toSubmit, new ArrayList<String>());
+        productResource.createProduct(toSubmit);
         
     }
     
@@ -75,12 +75,11 @@ public class ProductResourceTest extends DatabaseTestFixture {
                              "test-content-url", "test-gpg-url");
         
         HashSet<Content> contentSet = new HashSet<Content>();
-        List<String> childProducts = new LinkedList<String>();
         
         contentSet.add(testContent);
         toSubmit.setContent(contentSet);
         
-        productResource.createProduct(toSubmit, childProducts);
+        productResource.createProduct(toSubmit);
             
     }
     

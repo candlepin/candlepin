@@ -117,13 +117,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testFuzzyProductMatchingWithoutSubscription() {
         Product parent = TestUtil.createProduct();
-        parent.addChildProduct(product);
         productCurator.create(parent);
         
         Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(parent.getId());
+        providedProductIds.add(product.getId());
 
-        Pool p = TestUtil.createEntitlementPool(owner, product.getId(), 
+        Pool p = TestUtil.createEntitlementPool(owner, parent.getId(), 
             providedProductIds, 5);
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product);

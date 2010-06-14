@@ -54,17 +54,6 @@ public class ReadOnlyProduct {
     public String getId() {
         return product.getId();
     }
-    /**
-     * Return the read-only copies of the child Products.
-     * @return the read-only copies of the child Products.
-     */
-    public Set<ReadOnlyProduct> getChildProducts() {
-        Set<ReadOnlyProduct> toReturn = new HashSet<ReadOnlyProduct>();
-        for (Product toProxy : product.getChildProducts()) {
-            toReturn.add(new ReadOnlyProduct(toProxy));
-        }
-        return toReturn;
-    }
    
     // We may want to drop this and force use of the flattened attributes list.
     /**

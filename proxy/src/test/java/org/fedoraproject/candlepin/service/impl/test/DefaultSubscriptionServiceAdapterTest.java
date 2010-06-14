@@ -46,7 +46,6 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         parentProduct = TestUtil.createProduct();
         
         childProduct = TestUtil.createProduct();
-        parentProduct.addChildProduct(childProduct);
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
         

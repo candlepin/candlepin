@@ -88,50 +88,6 @@ public class ProductTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void addChildProducts() {
-        beginTransaction();
-        Product parent = new Product("parent-product", "Parent Product");
-        Product child1 = new Product("child-product1", "Child Product 1");
-        Product child2 = new Product("child-product2", "Child Product 2");
-
-        parent.addChildProduct(child1);
-        parent.addChildProduct(child2);
-        entityManager().persist(parent);
-        commitTransaction();
-
-        Product result = (Product) entityManager().createQuery(
-                "select p from Product as p where name = :name").setParameter(
-                "name", parent.getName()).getSingleResult();
-        assertEquals(2, result.getChildProducts().size());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testCascading() {
-        beginTransaction();
-
-        Product parent1 = new Product("parent-product1", "Parent Product 1");
-        Product child1 = new Product("child-product1", "Child Product 1");
-        parent1.addChildProduct(child1);
-        entityManager().persist(parent1);
-        commitTransaction();
-
-        Product result = (Product) entityManager().createQuery(
-                "select p from Product as p where name = :name").setParameter(
-                "name", child1.getName()).getSingleResult();
-        assertNotNull(result);
-
-        beginTransaction();
-        entityManager().remove(parent1);
-        commitTransaction();
-
-        List<Product> results = entityManager().createQuery(
-                "select p from Product as p where name = :name").setParameter(
-                "name", child1.getName()).getResultList();
-        assertEquals(0, results.size());
-    }
-    
-    @Test
     public void testUpdate() {
         Product product = new Product("test-product", "Test Product");
         Product updatedProduct = productCurator.update(product);
@@ -300,54 +256,6 @@ public class ProductTest extends DatabaseTestFixture {
         productCurator.create(prod);
        
         productCurator.find(prod.getId());
-    }
-    
-    @Test
-    public void testProductChildProducts() {
-        Set<Product> childProducts = new HashSet<Product>();
-        Set<Product> products = new HashSet<Product>();
-        Set<Content> content = new HashSet<Content>();
-        
-        String parentLabel = "cp_test_parent_product";
-        String childLabel = "cp_test_child_product";
-
-        Product childProd = new Product(childLabel, "Test Child Product", "variant",
-                        "version", "arch", "SVC", products, content);
-        
-        childProducts.add(childProd);
-        Product parentProd = new Product(parentLabel, "Test Parent Product", "variant",
-                        "version", "arch", "MKT", childProducts, content);
-      
-        productCurator.create(parentProd);
-        
-        Set<Product> testProducts = new HashSet<Product>();
-        Product lookedUp = productCurator.find(parentProd.getId());
-        assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
-    }
-    
-    @Test
-    public void testBlkUpdate() {
-        Set<Product> childProducts = new HashSet<Product>();
-        Set<Product> products = new HashSet<Product>();
-        Set<Content> content = new HashSet<Content>();
-        
-        String parentLabel = "cp_test_parent_product";
-        String childLabel = "cp_test_child_product";
-
-        Product childProd = new Product(childLabel, "Test Child Product", "variant",
-            "version", "arch", "SVC", products, content);
-
-        childProducts.add(childProd);
-        Product parentProd = new Product(parentLabel, "Test Parent Product", "variant",
-            "version", "arch", "MKT", null, content);
-        
-        productCurator.create(parentProd);
-        parentProd.setChildProducts(childProducts);
-        productCurator.update(parentProd);
-        
-        Set<Product> testProducts = new HashSet<Product>();
-        Product lookedUp = productCurator.find(parentProd.getId());
-        assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
     }
     
 }
