@@ -72,7 +72,6 @@ public class Product extends AbstractHibernateObject {
     @JoinTable(name = "cp_product_attribute")
     private Set<Attribute> attributes = new HashSet<Attribute>();
 
-//    @OneToMany(cascade = CascadeType.ALL)
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_content")
     private Set<Content> content;

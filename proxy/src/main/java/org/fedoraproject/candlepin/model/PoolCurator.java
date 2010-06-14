@@ -345,8 +345,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public void createPoolForSubscription(Subscription sub) {
         log.debug("Creating new pool for new sub: " + sub.getId());
+        Long quantity = sub.getQuantity() * sub.getMultiplier();
+        
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(),
-                sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
+                quantity, sub.getStartDate(), sub.getEndDate());
         newPool.setSubscriptionId(sub.getId());
         create(newPool);
         log.debug("   new pool: " + newPool);
