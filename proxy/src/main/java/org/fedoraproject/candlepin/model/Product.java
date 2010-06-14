@@ -72,7 +72,7 @@ public class Product extends AbstractHibernateObject {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_attribute")
     private Set<Attribute> attributes = new HashSet<Attribute>();
-   
+    
     @CollectionOfElements
     @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
     private Set<ProductContent> productContent = new HashSet<ProductContent>();
@@ -96,7 +96,7 @@ public class Product extends AbstractHibernateObject {
         setId(id);
         setName(name);
         setChildProducts(childProducts);
-        setContent(content);
+//        setContent(content);
         // FIXME
         setEnabledContent(content);
         setAttribute("version", version);
@@ -305,12 +305,18 @@ public class Product extends AbstractHibernateObject {
     
     
     public void setContent(Set<Content> content) {
+        if (content == null) {
+            return;
+        }
         for (Content newContent : content) {
             productContent.add(new ProductContent(newContent, this, false));
         }    
     }   
     
     public void setEnabledContent(Set<Content> content) {
+        if (content == null) {
+            return;
+        }
         for (Content newContent : content) {
             productContent.add(new ProductContent(newContent, this, true));
         }
@@ -338,4 +344,5 @@ public class Product extends AbstractHibernateObject {
         
     }
  
+       
 }

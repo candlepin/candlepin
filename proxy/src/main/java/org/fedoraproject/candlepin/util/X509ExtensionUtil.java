@@ -25,6 +25,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 
@@ -131,36 +132,46 @@ public class X509ExtensionUtil {
 
     public List<X509ExtensionWrapper> contentExtensions(Product product) {
         List<X509ExtensionWrapper> toReturn = new LinkedList<X509ExtensionWrapper>();
+        Set<ProductContent> productContent = product.getProductContent();
         Set<Content> content = product.getContent();
         Set<Content> enabledContent = product.getEnabledContent();
         
-        for (Content con : content) {
+//        for (Content con : content) {
+        for (ProductContent pc : productContent) {
             String contentOid = OIDUtil.REDHAT_OID + "." +  
                    OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + 
-                   "." + con.getId().toString() + "." + 
-                   OIDUtil.CF_REPO_TYPE.get(con.getType());
+                   "." + pc.getContent().getId().toString() + "." + 
+                   OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
             toReturn.add(new X509ExtensionWrapper(contentOid, 
-                    false, new DERUTF8String(con.getType())));
+                    false, new DERUTF8String(pc.getContent().getType())));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY),
-                    false, new DERUTF8String(con.getName())));
+                    false, new DERUTF8String(pc.getContent().getName())));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_LABEL_KEY),
-                   false, new DERUTF8String(con.getLabel())));
+                   false, new DERUTF8String(pc.getContent().getLabel())));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_VENDOR_ID_KEY) ,
-                    false, new DERUTF8String(con.getVendor())));
+                    false, new DERUTF8String(pc.getContent().getVendor())));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_DOWNLOAD_URL_KEY) ,
-                    false, new DERUTF8String(con.getContentUrl()))); 
+                    false, new DERUTF8String(pc.getContent().getContentUrl()))); 
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY),
-                    false, new DERUTF8String(con.getGpgUrl())));
-            
+                    false, new DERUTF8String(pc.getContent().getGpgUrl())));
+            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
+                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_FLEX_QUANTITY_KEY),
+                    false, new DERUTF8String(pc.getFlexEntitlement().toString())));
+            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
+                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_PHYS_QUANTITY_KEY),
+                false, new DERUTF8String(pc.getPhysicalEntitlement().toString())));
+                    
             toReturn.add(new X509ExtensionWrapper(contentOid + "." + 
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED),
                     false,  new DERUTF8String(
-                        (enabledContent.contains(con) ? "0" : "1"))));
+                        (pc.getEnabled()) ? "0" : "1")));
+            
+            
         }
         return toReturn;
     }
