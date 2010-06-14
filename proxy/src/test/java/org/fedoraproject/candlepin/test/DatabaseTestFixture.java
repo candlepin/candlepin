@@ -203,34 +203,12 @@ public class DatabaseTestFixture {
     protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
         Date startDate, Date endDate) {
         Set<String> productIds = new HashSet<String>();
-        productIds.add(product.getId());
-        Pool p = new Pool(owner, productIds, quantity, startDate, endDate);
+        Pool p = new Pool(owner, product.getId(), productIds, quantity,
+            startDate, endDate);
         Subscription sub = new Subscription(owner, product, quantity, startDate,
             endDate, TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
-        poolCurator.create(p);
-        return p;
-    }
-
-    /**
-     * Create an entitlement pool and matching subscription.
-     * @return an entitlement pool and matching subscription.
-     */
-    protected Pool createPool(Owner owner, Set<String> productIds, Long quantity,
-        Date startDate, Date endDate) {
-        Pool p = new Pool(owner, productIds, quantity, startDate, endDate);
-        poolCurator.create(p);
-        return p;
-    }
-
-    /**
-     * Create an entitlement pool and matching subscription.
-     * @return an entitlement pool and matching subscription.
-     */
-    protected Pool createPool(Owner owner, Set<String> productIds, Long quantity) {
-        Pool p = new Pool(owner, productIds, quantity, 
-            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2051, 02, 26));
         poolCurator.create(p);
         return p;
     }

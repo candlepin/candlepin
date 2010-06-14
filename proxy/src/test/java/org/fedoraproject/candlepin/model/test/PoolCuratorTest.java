@@ -121,10 +121,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         productCurator.create(parent);
         
         Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(product.getId());
         providedProductIds.add(parent.getId());
 
-        Pool p = TestUtil.createEntitlementPool(owner, providedProductIds, 5);
+        Pool p = TestUtil.createEntitlementPool(owner, product.getId(), 
+            providedProductIds, 5);
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product);
         assertEquals(1, results.size());
@@ -136,13 +136,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         productCurator.create(another);
         
         Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(product.getId());
         providedProductIds.add(another.getId());
         
-        Pool pool = createPool(owner, providedProductIds, new Long(5));
+        Pool pool = TestUtil.createEntitlementPool(owner, product.getId(), 
+            providedProductIds, 5);
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
-        assertTrue(pool.getProvidedProductIds().contains(product.getId()));
         assertTrue(pool.getProvidedProductIds().contains(another.getId()));
     }
 }

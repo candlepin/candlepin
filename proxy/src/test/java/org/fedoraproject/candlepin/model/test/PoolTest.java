@@ -49,20 +49,20 @@ public class PoolTest extends DatabaseTestFixture {
         prod2 = TestUtil.createProduct();
         productCurator.create(prod1);
         productCurator.create(prod2);
+        owner = new Owner("testowner");
+        ownerCurator.create(owner);
         
         Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(prod1.getId());
         providedProductIds.add(prod2.getId());
         
-        pool = createPool(createOwner(), providedProductIds,
-            new Long(1000), TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2015, 11, 30));
+        pool = TestUtil.createEntitlementPool(owner, prod1.getId(), providedProductIds,
+            1000);
+        poolCurator.create(pool);
         owner = pool.getOwner();
 
         consumer = TestUtil.createConsumer(owner);
         entitler = injector.getInstance(Entitler.class);
 
-        ownerCurator.create(owner);
         productCurator.create(prod1);
         poolCurator.create(pool);
         consumerTypeCurator.create(consumer.getType());
@@ -77,6 +77,7 @@ public class PoolTest extends DatabaseTestFixture {
                 Pool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
+        assertEquals(prod1.getId(), lookedUp.getProductId());
         assertTrue(lookedUp.provides(prod1.getId()));
         
     }
@@ -146,10 +147,10 @@ public class PoolTest extends DatabaseTestFixture {
         productCurator.create(parentProduct);
         
         Set<String> productIds = new HashSet<String>();
-        productIds.add(parentProduct.getId());
         productIds.add(childProduct.getId());
 
-        Pool pool = TestUtil.createEntitlementPool(owner, productIds, 5);
+        Pool pool = TestUtil.createEntitlementPool(owner, parentProduct.getId(), 
+            productIds, 5);
         poolCurator.create(pool);
         
         

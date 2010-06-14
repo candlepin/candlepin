@@ -115,15 +115,14 @@ public class TestUtil {
     }
 
     public static Pool createEntitlementPool(Owner owner, Product product, int quantity) {
-        Set<String> productIds = new HashSet<String>();
-        productIds.add(product.getId());
-        return createEntitlementPool(owner, productIds, quantity);
+        return createEntitlementPool(owner, product.getId(), new HashSet<String>(), 
+            quantity);
     }
     
-    public static Pool createEntitlementPool(Owner owner, Set<String> productIds,
-        int quantity) {
+    public static Pool createEntitlementPool(Owner owner, String productId, 
+        Set<String> productIds, int quantity) {
 
-        Pool pool = new Pool(owner, productIds, new Long(quantity),
+        Pool pool = new Pool(owner, productId, productIds, new Long(quantity),
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
         return pool;
     }

@@ -102,7 +102,7 @@ public class JavascriptEnforcer implements Enforcer {
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
                 new ValidationError(i18n.tr("Entitlements for {0} expired on: {1}",
-                    prodAdapter.getTopLevelProduct(entitlementPool.getProvidedProductIds()),
+                    entitlementPool.getProductId(),
                     entitlementPool.getEndDate())));
         }
 
@@ -136,8 +136,7 @@ public class JavascriptEnforcer implements Enforcer {
         PreEntHelper preHelper = new PreEntHelper(quantity);
 
         // Provide objects for the script:
-        String topLevelProductId = prodAdapter.getTopLevelProduct(
-            pool.getProvidedProductIds());
+        String topLevelProductId = pool.getProductId();
         Product product = prodAdapter.getProductById(topLevelProductId);
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
@@ -181,8 +180,7 @@ public class JavascriptEnforcer implements Enforcer {
         Consumer c = ent.getConsumer();
 
         // Provide objects for the script:
-        String topLevelProductId = prodAdapter.getTopLevelProduct(
-            pool.getProvidedProductIds());
+        String topLevelProductId = pool.getProductId();
         Product product = prodAdapter.getProductById(topLevelProductId);
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(c));

@@ -115,6 +115,9 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @Column(nullable = false)
     private Date endDate;
     
+    @Column(nullable = false)
+    private String productId;
+    
     @CollectionOfElements(targetElement = String.class)
     @JoinTable(name = "pool_products", joinColumns = @JoinColumn(name = "pool_id"))
     private Set<String> providedProductIds = new HashSet<String>();
@@ -129,8 +132,9 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     public Pool() {
     }
 
-    public Pool(Owner ownerIn, Set<String> providedProductIds, Long quantityIn,
-        Date startDateIn, Date endDateIn) {
+    public Pool(Owner ownerIn, String productId, Set<String> providedProductIds, 
+        Long quantityIn, Date startDateIn, Date endDateIn) {
+        this.productId = productId;
         this.owner = ownerIn;
         this.quantity = quantityIn;
         this.startDate = startDateIn;
@@ -416,7 +420,32 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         this.providedProductIds = providedProductIds;
     }
 
+    /**
+     * Check if this pool provides the given product ID.
+     * @param productId
+     * @return
+     */
     public Boolean provides(String productId) {
+        // Direct match?
+        if (this.productId == productId) {
+            return true;
+        }
+        
+        // Check provided products:
         return this.providedProductIds.contains(productId);
+    }
+
+    /**
+     * Return the "top level" product this pool is for.
+     * Note that pools can also provide access to other products. 
+     * See getProvidedProductIds().
+     * @return Top level product ID.
+     */
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
     }
 }

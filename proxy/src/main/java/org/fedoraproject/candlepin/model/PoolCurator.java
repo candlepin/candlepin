@@ -286,7 +286,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     
     // set a single name, if its not already there
     private void addProductName(Pool pool) {
-        String productId = productAdapter.getTopLevelProduct(pool.getProvidedProductIds());
+        String productId = pool.getProductId();
         if (pool != null) {
             if (pool.getProductName() == null) { 
                 HashMap<String, String> names = productAdapter.
@@ -306,8 +306,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             int i = 0;
             for (Pool p : pools) {            
                 // enrich with the product name
-                productIds[i] = productAdapter.getTopLevelProduct(
-                    p.getProvidedProductIds());
+                productIds[i] = p.getProductId();
                 i++;
             }
             
@@ -318,8 +317,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             if (null != productNames) { 
                 // set the product name
                 for (Pool p : pools) { 
-                    p.setProductName(productNames.get(productAdapter.getTopLevelProduct(
-                        p.getProvidedProductIds())));
+                    p.setProductName(productNames.get(p.getProductId()));
                 } 
             }
         }
@@ -350,7 +348,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         log.debug("Creating new pool for new sub: " + sub.getId());
         Set<String> productIds = new HashSet<String>();
         productIds.addAll(sub.getProvidedProductIds());
-        Pool newPool = new Pool(sub.getOwner(), productIds,
+        Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), productIds,
                 sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
         newPool.setSubscriptionId(sub.getId());
         create(newPool);

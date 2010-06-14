@@ -182,7 +182,7 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
      * @return Returns the product.
      */
     public String getProductId() {
-        return this.pool.getProvidedProductIds().iterator().next();
+        return this.pool.getProductId();
     }
 
     /**

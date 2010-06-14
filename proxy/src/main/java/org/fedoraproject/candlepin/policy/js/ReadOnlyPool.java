@@ -73,6 +73,10 @@ public class ReadOnlyPool {
     public Set<String> getProvidedProductIds() {
         return entPool.getProvidedProductIds();
     }
+    
+    public String getProductId() {
+        return entPool.getProductId();
+    }
 
 
     public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools) {

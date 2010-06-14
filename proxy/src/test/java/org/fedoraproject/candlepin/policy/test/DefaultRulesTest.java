@@ -82,8 +82,6 @@ public class DefaultRulesTest {
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
-            .thenReturn(productId);
 
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
 
@@ -101,8 +99,6 @@ public class DefaultRulesTest {
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
-            .thenReturn(productId);
         
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
 
@@ -120,8 +116,6 @@ public class DefaultRulesTest {
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
-            .thenReturn(productId);
 
         ValidationResult result = enforcer.pre(consumer, pool, new Integer(1)).getResult();
         
@@ -202,8 +196,6 @@ public class DefaultRulesTest {
         });
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
-            .thenReturn(productId);
         return pool;
     }
     
@@ -241,8 +233,6 @@ public class DefaultRulesTest {
         product.setAttribute("requires_consumer_type", ConsumerTypeEnum.DOMAIN.toString());
         Pool pool = TestUtil.createEntitlementPool(owner, product);
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
-            .thenReturn(productId);
         return pool;
     }
 
@@ -263,8 +253,8 @@ public class DefaultRulesTest {
 
         PostEntHelper postHelper = mock(PostEntHelper.class);
         enforcer.post(postHelper, e);
-        verify(postHelper).createUserRestrictedPool(pool.getProvidedProductIds(),
-            "unlimited");
+        verify(postHelper).createUserRestrictedPool(pool.getProductId(), 
+            pool.getProvidedProductIds(), "unlimited");
     }
 
     private Pool setupUserLicensedPool() {
@@ -273,8 +263,6 @@ public class DefaultRulesTest {
         pool.setAttribute("user_license", "unlimited");
         pool.setAttribute("requires_consumer_type", ConsumerTypeEnum.PERSON.toString());
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
-            .thenReturn(productId);
         return pool;
     }
 
@@ -303,8 +291,6 @@ public class DefaultRulesTest {
         Pool pool = TestUtil.createEntitlementPool(owner, product);
         pool.setAttribute("user_restricted", "bob");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        when(this.prodAdapter.getTopLevelProduct(TestUtil.createSet(productId)))
-            .thenReturn(productId);
         return pool;
     }
 

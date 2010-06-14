@@ -53,7 +53,8 @@ public class PostEntHelper {
     * @param productId Label of the product the pool is for.
     * @param quantity Number of entitlements for this pool, also accepts "unlimited".
     */
-    public void createUserRestrictedPool(Set<String> productIds, String quantity) {
+    public void createUserRestrictedPool(String productId, Set<String> providedProductIds, 
+        String quantity) {
 
         Long q = null;
         if (quantity.equals("unlimited")) {
@@ -64,8 +65,8 @@ public class PostEntHelper {
         }
         Consumer c = ent.getConsumer();
         Set<String> productIdCopies = new HashSet<String>();
-        productIdCopies.addAll(productIds);
-        Pool consumerSpecificPool = new Pool(c.getOwner(), productIdCopies, q,
+        productIdCopies.addAll(providedProductIds);
+        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, productIdCopies, q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate());
         consumerSpecificPool.setAttribute("user_restricted",
             c.getUsername());
