@@ -28,6 +28,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import org.hibernate.annotations.CollectionOfElements;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -71,17 +72,10 @@ public class Product extends AbstractHibernateObject {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_attribute")
     private Set<Attribute> attributes = new HashSet<Attribute>();
-
-//    @OneToMany(cascade = CascadeType.ALL)
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "cp_product_content")
-    private Set<Content> content;
- 
-  
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "cp_product_enabled_content")
-    private Set<Content> enabledContent;
     
+    @CollectionOfElements
+    @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
+    private Set<ProductContent> productContent = new HashSet<ProductContent>();
    
     /**
      * Constructor
@@ -121,7 +115,7 @@ public class Product extends AbstractHibernateObject {
         return id;
         
     }
-
+ 
     /**
      * @param id product id
      */
@@ -251,47 +245,7 @@ public class Product extends AbstractHibernateObject {
     }
 
   
-    public Set<Content> getContent() {
-        return content;
-    }
-
-    public void setContent(Set<Content> content) {
-        this.content = content;
-    }
-    
-    public void addContent(Content content) {
-        if (this.content != null) {
-            this.content = new HashSet<Content>();
-        }
-        if (!this.content.contains(content)) { 
-            this.content.add(content);
-        }
-    }
-
-    /**
-     * @param enabledContent the enabledContent to set
-     */
-    public void setEnabledContent(Set<Content> enabledContent) {
-        this.enabledContent = enabledContent;
-    }
-    
-    public void addEnabledContent(Content content) {
-        if (this.enabledContent != null) {
-            this.enabledContent = new HashSet<Content>();
-        }
-        if (!this.enabledContent.contains(content)) { 
-            this.enabledContent.add(content);
-        }
-    }
-
-    /**
-     * @return the enabledContent
-     */
-    public Set<Content> getEnabledContent() {
-//        return enabledContent;
-        return content;
-    }
-
+  
     /**
      * Return true if this product provides the requested product.
      * This method also checks if this product is a direct match itself.
@@ -318,6 +272,70 @@ public class Product extends AbstractHibernateObject {
 
         // Must not be a match:
         return Boolean.FALSE;
+    }
+
+    /**
+     * @param content
+     */
+    public void addContent(Content content) {
+        productContent.add(new ProductContent(content, this, false));
+    }
+
+    /**
+     * @param content
+     */
+    public void addEnabledContent(Content content) {
+        productContent.add(new ProductContent(content, this, true));
+    }
+
+    /**
+     * @param productContent the productContent to set
+     */
+    public void setProductContent(Set<ProductContent> productContent) {
+        this.productContent = productContent;
+    }
+
+    /**
+     * @return the productContent
+     */
+    @XmlTransient
+    public Set<ProductContent> getProductContent() {
+        return productContent;
+    }
+    
+    
+    public void setContent(Set<Content> content) {
+        for (Content newContent : content) {
+            productContent.add(new ProductContent(newContent, this, false));
+        }    
+    }   
+    
+    public void setEnabledContent(Set<Content> content) {
+        for (Content newContent : content) {
+            productContent.add(new ProductContent(newContent, this, true));
+        }
+    }
+    
+    // FIXME: this seems wrong
+    public Set<Content> getContent() {
+        Set<Content> content = new HashSet<Content>();
+        for (ProductContent pc : productContent) {
+            content.add(pc.getContent());
+        }
+        return content;
+        
+    }
+
+    public Set<Content> getEnabledContent() {
+        Set<Content> enabledContent = new HashSet<Content>();
+        
+        for (ProductContent pc : productContent) {
+            if (pc.getEnabled()) {
+                enabledContent.add(pc.getContent());
+            }
+        }
+        return enabledContent;
+        
     }
  
 }
