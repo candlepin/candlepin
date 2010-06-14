@@ -291,32 +291,4 @@ public class Product extends AbstractHibernateObject {
         return content;
     }
 
-    /**
-     * Return true if this product provides the requested product.
-     * This method also checks if this product is a direct match itself.
-     *
-     * @param desiredProductId Product we are looking for:
-     * @return True if product is provided, otherwise false.
-     */
-    public Boolean provides(String desiredProductId) {
-        // Check if I'm a direct match:
-        if (getId().equals(desiredProductId)) {
-            return Boolean.TRUE;
-        }
-        // No child products, can't be a match:
-        if (getChildProducts() == null) {
-            return Boolean.FALSE;
-        }
-
-        // Otherwise check if any of our child products provides:
-        for (Product child : getChildProducts()) {
-            if (child.provides(desiredProductId)) {
-                return Boolean.TRUE;
-            }
-        }
-
-        // Must not be a match:
-        return Boolean.FALSE;
-    }
- 
 }

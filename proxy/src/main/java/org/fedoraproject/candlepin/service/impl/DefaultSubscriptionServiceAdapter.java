@@ -55,8 +55,6 @@ public class DefaultSubscriptionServiceAdapter implements
         // and then filter out products that do not match:
         for (Subscription sub : getSubscriptions(owner)) {
 
-            // TODO: Performance hit here, needs to be addressed:
-            Product subProduct = prodAdapter.getProductById(sub.getProduct().getId());
             if (sub.getProduct().getId().equals(productId)) {
                 subs.add(sub);
                 if (log.isDebugEnabled()) {
@@ -64,7 +62,7 @@ public class DefaultSubscriptionServiceAdapter implements
                 }
                 continue;
             }
-            else if (subProduct.provides(productId)) {
+            else if (sub.provides(productId)) {
                 if (log.isDebugEnabled()) {
                     log.debug("   found provides: " + sub);
                 }

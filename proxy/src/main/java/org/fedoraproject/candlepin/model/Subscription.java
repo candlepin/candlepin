@@ -264,4 +264,20 @@ public class Subscription extends AbstractHibernateObject {
     public void setProvidedProductIds(Set<String> providedProductIds) {
         this.providedProductIds = providedProductIds;
     }
+    
+    /**
+     * Check if this pool provides the given product ID.
+     * @param productId
+     * @return
+     */
+    public Boolean provides(String productId) {
+        // Direct match?
+        if (this.product.getId() == productId) {
+            return true;
+        }
+        
+        // Check provided products:
+        return this.providedProductIds.contains(productId);
+    }
+
 }

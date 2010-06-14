@@ -350,16 +350,4 @@ public class ProductTest extends DatabaseTestFixture {
         assertEquals(parentProd.getChildProducts(), lookedUp.getChildProducts());
     }
     
-    @Test
-    public void testRecursiveProvides() {
-        Product top = TestUtil.createProduct();
-        Product middle = TestUtil.createProduct();
-        Product bottom = TestUtil.createProduct();
-        middle.addChildProduct(bottom);
-        top.addChildProduct(middle);
-        assertTrue(middle.provides(bottom.getId()));
-        assertTrue(top.provides(bottom.getId()));
-        assertFalse(middle.provides(top.getId()));
-    }
-    
 }

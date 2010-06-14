@@ -267,6 +267,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
+                // TODO: Enforcer will look up the product, see if we can eliminate:
                 PreEntHelper helper = enforcer.pre(c, p, new Integer(1));
                 if (helper.getResult().isSuccessful() && 
                         !helper.getResult().hasWarnings()) {
