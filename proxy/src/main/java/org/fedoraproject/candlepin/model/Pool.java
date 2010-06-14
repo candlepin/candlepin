@@ -397,7 +397,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
 
     public String toString() {
         return "EntitlementPool [id = " + getId() + ", owner = " + owner.getId() +
-            ", products = " + getProvidedProductIds() +
+            ", products = " + productId + " - " + getProvidedProductIds() +
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
@@ -427,7 +427,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
      */
     public Boolean provides(String productId) {
         // Direct match?
-        if (this.productId == productId) {
+        if (this.productId.equals(productId)) {
             return true;
         }
         
