@@ -52,7 +52,7 @@ def create_product(product_name, attrs=nil)
       attrs = {'virtualization_host' => 'virtualization_host' }
   end
   @product = @candlepin.create_product(product_name, id, 1,
-                                       'ALL', 'ALL', 'SVC', [],
+                                       'ALL', 'ALL', 'SVC', 
                                        attrs)
 end
 
