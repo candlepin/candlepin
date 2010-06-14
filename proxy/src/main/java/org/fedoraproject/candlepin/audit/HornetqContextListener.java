@@ -104,7 +104,7 @@ public class HornetqContextListener {
         eventSource = new EventSource();
         for (int i = 0; i < listeners.length; i++) {
             try {
-                Class clazz = this.getClass().getClassLoader().loadClass(listeners[i]);
+                Class<?> clazz = this.getClass().getClassLoader().loadClass(listeners[i]);
                 
                 eventSource.registerListener((EventListener) injector.getInstance(clazz));
             }

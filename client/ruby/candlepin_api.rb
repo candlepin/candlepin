@@ -276,8 +276,8 @@ class Candlepin
     return post("/owners/#{owner_id}/subscriptions", data)
   end
 
-  def delete_subscription(subscription)
-    return delete("/subscriptions/#{subscription}")
+  def delete_subscription(subscription_id)
+    return delete("/subscriptions/#{subscription_id}")
   end
 
   def get_subscription_tokens

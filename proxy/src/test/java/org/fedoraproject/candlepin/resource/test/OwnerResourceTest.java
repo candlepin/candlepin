@@ -85,7 +85,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(prod);
 
         Subscription sub = new Subscription(owner, prod,
-                new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
+                2000L, 1L, TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
@@ -113,7 +113,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = pool.getOwner();
 
         Subscription sub = new Subscription(owner, prod,
-                new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
+                2000L, 1L, TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
@@ -139,7 +139,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(prod);
 
         Subscription sub = new Subscription(owner, prod,
-                new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
+                2000L, 1L, TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
@@ -169,13 +169,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(prod2);
         
         Subscription sub = new Subscription(owner, prod,
-            new Long(2000), TestUtil.createDate(2010, 2, 9), TestUtil
+            2000L, 1L, TestUtil.createDate(2010, 2, 9), TestUtil
                     .createDate(3000, 2, 9),
                     TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
 
         Subscription sub2 = new Subscription(owner, prod2,
-                new Long(800), TestUtil.createDate(2010, 2, 9), TestUtil
+                800L, 1L, TestUtil.createDate(2010, 2, 9), TestUtil
                         .createDate(3000, 2, 9),
                         TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub2);

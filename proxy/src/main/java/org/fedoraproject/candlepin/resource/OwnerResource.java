@@ -260,10 +260,9 @@ public class OwnerResource {
     public Subscription createSubscription(@PathParam("owner_id") Long ownerId, 
         Subscription subscription) {
         
-        Subscription copy = new Subscription(subscription);
-        copy.setOwner(findOwner(ownerId));
-        copy.setProduct(productCurator.find(subscription.getProduct().getId()));
-        Subscription s = subscriptionCurator.create(copy);
+        subscription.setOwner(findOwner(ownerId));
+        subscription.setProduct(productCurator.find(subscription.getProduct().getId()));
+        Subscription s = subscriptionCurator.create(subscription);
         return s;
     }
 
