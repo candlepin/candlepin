@@ -101,7 +101,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         // oiduitl is busted at the moment, so do this manually
         List<X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
         
-        addExtensionsForChildProducts(extensions, product);
+        addExtensionsForProduct(extensions, product);
+        for (Product provided : sub.getProvidedProducts()) {
+            addExtensionsForProduct(extensions, provided);
+        }
 
         extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
@@ -117,7 +120,7 @@ public class DefaultEntitlementCertServiceAdapter extends
      * @param extensions Certificate extensions.
      * @param product Product to recurse through.
      */
-    private void addExtensionsForChildProducts(List<X509ExtensionWrapper> extensions, 
+    private void addExtensionsForProduct(List<X509ExtensionWrapper> extensions, 
         Product product) {
         
         // Add extensions for this product, unless it is a MKT product,
@@ -126,12 +129,6 @@ public class DefaultEntitlementCertServiceAdapter extends
             extensions.addAll(extensionUtil.productExtensions(product));
             extensions.addAll(extensionUtil.contentExtensions(product));
         }
-            
-        // Recurse for all child products:
-        for (Product childProduct : product.getChildProducts()) {
-            addExtensionsForChildProducts(extensions, childProduct);
-        }
-        
     }
     
     private String createDN(Consumer consumer) {
