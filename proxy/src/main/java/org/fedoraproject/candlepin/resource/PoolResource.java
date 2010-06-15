@@ -110,13 +110,6 @@ public class PoolResource {
             return poolCurator.listAll();
         }
         else {
-            Product p = null;
-            if (productId != null) {
-                p = productServiceAdapter.getProductById(productId);
-                if (p == null) {
-                    throw new NotFoundException(i18n.tr("product: {0}", productId));
-                }
-            }
             Consumer c = null;
             Owner o = null;
             if (consumerUuid != null) {
@@ -135,7 +128,7 @@ public class PoolResource {
                     throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
                 }                
             }                   
-            return poolCurator.listAvailableEntitlementPools(c, o, p, true);
+            return poolCurator.listAvailableEntitlementPools(c, o, productId, true);
         }
     }
     

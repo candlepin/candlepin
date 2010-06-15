@@ -94,7 +94,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         ownerResource.refreshEntitlementPools(owner.getKey());
         List<Pool> pools = poolCurator
-                .listByOwnerAndProduct(owner, prod);
+                .listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
 
@@ -148,7 +148,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         ownerResource.refreshEntitlementPools(owner.getKey());
         List<Pool> pools = poolCurator
-                .listByOwnerAndProduct(owner, prod);
+                .listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
 

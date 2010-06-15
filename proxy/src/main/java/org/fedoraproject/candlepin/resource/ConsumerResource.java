@@ -345,24 +345,18 @@ public class ConsumerResource {
      */
     private List<Entitlement> bindByProduct(String productId, Consumer consumer, 
         Integer quantity) {
-    
-
+        
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        Product p = productAdapter.getProductById(productId);
-        if (p == null) {
-            throw new BadRequestException(
-                i18n.tr("No such product: {0}", productId));
-        }
-        entitlementList.add(createEntitlementByProduct(consumer, p, quantity));
+        entitlementList.add(createEntitlementByProduct(consumer, productId, quantity));
         return entitlementList;
     }
 
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlementByProduct(Consumer consumer, Product p, 
+    private Entitlement createEntitlementByProduct(Consumer consumer, String productId, 
         Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitleByProduct(consumer, p, quantity);
+            Entitlement e = entitler.entitleByProduct(consumer, productId, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -374,7 +368,7 @@ public class ConsumerResource {
             if (error.equals("rulefailed.consumer.already.has.product")) {
                 throw new ForbiddenException(i18n.tr(
                     "This consumer is already subscribed to the product ''{0}''",
-                    p.getId()));
+                    productId));
             }
 
             throw new ForbiddenException(e.getResult().getErrors().get(0).getResourceKey());
@@ -435,7 +429,7 @@ public class ConsumerResource {
             }
 
             Product p = sub.getProduct();
-            entitlementList.add(createEntitlementByProduct(consumer, p, quantity));
+            entitlementList.add(createEntitlementByProduct(consumer, p.getId(), quantity));
         }
         
         if (email != null) {

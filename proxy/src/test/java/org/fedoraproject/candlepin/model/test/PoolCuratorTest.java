@@ -82,7 +82,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
         
-        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, p);
+        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, p.getId());
         Pool onlyPool = results.get(0);
         
         assertEquals("An Extremely Great Product", onlyPool.getProductName());
@@ -125,7 +125,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool p = TestUtil.createEntitlementPool(owner, parent.getId(), 
             providedProductIds, 5);
         poolCurator.create(p);
-        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product);
+        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
         assertEquals(1, results.size());
     }
     

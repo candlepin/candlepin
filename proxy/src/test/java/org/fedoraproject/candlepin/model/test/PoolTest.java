@@ -112,7 +112,7 @@ public class PoolTest extends DatabaseTestFixture {
                 TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        entitler.entitleByProduct(consumer, newProduct, new Integer("1"));
+        entitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable(new Integer(1)));
@@ -130,7 +130,7 @@ public class PoolTest extends DatabaseTestFixture {
         consumerPool = poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
-        entitler.entitleByProduct(consumer, newProduct, new Integer("1"));
+        entitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
 
         assertEquals(1, consumerCurator.find(consumer.getId())
                 .getEntitlements().size());
@@ -154,7 +154,7 @@ public class PoolTest extends DatabaseTestFixture {
         
         
         List<Pool> results = poolCurator.listAvailableEntitlementPools(null, owner, 
-            childProduct, false);
+            childProduct.getId(), false);
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
     }

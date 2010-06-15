@@ -485,12 +485,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         subCurator.create(sub);
         subTokenCurator.create(token);
         assertEquals(0, poolCurator.listByOwnerAndProduct(owner,
-            prod).size());
+            prod.getId()).size());
 
         consumerResource.bind(
             consumer.getUuid(), null, token.getToken(), null, null, null, null);
         assertEquals(1, poolCurator.listByOwnerAndProduct(owner,
-            prod).size());
+            prod.getId()).size());
     }
 
     @Test
@@ -508,7 +508,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         subTokenCurator.create(token);
         poolCurator.refreshPools(owner);
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
-            prod);
+            prod.getId());
         assertEquals(1, pools.size());
 
         List<Entitlement> ents = consumerResource.bind(
@@ -516,7 +516,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(1, ents.size());
         assertEquals(sub.getId(), ents.get(0).getPool().getSubscriptionId());
         assertEquals(1, poolCurator.listByOwnerAndProduct(owner,
-            prod).size());
+            prod.getId()).size());
     }
     
     @Test

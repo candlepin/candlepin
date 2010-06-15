@@ -111,17 +111,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true);
     }
     
-    @Transactional
-    @EnforceAccessControl
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            Product p, boolean activeOnly) {
-        String productId = (p == null) ? null : p.getId();
-        Owner owner = o == null ? c.getOwner() : o;
-        // TODO: Yet another performance hit, we have a Product here, we toss it,
-        // pass in the ID, then look up the product again later...
-        return listAvailableEntitlementPools(c, owner, productId, activeOnly);
-    }
-    
     /**
      * List all entitlement pools for the given owner and product.
      * 
@@ -132,8 +121,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByOwnerAndProduct(Owner owner,
-            Product product) {  
-        return listAvailableEntitlementPools(null, owner, product, false);
+            String productId) {  
+        return listAvailableEntitlementPools(null, owner, productId, false);
     }
 
     /**
@@ -209,9 +198,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    private List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
+    @EnforceAccessControl
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, boolean activeOnly) {
 
+        if (o == null && c != null) {
+            o = c.getOwner();
+        }
+        
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
             log.debug("   consumer: " + c);

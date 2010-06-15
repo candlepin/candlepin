@@ -106,16 +106,16 @@ public class Entitler {
     // will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitleByProduct(Consumer consumer, Product product, 
+    public Entitlement entitleByProduct(Consumer consumer, String productId, 
         Integer quantity)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
 
-        Pool pool = enforcer.selectBestPool(consumer, product.getId(),
-            epCurator.listByOwnerAndProduct(owner, product));
+        Pool pool = enforcer.selectBestPool(consumer, productId,
+            epCurator.listByOwnerAndProduct(owner, productId));
         if (pool == null) {
             throw new RuntimeException("No entitlements for product: " +
-                product.getName());
+                productId);
         }
 
         return addEntitlement(consumer, pool, quantity);

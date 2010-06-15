@@ -167,9 +167,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolResource.list(null, "blah", null, false);
     }
     
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testListNoSuchProduct() {
-        poolResource.list(owner1.getId(), null, "boogity", false);
+        assertEquals(0, poolResource.list(owner1.getId(), null, "boogity", false).size());
     }
     
     @Test(expected = ForbiddenException.class)
