@@ -89,6 +89,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return filtered;
     }
     
+    @SuppressWarnings("unchecked")
     @Transactional
     public void delete(Entitlement entity) {
         Entitlement toDelete = find(entity.getId());
@@ -99,7 +100,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             currentSession().delete(cert);
         }
         toDelete.getCertificates().clear();
-        
+        //TODO - Is this right? Should the pool also be deleted? For now, this works!
+        List<Pool> pools = currentSession().createCriteria(Pool.class)
+            .add(Restrictions.eq("sourceEntitlement", entity))
+            .list();
+        for (Pool pool : pools) {
+            pool.setSourceEntitlement(null);
+            currentSession().merge(pool);
+        }
         currentSession().delete(toDelete);
         flush();
     }
