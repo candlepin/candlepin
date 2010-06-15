@@ -38,21 +38,21 @@ public class ProductContent extends AbstractHibernateObject implements
     private Content content;
     
     private Boolean enabled;
-    private Long flexEntitlement = new Long(0);
-    private Long physicalEntitlement = new Long(0);
+    private Integer flexEntitlement = 0;
+    private Integer physicalEntitlement = 0;
     
     public ProductContent() {
         
     }
     
-    public ProductContent(Content content, Product product, Boolean enabled) {
+    public ProductContent(Product product, Content content, Boolean enabled) {
         this.setContent(content);
         this.setProduct(product);
         this.setEnabled(enabled);
     }
     
-    public ProductContent(Content content, Product product, Boolean enabled,
-            Long flexEntitlement, Long physicalEntitlement) {
+    public ProductContent(Product product, Content content, Boolean enabled,
+            Integer flexEntitlement, Integer physicalEntitlement) {
         this.setContent(content);
         this.setProduct(product);
         this.setEnabled(enabled);
@@ -127,28 +127,28 @@ public class ProductContent extends AbstractHibernateObject implements
     /**
      * @param physicalEntitlement the physicalEntitlement to set
      */
-    public void setPhysicalEntitlement(Long physicalEntitlement) {
+    public void setPhysicalEntitlement(Integer physicalEntitlement) {
         this.physicalEntitlement = physicalEntitlement;
     }
 
     /**
      * @return the physicalEntitlement
      */
-    public Long getPhysicalEntitlement() {
+    public Integer getPhysicalEntitlement() {
         return physicalEntitlement;
     }
 
     /**
      * @param flexEntitlement the flexEntitlement to set
      */
-    public void setFlexEntitlement(Long flexEntitlement) {
+    public void setFlexEntitlement(Integer flexEntitlement) {
         this.flexEntitlement = flexEntitlement;
     }
 
     /**
      * @return the flexEntitlement
      */
-    public Long getFlexEntitlement() {
+    public Integer getFlexEntitlement() {
         return flexEntitlement;
     }
     

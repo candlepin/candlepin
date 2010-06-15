@@ -146,10 +146,12 @@ public class ProductResource {
         Product product = prodAdapter.getProductById(pid);
         Content content = contentCurator.find(contentId);
         
-        ProductContent productContent = new ProductContent(content, product, enabled);
+        ProductContent productContent = new ProductContent(product, content, enabled);
         product.getProductContent().add(productContent);
         return prodAdapter.createProduct(product);
         
     }
+    
+    
     
 }

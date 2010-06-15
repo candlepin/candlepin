@@ -52,9 +52,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
         String arch = "ALL";
         String type = "SVC";
         HashSet<Product> childProducts = null;
-        HashSet<Content> content = null;
         Product prod = new Product(label, name, variant,
-                version, arch, type, childProducts, content);
+                version, arch, type, childProducts);
         return prod;
         
     }

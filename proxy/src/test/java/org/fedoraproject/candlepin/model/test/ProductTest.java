@@ -32,7 +32,6 @@ import javax.persistence.PersistenceException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.fedoraproject.candlepin.model.Attribute;
-import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -293,10 +292,9 @@ public class ProductTest extends DatabaseTestFixture {
     @Test
     public void testProductFullConstructor() {
         Set<Product> products = new HashSet<Product>();
-        Set<Content> content = new HashSet<Content>();
         Product prod = new Product("cp_test-label", "variant",
                                    "version", "arch", "",
-                                   "SVC", products, content);
+                                   "SVC", products);
         productCurator.create(prod);
        
         productCurator.find(prod.getId());
@@ -306,17 +304,16 @@ public class ProductTest extends DatabaseTestFixture {
     public void testProductChildProducts() {
         Set<Product> childProducts = new HashSet<Product>();
         Set<Product> products = new HashSet<Product>();
-        Set<Content> content = new HashSet<Content>();
         
         String parentLabel = "cp_test_parent_product";
         String childLabel = "cp_test_child_product";
 
         Product childProd = new Product(childLabel, "Test Child Product", "variant",
-                        "version", "arch", "SVC", products, content);
+                        "version", "arch", "SVC", products);
         
         childProducts.add(childProd);
         Product parentProd = new Product(parentLabel, "Test Parent Product", "variant",
-                        "version", "arch", "MKT", childProducts, content);
+                        "version", "arch", "MKT", childProducts);
       
         productCurator.create(parentProd);
         
@@ -329,17 +326,16 @@ public class ProductTest extends DatabaseTestFixture {
     public void testBlkUpdate() {
         Set<Product> childProducts = new HashSet<Product>();
         Set<Product> products = new HashSet<Product>();
-        Set<Content> content = new HashSet<Content>();
         
         String parentLabel = "cp_test_parent_product";
         String childLabel = "cp_test_child_product";
 
         Product childProd = new Product(childLabel, "Test Child Product", "variant",
-            "version", "arch", "SVC", products, content);
+            "version", "arch", "SVC", products);
 
         childProducts.add(childProd);
         Product parentProd = new Product(parentLabel, "Test Parent Product", "variant",
-            "version", "arch", "MKT", null, content);
+            "version", "arch", "MKT", null);
         
         productCurator.create(parentProd);
         parentProd.setChildProducts(childProducts);

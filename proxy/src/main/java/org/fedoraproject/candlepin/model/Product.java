@@ -92,13 +92,10 @@ public class Product extends AbstractHibernateObject {
     
     public Product(String id, String name, String variant,
                    String version, String arch, String type,
-                   Set<Product> childProducts, Set<Content> content) {
+                   Set<Product> childProducts) {
         setId(id);
         setName(name);
         setChildProducts(childProducts);
-//        setContent(content);
-        // FIXME
-        setEnabledContent(content);
         setAttribute("version", version);
         setAttribute("variant", variant);
         setAttribute("type", type);
@@ -278,14 +275,14 @@ public class Product extends AbstractHibernateObject {
      * @param content
      */
     public void addContent(Content content) {
-        productContent.add(new ProductContent(content, this, false));
+        productContent.add(new ProductContent(this, content, false));
     }
 
     /**
      * @param content
      */
     public void addEnabledContent(Content content) {
-        productContent.add(new ProductContent(content, this, true));
+        productContent.add(new ProductContent(this, content, true));
     }
 
     /**
@@ -309,7 +306,7 @@ public class Product extends AbstractHibernateObject {
             return;
         }
         for (Content newContent : content) {
-            productContent.add(new ProductContent(newContent, this, false));
+            productContent.add(new ProductContent(this, newContent, false));
         }    
     }   
     
@@ -318,7 +315,7 @@ public class Product extends AbstractHibernateObject {
             return;
         }
         for (Content newContent : content) {
-            productContent.add(new ProductContent(newContent, this, true));
+            productContent.add(new ProductContent(this, newContent, true));
         }
     }
     
