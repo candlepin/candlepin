@@ -65,6 +65,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     @Override
     public Product getProductById(String id) {
+        log.debug("called getProductById");
         return prodCurator.lookupById(id);
     }
     

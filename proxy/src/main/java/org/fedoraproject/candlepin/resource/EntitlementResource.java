@@ -93,12 +93,8 @@ public class EntitlementResource {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
         
-        // TODO: Performance hit, looks like this is unecessary too:
-        Product product = prodAdapter.getProductById(productId);
-        verifyExistence(product, productId);
-            
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProductId().equals(product.getId())) {
+            if (e.getProductId().equals(productId)) {
                 return e;
             }
         }
