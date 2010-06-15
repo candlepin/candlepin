@@ -75,14 +75,6 @@ data['products'].each do |product|
               provided_products << {'id' => pid}
           end
 
-          puts "\n"
-          puts "\n"
-          puts "\n"
-          puts provided_products
-          puts "\n"
-          puts "\n"
-          puts "\n"
-
           if attrs['type'] == 'MKT':
               subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 
                                                      'providedProducts' => provided_products,

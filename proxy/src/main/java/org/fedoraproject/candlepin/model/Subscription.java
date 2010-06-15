@@ -269,7 +269,7 @@ public class Subscription extends AbstractHibernateObject {
      */
     public Boolean provides(String desiredProductId) {
         // Direct match?
-        if (this.product.getId() == desiredProductId) {
+        if (this.product.getId().equals(desiredProductId)) {
             return true;
         }
         

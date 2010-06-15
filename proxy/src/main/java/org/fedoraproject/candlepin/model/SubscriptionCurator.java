@@ -80,6 +80,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         if (subs == null) {
             return new LinkedList<Subscription>();
         }
+        log.debug("Found subs: " + subs.size());
         return subs;
     }
     

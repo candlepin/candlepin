@@ -177,7 +177,6 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
         this.owner = ownerIn;
     }
 
-    // REMOVE
     /**
      * @return Returns the product.
      */
