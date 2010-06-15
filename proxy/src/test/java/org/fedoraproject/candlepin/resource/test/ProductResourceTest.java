@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -39,6 +40,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void setUp() {
         
         productResource = injector.getInstance(ProductResource.class);
+        contentCurator = injector.getInstance(ContentCurator.class);
     }
     
     private Product createProduct() {
@@ -76,7 +78,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
         
         HashSet<Content> contentSet = new HashSet<Content>();
         List<String> childProducts = new LinkedList<String>();
-        
+
+        testContent = contentCurator.create(testContent);
         contentSet.add(testContent);
         toSubmit.setContent(contentSet);
         
