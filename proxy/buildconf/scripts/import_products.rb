@@ -92,7 +92,7 @@ data['products'].each do |product|
 
 	  pp product
 	  product[9].each do |content|
-		cp.add_content_to_product(product_ret['id'], content, true)
+		cp.add_content_to_product(product_ret['id'], content[0], content[1])
 	  end
 end
 
