@@ -38,8 +38,8 @@ public class ProductContent extends AbstractHibernateObject implements
     private Content content;
     
     private Boolean enabled;
-    private Integer flexEntitlement = 0;
-    private Integer physicalEntitlement = 0;
+    private Long flexEntitlement = new Long(0);
+    private Long physicalEntitlement = new Long(0);
     
     public ProductContent() {
         
@@ -52,7 +52,7 @@ public class ProductContent extends AbstractHibernateObject implements
     }
     
     public ProductContent(Product product, Content content, Boolean enabled,
-            Integer flexEntitlement, Integer physicalEntitlement) {
+            Long flexEntitlement, Long physicalEntitlement) {
         this.setContent(content);
         this.setProduct(product);
         this.setEnabled(enabled);
@@ -127,28 +127,28 @@ public class ProductContent extends AbstractHibernateObject implements
     /**
      * @param physicalEntitlement the physicalEntitlement to set
      */
-    public void setPhysicalEntitlement(Integer physicalEntitlement) {
+    public void setPhysicalEntitlement(Long physicalEntitlement) {
         this.physicalEntitlement = physicalEntitlement;
     }
 
     /**
      * @return the physicalEntitlement
      */
-    public Integer getPhysicalEntitlement() {
+    public Long getPhysicalEntitlement() {
         return physicalEntitlement;
     }
 
     /**
      * @param flexEntitlement the flexEntitlement to set
      */
-    public void setFlexEntitlement(Integer flexEntitlement) {
+    public void setFlexEntitlement(Long flexEntitlement) {
         this.flexEntitlement = flexEntitlement;
     }
 
     /**
      * @return the flexEntitlement
      */
-    public Integer getFlexEntitlement() {
+    public Long getFlexEntitlement() {
         return flexEntitlement;
     }
     
