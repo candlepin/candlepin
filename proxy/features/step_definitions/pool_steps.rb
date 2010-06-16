@@ -10,10 +10,11 @@ Given /^I have a pool of quantity (\d+) for "([^\"]*)"$/ do |quantity, product|
     @candlepin.create_pool(p['id'], @test_owner['id'], nil)  
 end
 
-Given /^I have a pool of quantity (\d+) for "([^\"]*)" with a "([^\"]*)" attribute of "([^\"]*)"$/ do |quantity, product, attr_name, attr_val|
+Given /^I have a pool of quantity (\d+) for "([^\"]*)" with the following attributes:$/ do |quantity, product, table|
   p = @candlepin.get_product(product.hash.abs)
+  attrs = table.rows_hash.delete_if { |key, val| key == 'Name' }
   
-  @candlepin.create_pool(p['id'], @test_owner['id'], nil, { attr_name => attr_val })
+  @candlepin.create_pool(p['id'], @test_owner['id'], nil, attrs)
 end
 
 When /^I view all of my pools$/ do
@@ -38,15 +39,15 @@ Then /^I have access to (\d*) pools?$/ do |num_pools|
   pools.length.should == num_pools.to_i
 end
 
-Then /^I see (\d+) pools$/ do |num_pools|
+Then /^I see (\d+) pools?$/ do |num_pools|
   @found_pools.length.should == num_pools.to_i
 end
 
 Then /^I see (\d*) available entitlements$/ do |num_entitlements|
-  available = 0
-  @found_pools.each do |pool|
-      available += pool['quantity'] - pool['consumed']
+  available = @found_pools.inject(0) do |sum, pool|
+    sum += pool['quantity'] - pool['consumed']
   end
+
   available.should == num_entitlements.to_i
 end
 

@@ -41,16 +41,14 @@ public class ProductResourceTest extends DatabaseTestFixture {
     }
     
     private Product createProduct() {
-  //      String id = "test_product";
         String label = "test_product";
         String name = "Test Product";
         String variant = "server";
         String version = "1.0";
         String arch = "ALL";
         String type = "SVC";
-        HashSet<Product> childProducts = null;
         Product prod = new Product(label, name, variant,
-                version, arch, type, childProducts);
+                version, arch, type);
         return prod;
         
     }

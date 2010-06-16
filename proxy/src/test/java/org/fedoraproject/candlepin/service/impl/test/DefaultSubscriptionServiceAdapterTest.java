@@ -51,10 +51,9 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         
         Set<Product> providedProducts = new HashSet<Product>();
         providedProducts.add(childProduct);
-        s1 = new Subscription(owner, parentProduct, providedProducts, 100L, 1L, 
+        s1 = new Subscription(owner, parentProduct, providedProducts, 100L,
                 TestUtil.createDate(2010, 2, 8), TestUtil.createDate(2050, 2, 8),
                 TestUtil.createDate(2010, 2, 1));
-        
         
         subCurator.create(s1);
         

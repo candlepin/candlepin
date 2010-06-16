@@ -70,11 +70,11 @@ def gen_random_string(prefix)
 end
 
 Then /My ([\w ]+)'s (\w+) is "([^"]+)"/ do |entity, property, expected|
-    self.send(to_name(entity))[property].should == expected
+   self.send(to_name(entity))[property].should == expected
 end
 
 def to_name(text)
-    text.downcase.gsub(/\s/, '_')
+   text.downcase.gsub(/\s/, '_')
 end
 
 def connect(username=nil, password=nil, cert=nil, key=nil)

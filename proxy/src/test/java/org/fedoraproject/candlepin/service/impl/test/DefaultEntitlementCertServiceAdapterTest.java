@@ -77,7 +77,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         
         product = new Product("a_product", "a product", 
                               "variant", "version", "arch", 
-                              "SVC", new HashSet<Product>());
+                              "SVC");
         
         Content content = new Content(CONTENT_NAME, CONTENT_ID,
                                       CONTENT_LABEL, CONTENT_TYPE,
@@ -88,7 +88,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content.setId(CONTENT_ID);
         
         subscription = new Subscription(null, product, new HashSet<Product>(), 
-                1L, 1L, new Date(), new Date(), new Date());
+                1L, new Date(), new Date(), new Date());
         subscription.setId(1L);
         
         entitlement = new Entitlement();

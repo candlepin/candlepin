@@ -15,17 +15,15 @@
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
@@ -246,13 +244,35 @@ public class ProductTest extends DatabaseTestFixture {
     
     @Test
     public void testProductFullConstructor() {
-        Set<Product> products = new HashSet<Product>();
         Product prod = new Product("cp_test-label", "variant",
-                                   "version", "arch", "",
-                                   "SVC", products);
+                                   "version", "arch", "", "SVC");
         productCurator.create(prod);
        
         productCurator.find(prod.getId());
+    }
+    
+    @Test
+    public void setMultiplierBasic() {
+        Product product = new Product("test", "Test Product");
+        product.setMultiplier(4L);
+        
+        assertEquals(new Long(4), product.getMultiplier());
+    }
+    
+    @Test
+    public void setMultiplierNull() {
+        Product product = new Product("test", "Test Product");
+        product.setMultiplier(null);
+        
+        assertEquals(new Long(1), product.getMultiplier());
+    }
+    
+    @Test
+    public void setMultiplierNegative() {
+        Product product = new Product("test", "Test Product");
+        product.setMultiplier(-15L);
+        
+        assertEquals(new Long(1), product.getMultiplier());
     }
     
 }

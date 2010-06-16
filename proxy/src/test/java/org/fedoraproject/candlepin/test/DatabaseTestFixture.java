@@ -204,8 +204,7 @@ public class DatabaseTestFixture {
         Pool p = new Pool(owner, product.getId(), new HashSet<String>(), quantity, 
                 startDate, endDate);
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 
-            quantity, 1L, startDate,
-            endDate, TestUtil.createDate(2010, 2, 12));
+            quantity, startDate, endDate, TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
         poolCurator.create(p);
@@ -232,7 +231,6 @@ public class DatabaseTestFixture {
         Subscription sub = new Subscription(createOwner(), 
                                             p, new HashSet<Product>(),
                                             1000L,
-                                            1L,
                                             TestUtil.createDate(2000, 1, 1),
                                             TestUtil.createDate(2010, 1, 1), 
                                             TestUtil.createDate(2000, 1, 1));

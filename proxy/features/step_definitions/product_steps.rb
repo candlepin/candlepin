@@ -11,6 +11,10 @@ Given /^product "([^\"]*)" exists$/ do |product_name|
   create_product product_name
 end
 
+Given /^product "([^\"]*)" exists with multiplier (-?\d+)$/ do |product_name, multiplier|
+  create_product(product_name, multiplier.to_i)
+end
+
 Then /^I can create a product called "([^\"]*)"$/ do |product_name|
   create_product product_name
 
@@ -39,21 +43,18 @@ end
 
 Given /^product "([^\"]*)" exists with the following attributes:$/ do |product_name, table|
       # table is a Cucumber::Ast::Table
-  attrs = {}
-  table.hashes.each do |row|
-      attrs[row['Name']] = row['Value']
-  end
-  create_product(product_name, attrs)
+  attrs = table.rows_hash.delete_if { |key, val| key == 'Name' } # Get rid of the Name:Value entry
+  create_product(product_name, 1, attrs)
 end
 
-def create_product(product_name, attrs=nil)
+def create_product(product_name, multiplier=1, attrs=nil)
   id = get_product_id(product_name)
   if attrs.nil?
       attrs = {'virtualization_host' => 'virtualization_host' }
   end
-  @product = @candlepin.create_product(product_name, id, 1,
-                                       'ALL', 'ALL', 'SVC', 
-                                       attrs)
+
+  @product = @candlepin.create_product(product_name, id, multiplier,
+                                       1, 'ALL', 'ALL', 'SVC', [], attrs)
 end
 
 def get_product_id(product_name)

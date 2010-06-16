@@ -42,7 +42,7 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     @Test
     public void validProduct() {
         Product product = new Product("50", "Test Product", 
-            "Standard", "1", "x86_64", "Base", null);
+            "Standard", "1", "x86_64", "Base");
         ProductCertificate cert = createCert(product);
         
         Assert.assertEquals(product, cert.getProduct());
@@ -55,7 +55,7 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     
     private ProductCertificate createDummyCert() {
         Product product = new Product("50", "Test Product", 
-            "Standard", "1", "x86_64", "Base", null);
+            "Standard", "1", "x86_64", "Base");
 
         return createCert(product);
     }

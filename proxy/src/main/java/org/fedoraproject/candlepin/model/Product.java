@@ -53,6 +53,13 @@ public class Product extends AbstractHibernateObject {
     @Column(nullable = false, unique = true)
     private String name;
     
+    /**
+     * How many entitlements per quantity 
+     */
+    @Column
+    private Long multiplier;
+
+    
     // NOTE: we need a product "type" so we can tell what class of
     //       product we are... 
 
@@ -73,15 +80,20 @@ public class Product extends AbstractHibernateObject {
      * @param name Human readable Product name
      */
     public Product(String id, String name) {
+        this(id, name, 1L);
+    }
+    
+    public Product(String id, String name, Long multiplier) {
         setId(id);
         setName(name);
+        setMultiplier(multiplier);
     }
     
     public Product(String id, String name, String variant,
-                   String version, String arch, String type,
-                   Set<Product> childProducts) {
+                   String version, String arch, String type) {
         setId(id);
         setName(name);
+        setMultiplier(1L);
         setAttribute("version", version);
         setAttribute("variant", variant);
         setAttribute("type", type);
@@ -128,6 +140,25 @@ public class Product extends AbstractHibernateObject {
         this.name = name;
     }
     
+    /**
+     * @return the number of entitlements to create from a single subscription 
+     */
+    public Long getMultiplier() {
+        return multiplier;
+    }
+    
+    /**
+     * @param multiplier the multiplier to set
+     */
+    public void setMultiplier(Long multiplier) {
+        if (multiplier == null) {
+            this.multiplier = 1L;
+        }
+        else {
+            this.multiplier = Math.max(1L, multiplier);
+        }
+    }
+
     public void setAttribute(String key, String value) {
         Attribute existing = getAttribute(key);
         if (existing != null) {

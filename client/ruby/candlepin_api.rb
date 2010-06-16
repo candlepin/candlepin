@@ -196,9 +196,8 @@ class Candlepin
     end
     
   # TODO: label is unused here, needs to be dropped across the board.
-  def create_product(name, hash, version = 1, variant = 'ALL', 
-                     arch='ALL', type='SVC', attributes = {})
-
+  def create_product(name, hash, multiplier = 1, version = 1, variant = 'ALL', 
+                     arch='ALL', type='SVC',childProducts=[], attributes = {})
     attributes['arch'] = arch
     attributes['version'] = version
     attributes['variant'] = variant
@@ -206,11 +205,8 @@ class Candlepin
 
     product = {
       'name' => name,
-#      'arch' => arch,
       'id' => hash,
-#      'version' => version,
-#      'variant' => variant,
-#      'type' => type,
+      'multiplier' => multiplier,
       'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
     }
 

@@ -146,11 +146,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertTrue(pool.getProvidedProductIds().contains(another.getId()));
     }
 
+    // Note:  This simply tests that the multiplier is read and used in pool creation.
+    //        All of the null/negative multiplier test cases are in ProductTest
     @Test
     public void testMultiplierCreation() {
+        Product product = new Product("someProduct", "An Extremely Great Product", 10L);
+        productCurator.create(product);
+        
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L, 
-            10L, TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), 
-            new Date());
+            TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
         this.subCurator.create(sub);
         
         poolCurator.createPoolForSubscription(sub);
@@ -158,31 +162,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         
         assertEquals(160L, pool.getQuantity().longValue());
     }
-    
-    @Test
-    public void testNegativeMulitplierCreation() {
-        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 
-            3L, -5L, 
-            TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
-        this.subCurator.create(sub);
-        
-        poolCurator.createPoolForSubscription(sub);
-        Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
-        
-        assertEquals(3L, pool.getQuantity().longValue());
-    }
-    
-    @Test
-    public void testNullMultiplierCreation() {
-        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 8L, 
-            null, TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2100, 1, 1), 
-            new Date());
-        this.subCurator.create(sub);
-        
-        poolCurator.createPoolForSubscription(sub);
-        Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
-        
-        assertEquals(8L, pool.getQuantity().longValue());
-    }
+
     
 }

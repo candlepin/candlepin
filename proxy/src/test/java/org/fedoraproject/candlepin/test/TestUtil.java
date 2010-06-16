@@ -84,18 +84,17 @@ public class TestUtil {
         return rhel;
     }
     
-
     public static Subscription createSubscription(Product product) {
         Owner owner = new Owner("Test Owner " + randomInt());
         return createSubscription(owner, product);
     }
+    
     public static Subscription createSubscription(Owner owner, Product product) {
         Subscription sub = new Subscription(owner,
-            product, new HashSet<Product>(), 1000L, 1L, createDate(2000, 1, 1),
+            product, new HashSet<Product>(), 1000L, createDate(2000, 1, 1),
             createDate(2050, 1, 1), createDate(2000, 1, 1));
         return sub;
     }
-    
     
     public static SubscriptionToken createSubscriptionToken() {
         
