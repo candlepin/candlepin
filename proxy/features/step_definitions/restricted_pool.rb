@@ -57,9 +57,9 @@ When /^I consume entitlement from pool for consumer of type person$/ do
 end
 
 Then /^a new pool should have been created$/ do
-  pools = @person_cp.get_pools({ :consumer => @uuid})
-  @new_pool = pools[0]
-  @pool['id'].should_not == @new_pool['id']
+   pools = @person_cp.get_pools({ :consumer => @uuid})
+   pools.size.should == 2
+   @new_pool = pools.find { |pool| pool['id'] != @pool['id'] }
 end
 
 Then /^source entitlement of pool should match the entitlement just created$/ do

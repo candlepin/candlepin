@@ -28,7 +28,7 @@ function pre_user_restricted() {
 }
 
 function pre_requires_consumer_type() {
-	if (attributes.get("requires_consumer_type") != consumer.getType()) {
+	if (!attributes.get("requires_consumer_type").equals(consumer.getType())) {
 		pre.addError("rulefailed.consumer.type.mismatch");
 	}
 }
