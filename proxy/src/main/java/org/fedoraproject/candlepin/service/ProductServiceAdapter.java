@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.service;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;

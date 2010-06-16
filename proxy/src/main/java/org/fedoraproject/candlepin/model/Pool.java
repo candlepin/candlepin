@@ -424,7 +424,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     /**
      * Check if this pool provides the given product ID.
      * @param productId
-     * @return
+     * @return true if pool provides this product
      */
     public Boolean provides(String productId) {
         // Direct match?

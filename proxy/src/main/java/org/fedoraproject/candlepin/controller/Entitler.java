@@ -31,7 +31,6 @@ import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
@@ -95,7 +94,7 @@ public class Entitler {
      * 
      * @param consumer
      *            consumer requesting to be entitled
-     * @param product
+     * @param productId
      *            product to be entitled.
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused

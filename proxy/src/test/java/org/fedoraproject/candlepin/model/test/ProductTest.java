@@ -34,7 +34,6 @@ import org.codehaus.jackson.type.TypeReference;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Test;
 
 public class ProductTest extends DatabaseTestFixture {

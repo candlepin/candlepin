@@ -161,7 +161,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     
     @Test
     public void testNegativeMulitplierCreation() {
-        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 3L, -5L, 
+        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 
+            3L, -5L, 
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
         this.subCurator.create(sub);
         

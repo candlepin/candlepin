@@ -115,7 +115,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * List all entitlement pools for the given owner and product.
      * 
      * @param owner owner of the entitlement pool
-     * @param product product filter.
+     * @param productId product filter.
      * @return list of EntitlementPools
      */
     @Transactional
@@ -193,7 +193,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param o
      * @param productId
      * @param activeOnly
-     * @return
+     * @return List of entitlement pools.
      */
     @SuppressWarnings("unchecked")
     @Transactional

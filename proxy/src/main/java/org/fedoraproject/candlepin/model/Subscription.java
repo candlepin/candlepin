@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -278,7 +277,7 @@ public class Subscription extends AbstractHibernateObject {
     /**
      * Check if this pool provides the given product ID.
      * @param desiredProductId
-     * @return
+     * @return true if subscription provides product
      */
     public Boolean provides(String desiredProductId) {
         // Direct match?
