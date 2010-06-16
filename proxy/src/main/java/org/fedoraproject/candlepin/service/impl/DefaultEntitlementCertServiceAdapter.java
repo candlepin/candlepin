@@ -20,8 +20,10 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -99,7 +101,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         BigInteger serialNumber, KeyPair keyPair) 
         throws GeneralSecurityException, IOException {
         // oiduitl is busted at the moment, so do this manually
-        List<X509ExtensionWrapper> extensions = new LinkedList<X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
         
         addExtensionsForProduct(extensions, product);
         for (Product provided : sub.getProvidedProducts()) {
@@ -120,7 +122,7 @@ public class DefaultEntitlementCertServiceAdapter extends
      * @param extensions Certificate extensions.
      * @param product Product to recurse through.
      */
-    private void addExtensionsForProduct(List<X509ExtensionWrapper> extensions, 
+    private void addExtensionsForProduct(Set<X509ExtensionWrapper> extensions, 
         Product product) {
         
         // Add extensions for this product, unless it is a MKT product,

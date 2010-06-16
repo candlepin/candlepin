@@ -33,6 +33,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
@@ -64,7 +65,7 @@ public class PKIUtility {
  
     public X509Certificate createX509Certificate(
         String dn,
-        List<X509ExtensionWrapper> extensions, 
+        Set<X509ExtensionWrapper> extensions, 
         Date startDate,
         Date endDate,
         KeyPair clientKeyPair, 

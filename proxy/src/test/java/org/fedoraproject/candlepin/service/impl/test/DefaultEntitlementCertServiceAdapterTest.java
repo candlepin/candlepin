@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -99,7 +100,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testContentExtentionCreation() {
         // AAAH!  This should be pulled out to its own test class!
-        List<X509ExtensionWrapper> content = extensionUtil.contentExtensions(product);
+        Set<X509ExtensionWrapper> content = extensionUtil.contentExtensions(product);
         assertTrue(isEncodedContentValid(content));
     }
 
@@ -129,7 +130,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class));
     }
     
-    private boolean isEncodedContentValid(List<X509ExtensionWrapper> content) {
+    private boolean isEncodedContentValid(Set<X509ExtensionWrapper> content) {
         Map<String, X509ExtensionWrapper> encodedContent 
             = new HashMap<String, X509ExtensionWrapper>();
 
@@ -190,22 +191,22 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
     
     class ListContainsContentExtensions 
-        extends ArgumentMatcher<List<X509ExtensionWrapper>> {
+        extends ArgumentMatcher<Set<X509ExtensionWrapper>> {
         
         public boolean matches(Object list) {
-            return isEncodedContentValid((List) list);
+            return isEncodedContentValid((Set) list);
         }
     }
     
     class ListContainsEntitlementExtensions 
-        extends ArgumentMatcher<List<X509ExtensionWrapper>> {
+        extends ArgumentMatcher<Set<X509ExtensionWrapper>> {
         
         public boolean matches(Object list) {
             Map<String, X509ExtensionWrapper> encodedContent 
                 = new HashMap<String, X509ExtensionWrapper>();
 
         
-            for (X509ExtensionWrapper ext : (List<X509ExtensionWrapper>) list) {
+            for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
                 encodedContent.put(ext.getOid(), ext);
             }
             

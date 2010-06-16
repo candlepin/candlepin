@@ -16,22 +16,21 @@ package org.fedoraproject.candlepin.pki;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 
-
 /**
- * 
  * X509ExtensionWrapper
  */
 public class X509ExtensionWrapper {
     private String oid = null;
     private boolean critical;
     private ASN1Encodable asn1Encodable;
-    
-    public X509ExtensionWrapper(String oid, boolean critical, ASN1Encodable asn1Encodable) {
+
+    public X509ExtensionWrapper(String oid, boolean critical,
+        ASN1Encodable asn1Encodable) {
         this.oid = oid;
         this.critical = critical;
         this.asn1Encodable = asn1Encodable;
     }
-    
+
     public String getOid() {
         return oid;
     }
@@ -42,5 +41,34 @@ public class X509ExtensionWrapper {
 
     public ASN1Encodable getAsn1Encodable() {
         return asn1Encodable;
-    }   
+    }
+
+    @Override
+    public int hashCode() {
+        return oid.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        X509ExtensionWrapper other = (X509ExtensionWrapper) obj;
+        if (oid == null) {
+            if (other.oid != null) {
+                return false;
+            }
+        }
+        else if (!oid.equals(other.oid)) {
+            return false;
+        }
+        return true;
+    }
+
 }
