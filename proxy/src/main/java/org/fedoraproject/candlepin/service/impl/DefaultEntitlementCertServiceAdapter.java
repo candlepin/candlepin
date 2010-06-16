@@ -21,8 +21,6 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
