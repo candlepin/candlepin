@@ -256,17 +256,6 @@ public class OwnerResource {
         return userService.createUser(user);
     }
     
-    @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("{owner_id}/users/{user_id}")
-    public User getUser(@PathParam("owner_id") Long ownerId, 
-        @PathParam("user_id") Long userId) {
-        
-        // TODO: Add another method to the user service API?
-        
-        return null;
-    }
-    
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -274,15 +263,14 @@ public class OwnerResource {
     public Subscription createSubscription(@PathParam("owner_id") Long ownerId, 
         Subscription subscription) {
         
-        Subscription copy = new Subscription(subscription);
-        copy.setOwner(findOwner(ownerId));
-        copy.setProduct(productCurator.find(subscription.getProduct().getId()));
+        subscription.setOwner(findOwner(ownerId));
+        subscription.setProduct(productCurator.find(subscription.getProduct().getId()));
         Set<Product> provided = new HashSet<Product>();
         for (Product incoming : subscription.getProvidedProducts()) {
             provided.add(productCurator.find(incoming.getId()));
         }
-        copy.setProvidedProducts(provided);
-        Subscription s = subscriptionCurator.create(copy);
+        subscription.setProvidedProducts(provided);
+        Subscription s = subscriptionCurator.create(subscription);
         return s;
     }
 

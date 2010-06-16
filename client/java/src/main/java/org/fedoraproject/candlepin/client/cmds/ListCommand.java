@@ -140,6 +140,7 @@ public class ListCommand extends PrivilegedCommand {
         toConsoleAndLogs("%-25s%s\n", "Status:", status);
         toConsoleAndLogs("%-25s%s\n", "Expires:", expDate);
         toConsoleAndLogs("%-25s%s\n", "Subscription:", serial);
+        toConsoleAndLogs("%-25s%s\n", "Quantity:", quantity);
         toConsoleAndLogs("\n");
     }
 

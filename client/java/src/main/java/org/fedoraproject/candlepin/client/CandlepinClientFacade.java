@@ -83,7 +83,7 @@ public interface CandlepinClientFacade {
     List<Entitlement> bindByRegNumber(String regNo, int quantity);
 
     List<Entitlement> bindByRegNumber(String regNo, int quantity,
-        String emailId, String defLang);
+        String email, String defLocale);
 
     void unBindBySerialNumber(int serialNumber);
 

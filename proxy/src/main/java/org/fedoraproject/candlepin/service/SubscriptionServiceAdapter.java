@@ -72,9 +72,12 @@ public interface SubscriptionServiceAdapter {
      * Return a subscription for the given token.
      * @param owner the owner
      * @param token token for subscription.
+     * @param email
+     * @param emailLocale
      * @return a subscription for the given token.
      */
-    List<Subscription> getSubscriptionForToken(Owner owner, String token);
+    List<Subscription> getSubscriptionForToken(Owner owner, String token, 
+        String email, String emailLocale);
     
     /**
      * Lookup a specific subscription.
@@ -96,14 +99,4 @@ public interface SubscriptionServiceAdapter {
      * if there are terms to be accepted
      */
     boolean hasUnacceptedSubscriptionTerms(Owner owner);
-    
-    /**
-     * Sets email address/locale to use to send activation notification email
-     * 
-     * @param owner
-     * @param email
-     * @param emailLocale
-     */
-    void sendActivationEmailTo(Owner owner, String email, String emailLocale);
-    
 }

@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import java.util.HashSet;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -57,7 +59,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer);
+            poolCurator.listByConsumer(consumer);
         assertEquals(0, results.size());
 
     }
@@ -69,7 +71,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer);
+            poolCurator.listByConsumer(consumer);
         assertEquals(0, results.size());
     }
 
@@ -143,4 +145,43 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool = poolCurator.find(pool.getId());
         assertTrue(pool.getProvidedProductIds().contains(another.getId()));
     }
+
+    @Test
+    public void testMultiplierCreation() {
+        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L, 
+            10L, TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), 
+            new Date());
+        this.subCurator.create(sub);
+        
+        poolCurator.createPoolForSubscription(sub);
+        Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
+        
+        assertEquals(160L, pool.getQuantity().longValue());
+    }
+    
+    @Test
+    public void testNegativeMulitplierCreation() {
+        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 3L, -5L, 
+            TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
+        this.subCurator.create(sub);
+        
+        poolCurator.createPoolForSubscription(sub);
+        Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
+        
+        assertEquals(3L, pool.getQuantity().longValue());
+    }
+    
+    @Test
+    public void testNullMultiplierCreation() {
+        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 8L, 
+            null, TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2100, 1, 1), 
+            new Date());
+        this.subCurator.create(sub);
+        
+        poolCurator.createPoolForSubscription(sub);
+        Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
+        
+        assertEquals(8L, pool.getQuantity().longValue());
+    }
+    
 }

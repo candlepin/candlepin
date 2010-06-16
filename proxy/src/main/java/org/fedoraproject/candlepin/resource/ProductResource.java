@@ -32,6 +32,7 @@ import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
+import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
@@ -137,12 +138,12 @@ public class ProductResource {
         Product product = prodAdapter.getProductById(pid);
         Content content = contentCurator.find(contentId);
         
-        product.addContent(content);
-        if (enabled) {
-            product.addEnabledContent(content);
-        }
+        ProductContent productContent = new ProductContent(product, content, enabled);
+        product.getProductContent().add(productContent);
         return prodAdapter.createProduct(product);
         
     }
+    
+    
     
 }

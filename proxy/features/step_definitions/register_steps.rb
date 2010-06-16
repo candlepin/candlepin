@@ -2,8 +2,12 @@ require 'spec/expectations'
 require 'candlepin_api'
 
 Given /^I am a consumer "([^\"]*)"$/ do |consumer_name|
-  Given "I am logged in as \"#{@username}\""
-  When "I register a consumer \"#{consumer_name}\""
+  Given "I am a consumer \"#{consumer_name}\" registered by \"#{@username}\""
+end
+
+Given /^I am a consumer "([^\"]*)" registered by "([^\"]*)"$/ do |consumer_name, user_name|
+  Given "I am logged in as \"#{user_name}\""
+  When "I register a consumer \"#{consumer_name}\""  
 end
 
 def set_consumer(created_consumer)

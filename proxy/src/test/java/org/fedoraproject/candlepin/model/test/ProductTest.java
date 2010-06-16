@@ -32,7 +32,6 @@ import javax.persistence.PersistenceException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.fedoraproject.candlepin.model.Attribute;
-import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -249,10 +248,9 @@ public class ProductTest extends DatabaseTestFixture {
     @Test
     public void testProductFullConstructor() {
         Set<Product> products = new HashSet<Product>();
-        Set<Content> content = new HashSet<Content>();
         Product prod = new Product("cp_test-label", "variant",
                                    "version", "arch", "",
-                                   "SVC", products, content);
+                                   "SVC", products);
         productCurator.create(prod);
        
         productCurator.find(prod.getId());

@@ -90,16 +90,16 @@ public class EntitlerTest extends DatabaseTestFixture {
         productAdapter.createProduct(monitoring);
         productAdapter.createProduct(provisioning);
 
-        subCurator.create(new Subscription(o, virtHost, new HashSet<Product>(), 5L, 
-            new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, virtHostPlatform, new HashSet<Product>(), 
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, virtHost, new HashSet<Product>(), 5L, 1L, new Date(),
+            TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, virtHostPlatform, new HashSet<Product>(), 5L, 1L, new Date(),
+            TestUtil.createDate(3020, 12, 12), new Date()));
 
         
-        subCurator.create(new Subscription(o, monitoring, new HashSet<Product>(), 
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(), 5L, 
-            new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, monitoring, new HashSet<Product>(), 5L, 1L, new Date(),
+            TestUtil.createDate(3020, 12, 12), new Date()));
+        subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(), 5L, 1L, new Date(),
+            TestUtil.createDate(3020, 12, 12), new Date()));
 
         
         poolCurator.refreshPools(o);

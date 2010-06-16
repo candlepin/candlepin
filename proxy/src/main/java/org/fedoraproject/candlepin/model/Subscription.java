@@ -73,6 +73,12 @@ public class Subscription extends AbstractHibernateObject {
 
     @Column(nullable = false)
     private Long quantity;
+    
+    /**
+     * How many entitlements per quantity 
+     */
+    @Column(nullable = false)
+    private Long multiplier;
 
     @Column(nullable = false)
     private Date startDate;
@@ -92,10 +98,13 @@ public class Subscription extends AbstractHibernateObject {
     private Date modified;
 
     public Subscription() {
+        // make sure the default value is set
+        this.multiplier = 1L;
     }
 
     public Subscription(Owner ownerIn, Product productIn, Set<Product> providedProducts, 
-        Long maxMembersIn, Date startDateIn, Date endDateIn, Date modified) {
+            Long maxMembersIn, Long multiplierIn, Date startDateIn, Date endDateIn, 
+            Date modified) {
         this.owner = ownerIn;
         this.product = productIn;
         this.providedProducts = providedProducts;
@@ -103,21 +112,9 @@ public class Subscription extends AbstractHibernateObject {
         this.startDate = startDateIn;
         this.endDate = endDateIn;
         this.modified = modified;
-        
+        setMultiplier(multiplierIn);
+
         this.tokens = new HashSet<SubscriptionToken>();
-    }
-    
-    public Subscription(Subscription from) {
-        this.owner = from.owner;
-        this.product = from.product;
-        this.quantity = from.quantity;
-        this.startDate = from.startDate;
-        this.endDate = from.endDate;
-        this.modified = from.modified;
-        this.providedProducts.addAll(from.providedProducts);
-        this.tokens = from.getTokens() == null ? 
-            new HashSet<SubscriptionToken>() : 
-            new HashSet<SubscriptionToken>(from.getTokens());
     }
     
     public String toString() {
@@ -179,6 +176,22 @@ public class Subscription extends AbstractHibernateObject {
      */
     public void setQuantity(Long quantity) {
         this.quantity = quantity;
+    }
+    
+    /**
+     * @return the multiplier
+     */
+    public Long getMultiplier() {
+        return multiplier;
+    }
+    
+    public void setMultiplier(Long multiplier) {
+        if (multiplier == null) {
+            this.multiplier = 1L;
+        }
+        else {
+            this.multiplier = Math.max(1L, multiplier);
+        }
     }
 
     /**

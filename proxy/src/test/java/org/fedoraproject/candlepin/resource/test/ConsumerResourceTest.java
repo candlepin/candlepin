@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.*;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -42,6 +44,7 @@ import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -49,12 +52,19 @@ import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.inject.internal.Lists;
+
+
+import static org.mockito.Mockito.*;
 
 /**
  * ConsumerResourceTest
  */
+@RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceTest extends DatabaseTestFixture {
     
     private static final String METADATA_VALUE = "jsontestname";
@@ -62,6 +72,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private static final String CONSUMER_NAME = "consumer name";
     private static final String USER_NAME = "testing user";
     private static final String NON_EXISTENT_CONSUMER = "i don't exist";
+    
+    @Mock private ConsumerCurator mockedConsumerCurator;
+    @Mock private EntitlementCertServiceAdapter mockedEntitlementCertServiceAdapter;
     
     private ConsumerType standardSystemType;
     private ConsumerType personType;
@@ -131,6 +144,54 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
     }
+    
+    private BigInteger FIRST_CERT_SERIAL = new BigInteger("1");
+    private BigInteger SECOND_CERT_SERIAL = new BigInteger("2");
+    private BigInteger THIRD_CERT_SERIAL = new BigInteger("3");
+
+    @Test
+    public void testGetCertSerialsWithMocks() {
+        Consumer consumer = createConsumer();
+        List<EntitlementCertificate> certificates = createEntitlementCertificates();
+        
+        when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer))
+            .thenReturn(certificates);
+        when(mockedConsumerCurator.lookupByUuid(consumer.getUuid())).thenReturn(consumer);
+        
+        ConsumerResource consumerResource = new ConsumerResource(
+            mockedConsumerCurator, null, null, null, null, null, null, null, 
+            mockedEntitlementCertServiceAdapter, null, null, null, null, null);
+        
+        List<CertificateSerialDto> serials 
+            = consumerResource.getEntitlementCertificateSerials(consumer.getUuid());
+        
+        verifyCertificateSerialNumbers(serials);
+    }
+
+    private void verifyCertificateSerialNumbers(List<CertificateSerialDto> serials) {
+        assertEquals(3, serials.size());
+        assertEquals(FIRST_CERT_SERIAL, serials.get(0).getSerial());
+        assertEquals(SECOND_CERT_SERIAL, serials.get(1).getSerial());
+        assertEquals(THIRD_CERT_SERIAL, serials.get(2).getSerial());
+    }
+
+    private List<EntitlementCertificate> createEntitlementCertificates() {
+        return Arrays.asList(
+            new EntitlementCertificate[] {
+                createEntitlementCertificate("key1", "cert1", FIRST_CERT_SERIAL),
+                createEntitlementCertificate("key2", "cert2", SECOND_CERT_SERIAL),
+                createEntitlementCertificate("key3", "cert3", THIRD_CERT_SERIAL)
+            }
+        );
+    }
+
+    private Consumer createConsumer() {
+        return new Consumer("test-consumer", 
+            "test-user", 
+            new Owner("Test Owner"), 
+            new ConsumerType("test-consumer-type-"));
+    }
+    
 
     @Test
     public void testGetSerialFiltering() {

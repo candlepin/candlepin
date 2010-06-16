@@ -100,14 +100,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     
     
     /**
-     * Returns list of pools available for the consumer.
+     * Returns list of pools available to the consumer.
      *
      * @param c Consumer to filter
-     * @return pools owned by the given Owner.
+     * @return pools available to the consumer.
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listAvailableEntitlementPools(Consumer c) {
+    public List<Pool> listByConsumer(Consumer c) {
         return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true);
     }
     
@@ -179,7 +179,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
             deactivatePool(entry.getValue());
         }
-        
     }
 
     /**
@@ -264,8 +263,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
-                // TODO: Enforcer will look up the product, see if we can eliminate:
-                PreEntHelper helper = enforcer.pre(c, p, new Integer(1));
+                PreEntHelper helper = enforcer.pre(c, p, 1);
                 if (helper.getResult().isSuccessful() && 
                         !helper.getResult().hasWarnings()) {
                     newResults.add(p);
@@ -344,12 +342,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public void createPoolForSubscription(Subscription sub) {
         log.debug("Creating new pool for new sub: " + sub.getId());
+        Long quantity = sub.getQuantity() * sub.getMultiplier();
         Set<String> productIds = new HashSet<String>();
         for (Product p : sub.getProvidedProducts()) {
             productIds.add(p.getId());
         }
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), productIds,
-                sub.getQuantity(), sub.getStartDate(), sub.getEndDate());
+                quantity, sub.getStartDate(), sub.getEndDate());
         newPool.setSubscriptionId(sub.getId());
         create(newPool);
         log.debug("   new pool: " + newPool);

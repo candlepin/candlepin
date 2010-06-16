@@ -28,6 +28,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import org.hibernate.annotations.CollectionOfElements;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -62,17 +63,10 @@ public class Product extends AbstractHibernateObject {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_attribute")
     private Set<Attribute> attributes = new HashSet<Attribute>();
-
-//    @OneToMany(cascade = CascadeType.ALL)
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "cp_product_content")
-    private Set<Content> content;
- 
-  
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "cp_product_enabled_content")
-    private Set<Content> enabledContent;
     
+    @CollectionOfElements
+    @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
+    private Set<ProductContent> productContent = new HashSet<ProductContent>();
    
     /**
      * Constructor
@@ -89,12 +83,9 @@ public class Product extends AbstractHibernateObject {
     
     public Product(String id, String name, String variant,
                    String version, String arch, String type,
-                   Set<Product> childProducts, Set<Content> content) {
+                   Set<Product> childProducts) {
         setId(id);
         setName(name);
-        setContent(content);
-        // FIXME
-        setEnabledContent(content);
         setAttribute("version", version);
         setAttribute("variant", variant);
         setAttribute("type", type);
@@ -111,7 +102,7 @@ public class Product extends AbstractHibernateObject {
         return id;
         
     }
-
+ 
     /**
      * @param id product id
      */
@@ -215,45 +206,75 @@ public class Product extends AbstractHibernateObject {
     }
 
   
-    public Set<Content> getContent() {
-        return content;
-    }
-
-    public void setContent(Set<Content> content) {
-        this.content = content;
-    }
-    
+    /**
+     * @param content
+     */
     public void addContent(Content content) {
-        if (this.content != null) {
-            this.content = new HashSet<Content>();
-        }
-        if (!this.content.contains(content)) { 
-            this.content.add(content);
-        }
+        productContent.add(new ProductContent(this, content, false));
     }
 
     /**
-     * @param enabledContent the enabledContent to set
+     * @param content
      */
-    public void setEnabledContent(Set<Content> enabledContent) {
-        this.enabledContent = enabledContent;
+    public void addEnabledContent(Content content) {
+        productContent.add(new ProductContent(this, content, true));
+    }
+
+    /**
+     * @param productContent the productContent to set
+     */
+    public void setProductContent(Set<ProductContent> productContent) {
+        this.productContent = productContent;
+    }
+
+    /**
+     * @return the productContent
+     */
+    @XmlTransient
+    public Set<ProductContent> getProductContent() {
+        return productContent;
     }
     
-    public void addEnabledContent(Content content) {
-        if (this.enabledContent != null) {
-            this.enabledContent = new HashSet<Content>();
+    
+    public void setContent(Set<Content> content) {
+        if (content == null) {
+            return;
         }
-        if (!this.enabledContent.contains(content)) { 
-            this.enabledContent.add(content);
+        for (Content newContent : content) {
+            productContent.add(new ProductContent(this, newContent, false));
+        }    
+    }   
+    
+    public void setEnabledContent(Set<Content> content) {
+        if (content == null) {
+            return;
+        }
+        for (Content newContent : content) {
+            productContent.add(new ProductContent(this, newContent, true));
         }
     }
-
-    /**
-     * @return the enabledContent
-     */
-    public Set<Content> getEnabledContent() {
-//        return enabledContent;
+    
+    // FIXME: this seems wrong
+    public Set<Content> getContent() {
+        Set<Content> content = new HashSet<Content>();
+        for (ProductContent pc : productContent) {
+            content.add(pc.getContent());
+        }
         return content;
+        
     }
 
+    public Set<Content> getEnabledContent() {
+        Set<Content> enabledContent = new HashSet<Content>();
+        
+        for (ProductContent pc : productContent) {
+            if (pc.getEnabled()) {
+                enabledContent.add(pc.getContent());
+            }
+        }
+        return enabledContent;
+        
+    }
+ 
+       
 }

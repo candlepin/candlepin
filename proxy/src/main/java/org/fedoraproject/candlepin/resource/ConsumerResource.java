@@ -409,7 +409,7 @@ public class ConsumerResource {
             Integer quantity, String email, String emailLocale) {
         
         List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer.getOwner(), 
-            registrationToken);
+            registrationToken, email, emailLocale);
         if ((subs == null) || (subs.isEmpty())) {
             log.debug("token: " + registrationToken);
             throw new BadRequestException(
@@ -430,11 +430,6 @@ public class ConsumerResource {
 
             Product p = sub.getProduct();
             entitlementList.add(createEntitlementByProduct(consumer, p.getId(), quantity));
-        }
-        
-        if (email != null) {
-            subAdapter.sendActivationEmailTo(
-                consumer.getOwner(), email, emailLocale);
         }
         return entitlementList;
     }
