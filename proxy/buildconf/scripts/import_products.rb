@@ -53,25 +53,36 @@ end
 
 contract_number = 0
 data['products'].each do |product|
-	  # add arch as an attribute as well
-	  arch = product[5]
-	  attrs = product[8]
-          attrs['version'] = product[3]
-          attrs['variant'] = product[4]
-	  attrs['arch'] = product[5]
-          attrs['type'] = product[6]
+	  # add arch as an attribute as wel
 
+          pp product
+          # name, hash, multiplier, version, variant, arch, type, childProducts, attributes
 
-  
+          #FIXME: product data import file needs to move to dict's instead of lists
+          name = product[1]
+          id = product[2]
+          multiplier = product[3]
+          version = product[4]
+          variant = product[5]
+          arch = product[6]
+          type = product[7]
+          provided_products = product[8]
+          attrs = product[9]
+          product_content = product[10]
+
+          pp version
           pp attrs
-	  product_ret = cp.create_product(product[1], product[2],product[3],
-					product[4], product[5], product[6], 
+          attrs['version'] = version
+          attrs['variant'] = variant
+	  attrs['arch'] = arch
+          attrs['type'] = type
+	  product_ret = cp.create_product(name, id, multiplier,
+					version, variant, arch, type,
 					attrs)
           pp product_ret
 
-	  #FIXME: only create subscriptions for MKT/config sku's
           provided_products = Array.new()
-          product[7].each do |pid|
+          provided_products.each do |pid|
               provided_products << {'id' => pid}
           end
 
@@ -98,7 +109,7 @@ data['products'].each do |product|
           end
 
 	  pp product
-	  product[9].each do |content|
+	  product_content.each do |content|
 		cp.add_content_to_product(product_ret['id'], content[0], content[1])
 	  end
 end
