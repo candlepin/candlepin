@@ -41,6 +41,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @AllowRoles(roles = {Role.SUPER_ADMIN, Role.OWNER_ADMIN})
     @Transactional
     public Consumer create(Consumer entity) {
+        entity.ensureUUID();
         return super.create(entity);
     }
     
