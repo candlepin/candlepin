@@ -41,14 +41,7 @@ end
 def create_subscription(product, quantity)
   
   p = @candlepin.get_product(product.hash.abs)
-  subscription = {
-      'startDate' => '2007-07-13',
-      'endDate'   => '2012-07-13',
-      'quantity'  =>  quantity,
-      'product' => { 'id' => p['id'] }
-  }
-
-  created = @candlepin.create_subscription(@test_owner['id'], subscription)
+  created = @candlepin.create_subscription(@test_owner['id'], p['id'], quantity)
 
   @subscriptions[product] = created
 end

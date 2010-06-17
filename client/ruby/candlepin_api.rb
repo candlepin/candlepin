@@ -262,8 +262,22 @@ class Candlepin
     return get("/owners/#{owner_id}/subscriptions")
   end
 
-  def create_subscription(owner_id, data)
-    return post("/owners/#{owner_id}/subscriptions", data)
+  def create_subscription(owner_id, product_id, quantity=1,
+                          provided_products=[], contract_number='',
+                          start_date=nil, end_date=nil)
+    start_date ||= Date.today
+    end_date ||= start_date + 365
+
+    subscription = {
+      'startDate' => start_date,
+      'endDate'   => end_date,
+      'quantity'  =>  quantity,
+      'product' => { 'id' => product_id },
+      'providedProducts' => provided_products.collect { |pid| {'id' => pid} },
+      'contractNumber' => contract_number
+    }
+
+    return post("/owners/#{owner_id}/subscriptions", subscription)
   end
 
   def delete_subscription(subscription_id)

@@ -1,16 +1,10 @@
 #!/usr/bin/ruby
 
-
 require  "../client/ruby/candlepin_api"
-#CP_RUBY = $LOAD_PATH.unshift'/client/ruby'
-#CP_RUBY="/home/adrian/src/candlepin/client/ruby"
-#$LOAD_PATH << CP_RUBY
-
 
 require 'rubygems'
 require 'date'
 require 'json'
-#require 'candlepin_api'
 require 'pp'
 
 filenames=["import_products.json"]
@@ -81,18 +75,15 @@ data['products'].each do |product|
 					attrs)
           pp product_ret
 
-          provided_products = Array.new()
-          provided_products.each do |pid|
-              provided_products << {'id' => pid}
-          end
-
           if attrs['type'] == 'MKT':
-              subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 
-                                                     'providedProducts' => provided_products,
-                                                     'quantity' => 10,
-                                                       'startDate' => '2007-07-13',
-                                                       'contractNumber' => contract_number,
-                                                       'endDate' => '2012-07-13'})
+              # subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 
+              #                                        'providedProducts' => provided_products,
+              #                                        'quantity' => 10,
+              #                                          'startDate' => '2007-07-13',
+              #                                          'contractNumber' => contract_number,
+              #                                          'endDate' => '2012-07-13'})
+              subscription = cp.create_subscription(owner_id, product_ret['id'], 10, provided_products,
+                                                    contract_number)
             # go ahead and create a token for each subscription, the token itself is just a random int
             token = cp.create_subscription_token({'token' => rand(10000000000), 
                                                    'subscription' => {'id' => subscription['id']}})
