@@ -3,7 +3,7 @@ require 'candlepin_api'
 
 def create_client(consumer)
   idCert = consumer['idCert']
-  Candlepin.new(username=nil, password=nil, cert=idCert['cert'], key=idCert['key'])
+  Candlepin.new(nil, nil, cert=idCert['cert'], key=idCert['key'])
 end
 
 def get_client(consumer_id)
@@ -16,7 +16,7 @@ def get_client(consumer_id)
 end
 
 
-Given /^I am an user "([^\"]*)"$/ do |arg1|
+Given /^I am a user "([^\"]*)"$/ do |arg1|
   @user = @candlepin.create_user(@test_owner['id'], arg1, 'password')
 #  @clients = {} if @clients.nil?
   @client  = Candlepin.new(username=arg1, 'password')
@@ -26,9 +26,14 @@ When /^I create a consumer of type person$/ do
   @consumer = @client.register(nil, :person)
 end
 
-Given /^I create a consumer "([^\"]*)" of type system$/ do |consumer_id|
+#Given /^I create a consumer "([^\"]*)" of type system$/ do |consumer_id|
+#  @consumers = {} if @consumers.nil?
+#  @consumers[consumer_id] = @client.register(consumer_id, :system)
+#end
+
+Given /^I create a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_id, consumer_type|
   @consumers = {} if @consumers.nil?
-  @consumers[consumer_id] = @client.register(consumer_id, :system)
+  @consumers[consumer_id] = @client.register(consumer_id, consumer_type)
 end
 
 When /^I create a pool of unlimited license and consumer type person$/ do
@@ -102,11 +107,11 @@ Then /^pools from "([^\"]*)" pools should not be unlimited pool$/ do |arg1|
   any_unlimited_present(get_client(arg1).get_pools({ :consumer => @uuid})).should == false
 end
 
-Then /^pools without filtering consumers should not include unlimited pool$/ do
-  user =  @candlepin.create_user(@test_owner['id'], "annie", 'password1')
-  cp = Candlepin.new(username="annie", 'password1')
-  any_unlimited_present(cp.get_pools()).should == false
-#  pending #any_unlimited_prsent(
+Then /^another consumer cannot see user-restricted pool$/ do
+   @user = @candlepin.create_user(@test_owner['id'], 'alice', 'password')
+   @client  = Candlepin.new('alice', 'password')
+   @client.register(nil, :person)
+   any_unlimited_present(@client.get_pools()).should == false
 end
 
 Then /^the consumer's username should be "([^\"]*)"$/ do |arg1|
