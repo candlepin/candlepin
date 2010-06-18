@@ -158,6 +158,7 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     public Consumer() {
         // This constructor is for creating a new Consumer in the DB, so we'll
         // generate a UUID at this point.
+        this.ensureUUID();
         this.facts = new HashMap<String, String>();
         this.childConsumers = new HashSet<Consumer>();
         this.entitlements = new HashSet<Entitlement>();
