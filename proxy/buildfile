@@ -19,9 +19,8 @@ RESTEASY = [group('jaxrs-api',
                   'resteasy-guice', 
                   'resteasy-atom-provider',
                   :under => 'org.jboss.resteasy',
-                  :version => '1.2.1.GA'), 
+                  :version => '2.0-beta-4'),
             'javax.persistence:persistence-api:jar:1.0',
-            'xalan:xalan:jar:2.6.0',
             'org.scannotation:scannotation:jar:1.0.2',
             'commons-httpclient:commons-httpclient:jar:3.1']
 
@@ -30,7 +29,7 @@ JACKSON = [group('jackson-core-lgpl',
                  'jackson-jaxrs',
                  'jackson-xc',
                  :under => 'org.codehaus.jackson',
-                 :version => '1.5.2')]
+                 :version => '1.5.3')]
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.1']
 LOG4J = 'log4j:log4j:jar:1.2.14'
@@ -91,7 +90,7 @@ SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 #
 # Specify Maven 2.0 remote repositories here, like this:
 repositories.remote << "http://www.ibiblio.org/maven2/"
-repositories.remote << "http://repository.jboss.com/maven2/"
+repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 
 #############################################################################

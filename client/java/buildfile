@@ -14,13 +14,10 @@ COPYRIGHT = ""
 
 RESTEASY = [group('jaxrs-api', 
                   'resteasy-jaxrs',
-                  'resteasy-jaxb-provider', 
                   'resteasy-jackson-provider', 
-                  'resteasy-guice', 
                   :under => 'org.jboss.resteasy',
-                  :version => '1.2.1.GA'), 
+                  :version => '2.0-beta-4'),
             'javax.persistence:persistence-api:jar:1.0',
-            'xalan:xalan:jar:2.6.0',
             'org.scannotation:scannotation:jar:1.0.2',
             'commons-httpclient:commons-httpclient:jar:3.1',
              'org.slf4j:slf4j-api:jar:1.5.8',
@@ -59,7 +56,7 @@ BOUNCYCASTLE = group('bcprov-jdk16', 'bcpg-jdk16', :under=>'org.bouncycastle', :
 #
 # Specify Maven 2.0 remote repositories here, like this:
 repositories.remote << "http://www.ibiblio.org/maven2/"
-repositories.remote << "http://repository.jboss.com/maven2/"
+repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 
 #############################################################################
