@@ -72,11 +72,8 @@ Then /^source entitlement of pool should match the entitlement just created$/ do
 end
 
 Then /^pool should be of unlimited quantity and restricted to "([^\"]*)"$/ do |arg1|
-  map = pool_attr_to_map(@new_pool)
-  pool_attr_to_map(@new_pool['sourceEntitlement']['pool'])
-#  puts "pool id within entitlement: #{@new_pool['sourceEntitlement']['pool']['id']}"
   @new_pool['quantity'].should == -1
-  map['user_restricted'].should == arg1
+  @new_pool['restrictedToUsername'].should == arg1
 end
 
 
