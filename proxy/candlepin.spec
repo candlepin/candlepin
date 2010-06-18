@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.17
+Version: 0.0.18
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -106,6 +106,23 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Jun 18 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.18-1
+- Add Consumer info to Event system. (dgoodwin@redhat.com)
+- Add a UUID into the create if it is null (bkearney@redhat.com)
+- Handle change of create_product api, support "multiplier" product data
+  (adrian@alikins.usersys.redhat.com)
+- Moving multiplier to product from subscription. (jharris@redhat.com)
+- Performance fixes for PoolCurator. (dgoodwin@redhat.com)
+- Fix a eager fetching bug. (dgoodwin@redhat.com)
+- Add a ProductContent model/map, update ProductResource to use it.
+  (adrian@alikins.usersys.redhat.com)
+- Carry provided Product objects on a Subscription, not just their IDs.
+  (dgoodwin@redhat.com)
+- Introduce product adapter method to determine top level product.
+  (dgoodwin@redhat.com)
+- Add support for Subscription providing multiple product IDs.
+  (dgoodwin@redhat.com)
+
 * Fri Jun 11 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.17-1
 - Adding email and locale to the bind by regtoken api (calfonso@redhat.com)
 - Trace displayed when using invalid user name or password for consumer atom
