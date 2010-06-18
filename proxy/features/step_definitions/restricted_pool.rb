@@ -88,9 +88,12 @@ Then /^I should be able to consume entitlement for "([^\"]*)" system from this p
   get_client(arg1).consume_pool(@new_pool['id'])
 end
 
-#Then /^I should not be able to consume entitlement for a system "([^\"]*)" does not own$/ do |arg1|
-#  pending # express the regexp above with the code you wish you had
-#end
+Then /^I should not be able to consume entitlement for a system "([^\"]*)" does not own$/ do |arg1|
+  alice_user = @candlepin.create_user(@test_owner['id'], 'alice', 'password')
+  tmp_client = Candlepin.new('alice', 'password')
+  alice_client = create_client(tmp_client.register('alice_system', :system))
+  lambda { alice_client.consume_pool(@new_pool['id']) }.should raise_error(RestClient::ExceptionWithResponse)
+end
 
 Then /^one of "([^\"]*)" pools should be unlimited pool$/ do |arg1|
   any_unlimited_present(get_client(arg1).get_pools({ :consumer => @uuid})).should == true

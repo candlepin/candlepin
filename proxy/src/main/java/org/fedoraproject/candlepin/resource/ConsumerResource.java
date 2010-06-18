@@ -187,10 +187,11 @@ public class ConsumerResource {
             if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
                 // TODO:  This is not the correct error code for this situation!
                 throw new BadRequestException(
-                    i18n.tr("User {0} has already registered a personal consumer"));
+                    i18n.tr(
+                        "User {0} has already registered a personal consumer", 
+                        user.getUsername()
+                    ));
             }
-            
-            // otherwise, this is a personal consumer - set the name to match the username
             consumer.setName(user.getUsername());
         }
         
