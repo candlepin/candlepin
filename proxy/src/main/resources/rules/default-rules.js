@@ -11,20 +11,13 @@ function attribute_mappings() {
 			"architecture:1:arch, " +
 			"sockets:1:sockets, " +
 			"requires_consumer_type:1:requires_consumer_type," +
-			"user_license:1:user_license," +
-			"user_restricted:1:user_restricted";
+			"user_license:1:user_license";
 }
 
 function post_user_license() {
 	// Create a sub-pool for this user
 	post.createUserRestrictedPool(pool.getProductId(), pool.getProvidedProductIds(),
 			attributes.get("user_license"));
-}
-
-function pre_user_restricted() {
-	if (consumer.getUsername() != pool.getAttribute("user_restricted")) {
-		pre.addError("pool.not.available.to.user");
-	}
 }
 
 function pre_requires_consumer_type() {
@@ -94,6 +87,10 @@ function pre_global() {
 	// domain consumers can only consume products for domains
 	if (consumer.getType() == "domain" && product.getAttribute("requires_consumer_type") != "domain") {
 		pre.addError("rulefailed.consumer.type.mismatch");
+	}
+	
+	if (pool.getRestrictedToUsername() != null && consumer.getUsername() != pool.getRestrictedToUsername()) {
+		pre.addError("pool.not.available.to.user");
 	}
 	
 	// Support free entitlements for guests, if their parent has virt host or

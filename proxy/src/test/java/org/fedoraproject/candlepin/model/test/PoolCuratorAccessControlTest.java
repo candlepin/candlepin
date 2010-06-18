@@ -98,6 +98,45 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listAll().size());
     }
     
+    @Test
+    public void shouldReturnUserRestrictedPoolForTheMatchingUser() {
+        Pool p = TestUtil.createEntitlementPool(owner, product);
+        p.setRestrictedToUsername("username");
+        poolCurator.create(p);
+        
+        assertEquals(1, poolCurator.listAll().size());
+        
+        Consumer anotherConsumer = TestUtil.createConsumer(owner);
+        anotherConsumer.setUserName("username");
+        consumerTypeCurator.create(anotherConsumer.getType());
+        consumerCurator.create(anotherConsumer);
+        
+        poolCurator.enableFilter("Pool_CONSUMER_FILTER", "consumer_id", 
+            anotherConsumer.getId());
+        
+        assertEquals(1, poolCurator.listAll().size());
+    }
+    
+    @Test
+    public void shouldNotReturnUserRestrictedPoolForNonMatchingUser() {
+        Pool p = TestUtil.createEntitlementPool(owner, product);
+        p.setRestrictedToUsername("username");
+        poolCurator.create(p);
+        
+        assertEquals(1, poolCurator.listAll().size());
+        
+        Consumer anotherConsumer = TestUtil.createConsumer(owner);
+        anotherConsumer.setUserName("anotherusername");
+        consumerTypeCurator.create(anotherConsumer.getType());
+        consumerCurator.create(anotherConsumer);
+        
+        poolCurator.enableFilter("Pool_CONSUMER_FILTER", "consumer_id", 
+            anotherConsumer.getId());
+        
+        assertEquals(0, poolCurator.listAll().size());
+        
+    }
+    
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotDeleteAnotherOwnersPools() {
         Pool pool = createPoolAndSub(owner, product, new Long(100),

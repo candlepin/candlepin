@@ -69,7 +69,8 @@ import org.hibernate.annotations.ParamDef;
     @Filter(name = "Pool_CONSUMER_FILTER", 
         condition = "id in (select p.id from cp_pool p " +
             "inner join cp_owner o on p.owner_id = o.id " +
-            "inner join cp_consumer c on c.owner_id = o.id and c.id = :consumer_id)"
+            "inner join cp_consumer c on c.owner_id = o.id and c.id = :consumer_id " +
+            "and (p.restrictedToUsername is null or p.restrictedToUsername = c.username))"
     )
 })
 @Table(name = "cp_pool")
@@ -126,6 +127,8 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_entitlement_pool_attribute")
     private Set<Attribute> attributes = new HashSet<Attribute>();
+    
+    private String restrictedToUsername;
     
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
@@ -449,4 +452,12 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     public void setProductId(String productId) {
         this.productId = productId;
     }
+    
+    public String getRestrictedToUsername() {
+        return restrictedToUsername;
+    }
+
+    public void setRestrictedToUsername(String restrictedToUsername) {
+        this.restrictedToUsername = restrictedToUsername;
+    }    
 }

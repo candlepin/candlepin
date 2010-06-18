@@ -289,7 +289,7 @@ public class DefaultRulesTest {
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createEntitlementPool(owner, product);
-        pool.setAttribute("user_restricted", "bob");
+        pool.setRestrictedToUsername("bob");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }

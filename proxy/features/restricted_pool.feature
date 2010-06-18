@@ -1,5 +1,12 @@
 Feature: Test creating user-licensed pool which then creates user-restricted sub pool
   
+    Scenario: Pools without filtering consumers should not include unlimited pool
+      	Given I am a user "bob"
+        And I create a consumer of type person
+        And I create a pool of unlimited license and consumer type person
+        When I consume entitlement from pool for consumer of type person
+        Then another consumer cannot see user-restricted pool
+
     Scenario: Consumer's user name is set with their login id
       Given I am a user "bob"
       When I create a consumer of type person
@@ -24,10 +31,4 @@ Feature: Test creating user-licensed pool which then creates user-restricted sub
       Then I should not be able to consume entitlement for a system "bob" does not own
       Then one of "bob" pools should be unlimited pool
 	
-  Scenario: Pools without filtering consumers should not include unlimited pool
-    	Given I am a user "bob"
-	    And I create a consumer of type person
-      And I create a pool of unlimited license and consumer type person
-      When I consume entitlement from pool for consumer of type person
-      Then another consumer cannot see user-restricted pool
 	

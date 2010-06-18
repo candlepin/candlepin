@@ -108,10 +108,11 @@ Then /^pools from "([^\"]*)" pools should not be unlimited pool$/ do |arg1|
 end
 
 Then /^another consumer cannot see user-restricted pool$/ do
-   @user = @candlepin.create_user(@test_owner['id'], 'alice', 'password')
-   @client  = Candlepin.new('alice', 'password')
-   @client.register(nil, :person)
-   any_unlimited_present(@client.get_pools()).should == false
+   alice_user = @candlepin.create_user(@test_owner['id'], 'alice', 'password')
+   tmp_client = Candlepin.new('alice', 'password')
+   alice_consumer = tmp_client.register(nil, :person)
+   alice_client = create_client(alice_consumer)
+   any_unlimited_present(alice_client.get_pools()).should == false
 end
 
 Then /^the consumer's username should be "([^\"]*)"$/ do |arg1|

@@ -78,6 +78,9 @@ public class ReadOnlyPool {
         return entPool.getProductId();
     }
 
+    public String getRestrictedToUsername() {
+        return entPool.getRestrictedToUsername();
+    }
 
     public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools) {
         List<ReadOnlyPool> toReturn
