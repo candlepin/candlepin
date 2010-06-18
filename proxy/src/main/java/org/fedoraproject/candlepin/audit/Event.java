@@ -100,11 +100,15 @@ public class Event implements Persisted, AccessControlEnforced {
     private Date timestamp;
 
     // Uniquely identifies the entity's ID when combined with the event type.
+    // The entity type can be determined from the type field.
     @Column(nullable = false)
     private Long entityId;
     
     @Column(nullable = false)
     private Long ownerId;
+
+    @Column(nullable = true)
+    private Long consumerId;
 
     // Both old/new may be null for creation/deletion events. These are marked
     // Transient as we decided we do not necessarily want to store the object state
@@ -119,7 +123,7 @@ public class Event implements Persisted, AccessControlEnforced {
     }
 
     public Event(Type type, Target target, Principal principal,
-        Long ownerId, Long entityId, String oldEntity, String newEntity) {
+        Long ownerId, Long consumerId, Long entityId, String oldEntity, String newEntity) {
         this.type = type;
         this.target = target;
 
@@ -130,6 +134,7 @@ public class Event implements Persisted, AccessControlEnforced {
         this.entityId = entityId;
         this.oldEntity = oldEntity;
         this.newEntity = newEntity;
+        this.consumerId = consumerId;
 
         // Set the timestamp to the current date and time.
         this.timestamp = new Date();
@@ -232,5 +237,13 @@ public class Event implements Persisted, AccessControlEnforced {
     @Override
     public boolean shouldGrantAccessTo(Consumer consumer) {
         return false;
+    }
+
+    public Long getConsumerId() {
+        return consumerId;
+    }
+
+    public void setConsumerId(Long consumerId) {
+        this.consumerId = consumerId;
     }
 }

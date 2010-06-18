@@ -67,7 +67,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
     @EnforceAccessControl
     public List<Event> listMostRecent(int limit, Consumer consumer) {
         return createEventCriteria(limit).add(
-            Restrictions.eq("entityId", consumer.getId())).list();
+            Restrictions.eq("consumerId", consumer.getId())).list();
     }
     
     /**
