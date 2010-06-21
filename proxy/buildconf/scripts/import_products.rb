@@ -65,14 +65,15 @@ data['products'].each do |product|
           product_content = product[10]
 
           pp version
+          pp "bk"
           pp attrs
           attrs['version'] = version
           attrs['variant'] = variant
-	  attrs['arch'] = arch
+          attrs['arch'] = arch
           attrs['type'] = type
-	  product_ret = cp.create_product(name, id, multiplier,
-					version, variant, arch, type,
-					attrs)
+          product_ret = cp.create_product(name, id, multiplier,
+                        version, variant, arch, type, [],
+                        attrs)
           pp product_ret
 
           if attrs['type'] == 'MKT':
