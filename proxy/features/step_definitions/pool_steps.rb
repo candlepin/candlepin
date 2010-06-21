@@ -7,7 +7,12 @@ end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)"$/ do |quantity, product|
   p = @candlepin.get_product(product.hash.abs)
-    @candlepin.create_pool(p['id'], @test_owner['id'], nil)  
+  @candlepin.create_pool(p['id'], @test_owner['id'], nil)  
+end
+
+Given /^I have a pool of quantity (\d+) for "([^\"]*)" restricted to user "([^\"]*)"$/ do |quantity, product, user|
+  p = @candlepin.get_product(product.hash.abs)
+  @candlepin.create_pool(p['id'], @test_owner['id'], nil, {}, nil, nil, 100, user)  
 end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)" with the following attributes:$/ do |quantity, product, table|

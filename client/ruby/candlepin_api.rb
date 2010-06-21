@@ -116,7 +116,7 @@ class Candlepin
   
   def create_pool(product_id, owner_id,  subscription_id, 
 	          attributes = {}, start_date=nil, end_date=nil, 
-                  quantity = 100)
+                  quantity = 100, user_restricted=nil)
     start_date ||= Date.today
     end_date ||= Date.today + 365
 
@@ -136,7 +136,8 @@ class Candlepin
       'owner' => { 
         'id' => owner_id
       },
-      'attributes' => attribute_set
+      'attributes' => attribute_set,
+      'restrictedToUsername' => user_restricted
     }
     
     post('/pools', pool)
