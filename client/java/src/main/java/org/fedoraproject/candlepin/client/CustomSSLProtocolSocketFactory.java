@@ -15,26 +15,15 @@
 package org.fedoraproject.candlepin.client;
 
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 
-import javax.net.SocketFactory;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.commons.httpclient.ConnectTimeoutException;
 import org.apache.commons.httpclient.HttpClientError;
-import org.apache.commons.httpclient.params.HttpConnectionParams;
-import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+import org.fedoraproject.candlepin.client.cmds.Utils;
 
 /**
  * This is a combination of hte example from http client at
@@ -46,7 +35,7 @@ import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
  * http://www.mombu.com/programming/java
  * /t-ssl-for-java-without-keystores-1366416.html
  */
-public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
+public class CustomSSLProtocolSocketFactory extends AbstractSLLProtocolSocketFactory{
 
     private SSLContext sslcontext = null;
     private Configuration configuration;
@@ -61,32 +50,28 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
     private SSLContext createCustomSSLContext() {
         try {
             char[] passwd = configuration.getKeyStorePassword().toCharArray();
-            /* Load CA-Chain file */
-            CertificateFactory cf = CertificateFactory.getInstance(Constants.X509);
-            X509Certificate candlepinCert = (X509Certificate) cf
-                .generateCertificate(new FileInputStream(
-                    configuration.getCandlepinCertificateFile()));
-
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
             String[] keyCert = FileUtil.readKeyAndCert(configuration
                 .getConsumerIdentityFilePath());
             kmf.init(PemUtil.pemToKeyStore(keyCert[1], keyCert[0], "password"), passwd);
-
-            TrustManagerFactory tmf = TrustManagerFactory
-                .getInstance("SunX509");
-            KeyStore ks2 = KeyStore.getInstance(KeyStore.getDefaultType());
-            ks2.load(null, null);
-            ks2.load(
-                new FileInputStream(configuration.getKeyStoreFileLocation()),
-                passwd);
-            ks2.setCertificateEntry("candlepin_ca_crt", candlepinCert);
-            tmf.init(ks2);
-
             /* and provide them for the SSLContext */
             SSLContext ctx = SSLContext.getInstance("TLS");
-            // SSLContext ctx = SSLContext.getInstance("SSL");
-            ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(),
-                new SecureRandom());
+            if (configuration.isIgnoreTrustManagers()) {
+                ctx.init(kmf.getKeyManagers(), Utils.DUMMY_TRUST_MGRS, new SecureRandom());
+            }
+            else {
+                TrustManagerFactory tmf = TrustManagerFactory
+                    .getInstance("SunX509");
+                KeyStore ks2 = KeyStore.getInstance(KeyStore.getDefaultType());
+                ks2.load(null, null);
+
+                ks2.load(
+                    new FileInputStream(configuration.getKeyStoreFileLocation()),
+                    passwd);
+                tmf.init(ks2);
+                ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
+            }
+
             
             return ctx;
         }
@@ -96,65 +81,12 @@ public class CustomSSLProtocolSocketFactory implements ProtocolSocketFactory {
         }
     }
 
-    private SSLContext getSSLContext() {
+    protected SSLContext getSSLContext() {
         if (this.sslcontext == null) {
             this.sslcontext = createCustomSSLContext();
         }
         return this.sslcontext;
     }
 
-    public Socket createSocket(String host, int port, InetAddress clientHost,
-        int localPort) throws IOException, UnknownHostException {
-
-        return getSSLContext().getSocketFactory().createSocket(host, port,
-            clientHost, localPort);
-    }
-
-    public Socket createSocket(final String host, final int port,
-        final InetAddress localAddress, final int localPort,
-        final HttpConnectionParams params) throws IOException,
-        UnknownHostException, ConnectTimeoutException {
-
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters may not be null");
-        }
-        int timeout = params.getConnectionTimeout();
-        SocketFactory socketfactory = getSSLContext().getSocketFactory();
-        if (timeout == 0) {
-            return socketfactory.createSocket(host, port, localAddress,
-                localPort);
-        }
-        else {
-            Socket socket = socketfactory.createSocket();
-            SocketAddress localaddr = new InetSocketAddress(localAddress,
-                localPort);
-            SocketAddress remoteaddr = new InetSocketAddress(host, port);
-            socket.bind(localaddr);
-            socket.connect(remoteaddr, timeout);
-            return socket;
-        }
-    }
-
-    public Socket createSocket(String host, int port) throws IOException,
-        UnknownHostException {
-
-        return getSSLContext().getSocketFactory().createSocket(host, port);
-    }
-
-    public Socket createSocket(Socket socket, String host, int port,
-        boolean autoClose) throws IOException, UnknownHostException {
-
-        return getSSLContext().getSocketFactory().createSocket(socket, host,
-            port, autoClose);
-    }
-
-    public boolean equals(Object obj) {
-        return ((obj != null) && obj.getClass().equals(
-            CustomSSLProtocolSocketFactory.class));
-    }
-
-    public int hashCode() {
-        return CustomSSLProtocolSocketFactory.class.hashCode();
-    }
 
 }

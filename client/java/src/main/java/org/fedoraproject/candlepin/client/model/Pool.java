@@ -279,4 +279,5 @@ public final class Pool extends TimeStampedEntity {
     public void setActiveSubscription(boolean activeSubscription) {
         this.activeSubscription = activeSubscription;
     }
+
 }

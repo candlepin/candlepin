@@ -100,8 +100,12 @@ public class CLIMain {
                 return;
             }
             this.config = loadConfig(cmdLine);
-            System.setProperty("javax.net.ssl.trustStore",
-                config.getKeyStoreFileLocation());
+            this.config.setIgnoreTrustManagers(cmdLine.hasOption("k"));
+            L.info("Ignoring trust managers? :{}", cmdLine.hasOption("k"));
+            if (!this.config.isIgnoreTrustManagers()) {
+                System.setProperty("javax.net.ssl.trustStore", config
+                    .getKeyStoreFileLocation());
+            }
             cmd.setClient(new DefaultCandlepinClientFacade(this.config));
             cmd.execute(cmdLine);
         }
@@ -150,7 +154,7 @@ public class CLIMain {
                 tryStoringSystemProperty(pr, Constants.SERVER_URL_KEY);
                 tryStoringSystemProperty(pr, Constants.CP_HOME_DIR);
                 tryStoringSystemProperty(pr, Constants.KEY_STORE_LOC);
-                tryStoringSystemProperty(pr, Constants.CP_CERT_LOC);
+               // tryStoringSystemProperty(pr, Constants.CP_CERT_LOC);
             }
         }
         catch (IOException e) {

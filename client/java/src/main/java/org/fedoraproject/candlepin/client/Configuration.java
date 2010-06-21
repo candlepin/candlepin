@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 public final class Configuration {
 
     private Properties properties;
+    private boolean ignoreTrustManagers = false;
 
     /**
      * @param properties
@@ -58,15 +59,6 @@ public final class Configuration {
     }
 
      /**
-     * Gets the candlepin certificate file.
-     *
-     * @return the candlepin certificate file
-     */
-    public String getCandlepinCertificateFile() {
-        return this.properties.getProperty(Constants.CP_CERT_LOC);
-    }
-
-       /**
      * Gets the candlepin home dir.
      *
      * @return the candlepin home dir
@@ -109,5 +101,13 @@ public final class Configuration {
     public String getProductDirPath() {
         return new StringBuilder().append(getCandlepinHomeDir())
                 .append(File.separator).append("products").toString();
+    }
+
+    public boolean isIgnoreTrustManagers() {
+        return ignoreTrustManagers;
+    }
+
+    public void setIgnoreTrustManagers(boolean ignoreTrustManagers) {
+        this.ignoreTrustManagers = ignoreTrustManagers;
     }
 }

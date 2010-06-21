@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.client.cmds;
 
 import java.io.IOException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +25,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.SystemUtils;
@@ -110,4 +115,29 @@ public final class Utils {
         }
         return builder.append("---- End Map -----\n").toString();
     }
+
+    /**
+     * The Class DummyTrustManager.
+     */
+    public static final X509TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType)
+            throws CertificateException {
+        }
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType)
+            throws CertificateException {
+        }
+    };
+
+    public static final TrustManager [] DUMMY_TRUST_MGRS = new TrustManager[]{
+        DUMMY_TRUST_MANAGER
+    };
 }

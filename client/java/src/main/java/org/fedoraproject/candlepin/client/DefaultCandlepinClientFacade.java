@@ -17,19 +17,24 @@ package org.fedoraproject.candlepin.client;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.fedoraproject.candlepin.client.cmds.Utils;
 import org.fedoraproject.candlepin.client.model.Consumer;
@@ -373,11 +378,7 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
             HttpClient httpclient = new HttpClient();
             CustomSSLProtocolSocketFactory factory  =
                 new CustomSSLProtocolSocketFactory(config);
-            URL hostUrl = new URL(config.getServerURL());
-            Protocol customHttps = new Protocol("https", factory, 8443);
-            Protocol.registerProtocol("https", customHttps);
-            httpclient.getHostConfiguration().setHost(hostUrl.getHost(),
-                hostUrl.getPort(), customHttps);
+            setHttpsProtocol(httpclient, factory);
             httpclient.getParams().setConnectionManagerTimeout(1000);
             CandlepinConsumerClient client = ProxyFactory.create(
                 CandlepinConsumerClient.class, config.getServerURL(),
@@ -391,15 +392,50 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
 
     protected CandlepinConsumerClient clientWithCredentials(String username,
         String password) {
-        HttpClient httpclient = new HttpClient();
-        httpclient.getParams().setAuthenticationPreemptive(true);
-        UsernamePasswordCredentials creds = new UsernamePasswordCredentials(
-            username, password);
-        httpclient.getState().setCredentials(AuthScope.ANY, creds);
-        CandlepinConsumerClient client = ProxyFactory.create(
-            CandlepinConsumerClient.class, config.getServerURL(),
-            new ApacheHttpClientExecutor(httpclient));
-        return client;
+        try {
+            HttpClient httpclient = new HttpClient();
+            httpclient.getParams().setAuthenticationPreemptive(true);
+            UsernamePasswordCredentials creds = new UsernamePasswordCredentials(
+                username, password);
+            httpclient.getState().setCredentials(AuthScope.ANY, creds);
+            if (config.isIgnoreTrustManagers()) {
+                setHttpsProtocol(httpclient,
+                    new AbstractSLLProtocolSocketFactory() {
+                        protected SSLContext getSSLContext() {
+                            try {
+                                SSLContext context = SSLContext.getInstance("TLS");
+                                context.init(new KeyManager[]{},
+                                    Utils.DUMMY_TRUST_MGRS, new SecureRandom());
+                                return context;
+                            }
+                            catch (Exception e) {
+                                throw new ClientException(e);
+                            }
+                        }
+                    });
+            }
+            CandlepinConsumerClient client = ProxyFactory.create(
+                CandlepinConsumerClient.class, config.getServerURL(),
+                new ApacheHttpClientExecutor(httpclient));
+            return client;
+        }
+        catch (Exception e) {
+            throw new ClientException(e);
+        }
+    }
+
+    /**
+     * @param httpclient
+     * @param factory
+     * @throws MalformedURLException
+     */
+    private void setHttpsProtocol(HttpClient httpclient,
+        ProtocolSocketFactory factory) throws MalformedURLException {
+        URL hostUrl = new URL(config.getServerURL());
+        Protocol customHttps = new Protocol("https", factory, 8443);
+        Protocol.registerProtocol("https", customHttps);
+        httpclient.getHostConfiguration().setHost(hostUrl.getHost(),
+            hostUrl.getPort(), customHttps);
     }
 
     protected void recordIdentity(Consumer cons) {

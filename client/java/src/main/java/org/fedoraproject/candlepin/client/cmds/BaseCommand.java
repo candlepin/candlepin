@@ -46,6 +46,8 @@ public abstract class BaseCommand {
         opts.addOption("d", "debug", true, "debug level");
         opts.addOption("cfg", "configLoc",
             true, "Location of candlepin client's config file.");
+        opts.addOption("k", "insecure", false,
+            "Do not check the validity of the server's certificate");
         return opts;
     }
 

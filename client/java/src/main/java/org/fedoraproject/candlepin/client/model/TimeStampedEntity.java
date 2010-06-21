@@ -17,10 +17,12 @@ package org.fedoraproject.candlepin.client.model;
 import java.util.Date;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  * The Class TimeStampedEntity.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class TimeStampedEntity {
 
     /** The created. */
