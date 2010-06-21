@@ -21,9 +21,9 @@
     <persistence-unit name="production" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
-            <property name="hibernate.connection.url" value="jdbc:postgresql:candlepin"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.Oracle9iDialect"/>
+            <property name="hibernate.connection.driver_class" value="oracle.jdbc.driver.OracleDriver"/>
+            <property name="hibernate.connection.url" value="jdbc:oracle:thin:@db2.db.dev.redhat.com:11021:webdev0"/>
             
             <!-- Note this line wipes the DB every restart, only used for testing. -->
             <!-- property name="hibernate.hbm2ddl.auto" value="create-drop"-->

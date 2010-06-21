@@ -22,6 +22,9 @@ import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 /**
  * HighlanderJobFactory is a custom Quartz JobFactory implementation which
  * insures that only one instance of a job class is ever instantiated.
@@ -30,7 +33,13 @@ import org.quartz.spi.TriggerFiredBundle;
 public class HighlanderJobFactory implements JobFactory {
 
     private Map<String, Job> jobImplCache = new HashMap<String, Job>();
-
+    private Injector injector;
+    
+    @Inject
+    public HighlanderJobFactory(Injector injector) {
+        this.injector = injector;
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -42,7 +51,8 @@ public class HighlanderJobFactory implements JobFactory {
         Job retval = jobImplCache.get(jobClass.getName());
         if (retval == null) {
             try {
-                retval = (Job) jobClass.newInstance();
+                retval = (Job) injector.getInstance(jobClass);
+                injector.injectMembers(retval);
                 jobImplCache.put(jobClass.getName(), retval);
             }
             catch (Exception e) {

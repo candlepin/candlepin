@@ -37,7 +37,7 @@ public class HighlanderFactoryTest {
 
     @Test
     public void testNewJob() throws SchedulerException, ParseException {
-        HighlanderJobFactory hf = new HighlanderJobFactory();
+        HighlanderJobFactory hf = new HighlanderJobFactory(null);
         assertNotNull(hf);
         try {
             hf.newJob(null);

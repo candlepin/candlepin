@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
+import com.google.inject.Injector;
+
 /**
  * PinsetterContextListener
  */
@@ -26,11 +28,11 @@ public class PinsetterContextListener {
         }
     }
 
-    public void contextInitialized() {
+    public void contextInitialized(Injector injector) {
         System.out.println("ctx initialized");
         try {
             if (pk == null) {
-                pk = new PinsetterKernel();
+                pk = new PinsetterKernel(injector);
             }
             pk.startup();
         }

@@ -72,7 +72,7 @@ public class PinsetterKernelTest {
                 }
             });
 
-        pk = new PinsetterKernel(config);
+        pk = new PinsetterKernel(config, null);
         assertNotNull(pk);
 
         try {
@@ -100,7 +100,7 @@ public class PinsetterKernelTest {
                 }
             });
 
-        pk = new PinsetterKernel(config);
+        pk = new PinsetterKernel(config, null);
         assertNotNull(pk);
 
         pk.startup();

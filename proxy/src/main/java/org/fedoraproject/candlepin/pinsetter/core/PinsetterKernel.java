@@ -35,6 +35,7 @@ import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
  * Pinsetter Kernel.
@@ -51,14 +52,16 @@ public class PinsetterKernel implements SchedulerService {
     private Scheduler scheduler = null;
     private ChainedListener chainedJobListener = null;
     private Config config = null;
+    
+    @Inject Injector injector;
 
     /**
      * Kernel main driver behind Pinsetter
      * @throws InstantiationException thrown if this.scheduler can't be
      * initialized.
      */
-    protected PinsetterKernel() throws InstantiationException {
-        this(new Config());
+    protected PinsetterKernel(Injector injector) throws InstantiationException {
+        this(new Config(), injector);
     }
 
     /**
@@ -68,7 +71,8 @@ public class PinsetterKernel implements SchedulerService {
      * initialized.
      */
     @Inject
-    public PinsetterKernel(Config conf) throws InstantiationException {
+    public PinsetterKernel(Config conf, Injector injector) throws InstantiationException {
+        this.injector = injector;
         config = conf;
 
         Properties props = config.getNamespaceProperties("org.quartz",
@@ -80,7 +84,7 @@ public class PinsetterKernel implements SchedulerService {
 
             // this.scheduler
             scheduler = fact.getScheduler();
-            scheduler.setJobFactory(new HighlanderJobFactory());
+            scheduler.setJobFactory(new HighlanderJobFactory(injector));
 
             // Setup TriggerListener chains here.
             chainedJobListener = new ChainedListener();

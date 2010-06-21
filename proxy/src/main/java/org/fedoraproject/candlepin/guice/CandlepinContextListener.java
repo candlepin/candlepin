@@ -81,8 +81,8 @@ public class CandlepinContextListener extends
         hornetqListener = injector.getInstance(HornetqContextListener.class);
         hornetqListener.contextInitialized(injector);
         
-        pinsetterListener = new PinsetterContextListener();
-        pinsetterListener.contextInitialized();
+        pinsetterListener = injector.getInstance(PinsetterContextListener.class);
+        pinsetterListener.contextInitialized(injector);
         
     }
     
