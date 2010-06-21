@@ -172,7 +172,7 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     }
     
     public void ensureUUID() {
-        if (uuid == null) {
+        if (uuid == null  || uuid.length() == 0) {
             this.uuid = Util.generateUUID();
         }
     }
