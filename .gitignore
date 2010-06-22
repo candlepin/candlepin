@@ -42,3 +42,5 @@ client/java/.classpath
 proxy/buildconf/scripts/product_certs/*
 proxy/buildconf/scripts/gen_products*
 generated_certs/
+proxy/buildconf/scripts/import_products_ipa.json
+proxy/buildconf/scripts/import_products.json
