@@ -75,6 +75,10 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return prodCurator.listAll();
     }
 
+    // TODO: Looks like this needs to change, there should probably be an error
+    // thrown if you try to create a product that already exists, not a silent return.
+    // This may have been done for the tests, so those may need to be modified to only
+    // create the products if they do not exist.
     @Override
     public Product createProduct(Product product) {
         if ((prodCurator.find(product.getId()) == null)) {
