@@ -49,6 +49,7 @@ contract_number = 0
 data['products'].each do |product|
 	  # add arch as an attribute as wel
 
+          print "Product:\n"
           pp product
           # name, hash, multiplier, version, variant, arch, type, childProducts, attributes
 
@@ -64,17 +65,21 @@ data['products'].each do |product|
           attrs = product[9]
           product_content = product[10]
 
+          print "Version:\n"
           pp version
-          pp "bk"
-          pp attrs
           attrs['version'] = version
           attrs['variant'] = variant
-          attrs['arch'] = arch
+	      attrs['arch'] = arch
           attrs['type'] = type
-          product_ret = cp.create_product(name, id, multiplier,
-                        version, variant, arch, type, [],
-                        attrs)
+          print "Attrs:\n"
+          pp attrs
+          print "\n"
+	      product_ret = cp.create_product(name, id, multiplier,
+					version, variant, arch, type, [],
+					attrs)
+          print "Product created:\n"
           pp product_ret
+          print "\n"
 
           if attrs['type'] == 'MKT':
               # subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 
