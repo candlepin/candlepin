@@ -70,6 +70,10 @@ public class PostEntHelper {
             ent.getPool().getStartDate(), ent.getPool().getEndDate());
         consumerSpecificPool.setRestrictedToUsername(c.getUsername());
         consumerSpecificPool.setSourceEntitlement(ent);
+        
+        // temp - we need a way to specify this on the product
+        consumerSpecificPool.setAttribute("requires_consumer_type", "system");
+        
         poolCurator.create(consumerSpecificPool);
     }
 
