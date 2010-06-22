@@ -223,6 +223,20 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertTrue(entitlements.isEmpty());
     }
     
+    @Test
+    public void testConsumeQuantity() throws Exception {
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, 
+            monitoring.getId()).get(0);
+        assertEquals(new Long(5), monitoringPool.getQuantity());
+        
+        Entitlement e = entitler.entitleByProduct(parentSystem, monitoring.getId(), 3);
+        assertNotNull(e);
+        assertEquals(new Long(3), monitoringPool.getConsumed());
+        
+        entitler.revokeEntitlement(e);
+        assertEquals(new Long(0), monitoringPool.getConsumed());
+    }
+    
     @Override
     protected Module getGuiceOverrideModule() {
         return new AbstractModule() {

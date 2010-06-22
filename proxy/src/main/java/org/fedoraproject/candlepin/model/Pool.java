@@ -253,15 +253,16 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         this.productName = productName;
     }
 
-    /**
-     * Increment consumed quantity by one.
-     */
-    public void bumpConsumed() {
-        this.consumed++;
+    public void bumpConsumed(int quantity) {
+        consumed += quantity;
     }
 
-    public void dockConsumed() {
-        this.consumed--;
+    public void dockConsumed(int quantity) {
+        consumed -= quantity;
+    }
+    
+    public static void dockConsumed(Entitlement e) {
+        e.getPool().dockConsumed(e.getQuantity());
     }
 
     public Set<Attribute> getAttributes() {

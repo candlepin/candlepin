@@ -161,7 +161,7 @@ public class Entitler {
             e.setIsFree(Boolean.TRUE);
         }
         else {
-            pool.bumpConsumed();
+            pool.bumpConsumed(quantity);
         }
 
         postEntHelper.init(e);
@@ -202,7 +202,7 @@ public class Entitler {
     public void revokeEntitlement(Entitlement entitlement) {
         if (!entitlement.isFree()) {
             // put this entitlement back in the pool
-            entitlement.getPool().dockConsumed();
+            Pool.dockConsumed(entitlement);
         }
 
         Consumer consumer = entitlement.getConsumer();
