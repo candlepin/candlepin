@@ -193,11 +193,11 @@ eval $STOP
 
 # generate the postgresql DB
 
+buildr clean package test=no
+
 if [ "$GENDB" != "" ]; then
 	gendb	
 fi
-
-buildr clean package test=no
 
 # generate SSL certs if they are needed
 sh -x `dirname $0`/gen-certs
