@@ -15,8 +15,16 @@ function attribute_mappings() {
 }
 
 function post_user_license() {
+	// Default to using the same product from the pool.
+	var productId = pool.getProductId()
+
+	// Check if the sub-pool should be for a different product:
+	if (attributes.containsKey("user_license_product")) {
+		productId = attributes.get("user_license_product");
+	}
+
 	// Create a sub-pool for this user
-	post.createUserRestrictedPool(pool.getProductId(), pool.getProvidedProductIds(),
+	post.createUserRestrictedPool(productId, pool.getProvidedProductIds(),
 			attributes.get("user_license"));
 }
 

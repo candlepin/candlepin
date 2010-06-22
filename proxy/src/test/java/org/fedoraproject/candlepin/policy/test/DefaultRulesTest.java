@@ -257,6 +257,21 @@ public class DefaultRulesTest {
             pool.getProvidedProductIds(), "unlimited");
     }
 
+    @Test
+    public void testUserLicensePostForDifferentProduct() {
+        Pool pool = setupUserLicensedPool();
+        String subProductId = "subProductId";
+        pool.setAttribute("user_license_product", subProductId);
+
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
+        Entitlement e = new Entitlement(pool, consumer, new Date(), 1);
+
+        PostEntHelper postHelper = mock(PostEntHelper.class);
+        enforcer.post(postHelper, e);
+        verify(postHelper).createUserRestrictedPool(subProductId,
+            pool.getProvidedProductIds(), "unlimited");
+    }
+
     private Pool setupUserLicensedPool() {
         Product product = new Product(productId, "A user licensed product");
         Pool pool = TestUtil.createEntitlementPool(owner, product);
