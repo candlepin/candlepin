@@ -61,10 +61,13 @@ class BasicAuth {
                     .split(":");
 
             String username = userpass[0];
-            String password = userpass[1];
-
+            String password = null;
+            if (userpass.length > 1) {
+                password = userpass[1];
+            }
+            
             log.debug("check for: " + username + " - password of length #" +
-                password.length() + " = <omitted>");
+                (password == null ? 0 : password.length()) + " = <omitted>");
             if (userServiceAdapter.validateUser(username, password)) {
                 Principal principal = createPrincipal(username);
                 if (log.isDebugEnabled()) {
