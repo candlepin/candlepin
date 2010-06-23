@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -47,6 +48,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
     private KeyPairCurator keyPairCurator;
+    private CertificateSerialCurator serialCurator;
     
     private static Logger log = Logger
         .getLogger(DefaultEntitlementCertServiceAdapter.class);
@@ -55,12 +57,14 @@ public class DefaultEntitlementCertServiceAdapter extends
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
         X509ExtensionUtil extensionUtil,
         EntitlementCertificateCurator entCertCurator, 
-        KeyPairCurator keyPairCurator) {
+        KeyPairCurator keyPairCurator,
+        CertificateSerialCurator serialCurator) {
         
         this.pki = pki;
         this.extensionUtil = extensionUtil;
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
+        this.serialCurator = serialCurator;
     }
 
     
@@ -68,8 +72,9 @@ public class DefaultEntitlementCertServiceAdapter extends
     // NOTE: we can get consumer from entitlement.getConsumer()
     @Override
     public EntitlementCertificate generateEntitlementCert(Consumer consumer,
-        Entitlement entitlement, Subscription sub, Product product, Date endDate, 
-        BigInteger serialNumber) throws GeneralSecurityException, IOException {
+        Entitlement entitlement, Subscription sub, Product product, Date endDate)
+        throws GeneralSecurityException, IOException {
+        
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: " + consumer.getUuid());
         log.debug("   product: " + product.getId());
@@ -77,12 +82,13 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
+        BigInteger serialNumber = new BigInteger(serialCurator.getNextSerial().toString());
         
         X509Certificate x509Cert = createX509Certificate(consumer, entitlement, sub,
             product, endDate, serialNumber, keyPair);
         
         EntitlementCertificate cert = new EntitlementCertificate();
-        cert.setSerial(new BigInteger(serialNumber.toString()));
+        cert.setSerial(serialNumber);
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
         cert.setEntitlement(entitlement);
@@ -91,7 +97,15 @@ public class DefaultEntitlementCertServiceAdapter extends
         log.debug("Key: " + cert.getKey());
         log.debug("Cert: " + cert.getCert());
         
+        entitlement.getCertificates().add(cert);
+        entCertCurator.create(cert);
         return cert;
+    }
+    
+    @Override
+    public void revokeEntitlementCertificates(Entitlement e) {
+        // TODO: delete certs; store their serial numbers; potentially generate crls
+        // TODO: update cascading on Entitlement.certificates
     }
 
     public X509Certificate createX509Certificate(Consumer consumer,

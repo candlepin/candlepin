@@ -15,14 +15,13 @@
 package org.fedoraproject.candlepin.service;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 
@@ -41,14 +40,20 @@ public interface EntitlementCertServiceAdapter {
      * @param sub Subscription being used.
      * @param product Product being consumed.
      * @param endDate End date. (usually subscription end date, but not always)
-     * @param serialNumber the serial number to put in the certificate
      * @return Client entitlement certificate.
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
     EntitlementCertificate generateEntitlementCert(Consumer consumer,
-        Entitlement entitlement, Subscription sub, Product product, Date endDate, 
-        BigInteger serialNumber) throws GeneralSecurityException, IOException;
+        Entitlement entitlement, Subscription sub, Product product, Date endDate)
+        throws GeneralSecurityException, IOException;
+    
+    /**
+     * Revoke certificates for the given entitlement
+     * 
+     * @param e Entitlement for which the certificates are going to be revoked
+     */
+    void revokeEntitlementCertificates(Entitlement e);
 
     /**
      * Return a list of all entitlement certificates for a given consumer.

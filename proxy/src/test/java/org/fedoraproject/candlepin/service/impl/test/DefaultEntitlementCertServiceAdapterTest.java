@@ -14,11 +14,9 @@
  */
 package org.fedoraproject.candlepin.service.impl.test;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -32,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bouncycastle.asn1.DERUTF8String;
+import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -43,11 +42,16 @@ import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAda
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * DefaultEntitlementCertServiceAdapter
  */
+
+@RunWith(MockitoJUnitRunner.class)
 public class DefaultEntitlementCertServiceAdapterTest {
 
     private static final String CONTENT_LABEL = "label";
@@ -61,7 +65,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String ENTITLEMENT_QUANTITY = "10";
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
-    private PKIUtility mockedPKI;
+    @Mock private PKIUtility mockedPKI;
+    @Mock private CertificateSerialCurator serialCurator;
     private X509ExtensionUtil extensionUtil;
     private Product product;
     private Subscription subscription;
@@ -69,12 +74,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Before
     public void setUp() {
-        mockedPKI = mock(PKIUtility.class);
         extensionUtil = new X509ExtensionUtil();
         
         certServiceAdapter 
             = new DefaultEntitlementCertServiceAdapter(mockedPKI, 
-                extensionUtil, null, null);
+                extensionUtil, null, null, serialCurator);
         
         product = new Product("a_product", "a product", 
                               "variant", "version", "arch", 

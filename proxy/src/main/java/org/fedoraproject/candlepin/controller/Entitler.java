@@ -14,19 +14,16 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import java.math.BigInteger;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -55,19 +52,15 @@ public class Entitler {
     private static Logger log = Logger.getLogger(Entitler.class);
     private EntitlementCertServiceAdapter entCertAdapter;
     private SubscriptionServiceAdapter subAdapter;
-    private EntitlementCertificateCurator entCertCurator;
-    private CertificateSerialCurator serialCurator;
     private EventFactory eventFactory;
     private EventSink sink;
     private PostEntHelper postEntHelper;
     
     @Inject
     protected Entitler(PoolCurator epCurator,
-        EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator, 
-        EntitlementCertificateCurator entCertCurator,
+        EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
-        CertificateSerialCurator serialCurator,
         EventFactory eventFactory,
         EventSink sink,
         PostEntHelper postEntHelper) {
@@ -78,8 +71,6 @@ public class Entitler {
         this.enforcer = enforcer;
         this.entCertAdapter = entCertAdapter;
         this.subAdapter = subAdapter;
-        this.entCertCurator = entCertCurator;
-        this.serialCurator = serialCurator;
         this.eventFactory = eventFactory;
         this.sink = sink;
         this.postEntHelper = postEntHelper;
@@ -182,12 +173,9 @@ public class Entitler {
             // TODO: Assuming every entitlement = generate a cert, most likely we'll want
             // to know if this product entails granting a cert someday.
             try {
-                EntitlementCertificate cert = this.entCertAdapter.
+                EntitlementCertificate cert = entCertAdapter.
                     generateEntitlementCert(consumer, e, sub, sub.getProduct(),
-                    sub.getEndDate(), new BigInteger(
-                        serialCurator.getNextSerial().toString()));
-                e.getCertificates().add(cert);
-                this.entCertCurator.create(cert);
+                    sub.getEndDate());
             }
             catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -211,7 +199,7 @@ public class Entitler {
         Event event = eventFactory.entitlementDeleted(entitlement); 
         
         epCurator.merge(entitlement.getPool());
-        
+        entCertAdapter.revokeEntitlementCertificates(entitlement);
         entitlementCurator.delete(entitlement);
         sink.sendEvent(event);
     }
