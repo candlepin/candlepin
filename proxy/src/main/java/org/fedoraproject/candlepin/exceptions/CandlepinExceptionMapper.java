@@ -42,14 +42,15 @@ import com.google.inject.Injector;
 public class CandlepinExceptionMapper implements
     ExceptionMapper<RuntimeException> {
 
-    private static final List<MediaType> DESIRED_RESPONSE_TYPES = new LinkedList<MediaType>() {
-        {
-            add(MediaType.APPLICATION_JSON_TYPE);
-            add(MediaType.APPLICATION_XML_TYPE);
-            add(MediaType.TEXT_PLAIN_TYPE);
-            add(MediaType.APPLICATION_ATOM_XML_TYPE);
-        }
-    };
+    private static final List<MediaType> DESIRED_RESPONSE_TYPES = 
+        new LinkedList<MediaType>() {
+            {
+                add(MediaType.APPLICATION_JSON_TYPE);
+                add(MediaType.APPLICATION_XML_TYPE);
+                add(MediaType.TEXT_PLAIN_TYPE);
+                add(MediaType.APPLICATION_ATOM_XML_TYPE);
+            }
+        };
 
     @Inject
     private Injector injector;
@@ -69,8 +70,8 @@ public class CandlepinExceptionMapper implements
         if (header != null) {
             List<MediaType> headerMediaTypes = parseHeader(header);
 
-            responseMediaType = headerMediaTypes.size() == 0 ? MediaType.TEXT_PLAIN_TYPE
-                : getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
+            responseMediaType = headerMediaTypes.size() == 0 ? MediaType.TEXT_PLAIN_TYPE :
+                getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
         }
 
         ResponseBuilder bldr = null;
