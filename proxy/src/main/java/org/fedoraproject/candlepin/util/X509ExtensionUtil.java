@@ -171,7 +171,7 @@ public class X509ExtensionUtil {
 
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false,
-                new DERUTF8String((pc.getEnabled()) ? "0" : "1")));
+                new DERUTF8String((pc.getEnabled()) ? "1" : "0")));
 
         }
         return toReturn;
