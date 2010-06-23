@@ -282,8 +282,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     
     // set a single name, if its not already there
     private void addProductName(Pool pool) {
-        String productId = pool.getProductId();
         if (pool != null) {
+            String productId = pool.getProductId();            
             if (pool.getProductName() == null) { 
                 HashMap<String, String> names = productAdapter.
                     getProductNamesByProductId(new String[] 

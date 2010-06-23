@@ -14,7 +14,8 @@
  */
 package org.fedoraproject.candlepin.exceptions;
 
-import static org.jboss.resteasy.util.MediaTypeHelper.*;
+import static org.jboss.resteasy.util.MediaTypeHelper.getBestMatch;
+import static org.jboss.resteasy.util.MediaTypeHelper.parseHeader;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,10 +25,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.util.HttpHeaderNames;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -37,43 +40,79 @@ import com.google.inject.Injector;
  */
 @Provider
 public class CandlepinExceptionMapper implements
-    ExceptionMapper<CandlepinException> {
+    ExceptionMapper<RuntimeException> {
 
-    private static final List<MediaType> DESIRED_RESPONSE_TYPES =
-        new LinkedList<MediaType>() {
-            {
-                add(MediaType.APPLICATION_JSON_TYPE);
-                add(MediaType.APPLICATION_XML_TYPE);
-                add(MediaType.TEXT_PLAIN_TYPE);
-                add(MediaType.APPLICATION_ATOM_XML_TYPE);
-            }
-        };
+    private static final List<MediaType> DESIRED_RESPONSE_TYPES = new LinkedList<MediaType>() {
+        {
+            add(MediaType.APPLICATION_JSON_TYPE);
+            add(MediaType.APPLICATION_XML_TYPE);
+            add(MediaType.TEXT_PLAIN_TYPE);
+            add(MediaType.APPLICATION_ATOM_XML_TYPE);
+        }
+    };
 
     @Inject
     private Injector injector;
 
+    private I18n i18n;
+
     @Override
-    public Response toResponse(CandlepinException exception) {
+    public Response toResponse(RuntimeException exception) {
 
         HttpServletRequest request = injector
             .getInstance(HttpServletRequest.class);
+
+        i18n = injector.getInstance(I18n.class);
 
         String header = request.getHeader(HttpHeaderNames.ACCEPT);
         MediaType responseMediaType = MediaType.APPLICATION_XML_TYPE;
         if (header != null) {
             List<MediaType> headerMediaTypes = parseHeader(header);
 
-            responseMediaType = headerMediaTypes.size() == 0 ? MediaType.TEXT_PLAIN_TYPE : 
-                getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
+            responseMediaType = headerMediaTypes.size() == 0 ? MediaType.TEXT_PLAIN_TYPE
+                : getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
         }
 
+        ResponseBuilder bldr = null;
+        // Resteasy wraps the actual exception
+        Throwable cause = exception.getCause();
+        if (cause instanceof CandlepinException) {
+            bldr = getBuilder((CandlepinException) cause, responseMediaType);
+        }
+        else {
+            bldr = getDefaultBuilder(cause, responseMediaType);
+        }
+
+        return bldr.build();
+    }
+
+    public ResponseBuilder getBuilder(CandlepinException exception,
+        MediaType responseMediaType) {
         ResponseBuilder bldr = Response.status(exception.httpReturnCode())
-                .entity(exception.message()).type(responseMediaType);
+            .entity(exception.message()).type(responseMediaType);
 
         for (Map.Entry<String, String> hdr : exception.headers().entrySet()) {
             bldr.header(hdr.getKey(), hdr.getValue());
         }
 
-        return bldr.build();
+        return bldr;
+    }
+
+    public ResponseBuilder getDefaultBuilder(Throwable exception,
+        MediaType responseMediaType) {
+        Throwable cause = exception;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        StackTraceElement[] stes = cause.getStackTrace();
+        StackTraceElement ele = stes[0];
+        int line = ele.getLineNumber();
+        String method = ele.getMethodName();
+        String clazz = ele.getClassName();
+        String message = i18n.tr("Runtime Error {0} at {1}.{2}:{3}", exception
+            .getMessage(), clazz, method, line);
+        ResponseBuilder bldr = Response.status(Status.INTERNAL_SERVER_ERROR)
+            .entity(new ExceptionMessage(message)).type(responseMediaType);
+        return bldr;
     }
 }

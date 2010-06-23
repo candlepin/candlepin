@@ -27,6 +27,13 @@ public class ExceptionMessage {
 
     private String displayMessage;
 
+    public ExceptionMessage() {
+    }
+
+    public ExceptionMessage(String displayMessage) {
+        this.displayMessage = displayMessage;
+    }
+
     public ExceptionMessage setDisplayMessage(String displayMessage) {
         this.displayMessage = displayMessage;
         return this;
