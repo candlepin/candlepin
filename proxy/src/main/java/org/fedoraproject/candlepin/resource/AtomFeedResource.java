@@ -19,6 +19,7 @@ import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
@@ -46,7 +47,7 @@ public class AtomFeedResource {
     }
 
     @GET
-    @Produces("application/atom+xml")
+    @Produces({"application/atom+xml", MediaType.APPLICATION_JSON})
     public Feed getFeed() {
         List<Event> events = eventCurator.listMostRecent(ATOM_FEED_LIMIT);
         return this.adapter.toFeed(events);
