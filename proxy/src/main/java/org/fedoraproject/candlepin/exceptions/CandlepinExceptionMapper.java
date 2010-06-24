@@ -35,6 +35,7 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+
 /**
  * BadRequestExceptionMapper
  */
@@ -75,8 +76,8 @@ public class CandlepinExceptionMapper implements
         }
 
         ResponseBuilder bldr = null;
-        // Resteasy wraps the actual exception
-        Throwable cause = exception.getCause();
+        // Resteasy wraps the actual exception sometimes
+        Throwable cause = exception.getCause() == null ? exception : exception.getCause();
         if (cause instanceof CandlepinException) {
             bldr = getBuilder((CandlepinException) cause, responseMediaType);
         }
