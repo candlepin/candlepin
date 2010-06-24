@@ -327,17 +327,21 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void updatePoolForSubscription(Pool existingPool, Subscription sub) {
         log.debug("Found existing pool for sub: " + sub.getId());
         
-        Event e = eventFactory.poolQuantityChangedFrom(existingPool);
-        // TODO: We're just updating the pool always now, would be much
-        // better if we could check some kind of last modified date to
-        // determine if a change has taken place:
-        existingPool.setQuantity(sub.getQuantity());
-        existingPool.setStartDate(sub.getStartDate());
-        existingPool.setEndDate(sub.getEndDate());
-        merge(existingPool);
-        
-        eventFactory.poolQuantityChangedTo(e, existingPool);
-        sink.sendEvent(e);
+        // Modify the pool only if the values have changed
+        if ((!sub.getQuantity().equals(existingPool.getQuantity())) ||
+            (!sub.getStartDate().equals(existingPool.getStartDate())) ||
+            (!sub.getEndDate().equals(existingPool.getEndDate())))  {      
+             
+            //TODO: Shoud have better events, one per type of change
+            Event e = eventFactory.poolQuantityChangedFrom(existingPool);
+            existingPool.setQuantity(sub.getQuantity());
+            existingPool.setStartDate(sub.getStartDate());
+            existingPool.setEndDate(sub.getEndDate());
+            merge(existingPool);
+            
+            eventFactory.poolQuantityChangedTo(e, existingPool);
+            sink.sendEvent(e);
+        }
     }
 
     public void createPoolForSubscription(Subscription sub) {
