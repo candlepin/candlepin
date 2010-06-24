@@ -112,21 +112,6 @@ public class X509ExtensionUtil {
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false,
             new DERUTF8String(product.getName())));
 
-        if (product.getAttribute("variant") != null) {
-            toReturn.add(new X509ExtensionWrapper(productOid + "." +
-                OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_DESC_KEY), false,
-                new DERUTF8String(product.getAttributeValue("variant"))));
-        }
-        if (product.getAttribute("arch") != null) {
-            toReturn.add(new X509ExtensionWrapper(productOid + "." +
-                OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY), false,
-                new DERUTF8String(product.getAttributeValue("arch"))));
-        }
-        if (product.getAttribute("version") != null) {
-            toReturn.add(new X509ExtensionWrapper(productOid + "." +
-                OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY), false,
-                new DERUTF8String(product.getAttributeValue("version"))));
-        }
         return toReturn;
     }
 
