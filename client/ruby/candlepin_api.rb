@@ -51,6 +51,17 @@ class Candlepin
     return @consumer
   end
 
+  def update_facts(facts, uuid=nil)
+    uuid = @uuid if uuid.nil?
+
+    consumer = {
+      :uuid => uuid,
+      :facts => facts
+    }
+
+    put("/consumers/#{uuid}", consumer)
+  end
+
   def get_owners
     get('/owners')
   end
@@ -251,8 +262,9 @@ class Candlepin
     post_text("/rules/", rule_set)
   end
 
-  def get_consumer(cid)
-    get("/consumers/#{cid}")
+  def get_consumer(consumer_id=nil)
+    consumer_id ||= @uuid
+    get("/consumers/#{consumer_id}")
   end
 
   def unbind_entitlement(eid)

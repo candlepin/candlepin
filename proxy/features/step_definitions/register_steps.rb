@@ -10,6 +10,12 @@ Given /^I am a consumer "([^\"]*)" registered by "([^\"]*)"$/ do |consumer_name,
   When "I register a consumer \"#{consumer_name}\""  
 end
 
+Given /^I register a consumer "([^\"]*)" with the following facts:$/ do |consumer_name, facts_table|
+  # facts_table is a Cucumber::Ast::Table
+  facts = facts_table.rows_hash.delete_if { |key, val| key == 'Name' }
+  set_consumer(@current_owner_cp.register(consumer_name, :system, nil, facts))
+end
+
 def set_consumer(created_consumer)
     @consumer = created_consumer
     @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])

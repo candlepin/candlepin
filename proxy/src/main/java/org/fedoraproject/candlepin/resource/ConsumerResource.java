@@ -25,6 +25,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -49,6 +50,7 @@ import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -60,7 +62,6 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -247,6 +248,19 @@ public class ConsumerResource {
         }
         
         return null;
+    }
+    
+    @PUT
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{consumer_uuid}")
+    @Transactional
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    public void updateConsumer(@PathParam("consumer_uuid") String uuid, Consumer consumer) {
+        Consumer toUpdate = verifyAndLookupConsumer(uuid);
+        
+        // TODO:  Just updating the facts for now
+        // TODO:  Emit a message?
+        toUpdate.setFacts(consumer.getFacts());
     }
 
     /**
