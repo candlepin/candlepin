@@ -75,7 +75,13 @@ public class LoggingFilter implements Filter {
 
             log.debug("====Response====");
             log.debug("Status: " + lResponse.getStatus());
-            log.debug("Response Body:" + lResponse.getResponseBody());
+            log.debug("Content-type: " + lResponse.getContentType());
+
+            // Don't log file download responses, they make a mess of the log:
+            if (lResponse.getContentType() == null ||
+                !lResponse.getContentType().equals("application/x-download")) {
+                log.debug("Response Body:" + lResponse.getResponseBody());
+            }
             lResponse.getWriter().close();
         }
         else {

@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -619,5 +620,15 @@ public class ConsumerResource {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         return this.eventCurator.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
             consumer));
+    }
+
+    @GET
+    @Produces("application/x-download")
+    @Path("{consumer_uuid}/export")
+    @AllowRoles(roles = {Role.OWNER_ADMIN, Role.NO_AUTH})
+    public File exportData(@PathParam("consumer_uuid") String consumerUuid) {
+        // TODO: Need a proper file here:
+        File tgz = new File("/tmp/tito/candlepin-0.0.18-1.src.rpm");
+        return tgz;
     }
 }
