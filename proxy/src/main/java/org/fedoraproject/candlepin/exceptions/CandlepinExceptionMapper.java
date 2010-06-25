@@ -29,7 +29,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import org.jboss.resteasy.spi.ApplicationException;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.xnap.commons.i18n.I18n;
 
@@ -42,7 +41,7 @@ import com.google.inject.Injector;
  */
 @Provider
 public class CandlepinExceptionMapper implements
-    ExceptionMapper<ApplicationException> {
+    ExceptionMapper<RuntimeException> {
 
     private static final List<MediaType> DESIRED_RESPONSE_TYPES = 
         new LinkedList<MediaType>() {
@@ -60,7 +59,7 @@ public class CandlepinExceptionMapper implements
     private I18n i18n;
 
     @Override
-    public Response toResponse(ApplicationException exception) {
+    public Response toResponse(RuntimeException exception) {
 
         HttpServletRequest request = injector
             .getInstance(HttpServletRequest.class);
