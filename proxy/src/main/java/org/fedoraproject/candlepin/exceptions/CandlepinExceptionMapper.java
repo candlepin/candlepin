@@ -29,6 +29,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.jboss.resteasy.spi.DefaultOptionsMethodException;
+import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.xnap.commons.i18n.I18n;
 
@@ -80,6 +82,9 @@ public class CandlepinExceptionMapper implements
         Throwable cause = exception.getCause() == null ? exception : exception.getCause();
         if (cause instanceof CandlepinException) {
             bldr = getBuilder((CandlepinException) cause, responseMediaType);
+        }
+        else if (cause instanceof DefaultOptionsMethodException) {
+            return ((Failure) cause).getResponse();
         }
         else {
             bldr = getDefaultBuilder(cause, responseMediaType);
