@@ -31,6 +31,7 @@ import org.hornetq.core.config.impl.ConfigurationImpl;
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
+import org.hornetq.core.server.JournalType;
 import org.hornetq.core.server.impl.HornetQServerImpl;
 
 import com.google.inject.Injector;
@@ -61,6 +62,8 @@ public class HornetqContextListener {
     public void contextInitialized(Injector injector) {
         
         Config candlepinConfig = new Config();
+
+        
         if (hornetqServer == null) {
             
             Configuration config = new ConfigurationImpl();
@@ -77,6 +80,13 @@ public class HornetqContextListener {
             
             // in vm, who needs security?
             config.setSecurityEnabled(false);
+
+            int largeMsgSize =
+                candlepinConfig.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+            //config.setJournalBufferSize_AIO(largeMsgSize);
+            config.setJournalBufferSize_NIO(largeMsgSize);
+            // XXX: should use AIO when we get the native bindings working
+            config.setJournalType(JournalType.NIO);
 
             config.setCreateBindingsDir(true);
             config.setCreateJournalDir(true);
