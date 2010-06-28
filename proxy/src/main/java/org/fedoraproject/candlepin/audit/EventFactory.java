@@ -51,7 +51,6 @@ public class EventFactory {
     }
 
     public Event consumerCreated(Consumer newConsumer) {
-        
         String newEntityJson = entityToJson(newConsumer);
         Principal principal = principalProvider.get();
         
@@ -59,6 +58,16 @@ public class EventFactory {
             principal, principal.getOwner().getId(), newConsumer.getId(),
             newConsumer.getId(), null, newEntityJson);
         return e;
+    }
+    
+    public Event consumerModified(Consumer oldConsumer, Consumer newConsumer) {
+        String oldEntityJson = entityToJson(oldConsumer);
+        String newEntityJson = entityToJson(newConsumer);
+        Principal principal = principalProvider.get();
+        
+        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER, 
+            principal, principal.getOwner().getId(), oldConsumer.getId(),
+            oldConsumer.getId(), oldEntityJson, newEntityJson);
     }
 
     public Event consumerDeleted(Consumer oldConsumer) {

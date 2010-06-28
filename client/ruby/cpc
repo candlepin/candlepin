@@ -2,7 +2,7 @@
 $VERBOSE = nil
 
 require 'rubygems'
-require 'json'
+require 'pp'
 require 'yaml'
 require 'candlepin_api'
 
@@ -142,12 +142,7 @@ else
     args = ARGV[1..-1].collect { |arg| eval(arg) rescue arg }
     val = cli.send(method_name, *args)
 
-    begin
-      puts JSON.pretty_generate(val)
-    rescue JSON::GeneratorError
-      # Can't be jsonified...
-      puts val
-    end
+    pp val
   else
     puts "#{method_name} is not a valid command!"
   end

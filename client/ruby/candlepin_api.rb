@@ -323,6 +323,11 @@ class Candlepin
     return get("/consumers/#{@uuid}/certificates/serials")
   end
 
+  def get_consumer_events(consumer_id=nil)
+    consumer_id ||= @uuid
+    get_text("/consumers/#{consumer_id}/atom")
+  end
+
   private
 
   def create_basic_client(username=nil, password=nil)

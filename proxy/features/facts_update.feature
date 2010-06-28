@@ -41,3 +41,27 @@ Feature: Update a Consumer's Facts
           | memory.memtotal  | 2004036 |
           | uname.sysname    | Linux   |
       Then I have no fact "cpu.architecture"
+
+    Scenario:  Fact update emits an event
+      Given I register a consumer "mymachine" with the following facts:
+          | Name             | Value   |
+          | cpu.architecture | i686    |
+          | memory.memtotal  | 2004036 | 
+      When I update my facts to:
+          | Name             | Value   |
+          | cpu.architecture | i686    |
+          | memory.memtotal  | 4008072 | 
+      Then I see a "CONSUMER MODIFIED" event
+
+    Scenario:  No event emitted if facts have not changed
+      Given I register a consumer "consumer" with the following facts:
+          | Name             | Value   |
+          | cpu.architecture | i686    |
+          | memory.memtotal  | 2004036 |
+          | uname.sysname    | Linux   |
+      When I update my facts to:
+          | Name             | Value   |
+          | cpu.architecture | i686    |
+          | memory.memtotal  | 2004036 |
+          | uname.sysname    | Linux   |
+      Then I do not see a "CONSUMER MODIFIED" event
