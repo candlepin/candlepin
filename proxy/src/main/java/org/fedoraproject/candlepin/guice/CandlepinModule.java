@@ -29,10 +29,8 @@ import org.fedoraproject.candlepin.exporter.ConsumerExporter;
 import org.fedoraproject.candlepin.exporter.ConsumerTypeExporter;
 import org.fedoraproject.candlepin.exporter.Exporter;
 import org.fedoraproject.candlepin.exporter.MetaExporter;
-import org.fedoraproject.candlepin.exporter.MetaExporterTest;
 import org.fedoraproject.candlepin.exporter.RulesExporter;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
-import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
@@ -110,7 +108,6 @@ public class CandlepinModule extends AbstractModule {
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
         
-        bind(Exporter.class);
         bind(MetaExporter.class);
         bind(ConsumerTypeExporter.class);
         bind(ConsumerExporter.class);
