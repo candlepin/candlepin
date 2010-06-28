@@ -41,16 +41,23 @@ public class Exporter {
     private RulesExporter rules;
     
     public Exporter() {
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-        mapper = new ObjectMapper();
-        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
-        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+        mapper = getObjectMapper();
         
         meta = new MetaExporter(mapper);
         consumer = new ConsumerExporter(mapper);
         rules = new RulesExporter();
+    }
+
+    static ObjectMapper getObjectMapper() {
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
+        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+        
+        return mapper;
     }
     
     public File getExport(Consumer consumer) {

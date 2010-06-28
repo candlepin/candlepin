@@ -14,12 +14,13 @@
  */
 package org.fedoraproject.candlepin.exporter;
 
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
-import static org.mockito.Mockito.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * MetaExporterTest
@@ -28,15 +29,15 @@ public class MetaExporterTest {
     
     @Test
     public void testMetaExporter() throws IOException {
-        ObjectMapper mapper = mock(ObjectMapper.class);
+        ObjectMapper mapper = Exporter.getObjectMapper();
         
         MetaExporter meta = new MetaExporter(mapper);
         
-        FileWriter writer = mock(FileWriter.class);
+        StringWriter writer = new StringWriter();
         
         meta.export(writer);
         
-        verify(mapper).writeValue(any(FileWriter.class), any());
+        assertEquals("{\"version\":\"0.0.0\"}", writer.toString());
     }
 
 }

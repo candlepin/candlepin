@@ -14,8 +14,8 @@
  */
 package org.fedoraproject.candlepin.exporter;
 
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -38,7 +38,7 @@ class MetaExporter {
         this.mapper = mapper;
     }
 
-    void export(FileWriter writer) throws IOException {
+    void export(Writer writer) throws IOException {
         mapper.writeValue(writer, new Meta());
     }
 
