@@ -31,11 +31,11 @@ public class MetaExporterTest {
     public void testMetaExporter() throws IOException {
         ObjectMapper mapper = Exporter.getObjectMapper();
         
-        MetaExporter meta = new MetaExporter(mapper);
+        MetaExporter meta = new MetaExporter();
         
         StringWriter writer = new StringWriter();
         
-        meta.export(writer);
+        meta.export(mapper, writer);
         
         assertEquals("{\"version\":\"0.0.0\"}", writer.toString());
     }

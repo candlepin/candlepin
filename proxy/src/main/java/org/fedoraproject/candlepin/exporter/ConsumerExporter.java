@@ -19,17 +19,18 @@ import java.io.FileWriter;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Consumer;
 
+import com.google.inject.Inject;
+
 /**
  * Consumer - maps to the consumer.json file
  */
-class ConsumerExporter {
-    private ObjectMapper mapper;
+public class ConsumerExporter {
     
-    ConsumerExporter(ObjectMapper mapper) {
-        this.mapper = mapper;
+    @Inject
+    ConsumerExporter() {
     }
 
-    void export(Consumer consumer, FileWriter writer) {
+    void export(ObjectMapper mapper, Consumer consumer, FileWriter writer) {
         
     }
 }

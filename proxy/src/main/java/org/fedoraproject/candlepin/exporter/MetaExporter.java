@@ -19,11 +19,13 @@ import java.io.Writer;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.google.inject.Inject;
+
 /**
  * Meta maps to meta.json in the export
  * 
  */
-class MetaExporter {
+public class MetaExporter {
     private class Meta {
         private static final String VERSION = "0.0.0";
         
@@ -32,13 +34,11 @@ class MetaExporter {
         }
     }
     
-    private ObjectMapper mapper;
-
-    MetaExporter(ObjectMapper mapper) {
-        this.mapper = mapper;
+    @Inject
+    MetaExporter() {
     }
 
-    void export(Writer writer) throws IOException {
+    void export(ObjectMapper mapper, Writer writer) throws IOException {
         mapper.writeValue(writer, new Meta());
     }
 

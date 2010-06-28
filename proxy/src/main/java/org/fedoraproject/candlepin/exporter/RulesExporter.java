@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 /**
  * RulesExporter
  */
-class RulesExporter {
+public class RulesExporter {
     
     private RulesCurator rulesCurator;
     

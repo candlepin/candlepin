@@ -49,15 +49,18 @@ public class Exporter {
     private ConsumerTypeCurator consumerTypeCurator;
     
     @Inject
-    public Exporter(ConsumerTypeCurator consumerTypeCurator) {
+    public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
+        ConsumerExporter consumer, ConsumerTypeExporter consumerType, 
+        RulesExporter rules) {
+        
         mapper = getObjectMapper();
-        
-        meta = new MetaExporter(mapper);
-        consumer = new ConsumerExporter(mapper);
-        consumerType = new ConsumerTypeExporter(mapper);
-//        rules = new RulesExporter();
-        
         this.consumerTypeCurator = consumerTypeCurator;
+        
+        this.meta = meta;
+        this.consumer = consumer;
+        this.consumerType = consumerType;
+        this.rules = rules;
+        
     }
 
     static ObjectMapper getObjectMapper() {
@@ -126,14 +129,14 @@ public class Exporter {
     private void exportMeta(File baseDir) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
         FileWriter writer = new FileWriter(file);
-        meta.export(writer);
+        meta.export(mapper, writer);
         writer.close();
     }
     
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);
-        this.consumer.export(consumer, writer);
+        this.consumer.export(mapper, consumer, writer);
         writer.close();
     }
 
@@ -156,7 +159,7 @@ public class Exporter {
         for (ConsumerType type : types) {
             File file = new File(typeDir.getCanonicalPath(), type.getLabel() + ".json");
             FileWriter writer = new FileWriter(file);
-            consumerType.export(writer, type);
+            consumerType.export(mapper, writer, type);
             writer.close();
         }
     }

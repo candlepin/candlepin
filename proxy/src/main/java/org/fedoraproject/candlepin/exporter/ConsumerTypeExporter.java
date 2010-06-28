@@ -20,17 +20,19 @@ import java.io.Writer;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.ConsumerType;
 
+import com.google.inject.Inject;
+
 /**
  * ConsumerTypeExporter
  */
 public class ConsumerTypeExporter {
-    private ObjectMapper mapper;
 
-    ConsumerTypeExporter(ObjectMapper mapper) {
-        this.mapper = mapper;
+    @Inject
+    ConsumerTypeExporter() {
     }
 
-    void export(Writer writer, ConsumerType consumerType) throws IOException {
+    void export(ObjectMapper mapper, Writer writer, ConsumerType consumerType) 
+        throws IOException {
         mapper.writeValue(writer, consumerType);
     }
 }

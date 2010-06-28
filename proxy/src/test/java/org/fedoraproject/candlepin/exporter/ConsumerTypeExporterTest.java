@@ -32,13 +32,13 @@ public class ConsumerTypeExporterTest {
     public void testConsumerTypeExport() throws IOException {
         ObjectMapper mapper = Exporter.getObjectMapper();
         
-        ConsumerTypeExporter consumerType = new ConsumerTypeExporter(mapper);
+        ConsumerTypeExporter consumerType = new ConsumerTypeExporter();
         
         StringWriter writer = new StringWriter();
         
         ConsumerType type = new ConsumerType("TESTTYPE");
         
-        consumerType.export(writer, type);
+        consumerType.export(mapper, writer, type);
         
         assertEquals("{\"id\":null,\"label\":\"TESTTYPE\"}", writer.toString());
     }
