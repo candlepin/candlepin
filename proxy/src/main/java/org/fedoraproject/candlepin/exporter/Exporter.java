@@ -149,6 +149,7 @@ public class Exporter {
     }
     
     private File makeTempDir() throws IOException {
+        // TODO: Need to make sure WORK_DIR exists:
         File tmp = File.createTempFile("export", Long.toString(System.nanoTime()),
             new File(WORK_DIR));
 

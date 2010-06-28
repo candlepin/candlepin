@@ -46,6 +46,7 @@ import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.exporter.Exporter;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -625,10 +626,12 @@ public class ConsumerResource {
     @GET
     @Produces("application/x-download")
     @Path("{consumer_uuid}/export")
+    // TODO: Fix security, this is open just for testing:
     @AllowRoles(roles = {Role.OWNER_ADMIN, Role.NO_AUTH})
     public File exportData(@PathParam("consumer_uuid") String consumerUuid) {
-        // TODO: Need a proper file here:
-        File tgz = new File("/tmp/tito/candlepin-0.0.18-1.src.rpm");
-        return tgz;
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Exporter exporter = new Exporter();
+        File archive = exporter.getExport(consumer);
+        return archive;
     }
 }
