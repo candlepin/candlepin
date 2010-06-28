@@ -15,26 +15,30 @@
 package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
-import java.io.Writer;
+import java.io.StringWriter;
 
+import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
+import org.junit.Test;
+import static org.mockito.Mockito.*;
 
-import com.google.inject.Inject;
+import static org.junit.Assert.assertEquals;
 
 /**
- * RulesExporter
+ * MetaExporterTest
  */
-class RulesExporter {
+public class RulesExporterTest {
     
-    private RulesCurator rulesCurator;
+    private String FAKE_RULES = "HELLO WORLD";
     
-    @Inject
-    public RulesExporter(RulesCurator rulesCurator) {
-        this.rulesCurator = rulesCurator;
-    }
-    
-    void export(Writer writer) throws IOException {
-        writer.write(rulesCurator.getRules().getRules());
+    @Test
+    public void testMetaExporter() throws IOException {
+        RulesCurator rulesCurator = mock(RulesCurator.class);
+        when(rulesCurator.getRules()).thenReturn(new Rules(FAKE_RULES));
+        RulesExporter exporter = new RulesExporter(rulesCurator);
+        StringWriter writer = new StringWriter();
+        exporter.export(writer);
+        assertEquals(FAKE_RULES, writer.toString());
     }
 
 }

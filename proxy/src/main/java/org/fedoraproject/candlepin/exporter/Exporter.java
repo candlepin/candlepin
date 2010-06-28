@@ -45,7 +45,7 @@ public class Exporter {
         
         meta = new MetaExporter(mapper);
         consumer = new ConsumerExporter(mapper);
-        rules = new RulesExporter();
+//        rules = new RulesExporter();
     }
 
     static ObjectMapper getObjectMapper() {
