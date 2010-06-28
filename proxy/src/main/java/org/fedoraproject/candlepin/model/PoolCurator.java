@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +31,15 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -52,11 +57,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private Enforcer enforcer;
     private EventSink sink;
     private EventFactory eventFactory;
-    
+    private Config config;
 
     @Inject
     protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer, 
-        ProductServiceAdapter productAdapter, EventSink sink, EventFactory eventFactory) {
+        ProductServiceAdapter productAdapter, EventSink sink, EventFactory eventFactory,
+        Config cfg) {
         
         super(Pool.class);
         this.subAdapter = subAdapter;
@@ -64,6 +70,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         this.enforcer = enforcer;
         this.sink = sink;
         this.eventFactory = eventFactory;
+        this.config = cfg; 
     }
     
     @Override
@@ -132,8 +139,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * with separately from this event.
      *
      * @param owner Owner to be refreshed.
+     * @return List of entitlements which need to be revoked
      */
-    public void refreshPools(Owner owner) {
+    public List<Entitlement> refreshPools(Owner owner) {
         log.debug("Refreshing pools");
         
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
@@ -162,7 +170,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 subToPoolMap.put(p.getSubscriptionId(), p);
             }
         }
-        
+        List<Entitlement> toRevoke = Util.newList();
         for (Subscription sub : subs) {
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
                 createPoolForSubscription(sub);
@@ -170,7 +178,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             }
             else {
                 Pool existingPool = subToPoolMap.get(sub.getId());
-                updatePoolForSubscription(existingPool, sub);
+                toRevoke.addAll(updatePoolForSubscription(existingPool, sub));
                 subToPoolMap.remove(sub.getId());
             }
         }
@@ -179,6 +187,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
             deactivatePool(entry.getValue());
         }
+        return toRevoke;
     }
 
     /**
@@ -324,9 +333,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return subToPoolMap.containsKey(id);
     }
 
-    public void updatePoolForSubscription(Pool existingPool, Subscription sub) {
+    public List<Entitlement> updatePoolForSubscription(Pool existingPool,
+        Subscription sub) {
         log.debug("Found existing pool for sub: " + sub.getId());
-        
         // Modify the pool only if the values have changed
         if ((!sub.getQuantity().equals(existingPool.getQuantity())) ||
             (!sub.getStartDate().equals(existingPool.getStartDate())) ||
@@ -337,11 +346,32 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             existingPool.setQuantity(sub.getQuantity());
             existingPool.setStartDate(sub.getStartDate());
             existingPool.setEndDate(sub.getEndDate());
-            merge(existingPool);
+            merge(existingPool);  
             
             eventFactory.poolQuantityChangedTo(e, existingPool);
             sink.sendEvent(e);
         }
+        boolean lifo = !config
+        .getBoolean(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER);
+    
+        List<Entitlement> toRevoke = Util.newList();
+        if (existingPool.isOverflowing()) {
+            // if pool quantity has reduced, then start with revocation.
+            @SuppressWarnings("unchecked")
+            Iterator<Entitlement> iter = 
+                criteriaToSelectEntitlementForPool(existingPool)
+                    .add(Restrictions.eq("isFree", false))
+                    .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
+                    .list().iterator();
+            
+            long consumed = existingPool.getConsumed();
+            while ((consumed > existingPool.getQuantity()) && iter.hasNext()) {
+                Entitlement e = iter.next();
+                toRevoke.add(e);
+                consumed -= e.getQuantity();
+            }
+        }
+        return toRevoke;
     }
 
     public void createPoolForSubscription(Subscription sub) {
@@ -366,6 +396,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         pool.setActiveSubscription(Boolean.FALSE);
         merge(pool);
     }
+    
+    public Criteria criteriaToSelectEntitlementForPool(Pool entitlementPool) {
+        return currentSession().createCriteria(Entitlement.class)
+        .add(Restrictions.eq("pool", entitlementPool));
+    }
 
     /**
      * @param entitlementPool entitlement pool to search.
@@ -374,9 +409,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @SuppressWarnings("unchecked")
     public List<Entitlement> entitlementsIn(Pool entitlementPool) {
-        return currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("pool", entitlementPool))
-            .list();
+        return criteriaToSelectEntitlementForPool(entitlementPool).list();
     }
     
     public Pool lookupBySubscriptionId(Long subId) {

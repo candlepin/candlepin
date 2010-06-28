@@ -14,6 +14,12 @@
  */
 package org.fedoraproject.candlepin.util;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -27,10 +33,34 @@ public class Util {
 
     /**
      * Generates a random UUID.
+     * 
      * @return a random UUID.
      */
     public static String generateUUID() {
         return UUID.randomUUID().toString();
+    }
+
+    public static <T> List<T> subList(List<T> parentList, int start, int end) {
+        List<T> l = new ArrayList<T>();
+        for (int i = start; i < end; i++) {
+            l.add(parentList.get(i));
+        }
+        return l;
+    }
+
+    public static <T> List<T> subList(List<T> parentList, int size) {
+        return subList(parentList, 0, size - 1);
+    }
+    public static <E> List<E> newList() {
+        return new ArrayList<E>();
+    }
+
+    public static <K, V> Map<K, V> newMap() {
+        return new HashMap<K, V>();
+    }
+    
+    public static <T> Set<T> newSet() {
+        return new HashSet<T>();
     }
 
 }

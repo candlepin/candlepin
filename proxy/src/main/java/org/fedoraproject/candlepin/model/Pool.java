@@ -460,5 +460,14 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
 
     public void setRestrictedToUsername(String restrictedToUsername) {
         this.restrictedToUsername = restrictedToUsername;
-    }    
+    }
+
+    /**
+     * Check whether {@link #consumed} is greater than {@link #quantity}
+     * 
+     * @return true if consumed>quantity else false.
+     */
+    public boolean isOverflowing() {
+        return this.consumed > this.quantity;
+    }
 }

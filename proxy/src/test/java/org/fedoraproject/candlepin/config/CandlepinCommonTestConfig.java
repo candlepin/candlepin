@@ -40,5 +40,9 @@ public class CandlepinCommonTestConfig extends Config {
         
         return properties;
     }
+    
+    public void setProperty(String key, String value) {
+        this.configuration.put(key, value);
+    }
 
 }

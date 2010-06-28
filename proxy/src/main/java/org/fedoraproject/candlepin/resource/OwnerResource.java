@@ -324,7 +324,12 @@ public class OwnerResource {
             throw new NotFoundException(
                 i18n.tr("owner with key: {0} was not found.", ownerKey));
         }
-        
-        poolCurator.refreshPools(owner);
+        List<Entitlement> toRevoke = poolCurator.refreshPools(owner);
+        if (log.isInfoEnabled()) {
+            log.info("No of entitlements to revoke: #" + toRevoke.size());
+        }
+        for (Entitlement e : toRevoke) {
+            this.entitler.revokeEntitlement(e);
+        }
     }
 }

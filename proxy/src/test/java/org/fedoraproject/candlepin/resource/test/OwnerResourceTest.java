@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.*;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,8 +28,12 @@ import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -51,7 +57,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private Owner owner;
     private Product product;
     private EventFactory eventFactory;
-
+    private CandlepinCommonTestConfig config;
+    
     @Before
     public void setUp() {
         this.ownerResource = injector.getInstance(OwnerResource.class);
@@ -61,6 +68,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         eventFactory = injector.getInstance(EventFactory.class);
+        this.config = (CandlepinCommonTestConfig) injector
+            .getInstance(Config.class);
     }
 
     @Test
@@ -350,4 +359,81 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         ownerResource.getOwnerAtomFeed(owner.getId());
     }
+    
+    @Test
+    public void testEntitlementsRevocationWithFifoOrder() {
+        doTestEntitlementsRevocationCommon(7, 4, 4, true);
+        assertTrue(this.poolCurator.find(1L).getConsumed() == 4);
+        assertNull(this.entitlementCurator.find(2L));
+        assertNotNull(this.entitlementCurator.find(1L));
+    }
+
+    @Test
+    public void testEntitlementsRevocationWithLifoOrder() {
+        doTestEntitlementsRevocationCommon(7, 4, 5, false);
+        assertTrue(this.poolCurator.find(1L).getConsumed() == 5);
+        assertNull(this.entitlementCurator.find(1L));
+        assertNotNull(this.entitlementCurator.find(2L));
+    }
+    
+    @Test
+    public void testEntitlementsRevocationWithNoOverflow() {
+        doTestEntitlementsRevocationCommon(10, 4, 5, false);
+        assertTrue(this.poolCurator.find(1L).getConsumed() == 9);
+        assertNotNull(this.entitlementCurator.find(1L));
+        assertNotNull(this.entitlementCurator.find(2L));
+    }
+
+    /**
+     * @return
+     */
+    private void doTestEntitlementsRevocationCommon(long subQ, int e1, int e2,
+        boolean fifo) {
+        Product prod = TestUtil.createProduct();
+        productCurator.create(prod);
+        Pool pool = createPoolAndSub(createOwner(), prod,
+            new Long(1000), TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2015, 11, 30));
+        Owner owner = pool.getOwner();
+        Consumer consumer = createConsumer(owner);
+        Consumer consumer1 = createConsumer(owner);
+        Subscription sub = this.subCurator.find(pool.getSubscriptionId());
+        sub.setQuantity(subQ);
+        this.subCurator.merge(sub);
+        this.ownerResource.refreshEntitlementPools(owner.getKey());
+        pool = this.poolCurator.find(pool.getId());
+        createEntitlementWithQ(pool, owner, consumer, e1, "01/02/2010");
+        createEntitlementWithQ(pool, owner, consumer1, e2, "01/01/2010");
+        assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
+        this.config.setProperty(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, 
+            fifo ? "true" : "false");
+        this.ownerResource.refreshEntitlementPools(owner.getKey());
+        pool = poolCurator.find(pool.getId());
+    }
+    
+    /**
+     * @param pool
+     * @param owner
+     * @param consumer
+     * @return
+     */
+    private Entitlement createEntitlementWithQ(Pool pool, Owner owner,
+        Consumer consumer, int quantity, String date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        Entitlement e1 = createEntitlement(owner, consumer, pool, null); 
+        e1.setQuantity(quantity);
+        e1.getPool().bumpConsumed(e1.getQuantity());
+        this.entitlementCurator.create(e1);
+        this.poolCurator.merge(e1.getPool());
+        try {
+            e1.setCreated(dateFormat.parse(date));
+            this.entitlementCurator.merge(e1);
+        }
+        catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return e1;
+    }
+    
 }
+

@@ -79,7 +79,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(X509ExtensionUtil.class);
-        bind(Config.class).to(CandlepinCommonTestConfig.class);
+        bind(Config.class).to(CandlepinCommonTestConfig.class).asEagerSingleton();
         bind(ConsumerResource.class);
         bind(PoolResource.class);
         bind(EntitlementResource.class);

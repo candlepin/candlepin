@@ -38,6 +38,8 @@ public class ConfigProperties {
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
+    public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = 
+        "candlepin.entitlement.revoke.order.fifo";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -55,6 +57,7 @@ public class ConfigProperties {
                 this.put(AUDIT_LOG_VERBOSE, "false");
 
                 this.put(PRETTY_PRINT, "false");
+                this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
             }
         };
 }
