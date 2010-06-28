@@ -23,6 +23,7 @@ import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 
 /**
@@ -31,6 +32,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 public class Exporter {
     // XXX: make this configurable
     private static final String WORK_DIR = "/tmp/candlepin/exports";
+    private static Logger log = Logger.getLogger(Exporter.class);
     
     private ObjectMapper mapper;
 
@@ -51,7 +53,7 @@ public class Exporter {
         rules = new RulesExporter();
     }
     
-    public void getExport(Consumer consumer) {
+    public File getExport(Consumer consumer) {
         try {
             File baseDir = makeTempDir();
             
@@ -61,7 +63,7 @@ public class Exporter {
             exportProducts(baseDir);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
-            
+            return makeArchive(baseDir);
  //           FileUtils.deleteDirectory(baseDir);
         }
         catch (IOException e) {
@@ -69,6 +71,37 @@ public class Exporter {
             e.printStackTrace();
         }
         
+        // Shouldn't ever hit this...
+        return null;
+    }
+
+    /**
+     * Create a tar.gz archive of the exported directory.
+     *
+     * @param exportDir Directory where Candlepin data was exported.
+     * @return File reference to the new archive tar.gz.
+     */
+    private File makeArchive(File exportDir) {
+        String exportFileName = exportDir.getName() + ".tar.gz";
+        log.info("Creating archive of " + exportDir.getAbsolutePath() + " in: " +
+            exportFileName);
+        ProcessBuilder cmd = new ProcessBuilder("tar", "cvfz", exportFileName,
+            exportDir.getName());
+        cmd.directory(new File(WORK_DIR));
+        try {
+            Process p = cmd.start();
+            p.waitFor();
+            log.debug("Done creating: " + exportFileName);
+        }
+        catch (IOException e) {
+            // TODO
+        }
+        catch (InterruptedException e) {
+            // TODO
+        }
+        File archive = new File(WORK_DIR, exportFileName);
+        log.debug("Returning file: " + archive.getAbsolutePath());
+        return archive;
     }
 
     private void exportMeta(File baseDir) throws IOException {

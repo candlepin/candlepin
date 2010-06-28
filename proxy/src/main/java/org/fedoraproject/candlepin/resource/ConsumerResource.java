@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -630,29 +629,6 @@ public class ConsumerResource {
     public File exportData(@PathParam("consumer_uuid") String consumerUuid) {
         // TODO: Need a proper file here:
         File tgz = new File("/tmp/tito/candlepin-0.0.18-1.src.rpm");
-        createTarGz("/tmp", "test.tar.gz", "tarme");
         return tgz;
-    }
-
-    /**
-     * Create a .tar.gz from a directory on disk.
-     * @param workingDir Working directory.
-     * @param filename Tar.gz filename to create in working dir.
-     * @param directoryToTar Directory to tar up. Assumed relative to working dir.
-     */
-    public void createTarGz(String workingDir, String filename, String directoryToTar) {
-        ProcessBuilder cmd = new ProcessBuilder("tar", "cvfz", filename, directoryToTar);
-        cmd.directory(new File(workingDir));
-        try {
-            Process p = cmd.start();
-            p.waitFor();
-            log.debug("Done creating: " + filename);
-        }
-        catch (IOException e) {
-            // TODO
-        }
-        catch (InterruptedException e) {
-            // TODO
-        }
     }
 }
