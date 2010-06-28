@@ -22,7 +22,7 @@ RESTEASY = [group('jaxrs-api',
                   :version => '1.2.1.GA'), 
             'javax.persistence:persistence-api:jar:1.0',
             'xalan:xalan:jar:2.6.0',
-            'org.scannotation:scannotation:jar:1.0.2',
+            'net.sf.scannotation:scannotation:jar:1.0.2',
             'commons-httpclient:commons-httpclient:jar:3.1']
 
 JACKSON = [group('jackson-core-lgpl', 
@@ -82,7 +82,7 @@ HORNETQ = [group('hornetq-core',
 #                 'hornetq-resources', #Native libs for libaio
                  :under=>'org.hornetq',
                  :version=>'2.1.0.Final'),
-            'org.jboss.netty:netty:jar:3.2.0.BETA1']
+            'org.jboss.netty:netty:jar:3.2.1.Final']
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
@@ -91,7 +91,7 @@ SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 #
 # Specify Maven 2.0 remote repositories here, like this:
 repositories.remote << "http://www.ibiblio.org/maven2/"
-repositories.remote << "http://repository.jboss.com/maven2/"
+repositories.remote << "https://repository.jboss.org/nexus/content/repositories/releases/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 
 #############################################################################
