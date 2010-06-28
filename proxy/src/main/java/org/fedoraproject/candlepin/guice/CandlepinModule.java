@@ -100,7 +100,6 @@ public class CandlepinModule extends AbstractModule {
         bind(RulesResource.class);
         bind(AdminResource.class);
         bind(StatusResource.class);
-        bind(Exporter.class).asEagerSingleton();
         bind(CandlepinExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(I18n.class).toProvider(I18nProvider.class);
@@ -108,6 +107,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
         
+        bind(Exporter.class).asEagerSingleton();
         bind(MetaExporter.class);
         bind(ConsumerTypeExporter.class);
         bind(ConsumerExporter.class);
