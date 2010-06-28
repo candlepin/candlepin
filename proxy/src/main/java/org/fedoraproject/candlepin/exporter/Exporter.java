@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.exporter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.AnnotationIntrospector;
@@ -25,6 +26,10 @@ import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+
+import com.google.inject.Inject;
 
 /**
  * Exporter
@@ -38,14 +43,21 @@ public class Exporter {
 
     private MetaExporter meta;
     private ConsumerExporter consumer;
+    private ConsumerTypeExporter consumerType;
     private RulesExporter rules;
     
-    public Exporter() {
+    private ConsumerTypeCurator consumerTypeCurator;
+    
+    @Inject
+    public Exporter(ConsumerTypeCurator consumerTypeCurator) {
         mapper = getObjectMapper();
         
         meta = new MetaExporter(mapper);
         consumer = new ConsumerExporter(mapper);
+        consumerType = new ConsumerTypeExporter(mapper);
 //        rules = new RulesExporter();
+        
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     static ObjectMapper getObjectMapper() {
@@ -136,14 +148,18 @@ public class Exporter {
     }
     
     private void exportConsumerTypes(File baseDir) throws IOException {
-        File file = new File(baseDir.getCanonicalPath(), "consumer_types");
-        file.mkdir();
+        File typeDir = new File(baseDir.getCanonicalPath(), "consumer_types");
+        typeDir.mkdir();
+
+        List<ConsumerType> types = consumerTypeCurator.listAll();
         
-/*        file = new File(file.getCanonicalPath(), "rules.js");
-        FileWriter writer = new FileWriter(file);
-        rules.export(writer);
-        writer.close();
-*/    }
+        for (ConsumerType type : types) {
+            File file = new File(typeDir.getCanonicalPath(), type.getLabel() + ".json");
+            FileWriter writer = new FileWriter(file);
+            consumerType.export(writer, type);
+            writer.close();
+        }
+    }
 
     private void exportRules(File baseDir) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "rules");

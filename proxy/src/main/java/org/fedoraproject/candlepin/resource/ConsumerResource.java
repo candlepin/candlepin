@@ -97,6 +97,7 @@ public class ConsumerResource {
     private EventFactory eventFactory;
     private EventCurator eventCurator;
     private static final int FEED_LIMIT = 1000;
+    private Exporter exporter;
     
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -110,7 +111,8 @@ public class ConsumerResource {
         EventSink sink,
         EventFactory eventFactory,
         EventCurator eventCurator,
-        UserServiceAdapter userService) {
+        UserServiceAdapter userService,
+        Exporter exporter) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -126,6 +128,7 @@ public class ConsumerResource {
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
         this.userService = userService;
+        this.exporter = exporter;
     }
 
     /**
@@ -630,7 +633,6 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.OWNER_ADMIN, Role.NO_AUTH})
     public File exportData(@PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        Exporter exporter = new Exporter();
         File archive = exporter.getExport(consumer);
         return archive;
     }

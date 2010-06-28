@@ -151,7 +151,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, null, null, null, null, 
-            mockedEntitlementCertServiceAdapter, null, null, null, null, null);
+            mockedEntitlementCertServiceAdapter, null, null, null, null, null, null);
         
         List<CertificateSerialDto> serials 
             = consumerResource.getEntitlementCertificateSerials(consumer.getUuid());
