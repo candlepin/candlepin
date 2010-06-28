@@ -19,6 +19,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
+import org.codehaus.jackson.map.AnnotationIntrospector;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.model.Consumer;
 
 /**
@@ -28,14 +32,23 @@ public class Exporter {
     // XXX: make this configurable
     private static final String WORK_DIR = "/tmp/candlepin/exports";
     
+    private ObjectMapper mapper;
+
     private MetaExporter meta;
     private ConsumerExporter consumer;
     private RulesExporter rules;
     
     public Exporter() {
-        this.meta = new MetaExporter();
-        this.consumer = new ConsumerExporter();
-        this.rules = new RulesExporter();
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        mapper = new ObjectMapper();
+        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
+        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+        
+        meta = new MetaExporter(mapper);
+        consumer = new ConsumerExporter(mapper);
+        rules = new RulesExporter();
     }
     
     public void getExport(Consumer consumer) {

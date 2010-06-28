@@ -16,12 +16,19 @@ package org.fedoraproject.candlepin.exporter;
 
 import java.io.FileWriter;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Consumer;
 
 /**
  * Consumer - maps to the consumer.json file
  */
 class ConsumerExporter {
+    private ObjectMapper mapper;
+    
+    ConsumerExporter(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
+
     void export(Consumer consumer, FileWriter writer) {
         
     }

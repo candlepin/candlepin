@@ -17,15 +17,29 @@ package org.fedoraproject.candlepin.exporter;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.codehaus.jackson.map.ObjectMapper;
+
 /**
  * Meta maps to meta.json in the export
  * 
  */
 class MetaExporter {
-    private static final String VERSION = "0.0.0";
+    private class Meta {
+        private static final String VERSION = "0.0.0";
+        
+        public String getVersion() {
+            return VERSION;
+        }
+    }
+    
+    private ObjectMapper mapper;
+
+    MetaExporter(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     void export(FileWriter writer) throws IOException {
-        writer.write(VERSION);
+        mapper.writeValue(writer, new Meta());
     }
 
 }
