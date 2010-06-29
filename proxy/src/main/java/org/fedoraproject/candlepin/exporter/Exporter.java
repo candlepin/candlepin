@@ -17,7 +17,12 @@ package org.fedoraproject.candlepin.exporter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -27,8 +32,11 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.model.Product;
 
 import com.google.inject.Inject;
 
@@ -44,18 +52,22 @@ public class Exporter {
 
     private MetaExporter meta;
     private ConsumerExporter consumer;
+    private ProductExporter productExporter;
+    private ProductCertExporter productCertExporter;
     private ConsumerTypeExporter consumerType;
     private RulesExporter rules;
     private EntitlementCertExporter entCert;
     
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
+    private ProductServiceAdapter productAdapter;
     
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
         ConsumerExporter consumer, ConsumerTypeExporter consumerType, 
         RulesExporter rules, EntitlementCertExporter entCert,
-        EntitlementCertServiceAdapter entCertAdapter) {
+        EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
+        ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter) {
         
         mapper = getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
@@ -66,6 +78,9 @@ public class Exporter {
         this.rules = rules;
         this.entCert = entCert;
         this.entCertAdapter = entCertAdapter;
+        this.productExporter = productExporter;
+        this.productAdapter = productAdapter;
+        this.productCertExporter = productCertExporter;
     }
 
     static ObjectMapper getObjectMapper() {
@@ -87,7 +102,7 @@ public class Exporter {
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
-            exportProducts(baseDir);
+            exportProducts(baseDir, consumer);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
             return makeArchive(baseDir);
@@ -158,18 +173,40 @@ public class Exporter {
         }
     }
     
-    private void exportProducts(File baseDir) throws IOException {
-        File file = new File(baseDir.getCanonicalPath(), "products");
-        file.mkdir();
+    private void exportProducts(File baseDir, Consumer consumer) throws IOException {
+        File productDir = new File(baseDir.getCanonicalPath(), "products");
+        productDir.mkdir();
+        
+        Map<String, Product> products = new HashMap<String, Product>();
+        for (Entitlement entitlement : consumer.getEntitlements()) {
+            
+            for (String productId : entitlement.getPool().getProvidedProductIds()) {
+                // Don't want to call the adapter if not needed, it can be expensive.
+                if (!products.containsKey(productId)) {
+                    products.put(productId, productAdapter.getProductById(productId));
+                }
+            }
+        }
+        
+        for (Product product : products.values()) {
+            File file = new File(productDir.getCanonicalPath(), product.getId() + ".json");
+            FileWriter writer = new FileWriter(file);
+            productExporter.export(mapper, writer, product);
+            writer.close();
+            
+            file = new File(productDir.getCanonicalPath(), product.getId() + ".pem");
+            writer = new FileWriter(file);
+            productCertExporter.export(writer,
+                productAdapter.getProductCertificate(product));
+            writer.close();
+        }
     }
     
     private void exportConsumerTypes(File baseDir) throws IOException {
         File typeDir = new File(baseDir.getCanonicalPath(), "consumer_types");
         typeDir.mkdir();
 
-        List<ConsumerType> types = consumerTypeCurator.listAll();
-        
-        for (ConsumerType type : types) {
+        for (ConsumerType type : consumerTypeCurator.listAll()) {
             File file = new File(typeDir.getCanonicalPath(), type.getLabel() + ".json");
             FileWriter writer = new FileWriter(file);
             consumerType.export(mapper, writer, type);
