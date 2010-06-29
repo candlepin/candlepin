@@ -629,8 +629,7 @@ public class ConsumerResource {
     @GET
     @Produces("application/x-download")
     @Path("{consumer_uuid}/export")
-    // TODO: Fix security, this is open just for testing:
-    @AllowRoles(roles = {Role.OWNER_ADMIN, Role.NO_AUTH})
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public File exportData(@PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         File archive = exporter.getExport(consumer);

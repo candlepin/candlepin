@@ -19,7 +19,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
@@ -28,6 +27,8 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -45,13 +46,16 @@ public class Exporter {
     private ConsumerExporter consumer;
     private ConsumerTypeExporter consumerType;
     private RulesExporter rules;
+    private EntitlementCertExporter entCert;
     
     private ConsumerTypeCurator consumerTypeCurator;
+    private EntitlementCertServiceAdapter entCertAdapter;
     
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
         ConsumerExporter consumer, ConsumerTypeExporter consumerType, 
-        RulesExporter rules) {
+        RulesExporter rules, EntitlementCertExporter entCert,
+        EntitlementCertServiceAdapter entCertAdapter) {
         
         mapper = getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
@@ -60,7 +64,8 @@ public class Exporter {
         this.consumer = consumer;
         this.consumerType = consumerType;
         this.rules = rules;
-        
+        this.entCert = entCert;
+        this.entCertAdapter = entCertAdapter;
     }
 
     static ObjectMapper getObjectMapper() {
@@ -81,7 +86,7 @@ public class Exporter {
             
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
-            exportEntitlements(baseDir);
+            exportEntitlements(baseDir, consumer);
             exportProducts(baseDir);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
@@ -140,9 +145,17 @@ public class Exporter {
         writer.close();
     }
 
-    private void exportEntitlements(File baseDir) throws IOException {
-        File file = new File(baseDir.getCanonicalPath(), "entitlements");
-        file.mkdir();
+    private void exportEntitlements(File baseDir, Consumer consumer) throws IOException {
+        File entCertDir = new File(baseDir.getCanonicalPath(), "entitlements");
+        entCertDir.mkdir();
+
+        for (EntitlementCertificate cert : entCertAdapter.listForConsumer(consumer)) {
+            log.debug("Exporting entitlement certificate: " + cert.getSerial());
+            File file = new File(entCertDir.getCanonicalPath(), cert.getSerial() + ".pem");
+            FileWriter writer = new FileWriter(file);
+            entCert.export(writer, cert);
+            writer.close();
+        }
     }
     
     private void exportProducts(File baseDir) throws IOException {

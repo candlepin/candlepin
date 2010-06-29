@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.exporter.ConsumerExporter;
 import org.fedoraproject.candlepin.exporter.ConsumerTypeExporter;
+import org.fedoraproject.candlepin.exporter.EntitlementCertExporter;
 import org.fedoraproject.candlepin.exporter.Exporter;
 import org.fedoraproject.candlepin.exporter.MetaExporter;
 import org.fedoraproject.candlepin.exporter.RulesExporter;
@@ -112,6 +113,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerTypeExporter.class);
         bind(ConsumerExporter.class);
         bind(RulesExporter.class);
+        bind(EntitlementCertExporter.class);
         
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
