@@ -14,9 +14,10 @@
  */
 package org.fedoraproject.candlepin.service.impl.stub;
 
-import java.math.BigInteger;
+import java.util.Date;
 import java.util.Random;
 
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -29,12 +30,14 @@ public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapte
     public IdentityCertificate generateIdentityCert(Consumer consumer,
             String username) {
         IdentityCertificate idCert = new IdentityCertificate();
-
+        CertificateSerial serial = new CertificateSerial(new Date());
+        serial.setId(new Long(random.nextInt(1000000)));
+       
         // totally arbitrary
         idCert.setId(43L);
         idCert.setKey("uh0876puhapodifbvj094");
         idCert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
-        idCert.setSerial(new BigInteger(new Integer(random.nextInt(1000000)).toString()));
+        idCert.setSerial(serial);
 
         // TODO: Should probably be saved to the database even if it is a stub...
         return idCert;

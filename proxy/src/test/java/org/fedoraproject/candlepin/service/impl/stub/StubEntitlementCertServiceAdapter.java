@@ -20,6 +20,7 @@ import java.security.GeneralSecurityException;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -61,15 +62,16 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
         log.debug("   end date: " + endDate);
         
         EntitlementCertificate cert = new EntitlementCertificate();
-        BigInteger serialNumber = new BigInteger(serialCurator.getNextSerial().toString());
-
-        cert.setSerial(serialNumber);
+        CertificateSerial serial = new CertificateSerial(endDate);
+        serialCurator.create(serial);
+       
+        cert.setSerial(serial);
         cert.setKeyAsBytes("---- STUB KEY -----".getBytes());
         cert.setCertAsBytes("---- STUB CERT -----".getBytes());
         cert.setEntitlement(entitlement);
         entitlement.getCertificates().add(cert);
         
-        log.debug("Generated cert: " + serialNumber);
+        log.debug("Generated cert: " + serial.getId());
         log.debug("Key: " + cert.getKey());
         log.debug("Cert: " + cert.getCert());
         entCertCurator.create(cert);

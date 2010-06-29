@@ -33,6 +33,7 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.AttributeCurator;
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -266,12 +267,14 @@ public class DatabaseTestFixture {
         return toReturn;
     }
     
-    protected EntitlementCertificate createEntitlementCertificate(String key, String cert, 
-            BigInteger serial) {
+    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
+        CertificateSerial certSerial = new CertificateSerial(new Date());
+        certSerialCurator.create(certSerial);
+        
         toReturn.setKeyAsBytes(key.getBytes());
         toReturn.setCertAsBytes(cert.getBytes());
-        toReturn.setSerial(serial);
+        toReturn.setSerial(certSerial);
         return toReturn;
     }
     

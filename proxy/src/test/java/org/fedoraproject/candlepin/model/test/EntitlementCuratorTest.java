@@ -36,7 +36,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Entitlement secondEntitlement;
     private Entitlement firstEntitlement;
     
-    private final Integer EXPECTED_CERTIFICATE_SERIAL = 456;
+    private final Long EXPECTED_CERTIFICATE_SERIAL = 2L;
 
     @Before
     public void setUp() {
@@ -54,8 +54,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         poolCurator.create(firstPool);
         
         EntitlementCertificate firstCertificate 
-            = createEntitlementCertificate("key", "certificate",
-                new BigInteger(Integer.toString(123)));
+            = createEntitlementCertificate("key", "certificate");
         
         firstEntitlement = createEntitlement(owner, null, firstPool, firstCertificate);
         entitlementCurator.create(firstEntitlement);
@@ -68,8 +67,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         poolCurator.create(secondPool);
         
         EntitlementCertificate secondCertificate 
-            = createEntitlementCertificate("key", "certificate", 
-                new BigInteger(Integer.toString(EXPECTED_CERTIFICATE_SERIAL)));
+            = createEntitlementCertificate("key", "certificate");
         
         secondEntitlement = createEntitlement(owner, null, secondPool, secondCertificate);
         entitlementCurator.create(secondEntitlement);
@@ -77,8 +75,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     
     @Test
     public void shouldReturnCorrectCertificate() {
-        assertEquals(secondEntitlement, 
-            entitlementCurator.findByCertificateSerial(
-                new BigInteger(new Long(EXPECTED_CERTIFICATE_SERIAL).toString())));
+        Entitlement e = entitlementCurator.findByCertificateSerial(
+            BigInteger.valueOf(EXPECTED_CERTIFICATE_SERIAL));
+        assertEquals(secondEntitlement, e);
     }
 }

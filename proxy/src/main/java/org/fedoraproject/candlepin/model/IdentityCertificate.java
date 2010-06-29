@@ -44,17 +44,17 @@ public class IdentityCertificate extends AbstractCertificate {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_id_cert")
     private Long id;
 
-    @Column(nullable = false)
-    private BigInteger serial;
+    @OneToOne
+    private CertificateSerial serial;
 
     @OneToOne(mappedBy = "idCert")
     private Consumer consumer;
 
-    public BigInteger getSerial() {
+    public CertificateSerial getSerial() {
         return serial;
     }
 
-    public void setSerial(BigInteger serialNumber) {
+    public void setSerial(CertificateSerial serialNumber) {
         this.serial = serialNumber;
     }
 

@@ -14,7 +14,11 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Date;
+
+import junit.framework.Assert;
 
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -26,25 +30,11 @@ import org.junit.Test;
 public class CertificateSerialCuratorTest extends DatabaseTestFixture {
 
     @Test
-    public void testOldSerialsDeleted() {
-        Long firstSerial = certSerialCurator.getNextSerial();
-        CertificateSerial serial = certSerialCurator.find(firstSerial);
-        assertEquals(firstSerial, serial.getId());
-
-        Long secondSerial = certSerialCurator.getNextSerial();
-        Long expected = firstSerial + 1;
-        assertEquals(expected, secondSerial);
-
-        Long thirdSerial = certSerialCurator.getNextSerial();
-        expected = secondSerial + 1;
-        assertEquals(expected, thirdSerial);
-
-        // First two should be gone now:
-        assertNull(certSerialCurator.find(firstSerial));
-        assertNull(certSerialCurator.find(secondSerial));
-
-        // Make sure we didn't delete the latest:
-        assertNotNull(certSerialCurator.find(thirdSerial));
+    public void testSerialCreation() {
+        CertificateSerial serial = new CertificateSerial(new Date());
+        serial = certSerialCurator.create(serial);
+        assertNotNull(serial);
+        Assert.assertTrue(serial.getId() > 0);
     }
 
 }

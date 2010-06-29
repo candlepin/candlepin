@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
@@ -80,16 +81,20 @@ public class DefaultIdentityCertServiceAdapter implements
             return certificate;
         }
 
-        BigInteger serialNumber = new BigInteger(serialCurator.getNextSerial().toString());
+        CertificateSerial serial = new CertificateSerial(endDate);
+        // We need the sequence generated id before we create the EntitlementCertificate,
+        // otherwise we could have used cascading create
+        serialCurator.create(serial);
+        
         String dn = createDN(consumer, username);
         IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
-            startDate, endDate, keyPair, serialNumber);
+            startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()));
         
         identityCert.setCert(new String(pki.getPemEncoded(x509cert)));
         identityCert.setKey(new String(pki.getPemEncoded(keyPair.getPrivate())));
-        identityCert.setSerial(x509cert.getSerialNumber());
+        identityCert.setSerial(serial);
         identityCert.setConsumer(consumer);
         consumer.setIdCert(identityCert);
 

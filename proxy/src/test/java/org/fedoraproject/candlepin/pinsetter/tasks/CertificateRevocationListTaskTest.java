@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.Job;
@@ -29,7 +30,7 @@ import org.quartz.JobExecutionException;
 /**
  * CertificateRevocationListTaskTest
  */
-public class CertificateRevocationListTaskTest {
+public class CertificateRevocationListTaskTest extends DatabaseTestFixture{
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
     private final ByteArrayOutputStream err = new ByteArrayOutputStream();
     
@@ -42,7 +43,8 @@ public class CertificateRevocationListTaskTest {
 
     @Test
     public void testExecute() throws JobExecutionException {
-        Job task = new CertificateRevocationListTask(null);
+        CertificateRevocationListTask task = new CertificateRevocationListTask(null);
+        task.setEntCertCurator(entCertCurator);
         task.execute(null);
         assertNotNull(out.toString());
         assertTrue(out.toString().startsWith("crl task ran:"));

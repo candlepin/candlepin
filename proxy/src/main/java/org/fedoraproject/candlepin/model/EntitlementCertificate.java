@@ -23,6 +23,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -76,19 +77,19 @@ public class EntitlementCertificate extends AbstractCertificate
                     generator = "seq_ent_cert")
     private Long id;
 
-    @Column(nullable = false)
-    private BigInteger serial;
+    @OneToOne
+    private CertificateSerial serial;
 
     @ManyToOne
     @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
     private Entitlement entitlement;
 
-    public BigInteger getSerial() {
+    public CertificateSerial getSerial() {
         return serial;
     }
 
-    public void setSerial(BigInteger serialNumber) {
+    public void setSerial(CertificateSerial serialNumber) {
         this.serial = serialNumber;
     }
 

@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
+import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -31,6 +32,13 @@ public class CertificateRevocationListTask implements Job {
     public static final String DEFAULT_SCHEDULE = "*/1 * * * * ?";
     private EntitlementCertificateCurator entCertCurator;
 
+    /**
+     * @param entCertCurator the entCertCurator to set
+     */
+    public void setEntCertCurator(EntitlementCertificateCurator entCertCurator) {
+        this.entCertCurator = entCertCurator;
+    }
+
     @Inject
     public CertificateRevocationListTask(
         EntitlementCertificateCurator entCertCurator) {
@@ -40,8 +48,9 @@ public class CertificateRevocationListTask implements Job {
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
         List<EntitlementCertificate> entCerts = entCertCurator.listAll();
-        System.out.println("Found " + entCerts.size() +
-            " entitlement certificats");
+         System.out.println("crl task ran: " + new Date().toString());
     }
+    
+    
 
 }

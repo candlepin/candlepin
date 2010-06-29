@@ -136,9 +136,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(1, serials.size());
     }
     
-    private BigInteger FIRST_CERT_SERIAL = new BigInteger("1");
-    private BigInteger SECOND_CERT_SERIAL = new BigInteger("2");
-    private BigInteger THIRD_CERT_SERIAL = new BigInteger("3");
+    private Long FIRST_CERT_SERIAL = Long.valueOf(1);
+    private Long SECOND_CERT_SERIAL = Long.valueOf(2);
+    private Long THIRD_CERT_SERIAL = Long.valueOf(3);
 
     @Test
     public void testGetCertSerials() {
@@ -169,9 +169,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private List<EntitlementCertificate> createEntitlementCertificates() {
         return Arrays.asList(
             new EntitlementCertificate[] {
-                createEntitlementCertificate("key1", "cert1", FIRST_CERT_SERIAL),
-                createEntitlementCertificate("key2", "cert2", SECOND_CERT_SERIAL),
-                createEntitlementCertificate("key3", "cert3", THIRD_CERT_SERIAL)
+                createEntitlementCertificate("key1", "cert1"),
+                createEntitlementCertificate("key2", "cert2"),
+                createEntitlementCertificate("key3", "cert3")
             }
         );
     }
@@ -194,20 +194,20 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             consumer.getUuid(), pool.getId(), null, null, 1, null, null);
         consumerResource.bind(
             consumer.getUuid(), pool.getId(), null, null, 1, null, null);
-        List<EntitlementCertificate> serials = consumerResource.
+        List<EntitlementCertificate> certificates = consumerResource.
             getEntitlementCertificates(consumer.getUuid(), null);
-        assertEquals(4, serials.size());
+        assertEquals(4, certificates.size());
 
-        BigInteger serial1 = serials.get(0).getSerial();
-        BigInteger serial2 = serials.get(3).getSerial();
+        Long serial1 = Long.valueOf(certificates.get(0).getSerial().getId());
+        Long serial2 = Long.valueOf(certificates.get(3).getSerial().getId());
 
         String serialsToFilter =  serial1.toString() + "," + serial2.toString();
 
-        serials = consumerResource.getEntitlementCertificates(consumer.getUuid(),
+        certificates = consumerResource.getEntitlementCertificates(consumer.getUuid(),
             serialsToFilter);
-        assertEquals(2, serials.size());
-        assertEquals(serial1, serials.get(0).getSerial());
-        assertEquals(serial2, serials.get(1).getSerial());
+        assertEquals(2, certificates.size());
+        assertEquals(serial1, certificates.get(0).getSerial().getId());
+        assertEquals(serial2, certificates.get(1).getSerial().getId());
     }
 
     @Test
@@ -350,7 +350,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(1, serials.size());
 
         consumerResource.unbindBySerial(consumer.getUuid(),
-            serials.get(0).getSerial().longValue());
+            serials.get(0).getSerial().getId());
         assertEquals(0,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }

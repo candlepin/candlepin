@@ -116,7 +116,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Entitlement findByCertificateSerial(BigInteger serial) {
         return (Entitlement) currentSession().createCriteria(Entitlement.class)
             .createCriteria("certificates")
-                .add(Restrictions.eq("serial", serial))
+                .add(Restrictions.eq("serial.id", serial.longValue()))
             .uniqueResult();
     }
 }

@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -80,20 +81,22 @@ public class DefaultEntitlementCertServiceAdapter extends
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + endDate);
         
-        
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
-        BigInteger serialNumber = new BigInteger(serialCurator.getNextSerial().toString());
+        CertificateSerial serial = new CertificateSerial(endDate);
+        // We need the sequence generated id before we create the EntitlementCertificate,
+        // otherwise we could have used cascading create
+        serialCurator.create(serial);
         
         X509Certificate x509Cert = createX509Certificate(consumer, entitlement, sub,
-            product, endDate, serialNumber, keyPair);
+            product, endDate, BigInteger.valueOf(serial.getId()), keyPair);
         
         EntitlementCertificate cert = new EntitlementCertificate();
-        cert.setSerial(serialNumber);
+        cert.setSerial(serial);
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
         cert.setEntitlement(entitlement);
         
-        log.debug("Generated cert serial number: " + serialNumber);
+        log.debug("Generated cert serial number: " + serial.getId());
         log.debug("Key: " + cert.getKey());
         log.debug("Cert: " + cert.getCert());
         

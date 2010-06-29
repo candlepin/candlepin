@@ -305,24 +305,25 @@ public class ConsumerResource {
         log.debug("Getting client certificates for consumer: " + consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
-        Set<BigInteger> serialSet = new HashSet<BigInteger>();
+        Set<Long> serialSet = new HashSet<Long>();
         if (serials != null) {
             log.debug("Requested serials: " + serials);
             for (String s : serials.split(",")) {
                 log.debug("   " + s);
-                serialSet.add(new BigInteger(s));
+                serialSet.add(Long.valueOf(s));
             }
         }
 
-        List<EntitlementCertificate> allCerts =
+        List<EntitlementCertificate> returnCerts =
             new LinkedList<EntitlementCertificate>();
-        for (EntitlementCertificate cert : entCertService.listForConsumer(consumer)) {
-
-            if (serialSet.size() == 0 || serialSet.contains(cert.getSerial())) {
-                allCerts.add(cert);
+        List<EntitlementCertificate> allCerts =
+            entCertService.listForConsumer(consumer);
+        for (EntitlementCertificate cert : allCerts) {
+            if (serialSet.size() == 0 || serialSet.contains(cert.getSerial().getId())) {
+                returnCerts.add(cert);
             }
         }
-        return allCerts;
+        return returnCerts;
     }
 
     /**
@@ -348,7 +349,7 @@ public class ConsumerResource {
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
         for (EntitlementCertificate cert :
             entCertService.listForConsumer(consumer)) {
-            allCerts.add(new CertificateSerialDto(cert.getSerial()));
+            allCerts.add(new CertificateSerialDto(cert.getSerial().getId()));
         }
 
         return allCerts;
@@ -619,7 +620,7 @@ public class ConsumerResource {
         
         verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator.findByCertificateSerial(
-            new BigInteger(serial.toString()));
+           BigInteger.valueOf(serial));
         
         if (toDelete != null) {
             entitler.revokeEntitlement(toDelete);

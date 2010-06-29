@@ -14,43 +14,14 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.List;
-
-import org.apache.log4j.Logger;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
- * Doesn't do much else.
  */
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
-
-    private static Logger log = Logger.getLogger(CertificateSerialCurator.class);
-
+    
     protected CertificateSerialCurator() {
         super(CertificateSerial.class);
     }
-
-    /**
-     * Get the next available serial number, delete the old entries from the db.
-     * (we're really only interested in the most recent)
-     *
-     * @return next available serial number.
-     */
-    public Long getNextSerial() {
-        CertificateSerial serial = new CertificateSerial();
-        create(serial);
-
-        Criteria crit = currentSession().createCriteria(CertificateSerial.class);
-        crit.add(Restrictions.lt("id", serial.getId()));
-        List<CertificateSerial> toDelete = crit.list();
-        for (CertificateSerial deleteThis : toDelete) {
-            log.debug("Deleting serial: " + deleteThis);
-            delete(deleteThis);
-        }
-
-        return serial.getId();
-    }
-
+    
 }

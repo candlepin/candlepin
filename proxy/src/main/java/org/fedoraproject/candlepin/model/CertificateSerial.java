@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -26,7 +28,7 @@ import javax.persistence.Table;
  * unique serial numbers.
  */
 @Entity
-@Table(name = "cp_serial_generator")
+@Table(name = "cp_cert_serial")
 @SequenceGenerator(name = "seq_certificate_serial", sequenceName = "seq_certificate_serial",
         allocationSize = 1)
 public class CertificateSerial extends AbstractHibernateObject{
@@ -35,8 +37,12 @@ public class CertificateSerial extends AbstractHibernateObject{
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator =
         "seq_certificate_serial")
     private Long id;
+    private boolean revoked;
+    private boolean collected;
+    private Date expiration;
 
-    public CertificateSerial() {
+    public CertificateSerial(Date expiration) {
+        this.expiration = expiration;
     }
 
     public CertificateSerial(Long id) {
@@ -49,6 +55,48 @@ public class CertificateSerial extends AbstractHibernateObject{
 
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    /**
+     * @return the revoked
+     */
+    public boolean isRevoked() {
+        return revoked;
+    }
+
+    /**
+     * @param revoked the revoked to set
+     */
+    public void setRevoked(boolean revoked) {
+        this.revoked = revoked;
+    }
+
+    /**
+     * @return the collected
+     */
+    public boolean isCollected() {
+        return collected;
+    }
+
+    /**
+     * @param collected the collected to set
+     */
+    public void setCollected(boolean collected) {
+        this.collected = collected;
+    }
+
+    /**
+     * @return the expiration
+     */
+    public Date getExpiration() {
+        return expiration;
+    }
+
+    /**
+     * @param expiration the expiration to set
+     */
+    public void setExpiration(Date expiration) {
+        this.expiration = expiration;
     }
 
     public String toString() {

@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.math.BigInteger;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -28,20 +26,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class CertificateSerialDto {
 
-    private BigInteger serial;
+    private Long serial;
 
     public CertificateSerialDto() {
     }
 
-    public CertificateSerialDto(BigInteger serial) {
+    public CertificateSerialDto(Long serial) {
         this.serial = serial;
     }
 
-    public BigInteger getSerial() {
+    public Long getSerial() {
         return serial;
     }
 
-    public void setSerial(BigInteger serial) {
+    public void setSerial(Long serial) {
         this.serial = serial;
     }
 

@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import java.text.ParseException;
 
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
@@ -33,11 +34,11 @@ import org.quartz.spi.TriggerFiredBundle;
  * HighlanderFactoryTest
  * @version $Rev$
  */
-public class HighlanderFactoryTest {
+public class HighlanderFactoryTest extends DatabaseTestFixture{
 
     @Test
     public void testNewJob() throws SchedulerException, ParseException {
-        HighlanderJobFactory hf = new HighlanderJobFactory(null);
+        HighlanderJobFactory hf = new HighlanderJobFactory(injector);
         assertNotNull(hf);
         try {
             hf.newJob(null);
