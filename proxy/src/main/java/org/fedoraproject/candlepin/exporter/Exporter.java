@@ -136,7 +136,7 @@ public class Exporter {
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);
-        this.consumer.export(mapper, consumer, writer);
+        this.consumer.export(mapper, writer, consumer);
         writer.close();
     }
 
