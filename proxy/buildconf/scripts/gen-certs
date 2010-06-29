@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CERTS_HOME=/etc/candlepin/certs
+CA_KEY_PASSWORD=$CERTS_HOME/candlepin-ca-password.txt
 CA_KEY=$CERTS_HOME/candlepin-ca.key
 CA_CERT=$CERTS_HOME/candlepin-ca.crt
 KEYSTORE=$CERTS_HOME/keystore
@@ -26,8 +27,10 @@ HOSTNAME=${HOSTNAME:-$(hostname)}
 if [ -f $CA_KEY ] && [ -f $CA_CERT ] && [ "$FORCECERT" = "" ]; then
     echo "Certificates are already present."
 else
+    echo "Creating CA private key password"
+    sudo su -c "echo $RANDOM > $CA_KEY_PASSWORD"
     echo "Creating CA private key"
-    sudo openssl genrsa -out $CA_KEY 1024
+    sudo openssl genrsa -out $CA_KEY -passout "file:$CA_KEY_PASSWORD" 1024
     echo "Creating CA certificate"
     sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj "/CN=$HOSTNAME/C=US/L=Raleigh/"
     sudo openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE -name tomcat -CAfile $CA_CERT -caname root -chain -password pass:password
