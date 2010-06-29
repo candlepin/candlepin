@@ -14,27 +14,33 @@
  */
 package org.fedoraproject.candlepin.exporter;
 
-import java.io.IOException;
-import java.io.Writer;
-
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Consumer;
 
-import com.google.inject.Inject;
-
 /**
- * Consumer - maps to the consumer.json file
+ * ConsumerDTO
  */
-public class ConsumerExporter {
+public class ConsumerDto {
+    private String uuid;
     
-    @Inject
-    ConsumerExporter() {
+    public ConsumerDto() {
     }
     
-    void export(ObjectMapper mapper, Writer writer, Consumer consumer)
-        throws IOException {
-        ConsumerDto dto = new ConsumerDto(consumer.getUuid());
-        
-        mapper.writeValue(writer, dto);
+    ConsumerDto(String uuid) {
+        this.uuid = uuid;
+    }
+    
+    public String getUuid() {
+        return uuid;
+    }
+    
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+    
+    public Consumer consumer() {
+        Consumer toReturn = new Consumer();
+        toReturn.setUuid(uuid);
+        return toReturn;
     }
 }
+

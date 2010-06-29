@@ -15,26 +15,34 @@
 package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
-import java.io.Writer;
+import java.io.StringReader;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.google.inject.Inject;
+import static org.junit.Assert.*;
 
 /**
- * Consumer - maps to the consumer.json file
+ * ConsumerImporterTest
  */
-public class ConsumerExporter {
+public class ConsumerImporterTest {
     
-    @Inject
-    ConsumerExporter() {
+    private ConsumerImporter importer;
+    private ObjectMapper mapper;
+
+    @Before
+    public void setUp() {
+        importer = new ConsumerImporter();
+        mapper = Exporter.getObjectMapper();
     }
-    
-    void export(ObjectMapper mapper, Writer writer, Consumer consumer)
-        throws IOException {
-        ConsumerDto dto = new ConsumerDto(consumer.getUuid());
+
+    @Test
+    public void importShouldCreateAValidConsumer() throws IOException {
+        Consumer consumer = 
+            importer.importObject(mapper, new StringReader("{\"uuid\":\"test-uuid\"}"));
         
-        mapper.writeValue(writer, dto);
+        assertEquals("test-uuid", consumer.getUuid());
     }
 }
