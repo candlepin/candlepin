@@ -14,7 +14,11 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -272,5 +276,129 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.update(consumer);
     }
     
+    @Test
+    public void factsEqual() {
+        Consumer first = new Consumer();
+        Map<String, String> firstFacts = first.getFacts();
+        
+        firstFacts.put("key1", "1");
+        firstFacts.put("key2", "two");
+        firstFacts.put("key3", "3");
+        
+        Consumer second = new Consumer();
+        Map<String, String> secondFacts = second.getFacts();
+        
+        secondFacts.put("key1", "1");
+        secondFacts.put("key2", "two");
+        secondFacts.put("key3", "3");
+        
+        assertTrue(first.factsAreEqual(second));
+    }
+    
+    @Test
+    public void defaultFactsEqual() {
+        assertTrue(new Consumer().factsAreEqual(new Consumer()));
+    }
+    
+    @Test
+    public void factsDifferentValues() {
+        Consumer first = new Consumer();
+        Map<String, String> firstFacts = first.getFacts();
+        
+        firstFacts.put("key1", "1");
+        firstFacts.put("key2", "two");
+        firstFacts.put("key3", "3");
+        
+        Consumer second = new Consumer();
+        Map<String, String> secondFacts = second.getFacts();
+        
+        secondFacts.put("key1", "1");
+        secondFacts.put("key2", "2");
+        secondFacts.put("key3", "3");
+        
+        assertFalse(first.factsAreEqual(second));
+    }
+    
+    @Test
+    public void factsSecondMissing() {
+        Consumer first = new Consumer();
+        Map<String, String> firstFacts = first.getFacts();
+        
+        firstFacts.put("key1", "1");
+        firstFacts.put("key2", "two");
+        firstFacts.put("key3", "3");
+        
+        Consumer second = new Consumer();
+        Map<String, String> secondFacts = second.getFacts();
+        
+        secondFacts.put("key1", "1");
+        
+        assertFalse(first.factsAreEqual(second));
+    }
+    
+    @Test
+    public void factsFirstMissing() {
+        Consumer first = new Consumer();
+        Map<String, String> firstFacts = first.getFacts();
+        
+        firstFacts.put("key1", "1");
+        firstFacts.put("key3", "3");
+        
+        Consumer second = new Consumer();
+        Map<String, String> secondFacts = second.getFacts();
+        
+        secondFacts.put("key1", "1");
+        secondFacts.put("key2", "2");
+        secondFacts.put("key3", "3");
+        
+        assertFalse(first.factsAreEqual(second));
+    }
+    
+    @Test 
+    public void factsEqualNull() {
+        Consumer first = new Consumer();
+        Map<String, String> firstFacts = first.getFacts();
+        
+        firstFacts.put("key1", "1");
+        firstFacts.put("key2", null);
+        
+        Consumer second = new Consumer();
+        Map<String, String> secondFacts = second.getFacts();
+        
+        secondFacts.put("key1", "1");
+        secondFacts.put("key2", null);
+        
+        assertTrue(first.factsAreEqual(second));
+    }
+    
+    @Test
+    public void factsFirstNull() {
+        Consumer first = new Consumer();
+        Map<String, String> firstFacts = first.getFacts();
+        
+        firstFacts.put("key1", "1");
+        firstFacts.put("key2", null);
+        
+        Consumer second = new Consumer();
+        Map<String, String> secondFacts = second.getFacts();
+        
+        secondFacts.put("key1", "1");
+        secondFacts.put("key2", "two");
+        
+        assertFalse(first.factsAreEqual(second));
+    }
+    
+    @Test
+    public void factsSecondNull() {
+        Consumer first = new Consumer();
+        Map<String, String> firstFacts = first.getFacts();
+        firstFacts.put("key1", "1");
+        
+        Consumer second = new Consumer();
+        Map<String, String> secondFacts = second.getFacts();
+        secondFacts.put("key1", null);
+        
+        assertFalse(first.factsAreEqual(second));
+    }
 
 }

@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -324,12 +325,43 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
         return facts.get(factKey);
     }
 
-    
     /**
      * @param factsIn facts about this consumer.
      */
     public void setFacts(Map<String, String> factsIn) {
         facts = factsIn;
+    }
+    
+    /**
+     * Returns if the <code>other</code> consumer's facts are
+     * the same as the facts of this consumer.
+     * 
+     * @param other the Consumer whose facts to compare
+     * @return <code>true</code> if the facts are the same, <code>false</code> otherwise
+     */
+    public boolean factsAreEqual(Consumer other) {
+        Map<String, String> myFacts = getFacts();
+        Map<String, String> otherFacts = other.getFacts();
+        
+        if (myFacts.size() != otherFacts.size()) {
+            return false;
+        }
+        
+        for (Entry<String, String> entry : myFacts.entrySet()) {
+            String myVal = entry.getValue();
+            String otherVal = otherFacts.get(entry.getKey());
+            
+            if (myVal == null) {
+                if (otherVal != null) {
+                    return false;
+                }
+            }
+            else if (!myVal.equals(otherVal)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     /**
@@ -379,7 +411,7 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     public void removeEntitlement(Entitlement entitlement) {
         this.entitlements.remove(entitlement);
     }
-
+    
     @XmlTransient
     public KeyPair getKeyPair() {
         return keyPair;

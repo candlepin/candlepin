@@ -18,8 +18,6 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -260,7 +258,7 @@ public class ConsumerResource {
     public void updateConsumer(@PathParam("consumer_uuid") String uuid, Consumer consumer) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
         
-        if (factsHaveChanged(toUpdate, consumer)) {
+        if (!toUpdate.factsAreEqual(consumer)) {
             Event event = eventFactory.consumerModified(toUpdate, consumer);
         
             // TODO:  Just updating the facts for now
@@ -269,22 +267,6 @@ public class ConsumerResource {
         }
     }
     
-    private boolean factsHaveChanged(Consumer oldConsumer, Consumer newConsumer) {
-        Map<String, String> oldFacts = oldConsumer.getFacts();
-        Map<String, String> newFacts = newConsumer.getFacts();
-        
-        if (oldFacts.size() != newFacts.size()) {
-            return true;
-        }
-        
-        for (Entry<String, String> entry : oldFacts.entrySet()) {
-            if (!entry.getValue().equals(newFacts.get(entry.getKey()))) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
 
     /**
      * delete the consumer.
