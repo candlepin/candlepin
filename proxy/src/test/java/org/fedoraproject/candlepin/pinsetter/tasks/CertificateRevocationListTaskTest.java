@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
-import org.quartz.Job;
 import org.quartz.JobExecutionException;
 
 

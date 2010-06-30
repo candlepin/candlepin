@@ -14,12 +14,13 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import static org.fedoraproject.candlepin.util.Util.getFutureDate;
+
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
-import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
@@ -112,11 +113,4 @@ public class DefaultIdentityCertServiceAdapter implements
         return sb.toString();
     }
 
-    private Date getFutureDate(int years) {
-        Calendar future = Calendar.getInstance();
-        future.setTime(new Date());
-        future.set(Calendar.YEAR, future.get(Calendar.YEAR) + years);
-
-        return future.getTime();
-    }
 }

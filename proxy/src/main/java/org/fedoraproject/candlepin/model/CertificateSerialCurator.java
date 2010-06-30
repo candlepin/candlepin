@@ -14,6 +14,11 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.List;
+
+import org.fedoraproject.candlepin.util.Util;
+import org.hibernate.criterion.Restrictions;
+
 
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
@@ -23,5 +28,34 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     protected CertificateSerialCurator() {
         super(CertificateSerial.class);
     }
+
+    /**
+     * @return list of certificate serials which are revoked but not yet collected
+     * and put into crl
+     */
+    @SuppressWarnings("unchecked")
+    public List<CertificateSerial> retrieveTobeCollectedSerials() {
+        return this.currentSession().createCriteria(CertificateSerial.class)
+            .add(Restrictions.eq("revoked", true))
+            .add(Restrictions.eq("collected", false)).list();
+    }
     
+    @SuppressWarnings("unchecked")
+    public List<CertificateSerial> getExpiredSerials() {
+        //TODO - Should date fields be truncated when checking expiration?
+        return this.currentSession()
+            .createCriteria(CertificateSerial.class)
+            .add(Restrictions.ge("expiration", Util.yesterday())).list();
+    }
+
+    /**
+     * 
+     */
+    public void deleteExpiredSerials() {
+        this.currentSession()
+            .createQuery("delete from CertificateSerial where expiration >= :date")
+            .setDate("date", Util.yesterday())
+            .executeUpdate();
+    }
+
 }

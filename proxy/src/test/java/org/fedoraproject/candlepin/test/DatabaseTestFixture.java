@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.test;
 
-import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;

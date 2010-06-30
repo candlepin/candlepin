@@ -14,9 +14,11 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -57,9 +59,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.inject.internal.Lists;
-
-
-import static org.mockito.Mockito.*;
 
 /**
  * ConsumerResourceTest

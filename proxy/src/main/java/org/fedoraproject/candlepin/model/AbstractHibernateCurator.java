@@ -34,6 +34,7 @@ import com.wideplay.warp.persist.Transactional;
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     private final Class<E> entityType;
+    private int batchSize = 30;
 
     protected AbstractHibernateCurator(Class<E> entityType) {
         //entityType = (Class<E>) ((ParameterizedType)
@@ -126,5 +127,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     protected EntityManager getEntityManager() {
         return entityManager.get();
+    }
+    
+    public void saveOrUpdateAll(List<E> entries) {
+        Session session = currentSession();
+        for (int i = 0; i < entries.size(); i++) {
+            session.saveOrUpdate(entries.get(i));
+            if (i % batchSize == 0) {
+                session.flush();
+                session.clear();
+            }
+        }
+
     }
 }

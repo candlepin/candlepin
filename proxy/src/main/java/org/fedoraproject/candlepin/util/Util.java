@@ -14,13 +14,23 @@
  */
 package org.fedoraproject.candlepin.util;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.cert.X509CRLEntry;
+import java.security.cert.X509Certificate;
+import java.security.cert.X509Extension;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.DEROctetString;
 
 /**
  * Genuinely random utilities.
@@ -62,5 +72,43 @@ public class Util {
     public static <T> Set<T> newSet() {
         return new HashSet<T>();
     }
+    
 
+    public static Date getFutureDate(int years) {
+        Calendar future = Calendar.getInstance();
+        future.setTime(new Date());
+        future.set(Calendar.YEAR, future.get(Calendar.YEAR) + years);
+        return future.getTime();
+    }
+    
+    public static Date tomorrow() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.roll(Calendar.DAY_OF_MONTH, true);
+        return calendar.getTime();
+    }
+    
+    public static Date yesterday() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.roll(Calendar.DAY_OF_MONTH, false);
+        return calendar.getTime();
+    }
+    
+
+    public static BigInteger toBigInt(long l) {
+        return new BigInteger(String.valueOf(l));
+    }
+    
+    public static String decodeValue(byte[] value) {
+        try {
+            return new ASN1InputStream(((DEROctetString) new ASN1InputStream(value)
+                .readObject()).getOctets()).readObject().toString();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public static String getValue(X509Extension cert, String extension) {
+        return decodeValue(cert.getExtensionValue(extension));
+    }
 }

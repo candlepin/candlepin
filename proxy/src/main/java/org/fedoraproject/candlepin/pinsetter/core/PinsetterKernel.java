@@ -53,7 +53,7 @@ public class PinsetterKernel implements SchedulerService {
     private ChainedListener chainedJobListener = null;
     private Config config = null;
     
-    @Inject Injector injector;
+    @Inject private Injector injector;
 
     /**
      * Kernel main driver behind Pinsetter

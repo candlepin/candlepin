@@ -51,7 +51,7 @@ public class HighlanderJobFactory implements JobFactory {
         Job retval = jobImplCache.get(jobClass.getName());
         if (retval == null) {
             try {
-                if(injector != null){
+                if (injector != null) {
                     retval = (Job) injector.getInstance(jobClass);
                     injector.injectMembers(retval);
                     jobImplCache.put(jobClass.getName(), retval);

@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.math.BigInteger;
 import java.util.Date;
 
 import javax.persistence.Entity;
@@ -22,6 +23,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.fedoraproject.candlepin.util.Util;
 
 /**
  * CertificateSerial: A simple database sequence used to ensure certificates receive
@@ -37,8 +40,14 @@ public class CertificateSerial extends AbstractHibernateObject{
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator =
         "seq_certificate_serial")
     private Long id;
+    
+    /**Flag which indicates whether the certificate is revoked */
     private boolean revoked;
+    
+    /** Set to true if this serial is already a part of the crl*/
     private boolean collected;
+    
+    /** The expiration. */
     private Date expiration;
 
     public CertificateSerial(Date expiration) {
@@ -101,6 +110,10 @@ public class CertificateSerial extends AbstractHibernateObject{
 
     public String toString() {
         return "CertificateSerial[id=" + id + "]";
+    }
+    
+    public BigInteger getSerial() {
+        return Util.toBigInt(this.getId());
     }
 
 }

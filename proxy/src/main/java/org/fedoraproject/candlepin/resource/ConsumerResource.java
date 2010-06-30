@@ -619,8 +619,8 @@ public class ConsumerResource {
         @PathParam("serial") Long serial) {
         
         verifyAndLookupConsumer(consumerUuid);
-        Entitlement toDelete = entitlementCurator.findByCertificateSerial(
-           BigInteger.valueOf(serial));
+        Entitlement toDelete = entitlementCurator
+            .findByCertificateSerial(BigInteger.valueOf(serial));
         
         if (toDelete != null) {
             entitler.revokeEntitlement(toDelete);
