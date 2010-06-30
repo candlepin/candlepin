@@ -40,6 +40,10 @@ public class ProductExporter {
             return product.getId();
         }
         
+        public String getName() {
+            return product.getName();
+        }
+        
         public Long getMultiplier() {
             return product.getMultiplier();
         }
