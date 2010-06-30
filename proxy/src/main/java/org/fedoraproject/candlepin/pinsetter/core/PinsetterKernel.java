@@ -52,9 +52,6 @@ public class PinsetterKernel implements SchedulerService {
     private Scheduler scheduler = null;
     private ChainedListener chainedJobListener = null;
     private Config config = null;
-    
-    @Inject private Injector injector;
-
     /**
      * Kernel main driver behind Pinsetter
      * @throws InstantiationException thrown if this.scheduler can't be
@@ -72,7 +69,6 @@ public class PinsetterKernel implements SchedulerService {
      */
     @Inject
     public PinsetterKernel(Config conf, Injector injector) throws InstantiationException {
-        this.injector = injector;
         config = conf;
 
         Properties props = config.getNamespaceProperties("org.quartz",
