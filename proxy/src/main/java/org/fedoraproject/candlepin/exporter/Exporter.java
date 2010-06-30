@@ -97,7 +97,9 @@ public class Exporter {
     
     public File getExport(Consumer consumer) {
         try {
-            File baseDir = makeTempDir();
+            File tempDir = makeTempDir();
+            File baseDir = new File(tempDir.getAbsolutePath(), "export");
+            baseDir.mkdir();
             
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
@@ -105,7 +107,7 @@ public class Exporter {
             exportProducts(baseDir, consumer);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
-            return makeArchive(baseDir);
+            return makeArchive(tempDir, baseDir);
  //           FileUtils.deleteDirectory(baseDir);
         }
         catch (IOException e) {
@@ -123,13 +125,13 @@ public class Exporter {
      * @param exportDir Directory where Candlepin data was exported.
      * @return File reference to the new archive tar.gz.
      */
-    private File makeArchive(File exportDir) {
+    private File makeArchive(File tempDir, File exportDir) {
         String exportFileName = exportDir.getName() + ".tar.gz";
         log.info("Creating archive of " + exportDir.getAbsolutePath() + " in: " +
             exportFileName);
         ProcessBuilder cmd = new ProcessBuilder("tar", "cvfz", exportFileName,
             exportDir.getName());
-        cmd.directory(new File(WORK_DIR));
+        cmd.directory(tempDir);
         try {
             Process p = cmd.start();
             p.waitFor();
@@ -141,7 +143,7 @@ public class Exporter {
         catch (InterruptedException e) {
             // TODO
         }
-        File archive = new File(WORK_DIR, exportFileName);
+        File archive = new File(tempDir, exportFileName);
         log.debug("Returning file: " + archive.getAbsolutePath());
         return archive;
     }
