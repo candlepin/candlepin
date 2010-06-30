@@ -18,27 +18,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import org.fedoraproject.candlepin.model.Rules;
-import org.fedoraproject.candlepin.model.RulesCurator;
-
-import com.google.inject.Inject;
-
 /**
- * RulesImporter
+ * StringFromReader
  */
-public class RulesImporter {
-    
-    private RulesCurator curator;
-
-    @Inject
-    RulesImporter(RulesCurator curator) {
-        this.curator = curator;
+public class StringFromReader {
+    private StringFromReader() {
     }
-
-    public Rules importObject(Reader reader) throws IOException {
-        
-        new BufferedReader(reader);
-        
-        return curator.create(new Rules(StringFromReader.asString(reader)));
+    
+    public static String asString(Reader reader) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        String line;
+        BufferedReader br = new BufferedReader(reader);
+        while ((line = br.readLine()) != null) {
+            sb.append(line);
+        }
+        return sb.toString();    
     }
 }

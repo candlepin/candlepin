@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.exporter;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.io.StringReader;
 
 import org.fedoraproject.candlepin.model.Rules;
@@ -44,7 +45,7 @@ public class RulesImporterTest {
     }
     
     @Test
-    public void importRules() {
+    public void importRules() throws IOException {
         importer.importObject(new StringReader(RULE));
         verify(curator).create(any(Rules.class)); // TODO: can't get custom matcher to work?
     }
