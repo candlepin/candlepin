@@ -16,8 +16,6 @@ package org.fedoraproject.candlepin.util;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.cert.X509CRLEntry;
-import java.security.cert.X509Certificate;
 import java.security.cert.X509Extension;
 import java.util.ArrayList;
 import java.util.Calendar;

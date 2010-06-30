@@ -28,6 +28,7 @@ import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.pinsetter.core.HighlanderJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
+import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
@@ -105,6 +106,7 @@ public class CandlepinModule extends AbstractModule {
         bind(EventSink.class).to(EventSinkImpl.class);
         bind(HighlanderJobFactory.class);
         bind(PinsetterKernel.class);
+        bind(CertificateRevocationListTask.class);
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(

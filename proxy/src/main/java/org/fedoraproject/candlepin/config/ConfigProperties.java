@@ -58,6 +58,9 @@ public class ConfigProperties {
 
                 this.put(PRETTY_PRINT, "false");
                 this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
+                this.put(CRL_FILE_PATH, "/etc/candlepin/candlepin-crl.crl");
+                
             }
         };
+    public static final String CRL_FILE_PATH = "candlepin.crl.file";
 }
