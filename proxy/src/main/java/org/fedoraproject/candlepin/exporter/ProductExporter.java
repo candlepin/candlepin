@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.exporter;
 
-import java.io.FileWriter;
+import java.io.Writer;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -62,7 +62,7 @@ public class ProductExporter {
         
     }
 
-    public void export(ObjectMapper mapper, FileWriter writer, Product product)
+    public void export(ObjectMapper mapper, Writer writer, Product product)
         throws IOException {
         mapper.writeValue(writer, new ProductDto(product));
     }
