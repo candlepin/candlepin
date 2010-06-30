@@ -37,6 +37,7 @@ public class Consumer extends TimeStampedEntity {
     protected IdentityCertificate idCert;
     private Consumer parent;
     private Long id;
+    private Map<String, String> facts;
 
     public Long getId() {
         return id;
@@ -92,8 +93,13 @@ public class Consumer extends TimeStampedEntity {
         this.idCert = idCert;
     }
 
-    @JsonIgnore
+    public Map<String, String> getFacts() {
+        return this.facts;
+    }
+    
+    //@JsonIgnore
     public void setFacts(Map<String, String> facts) {
+        this.facts = facts;
     }
 
     /* (non-Javadoc)

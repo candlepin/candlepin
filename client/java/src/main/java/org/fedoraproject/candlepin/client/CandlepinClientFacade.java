@@ -44,6 +44,13 @@ public interface CandlepinClientFacade {
      * @return The UUID of the new consumer.
      */
     String register(String username, String password, String name, String type);
+    
+    /**
+     * Updates the consumer information, based on the current jvm info.
+     * 
+     * @return <code>true</code>, if successful
+     */
+    boolean updateConsumer();
 
     /**
      * Register to an existing consumer. The credentials are user for

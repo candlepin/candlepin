@@ -20,6 +20,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -40,12 +41,18 @@ public interface CandlepinConsumerClient{
     @Path("consumers")
     @Consumes(MediaType.APPLICATION_JSON)
     Consumer register(Consumer aConsumer);
+    
 
     @GET
     @Path("consumers/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<Consumer> getConsumer(@PathParam("uuid") String uuid);
 
+    @PUT
+    @Path("consumers/{uuid}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    Consumer updateConsumer(@PathParam("uuid") String uuid, Consumer consumer);
+    
     @DELETE
     @Path("consumers/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)

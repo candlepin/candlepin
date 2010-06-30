@@ -101,9 +101,26 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
         Consumer cons = new Consumer();
         cons.setName(name);
         cons.setType(type);
+        cons.setFacts(Utils.getHardwareFacts());
         cons = client.register(cons);
         recordIdentity(cons);
         return cons.getUuid();
+    }
+    
+    /* (non-Javadoc)
+     * @see org.fedoraproject.candlepin.client.CandlepinClientFacade#updateConsumer(java.lang.String, java.lang.String)
+     */
+    @Override
+    public boolean updateConsumer() {
+        String uuid = getUUID();
+        CandlepinConsumerClient client = clientWithCert();
+        
+        // Currently this just updates the hardware facts
+        Consumer consumer = client.getConsumer(uuid).getEntity();
+        consumer.setFacts(Utils.getHardwareFacts());
+        client.updateConsumer(uuid, consumer);
+        
+        return true;
     }
 
     /*

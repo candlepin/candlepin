@@ -74,6 +74,32 @@ public final class Utils {
         properties.setProperty(key,
             String.format(properties.getProperty(key), SystemUtils.USER_HOME));
     }
+    
+    public static Map<String, String> getHardwareFacts() {
+        Map<String, String> facts = new HashMap<String, String>();
+        
+        // TODO:  Just using system properties for now
+        Properties properties = System.getProperties();
+        for (String property : properties.stringPropertyNames()) {
+            facts.put(property, properties.getProperty(property));
+        }
+        
+        // get rid of a few attributes
+        facts.remove("java.class.path");
+        facts.remove("java.io.tmpdir");
+        facts.remove("file.separator");
+        facts.remove("java.endorsed.dirs");
+        facts.remove("user.name");
+        facts.remove("path.separator");
+        facts.remove("line.separator");
+        facts.remove("sun.boot.library.path");
+        facts.remove("java.library.path");
+        facts.remove("java.ext.dirs");
+        facts.remove("sun.boot.class.path");
+        facts.remove("user.dir");
+        
+        return facts;
+    }
 
     public static <T> Set<T> newSet() {
         return new HashSet<T>();

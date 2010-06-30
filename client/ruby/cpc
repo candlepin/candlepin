@@ -139,7 +139,13 @@ else
   method_name = ARGV[0]
 
   if cli.is_method? method_name
-    args = ARGV[1..-1].collect { |arg| eval(arg) rescue arg }
+    args = ARGV[1..-1].collect do |arg|
+      begin
+        eval(arg)
+      rescue Exception
+        arg
+      end
+    end
     val = cli.send(method_name, *args)
 
     pp val

@@ -29,6 +29,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.fedoraproject.candlepin.client.cmds.BaseCommand;
+import org.fedoraproject.candlepin.client.cmds.FactsCommand;
 import org.fedoraproject.candlepin.client.cmds.HelpCommand;
 import org.fedoraproject.candlepin.client.cmds.ListCommand;
 import org.fedoraproject.candlepin.client.cmds.RegisterCommand;
@@ -60,9 +61,9 @@ public class CLIMain {
             Class<? extends BaseCommand>[] commands = new Class[]{
                 RegisterCommand.class, ListCommand.class,
                 SubscribeCommand.class, UnSubscribeCommand.class,
-                UnRegisterCommand.class };
-            for (Class cmdClass : commands) {
-                BaseCommand cmd = (BaseCommand) cmdClass.newInstance();
+                FactsCommand.class, UnRegisterCommand.class };
+            for (Class<? extends BaseCommand> cmdClass : commands) {
+                BaseCommand cmd = cmdClass.newInstance();
                 cmds.put(cmd.getName(), cmd);
             }
             // Now add the help command
