@@ -197,7 +197,7 @@ public class Exporter {
             writer.close();
             
             // MKT products aren't 'real' products; we can't make certs from them.
-            if (!product.getAttribute("type").equals("MKT")) {
+            if (!product.getAttributeValue("type").equals("MKT")) {
                 file = new File(productDir.getCanonicalPath(), product.getId() + ".pem");
                 writer = new FileWriter(file);
                 productCertExporter.export(writer,
