@@ -14,7 +14,14 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -98,4 +105,26 @@ public class AdminResource {
         return "Initialized!";
     }
     
+    @POST
+    @Path("import")
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Consumes("*/*")
+    public void importData(File archive) {
+        log.info("Importing archive: " + archive.getAbsolutePath());
+        File export = new File("/tmp/candlepin/export.tar.gz");
+        try {
+            FileReader reader = new FileReader(archive);
+            FileWriter writer = new FileWriter(export);
+            int c;
+            while ((c = reader.read()) != -1) {
+                writer.write(c);
+            }
+            reader.close();
+            writer.close();
+        }
+        catch (IOException e) {
+            // TODO
+        }
+    }
+
 }
