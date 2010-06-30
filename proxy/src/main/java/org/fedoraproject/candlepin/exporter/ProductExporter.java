@@ -40,6 +40,10 @@ public class ProductExporter {
             return product.getId();
         }
         
+        public Long getMultiplier() {
+            return product.getMultiplier();
+        }
+        
         public Set<Attribute> getAttributes() {
             return product.getAttributes();
         }
