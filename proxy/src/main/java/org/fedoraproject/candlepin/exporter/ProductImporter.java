@@ -15,19 +15,17 @@
 package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
-import java.io.Writer;
+import java.io.Reader;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Product;
 
 /**
- * ProductExporter
+ * ProductImporter
  */
-public class ProductExporter {
-    
-    public void export(ObjectMapper mapper, Writer writer, Product product)
-        throws IOException {
-        mapper.writeValue(writer, new ProductDto(product));
-    }
+public class ProductImporter {
 
+    public Product importObject(ObjectMapper mapper, Reader reader) throws IOException {
+        return mapper.readValue(reader, ProductDto.class).product();
+    }
 }
