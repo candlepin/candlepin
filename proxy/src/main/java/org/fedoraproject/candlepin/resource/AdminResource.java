@@ -15,8 +15,8 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import javax.ws.rs.Consumes;
@@ -36,6 +36,9 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.jboss.resteasy.util.GenericType;
 
 import com.google.inject.Inject;
 
@@ -108,22 +111,29 @@ public class AdminResource {
     @POST
     @Path("import")
     @AllowRoles(roles = Role.SUPER_ADMIN)
-    @Consumes("*/*")
-    public void importData(File archive) {
-        log.info("Importing archive: " + archive.getAbsolutePath());
-        File export = new File("/tmp/candlepin/export.tar.gz");
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public void importData(MultipartInput input) {
+
         try {
-            FileReader reader = new FileReader(archive);
-            FileWriter writer = new FileWriter(export);
+            InputPart part = input.getParts().get(0);
+            log.info("part: " + part.getBodyAsString());
+            File archive = part.getBody(new GenericType<File>(){});
+            log.info("Importing archive: " + archive.getAbsolutePath());
+
+            File export = new File("/tmp/candlepin/export.tar.gz");
+            FileOutputStream fos = new FileOutputStream(export);
+            FileInputStream fis = new FileInputStream(archive);
+
             int c;
-            while ((c = reader.read()) != -1) {
-                writer.write(c);
+            while ((c = fis.read()) != -1) {
+                fos.write(c);
             }
-            reader.close();
-            writer.close();
+            fis.close();
+            fos.close();
         }
         catch (IOException e) {
             // TODO
+            log.error(e);
         }
     }
 

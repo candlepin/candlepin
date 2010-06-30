@@ -18,11 +18,16 @@ RESTEASY = [group('jaxrs-api',
                   'resteasy-jaxb-provider', 
                   'resteasy-guice', 
                   'resteasy-atom-provider',
+                  'resteasy-multipart-provider',
                   :under => 'org.jboss.resteasy',
                   :version => '2.0-beta-4'),
             'javax.persistence:persistence-api:jar:1.0',
             'org.scannotation:scannotation:jar:1.0.2',
             'commons-httpclient:commons-httpclient:jar:3.1']
+
+MIME4J = [group('apache-mime4j',
+                :under => 'org.apache.james',
+                :version => '0.6')]
 
 JACKSON = [group('jackson-core-lgpl', 
                  'jackson-mapper-lgpl', 
@@ -139,7 +144,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB
+      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J
  
   #
   # testing
