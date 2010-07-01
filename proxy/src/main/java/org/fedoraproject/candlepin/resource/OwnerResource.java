@@ -21,12 +21,14 @@ import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -261,9 +263,21 @@ public class OwnerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/subscriptions")
     public Subscription createSubscription(@PathParam("owner_id") Long ownerId, 
-        Subscription subscription) {
-        
-        subscription.setOwner(findOwner(ownerId));
+        Subscription subscription, 
+        @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
+        Owner o = this.ownerCurator.find(ownerId);
+        if (o == null) {
+            if (autoCreateOwner) {
+                Owner owner = new Owner(String.valueOf(ownerId), String.valueOf(ownerId));
+                owner.setId(ownerId);
+                o = this.createOwner(owner);
+            }
+            else {
+                throw new NotFoundException(
+                    i18n.tr("owner with id: {0} was not found.", ownerId));
+            }
+        }
+        subscription.setOwner(o);
         subscription.setProduct(productCurator.find(subscription.getProduct().getId()));
         Set<Product> provided = new HashSet<Product>();
         for (Product incoming : subscription.getProvidedProducts()) {
