@@ -31,6 +31,9 @@ public class ProductDto {
     private Set<Attribute> attributes;
     private Set<Long> content;
     
+    public ProductDto() {
+    }
+    
     ProductDto(Product product) {
         this.id = product.getId();
         this.name = product.getName();
@@ -91,7 +94,7 @@ public class ProductDto {
         Product toReturn = new Product(id, name, multiplier);
         toReturn.setAttributes(attributes);
         
-        // TODO: handle content
+        // TODO: handle content out of entitlement cert.
         
         return toReturn;
     }
