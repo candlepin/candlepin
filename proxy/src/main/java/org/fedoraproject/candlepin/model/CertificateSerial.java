@@ -68,13 +68,6 @@ public class CertificateSerial extends AbstractHibernateObject{
         this.expiration = expiration;
     }    
 
-    /**
-     * 
-     */
-    public CertificateSerial() {
-        super();
-    }
-
     public Long getId() {
         return id;
     }
