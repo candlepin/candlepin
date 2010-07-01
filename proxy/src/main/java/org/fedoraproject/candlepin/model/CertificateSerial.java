@@ -50,6 +50,11 @@ public class CertificateSerial extends AbstractHibernateObject{
     /** The expiration. */
     private Date expiration;
 
+    /**
+     * Default constructor for serialization - DO NOT REMOVE!
+     */
+    public CertificateSerial() { }
+    
     public CertificateSerial(Date expiration) {
         this.expiration = expiration;
     }
