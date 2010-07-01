@@ -33,87 +33,132 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.security.auth.x500.X500Principal;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.util.Util;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 /**
- * CertificateRevocationListTask
+ * CertificateRevocationListTask.
  */
 public class CertificateRevocationListTask implements Job {
-    public static final String DEFAULT_SCHEDULE = "*/1 * * * * ?";
+    
+    //"*/1 * * * * ?";
+    /** The Constant DEFAULT_SCHEDULE. */
+    public static final String DEFAULT_SCHEDULE = "* * */24 * * ?";
+    
+    /** The pki reader. */
     private PKIReader pkiReader;
+    
+    /** The config. */
     private Config config;
+    
+    /** The certificate serial curator. */
     private CertificateSerialCurator certificateSerialCurator;
+    
+    /** The algorithm. */
+    private String algorithm;
 
+    private static final Logger L = Logger.getLogger(CertificateRevocationListTask.class); 
+    /**
+     * Instantiates a new certificate revocation list task.
+     * 
+     * @param rdr the rdr
+     * @param conf the conf
+     * @param curator the curator
+     * @param algorithm the algorithm
+     */
     @Inject
-    public CertificateRevocationListTask(PKIReader rdr, Config conf) {
+    public CertificateRevocationListTask(PKIReader rdr, Config conf,
+        CertificateSerialCurator curator, @Named("crlSignatureAlgo")String algorithm) {
         this.pkiReader = rdr;
         this.config = conf;
+        this.certificateSerialCurator = curator;
+        this.algorithm = algorithm;
     }
 
+    /* (non-Javadoc)
+     * @see org.quartz.Job#execute(org.quartz.JobExecutionContext)
+     */
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
-        File crlFile = new File(config.getString(ConfigProperties.CRL_FILE_PATH));
-        this.updateCRL(crlFile, ""); //TODO: principal needs to be provided.
+        String filePath = config.getString(ConfigProperties.CRL_FILE_PATH);
+        L.info("Executing CRL Job. CRL filePath=" + filePath);
+        File crlFile = new File(filePath);
+        Principal systemPrincipal = new SystemPrincipal();
+        ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
+        this.updateCRL(crlFile, "CN=test, UID=" + UUID.randomUUID());
+        ResteasyProviderFactory.popContextData(Principal.class);
     }
 
-    public CertificateSerialCurator getCertificateSerialCurator() {
-        return certificateSerialCurator;
-    }
-    
-    
-
-    public void setCertificateSerialCurator(
-        CertificateSerialCurator certificateSerialCurator) {
-        this.certificateSerialCurator = certificateSerialCurator;
-    }
-    
-    
-    private static class SimpleCRLEntry{
-        private BigInteger serialNumber;
-        private Date revocationDate;
+    /**
+     * The Class SimpleCRLEntry.
+     */
+    protected static class SimpleCRLEntry{
+        
+        /** The serial number. */
+        protected BigInteger serialNumber;
+        
+        /** The revocation date. */
+        protected Date revocationDate;
         /**
-         * @param serialNumber
-         * @param revocationDate
+         * Instantiates a new simple crl entry.
+         * 
+         * @param serialNumber the serial number
+         * @param revocationDate the revocation date
          */
         private SimpleCRLEntry(BigInteger serialNumber, Date revocationDate) {
-            super();
             this.serialNumber = serialNumber;
             this.revocationDate = revocationDate;
         }
     }
 
+    /**
+     * Generate crl.
+     * 
+     * @param entries the entries
+     * @param principal the principal
+     * @param crlNumber the crl number
+     * @return the x509 crl
+     */
     protected X509CRL generateCRL(Iterator<SimpleCRLEntry> entries,
         String principal, BigInteger crlNumber) {
         try {
             X509V2CRLGenerator generator = new X509V2CRLGenerator();
             generator.setIssuerDN(new X500Principal(principal));
             generator.setThisUpdate(new Date());
+            generator.setNextUpdate(Util.tomorrow());
+            generator.setSignatureAlgorithm(algorithm);
             //add all the crl entries.
             while (entries.hasNext()) {
                 SimpleCRLEntry entry = entries.next();
                 generator.addCRLEntry(entry.serialNumber, entry.revocationDate,
                     CRLReason.privilegeWithdrawn);
             }
+            L.info("Completed adding CRL numbers to the certificate.");
             generator.addExtension(X509Extensions.AuthorityKeyIdentifier,
                 false, new AuthorityKeyIdentifierStructure(pkiReader.getCACert()));
             generator.addExtension(X509Extensions.CRLNumber, false,
@@ -125,6 +170,11 @@ public class CertificateRevocationListTask implements Job {
         }
     }
 
+    /**
+     * Gets the new serials to append and set them consumed.
+     * 
+     * @return the new serials to append and set them consumed
+     */
     protected List<SimpleCRLEntry> getNewSerialsToAppendAndSetThemConsumed() {
         List<SimpleCRLEntry> entries = Util.newList();
         List<CertificateSerial> serials =  
@@ -134,14 +184,29 @@ public class CertificateRevocationListTask implements Job {
                     cs.getExpiration()));
             cs.setCollected(true);
         }
+        L.info("Added #" + serials.size() + " new entries to the CRL");
+        if (L.isDebugEnabled()) {
+            StringBuilder builder = new StringBuilder("[ ");
+            for (CertificateSerial cs : serials) {
+                builder.append(cs.getSerial()).append(", ");
+            }
+            builder.append(" ]");
+            L.debug("Newly added serials = " + builder.toString());
+        }
         this.certificateSerialCurator.saveOrUpdateAll(serials);
         return entries;
     }
 
+    /**
+     * Removes the expired serials.
+     * 
+     * @param revokedEntries the revoked entries
+     * @return the set
+     */
     protected Set<? extends X509CRLEntry> removeExpiredSerials(
         Set<? extends X509CRLEntry> revokedEntries) {
         if (revokedEntries == null || revokedEntries.size() == 0) {
-            return revokedEntries;
+            return Util.newSet();
         }
         Map<BigInteger, X509CRLEntry> map = newMap();
         for (X509CRLEntry entry : revokedEntries) {
@@ -152,13 +217,23 @@ public class CertificateRevocationListTask implements Job {
             X509CRLEntry entry = map.get(cs.getSerial());
             if (entry != null) {
                 revokedEntries.remove(entry);
+                L.info("Serial #" + cs.getId() +
+                    " has expired. Removing it from CRL");
             }
         }
         return revokedEntries;
     }
 
+    /**
+     * Update crl.
+     * 
+     * @param x509crl the x509crl
+     * @param principal the principal
+     * @return the x509 crl
+     */
     protected X509CRL updateCRL(X509CRL x509crl, String principal) {
         BigInteger no = getCRLNumber(x509crl);
+        L.info("Old CRLNumber is : " + no);
         List<SimpleCRLEntry> crlEntries = newList();
         if (x509crl != null) {
             crlEntries = this.toSimpleCRLEntries(removeExpiredSerials(x509crl
@@ -171,16 +246,24 @@ public class CertificateRevocationListTask implements Job {
     }
 
     /**
-     * @param x509crl
-     * @return
+     * Gets the cRL number.
+     * 
+     * @param x509crl the x509crl
+     * @return the cRL number
      */
     protected BigInteger getCRLNumber(X509CRL x509crl) {
         if (x509crl == null) {
-            return BigInteger.ONE;
+            return BigInteger.ZERO; 
         }
         return new BigInteger(getValue(x509crl, "2.5.29.20"));
     }
     
+    /**
+     * To simple crl entries.
+     * 
+     * @param entries the entries
+     * @return the list
+     */
     protected List<SimpleCRLEntry> toSimpleCRLEntries(
         Set<? extends X509CRLEntry> entries) {
         List<SimpleCRLEntry> crlEntries = newList();
@@ -191,6 +274,13 @@ public class CertificateRevocationListTask implements Job {
         return crlEntries;
     }
     
+    /**
+     * Update crl.
+     * 
+     * @param in the in
+     * @param principal the principal
+     * @param out the out
+     */
     public void updateCRL(InputStream in, String principal, OutputStream out) {
         try {
             X509CRL x509crl = null;
@@ -199,21 +289,35 @@ public class CertificateRevocationListTask implements Job {
                     .generateCRL(in);
             }
             x509crl = updateCRL(x509crl, principal);
-            new PEMWriter(new OutputStreamWriter(out)).writeObject(x509crl);
+            PEMWriter writer = new PEMWriter(new OutputStreamWriter(out));
+            writer.writeObject(x509crl);
+            writer.flush();
+            writer.close();
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Update crl.
+     * 
+     * @param file the file
+     * @param principal the principal
+     */
     public void updateCRL(File file, String principal) {
         FileInputStream in = null;
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
-            if (file.exists()) {
+            if (file.exists() && file.length() > 0) {
+                L.info("CRL File: " + file + " exists. Loading the old CRL");
                 in = new FileInputStream(file);
             }
+            else {
+                L.info("CRL File: " + file + " either does not exist");
+            }
             updateCRL(in, principal, stream);
+            L.info("Completed generating CRL. Writing it to disk");
             FileUtils.writeByteArrayToFile(file, stream.toByteArray());
         }
         catch (Exception e) {

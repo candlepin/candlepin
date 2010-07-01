@@ -59,6 +59,7 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 
 /**
@@ -107,6 +108,8 @@ public class CandlepinModule extends AbstractModule {
         bind(HighlanderJobFactory.class);
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
+        bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
+            .toInstance("SHA1withRSA");
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(

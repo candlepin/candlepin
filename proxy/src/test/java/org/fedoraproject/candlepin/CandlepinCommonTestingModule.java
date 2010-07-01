@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.test.TestRulesCurator;
+import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
@@ -132,6 +133,9 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(EnforceAccessControl.class), 
             crudInterceptor);
+        bind(CertificateRevocationListTask.class);
+        bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
+            .toInstance("SHA1withRSA");
     }
     
     public TestingInterceptor crudInterceptor() {
