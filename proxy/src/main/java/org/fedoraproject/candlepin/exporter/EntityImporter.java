@@ -18,15 +18,11 @@ import java.io.IOException;
 import java.io.Reader;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.Consumer;
 
 /**
- * ConsumerImporter
+ * EntityImporter
+ * @param <T> - entity 
  */
-public class ConsumerImporter implements EntityImporter<Consumer> {
-
-    public Consumer importObject(ObjectMapper mapper, Reader reader) throws IOException {
-        return mapper.readValue(reader, ConsumerDto.class).consumer();
-    }
-
+public interface EntityImporter<T> {
+    T importObject(ObjectMapper mapper, Reader reader) throws IOException;
 }

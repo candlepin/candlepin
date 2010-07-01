@@ -23,7 +23,7 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 /**
  * ConsumerTypeImporter
  */
-public class ConsumerTypeImporter {
+public class ConsumerTypeImporter implements EntityImporter<ConsumerType> {
 
     public ConsumerType importObject(ObjectMapper mapper, Reader reader) 
         throws IOException {
