@@ -15,7 +15,7 @@ When /^I filter certificates on the serial number for "([^\"]*)"$/ do |entitleme
     certificates = @consumer_cp.get_certificates()
     found = certificates.find {|item|
         item['entitlement']['pool']['productId'] == entitlement.hash.abs.to_s}
-    @serials << found['serial']
+    @serials << found['serial']['id']
 end
 
 Then /^I see (\d+) certificate$/ do |serials|
