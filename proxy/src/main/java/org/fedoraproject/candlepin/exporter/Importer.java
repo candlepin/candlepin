@@ -30,7 +30,10 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Persisted;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
 
 import com.google.inject.Inject;
@@ -67,13 +70,18 @@ public class Importer {
     private ConsumerCurator consumerCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
+    private EntitlementCurator entitlementCurator;
+    private PoolCurator poolCurator;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, 
-        ConsumerCurator consumerCurator, ProductCurator productCurator) {
+        ConsumerCurator consumerCurator, ProductCurator productCurator, 
+        EntitlementCurator entitlementCurator, PoolCurator poolCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
+        this.entitlementCurator = entitlementCurator;
+        this.poolCurator = poolCurator;
         this.mapper = ExportUtils.getObjectMapper();
     }
 
@@ -164,14 +172,20 @@ public class Importer {
         return toReturn;
     }
     
-    public Entitlement createEntitlement(EntitlementImporter importer, File entitlement,
+    public void createEntitlement(EntitlementImporter importer, File entitlement,
         Map<BigInteger, EntitlementCertificate> certs) 
         throws IOException {
         
         Reader reader = null;
         try {
             reader = new FileReader(entitlement);
-            return importer.importObject(mapper, reader, certs);
+            Object[] parsed = importer.importObject(mapper, reader, certs);
+            Entitlement e = (Entitlement) parsed[0];
+            Pool p = (Pool) parsed[1];
+            e.setPool(p);
+            
+            poolCurator.create(p);
+            entitlementCurator.create(e);
         } 
         finally {
             if (reader != null) {
@@ -179,7 +193,7 @@ public class Importer {
             }
         }
     }
-    
+
     private <T extends Persisted> void createEntity(
         EntityImporter<T> importer, AbstractHibernateCurator<T> curator, File file)
         throws FileNotFoundException, IOException {

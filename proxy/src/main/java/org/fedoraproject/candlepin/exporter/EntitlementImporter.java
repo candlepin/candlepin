@@ -20,17 +20,17 @@ import java.math.BigInteger;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 
 /**
  * EntitlementImporter
  */
 public class EntitlementImporter {
-    public Entitlement importObject(
+    public Object[] importObject(
         ObjectMapper mapper, Reader reader, Map<BigInteger, EntitlementCertificate> certs) 
         throws IOException {
         
-        return mapper.readValue(reader, EntitlementDto.class).entitlement(certs);
+        EntitlementDto dto = mapper.readValue(reader, EntitlementDto.class);
+        return new Object[] { dto.entitlement(certs), dto.poolForEntitlement() };
     }
 }

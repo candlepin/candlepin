@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * EntitlementDto
@@ -33,6 +34,8 @@ class EntitlementDto {
     private Boolean isFree;
     private Integer quantity;
     private List<BigInteger> certificateSerials;
+    private String productId;
+    private Date endDate;
 
     public EntitlementDto() {
     }
@@ -40,9 +43,11 @@ class EntitlementDto {
     EntitlementDto(Entitlement e) {
         consumerUuid = e.getConsumer().getUuid();
         startDate = e.getStartDate();
+        endDate = e.getEndDate();
         isFree = e.getIsFree();
         quantity = e.getQuantity();
         certificateSerials = certificateSerialNumbers(e.getCertificates());
+        productId = e.getPool().getProductId();
     }
     
     public String getConsumerUuid() {
@@ -59,6 +64,14 @@ class EntitlementDto {
 
     public void setStartDate(Date startdate) {
         this.startDate = startdate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     public Boolean getIsFree() {
@@ -84,6 +97,14 @@ class EntitlementDto {
     public void setCertificateSerials(List<BigInteger> certificateSerials) {
         this.certificateSerials = certificateSerials;
     }
+    
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
 
     public Entitlement entitlement(Map<BigInteger, EntitlementCertificate> certs) {        
         Entitlement toReturn = new Entitlement();
@@ -95,6 +116,16 @@ class EntitlementDto {
             toReturn.addCertificate(certs.get(serial));
         }
         
+        return toReturn;
+    }
+    
+    public Pool poolForEntitlement() {
+        Pool toReturn = new Pool();
+        toReturn.setProductId(productId);
+        toReturn.setStartDate(startDate);
+        toReturn.setEndDate(endDate);
+        toReturn.setQuantity(new Long(quantity));
+        toReturn.setConsumed(new Long(quantity));
         return toReturn;
     }
     
