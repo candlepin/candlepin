@@ -107,8 +107,12 @@ public class DefaultEntitlementCertServiceAdapter extends
     
     @Override
     public void revokeEntitlementCertificates(Entitlement e) {
-        // TODO: delete certs; store their serial numbers; potentially generate crls
-        // TODO: update cascading on Entitlement.certificates
+        for (EntitlementCertificate cert : e.getCertificates()) {
+            CertificateSerial serial = cert.getSerial();
+            serial.setRevoked(true);
+            
+            this.serialCurator.merge(serial);
+        }
     }
 
     public X509Certificate createX509Certificate(Consumer consumer,

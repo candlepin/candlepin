@@ -1,4 +1,4 @@
-When /^I unbind my "([^\"]*)" Entitlement$/ do |product_id|
+When /^I unbind my "([^\"]*)" entitlement$/ do |product_id|
     @consumed = @consumer_cp.list_entitlements(product_id.hash.abs)[0]['pool']['consumed']
     @consumer_cp.list_entitlements(product_id.hash.abs).collect do |entitlement|
         @consumer_cp.unbind_entitlement(entitlement['id'])

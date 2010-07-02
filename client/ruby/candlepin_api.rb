@@ -323,6 +323,14 @@ class Candlepin
     return get("/consumers/#{@uuid}/certificates/serials")
   end
 
+  def get_all_serials
+    get('/serials')
+  end
+
+  def get_serial(serial_id)
+    get("/serials/#{serial_id}")
+  end
+
   def get_consumer_events(consumer_id=nil)
     consumer_id ||= @uuid
     get_text("/consumers/#{consumer_id}/atom")

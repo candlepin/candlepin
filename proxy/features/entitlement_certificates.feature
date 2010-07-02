@@ -12,17 +12,17 @@ Feature: Entitlement Certificates
 
     Scenario: List certificates
         Given I am a consumer "test_consumer"
-        When I Consume an Entitlement for the "monitoring" Product
+        When I consume an entitlement for the "monitoring" product
         Then I have 1 certificate
 
     Scenario: Filter certificates by serial number
         Given I am a consumer "test_consumer"
-        When I Consume an Entitlement for the "monitoring" Product
-        And I Consume an Entitlement for the "virtualization_host" Product
+        When I consume an entitlement for the "monitoring" product
+        And I consume an entitlement for the "virtualization_host" product
         When I filter certificates on the serial number for "virtualization_host"
-        Then I see 1 certificate
+        Then I have 1 filtered certificate
 
     Scenario: List certificates serial numbers
         Given I am a consumer "test_consumer"
-        When I Consume an Entitlement for the "monitoring" Product
+        When I consume an entitlement for the "monitoring" product
         Then I have 1 certificate serial number

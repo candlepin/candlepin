@@ -8,84 +8,84 @@ Feature: Consume an Entitlement
         And I am logged in as "test_owner"
         And product "virtualization_host" exists
         And product "monitoring" exists
-        And test owner has 2 entitlements for "virtualization_host"
+        And test owner has 20 entitlements for "virtualization_host"
         And test owner has 4 entitlements for "monitoring"
 
     Scenario: An Exception is thrown When Consumer filters Entitlement by Invalid Product ID
         Given I am a consumer "consumer"
-        Then I Get an Exception If I Filter by Product ID "non_existent"
+        Then I get an exception if I filter by product ID "non_existent"
 
     Scenario: Entitlement is Consumed
         Given I am a consumer "random_box"
-        When I Consume an Entitlement for the "virtualization_host" Product
-        Then I Have 1 Entitlement
+        When I consume an entitlement for the "virtualization_host" product
+        Then I have 1 entitlement
         
     Scenario: Entitlement from a Pool is Consumed 
         Given I am a consumer "random_box"
-        When I Consume an Entitlement for the "virtualization_host" Pool
-        Then I Have 1 Entitlement
+        When I consume an entitlement for the "virtualization_host" pool
+        Then I have 1 entitlement
 
     Scenario: Entitlement With a Quantity of 10 is Consumed 
         Given I am a consumer "random_box"
-        When I Consume an Entitlement for the "virtualization_host" Product With a Quantity of 10
-        Then I Have 1 Entitlement With a Quantity of 10
+        When I consume an entitlement for the "virtualization_host" product with a quantity of 10
+        Then I have 1 entitlement with a quantity of 10
 
     Scenario: Multiple Entitlements are Consumed
         Given I am a consumer "consumer"
-        When I Consume an Entitlement for the "virtualization_host" Product 
-        And I Consume an Entitlement for the "monitoring" Product
-        Then I Have 2 Entitlements
+        When I consume an entitlement for the "virtualization_host" product 
+        And I consume an entitlement for the "monitoring" product
+        Then I have 2 entitlements
 
     Scenario: Single Entitlement has the correct productId
         Given I am a consumer "bar"
-        When I Consume an Entitlement for the "monitoring" Product
-        Then I Have an Entitlement for the "monitoring" Product
+        When I consume an entitlement for the "monitoring" product
+        Then I have an entitlement for the "monitoring" product
 
     Scenario: Single Entitlement from a Pool has the correct productId 
         Given I am a consumer "random_box"
-        When I Consume an Entitlement for the "monitoring" Pool
-        Then I Have an Entitlement for the "monitoring" Product
+        When I consume an entitlement for the "monitoring" pool
+        Then I have an entitlement for the "monitoring" product
 
     Scenario: Multiple Entitlements have correct productIds
         Given I am a consumer "michael_knight"
-        When I Consume an Entitlement for the "monitoring" Product
-        And I Consume an Entitlement for the "virtualization_host" Product
-        Then I Have an Entitlement for the "monitoring" Product
-        And I Have an Entitlement for the "virtualization_host" Product
+        When I consume an entitlement for the "monitoring" product
+        And I consume an entitlement for the "virtualization_host" product
+        Then I have an entitlement for the "monitoring" product
+        And I have an entitlement for the "virtualization_host" product
 
     Scenario: A Consumer has No Entitlements After Unregistering
         Given I am a consumer "some_machine"
-        When I Consume an Entitlement for the "virtualization_host" Product
+        When I consume an entitlement for the "virtualization_host" product
         And I revoke all my entitlements
-        Then I Have 0 Entitlements
+        Then I have 0 entitlements
 
     Scenario: Entitlement generates a certificate.
         Given I am a consumer "meow"
-        When I Consume an Entitlement for the "virtualization_host" Product
-        Then I Have 1 Certificate
+        When I consume an entitlement for the "virtualization_host" product
+        Then I have 1 certificate
 
     Scenario: A Consumer has No Entitlements After Unregistering Multiple Products
         Given I am a consumer "foo"
-        When I Consume an Entitlement for the "monitoring" Product
-        And I Consume an Entitlement for the "virtualization_host" Product
+        When I consume an entitlement for the "monitoring" product
+        And I consume an entitlement for the "virtualization_host" product
         And I revoke all my entitlements
-        Then I Have 0 Entitlements
+        Then I have 0 entitlements
 
     Scenario: A Consumer can filter Entitlements by Product ID
         Given I am a consumer "consumer"
-        And I Consume an Entitlement for the "monitoring" Product
-        And I Consume an Entitlement for the "virtualization_host" Product
-        Then I Get 1 Entitlement When I Filter by Product ID "monitoring"
+        And I consume an entitlement for the "monitoring" product
+        And I consume an entitlement for the "virtualization_host" product
+        Then I get 1 entitlement when I filter by product ID "monitoring"
 
     Scenario: Consuming the same entitlement by product twice is not allowed
         Given I am a consumer "random_box"
-        When I Consume an Entitlement for the "virtualization_host" Product
-        And I try to consume an Entitlement for the "virtualization_host" Product again
+        When I consume an entitlement for the "virtualization_host" product
+        And I try to consume an entitlement for the "virtualization_host" product again
         Then I recieve an http forbidden response
 
     Scenario: Consuming the same entitlement by pool twice is not allowed
         Given I am a consumer "random_box"
-        When I Consume an Entitlement for the "virtualization_host" Pool
-        And I try to consume an Entitlement for the "virtualization_host" Pool again
+        When I consume an entitlement for the "virtualization_host" pool
+        And I try to consume an entitlement for the "virtualization_host" pool again
         Then I recieve an http forbidden response
 

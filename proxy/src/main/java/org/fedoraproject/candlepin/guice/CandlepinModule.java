@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
+import org.fedoraproject.candlepin.resource.CertificateSerialResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
 import org.fedoraproject.candlepin.resource.ContentResource;
@@ -94,6 +95,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ProductResource.class);
         bind(SubscriptionResource.class);
         bind(SubscriptionTokenResource.class);
+        bind(CertificateSerialResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(JavascriptEnforcer.class);
         bind(RulesResource.class);

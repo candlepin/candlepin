@@ -124,6 +124,7 @@ public class CertificateRevocationListTask implements Job {
         
         /** The revocation date. */
         protected Date revocationDate;
+
         /**
          * Instantiates a new simple crl entry.
          * 

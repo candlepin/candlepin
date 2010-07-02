@@ -5,10 +5,6 @@ Before do
     @serials = []
 end
 
-Then /^I have (\d+) certificate$/ do |certificates|
-    @consumer_cp.get_certificates.length.should == certificates.to_i
-end
-
 # TODO: this test should actually be using ?serials=x,y,z to test serial filtering
 # server side, not client side:
 When /^I filter certificates on the serial number for "([^\"]*)"$/ do |entitlement|
@@ -18,10 +14,14 @@ When /^I filter certificates on the serial number for "([^\"]*)"$/ do |entitleme
     @serials << found['serial']['id']
 end
 
-Then /^I see (\d+) certificate$/ do |serials|
-    @consumer_cp.get_certificates(@serials).length.should == serials.to_i
+Then /^I have (\d+) filtered certificate[s]?$/ do |certificates_size|
+    @consumer_cp.get_certificates(@serials).length.should == certificates_size.to_i
 end
 
-Then /^I have (\d+) certificate serial number$/ do |serials|
-    @consumer_cp.get_certificate_serials.length.should == serials.to_i
+Then /^the filtered certificates are revoked$/ do
+  @serials.each { |serial| @candlepin.get_serial(serial)['revoked'].should == true }
+end
+
+Then /^the filtered certificates are not revoked$/ do
+  @serials.each { |serial| @candlepin.get_serial(serial)['revoked'].should == false }
 end

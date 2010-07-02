@@ -18,9 +18,9 @@ Feature: Query pools
 
     Scenario: View pools for products I've already subscribed to
         Given I am a consumer "random_box"
-        When I Consume an Entitlement for the "some_product" Product
-        And I Consume an Entitlement for the "another_product" Product
+        When I consume an entitlement for the "some_product" product
+        And I consume an entitlement for the "another_product" product
         And I view all pools for my owner
         Then I see 3 pools
         And I see 9 available entitlements
-        And I Have 2 Entitlements
+        And I have 2 entitlements

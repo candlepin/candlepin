@@ -12,29 +12,33 @@ Given /^I have an entitlement named "([^\"]*)" for the "([^\"]*)" product$/ do |
   @entitlements[name] = @consumer_cp.consume_product(product.hash.abs)
 end
 
-When /I Consume an Entitlement for the "([^\"]*)" Product/ do |product|
+When /^I consume an entitlement for the "([^\"]*)" product$/ do |product|
     @consumer_cp.consume_product(product.hash.abs)
 end
 
-When /I Consume an Entitlement for the "([^\"]*)" Product With a Quantity of "(\d+)" / do |product, quantity|
-    @consumer_cp.consume_product(product, quantity)
+When /^I consume an entitlement for the "([^\"]*)" product with a quantity of (\d+)$/ do |product, quantity|
+    @consumer_cp.consume_product(product.hash.abs, quantity)
 end
 
-Then /I Have (\d+) Entitlement[s]? With a Quantity of "(\d+)"/ do |entitlement_size, quantity|
-    entitlements = @consumer_cp.list_entitlements
-    entitlements.length.should == entitlement_size.to_i
-    entitlements[0].quantity.should == 10
+Then /I have (\d+) entitlements? with a quantity of (\d+)/ do |entitlement_size, quantity|
+  entitlements = @consumer_cp.list_entitlements
+
+  entitlements.select { |ent| ent['quantity'] == quantity.to_i }.length.should == entitlement_size.to_i
 end
 
-Then /I Have (\d+) Entitlement[s]?/ do |entitlement_size|
+Then /^I have (\d+) entitlement[s]?$/ do |entitlement_size|
     @consumer_cp.list_entitlements.length.should == entitlement_size.to_i
 end
 
-Then /I Have (\d+) Certificate[s]?/ do |certificates_size|
+Then /^I have (\d+) certificate[s]?$/ do |certificates_size|
     @consumer_cp.get_certificates.length.should == certificates_size.to_i
 end
 
-Then /^I Have an Entitlement for the "([^\"]*)" Product$/ do |product_id|
+Then /^I have (\d+) certificate serial number$/ do |serials_size|
+    @consumer_cp.get_certificate_serials.length.should == serials_size.to_i
+end
+
+Then /^I have an entitlement for the "([^\"]*)" product$/ do |product_id|
     product_ids = @consumer_cp.list_entitlements.collect do |entitlement|
         entitlement['pool']['productId']
     end
@@ -44,7 +48,7 @@ end
 
 # need a test for a Pool created with a productid that doesn't exist...
 
-When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
+When /I consume an entitlement for the "([^\"]*)" pool$/ do |pool|
   all_pools = @consumer_cp.get_pools({:consumer => @consumer_cp.consumer['uuid']})
  
   product_pools = all_pools.select {|p| p.has_value?(pool)}
@@ -55,11 +59,11 @@ When /I Consume an Entitlement for the "([^\"]*)" Pool$/ do |pool|
   results = @consumer_cp.consume_pool(@pool_id)
 end
 
-Then /^I Get (\d+) Entitlement When I Filter by Product ID "([^\"]*)"$/ do |entitlement_size, product_id|
+Then /^I get (\d+) entitlements? when I filter by product ID "([^\"]*)"$/ do |entitlement_size, product_id|
   @consumer_cp.list_entitlements(product_id.hash.abs).length.should == entitlement_size.to_i
 end
 
-Then /^I Get an Exception If I Filter by Product ID "(\w+)"$/ do |product_id|
+Then /^I get an exception if I filter by product ID "(\w+)"$/ do |product_id|
   begin
     @consumer_cp.list_entitlements(product_id)
   rescue RestClient::Exception => e
@@ -81,7 +85,7 @@ Then /^The entitlement named "([^\"]*)" should not exist$/ do |name|
   end
 end
 
-When /^I try to consume an Entitlement for the "([^\"]*)" Product again$/ do |product|
+When /^I try to consume an entitlement for the "([^\"]*)" product again$/ do |product|
 
   begin
     @consumer_cp.consume_product(product.hash.abs)
@@ -90,7 +94,7 @@ When /^I try to consume an Entitlement for the "([^\"]*)" Product again$/ do |pr
   end
 end
 
-When /^I try to consume an Entitlement for the "([^\"]*)" Pool again$/ do |pool|
+When /^I try to consume an entitlement for the "([^\"]*)" pool again$/ do |pool|
   begin
     @consumer_cp.consume_pool(@pool_id)
   rescue RestClient::Exception => e
