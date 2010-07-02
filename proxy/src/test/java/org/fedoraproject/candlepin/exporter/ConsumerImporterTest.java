@@ -35,7 +35,7 @@ public class ConsumerImporterTest {
     @Before
     public void setUp() {
         importer = new ConsumerImporter();
-        mapper = Exporter.getObjectMapper();
+        mapper = ExportUtils.getObjectMapper();
     }
 
     @Test

@@ -35,7 +35,7 @@ public class ProductImporterTest {
 
     @Before
     public void setUp() throws IOException {
-        mapper = Exporter.getObjectMapper();
+        mapper = ExportUtils.getObjectMapper();
         importer = new ProductImporter();
     }
     

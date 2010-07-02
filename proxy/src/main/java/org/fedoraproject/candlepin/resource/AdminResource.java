@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.exporter.Importer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -53,13 +54,15 @@ public class AdminResource {
     private ConsumerTypeCurator consumerTypeCurator;
     private OwnerCurator ownerCurator;
     private UserServiceAdapter userService;
+    private Importer importer;
 
     @Inject
     public AdminResource(ConsumerTypeCurator consumerTypeCurator, 
-        OwnerCurator ownerCurator, UserServiceAdapter userService) {
+        OwnerCurator ownerCurator, UserServiceAdapter userService, Importer importer) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.ownerCurator = ownerCurator;
         this.userService = userService;
+        this.importer = importer;
     }
 
     /**
@@ -130,6 +133,8 @@ public class AdminResource {
             }
             fis.close();
             fos.close();
+            
+            importer.loadExport(export);
         }
         catch (IOException e) {
             // TODO

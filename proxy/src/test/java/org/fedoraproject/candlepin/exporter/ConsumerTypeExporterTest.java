@@ -30,7 +30,7 @@ public class ConsumerTypeExporterTest {
     
     @Test
     public void testConsumerTypeExport() throws IOException {
-        ObjectMapper mapper = Exporter.getObjectMapper();
+        ObjectMapper mapper = ExportUtils.getObjectMapper();
         
         ConsumerTypeExporter consumerType = new ConsumerTypeExporter();
         

@@ -21,10 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
@@ -40,8 +37,6 @@ import com.google.inject.Inject;
  * Exporter
  */
 public class Exporter {
-    // XXX: make this configurable
-    private static final String WORK_DIR = "/tmp/candlepin/exports";
     private static Logger log = Logger.getLogger(Exporter.class);
     
     private ObjectMapper mapper;
@@ -65,7 +60,7 @@ public class Exporter {
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter) {
         
-        mapper = getObjectMapper();
+        mapper = ExportUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
         
         this.meta = meta;
@@ -79,21 +74,9 @@ public class Exporter {
         this.productCertExporter = productCertExporter;
     }
 
-    static ObjectMapper getObjectMapper() {
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-        
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
-        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
-        
-        return mapper;
-    }
-    
     public File getExport(Consumer consumer) {
         try {
-            File tempDir = makeTempDir();
+            File tempDir = ExportUtils.makeTempDir("export");
             File baseDir = new File(tempDir.getAbsolutePath(), "export");
             baseDir.mkdir();
             
@@ -223,22 +206,5 @@ public class Exporter {
         FileWriter writer = new FileWriter(file);
         rules.export(writer);
         writer.close();
-    }
-    
-    private File makeTempDir() throws IOException {
-        // TODO: Need to make sure WORK_DIR exists:
-        File tmp = File.createTempFile("export", Long.toString(System.nanoTime()),
-            new File(WORK_DIR));
-
-        if (!tmp.delete()) {
-            throw new IOException("Could not delete temp file: " + tmp.getAbsolutePath());
-        }
-
-        if (!tmp.mkdirs()) {
-            throw new IOException("Could not create temp directory: " + 
-                tmp.getAbsolutePath());
-        }
-
-        return (tmp);
     }
 }

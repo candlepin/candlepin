@@ -29,7 +29,7 @@ import org.junit.Test;
 public class ConsumerExporterTest {
     @Test
     public void testConsumerExport() throws IOException {
-        ObjectMapper mapper = Exporter.getObjectMapper();
+        ObjectMapper mapper = ExportUtils.getObjectMapper();
         
         ConsumerExporter exporter = new ConsumerExporter();
         

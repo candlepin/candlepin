@@ -19,8 +19,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -35,6 +37,7 @@ import com.google.inject.Inject;
  * Importer
  */
 public class Importer {
+    private static Logger log = Logger.getLogger(Exporter.class);
     
     /**
      * 
@@ -72,16 +75,34 @@ public class Importer {
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
         this.entitlementCertificateCurator = entitlementCertificateCurator;
-        this.mapper = Exporter.getObjectMapper();
+        this.mapper = ExportUtils.getObjectMapper();
     }
 
+    public void loadExport(File exportFile) {
+        try {
+            File tmpDir = ExportUtils.makeTempDir("import");
+            File exportDir = extractArchive(tmpDir, exportFile);
+            
+            Map<String, File> importFiles = new HashMap<String, File>();
+            for (File file : exportDir.listFiles()) {
+                importFiles.put(file.getName(), file);
+            }
+            
+            importObjects(importFiles);
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+    
     public void importObjects(Map<String, File> importFiles) throws IOException {
         
         // owner?
         
-        importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE).listFiles());
-        importConsumer(importFiles.get(ImportFile.CONSUMER));
-        importProducts(importFiles.get(ImportFile.PRODUCTS).listFiles());
+        importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
+        importConsumer(importFiles.get(ImportFile.CONSUMER.fileName()));
+        importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
         
         
         // import entitlement certs & generate content sets
@@ -133,5 +154,30 @@ public class Importer {
             }
         }
     }
-    
+    /**
+     * Create a tar.gz archive of the exported directory.
+     *
+     * @param exportDir Directory where Candlepin data was exported.
+     * @return File reference to the new archive tar.gz.
+     */
+    private File extractArchive(File tempDir, File exportFile) {
+        log.info("Extracting archive to: " + tempDir.getAbsolutePath());
+        ProcessBuilder cmd = new ProcessBuilder("tar", "xvfz",
+            exportFile.getAbsolutePath());
+        cmd.directory(tempDir);
+        try {
+            Process p = cmd.start();
+            p.waitFor();
+            log.debug("Done extracting archive");
+        }
+        catch (IOException e) {
+            // TODO
+        }
+        catch (InterruptedException e) {
+            // TODO
+        }
+        
+        File extractDir = new File(tempDir.getAbsolutePath(), "export");
+        return extractDir;
+    }
 }

@@ -29,7 +29,7 @@ public class MetaExporterTest {
     
     @Test
     public void testMetaExporter() throws IOException {
-        ObjectMapper mapper = Exporter.getObjectMapper();
+        ObjectMapper mapper = ExportUtils.getObjectMapper();
         
         MetaExporter meta = new MetaExporter();
         
