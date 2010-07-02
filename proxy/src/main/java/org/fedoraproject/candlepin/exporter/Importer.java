@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +28,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Persisted;
 import org.fedoraproject.candlepin.model.ProductCurator;
 
@@ -64,17 +66,14 @@ public class Importer {
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerCurator consumerCurator;
     private ProductCurator productCurator;
-    private EntitlementCertificateCurator entitlementCertificateCurator;
     private ObjectMapper mapper;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, 
-        ConsumerCurator consumerCurator, ProductCurator productCurator, 
-        EntitlementCertificateCurator entitlementCertificateCurator) {
+        ConsumerCurator consumerCurator, ProductCurator productCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
-        this.entitlementCertificateCurator = entitlementCertificateCurator;
         this.mapper = ExportUtils.getObjectMapper();
     }
 
@@ -130,11 +129,54 @@ public class Importer {
         }
     }
     
-    // TODO set entitlements on certs
-    public void importEntitlements(File[] entitlementCertificates) throws IOException {
-        EntitlementCertImporter importer = new EntitlementCertImporter();
-        for (File entitlementCertificate : entitlementCertificates) {
-            createEntity(importer, entitlementCertificateCurator, entitlementCertificate);
+    public void importEntitlements(File[] entitlements, File[] entitlementCertificates) 
+        throws IOException {
+        
+        Map<BigInteger, EntitlementCertificate> certs 
+            = importCertificates(entitlementCertificates);
+        EntitlementImporter importer = new EntitlementImporter();
+        for (File entitlement : entitlements) {
+            createEntitlement(importer, entitlement, certs);
+        }
+    }
+    
+    public Map<BigInteger, EntitlementCertificate> importCertificates(
+            File[] entitlementCertificates) throws IOException {
+        
+        EntitlementCertImporter importer = new EntitlementCertImporter();        
+        Map<BigInteger, EntitlementCertificate> toReturn 
+            = new HashMap<BigInteger, EntitlementCertificate>();
+        
+        for (File certificate : entitlementCertificates) {
+            Reader reader = null;
+            try {
+                reader = new FileReader(certificate);
+                EntitlementCertificate cert = importer.importObject(mapper, reader);
+                toReturn.put(cert.getSerial(), cert);
+            } 
+            finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+        }
+        
+        return toReturn;
+    }
+    
+    public Entitlement createEntitlement(EntitlementImporter importer, File entitlement,
+        Map<BigInteger, EntitlementCertificate> certs) 
+        throws IOException {
+        
+        Reader reader = null;
+        try {
+            reader = new FileReader(entitlement);
+            return importer.importObject(mapper, reader, certs);
+        } 
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
         }
     }
     

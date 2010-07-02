@@ -267,6 +267,11 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
         this.certificates = certificates;
     } 
     
+    public void addCertificate(EntitlementCertificate certificate) {
+        certificate.setEntitlement(this);
+        certificates.add(certificate);
+    }
+    
     public String toString() {
         return "Entitlement[id=" + getId() + ", product=" + getProductId() + 
             ", consumer= " + consumer.getUuid() + "]";
