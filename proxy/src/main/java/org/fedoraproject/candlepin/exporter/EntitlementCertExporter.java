@@ -17,22 +17,16 @@ package org.fedoraproject.candlepin.exporter;
 import java.io.IOException;
 import java.io.Writer;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
-
-import com.google.inject.Inject;
 
 /**
  * EntitlementCertExporter
  */
 public class EntitlementCertExporter {
 
-    @Inject
-    EntitlementCertExporter() {
-    }
-
-    void export(Writer writer, EntitlementCertificate cert)
+    void export(ObjectMapper mapper, Writer writer, EntitlementCertificate cert)
         throws IOException {
-        writer.write(cert.getKey());
-        writer.write(cert.getCert());
+        mapper.writeValue(writer, new EntitlementCertDto(cert));
     }
 }

@@ -40,7 +40,7 @@ public class ProductExporterTest {
         exporter.export(mapper, writer, product);
         System.out.println(writer.toString());
         assertEquals("{\"name\":\"product name\",\"id\":\"my-id\"," +
-            "\"attributes\":[],\"content\":[],\"multiplier\":1}",
+            "\"content\":[],\"attributes\":[],\"multiplier\":1}",
             writer.toString());
     }
 }

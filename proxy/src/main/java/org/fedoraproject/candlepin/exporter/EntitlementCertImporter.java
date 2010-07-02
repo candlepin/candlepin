@@ -17,36 +17,17 @@ package org.fedoraproject.candlepin.exporter;
 import java.io.IOException;
 import java.io.Reader;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.pki.PKIUtility;
 
 /**
  * EntitlementCertImporter
  */
-public class EntitlementCertImporter {
+public class EntitlementCertImporter implements EntityImporter<EntitlementCertificate> {
     
-    public EntitlementCertificate importObject(Reader reader) throws IOException {
-        String certificateAndKey = StringFromReader.asString(reader);
-        EntitlementCertificate toReturn = new EntitlementCertificate();
-        toReturn.setCert(certificate(certificateAndKey));
-        toReturn.setKey(key(certificateAndKey));
-        // certificate has to be in DER format
-        toReturn.setSerial(
-            PKIUtility.createCert(certificate(certificateAndKey)).getSerialNumber());
-        return toReturn;
-    }
-    
-    private String certificate(String certificateAndKey) {
-        return certificateAndKey.substring(
-            certificateAndKey.indexOf(PKIUtility.BEGIN_CERTIFICATE), 
-            certificateAndKey.indexOf(PKIUtility.END_CERTIFICATE) + 
-                PKIUtility.END_CERTIFICATE.length());
-    }
-    
-    private String key(String certificateAndKey) {
-        return certificateAndKey.substring(
-            certificateAndKey.indexOf(PKIUtility.BEGIN_KEY), 
-            certificateAndKey.indexOf(PKIUtility.END_KEY) + 
-                PKIUtility.END_KEY.length());
-    }
+    public EntitlementCertificate importObject(ObjectMapper mapper, Reader reader) 
+        throws IOException {
+        
+        return mapper.readValue(reader, EntitlementCertDto.class).certificate();
+    }    
 }

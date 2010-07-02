@@ -25,6 +25,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.Persisted;
 import org.fedoraproject.candlepin.model.ProductCurator;
 
@@ -60,14 +61,17 @@ public class Importer {
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerCurator consumerCurator;
     private ProductCurator productCurator;
+    private EntitlementCertificateCurator entitlementCertificateCurator;
     private ObjectMapper mapper;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, 
-        ConsumerCurator consumerCurator, ProductCurator productCurator) {
+        ConsumerCurator consumerCurator, ProductCurator productCurator, 
+        EntitlementCertificateCurator entitlementCertificateCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
+        this.entitlementCertificateCurator = entitlementCertificateCurator;
         this.mapper = Exporter.getObjectMapper();
     }
 
@@ -105,9 +109,11 @@ public class Importer {
         }
     }
     
+    // TODO set entitlements on certs
     public void importEntitlements(File[] entitlementCertificates) throws IOException {
+        EntitlementCertImporter importer = new EntitlementCertImporter();
         for (File entitlementCertificate : entitlementCertificates) {
-            
+            createEntity(importer, entitlementCertificateCurator, entitlementCertificate);
         }
     }
     
