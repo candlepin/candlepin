@@ -27,7 +27,7 @@ public class ProductExporter {
     
     public void export(ObjectMapper mapper, Writer writer, Product product)
         throws IOException {
-        mapper.writeValue(writer, new ProductDto(product));
+        mapper.writeValue(writer, product);
     }
 
 }

@@ -26,6 +26,6 @@ import org.fedoraproject.candlepin.model.Product;
 public class ProductImporter implements EntityImporter<Product> {
 
     public Product importObject(ObjectMapper mapper, Reader reader) throws IOException {
-        return mapper.readValue(reader, ProductDto.class).product();
+        return mapper.readValue(reader, Product.class);
     }
 }
