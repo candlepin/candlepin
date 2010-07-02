@@ -269,7 +269,6 @@ public class OwnerResource {
         if (o == null) {
             if (autoCreateOwner) {
                 Owner owner = new Owner(String.valueOf(ownerId), String.valueOf(ownerId));
-                owner.setId(ownerId);
                 o = this.createOwner(owner);
             }
             else {
