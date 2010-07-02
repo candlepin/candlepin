@@ -106,9 +106,12 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
         recordIdentity(cons);
         return cons.getUuid();
     }
-    
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.client.CandlepinClientFacade#updateConsumer(java.lang.String, java.lang.String)
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.fedoraproject.candlepin.client.CandlepinClientFacade#updateConsumer
+     * (java.lang.String, java.lang.String)
      */
     @Override
     public boolean updateConsumer() {

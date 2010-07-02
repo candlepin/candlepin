@@ -325,11 +325,11 @@ public class OwnerResource {
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
             if (autoCreateOwner) {
-                 owner = this.createOwner(new Owner(ownerKey, ownerKey));
+                owner = this.createOwner(new Owner(ownerKey, ownerKey));
             }
             else {
-                throw new NotFoundException(
-                    i18n.tr("owner with key: {0} was not found.", ownerKey));
+                throw new NotFoundException(i18n.tr(
+                    "owner with key: {0} was not found.", ownerKey));
             }
         }
         List<Entitlement> toRevoke = poolCurator.refreshPools(owner);

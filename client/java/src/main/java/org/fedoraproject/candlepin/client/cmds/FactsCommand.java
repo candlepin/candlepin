@@ -75,9 +75,9 @@ public class FactsCommand extends BaseCommand {
         
         return longest;
     }
-    
+
     private String padRight(String s, int n) {
-        return String.format("%1$-" + n + "s", s);  
-   }
+        return String.format("%1$-" + n + "s", s);
+    }
 
 }
