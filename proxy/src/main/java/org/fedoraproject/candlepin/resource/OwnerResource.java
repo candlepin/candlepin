@@ -263,19 +263,8 @@ public class OwnerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_id}/subscriptions")
     public Subscription createSubscription(@PathParam("owner_id") Long ownerId, 
-        Subscription subscription, 
-        @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
-        Owner o = this.ownerCurator.find(ownerId);
-        if (o == null) {
-            if (autoCreateOwner) {
-                Owner owner = new Owner(String.valueOf(ownerId), String.valueOf(ownerId));
-                o = this.createOwner(owner);
-            }
-            else {
-                throw new NotFoundException(
-                    i18n.tr("owner with id: {0} was not found.", ownerId));
-            }
-        }
+        Subscription subscription) {
+        Owner o = findOwner(ownerId);
         subscription.setOwner(o);
         subscription.setProduct(productCurator.find(subscription.getProduct().getId()));
         Set<Product> provided = new HashSet<Product>();
@@ -331,11 +320,17 @@ public class OwnerResource {
     @PUT
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_key}/subscriptions")
-    public void refreshEntitlementPools(@PathParam("owner_key") String ownerKey) {
+    public void refreshEntitlementPools(@PathParam("owner_key") String ownerKey, 
+        @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
-            throw new NotFoundException(
-                i18n.tr("owner with key: {0} was not found.", ownerKey));
+            if (autoCreateOwner) {
+                 owner = this.createOwner(new Owner(ownerKey, ownerKey));
+            }
+            else {
+                throw new NotFoundException(
+                    i18n.tr("owner with key: {0} was not found.", ownerKey));
+            }
         }
         List<Entitlement> toRevoke = poolCurator.refreshPools(owner);
         if (log.isInfoEnabled()) {
