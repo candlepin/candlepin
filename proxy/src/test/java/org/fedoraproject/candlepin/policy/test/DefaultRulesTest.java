@@ -78,7 +78,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A product for testing");
         Pool pool = TestUtil.createEntitlementPool(owner, product);
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -95,7 +95,7 @@ public class DefaultRulesTest {
         product.addAttribute(new Attribute("multi-entitlement", "yes"));
         Pool pool = TestUtil.createEntitlementPool(owner, product);
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -112,7 +112,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A product for testing");
         Pool pool = TestUtil.createEntitlementPool(owner, product, 0);
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -249,7 +249,7 @@ public class DefaultRulesTest {
     public void userLicensePostCreatesSubPool() {
         Pool pool = setupUserLicensedPool();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
-        Entitlement e = new Entitlement(pool, consumer, new Date(), 1);
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
 
         PostEntHelper postHelper = mock(PostEntHelper.class);
         enforcer.post(postHelper, e);
@@ -264,7 +264,7 @@ public class DefaultRulesTest {
         pool.setAttribute("user_license_product", subProductId);
 
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
-        Entitlement e = new Entitlement(pool, consumer, new Date(), 1);
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
 
         PostEntHelper postHelper = mock(PostEntHelper.class);
         enforcer.post(postHelper, e);
