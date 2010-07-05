@@ -40,7 +40,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
         
         ConsumerType consumerType =
-            new ConsumerTypeImporter(null).importObject(ExportUtils.getObjectMapper(), reader);
+            new ConsumerTypeImporter(null).createObject(ExportUtils.getObjectMapper(), reader);
         
         assertEquals("prosumer", consumerType.getLabel());
     }
@@ -52,7 +52,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
         
         ConsumerType consumerType =
-            new ConsumerTypeImporter(null).importObject(ExportUtils.getObjectMapper(), reader);
+            new ConsumerTypeImporter(null).createObject(ExportUtils.getObjectMapper(), reader);
         
         assertEquals(null, consumerType.getId());      
     }

@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Product;
@@ -25,7 +26,11 @@ import org.fedoraproject.candlepin.model.Product;
  */
 public class ProductImporter implements EntityImporter<Product> {
 
-    public Product importObject(ObjectMapper mapper, Reader reader) throws IOException {
+    public Product createObject(ObjectMapper mapper, Reader reader) throws IOException {
         return mapper.readValue(reader, Product.class);
+    }
+
+    public void store(Set<Product> products) {
+
     }
 }

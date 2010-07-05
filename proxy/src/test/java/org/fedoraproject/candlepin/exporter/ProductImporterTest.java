@@ -41,7 +41,7 @@ public class ProductImporterTest {
     
     @Test
     public void importShouldCreateAValidProduct() throws IOException {
-        Product p = importer.importObject(mapper, 
+        Product p = importer.createObject(mapper,
             new StringReader("{\"name\":\"name\",\"id\":\"id\"," +
                 "\"content\":[1]," +
                 "\"attributes\":[{\"name\":\"a_name\",\"value\":\"a_value\"," +

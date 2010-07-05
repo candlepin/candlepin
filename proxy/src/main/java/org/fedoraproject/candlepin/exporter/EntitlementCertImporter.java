@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -25,9 +26,17 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
  */
 public class EntitlementCertImporter implements EntityImporter<EntitlementCertificate> {
     
-    public EntitlementCertificate importObject(ObjectMapper mapper, Reader reader) 
+    public EntitlementCertificate createObject(ObjectMapper mapper, Reader reader)
         throws IOException {
         
         return mapper.readValue(reader, EntitlementCertDto.class).certificate();
+    }
+
+    /* (non-Javadoc)
+     * @see org.fedoraproject.candlepin.exporter.EntityImporter#store(java.util.Set)
+     */
+    @Override
+    public void store(Set<EntitlementCertificate> entities) {
+        // TODO Auto-generated method stub
     }    
 }

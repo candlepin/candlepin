@@ -37,7 +37,7 @@ public class ConsumerTypeImporter implements EntityImporter<ConsumerType> {
         this.curator = curator;
     }
     
-    public ConsumerType importObject(ObjectMapper mapper, Reader reader) 
+    public ConsumerType createObject(ObjectMapper mapper, Reader reader)
         throws IOException {
         ConsumerType consumerType = mapper.readValue(reader, ConsumerType.class);
         consumerType.setId(null);

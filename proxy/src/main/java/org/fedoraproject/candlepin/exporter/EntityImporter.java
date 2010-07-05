@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -24,5 +25,7 @@ import org.codehaus.jackson.map.ObjectMapper;
  * @param <T> - entity 
  */
 public interface EntityImporter<T> {
-    T importObject(ObjectMapper mapper, Reader reader) throws IOException;
+    T createObject(ObjectMapper mapper, Reader reader) throws IOException;
+
+    void store(Set<T> entities);
 }

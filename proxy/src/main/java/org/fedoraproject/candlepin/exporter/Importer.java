@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Persisted;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 
 import com.google.inject.Inject;
@@ -130,7 +131,7 @@ public class Importer {
             Reader reader = null;
             try {
                 reader = new FileReader(consumerType);
-                consumerTypeObjs.add(importer.importObject(mapper, reader));
+                consumerTypeObjs.add(importer.createObject(mapper, reader));
             } 
             finally {
                 if (reader != null) {
@@ -148,9 +149,24 @@ public class Importer {
     
     public void importProducts(File[] products) throws IOException {
         ProductImporter importer = new ProductImporter();
+        Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
-            createEntity(importer, productCurator, product);
+            // Skip product.pem's, we just need the json to import:
+            if (product.getName().endsWith(".json")) {
+                log.debug("Import product: " + product.getName());
+                Reader reader = null;
+                try {
+                    reader = new FileReader(product);
+                    productsToImport.add(importer.createObject(mapper, reader));
+                }
+                finally {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                }
+            }
         }
+        importer.store(productsToImport);
     }
     
     public void importEntitlements(File[] entitlements, File[] entitlementCertificates) 
@@ -175,7 +191,7 @@ public class Importer {
             Reader reader = null;
             try {
                 reader = new FileReader(certificate);
-                EntitlementCertificate cert = importer.importObject(mapper, reader);
+                EntitlementCertificate cert = importer.createObject(mapper, reader);
                 toReturn.put(cert.getSerial(), cert);
             } 
             finally {
@@ -217,7 +233,7 @@ public class Importer {
         Reader reader = null;
         try {
             reader = new FileReader(file);
-            T type = importer.importObject(mapper, reader);
+            T type = importer.createObject(mapper, reader);
             curator.create(type);
         } 
         finally {

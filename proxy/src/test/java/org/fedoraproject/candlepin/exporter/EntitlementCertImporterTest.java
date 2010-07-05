@@ -47,7 +47,7 @@ public class EntitlementCertImporterTest {
     @Ignore
     @Test
     public void shouldSetKeyAndCertificateFields() throws IOException {
-        EntitlementCertificate cert = importer.importObject(mapper, certFileReader);
+        EntitlementCertificate cert = importer.createObject(mapper, certFileReader);
         
         assertTrue(cert.getCert().startsWith(PKIUtility.BEGIN_CERTIFICATE));
         assertTrue(cert.getCert().endsWith(PKIUtility.END_CERTIFICATE));
@@ -58,7 +58,7 @@ public class EntitlementCertImporterTest {
     @Ignore
     @Test
     public void shoudSetCorrectSerialNumber() throws IOException {
-        EntitlementCertificate cert = importer.importObject(mapper, certFileReader);
+        EntitlementCertificate cert = importer.createObject(mapper, certFileReader);
         assertEquals(new BigInteger("2"), cert.getSerial());
     }
 }
