@@ -20,17 +20,26 @@ import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 
 /**
  * ProductImporter
  */
 public class ProductImporter implements EntityImporter<Product> {
 
+    private ProductCurator curator;
+
+    public ProductImporter(ProductCurator curator) {
+        this.curator = curator;
+    }
+
     public Product createObject(ObjectMapper mapper, Reader reader) throws IOException {
         return mapper.readValue(reader, Product.class);
     }
 
     public void store(Set<Product> products) {
-
+        for (Product p : products) {
+            curator.createOrUpdate(p);
+        }
     }
 }

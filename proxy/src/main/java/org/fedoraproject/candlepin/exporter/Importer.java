@@ -170,7 +170,7 @@ public class Importer {
     }
     
     public void importProducts(File[] products) throws IOException {
-        ProductImporter importer = new ProductImporter();
+        ProductImporter importer = new ProductImporter(productCurator);
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:

@@ -136,6 +136,7 @@ public class Attribute  extends AbstractHibernateObject{
         return name.hashCode() * 31 + value.hashCode();
     }
 
+    // TODO: is this attribute hierarchy used at all?
     public Set<Attribute> getChildAttributes() {
         if (childAttributes == null) {
             childAttributes = new HashSet<Attribute>();
