@@ -21,12 +21,15 @@ import java.io.IOException;
 import java.io.Reader;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -42,7 +45,7 @@ import com.google.inject.Inject;
  * Importer
  */
 public class Importer {
-    private static Logger log = Logger.getLogger(Exporter.class);
+    private static Logger log = Logger.getLogger(Importer.class);
     
     /**
      * 
@@ -119,10 +122,21 @@ public class Importer {
     }
     
     public void importConsumerTypes(File[] consumerTypes) throws IOException {
-        ConsumerTypeImporter importer = new ConsumerTypeImporter();
+        ConsumerTypeImporter importer = new ConsumerTypeImporter(consumerTypeCurator);
+        Set<ConsumerType> consumerTypeObjs = new HashSet<ConsumerType>();
         for (File consumerType : consumerTypes) {
-            createEntity(importer, consumerTypeCurator, consumerType);
+            Reader reader = null;
+            try {
+                reader = new FileReader(consumerType);
+                consumerTypeObjs.add(importer.importObject(mapper, reader));
+            } 
+            finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
         }
+        importer.store(consumerTypeObjs);
     }
 
     public void importConsumer(File consumer) throws IOException {
