@@ -77,6 +77,10 @@ public class Attribute  extends AbstractHibernateObject{
 
     }
 
+    public String toString() {
+        return "Attribute [id=" + id + ", name=" + name + ", value=" + value + "]";
+    }
+
     /**
      * @param name attribute name
      * @param quantity quantity of the attribute.
@@ -90,13 +94,14 @@ public class Attribute  extends AbstractHibernateObject{
         return name;
     }
     
-    /**
-     * @return the id
-     */
     public Long getId() {
         return this.id;
     }
     
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     
     public void setName(String name) {
         this.name = name;
