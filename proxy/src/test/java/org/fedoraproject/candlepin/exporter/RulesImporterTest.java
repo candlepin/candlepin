@@ -47,7 +47,7 @@ public class RulesImporterTest {
     @Test
     public void importRules() throws IOException {
         importer.importObject(new StringReader(RULE));
-        verify(curator).create(any(Rules.class)); // TODO: can't get custom matcher to work?
+        verify(curator).update(any(Rules.class)); // TODO: can't get custom matcher to work?
     }
     
     class RulesMatcher extends ArgumentMatcher<Rules> {
