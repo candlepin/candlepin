@@ -39,6 +39,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.RulesCurator;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -78,16 +79,19 @@ public class Importer {
     private ObjectMapper mapper;
     private EntitlementCurator entitlementCurator;
     private PoolCurator poolCurator;
+    private RulesCurator rulesCurator;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, 
         ConsumerCurator consumerCurator, ProductCurator productCurator, 
-        EntitlementCurator entitlementCurator, PoolCurator poolCurator) {
+        EntitlementCurator entitlementCurator, PoolCurator poolCurator,
+        RulesCurator rulesCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
         this.entitlementCurator = entitlementCurator;
         this.poolCurator = poolCurator;
+        this.rulesCurator = rulesCurator;
         this.mapper = ExportUtils.getObjectMapper();
     }
 
@@ -114,16 +118,32 @@ public class Importer {
         
         // owner?
         
+        importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
-        importConsumer(importFiles.get(ImportFile.CONSUMER.fileName()));
-        importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
-        importEntitlements(
-            importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles(),
-            importFiles.get(ImportFile.ENTITLEMENT_CERTIFICATES.fileName()).listFiles());        
+        //importConsumer(importFiles.get(ImportFile.CONSUMER.fileName()));
+        //importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
+        //importEntitlements(
+        //    importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles(),
+        //   importFiles.get(ImportFile.ENTITLEMENT_CERTIFICATES.fileName()).listFiles());        
         
         // update product with content
-        // import rules
         
+    }
+    
+    public void importRules(File[] rulesFiles) throws IOException {
+        RulesImporter importer = new RulesImporter(rulesCurator);
+        
+        // Only importing a single rules file now.
+        Reader reader = null;
+        try {
+            reader = new FileReader(rulesFiles[0]);
+            importer.importObject(reader);
+        }
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
     }
     
     public void importConsumerTypes(File[] consumerTypes) throws IOException {

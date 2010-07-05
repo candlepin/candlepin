@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
 
@@ -27,6 +28,7 @@ import com.google.inject.Inject;
  * RulesImporter
  */
 public class RulesImporter {
+    private static Logger log = Logger.getLogger(RulesImporter.class);
     
     private RulesCurator curator;
 
@@ -36,9 +38,9 @@ public class RulesImporter {
     }
 
     public Rules importObject(Reader reader) throws IOException {
-        
+        log.debug("Importing rules file");
         new BufferedReader(reader);
         
-        return curator.create(new Rules(StringFromReader.asString(reader)));
+        return curator.update(new Rules(StringFromReader.asString(reader)));
     }
 }
