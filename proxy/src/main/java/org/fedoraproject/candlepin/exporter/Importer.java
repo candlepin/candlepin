@@ -120,11 +120,11 @@ public class Importer {
         
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
-        //importConsumer(importFiles.get(ImportFile.CONSUMER.fileName()));
-        //importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
-        //importEntitlements(
-        //    importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles(),
-        //   importFiles.get(ImportFile.ENTITLEMENT_CERTIFICATES.fileName()).listFiles());        
+        importConsumer(importFiles.get(ImportFile.CONSUMER.fileName()));
+        importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
+        importEntitlements(
+            importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles(),
+            importFiles.get(ImportFile.ENTITLEMENT_CERTIFICATES.fileName()).listFiles());        
         
         // update product with content
         
