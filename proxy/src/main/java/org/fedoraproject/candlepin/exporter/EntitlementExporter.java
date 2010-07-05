@@ -18,14 +18,16 @@ import java.io.IOException;
 import java.io.Writer;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 
 /**
  * EntitlementExporter
  */
 public class EntitlementExporter {
-    void export(ObjectMapper mapper, Writer writer, Consumer consumer) throws IOException {
-        ConsumerDto dto = new ConsumerDto(consumer.getUuid());
+    void export(ObjectMapper mapper, Writer writer, Entitlement entitlement) 
+        throws IOException {
+        
+        EntitlementDto dto = new EntitlementDto(entitlement);
         mapper.writeValue(writer, dto);
     }
 }

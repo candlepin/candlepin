@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -48,17 +49,23 @@ public class Exporter {
     private ConsumerTypeExporter consumerType;
     private RulesExporter rules;
     private EntitlementCertExporter entCert;
+    private Entitlement entitlement;
+    private EntitlementExporter entExporter;
     
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
     private ProductServiceAdapter productAdapter;
+    private EntitlementCurator entitlementCurator;
+
+
     
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
         ConsumerExporter consumer, ConsumerTypeExporter consumerType, 
-        RulesExporter rules, EntitlementCertExporter entCert,
+        RulesExporter rules, Entitlement entitlement, EntitlementCertExporter entCert,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
-        ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter) {
+        ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
+        EntitlementCurator entitlementCurator, EntitlementExporter entExporter) {
         
         mapper = ExportUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
@@ -67,11 +74,14 @@ public class Exporter {
         this.consumer = consumer;
         this.consumerType = consumerType;
         this.rules = rules;
+        this.entitlement = entitlement;
         this.entCert = entCert;
         this.entCertAdapter = entCertAdapter;
         this.productExporter = productExporter;
         this.productAdapter = productAdapter;
         this.productCertExporter = productCertExporter;
+        this.entitlementCurator = entitlementCurator;
+        this.entExporter = entExporter;
     }
 
     public File getExport(Consumer consumer) {
@@ -83,6 +93,7 @@ public class Exporter {
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
+            exportEntitlementsCerts(baseDir, consumer);
             exportProducts(baseDir, consumer);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
@@ -141,8 +152,10 @@ public class Exporter {
         writer.close();
     }
 
-    private void exportEntitlements(File baseDir, Consumer consumer) throws IOException {
-        File entCertDir = new File(baseDir.getCanonicalPath(), "entitlements");
+    private void exportEntitlementsCerts(File baseDir, Consumer consumer) 
+        throws IOException {
+        
+        File entCertDir = new File(baseDir.getCanonicalPath(), "entitlement_certificates");
         entCertDir.mkdir();
 
         for (EntitlementCertificate cert : entCertAdapter.listForConsumer(consumer)) {
@@ -151,6 +164,28 @@ public class Exporter {
             FileWriter writer = new FileWriter(file);
             entCert.export(mapper, writer, cert);
             writer.close();
+        }
+    }
+    
+    private void exportEntitlements(File baseDir, Consumer consumer) throws IOException {
+        File entCertDir = new File(baseDir.getCanonicalPath(), "entitlements");
+        entCertDir.mkdir();
+
+        for (Entitlement ent : entitlementCurator.listByConsumer(consumer)) {
+            if (log.isDebugEnabled()) {
+                log.debug("Exporting entitlement for product" + ent.getProductId());
+            }
+            FileWriter writer = null;
+            try {
+                File file = new File(entCertDir.getCanonicalPath(), ent.getId() + ".json");
+                writer = new FileWriter(file);
+                entExporter.export(mapper, writer, ent);
+            } 
+            finally {
+                if (writer != null) {
+                    writer.close();
+                }
+            }
         }
     }
     

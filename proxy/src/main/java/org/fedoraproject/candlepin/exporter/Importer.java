@@ -55,6 +55,7 @@ public class Importer {
         CONSUMER_TYPE("consumer_types"),
         CONSUMER("consumer.json"),
         ENTITLEMENTS("entitlements"),
+        ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
         RULES("rules");
         
@@ -113,9 +114,10 @@ public class Importer {
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
         importConsumer(importFiles.get(ImportFile.CONSUMER.fileName()));
         importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
+        importEntitlements(
+            importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles(),
+            importFiles.get(ImportFile.ENTITLEMENT_CERTIFICATES.fileName()).listFiles());        
         
-        
-        // import entitlement certs & generate content sets
         // update product with content
         // import rules
         
