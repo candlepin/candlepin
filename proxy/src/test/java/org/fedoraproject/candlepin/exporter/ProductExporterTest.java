@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.exporter;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -38,9 +38,11 @@ public class ProductExporterTest {
         Product product = new Product("my-id", "product name");
         
         exporter.export(mapper, writer, product);
-        System.out.println(writer.toString());
-        assertEquals("{\"name\":\"product name\",\"id\":\"my-id\"," +
-            "\"content\":[],\"attributes\":[],\"multiplier\":1}",
-            writer.toString());
+        String s = writer.toString();
+        assertTrue(s.contains("\"name\":\"product name\","));
+        assertTrue(s.contains("\"id\":\"my-id\","));
+        assertTrue(s.contains("\"content\":[],"));
+        assertTrue(s.contains("\"attributes\":[],"));
+        assertTrue(s.contains("\"multiplier\":1"));
     }
 }
