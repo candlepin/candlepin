@@ -41,6 +41,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * Importer
@@ -108,6 +109,7 @@ public class Importer {
         }
     }
     
+    @Transactional
     public void importObjects(Map<String, File> importFiles) throws IOException {
         
         // owner?
