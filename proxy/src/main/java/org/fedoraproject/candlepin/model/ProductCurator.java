@@ -56,6 +56,22 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
     
     /**
+     * Create the given product if it does not already exist, otherwise update
+     * existing product.
+     *
+     * @param p Product to create or update.
+     */
+    public void createOrUpdate(Product p) {
+        Product existing = lookupById(p.getId());
+        if (existing == null) {
+            create(p);
+            return;
+        }
+
+        merge(p);
+    }
+
+    /**
      * @param updated Product to update
      * @return the updated Product
      */
@@ -86,6 +102,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
         return toReturn;
     }
+
     /**
      * @param products set of products to update.
      * @return updated products.
