@@ -27,6 +27,8 @@ public class ConsumerTypeImporter implements EntityImporter<ConsumerType> {
 
     public ConsumerType importObject(ObjectMapper mapper, Reader reader) 
         throws IOException {
-        return mapper.readValue(reader, ConsumerType.class);
+        ConsumerType consumerType = mapper.readValue(reader, ConsumerType.class);
+        consumerType.setId(null);
+        return consumerType;
     }
 }
