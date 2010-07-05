@@ -49,8 +49,6 @@ import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
 
-import sun.misc.BASE64Decoder;
-
 /**
  * PKIUtility
  */
@@ -176,10 +174,6 @@ public class PKIUtility {
         return byteArrayOutputStream.toByteArray();
     }
     
-    public static X509Certificate createCert(String certData) throws IOException {
-        return createCert(pemToDer(certData));
-    }
-    
     public static X509Certificate createCert(byte[] certData) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X509");
@@ -190,11 +184,5 @@ public class PKIUtility {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-    
-    public static byte[] pemToDer(String pemCert) throws IOException {
-        return new BASE64Decoder().decodeBuffer(
-            pemCert.replaceFirst(BEGIN_CERTIFICATE, "")
-                .replaceFirst(END_CERTIFICATE, ""));        
-    }
+    }    
 }
