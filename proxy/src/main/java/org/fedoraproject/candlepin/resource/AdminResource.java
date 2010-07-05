@@ -119,7 +119,6 @@ public class AdminResource {
 
         try {
             InputPart part = input.getParts().get(0);
-            log.info("part: " + part.getBodyAsString());
             File archive = part.getBody(new GenericType<File>(){});
             log.info("Importing archive: " + archive.getAbsolutePath());
 
