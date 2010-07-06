@@ -146,6 +146,11 @@ class Candlepin
   def refresh_pools(owner_key)
     put("/owners/#{owner_key}/subscriptions")
   end
+  
+  def export_consumer
+    path = "/consumers/#{@uuid}/export"
+    get_file(path)
+  end
 
   # TODO: Add support for serial filtering:
   def get_certificates()
@@ -324,14 +329,22 @@ class Candlepin
                                        :ssl_client_key => @identity_key)
   end
 
-  def get(uri)
-    response = @client[URI.escape(uri)].get :accept => :json
+  def get(uri, accept_header = :json)
+    response = @client[URI.escape(uri)].get :accept => accept_header
 
     return JSON.parse(response.body)
   end
-
-  def get_text(uri)
+  
+  #assumes a tar.gzip archive atm
+  def get_file(uri)
     response = @client[URI.escape(uri)].get
+    filename = response.headers["Content-Disposition"] == nil ? "tmp_#{rand}.tar.gzip" : response.headers["Content-Disposition"].split("filename=")[1]
+    File.open(filename, 'w') { |f| f.write(response.body) }
+    filename
+  end
+
+  def get_text(uri, accept_header = nil)
+    response = @client[URI.escape(uri)].get :accept => accept_header
     return (response.body)
   end
 
