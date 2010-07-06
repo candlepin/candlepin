@@ -280,6 +280,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         if (this.attributes == null) {
             this.attributes = new HashSet<PoolAttribute>();
         }
+        attrib.setPool(this);
         this.attributes.add(attrib);
     }
 

@@ -17,8 +17,10 @@ package org.fedoraproject.candlepin.model;
 
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * See Attributes class for documentation.
@@ -29,6 +31,9 @@ import javax.persistence.Table;
         allocationSize = 1)
 @Embeddable
 public class ProductAttribute extends Attribute {
+    
+    @ManyToOne
+    private Product product;
 
     public ProductAttribute() {
 
@@ -37,5 +42,14 @@ public class ProductAttribute extends Attribute {
     public ProductAttribute(String name, String quantity) {
         this.name = name;
         this.value = quantity;
+    }
+
+    @XmlTransient
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
     }
 }

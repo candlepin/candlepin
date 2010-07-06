@@ -188,6 +188,7 @@ public class Product extends AbstractHibernateObject {
     }
 
     public void addAttribute(ProductAttribute attrib) {
+        attrib.setProduct(this);
         this.attributes.add(attrib);
     }
     

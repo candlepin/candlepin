@@ -116,8 +116,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product prod = new Product("cptest-label", "My Product");
         ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
-        attributeCurator.create(a);
         productCurator.create(prod);
+        attributeCurator.create(a);
 
         Product lookedUp = productCurator.find(prod.getId());
         assertEquals(jsonData, lookedUp.getAttribute("content_sets").getValue());
@@ -148,8 +148,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product prod = new Product("cptest-label", "My Product");
         ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
-        attributeCurator.create(a);
         productCurator.create(prod);
+        attributeCurator.create(a);
 
         Product lookedUp = productCurator.find(prod.getId());
         assertEquals(jsonData, lookedUp.getAttribute("content_sets").getValue());

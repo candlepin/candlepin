@@ -17,7 +17,9 @@ package org.fedoraproject.candlepin.model;
 
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * See Attributes class for documentation.
@@ -27,6 +29,9 @@ import javax.persistence.Table;
 @Embeddable
 public class PoolAttribute extends Attribute {
     
+    @ManyToOne
+    private Pool pool;
+    
     public PoolAttribute() {
 
     }
@@ -34,5 +39,14 @@ public class PoolAttribute extends Attribute {
     public PoolAttribute(String name, String quantity) {
         this.name = name;
         this.value = quantity;
+    }
+
+    @XmlTransient
+    public Pool getPool() {
+        return pool;
+    }
+
+    public void setPool(Pool pool) {
+        this.pool = pool;
     }
 }
