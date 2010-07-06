@@ -12,15 +12,27 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.fedoraproject.candlepin.model;
 
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
 /**
- * AttributeCurator
+ * See Attributes class for documentation.
  */
-public class AttributeCurator extends AbstractHibernateCurator<Attribute> {
+@Entity
+@Table(name = "cp_pool_attribute")
+@Embeddable
+public class PoolAttribute extends Attribute {
     
-    protected AttributeCurator() {
-        super(Attribute.class);
+    public PoolAttribute() {
+
     }
 
+    public PoolAttribute(String name, String quantity) {
+        this.name = name;
+        this.value = quantity;
+    }
 }

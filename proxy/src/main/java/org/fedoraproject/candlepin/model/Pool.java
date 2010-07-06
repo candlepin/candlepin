@@ -126,7 +126,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_entitlement_pool_attribute")
-    private Set<Attribute> attributes = new HashSet<Attribute>();
+    private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
     
     private String restrictedToUsername;
     
@@ -265,39 +265,39 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         e.getPool().dockConsumed(e.getQuantity());
     }
 
-    public Set<Attribute> getAttributes() {
+    public Set<PoolAttribute> getAttributes() {
         if (attributes == null) {
-            return new HashSet<Attribute>();
+            return new HashSet<PoolAttribute>();
         }
         return attributes;
     }
 
-    public void setAttributes(Set<Attribute> attributes) {
+    public void setAttributes(Set<PoolAttribute> attributes) {
         this.attributes = attributes;
     }
 
-    public void addAttribute(Attribute attrib) {
+    public void addAttribute(PoolAttribute attrib) {
         if (this.attributes == null) {
-            this.attributes = new HashSet<Attribute>();
+            this.attributes = new HashSet<PoolAttribute>();
         }
         this.attributes.add(attrib);
     }
 
     public void setAttribute(String key, String value) {
-        Attribute existing = getAttribute(key);
+        PoolAttribute existing = getAttribute(key);
         if (existing != null) {
             existing.setValue(value);
         }
         else {
-            addAttribute(new Attribute(key, value));
+            addAttribute(new PoolAttribute(key, value));
         }
     }
 
-    public Attribute getAttribute(String key) {
+    public PoolAttribute getAttribute(String key) {
         if (attributes == null) {
             return null;
         }
-        for (Attribute a : attributes) {
+        for (PoolAttribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a;
             }
@@ -309,7 +309,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         if (attributes == null) {
             return null;
         }
-        for (Attribute a : attributes) {
+        for (PoolAttribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a.getValue();
             }

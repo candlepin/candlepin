@@ -33,6 +33,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 
@@ -113,7 +114,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         String jsonData = mapper.writeValueAsString(data);
 
         Product prod = new Product("cptest-label", "My Product");
-        Attribute a = new Attribute("content_sets", jsonData);
+        ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
         attributeCurator.create(a);
         productCurator.create(prod);
@@ -145,7 +146,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         String jsonData = mapper.writeValueAsString(data);
 
         Product prod = new Product("cptest-label", "My Product");
-        Attribute a = new Attribute("content_sets", jsonData);
+        ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
         attributeCurator.create(a);
         productCurator.create(prod);
@@ -167,19 +168,21 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         // NOTE: Not using value on the Attributes which have children, but you
         // easily could, perhaps a string list of the children labels or
         // what not.
-        Attribute contentSets = new Attribute("content_sets", "");
+        ProductAttribute contentSets = new ProductAttribute("content_sets", "");
         for (int i = 0; i < 5; i++) {
             // assume family label as attribute name:
-            Attribute channelFamily = new Attribute("channelfamilylabel" + i, "");
+            ProductAttribute channelFamily = new ProductAttribute(
+                "channelfamilylabel" + i, "");
             channelFamily.addChildAttribute("family_id", "some family id");
             channelFamily.addChildAttribute("family_name", "some family name");
             channelFamily.addChildAttribute("flex_quantity", "5");
             channelFamily.addChildAttribute("physical_quantity", "10");
 
             // Now add the channels as a child of the channel family:
-            Attribute channels = new Attribute("channels", "");
+            ProductAttribute channels = new ProductAttribute("channels", "");
             for (int j = 0; j < 3; j++) {
-                Attribute channel = new Attribute("channel" + j, ""); // assume channel ID?
+                // assume channel ID?
+                ProductAttribute channel = new ProductAttribute("channel" + j, ""); 
                 channel.addChildAttribute("channel_name", "chan name");
                 channel.addChildAttribute("channel_desc", "description");
                 channel.addChildAttribute("channel_basedir", "basedir");
@@ -279,13 +282,13 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     private Product createTestProduct() {
         Product p = new Product("testProductId", "Test Product");
 
-        Attribute a1 = new Attribute("a1", "a1");
+        ProductAttribute a1 = new ProductAttribute("a1", "a1");
         p.addAttribute(a1);
 
-        Attribute a2 = new Attribute("a2", "a2");
+        ProductAttribute a2 = new ProductAttribute("a2", "a2");
         p.addAttribute(a2);
 
-        Attribute a3 = new Attribute("a3", "a3");
+        ProductAttribute a3 = new ProductAttribute("a3", "a3");
         p.addAttribute(a3);
 
         p.setMultiplier(new Long(1));
@@ -302,12 +305,12 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         modified.setName(newName);
 
         // Hack up the attributes, keep a1, skip a2, modify a3, add a4:
-        Set<Attribute> newAttributes = new HashSet<Attribute>();
+        Set<ProductAttribute> newAttributes = new HashSet<ProductAttribute>();
         newAttributes.add(modified.getAttribute("a1"));
-        Attribute a3 = modified.getAttribute("a3");
+        ProductAttribute a3 = modified.getAttribute("a3");
         a3.setValue("a3-modified");
         newAttributes.add(a3);
-        Attribute a4 = new Attribute("a4", "a4");
+        ProductAttribute a4 = new ProductAttribute("a4", "a4");
         newAttributes.add(a4);
         modified.setAttributes(newAttributes);
 

@@ -19,12 +19,12 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
@@ -64,7 +64,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     public void testLookupRuleFiltering() {
 
         Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
-        p.addAttribute(new Attribute(CPU_LIMITED_PRODUCT, ""));
+        p.addAttribute(new ProductAttribute(CPU_LIMITED_PRODUCT, ""));
         productCurator.create(p);
 
         Pool pool = createPoolAndSub(owner, p, new Long(100),

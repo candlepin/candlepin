@@ -25,13 +25,13 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
@@ -78,11 +78,12 @@ public class EntitlerTest extends DatabaseTestFixture {
         monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING);
         provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);        
         
-        virtHost.addAttribute(new Attribute(PRODUCT_VIRT_HOST, ""));
-        virtHostPlatform.addAttribute(new Attribute(PRODUCT_VIRT_HOST_PLATFORM, ""));
-        virtGuest.addAttribute(new Attribute(PRODUCT_VIRT_GUEST, ""));
-        monitoring.addAttribute(new Attribute(PRODUCT_MONITORING, ""));
-        provisioning.addAttribute(new Attribute(PRODUCT_PROVISIONING, ""));
+        virtHost.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST, ""));
+        virtHostPlatform.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST_PLATFORM, 
+            ""));
+        virtGuest.addAttribute(new ProductAttribute(PRODUCT_VIRT_GUEST, ""));
+        monitoring.addAttribute(new ProductAttribute(PRODUCT_MONITORING, ""));
+        provisioning.addAttribute(new ProductAttribute(PRODUCT_PROVISIONING, ""));
         
         productAdapter.createProduct(virtHost);
         productAdapter.createProduct(virtHostPlatform);

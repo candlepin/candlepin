@@ -34,7 +34,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
 
 /**
@@ -80,10 +79,6 @@ public class Subscription extends AbstractHibernateObject {
     private Date endDate;
  
     private String contractNumber;
-    
-    @CollectionOfElements
-    @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
-    private Set<Attribute> attributes;
     
     @OneToMany(mappedBy = "subscription")
     private Set<SubscriptionToken> tokens;
@@ -193,21 +188,6 @@ public class Subscription extends AbstractHibernateObject {
      */
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
-    }
-
-    /**
-     * @return the attributes of the subscription.
-     */
-    public Set<Attribute> getAttributes() {
-        return attributes;
-    }
-
-    /**
-     * Replaces all of the attributes of the subscription.
-     * @param attributes set of attributes for the subscription.
-     */
-    public void setAttributes(Set<Attribute> attributes) {
-        this.attributes = attributes;
     }
 
     /**

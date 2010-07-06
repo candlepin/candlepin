@@ -26,8 +26,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,15 +97,15 @@ public class ProductImporterTest {
     private Product createTestProduct() {
         Product p = new Product("testProductId", "Test Product");
 
-        Attribute a1 = new Attribute("a1", "a1");
+        ProductAttribute a1 = new ProductAttribute("a1", "a1");
         a1.setId(new Long(1001)); // faked
         p.addAttribute(a1);
 
-        Attribute a2 = new Attribute("a2", "a2");
+        ProductAttribute a2 = new ProductAttribute("a2", "a2");
         a2.setId(new Long(1002)); // faked
         p.addAttribute(a2);
 
-        Attribute a3 = new Attribute("a3", "a3");
+        ProductAttribute a3 = new ProductAttribute("a3", "a3");
         a3.setId(new Long(1003)); // faked
         p.addAttribute(a3);
 

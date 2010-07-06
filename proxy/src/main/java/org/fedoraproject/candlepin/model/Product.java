@@ -65,7 +65,7 @@ public class Product extends AbstractHibernateObject {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "cp_product_attribute")
-    private Set<Attribute> attributes = new HashSet<Attribute>();
+    private Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
     
     @CollectionOfElements
     @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
@@ -165,11 +165,11 @@ public class Product extends AbstractHibernateObject {
             existing.setValue(value);
         }
         else {
-            addAttribute(new Attribute(key, value));
+            addAttribute(new ProductAttribute(key, value));
         }
     }
 
-    public Set<Attribute> getAttributes() {
+    public Set<ProductAttribute> getAttributes() {
         return attributes;
     }
     
@@ -177,22 +177,22 @@ public class Product extends AbstractHibernateObject {
     public Set<String> getAttributeNames() {
         Set<String> toReturn = new HashSet<String>();
         
-        for (Attribute attribute : attributes) {
+        for (ProductAttribute attribute : attributes) {
             toReturn.add(attribute.getName());
         }
         return toReturn;
     }
 
-    public void setAttributes(Set<Attribute> attributes) {
+    public void setAttributes(Set<ProductAttribute> attributes) {
         this.attributes = attributes;
     }
 
-    public void addAttribute(Attribute attrib) {
+    public void addAttribute(ProductAttribute attrib) {
         this.attributes.add(attrib);
     }
     
-    public Attribute getAttribute(String key) {
-        for (Attribute a : attributes) {
+    public ProductAttribute getAttribute(String key) {
+        for (ProductAttribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a;
             }
@@ -200,9 +200,8 @@ public class Product extends AbstractHibernateObject {
         return null;
     }
     
-
     public String getAttributeValue(String key) {
-        for (Attribute a : attributes) {
+        for (ProductAttribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a.getValue();
             }

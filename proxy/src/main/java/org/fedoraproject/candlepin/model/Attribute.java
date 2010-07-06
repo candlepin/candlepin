@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -30,7 +29,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
 
 import org.hibernate.annotations.ForeignKey;
 
@@ -44,22 +42,22 @@ import org.hibernate.annotations.ForeignKey;
  * Attributes are used by both Products and Entitlement Pools.
  */
 @Entity
-@Table(name = "cp_attribute")
+//@Table(name = "cp_attribute")
 @SequenceGenerator(name = "seq_attribute", sequenceName = "seq_attribute",
         allocationSize = 1)
-@Embeddable
-public class Attribute  extends AbstractHibernateObject{
+//@Embeddable
+public class Attribute extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_attribute")
-    private Long id;
+    protected Long id;
     
     @Column(nullable = false)
-    private String name;
+    protected String name;
     
 //    @Column(nullable = false)
     @Column
-    private String value;
+    protected String value;
 
     @OneToMany(targetEntity = Attribute.class, cascade = CascadeType.ALL,
         fetch = FetchType.EAGER)
@@ -68,17 +66,13 @@ public class Attribute  extends AbstractHibernateObject{
     @JoinTable(name = "cp_attribute_hierarchy",
         joinColumns = @JoinColumn(name = "PARENT_ATTRIBUTE_ID"),
         inverseJoinColumns = @JoinColumn(name = "CHILD_ATTRIBUTE_ID"))
-    private Set<Attribute> childAttributes;
+    protected Set<Attribute> childAttributes;
 
     /**
      * default ctor
      */
     public Attribute() {
 
-    }
-
-    public String toString() {
-        return "Attribute [id=" + id + ", name=" + name + ", value=" + value + "]";
     }
 
     /**
@@ -90,6 +84,10 @@ public class Attribute  extends AbstractHibernateObject{
         this.value = quantity;
     }
 
+    public String toString() {
+        return "Attribute [id=" + id + ", name=" + name + ", value=" + value + "]";
+    }
+    
     public String getName() {
         return name;
     }
@@ -101,7 +99,6 @@ public class Attribute  extends AbstractHibernateObject{
     public void setId(Long id) {
         this.id = id;
     }
-
     
     public void setName(String name) {
         this.name = name;

@@ -32,7 +32,6 @@ import java.util.Set;
 
 import javax.script.ScriptEngineManager;
 
-import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -249,7 +248,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test(expected = RuleExecutionException.class)
     public void testRuleFailsWhenConsumerDoesntHaveFact() {
         Product product = new Product("a-product", "A product for testing");
-        product.addAttribute(new Attribute(PRODUCT_CPULIMITED, "2"));
+        product.setAttribute(PRODUCT_CPULIMITED, "2");
         productCurator.create(product);
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
@@ -268,7 +267,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void testSelectBestPoolLongestExpiry() {
         Product product = new Product("a-product", "A product for testing");
-        product.addAttribute(new Attribute(LONGEST_EXPIRY_PRODUCT, ""));
+        product.setAttribute(LONGEST_EXPIRY_PRODUCT, "");
         productCurator.create(product);
 
         Pool pool1 = createPoolAndSub(owner, product, new Long(5),
@@ -298,7 +297,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void testSelectBestPoolMostAvailable() {
         Product product = new Product("a-product", "A product for testing");
-        product.addAttribute(new Attribute(HIGHEST_QUANTITY_PRODUCT, ""));
+        product.setAttribute(HIGHEST_QUANTITY_PRODUCT, "");
         productCurator.create(product);
 
         Pool pool1 = createPoolAndSub(owner, product, new Long(5),
@@ -325,8 +324,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void shouldUseHighestPriorityRule() {
         Product product = new Product("a-product", "A product for testing");
-        product.addAttribute(new Attribute(HIGHEST_QUANTITY_PRODUCT, ""));
-        product.addAttribute(new Attribute(LONGEST_EXPIRY_PRODUCT, ""));
+        product.setAttribute(HIGHEST_QUANTITY_PRODUCT, "");
+        product.setAttribute(LONGEST_EXPIRY_PRODUCT, "");
         productCurator.create(product);
         
         Pool pool1 = createPoolAndSub(owner, product, new Long(5),
@@ -359,7 +358,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test(expected = RuleExecutionException.class)
     public void testSelectBestPoolBadRule() {
         Product product = new Product("a-product", "A product for testing");
-        product.addAttribute(new Attribute(BAD_RULE_PRODUCT, ""));
+        product.setAttribute(BAD_RULE_PRODUCT, "");
         productCurator.create(product);
 
         
