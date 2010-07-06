@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductCurator;
 
 /**
@@ -34,7 +35,13 @@ public class ProductImporter implements EntityImporter<Product> {
     }
 
     public Product createObject(ObjectMapper mapper, Reader reader) throws IOException {
-        return mapper.readValue(reader, Product.class);
+        Product p = mapper.readValue(reader, Product.class);
+        for (ProductAttribute a : p.getAttributes()) {
+            // Make sure the ID's are null, otherwise Hibernate thinks these are detached
+            // entities.
+            a.setId(null);
+        }
+        return p;
     }
 
     public void store(Set<Product> products) {

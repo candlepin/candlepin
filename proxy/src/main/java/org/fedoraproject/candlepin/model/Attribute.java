@@ -29,6 +29,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 
@@ -92,6 +93,7 @@ public class Attribute extends AbstractHibernateObject {
         return name;
     }
     
+    @XmlTransient
     public Long getId() {
         return this.id;
     }
