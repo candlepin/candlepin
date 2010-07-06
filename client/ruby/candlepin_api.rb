@@ -337,8 +337,8 @@ class Candlepin
   
   #assumes a tar.gzip archive atm
   def get_file(uri)
-    response = @client[URI.escape(uri)].get
-    filename = response.headers["Content-Disposition"] == nil ? "tmp_#{rand}.tar.gzip" : response.headers["Content-Disposition"].split("filename=")[1]
+    response = @client[URI.escape(uri)].get    
+    filename = response.headers[:content_disposition] == nil ? "tmp_#{rand}.tar.gzip" : response.headers[:content_disposition].split("filename=")[1]
     File.open(filename, 'w') { |f| f.write(response.body) }
     filename
   end
