@@ -185,14 +185,16 @@ public class CertificateRevocationListTask implements Job {
                     cs.getExpiration()));
             cs.setCollected(true);
         }
-        log.info("Added #" + serials.size() + " new entries to the CRL");
-        if (log.isDebugEnabled()) {
+        if (log.isTraceEnabled()) {
+            log.trace("Added #" + serials.size() + " new entries to the CRL");
+        }
+        if (log.isTraceEnabled()) {
             StringBuilder builder = new StringBuilder("[ ");
             for (CertificateSerial cs : serials) {
                 builder.append(cs.getSerial()).append(", ");
             }
             builder.append(" ]");
-            log.debug("Newly added serials = " + builder.toString());
+            log.trace("Newly added serials = " + builder.toString());
         }
         this.certificateSerialCurator.saveOrUpdateAll(serials);
         return entries;
@@ -218,8 +220,10 @@ public class CertificateRevocationListTask implements Job {
             X509CRLEntry entry = map.get(cs.getSerial());
             if (entry != null) {
                 revokedEntries.remove(entry);
-                log.info("Serial #" + cs.getId() +
-                    " has expired. Removing it from CRL");
+                if (log.isTraceEnabled()) {
+                    log.trace("Serial #" + cs.getId() +
+                        " has expired. Removing it from CRL");
+                }
             }
         }
         return revokedEntries;

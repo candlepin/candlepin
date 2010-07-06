@@ -17,6 +17,8 @@ package org.fedoraproject.candlepin.util;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.cert.X509Extension;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -80,14 +82,24 @@ public class Util {
     }
     
     public static Date tomorrow() {
+        return addDaysToDt(1);
+    }
+
+    public static Date yesterday() {
+        return addDaysToDt(-1);
+    }
+    
+    public static Date addDaysToDt(int dayField) {
         Calendar calendar = Calendar.getInstance();
-        calendar.roll(Calendar.DAY_OF_MONTH, true);
+        calendar.add(Calendar.DAY_OF_MONTH, dayField);
         return calendar.getTime();
     }
     
-    public static Date yesterday() {
+    public static Date addToFields(int day, int month, int yr) {
         Calendar calendar = Calendar.getInstance();
-        calendar.roll(Calendar.DAY_OF_MONTH, false);
+        calendar.add(Calendar.DAY_OF_MONTH, day);
+        calendar.add(Calendar.MONTH, month);
+        calendar.add(Calendar.YEAR, yr);
         return calendar.getTime();
     }
     
@@ -108,5 +120,15 @@ public class Util {
     
     public static String getValue(X509Extension cert, String extension) {
         return decodeValue(cert.getExtensionValue(extension));
+    }
+    
+    public static Date toDate(String dt) {
+        SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy");
+        try {
+            return fmt.parse(dt);
+        }
+        catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

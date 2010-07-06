@@ -45,17 +45,21 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         //TODO - Should date fields be truncated when checking expiration?
         return this.currentSession()
             .createCriteria(CertificateSerial.class)
-            .add(Restrictions.ge("expiration", Util.yesterday())).list();
+            .add(Restrictions.le("expiration", Util.yesterday()))
+            .add(Restrictions.eq("revoked", true)).list();
     }
 
     /**
+     * Delete expired serials.
      * 
+     * @return the number of rows deleted.
      */
-    public void deleteExpiredSerials() {
-        this.currentSession()
-            .createQuery("delete from CertificateSerial where expiration >= :date")
-            .setDate("date", Util.yesterday())
-            .executeUpdate();
+    public int deleteExpiredSerials() {
+        return this.currentSession().createQuery(
+            "delete from CertificateSerial where expiration <= :date" +
+                " and revoked = :revoked")
+                .setDate("date", Util.yesterday())
+                .setBoolean("revoked", true).executeUpdate();
     }
 
 }

@@ -121,9 +121,10 @@ public class CertificateSerial extends AbstractHibernateObject{
     }
 
     public String toString() {
-        return "CertificateSerial[id=" + id + "]";
+        return "CertificateSerial[id=" + id + ", revoked=" + revoked +
+            " ,collected=" + collected + ", expDt=" + expiration + "] ";
     }
-    
+
     public BigInteger getSerial() {
         return Util.toBigInt(this.getId());
     }
