@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
@@ -83,12 +84,14 @@ public class Importer {
     private PoolCurator poolCurator;
     private RulesCurator rulesCurator;
     private OwnerCurator ownerCurator;
+    private ContentCurator contentCurator;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, 
         ConsumerCurator consumerCurator, ProductCurator productCurator, 
         EntitlementCurator entitlementCurator, PoolCurator poolCurator,
-        RulesCurator rulesCurator, OwnerCurator ownerCurator) {
+        RulesCurator rulesCurator, OwnerCurator ownerCurator, 
+        ContentCurator contentCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
@@ -96,6 +99,7 @@ public class Importer {
         this.poolCurator = poolCurator;
         this.rulesCurator = rulesCurator;
         this.ownerCurator = ownerCurator;
+        this.contentCurator = contentCurator;
         this.mapper = ExportUtils.getObjectMapper();
     }
 
@@ -186,7 +190,7 @@ public class Importer {
     }
     
     public void importProducts(File[] products) throws IOException {
-        ProductImporter importer = new ProductImporter(productCurator);
+        ProductImporter importer = new ProductImporter(productCurator, contentCurator);
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:

@@ -32,7 +32,18 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         return (Content) currentSession().createCriteria(Content.class)
             .add(Restrictions.eq("label", label))
             .uniqueResult();
-        
     }
     
+    @Transactional
+    public void createOrUpdate(Content c) {
+        Content existing = findByLabel(c.getLabel());
+        if (existing == null) {
+            create(c);
+            return;
+        }
+        else {
+            // Copy the ID so Hibernate knows this is an existing entity to merge:
+            merge(c);
+        }
+    }
 }

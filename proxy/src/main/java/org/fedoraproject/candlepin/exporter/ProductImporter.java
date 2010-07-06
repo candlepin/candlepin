@@ -19,8 +19,10 @@ import java.io.Reader;
 import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
+import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.model.ProductCurator;
 
 /**
@@ -29,23 +31,37 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 public class ProductImporter implements EntityImporter<Product> {
 
     private ProductCurator curator;
+    private ContentCurator contentCurator;
 
-    public ProductImporter(ProductCurator curator) {
+    public ProductImporter(ProductCurator curator, ContentCurator contentCurator) {
         this.curator = curator;
+        this.contentCurator = contentCurator;
     }
 
     public Product createObject(ObjectMapper mapper, Reader reader) throws IOException {
         Product p = mapper.readValue(reader, Product.class);
+        
+        // Make sure the ID's are null, otherwise Hibernate thinks these are detached
+        // entities.
         for (ProductAttribute a : p.getAttributes()) {
-            // Make sure the ID's are null, otherwise Hibernate thinks these are detached
-            // entities.
             a.setId(null);
         }
+        
+        // TODO: test product content doesn't dangle
+        
         return p;
     }
 
     public void store(Set<Product> products) {
         for (Product p : products) {
+            // Handling the storing/updating of Content here. This is technically a 
+            // disjoint entity, but really only makes sense in the concept of products.
+            // Downside, if multiple products reference the same content, it will be
+            // updated multiple times during the import.
+            for (ProductContent content : p.getProductContent()) {
+                contentCurator.createOrUpdate(content.getContent());
+            }
+            
             curator.createOrUpdate(p);
         }
     }

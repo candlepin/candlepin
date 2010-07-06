@@ -19,6 +19,7 @@ import java.io.Serializable;
 import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.xml.bind.annotation.XmlTransient;
 //import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.Parent;
@@ -73,15 +74,12 @@ public class ProductContent extends AbstractHibernateObject implements
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.model.Persisted#getId()
-     */
-    @Override
+    @XmlTransient
     public Serializable getId() {
-        // TODO Auto-generated method stub
+        // TODO: just here to appease AbstractHibernateObject
         return null;
     }
-
+    
     /**
      * @param content the content to set
      */
@@ -106,6 +104,7 @@ public class ProductContent extends AbstractHibernateObject implements
     /**
      * @return the product
      */
+    @XmlTransient
     public Product getProduct() {
         return product;
     }

@@ -36,13 +36,12 @@ public class ProductExporterTest {
         StringWriter writer = new StringWriter();
         
         Product product = new Product("my-id", "product name");
-        
         exporter.export(mapper, writer, product);
         String s = writer.toString();
-        assertTrue(s.contains("\"name\":\"product name\","));
-        assertTrue(s.contains("\"id\":\"my-id\","));
-        assertTrue(s.contains("\"content\":[],"));
-        assertTrue(s.contains("\"attributes\":[],"));
+        assertTrue(s.contains("\"name\":\"product name\""));
+        assertTrue(s.contains("\"id\":\"my-id\""));
+        assertTrue(s.contains("\"productContent\":[]"));
+        assertTrue(s.contains("\"attributes\":[]"));
         assertTrue(s.contains("\"multiplier\":1"));
     }
 }

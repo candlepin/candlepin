@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -40,12 +41,13 @@ public class ProductImporterTest {
     private ObjectMapper mapper;
     private ProductImporter importer;
     private ProductCurator mockedCurator;
+    private ContentCurator mockedContentCurator;
 
     @Before
     public void setUp() throws IOException {
         mapper = ExportUtils.getObjectMapper();
         mockedCurator = mock(ProductCurator.class);
-        importer = new ProductImporter(mockedCurator);
+        importer = new ProductImporter(mockedCurator, mockedContentCurator);
     }
     
     @Test

@@ -261,7 +261,6 @@ public class Product extends AbstractHibernateObject {
     /**
      * @return the productContent
      */
-    @XmlTransient
     public Set<ProductContent> getProductContent() {
         return productContent;
     }
