@@ -27,8 +27,8 @@ import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,7 +50,7 @@ public class ProductImporterTest {
     
     @Test
     public void testCreateObject() throws Exception {
-        Product product = createTestProduct();
+        Product product = TestUtil.createProduct();
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader);
@@ -66,12 +66,11 @@ public class ProductImporterTest {
 
     @Test
     public void testExistingProductUpdated() throws Exception {
-        Product product = createTestProduct();
+        Product product = TestUtil.createProduct();
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
 
         Product created = importer.createObject(mapper, reader);
-
 
         // Dummy up some changes to this product:
         String newProductName = "New Name";
@@ -93,25 +92,6 @@ public class ProductImporterTest {
     // TODO: test old products not cleaned up if in use
 
     // TODO: test old products cleaned up if not in use *after* this import
-
-    private Product createTestProduct() {
-        Product p = new Product("testProductId", "Test Product");
-
-        ProductAttribute a1 = new ProductAttribute("a1", "a1");
-        a1.setId(new Long(1001)); // faked
-        p.addAttribute(a1);
-
-        ProductAttribute a2 = new ProductAttribute("a2", "a2");
-        a2.setId(new Long(1002)); // faked
-        p.addAttribute(a2);
-
-        ProductAttribute a3 = new ProductAttribute("a3", "a3");
-        a3.setId(new Long(1003)); // faked
-        p.addAttribute(a3);
-
-        p.setMultiplier(new Long(1));
-        return p;
-    }
 
     private String getJsonForProduct(Product p) throws Exception {
         Writer writer = new StringWriter();
