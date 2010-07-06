@@ -15,10 +15,15 @@
 package org.fedoraproject.candlepin.exporter;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -97,7 +102,7 @@ public class Exporter {
             exportProducts(baseDir, consumer);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
-            return makeArchive(tempDir, baseDir);
+            return makeArchive(consumer, tempDir, baseDir);
  //           FileUtils.deleteDirectory(baseDir);
         }
         catch (IOException e) {
@@ -113,29 +118,65 @@ public class Exporter {
      * Create a tar.gz archive of the exported directory.
      *
      * @param exportDir Directory where Candlepin data was exported.
-     * @return File reference to the new archive tar.gz.
+     * @return File reference to the new archive zip.
      */
-    private File makeArchive(File tempDir, File exportDir) {
-        String exportFileName = exportDir.getName() + ".tar.gz";
+    private File makeArchive(Consumer consumer, File tempDir, File exportDir) {
+        String exportFileName = exportDir.getName() + ".zip";
         log.info("Creating archive of " + exportDir.getAbsolutePath() + " in: " +
             exportFileName);
-        ProcessBuilder cmd = new ProcessBuilder("tar", "cvfz", exportFileName,
-            exportDir.getName());
-        cmd.directory(tempDir);
+
+        File archive = new File(tempDir, exportFileName);
+        ZipOutputStream out = null;
         try {
-            Process p = cmd.start();
-            p.waitFor();
-            log.debug("Done creating: " + exportFileName);
+            out = new ZipOutputStream(new FileOutputStream(archive));
+        }
+        catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        try {
+            out.setComment("Candlepin export for " + consumer.getUuid());
+            addFilesToArchive(out, exportDir.getParent().length(), exportDir);
+            out.close();
         }
         catch (IOException e) {
-            // TODO
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
-        catch (InterruptedException e) {
-            // TODO
-        }
-        File archive = new File(tempDir, exportFileName);
+        
+        
         log.debug("Returning file: " + archive.getAbsolutePath());
         return archive;
+    }
+
+    /**
+     * @param out
+     * @param exportDir
+     * @throws IOException 
+     */
+    private void addFilesToArchive(ZipOutputStream out, int charsToDropFromName,
+        File directory) throws IOException {
+        for (File file : directory.listFiles()) {
+            if (file.isDirectory()) {
+                addFilesToArchive(out, charsToDropFromName, file);
+            }
+            else {
+                log.debug("Adding file to archive: " +
+                    file.getAbsolutePath().substring(charsToDropFromName));
+                out.putNextEntry(new ZipEntry(
+                    file.getAbsolutePath().substring(charsToDropFromName)));
+                FileInputStream in = new FileInputStream(file);
+                
+                byte [] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+                out.closeEntry();
+                in.close();
+            }
+        }
     }
 
     private void exportMeta(File baseDir) throws IOException {
