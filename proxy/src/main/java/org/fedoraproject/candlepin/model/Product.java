@@ -26,6 +26,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -64,7 +66,9 @@ public class Product extends AbstractHibernateObject {
     //       product we are... 
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "cp_product_attribute")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL, 
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
     
     @CollectionOfElements

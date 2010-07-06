@@ -326,8 +326,11 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         // TODO: test content merging
 
         // TODO: test attribute cleanup:
-//        List<Attribute> all = attributeCurator.listAll();
-//        // Old attributes should get cleaned up:
-//        assertEquals(3, all.size());
+        List<ProductAttribute> all = attributeCurator.listAll();
+        for (ProductAttribute a : all) {
+            System.out.println(a);
+        }
+        // Old attributes should get cleaned up:
+        assertEquals(3, all.size());
     }
 }

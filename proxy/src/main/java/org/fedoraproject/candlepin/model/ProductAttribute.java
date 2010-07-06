@@ -36,12 +36,16 @@ public class ProductAttribute extends Attribute {
     private Product product;
 
     public ProductAttribute() {
-
     }
-
+    
     public ProductAttribute(String name, String quantity) {
         this.name = name;
         this.value = quantity;
+    }
+
+    public String toString() {
+        return "ProductAttribute [id=" + id + ", name=" + name + ", value=" + value + 
+            ", product=" + product + "]";
     }
 
     @XmlTransient

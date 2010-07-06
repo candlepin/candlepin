@@ -37,6 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -125,7 +126,9 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     private Set<String> providedProductIds = new HashSet<String>();
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "cp_entitlement_pool_attribute")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL, 
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
     
     private String restrictedToUsername;
