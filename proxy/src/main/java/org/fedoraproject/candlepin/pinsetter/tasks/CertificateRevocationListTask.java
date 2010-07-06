@@ -82,7 +82,7 @@ public class CertificateRevocationListTask implements Job {
     /** The algorithm. */
     private String algorithm;
 
-    private static final Logger L = Logger.getLogger(CertificateRevocationListTask.class); 
+    private static Logger log = Logger.getLogger(CertificateRevocationListTask.class); 
     /**
      * Instantiates a new certificate revocation list task.
      * 
@@ -106,7 +106,7 @@ public class CertificateRevocationListTask implements Job {
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
         String filePath = config.getString(ConfigProperties.CRL_FILE_PATH);
-        L.info("Executing CRL Job. CRL filePath=" + filePath);
+        log.info("Executing CRL Job. CRL filePath=" + filePath);
         File crlFile = new File(filePath);
         Principal systemPrincipal = new SystemPrincipal();
         ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
@@ -159,7 +159,7 @@ public class CertificateRevocationListTask implements Job {
                 generator.addCRLEntry(entry.serialNumber, entry.revocationDate,
                     CRLReason.privilegeWithdrawn);
             }
-            L.info("Completed adding CRL numbers to the certificate.");
+            log.info("Completed adding CRL numbers to the certificate.");
             generator.addExtension(X509Extensions.AuthorityKeyIdentifier,
                 false, new AuthorityKeyIdentifierStructure(pkiReader.getCACert()));
             generator.addExtension(X509Extensions.CRLNumber, false,
@@ -185,14 +185,14 @@ public class CertificateRevocationListTask implements Job {
                     cs.getExpiration()));
             cs.setCollected(true);
         }
-        L.info("Added #" + serials.size() + " new entries to the CRL");
-        if (L.isDebugEnabled()) {
+        log.info("Added #" + serials.size() + " new entries to the CRL");
+        if (log.isDebugEnabled()) {
             StringBuilder builder = new StringBuilder("[ ");
             for (CertificateSerial cs : serials) {
                 builder.append(cs.getSerial()).append(", ");
             }
             builder.append(" ]");
-            L.debug("Newly added serials = " + builder.toString());
+            log.debug("Newly added serials = " + builder.toString());
         }
         this.certificateSerialCurator.saveOrUpdateAll(serials);
         return entries;
@@ -218,7 +218,7 @@ public class CertificateRevocationListTask implements Job {
             X509CRLEntry entry = map.get(cs.getSerial());
             if (entry != null) {
                 revokedEntries.remove(entry);
-                L.info("Serial #" + cs.getId() +
+                log.info("Serial #" + cs.getId() +
                     " has expired. Removing it from CRL");
             }
         }
@@ -234,7 +234,7 @@ public class CertificateRevocationListTask implements Job {
      */
     protected X509CRL updateCRL(X509CRL x509crl, String principal) {
         BigInteger no = getCRLNumber(x509crl);
-        L.info("Old CRLNumber is : " + no);
+        log.info("Old CRLNumber is : " + no);
         List<SimpleCRLEntry> crlEntries = newList();
         if (x509crl != null) {
             crlEntries = this.toSimpleCRLEntries(removeExpiredSerials(x509crl
@@ -311,14 +311,14 @@ public class CertificateRevocationListTask implements Job {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
             if (file.exists() && file.length() > 0) {
-                L.info("CRL File: " + file + " exists. Loading the old CRL");
+                log.info("CRL File: " + file + " exists. Loading the old CRL");
                 in = new FileInputStream(file);
             }
             else {
-                L.info("CRL File: " + file + " either does not exist");
+                log.info("CRL File: " + file + " either does not exist");
             }
             updateCRL(in, principal, stream);
-            L.info("Completed generating CRL. Writing it to disk");
+            log.info("Completed generating CRL. Writing it to disk");
             FileUtils.writeByteArrayToFile(file, stream.toByteArray());
         }
         catch (Exception e) {
