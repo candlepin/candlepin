@@ -14,14 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -29,7 +22,6 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.exporter.Importer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Owner;
@@ -37,9 +29,6 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.jboss.resteasy.util.GenericType;
 
 import com.google.inject.Inject;
 
@@ -54,15 +43,13 @@ public class AdminResource {
     private ConsumerTypeCurator consumerTypeCurator;
     private OwnerCurator ownerCurator;
     private UserServiceAdapter userService;
-    private Importer importer;
 
     @Inject
     public AdminResource(ConsumerTypeCurator consumerTypeCurator, 
-        OwnerCurator ownerCurator, UserServiceAdapter userService, Importer importer) {
+        OwnerCurator ownerCurator, UserServiceAdapter userService) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.ownerCurator = ownerCurator;
         this.userService = userService;
-        this.importer = importer;
     }
 
     /**
@@ -110,35 +97,4 @@ public class AdminResource {
 
         return "Initialized!";
     }
-    
-    @POST
-    @Path("import")
-    @AllowRoles(roles = Role.SUPER_ADMIN)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public void importData(MultipartInput input) {
-
-        try {
-            InputPart part = input.getParts().get(0);
-            File archive = part.getBody(new GenericType<File>(){});
-            log.info("Importing archive: " + archive.getAbsolutePath());
-
-            File export = new File("/tmp/candlepin/export.tar.gz");
-            FileOutputStream fos = new FileOutputStream(export);
-            FileInputStream fis = new FileInputStream(archive);
-
-            int c;
-            while ((c = fis.read()) != -1) {
-                fos.write(c);
-            }
-            fis.close();
-            fos.close();
-            
-            importer.loadExport(export);
-        }
-        catch (IOException e) {
-            // TODO
-            log.error(e);
-        }
-    }
-
 }

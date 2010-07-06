@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +42,7 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.exporter.Importer;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -58,6 +61,9 @@ import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.jboss.resteasy.util.GenericType;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -81,6 +87,7 @@ public class OwnerResource {
     private static Logger log = Logger.getLogger(OwnerResource.class);
     private EventCurator eventCurator;
     private ProductCurator productCurator;
+    private Importer importer;
     private static final int FEED_LIMIT = 1000;
     
 
@@ -91,8 +98,7 @@ public class OwnerResource {
         SubscriptionTokenCurator subscriptionTokenCurator,
         ConsumerCurator consumerCurator, I18n i18n,
         UserServiceAdapter userService, Entitler entitler, EventSink sink,
-        EventFactory eventFactory, 
-        EventCurator eventCurator) {
+        EventFactory eventFactory, EventCurator eventCurator, Importer importer) {
 
         this.ownerCurator = ownerCurator;
         this.productCurator = productCurator;
@@ -106,6 +112,7 @@ public class OwnerResource {
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
+        this.importer = importer;
     }
 
     /**
@@ -326,5 +333,24 @@ public class OwnerResource {
         }
         
         poolCurator.refreshPools(owner);
+    }
+    
+    @POST
+    @Path("{owner_id}/import")
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public void importData(@PathParam("owner_id") Long ownerId, MultipartInput input) {
+        Owner owner = findOwner(ownerId);
+        
+        try {
+            InputPart part = input.getParts().get(0);
+            File archive = part.getBody(new GenericType<File>(){});
+            log.info("Importing archive: " + archive.getAbsolutePath());
+            importer.loadExport(owner, archive);
+        }
+        catch (IOException e) {
+            // TODO
+            log.error(e);
+        }
     }
 }
