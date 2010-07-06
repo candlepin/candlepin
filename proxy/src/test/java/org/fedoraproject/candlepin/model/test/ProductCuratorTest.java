@@ -87,15 +87,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUpdate() {
-        Product product = new Product("test-product", "Test Product");
-        Product updatedProduct = productCurator.update(product);
-
-        assertEquals(product.getId(), updatedProduct.getId());
-        assertEquals(product.getName(), updatedProduct.getName());
-    }
-
-    @Test
     public void testEquality() {
         assertEquals(new Product("label", "name"), new Product("label", "name"));
         assertFalse(new Product("label", "name").equals(null));

@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.hibernate.criterion.Restrictions;
 
 import com.wideplay.warp.persist.Transactional;
@@ -69,51 +66,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
 
         merge(p);
-    }
-
-    /**
-     * @param updated Product to update
-     * @return the updated Product
-     */
-    @Transactional
-    public Product update(Product updated) {
-        Product existingProduct = find(updated.getId());
-        if (existingProduct == null) {
-            existingProduct = create(updated);    
-        }
-        
-        if (updated.getContent() != null) {
-            existingProduct.setContent(bulkContentUpdate(updated.getContent()));
-//            existingProduct.setContent(updated.getContent());
-        }
-        existingProduct.setId(updated.getId());
-        existingProduct.setName(updated.getName());
-        save(existingProduct);
-        flush();
-        
-        return existingProduct;
-    }
-    
-    
-    public Set<Content> bulkContentUpdate(Set<Content> content) {
-        Set<Content> toReturn = new HashSet<Content>();
-        for (Content toUpdate : content) {
-            toReturn.add(toUpdate);
-        }
-        return toReturn;
-    }
-
-    /**
-     * @param products set of products to update.
-     * @return updated products.
-     */
-    @Transactional
-    public Set<Product> bulkUpdate(Set<Product> products) {
-        Set<Product> toReturn = new HashSet<Product>();
-        for (Product toUpdate : products) {
-            toReturn.add(update(toUpdate));
-        }
-        return toReturn;
     }
 
 }

@@ -285,27 +285,4 @@ public class Product extends AbstractHibernateObject {
         }
     }
     
-    // FIXME: this seems wrong
-    public Set<Content> getContent() {
-        Set<Content> content = new HashSet<Content>();
-        for (ProductContent pc : productContent) {
-            content.add(pc.getContent());
-        }
-        return content;
-        
-    }
-
-    public Set<Content> getEnabledContent() {
-        Set<Content> enabledContent = new HashSet<Content>();
-        
-        for (ProductContent pc : productContent) {
-            if (pc.getEnabled()) {
-                enabledContent.add(pc.getContent());
-            }
-        }
-        return enabledContent;
-        
-    }
- 
-       
 }
