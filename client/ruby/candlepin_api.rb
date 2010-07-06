@@ -335,10 +335,10 @@ class Candlepin
     return JSON.parse(response.body)
   end
   
-  #assumes a tar.gzip archive atm
+  #assumes a zip archive atm
   def get_file(uri)
     response = @client[URI.escape(uri)].get    
-    filename = response.headers[:content_disposition] == nil ? "tmp_#{rand}.tar.gzip" : response.headers[:content_disposition].split("filename=")[1]
+    filename = response.headers[:content_disposition] == nil ? "tmp_#{rand}.zip" : response.headers[:content_disposition].split("filename=")[1]
     File.open(filename, 'w') { |f| f.write(response.body) }
     filename
   end

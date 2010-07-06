@@ -628,7 +628,7 @@ public class ConsumerResource {
     }
 
     @GET
-    @Produces("application/gzip-compressed")
+    @Produces("application/zip")
     @Path("{consumer_uuid}/export")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public File exportData(
