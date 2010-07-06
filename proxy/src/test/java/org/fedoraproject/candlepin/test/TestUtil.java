@@ -84,11 +84,9 @@ public class TestUtil {
         rhel.setId("test-product-" + random);
         
         ProductAttribute a1 = new ProductAttribute("a1", "a1");
-        a1.setId(new Long(1001)); // faked
         rhel.addAttribute(a1);
 
         ProductAttribute a2 = new ProductAttribute("a2", "a2");
-        a2.setId(new Long(1002)); // faked
         rhel.addAttribute(a2);
         
         return rhel;
