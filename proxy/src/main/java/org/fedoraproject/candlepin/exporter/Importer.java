@@ -34,6 +34,7 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Persisted;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -95,7 +96,7 @@ public class Importer {
         this.mapper = ExportUtils.getObjectMapper();
     }
 
-    public void loadExport(File exportFile) {
+    public void loadExport(Owner owner, File exportFile) {
         try {
             File tmpDir = ExportUtils.makeTempDir("import");
             File exportDir = extractArchive(tmpDir, exportFile);
