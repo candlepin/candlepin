@@ -16,26 +16,39 @@ package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 
 /**
  * ConsumerImporter
  */
-public class ConsumerImporter implements EntityImporter<Consumer> {
+public class ConsumerImporter {
 
-    public Consumer createObject(ObjectMapper mapper, Reader reader) throws IOException {
-        return mapper.readValue(reader, ConsumerDto.class).consumer();
+    private OwnerCurator curator;
+    
+    public ConsumerImporter(OwnerCurator curator) {
+        this.curator = curator;
+    }
+    
+    public ConsumerDto createObject(ObjectMapper mapper, Reader reader) throws IOException {
+        return mapper.readValue(reader, ConsumerDto.class);
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.exporter.EntityImporter#store(java.util.Set)
-     */
-    @Override
-    public void store(Set<Consumer> entities) {
-        // TODO Auto-generated method stub
+    public void store(Owner owner, ConsumerDto consumer) throws ImporterException {
+        
+        if (consumer.getUuid() == null) {
+            throw new ImporterException("null uuid on consumer info");
+        }
+        
+        if (owner.getUpstreamUuid() != null &&
+            owner.getUpstreamUuid() != consumer.getUuid()) {
+            throw new ImporterException("mismatched consumer uuid for this owner");
+        }
+        
+        owner.setUpstreamUuid(consumer.getUuid());
+        curator.merge(owner);
     }
 
 }

@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Persisted;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -81,18 +82,20 @@ public class Importer {
     private EntitlementCurator entitlementCurator;
     private PoolCurator poolCurator;
     private RulesCurator rulesCurator;
+    private OwnerCurator ownerCurator;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, 
         ConsumerCurator consumerCurator, ProductCurator productCurator, 
         EntitlementCurator entitlementCurator, PoolCurator poolCurator,
-        RulesCurator rulesCurator) {
+        RulesCurator rulesCurator, OwnerCurator ownerCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
         this.entitlementCurator = entitlementCurator;
         this.poolCurator = poolCurator;
         this.rulesCurator = rulesCurator;
+        this.ownerCurator = ownerCurator;
         this.mapper = ExportUtils.getObjectMapper();
     }
 
@@ -106,22 +109,24 @@ public class Importer {
                 importFiles.put(file.getName(), file);
             }
             
-            importObjects(importFiles);
+            importObjects(owner, importFiles);
         }
         catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (ImporterException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
     
     @Transactional
-    public void importObjects(Map<String, File> importFiles) throws IOException {
+    public void importObjects(Owner owner, Map<String, File> importFiles) throws IOException, ImporterException {
         
-        // owner?
-        
+        importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
-        importConsumer(importFiles.get(ImportFile.CONSUMER.fileName()));
         importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
         importEntitlements(
             importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles(),
@@ -165,9 +170,19 @@ public class Importer {
         importer.store(consumerTypeObjs);
     }
 
-    public void importConsumer(File consumer) throws IOException {
-        ConsumerImporter importer = new ConsumerImporter();
-        createEntity(importer, consumerCurator, consumer);
+    public void importConsumer(Owner owner, File consumerFile) throws IOException, ImporterException {
+        ConsumerImporter importer = new ConsumerImporter(ownerCurator);
+        Reader reader = null;
+        try {
+            reader = new FileReader(consumerFile);
+            ConsumerDto consumer = importer.createObject(mapper, reader);
+            importer.store(owner, consumer);
+        }
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
     }
     
     public void importProducts(File[] products) throws IOException {

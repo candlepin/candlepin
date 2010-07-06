@@ -61,6 +61,13 @@ public class Owner extends AbstractHibernateObject implements Serializable {
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
     
+    /*
+     *  The uuid of the consumer in the upstream candlepin that maps to this owner,
+     *  for entitlement syncing.
+     */
+    @Column(name = "upstream_uuid")
+    private String upstreamUuid;
+    
     /**
      * Default constructor
      */
@@ -221,5 +228,19 @@ public class Owner extends AbstractHibernateObject implements Serializable {
         hash = 89 * hash + (this.key != null ? this.key.hashCode() : 0);
         hash = 89 * hash + (this.displayName != null ? this.displayName.hashCode() : 0);
         return hash;
+    }
+
+    /**
+     * @param upstreamUuid the upstreamUuid to set
+     */
+    public void setUpstreamUuid(String upstreamUuid) {
+        this.upstreamUuid = upstreamUuid;
+    }
+
+    /**
+     * @return the upstreamUuid
+     */
+    public String getUpstreamUuid() {
+        return upstreamUuid;
     }
 }
