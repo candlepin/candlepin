@@ -343,8 +343,8 @@ class Candlepin
     filename
   end
 
-  def get_text(uri, accept_header = nil)
-    response = @client[URI.escape(uri)].get :accept => accept_header
+  def get_text(uri)
+    response = @client[URI.escape(uri)].get :content_type => 'text/plain'
     return (response.body)
   end
 
