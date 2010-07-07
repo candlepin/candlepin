@@ -23,14 +23,19 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,13 +49,18 @@ public class ProductImporterTest {
     private ProductImporter importer;
     private ProductCurator productCuratorMock;
     private ContentCurator contentCuratorMock;
+    private SubscriptionCurator subCuratorMock;
+    private PoolCurator poolCuratorMock;
 
     @Before
     public void setUp() throws IOException {
         mapper = ExportUtils.getObjectMapper();
         productCuratorMock = mock(ProductCurator.class);
         contentCuratorMock = mock(ContentCurator.class);
-        importer = new ProductImporter(productCuratorMock, contentCuratorMock);
+        subCuratorMock = mock(SubscriptionCurator.class);
+        poolCuratorMock = mock(PoolCurator.class);
+        importer = new ProductImporter(productCuratorMock, contentCuratorMock,
+            poolCuratorMock, subCuratorMock);
     }
     
     @Test
@@ -95,17 +105,31 @@ public class ProductImporterTest {
 
         // Simulate the pre-existing product:
         when(productCuratorMock.lookupById(product.getId())).thenReturn(product);
+        when(subCuratorMock.listByProduct(product)).thenReturn(
+            new LinkedList<Subscription>());
 
         importer.store(storeThese);
 
         verify(productCuratorMock).createOrUpdate(created);
     }
+    
+    @Test
+    public void testUnusedProductsCleanedUp() throws Exception {
 
-    // TODO: test old products cleaned up
+        Product inUse = TestUtil.createProduct();
+        inUse.getSubscriptions().add(TestUtil.createSubscription(inUse));
 
-    // TODO: test old products not cleaned up if in use
+        Product notInUse = TestUtil.createProduct();
 
-    // TODO: test old products cleaned up if not in use *after* this import
+        // Create the list of all products our mocked curator will return:
+        List<Product> allProducts = new LinkedList<Product>();
+        allProducts.add(inUse);
+        allProducts.add(notInUse);
+
+        when(productCuratorMock.listAll()).thenReturn(allProducts);
+        importer.cleanupUnusedProductsAndContent();
+        verify(productCuratorMock).delete(notInUse);
+    }
 
     @Test
     public void testContentCreated() throws Exception {

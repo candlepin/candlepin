@@ -77,9 +77,8 @@ public class Product extends AbstractHibernateObject {
     private Set<ProductContent> productContent = new HashSet<ProductContent>();
 
     @ManyToMany(mappedBy = "providedProducts")
-    private Set<Subscription> subscriptions;
-
-   
+    private Set<Subscription> subscriptions = new HashSet<Subscription>();
+    
     /**
      * Constructor
      * 

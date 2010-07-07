@@ -16,26 +16,37 @@ package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.ContentCurator;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
 
 /**
  * ProductImporter
  */
 public class ProductImporter implements EntityImporter<Product> {
 
+    private static Logger log = Logger.getLogger(ProductImporter.class);
+
     private ProductCurator curator;
     private ContentCurator contentCurator;
+    private SubscriptionCurator subCurator;
+    private PoolCurator poolCurator;
 
-    public ProductImporter(ProductCurator curator, ContentCurator contentCurator) {
+    public ProductImporter(ProductCurator curator, ContentCurator contentCurator,
+        PoolCurator poolCurator, SubscriptionCurator subCurator) {
         this.curator = curator;
         this.contentCurator = contentCurator;
+        this.poolCurator = poolCurator;
+        this.subCurator = subCurator;
     }
 
     public Product createObject(ObjectMapper mapper, Reader reader) throws IOException {
@@ -64,7 +75,19 @@ public class ProductImporter implements EntityImporter<Product> {
             
             curator.createOrUpdate(p);
         }
+    }
 
-        // TODO: Now we need to clean up unused Products and Content
+    public void cleanupUnusedProductsAndContent() {
+        log.info("Cleaning up unused products:");
+        List<Product> allProducts = curator.listAll();
+        for (Product p : allProducts) {
+
+            // Check for subscriptions for this product, or which provide this product:
+            if (p.getSubscriptions().size() == 0 &&
+                (subCurator.listByProduct(p).size() == 0)) {
+                log.info("Removing unused product: " + p);
+                curator.delete(p);
+            }
+        }
     }
 }
