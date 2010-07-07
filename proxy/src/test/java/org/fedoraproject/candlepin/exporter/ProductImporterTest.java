@@ -26,8 +26,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -40,14 +42,15 @@ public class ProductImporterTest {
 
     private ObjectMapper mapper;
     private ProductImporter importer;
-    private ProductCurator mockedCurator;
-    private ContentCurator mockedContentCurator;
+    private ProductCurator productCuratorMock;
+    private ContentCurator contentCuratorMock;
 
     @Before
     public void setUp() throws IOException {
         mapper = ExportUtils.getObjectMapper();
-        mockedCurator = mock(ProductCurator.class);
-        importer = new ProductImporter(mockedCurator, mockedContentCurator);
+        productCuratorMock = mock(ProductCurator.class);
+        contentCuratorMock = mock(ContentCurator.class);
+        importer = new ProductImporter(productCuratorMock, contentCuratorMock);
     }
     
     @Test
@@ -63,7 +66,16 @@ public class ProductImporterTest {
 
     @Test
     public void testNewProductCreated() throws Exception {
-        // TODO
+        Product product = TestUtil.createProduct();
+
+        String json = getJsonForProduct(product);
+        Reader reader = new StringReader(json);
+        Product created = importer.createObject(mapper, reader);
+        Set<Product> storeThese = new HashSet<Product>();
+        storeThese.add(created);
+        when(productCuratorMock.lookupById(product.getId())).thenReturn(null);
+        importer.store(storeThese);
+        verify(productCuratorMock).createOrUpdate(created);
     }
 
     @Test
@@ -82,11 +94,11 @@ public class ProductImporterTest {
         storeThese.add(created);
 
         // Simulate the pre-existing product:
-        when(mockedCurator.lookupById(product.getId())).thenReturn(product);
+        when(productCuratorMock.lookupById(product.getId())).thenReturn(product);
 
         importer.store(storeThese);
 
-        verify(mockedCurator).createOrUpdate(created);
+        verify(productCuratorMock).createOrUpdate(created);
     }
 
     // TODO: test old products cleaned up
@@ -94,6 +106,30 @@ public class ProductImporterTest {
     // TODO: test old products not cleaned up if in use
 
     // TODO: test old products cleaned up if not in use *after* this import
+
+    @Test
+    public void testContentCreated() throws Exception {
+        Product product = TestUtil.createProduct();
+        addContentTo(product);
+
+        String json = getJsonForProduct(product);
+        System.out.println(json);
+        Reader reader = new StringReader(json);
+        Product created = importer.createObject(mapper, reader);
+        Content c = created.getProductContent().iterator().next().getContent();
+        Set<Product> storeThese = new HashSet<Product>();
+        storeThese.add(created);
+        importer.store(storeThese);
+
+        verify(contentCuratorMock).createOrUpdate(c);
+    }
+
+    // Returns the Content object added
+    private void addContentTo(Product p) {
+        Content c = new Content("name", new Long(100130), "label", "type",
+            "vendor", "url", "gpgurl");
+        p.getProductContent().add(new ProductContent(p, c, true));
+    }
 
     private String getJsonForProduct(Product p) throws Exception {
         Writer writer = new StringWriter();

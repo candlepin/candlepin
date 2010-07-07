@@ -64,5 +64,7 @@ public class ProductImporter implements EntityImporter<Product> {
             
             curator.createOrUpdate(p);
         }
+
+        // TODO: Now we need to clean up unused Products and Content
     }
 }
