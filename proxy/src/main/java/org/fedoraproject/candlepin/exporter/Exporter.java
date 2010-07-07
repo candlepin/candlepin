@@ -54,7 +54,6 @@ public class Exporter {
     private ConsumerTypeExporter consumerType;
     private RulesExporter rules;
     private EntitlementCertExporter entCert;
-    private Entitlement entitlement;
     private EntitlementExporter entExporter;
     
     private ConsumerTypeCurator consumerTypeCurator;
@@ -67,7 +66,7 @@ public class Exporter {
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
         ConsumerExporter consumer, ConsumerTypeExporter consumerType, 
-        RulesExporter rules, Entitlement entitlement, EntitlementCertExporter entCert,
+        RulesExporter rules, EntitlementCertExporter entCert,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter) {
@@ -79,7 +78,6 @@ public class Exporter {
         this.consumer = consumer;
         this.consumerType = consumerType;
         this.rules = rules;
-        this.entitlement = entitlement;
         this.entCert = entCert;
         this.entCertAdapter = entCertAdapter;
         this.productExporter = productExporter;

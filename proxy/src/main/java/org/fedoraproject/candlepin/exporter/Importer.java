@@ -32,7 +32,6 @@ import java.util.zip.ZipInputStream;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.ContentCurator;
@@ -81,7 +80,6 @@ public class Importer {
     }
 
     private ConsumerTypeCurator consumerTypeCurator;
-    private ConsumerCurator consumerCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
     private EntitlementCurator entitlementCurator;
@@ -91,13 +89,11 @@ public class Importer {
     private ContentCurator contentCurator;
     
     @Inject
-    public Importer(ConsumerTypeCurator consumerTypeCurator, 
-        ConsumerCurator consumerCurator, ProductCurator productCurator, 
+    public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         EntitlementCurator entitlementCurator, PoolCurator poolCurator,
         RulesCurator rulesCurator, OwnerCurator ownerCurator, 
         ContentCurator contentCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
-        this.consumerCurator = consumerCurator;
         this.productCurator = productCurator;
         this.entitlementCurator = entitlementCurator;
         this.poolCurator = poolCurator;
