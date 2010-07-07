@@ -92,7 +92,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             .asEagerSingleton();
         bind(Enforcer.class).to(EnforcerForTesting.class); //.to(JavascriptEnforcer.class);
         bind(PKIUtility.class).to(CandlepinPKIUtility.class);
-        bind(PKIReader.class).to(CandlepinPKIReader.class);
+        bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
         bind(IdentityCertServiceAdapter.class).to(

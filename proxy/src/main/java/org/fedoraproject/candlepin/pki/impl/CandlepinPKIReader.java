@@ -21,15 +21,18 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PasswordFinder;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
@@ -44,28 +47,80 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
     private String caCertPath;
     private String caKeyPath;
     private String caKeyPassword;
+    private final X509Certificate x509Certificate;
+    private final PrivateKey privateKey;
+    
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     @Inject
     public CandlepinPKIReader(Config config) throws CertificateException {
         this.certFactory = CertificateFactory.getInstance("X.509");
-
         this.caCertPath = config.getString(ConfigProperties.CA_CERT);
         this.caKeyPath = config.getString(ConfigProperties.CA_KEY);
+        Util.assertNotNull(this.caCertPath,
+            "caCertPath cannot be null. Unable to load CA Certificate");
+        Util.assertNotNull(this.caKeyPath,
+            "caKeyPath cannot be null. Unable to load PrivateKey");
         this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD);
+        this.x509Certificate = loadCACertificate();
+        this.privateKey = loadPrivateKey();
+    }
+
+    /**
+     * @return
+     */
+    private X509Certificate loadCACertificate() {
+        try {
+            System.out.println(caCertPath);
+            InputStream inStream = new FileInputStream(this.caCertPath);
+            X509Certificate cert = (X509Certificate) this.certFactory
+                .generateCertificate(inStream);
+            inStream.close();
+            return cert;
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * @return
+     */
+    private PrivateKey loadPrivateKey() {
+        try {
+            InputStreamReader inStream = new InputStreamReader(
+                new FileInputStream(this.caKeyPath));
+            PEMReader reader = null;
+
+            try {
+                if (this.caKeyPassword != null) {
+                    reader = new PEMReader(inStream, this);
+                }
+                else {
+                    reader = new PEMReader(inStream);
+                }
+
+                KeyPair caKeyPair = (KeyPair) reader.readObject();
+                if (caKeyPair == null) {
+                    throw new GeneralSecurityException(
+                        "Reading CA private key failed");
+                }
+                return caKeyPair.getPrivate();
+            }
+            finally {
+                reader.close();
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public X509Certificate getCACert() throws IOException, CertificateException {
-        if (this.caCertPath != null) {
-            InputStream inStream = new FileInputStream(this.caCertPath);
-            X509Certificate cert = (X509Certificate) this.certFactory.
-                    generateCertificate(inStream);
-            inStream.close();
-            
-            return cert;
-        }
-
-        return null;
+        return this.x509Certificate;
     }
 
     /**
@@ -78,33 +133,7 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
      */
     @Override
     public PrivateKey getCaKey() throws IOException, GeneralSecurityException {
-        if (this.caKeyPath != null) {
-            InputStreamReader inStream = new InputStreamReader(
-                    new FileInputStream(this.caKeyPath));
-            PEMReader reader = null;
-    
-            try {
-                if (this.caKeyPassword != null) {
-                    reader = new PEMReader(inStream, this);
-                }
-                else {
-                    reader = new PEMReader(inStream);
-                }
-    
-                KeyPair caKeyPair = (KeyPair) reader.readObject();
-    
-                if (caKeyPair == null) {
-                    throw new GeneralSecurityException("Reading CA private key failed");
-                }
-    
-                return caKeyPair.getPrivate();
-            }
-            finally {
-                reader.close();
-            }
-        }
-
-        return null;
+        return this.privateKey;
     }
 
     @Override

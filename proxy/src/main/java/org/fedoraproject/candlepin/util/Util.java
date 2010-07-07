@@ -131,4 +131,11 @@ public class Util {
             throw new RuntimeException(e);
         }
     }
+    
+    public static <T> T assertNotNull(T value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
+    }
 }

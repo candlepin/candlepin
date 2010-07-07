@@ -197,6 +197,10 @@ public class CertificateRevocationListTask implements Job {
             log.trace("Newly added serials = " + builder.toString());
         }
         this.certificateSerialCurator.saveOrUpdateAll(serials);
+        if (log.isDebugEnabled()) {
+            log.debug("Total number of serials retrieved from db: #" +
+                entries.size());
+        }
         return entries;
     }
 
