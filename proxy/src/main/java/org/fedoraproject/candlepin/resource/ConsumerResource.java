@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -627,12 +628,17 @@ public class ConsumerResource {
     }
 
     @GET
-    @Produces("application/x-download")
+    @Produces("application/zip")
     @Path("{consumer_uuid}/export")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public File exportData(@PathParam("consumer_uuid") String consumerUuid) {
+    public File exportData(
+        @Context HttpServletResponse response, 
+        @PathParam("consumer_uuid") String consumerUuid) {
+        
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         File archive = exporter.getExport(consumer);
+        response.addHeader("Content-Disposition", 
+            "attachment; filename=" + archive.getName());
         return archive;
     }
 }

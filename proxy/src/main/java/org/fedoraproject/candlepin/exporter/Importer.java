@@ -15,7 +15,9 @@
 package org.fedoraproject.candlepin.exporter;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -24,6 +26,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -292,21 +296,42 @@ public class Importer {
      */
     private File extractArchive(File tempDir, File exportFile) {
         log.info("Extracting archive to: " + tempDir.getAbsolutePath());
-        ProcessBuilder cmd = new ProcessBuilder("tar", "xvfz",
-            exportFile.getAbsolutePath());
-        cmd.directory(tempDir);
         try {
-            Process p = cmd.start();
-            p.waitFor();
-            log.debug("Done extracting archive");
+            byte[] buf = new byte[1024];
+            ZipInputStream zipinputstream = null;
+            ZipEntry zipentry;
+            zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
+    
+            zipentry = zipinputstream.getNextEntry();
+            while (zipentry != null) {
+                //for each entry to be extracted
+                String entryName = zipentry.getName();
+                System.out.println("entryname " + entryName);
+                int n;
+                FileOutputStream fileoutputstream;
+                File newFile = new File(entryName);
+                String directory = newFile.getParent();
+                new File(tempDir, directory).mkdirs();
+                
+                fileoutputstream = new FileOutputStream(tempDir.getAbsolutePath() +
+                    entryName);
+    
+                while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
+                    fileoutputstream.write(buf, 0, n);
+                }
+    
+                fileoutputstream.close(); 
+                zipinputstream.closeEntry();
+                zipentry = zipinputstream.getNextEntry();
+    
+            }
+    
+            zipinputstream.close();
         }
         catch (IOException e) {
-            // TODO
+             // TODO: handle this
+            e.printStackTrace();
         }
-        catch (InterruptedException e) {
-            // TODO
-        }
-        
         File extractDir = new File(tempDir.getAbsolutePath(), "export");
         return extractDir;
     }
