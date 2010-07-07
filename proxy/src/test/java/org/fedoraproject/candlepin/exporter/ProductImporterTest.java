@@ -113,7 +113,6 @@ public class ProductImporterTest {
         addContentTo(product);
 
         String json = getJsonForProduct(product);
-        System.out.println(json);
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader);
         Content c = created.getProductContent().iterator().next().getContent();

@@ -84,7 +84,7 @@ public class DefaultSubscriptionServiceAdapter implements
 
     @Override
     public List<Subscription> getSubscriptionsSince(Owner owner, Date sinceDate) {
-        return subCurator.listByOwnerAndProductSince(owner, sinceDate);
+        return subCurator.listByOwnerSince(owner, sinceDate);
     }
 
     @Override

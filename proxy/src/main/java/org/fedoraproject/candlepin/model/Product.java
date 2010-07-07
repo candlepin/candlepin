@@ -23,6 +23,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -74,6 +75,10 @@ public class Product extends AbstractHibernateObject {
     @CollectionOfElements
     @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
     private Set<ProductContent> productContent = new HashSet<ProductContent>();
+
+    @ManyToMany(mappedBy = "providedProducts")
+    private Set<Subscription> subscriptions;
+
    
     /**
      * Constructor
@@ -282,6 +287,14 @@ public class Product extends AbstractHibernateObject {
         for (Content newContent : content) {
             productContent.add(new ProductContent(this, newContent, true));
         }
+    }
+
+    public Set<Subscription> getSubscriptions() {
+        return subscriptions;
+    }
+
+    public void setSubscriptions(Set<Subscription> subscriptions) {
+        this.subscriptions = subscriptions;
     }
     
 }
