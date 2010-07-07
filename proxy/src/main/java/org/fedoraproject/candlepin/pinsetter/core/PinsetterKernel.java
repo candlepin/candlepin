@@ -24,7 +24,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.pinsetter.tasks.SubscriptionSyncTask;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.util.PropertyUtil;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
@@ -43,10 +43,9 @@ import com.google.inject.Injector;
  */
 public class PinsetterKernel implements SchedulerService {
 
-    private static Logger log = Logger.getLogger(PinsetterKernel.class);
     private static final String TASK_GROUP = "Pinsetter Batch Engine Group";
-    private static final String TASKS = "pinsetter.tasks";
-    private static final String DEFAULT_TASKS = "pinsetter.default_tasks";
+    
+    private static Logger log = Logger.getLogger(PinsetterKernel.class);
 
     private byte[] shutdownLock = new byte[0];
     private Scheduler scheduler = null;
@@ -69,10 +68,9 @@ public class PinsetterKernel implements SchedulerService {
      */
     @Inject
     public PinsetterKernel(Config conf, Injector injector) throws InstantiationException {
-        config = conf;
+        this.config = conf;
 
-        Properties props = config.getNamespaceProperties("org.quartz",
-            defaultConfig());
+        Properties props = config.getNamespaceProperties("org.quartz");
 
         // create a schedulerFactory
         try {
@@ -100,7 +98,7 @@ public class PinsetterKernel implements SchedulerService {
     public void startup() throws PinsetterException {
         try {
             scheduler.start();
-            configure(config, defaultConfig());
+            configure();
         }
         catch (SchedulerException e) {
             throw new PinsetterException(e.getMessage(), e);
@@ -110,10 +108,8 @@ public class PinsetterKernel implements SchedulerService {
     /**
      * Configures the system.
      * @param conf Configuration object containing config values.
-     * @param overrides Map containing configuration overrides based on cli
-     * params
      */
-    private void configure(Config conf, Map<String, String> overrides) {
+    private void configure() {
         if (log.isDebugEnabled()) {
             log.debug("Scheduling tasks");
         }
@@ -124,13 +120,13 @@ public class PinsetterKernel implements SchedulerService {
         }
 
         // get the default tasks first
-        String[] jobs = config.getStringArray(DEFAULT_TASKS);
+        String[] jobs = this.config.getStringArray(ConfigProperties.DEFAULT_TASKS);
         if (jobs != null && jobs.length > 0) {
             jobImpls.addAll(Arrays.asList(jobs));
         }
 
         // get other tasks
-        String[] addlJobs = config.getStringArray(TASKS);
+        String[] addlJobs = this.config.getStringArray(ConfigProperties.TASKS);
         if (addlJobs != null && addlJobs.length > 0) {
             jobImpls.addAll(Arrays.asList(addlJobs));
         }
@@ -158,7 +154,7 @@ public class PinsetterKernel implements SchedulerService {
                 throw new RuntimeException(e.getLocalizedMessage(), e);
             }
 
-            String schedulerEntry = config.getString("pinsetter." + jobImpl +
+            String schedulerEntry = this.config.getString("pinsetter." + jobImpl +
                 ".schedule", defvalue);
 
             if (schedulerEntry != null && schedulerEntry.length() > 0) {
@@ -243,7 +239,7 @@ public class PinsetterKernel implements SchedulerService {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public void scheduleJob(Class job, String jobName, String crontab)
         throws PinsetterException {
         
@@ -262,7 +258,7 @@ public class PinsetterKernel implements SchedulerService {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public void scheduleJob(Class job, String jobName, Trigger trigger)
         throws PinsetterException {
         try {
@@ -305,20 +301,4 @@ public class PinsetterKernel implements SchedulerService {
         }
     }
 
-    /**
-     * Returns the default configuration if no config file is present.
-     * @return the default configuration if no config file is present.
-     */
-    @SuppressWarnings("serial")
-    private Map<String, String> defaultConfig() {
-        return new HashMap<String, String>() {
-            {
-                put("org.quartz.threadPool.class",
-                    "org.quartz.simpl.SimpleThreadPool");
-                put("org.quartz.threadPool.threadCount", "15");
-                put("org.quartz.threadPool.threadPriority", "5");
-                put(DEFAULT_TASKS, SubscriptionSyncTask.class.getName());
-            }
-        };
-    }
 }

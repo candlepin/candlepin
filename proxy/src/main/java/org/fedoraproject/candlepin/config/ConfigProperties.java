@@ -18,6 +18,10 @@ package org.fedoraproject.candlepin.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
+import org.fedoraproject.candlepin.pinsetter.tasks.SubscriptionSyncTask;
+import org.hibernate.tool.hbm2x.StringUtils;
+
 /**
  * Defines a map of default properties used to prepopulate the {@link Config}.
  * Also holds static keys for config lookup.
@@ -40,6 +44,15 @@ public class ConfigProperties {
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = 
         "candlepin.entitlement.revoke.order.fifo";
+    
+    // Pinsetter
+    public static final String TASKS = "pinsetter.tasks";
+    public static final String DEFAULT_TASKS = "pinsetter.default_tasks";
+    
+    private static final String[] DEFAULT_TASK_LIST = new String[] {
+        SubscriptionSyncTask.class.getName(),
+        CertificateRevocationListTask.class.getName()
+    };
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -60,6 +73,13 @@ public class ConfigProperties {
                 this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
                 this.put(CRL_FILE_PATH, "/etc/candlepin/candlepin-crl.crl");
                 
+                // Pinsetter
+                this.put("org.quartz.threadPool.class", 
+                    "org.quartz.simpl.SimpleThreadPool");
+                this.put("org.quartz.threadPool.threadCount", "15");
+                this.put("org.quartz.threadPool.threadPriority", "5");
+                
+                this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
