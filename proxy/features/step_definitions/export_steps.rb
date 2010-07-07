@@ -17,6 +17,20 @@ Then /I get an archived extract of data/ do
   assert_rules
 end
 
+When /I perform import/ do
+end
+
+Then /I have data from extract in candlepin/ do
+  @export_dir = unzip_export_file("extract.zip")
+  
+  assert_consumer_types
+  assert_consumer
+  assert_entitlements
+  assert_entitlement_certificates
+  assert_pools
+  assert_rules
+end
+
 After do
   File.delete(@export_filename) if File.exist?(@export_filename)
   FileUtils.rm_rf(@export_dir) if File.exist?(@export_dir)
@@ -83,6 +97,23 @@ end
 
 def assert_rules
   Base64.decode64(@candlepin.list_rules).should == load_file(File.join(@export_dir, "rules/rules.js"))
+end
+
+def assert_pools
+  entitlements_dir = File.join(@export_dir, 'entitlements')
+  
+  available_pools ||= {}
+  @consumer_cp.get_pools(@consumer['uuid']).each do |p|
+    available_pools[p['productId']] = p
+  end
+  exported_entitlements = files_in_dir(entitlements_dir)
+    
+  exported_entitlements.size.should == available_pools.size
+  
+  exported_entitlements.each do |file|
+    exported_entitlement = parse_file(File.join(entitlements_dir, file))
+    available_pools[exported_entitlement['productId']].should_not == nil
+  end
 end
 
 def parse_file(filename)
