@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.controller.CRLGenerator;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.pinsetter.core.HighlanderJobFactory;
@@ -84,6 +85,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PKIUtility.class).to(CandlepinPKIUtility.class).asEagerSingleton();
         bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
         bind(X509ExtensionUtil.class);
+        bind(CRLGenerator.class);
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);
