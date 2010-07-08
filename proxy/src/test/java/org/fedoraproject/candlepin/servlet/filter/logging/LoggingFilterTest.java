@@ -106,7 +106,8 @@ public class LoggingFilterTest {
                 add("====Response====");
                 add("Status: 0");
                 add("Content-type: null");
-                add("Response Body:");
+                add("====ResponseBody====");
+                add("");
             }
         });
 
@@ -130,7 +131,8 @@ public class LoggingFilterTest {
                 add("====Response====");
                 add("Status: 0");
                 add("Content-type: null");
-                add("Response Body:");
+                add("====ResponseBody====");
+                add("");
             }
         });
     }
@@ -165,7 +167,8 @@ public class LoggingFilterTest {
                 add("====Response====");
                 add("Status: 0");
                 add("Content-type: null");
-                add("Response Body:");
+                add("====ResponseBody====");
+                add("");
             }
         });
     }

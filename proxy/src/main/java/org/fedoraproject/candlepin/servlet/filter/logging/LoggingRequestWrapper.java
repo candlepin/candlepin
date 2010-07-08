@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 /**
  * LoggingRequestWrapper
  */
-public class LoggingRequestWrapper extends HttpServletRequestWrapper {
+public class LoggingRequestWrapper extends HttpServletRequestWrapper implements BodyLogger {
 
     private final byte [] body;
 
