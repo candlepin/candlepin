@@ -31,7 +31,6 @@ import javax.persistence.PersistenceException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -152,49 +151,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         Map<String, String> cs2 = data.get(1);
         assertEquals("cs2", cs2.get("name"));
-    }
-
-    @Test
-    public void testProductWithContentSets() {
-        // NOTE: Not using value on the Attributes which have children, but you
-        // easily could, perhaps a string list of the children labels or
-        // what not.
-        ProductAttribute contentSets = new ProductAttribute("content_sets", "");
-        for (int i = 0; i < 5; i++) {
-            // assume family label as attribute name:
-            ProductAttribute channelFamily = new ProductAttribute(
-                "channelfamilylabel" + i, "");
-            channelFamily.addChildAttribute("family_id", "some family id");
-            channelFamily.addChildAttribute("family_name", "some family name");
-            channelFamily.addChildAttribute("flex_quantity", "5");
-            channelFamily.addChildAttribute("physical_quantity", "10");
-
-            // Now add the channels as a child of the channel family:
-            ProductAttribute channels = new ProductAttribute("channels", "");
-            for (int j = 0; j < 3; j++) {
-                // assume channel ID?
-                ProductAttribute channel = new ProductAttribute("channel" + j, ""); 
-                channel.addChildAttribute("channel_name", "chan name");
-                channel.addChildAttribute("channel_desc", "description");
-                channel.addChildAttribute("channel_basedir", "basedir");
-                channels.addChildAttribute(channel);
-            }
-
-            // Finish the mapping:
-            channelFamily.addChildAttribute(channels);
-            contentSets.addChildAttribute(channelFamily);
-        }
-
-        Product prod = new Product("cptest-label", "My Product");
-        prod.addAttribute(contentSets);
-        productCurator.create(prod);
-
-        Product lookedUp = productCurator.find(prod.getId());
-        Attribute testing = lookedUp.getAttribute("content_sets");
-        assertEquals(5, testing.getChildAttributes().size());
-        testing = testing.getChildAttribute("channelfamilylabel0");
-        testing = testing.getChildAttribute("channels");
-        assertEquals(3, testing.getChildAttributes().size());
     }
 
     /**

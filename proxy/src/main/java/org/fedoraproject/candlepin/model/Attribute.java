@@ -15,23 +15,13 @@
 
 package org.fedoraproject.candlepin.model;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * Attributes can be thought of as a hint on some restriction on the usage of an
@@ -60,18 +50,6 @@ public class Attribute extends AbstractHibernateObject {
     @Column
     protected String value;
 
-    @OneToMany(targetEntity = Attribute.class, cascade = CascadeType.ALL,
-        fetch = FetchType.EAGER)
-    @ForeignKey(name = "fk_attribute_parent_id",
-            inverseName = "fk_attribute_child_id")
-    @JoinTable(name = "cp_attribute_hierarchy",
-        joinColumns = @JoinColumn(name = "PARENT_ATTRIBUTE_ID"),
-        inverseJoinColumns = @JoinColumn(name = "CHILD_ATTRIBUTE_ID"))
-    protected Set<Attribute> childAttributes;
-
-    /**
-     * default ctor
-     */
     public Attribute() {
 
     }
@@ -133,38 +111,6 @@ public class Attribute extends AbstractHibernateObject {
     @Override
     public int hashCode() {
         return name.hashCode() * 31 + value.hashCode();
-    }
-
-    // TODO: is this attribute hierarchy used at all?
-    public Set<Attribute> getChildAttributes() {
-        if (childAttributes == null) {
-            childAttributes = new HashSet<Attribute>();
-        }
-        return childAttributes;
-    }
-
-    public void setChildAttributes(Set<Attribute> childAttributes) {
-        this.childAttributes = childAttributes;
-    }
-
-    public void addChildAttribute(Attribute newChild) {
-        if (this.childAttributes == null) {
-            this.childAttributes = new HashSet<Attribute>();
-        }
-        this.childAttributes.add(newChild);
-    }
-
-    public void addChildAttribute(String key, String val) {
-        addChildAttribute(new Attribute(key, val));
-    }
-
-    public Attribute getChildAttribute(String key) {
-        for (Attribute a : childAttributes) {
-            if (a.getName().equals(key)) {
-                return a;
-            }
-        }
-        return null;
     }
 
 }
