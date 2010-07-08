@@ -221,7 +221,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("   product: " + productId);
         }
         
-        List<Pool> results = null;
         Criteria crit = currentSession().createCriteria(Pool.class);
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
@@ -236,7 +235,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         crit.add(Restrictions.lt("startDate", new Date())); // TODO: is this right?
         crit.add(Restrictions.gt("endDate", new Date())); // TODO: is this right?
         // FIXME: sort by enddate?
-        results = crit.list();
+        List<Pool> results = crit.list();
         log.debug("active pools for owner: " + results.size());
         
         if (results == null) {
