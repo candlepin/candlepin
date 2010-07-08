@@ -32,8 +32,8 @@ Then /I have data from extract in candlepin/ do
 end
 
 After do
-  File.delete(@export_filename) if File.exist?(@export_filename)
-  FileUtils.rm_rf(@export_dir) if File.exist?(@export_dir)
+  File.delete(@export_filename) if @export_filename != nil && File.exist?(@export_filename)
+  FileUtils.rm_rf(@export_dir) if @export_dir != nil && File.exist?(@export_dir)
 end
 
 
