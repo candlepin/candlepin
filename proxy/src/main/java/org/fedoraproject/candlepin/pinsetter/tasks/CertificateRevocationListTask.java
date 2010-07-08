@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.pinsetter.tasks;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -127,6 +128,18 @@ public class CertificateRevocationListTask implements Job {
         }
         catch (Exception e) {
             throw new RuntimeException(e);
+        }
+        finally {
+            if (in != null) {
+                try {
+                    in.close();
+                }
+                catch (IOException e) {
+                    log.error(
+                        "exception when closing a CRL file: " + file.getAbsolutePath());
+                    // we tried, we failed. better luck next time!
+                }
+            }
         }
 
     }
