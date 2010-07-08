@@ -337,6 +337,10 @@ class Candlepin
     get_text("/consumers/#{consumer_id}/atom")
   end
 
+  def get_crl
+    OpenSSL::X509::CRL.new(get_text('/crl'))
+  end
+
   private
 
   def create_basic_client(username=nil, password=nil)

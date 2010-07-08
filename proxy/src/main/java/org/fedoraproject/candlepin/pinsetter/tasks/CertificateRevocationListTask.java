@@ -32,7 +32,7 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.controller.CRLGenerator;
+import org.fedoraproject.candlepin.controller.CrlGenerator;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -51,7 +51,7 @@ public class CertificateRevocationListTask implements Job {
     
     /** The config. */
     private Config config;
-    private CRLGenerator crlGenerator;
+    private CrlGenerator crlGenerator;
     
     private static Logger log = Logger.getLogger(CertificateRevocationListTask.class); 
     /**
@@ -61,7 +61,7 @@ public class CertificateRevocationListTask implements Job {
      * @param conf the conf
      */
     @Inject
-    public CertificateRevocationListTask(CRLGenerator crlGenerator, Config conf) {
+    public CertificateRevocationListTask(CrlGenerator crlGenerator, Config conf) {
         this.crlGenerator = crlGenerator;
         this.config = conf;
     }

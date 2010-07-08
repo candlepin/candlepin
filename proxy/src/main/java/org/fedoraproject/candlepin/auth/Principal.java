@@ -25,7 +25,7 @@ import org.fedoraproject.candlepin.model.Owner;
 public abstract class Principal {
 
     private Owner owner;
-    private List<Role> roles = new LinkedList<Role>();
+    private List<Role> roles;
 
     public Principal(Owner owner, List<Role> roles) {
         this.owner = owner;
@@ -44,11 +44,6 @@ public abstract class Principal {
     }
     
     public Boolean hasRole(Role role) {
-        if (roles.contains(role)) {
-            return Boolean.TRUE;
-        }
-        else {
-            return Boolean.FALSE;
-        }
+        return roles.contains(role);
     }
 }

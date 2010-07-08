@@ -46,7 +46,7 @@ import com.google.inject.name.Named;
 /**
  * CRLGenerator
  */
-public class CRLGenerator {
+public class CrlGenerator {
 
     /** The pki reader. */
     private PKIReader pkiReader;
@@ -57,7 +57,7 @@ public class CRLGenerator {
     /** The algorithm. */
     private String algorithm;
 
-    private static Logger log = Logger.getLogger(CRLGenerator.class); 
+    private static Logger log = Logger.getLogger(CrlGenerator.class); 
     /**
      * Instantiates a new certificate revocation list task.
      * 
@@ -66,7 +66,7 @@ public class CRLGenerator {
      * @param algorithm the algorithm
      */
     @Inject
-    public CRLGenerator(PKIReader rdr, CertificateSerialCurator curator, 
+    public CrlGenerator(PKIReader rdr, CertificateSerialCurator curator, 
         @Named("crlSignatureAlgo") String algorithm) {
         
         this.pkiReader = rdr;

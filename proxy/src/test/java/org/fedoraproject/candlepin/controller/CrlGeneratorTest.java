@@ -41,7 +41,7 @@ import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
-import org.fedoraproject.candlepin.controller.CRLGenerator.SimpleCRLEntry;
+import org.fedoraproject.candlepin.controller.CrlGenerator.SimpleCRLEntry;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.pki.PKIReader;
@@ -56,7 +56,7 @@ import org.mockito.runners.MockitoJUnitRunner;
  * CRLGeneratorTest
  */
 @RunWith(MockitoJUnitRunner.class)
-public class CRLGeneratorTest {
+public class CrlGeneratorTest {
 
     private static final KeyPair KP = generateKP();
     private static final X509Certificate CERT = generateCertificate();
@@ -64,7 +64,7 @@ public class CRLGeneratorTest {
     @Mock private PKIReader pkiReader;
     @Mock private CertificateSerialCurator curator;
     
-    private CRLGenerator generator;
+    private CrlGenerator generator;
 
     private static KeyPair generateKP() {
         KeyPairGenerator kpg;
@@ -102,7 +102,7 @@ public class CRLGeneratorTest {
     
     @Before
     public void init() throws Exception {
-        this.generator = new CRLGenerator(pkiReader, curator, "SHA1withRSA");
+        this.generator = new CrlGenerator(pkiReader, curator, "SHA1withRSA");
         
         when(pkiReader.getCaKey()).thenReturn(KP.getPrivate());
         when(pkiReader.getCACert()).thenReturn(CERT);

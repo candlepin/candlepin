@@ -18,7 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.controller.CRLGenerator;
+import org.fedoraproject.candlepin.controller.CrlGenerator;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -34,7 +34,7 @@ import org.quartz.JobExecutionException;
 public class CertificateRevocationListTaskTest{
     private CertificateRevocationListTask task;
      
-    @Mock private CRLGenerator generator; 
+    @Mock private CrlGenerator generator; 
     @Mock private Config config;
 
     @Before
