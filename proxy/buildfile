@@ -158,7 +158,18 @@ define "candlepin" do
 
   package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', 'target/classes/org/fedoraproject/candlepin/exceptions', 'target/classes/org/fedoraproject/candlepin/util', :path=>"org/fedoraproject/candlepin/"  
   package(:war, :id=>"candlepin").libs << HSQLDB
-  
+
+  #
+  # coverity report generation
+  #  
+  task :coverity do
+    mkdir_p compile.target
+    classpath = FileList[_("src/main/java/**/*.java"), compile.dependencies]
+    sh "cov-build --dir=/cov_builds/candlepin_jd/ javac -classpath #{classpath} -d #{compile.target} -verbose -g -target 1.6"
+    sh "cov-analyze-java --dir=/cov_builds/candlepin_jd/"
+    sh "cov-commit-defects --dir /cov_builds/candlepin_jd/ --stream candlepin --user admin"
+  end
+
   #
   # to use: buildr candlepin:genschema
   #
