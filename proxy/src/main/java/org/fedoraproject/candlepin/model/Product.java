@@ -288,6 +288,7 @@ public class Product extends AbstractHibernateObject {
         }
     }
 
+    @XmlTransient
     public Set<Subscription> getSubscriptions() {
         return subscriptions;
     }
