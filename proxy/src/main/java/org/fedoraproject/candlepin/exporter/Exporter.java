@@ -135,7 +135,7 @@ public class Exporter {
 
         try {
             out.setComment("Candlepin export for " + consumer.getUuid());
-            addFilesToArchive(out, exportDir.getParent().length(), exportDir);
+            addFilesToArchive(out, exportDir.getParent().length() + 1, exportDir);
             out.close();
         }
         catch (IOException e) {
