@@ -84,6 +84,9 @@ public class Subscription extends AbstractHibernateObject {
     private Set<SubscriptionToken> tokens;
     
     private Date modified;
+    
+    @Column(name = "upstream_entitlement_id")
+    private Long upstreamEntitlmentId;
 
     public Subscription() {
     }
@@ -254,6 +257,20 @@ public class Subscription extends AbstractHibernateObject {
 
     public void setProvidedProducts(Set<Product> providedProducts) {
         this.providedProducts = providedProducts;
+    }
+
+    /**
+     * @param upstreamEntitlmentId the upstreamEntitlmentId to set
+     */
+    public void setUpstreamEntitlmentId(Long upstreamEntitlmentId) {
+        this.upstreamEntitlmentId = upstreamEntitlmentId;
+    }
+
+    /**
+     * @return the upstreamEntitlmentId
+     */
+    public Long getUpstreamEntitlmentId() {
+        return upstreamEntitlmentId;
     }
 
 }

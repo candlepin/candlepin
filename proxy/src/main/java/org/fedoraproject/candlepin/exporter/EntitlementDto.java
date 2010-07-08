@@ -18,7 +18,6 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -29,6 +28,7 @@ import org.fedoraproject.candlepin.model.Pool;
  * EntitlementDto
  */
 class EntitlementDto {
+    private Long id;
     private String consumerUuid;
     private Date startDate;
     private Boolean isFree;
@@ -36,11 +36,13 @@ class EntitlementDto {
     private List<BigInteger> certificateSerials;
     private String productId;
     private Date endDate;
+    private Set<String> providedProductIds;
 
     public EntitlementDto() {
     }
     
     EntitlementDto(Entitlement e) {
+        id = e.getId();
         consumerUuid = e.getConsumer().getUuid();
         startDate = e.getStartDate();
         endDate = e.getEndDate();
@@ -48,6 +50,7 @@ class EntitlementDto {
         quantity = e.getQuantity();
         certificateSerials = certificateSerialNumbers(e.getCertificates());
         productId = e.getPool().getProductId();
+        setProvidedProductIds(e.getPool().getProvidedProductIds());
     }
     
     public String getConsumerUuid() {
@@ -106,16 +109,12 @@ class EntitlementDto {
         this.productId = productId;
     }
 
-    public Entitlement entitlement(Map<BigInteger, EntitlementCertificate> certs) {        
+    public Entitlement entitlement() {        
         Entitlement toReturn = new Entitlement();
         toReturn.setStartDate(startDate);
         toReturn.setIsFree(isFree);
         toReturn.setQuantity(quantity);
-        
-        for (BigInteger serial : certificateSerials) {
-            toReturn.addCertificate(certs.get(serial));
-        }
-        
+                
         return toReturn;
     }
     
@@ -129,6 +128,14 @@ class EntitlementDto {
         return toReturn;
     }
     
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public Long getId() {
+        return this.id;
+    }
+    
     private List<BigInteger> certificateSerialNumbers(
             Set<EntitlementCertificate> certificates) {
         
@@ -138,6 +145,18 @@ class EntitlementDto {
         }
         return toReturn;
     }
-    
-    
+
+    /**
+     * @param providedProductIds the providedProductIds to set
+     */
+    public void setProvidedProductIds(Set<String> providedProductIds) {
+        this.providedProductIds = providedProductIds;
+    }
+
+    /**
+     * @return the providedProductIds
+     */
+    public Set<String> getProvidedProductIds() {
+        return providedProductIds;
+    }
 }

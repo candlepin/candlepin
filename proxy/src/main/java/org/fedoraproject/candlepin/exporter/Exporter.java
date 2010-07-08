@@ -241,6 +241,12 @@ public class Exporter {
                     products.put(productId, productAdapter.getProductById(productId));
                 }
             }
+            
+            // Don't forget the 'main' product!
+            String productId = entitlement.getPool().getProductId();
+            if (!products.containsKey(productId)) {
+                products.put(productId, productAdapter.getProductById(productId));
+            }
         }
         
         for (Product product : products.values()) {

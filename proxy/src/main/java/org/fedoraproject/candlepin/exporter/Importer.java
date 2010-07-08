@@ -16,12 +16,10 @@ package org.fedoraproject.candlepin.exporter;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,21 +29,17 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.ContentCurator;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Persisted;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -82,24 +76,23 @@ public class Importer {
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
-    private EntitlementCurator entitlementCurator;
     private PoolCurator poolCurator;
     private RulesCurator rulesCurator;
     private OwnerCurator ownerCurator;
     private ContentCurator contentCurator;
+    private SubscriptionCurator subCurator;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
-        EntitlementCurator entitlementCurator, PoolCurator poolCurator,
-        RulesCurator rulesCurator, OwnerCurator ownerCurator, 
-        ContentCurator contentCurator) {
+        PoolCurator poolCurator, RulesCurator rulesCurator, OwnerCurator ownerCurator, 
+        ContentCurator contentCurator, SubscriptionCurator subCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
-        this.entitlementCurator = entitlementCurator;
         this.poolCurator = poolCurator;
         this.rulesCurator = rulesCurator;
         this.ownerCurator = ownerCurator;
         this.contentCurator = contentCurator;
+        this.subCurator = subCurator;
         this.mapper = ExportUtils.getObjectMapper();
     }
 
@@ -131,13 +124,12 @@ public class Importer {
         importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
-        importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
-        importEntitlements(
-            importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles(),
-            importFiles.get(ImportFile.ENTITLEMENT_CERTIFICATES.fileName()).listFiles());        
+        Set<Product> importedProducts =
+            importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
+        importEntitlements(owner, importedProducts,
+            importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
         
-        // update product with content
-        
+        poolCurator.refreshPools(owner);
     }
     
     public void importRules(File[] rulesFiles) throws IOException {
@@ -189,7 +181,7 @@ public class Importer {
         }
     }
     
-    public void importProducts(File[] products) throws IOException {
+    public Set<Product> importProducts(File[] products) throws IOException {
         ProductImporter importer = new ProductImporter(productCurator, contentCurator);
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
@@ -212,32 +204,26 @@ public class Importer {
         // TODO: Do we need to cleanup unused products? Looked at this earlier and it
         // looks somewhat complex and a little bit dangerous, so we're leaving them
         // around for now.
+        
+        return productsToImport;
     }
     
-    public void importEntitlements(File[] entitlements, File[] entitlementCertificates) 
-        throws IOException {
-        
-        Map<BigInteger, EntitlementCertificate> certs 
-            = importCertificates(entitlementCertificates);
-        EntitlementImporter importer = new EntitlementImporter();
-        for (File entitlement : entitlements) {
-            createEntitlement(importer, entitlement, certs);
+    public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements)
+        throws IOException, ImporterException { 
+        EntitlementImporter importer = new EntitlementImporter(subCurator);
+
+        Map<String, Product> productsById = new HashMap<String, Product>();
+        for (Product product : products) {
+            productsById.put(product.getId(), product);
         }
-    }
-    
-    public Map<BigInteger, EntitlementCertificate> importCertificates(
-            File[] entitlementCertificates) throws IOException {
         
-        EntitlementCertImporter importer = new EntitlementCertImporter();        
-        Map<BigInteger, EntitlementCertificate> toReturn 
-            = new HashMap<BigInteger, EntitlementCertificate>();
-        
-        for (File certificate : entitlementCertificates) {
+        Set<Subscription> subscriptionsToImport = new HashSet<Subscription>();
+        for (File entitlement : entitlements) {
             Reader reader = null;
             try {
-                reader = new FileReader(certificate);
-                EntitlementCertificate cert = importer.createObject(mapper, reader);
-                toReturn.put(cert.getSerial(), cert);
+                log.debug("Import entitlement: " + entitlement.getName());
+                reader = new FileReader(entitlement);
+                subscriptionsToImport.add(importer.importObject(mapper, reader, owner, productsById));
             } 
             finally {
                 if (reader != null) {
@@ -246,47 +232,9 @@ public class Importer {
             }
         }
         
-        return toReturn;
+        importer.store(owner, subscriptionsToImport);
     }
-    
-    public void createEntitlement(EntitlementImporter importer, File entitlement,
-        Map<BigInteger, EntitlementCertificate> certs) 
-        throws IOException {
         
-        Reader reader = null;
-        try {
-            reader = new FileReader(entitlement);
-            Object[] parsed = importer.importObject(mapper, reader, certs);
-            Entitlement e = (Entitlement) parsed[0];
-            Pool p = (Pool) parsed[1];
-            e.setPool(p);
-            
-            poolCurator.create(p);
-            entitlementCurator.create(e);
-        } 
-        finally {
-            if (reader != null) {
-                reader.close();
-            }
-        }
-    }
-
-    private <T extends Persisted> void createEntity(
-        EntityImporter<T> importer, AbstractHibernateCurator<T> curator, File file)
-        throws FileNotFoundException, IOException {
-        
-        Reader reader = null;
-        try {
-            reader = new FileReader(file);
-            T type = importer.createObject(mapper, reader);
-            curator.create(type);
-        } 
-        finally {
-            if (reader != null) {
-                reader.close();
-            }
-        }
-    }
     /**
      * Create a tar.gz archive of the exported directory.
      *
