@@ -46,7 +46,6 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
-import org.fedoraproject.candlepin.model.SubscriptionCurator;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -88,13 +87,12 @@ public class Importer {
     private RulesCurator rulesCurator;
     private OwnerCurator ownerCurator;
     private ContentCurator contentCurator;
-    private SubscriptionCurator subCurator;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         EntitlementCurator entitlementCurator, PoolCurator poolCurator,
         RulesCurator rulesCurator, OwnerCurator ownerCurator, 
-        ContentCurator contentCurator, SubscriptionCurator subCurator) {
+        ContentCurator contentCurator) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.entitlementCurator = entitlementCurator;
@@ -102,7 +100,6 @@ public class Importer {
         this.rulesCurator = rulesCurator;
         this.ownerCurator = ownerCurator;
         this.contentCurator = contentCurator;
-        this.subCurator = subCurator;
         this.mapper = ExportUtils.getObjectMapper();
     }
 
@@ -193,8 +190,7 @@ public class Importer {
     }
     
     public void importProducts(File[] products) throws IOException {
-        ProductImporter importer = new ProductImporter(productCurator, contentCurator,
-            poolCurator, subCurator);
+        ProductImporter importer = new ProductImporter(productCurator, contentCurator);
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:
@@ -213,6 +209,9 @@ public class Importer {
             }
         }
         importer.store(productsToImport);
+        // TODO: Do we need to cleanup unused products? Looked at this earlier and it
+        // looks somewhat complex and a little bit dangerous, so we're leaving them
+        // around for now.
     }
     
     public void importEntitlements(File[] entitlements, File[] entitlementCertificates) 
