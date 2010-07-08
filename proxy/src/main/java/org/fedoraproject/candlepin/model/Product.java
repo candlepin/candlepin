@@ -168,7 +168,7 @@ public class Product extends AbstractHibernateObject {
     }
 
     public void setAttribute(String key, String value) {
-        Attribute existing = getAttribute(key);
+        ProductAttribute existing = getAttribute(key);
         if (existing != null) {
             existing.setValue(value);
         }
