@@ -72,9 +72,10 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
      * @return
      */
     private X509Certificate loadCACertificate() {
+        InputStream inStream = null;
         try {
             System.out.println(caCertPath);
-            InputStream inStream = new FileInputStream(this.caCertPath);
+            inStream = new FileInputStream(this.caCertPath);
             X509Certificate cert = (X509Certificate) this.certFactory
                 .generateCertificate(inStream);
             inStream.close();
@@ -82,6 +83,16 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
         }
         catch (Exception e) {
             throw new RuntimeException(e);
+        }
+        finally {
+            try {
+                if (inStream != null) {
+                    inStream.close();
+                }
+            }
+            catch (IOException e) {
+                // ignore. there's nothing we can do.
+            }
         }
     }
 
