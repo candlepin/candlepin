@@ -260,8 +260,7 @@ public class Importer {
                 String directory = newFile.getParent();
                 new File(tempDir, directory).mkdirs();
                 
-                fileoutputstream = new FileOutputStream(tempDir.getAbsolutePath() +
-                    entryName);
+                fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
     
                 while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
                     fileoutputstream.write(buf, 0, n);
