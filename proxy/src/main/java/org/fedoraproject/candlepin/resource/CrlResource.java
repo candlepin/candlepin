@@ -48,6 +48,8 @@ public class CrlResource {
     
     /**
      * @return the current CRL
+     * @throws CRLException if there is issue generating the CRL
+     * @throws IOException if there is a problem serializing the CRL
      */
     @GET
     @AllowRoles(roles = Role.SUPER_ADMIN)
