@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.exporter;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Date;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -31,6 +32,10 @@ public class MetaExporter {
         
         public String getVersion() {
             return VERSION;
+        }
+        
+        public Date getCreated() {
+            return new Date();
         }
     }
     
