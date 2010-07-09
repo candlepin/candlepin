@@ -13,11 +13,11 @@ Given /^I have an entitlement named "([^\"]*)" for the "([^\"]*)" product$/ do |
 end
 
 When /^I consume an entitlement for the "([^\"]*)" product$/ do |product|
-    @consumer_cp.consume_product(product.hash.abs)
+  @consumer_cp.consume_product(product.hash.abs)
 end
 
 When /^I consume an entitlement for the "([^\"]*)" product with a quantity of (\d+)$/ do |product, quantity|
-    @consumer_cp.consume_product(product.hash.abs, quantity)
+  @consumer_cp.consume_product(product.hash.abs, quantity)
 end
 
 Then /I have (\d+) entitlements? with a quantity of (\d+)/ do |entitlement_size, quantity|
