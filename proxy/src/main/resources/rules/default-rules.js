@@ -97,8 +97,8 @@ function pre_global() {
 		pre.addError("rulefailed.consumer.type.mismatch");
 	}
 	
-	if (pool.getRestrictedToUsername() != null && consumer.getUsername() != pool.getRestrictedToUsername()) {
-		pre.addError("pool.not.available.to.user");
+	if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
+		pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
 	}
 	
 	// Support free entitlements for guests, if their parent has virt host or
