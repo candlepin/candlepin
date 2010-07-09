@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -97,8 +98,9 @@ public class Importer {
     }
 
     public void loadExport(Owner owner, File exportFile) throws ImporterException {
+        File tmpDir = null;
         try {
-            File tmpDir = new SyncUtils().makeTempDir("import");
+            tmpDir = new SyncUtils().makeTempDir("import");
             File exportDir = extractArchive(tmpDir, exportFile);
             
             Map<String, File> importFiles = new HashMap<String, File>();
@@ -110,6 +112,17 @@ public class Importer {
         }
         catch (IOException e) {
             throw new ImportExtractionException("unable to extract export archive", e);
+        }
+        finally {
+            if (tmpDir != null) {
+                try {
+                    FileUtils.deleteDirectory(tmpDir);
+                }
+                catch (IOException e) {
+                    log.error("Failed to delete extracted export");
+                    log.error(e);
+                }
+            }
         }
     }
     

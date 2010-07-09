@@ -87,9 +87,11 @@ public class Exporter {
     }
 
     public File getExport(Consumer consumer) throws ExportCreationException {
+        // TODO: need to delete tmpDir (which contains the archive,
+        // which we need to return...)
         try {
-            File tempDir = new SyncUtils().makeTempDir("export");
-            File baseDir = new File(tempDir.getAbsolutePath(), "export");
+            File tmpDir = new SyncUtils().makeTempDir("export");
+            File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
             
             exportMeta(baseDir);
@@ -99,8 +101,7 @@ public class Exporter {
             exportProducts(baseDir, consumer);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
-            return makeArchive(consumer, tempDir, baseDir);
- //           FileUtils.deleteDirectory(baseDir);
+            return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
             throw new ExportCreationException("Unable to create export archive", e);
