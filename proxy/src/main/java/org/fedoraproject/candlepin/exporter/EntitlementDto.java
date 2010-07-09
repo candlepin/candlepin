@@ -37,6 +37,7 @@ class EntitlementDto {
     private String productId;
     private Date endDate;
     private Set<String> providedProductIds;
+    private Long poolId;
 
     public EntitlementDto() {
     }
@@ -49,6 +50,7 @@ class EntitlementDto {
         isFree = e.getIsFree();
         quantity = e.getQuantity();
         certificateSerials = certificateSerialNumbers(e.getCertificates());
+        setPoolId(e.getPool().getId());
         productId = e.getPool().getProductId();
         setProvidedProductIds(e.getPool().getProvidedProductIds());
     }
@@ -158,5 +160,19 @@ class EntitlementDto {
      */
     public Set<String> getProvidedProductIds() {
         return providedProductIds;
+    }
+
+    /**
+     * @param poolId the poolId to set
+     */
+    public void setPoolId(Long poolId) {
+        this.poolId = poolId;
+    }
+
+    /**
+     * @return the poolId
+     */
+    public Long getPoolId() {
+        return poolId;
     }
 }

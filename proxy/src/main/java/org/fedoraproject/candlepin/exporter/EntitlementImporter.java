@@ -46,7 +46,7 @@ public class EntitlementImporter {
         EntitlementDto entitlement = mapper.readValue(reader, EntitlementDto.class);
         Subscription subscription = new Subscription();
         
-        subscription.setUpstreamEntitlmentId(entitlement.getId());
+        subscription.setUpstreamPoolId(entitlement.getPoolId());
         
         subscription.setOwner(owner);
         
@@ -83,19 +83,19 @@ public class EntitlementImporter {
         Map<Long, Subscription> existingSubByEntitlement =
             new HashMap<Long, Subscription>();
         for (Subscription subscription : subscriptionCurator.listByOwner(owner)) {
-            // if the upstream entitlement id is null,
+            // if the upstream pool id is null,
             // this must be a locally controlled sub.
-            if (subscription.getUpstreamEntitlmentId() != null) {
-                existingSubByEntitlement.put(subscription.getUpstreamEntitlmentId(),
+            if (subscription.getUpstreamPoolId() != null) {
+                existingSubByEntitlement.put(subscription.getUpstreamPoolId(),
                     subscription);
             }
         }
         
         for (Subscription subscription : subscriptionsToImport) {
-            log.debug("Saving subscription for entitlement id: " +
-                subscription.getUpstreamEntitlmentId());
+            log.debug("Saving subscription for upstream pool id: " +
+                subscription.getUpstreamPoolId());
             Subscription local =
-                existingSubByEntitlement.get(subscription.getUpstreamEntitlmentId());
+                existingSubByEntitlement.get(subscription.getUpstreamPoolId());
             
             if (local == null) {
                 subscriptionCurator.create(subscription);
@@ -104,7 +104,7 @@ public class EntitlementImporter {
                 subscription.setId(local.getId());
                 subscriptionCurator.merge(subscription);
                 
-                existingSubByEntitlement.remove(subscription.getUpstreamEntitlmentId());
+                existingSubByEntitlement.remove(subscription.getUpstreamPoolId());
             }
         }
         

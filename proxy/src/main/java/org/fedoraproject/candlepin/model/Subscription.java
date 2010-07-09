@@ -85,8 +85,8 @@ public class Subscription extends AbstractHibernateObject {
     
     private Date modified;
     
-    @Column(name = "upstream_entitlement_id")
-    private Long upstreamEntitlmentId;
+    @Column(name = "upstream_pool_id")
+    private Long upstreamPoolId;
 
     public Subscription() {
     }
@@ -259,18 +259,12 @@ public class Subscription extends AbstractHibernateObject {
         this.providedProducts = providedProducts;
     }
 
-    /**
-     * @param upstreamEntitlmentId the upstreamEntitlmentId to set
-     */
-    public void setUpstreamEntitlmentId(Long upstreamEntitlmentId) {
-        this.upstreamEntitlmentId = upstreamEntitlmentId;
+    public void setUpstreamPoolId(Long upstreamPoolId) {
+        this.upstreamPoolId = upstreamPoolId;
     }
 
-    /**
-     * @return the upstreamEntitlmentId
-     */
-    public Long getUpstreamEntitlmentId() {
-        return upstreamEntitlmentId;
+    public Long getUpstreamPoolId() {
+        return upstreamPoolId;
     }
 
 }
