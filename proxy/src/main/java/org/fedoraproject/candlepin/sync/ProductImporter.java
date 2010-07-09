@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -30,8 +29,6 @@ import org.fedoraproject.candlepin.model.ProductCurator;
  * ProductImporter
  */
 public class ProductImporter implements EntityImporter<Product> {
-
-    private static Logger log = Logger.getLogger(ProductImporter.class);
 
     private ProductCurator curator;
     private ContentCurator contentCurator;

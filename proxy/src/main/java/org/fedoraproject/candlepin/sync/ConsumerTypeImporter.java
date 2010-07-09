@@ -48,7 +48,7 @@ public class ConsumerTypeImporter implements EntityImporter<ConsumerType> {
      * @param testType
      */
     public void store(Set<ConsumerType> consumerTypes) {
-        Set<String> resolved = new HashSet();
+        Set<String> resolved = new HashSet<String>();
         
         log.debug("Creating/updating consumer types");
         for (ConsumerType consumerType : consumerTypes) {
