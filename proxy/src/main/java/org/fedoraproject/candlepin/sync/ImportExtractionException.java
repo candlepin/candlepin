@@ -15,17 +15,22 @@
 package org.fedoraproject.candlepin.sync;
 
 /**
- * ImporterException
+ * ImportExtractionException
  */
-public class ImporterException extends SyncException {
+public class ImportExtractionException extends ImporterException {
 
-    public ImporterException(String msg) {
+    public ImportExtractionException(String msg) {
         super(msg);
     }
 
-    public ImporterException(String msg, Throwable e) {
+    /**
+     * @param string
+     * @param e
+     */
+    public ImportExtractionException(String msg, Throwable e) {
         super(msg, e);
     }
 
-    private static final long serialVersionUID = -9086462704164995593L;
+    private static final long serialVersionUID = -4004706290899144021L;
+
 }

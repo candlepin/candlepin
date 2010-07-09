@@ -28,7 +28,7 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 /**
  * ProductImporter
  */
-public class ProductImporter implements EntityImporter<Product> {
+public class ProductImporter {
 
     private ProductCurator curator;
     private ContentCurator contentCurator;

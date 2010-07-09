@@ -41,7 +41,7 @@ public class EntitlementImporter {
     }
     
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
-        Map<String, Product> productsById) throws IOException, ImporterException {
+        Map<String, Product> productsById) throws IOException, SyncDataFormatException {
         
         EntitlementDto entitlement = mapper.readValue(reader, EntitlementDto.class);
         Subscription subscription = new Subscription();
@@ -68,10 +68,11 @@ public class EntitlementImporter {
     }
 
     private Product findProduct(Map<String, Product> productsById,
-        String productId) throws ImporterException {
+        String productId) throws SyncDataFormatException {
         Product product = productsById.get(productId);
         if (product == null) {
-            throw new ImporterException("Unable to find product with id: " + productId);
+            throw new SyncDataFormatException("Unable to find product with id: " +
+                productId);
         }
         return product;
     }

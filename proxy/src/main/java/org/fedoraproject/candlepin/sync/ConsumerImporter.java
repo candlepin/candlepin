@@ -36,15 +36,15 @@ public class ConsumerImporter {
         return mapper.readValue(reader, ConsumerDto.class);
     }
 
-    public void store(Owner owner, ConsumerDto consumer) throws ImporterException {
+    public void store(Owner owner, ConsumerDto consumer) throws SyncDataFormatException {
         
         if (consumer.getUuid() == null) {
-            throw new ImporterException("null uuid on consumer info");
+            throw new SyncDataFormatException("null uuid on consumer info");
         }
         
         if (owner.getUpstreamUuid() != null &&
             owner.getUpstreamUuid() != consumer.getUuid()) {
-            throw new ImporterException("mismatched consumer uuid for this owner");
+            throw new SyncDataFormatException("mismatched consumer uuid for this owner");
         }
         
         owner.setUpstreamUuid(consumer.getUuid());

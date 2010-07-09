@@ -96,7 +96,7 @@ public class Importer {
         this.mapper = SyncUtils.getObjectMapper();
     }
 
-    public void loadExport(Owner owner, File exportFile) {
+    public void loadExport(Owner owner, File exportFile) throws ImporterException {
         try {
             File tmpDir = new SyncUtils().makeTempDir("import");
             File exportDir = extractArchive(tmpDir, exportFile);
@@ -109,17 +109,13 @@ public class Importer {
             importObjects(owner, importFiles);
         }
         catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (ImporterException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new ImportExtractionException("unable to extract export archive", e);
         }
     }
     
     @Transactional
-    public void importObjects(Owner owner, Map<String, File> importFiles) throws IOException, ImporterException {
+    public void importObjects(Owner owner, Map<String, File> importFiles) throws IOException,
+        SyncDataFormatException {
         
         importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
@@ -166,7 +162,8 @@ public class Importer {
         importer.store(consumerTypeObjs);
     }
 
-    public void importConsumer(Owner owner, File consumerFile) throws IOException, ImporterException {
+    public void importConsumer(Owner owner, File consumerFile) throws IOException,
+        SyncDataFormatException {
         ConsumerImporter importer = new ConsumerImporter(ownerCurator);
         Reader reader = null;
         try {
@@ -209,7 +206,7 @@ public class Importer {
     }
     
     public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements)
-        throws IOException, ImporterException { 
+        throws IOException, SyncDataFormatException { 
         EntitlementImporter importer = new EntitlementImporter(subCurator);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
@@ -241,43 +238,38 @@ public class Importer {
      * @param exportDir Directory where Candlepin data was exported.
      * @return File reference to the new archive tar.gz.
      */
-    private File extractArchive(File tempDir, File exportFile) {
+    private File extractArchive(File tempDir, File exportFile) throws IOException {
         log.info("Extracting archive to: " + tempDir.getAbsolutePath());
-        try {
-            byte[] buf = new byte[1024];
-            ZipInputStream zipinputstream = null;
-            ZipEntry zipentry;
-            zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
-    
-            zipentry = zipinputstream.getNextEntry();
-            while (zipentry != null) {
-                //for each entry to be extracted
-                String entryName = zipentry.getName();
-                System.out.println("entryname " + entryName);
-                int n;
-                FileOutputStream fileoutputstream;
-                File newFile = new File(entryName);
-                String directory = newFile.getParent();
-                new File(tempDir, directory).mkdirs();
-                
-                fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
-    
-                while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
-                    fileoutputstream.write(buf, 0, n);
-                }
-    
-                fileoutputstream.close(); 
-                zipinputstream.closeEntry();
-                zipentry = zipinputstream.getNextEntry();
-    
+        byte[] buf = new byte[1024];
+        ZipInputStream zipinputstream = null;
+        ZipEntry zipentry;
+        zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
+
+        zipentry = zipinputstream.getNextEntry();
+        while (zipentry != null) {
+            //for each entry to be extracted
+            String entryName = zipentry.getName();
+            System.out.println("entryname " + entryName);
+            int n;
+            FileOutputStream fileoutputstream;
+            File newFile = new File(entryName);
+            String directory = newFile.getParent();
+            new File(tempDir, directory).mkdirs();
+            
+            fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
+
+            while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
+                fileoutputstream.write(buf, 0, n);
             }
-    
-            zipinputstream.close();
+
+            fileoutputstream.close(); 
+            zipinputstream.closeEntry();
+            zipentry = zipinputstream.getNextEntry();
+
         }
-        catch (IOException e) {
-             // TODO: handle this
-            e.printStackTrace();
-        }
+
+        zipinputstream.close();
+
         File extractDir = new File(tempDir.getAbsolutePath(), "export");
         return extractDir;
     }

@@ -15,17 +15,14 @@
 package org.fedoraproject.candlepin.sync;
 
 /**
- * ImporterException
+ * SyncDataFormatException
  */
-public class ImporterException extends SyncException {
+public class SyncDataFormatException extends ImporterException {
 
-    public ImporterException(String msg) {
+    private static final long serialVersionUID = 1L;
+
+    public SyncDataFormatException(String msg) {
         super(msg);
     }
 
-    public ImporterException(String msg, Throwable e) {
-        super(msg, e);
-    }
-
-    private static final long serialVersionUID = -9086462704164995593L;
 }

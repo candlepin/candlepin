@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.sync;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -87,7 +86,7 @@ public class Exporter {
         this.entExporter = entExporter;
     }
 
-    public File getExport(Consumer consumer) {
+    public File getExport(Consumer consumer) throws ExportCreationException {
         try {
             File tempDir = new SyncUtils().makeTempDir("export");
             File baseDir = new File(tempDir.getAbsolutePath(), "export");
@@ -104,12 +103,8 @@ public class Exporter {
  //           FileUtils.deleteDirectory(baseDir);
         }
         catch (IOException e) {
-            // XXX: deal with this.
-            e.printStackTrace();
+            throw new ExportCreationException("Unable to create export archive", e);
         }
-        
-        // Shouldn't ever hit this...
-        return null;
     }
 
     /**
@@ -118,31 +113,18 @@ public class Exporter {
      * @param exportDir Directory where Candlepin data was exported.
      * @return File reference to the new archive zip.
      */
-    private File makeArchive(Consumer consumer, File tempDir, File exportDir) {
+    private File makeArchive(Consumer consumer, File tempDir, File exportDir)
+        throws IOException {
         String exportFileName = exportDir.getName() + ".zip";
         log.info("Creating archive of " + exportDir.getAbsolutePath() + " in: " +
             exportFileName);
 
         File archive = new File(tempDir, exportFileName);
-        ZipOutputStream out = null;
-        try {
-            out = new ZipOutputStream(new FileOutputStream(archive));
-        }
-        catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
 
-        try {
-            out.setComment("Candlepin export for " + consumer.getUuid());
-            addFilesToArchive(out, exportDir.getParent().length() + 1, exportDir);
-            out.close();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        
+        out.setComment("Candlepin export for " + consumer.getUuid());
+        addFilesToArchive(out, exportDir.getParent().length() + 1, exportDir);
+        out.close();
         
         log.debug("Returning file: " + archive.getAbsolutePath());
         return archive;

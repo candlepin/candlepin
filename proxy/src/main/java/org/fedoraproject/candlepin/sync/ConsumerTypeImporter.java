@@ -28,7 +28,7 @@ import org.hibernate.exception.ConstraintViolationException;
 /**
  * ConsumerTypeImporter
  */
-public class ConsumerTypeImporter implements EntityImporter<ConsumerType> {
+public class ConsumerTypeImporter {
     private static Logger log = Logger.getLogger(ConsumerTypeImporter.class);
 
     private ConsumerTypeCurator curator;

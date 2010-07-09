@@ -41,6 +41,7 @@ import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -59,6 +60,8 @@ import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.Importer;
+import org.fedoraproject.candlepin.sync.ImporterException;
+import org.fedoraproject.candlepin.sync.SyncDataFormatException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -349,8 +352,13 @@ public class OwnerResource {
             importer.loadExport(owner, archive);
         }
         catch (IOException e) {
-            // TODO
-            log.error(e);
+            throw new IseException(i18n.tr("Error reading export archive"));
+        }
+        catch (SyncDataFormatException e) {
+            throw new BadRequestException(i18n.tr("Bad data in export archive"));
+        }
+        catch (ImporterException e) {
+            throw new IseException(i18n.tr("Error extracting export archive"));
         }
     }
 }

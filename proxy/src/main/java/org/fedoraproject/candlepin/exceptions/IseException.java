@@ -12,20 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.sync;
+package org.fedoraproject.candlepin.exceptions;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Set;
-
-import org.codehaus.jackson.map.ObjectMapper;
+import javax.ws.rs.core.Response.Status;
 
 /**
- * EntityImporter
- * @param <T> - entity 
+ * IseException
  */
-public interface EntityImporter<T> {
-    T createObject(ObjectMapper mapper, Reader reader) throws IOException;
+public class IseException extends CandlepinException {
 
-    void store(Set<T> entities);
+    public IseException(String message) {
+        super(Status.INTERNAL_SERVER_ERROR, message);
+    }
+
+    private static final long serialVersionUID = 4256788923174204495L;
+
 }

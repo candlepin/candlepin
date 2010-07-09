@@ -46,6 +46,7 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -69,6 +70,7 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.sync.ExportCreationException;
 import org.fedoraproject.candlepin.sync.Exporter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
@@ -636,9 +638,15 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") String consumerUuid) {
         
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        File archive = exporter.getExport(consumer);
-        response.addHeader("Content-Disposition", 
-            "attachment; filename=" + archive.getName());
-        return archive;
+        File archive;
+        try {
+            archive = exporter.getExport(consumer);
+            response.addHeader("Content-Disposition", 
+                "attachment; filename=" + archive.getName());
+            return archive;
+        }
+        catch (ExportCreationException e) {
+            throw new IseException(i18n.tr("Unable to create export archive"));
+        }
     }
 }

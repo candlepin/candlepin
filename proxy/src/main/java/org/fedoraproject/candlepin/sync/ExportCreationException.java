@@ -14,18 +14,17 @@
  */
 package org.fedoraproject.candlepin.sync;
 
+import java.io.IOException;
+
 /**
- * ImporterException
+ * ExportCreationException
  */
-public class ImporterException extends SyncException {
+public class ExportCreationException extends SyncException {
 
-    public ImporterException(String msg) {
-        super(msg);
-    }
+    private static final long serialVersionUID = 1126642027355176388L;
 
-    public ImporterException(String msg, Throwable e) {
+    public ExportCreationException(String msg, IOException e) {
         super(msg, e);
     }
 
-    private static final long serialVersionUID = -9086462704164995593L;
 }
