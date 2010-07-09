@@ -98,7 +98,7 @@ public class Importer {
 
     public void loadExport(Owner owner, File exportFile) {
         try {
-            File tmpDir = SyncUtils.makeTempDir("import");
+            File tmpDir = new SyncUtils().makeTempDir("import");
             File exportDir = extractArchive(tmpDir, exportFile);
             
             Map<String, File> importFiles = new HashMap<String, File>();

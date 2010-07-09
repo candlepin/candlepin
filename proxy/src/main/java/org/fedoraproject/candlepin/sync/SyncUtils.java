@@ -21,17 +21,18 @@ import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 
 /**
  * SyncUtils
  */
 class SyncUtils {
 
-    // XXX: make this configurable
-    static final String WORK_DIR = "/tmp/candlepin/exports";
+    private String workDir;
 
-    private SyncUtils() {
-        
+    SyncUtils() {
+        workDir = new Config().getString(ConfigProperties.SYNC_WORK_DIR);
     }
     
     static ObjectMapper getObjectMapper() {
@@ -46,10 +47,14 @@ class SyncUtils {
         return mapper;
     }
 
-    static File makeTempDir(String baseName) throws IOException {
-        // TODO: Need to make sure WORK_DIR exists:
+    File makeTempDir(String baseName) throws IOException {
+        File baseDir = new File(workDir);
+        if (!baseDir.exists()) {
+            baseDir.mkdirs();
+        }
+        
         File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()),
-            new File(SyncUtils.WORK_DIR));
+            baseDir);
 
         if (!tmp.delete()) {
             throw new IOException("Could not delete temp file: " + tmp.getAbsolutePath());

@@ -36,6 +36,8 @@ public class ConfigProperties {
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
+    
+    public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -52,6 +54,8 @@ public class ConfigProperties {
                 this.put(AUDIT_LOG_VERBOSE, "false");
 
                 this.put(PRETTY_PRINT, "false");
+                
+                this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
             }
         };
 }

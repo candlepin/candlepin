@@ -89,7 +89,7 @@ public class Exporter {
 
     public File getExport(Consumer consumer) {
         try {
-            File tempDir = SyncUtils.makeTempDir("export");
+            File tempDir = new SyncUtils().makeTempDir("export");
             File baseDir = new File(tempDir.getAbsolutePath(), "export");
             baseDir.mkdir();
             
