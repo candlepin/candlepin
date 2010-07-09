@@ -45,9 +45,8 @@ import com.google.inject.Inject;
  */
 public class CertificateRevocationListTask implements Job {
     
-    //"*/1 * * * * ?";
     /** The Constant DEFAULT_SCHEDULE. */
-    public static final String DEFAULT_SCHEDULE = "* * */12 * * ?";
+    public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
     
     /** The config. */
     private Config config;
