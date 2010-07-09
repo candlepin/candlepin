@@ -6,6 +6,10 @@ function entitlement_name_space() {
 	return Entitlement;
 }
 
+function revocation_name_space() {
+	return Revocation;
+}
+
 var Entitlement = {
 		
 	// defines mapping of product attributes to functions
@@ -128,6 +132,14 @@ var Entitlement = {
 	    }
 	
 	    return null;
+	}
+}
+
+var Revocation = {
+	pre_global: function() {
+	},
+	
+	post_global: function() {
 	}
 }
 

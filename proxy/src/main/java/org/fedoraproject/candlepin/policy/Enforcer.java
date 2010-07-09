@@ -43,7 +43,7 @@ public interface Enforcer {
      * @param quantity number of entitlements to consume.
      * @return TODO
      */
-    PreEntHelper pre(Consumer consumer, Pool entitlementPool, Integer quantity);
+    PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity);
 
     /**
      * Run post-entitlement actions.
@@ -52,7 +52,7 @@ public interface Enforcer {
      * @param ent The entitlement that was just granted.
      * @return post-entitlement processor
      */
-    PostEntHelper post(Consumer c, PostEntHelper postEntHelper, Entitlement ent);
+    PostEntHelper postEntitlement(Consumer c, PostEntHelper postEntHelper, Entitlement ent);
 
     /**
      * Select the best entitlement pool available for the given product ID.

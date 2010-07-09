@@ -100,9 +100,10 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     @Override
-    public PreEntHelper pre(Consumer consumer, Pool entitlementPool, Integer quantity) {
+    public PreEntHelper preEntitlement(
+        Consumer consumer, Pool entitlementPool, Integer quantity) {
 
-        PreEntHelper preHelper = runPre(consumer, entitlementPool, quantity);
+        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool, quantity);
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
@@ -137,7 +138,7 @@ public class JavascriptEnforcer implements Enforcer {
         return allAttributes;
     }
 
-    private PreEntHelper runPre(Consumer consumer, Pool pool, Integer quantity) {
+    private PreEntHelper runPreEntitlement(Consumer consumer, Pool pool, Integer quantity) {
         PreEntHelper preHelper = new PreEntHelper(quantity);
 
         // Provide objects for the script:
@@ -156,10 +157,10 @@ public class JavascriptEnforcer implements Enforcer {
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
         if (matchingRules.isEmpty()) {
-            invokeGlobalPreRule();
+            invokeGlobalPreEntitlementRule();
         }
         else {
-            callPreRules(matchingRules);
+            callPreEntitlementRules(matchingRules);
         }
 
         if (log.isDebugEnabled()) {
@@ -175,13 +176,13 @@ public class JavascriptEnforcer implements Enforcer {
     }
 
     @Override
-    public PostEntHelper post(Consumer consumer, PostEntHelper postEntHelper,
-        Entitlement ent) {
-        runPost(postEntHelper, ent);
+    public PostEntHelper postEntitlement(
+            Consumer consumer, PostEntHelper postEntHelper, Entitlement ent) {
+        runPostEntitlement(postEntHelper, ent);
         return postEntHelper;
     }
 
-    private void runPost(PostEntHelper postHelper, Entitlement ent) {
+    private void runPostEntitlement(PostEntHelper postHelper, Entitlement ent) {
         Pool pool = ent.getPool();
         Consumer c = ent.getConsumer();
 
@@ -202,10 +203,10 @@ public class JavascriptEnforcer implements Enforcer {
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         if (matchingRules.isEmpty()) {
-            invokeGlobalPostRule();
+            invokeGlobalPostEntitlementRule();
         }
         else {
-            callPostRules(matchingRules);
+            callPostEntitlementRules(matchingRules);
         }
     }
 
@@ -229,8 +230,8 @@ public class JavascriptEnforcer implements Enforcer {
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
-                result = (ReadOnlyPool) inv.invokeFunction(
-                    SELECT_POOL_PREFIX + rule.getRuleName());
+                result = (ReadOnlyPool) inv.invokeMethod(
+                    entitlementNameSpace, SELECT_POOL_PREFIX + rule.getRuleName());
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
                     productId);
@@ -247,7 +248,7 @@ public class JavascriptEnforcer implements Enforcer {
         if (!foundMatchingRule) {
             try {
                 result = (ReadOnlyPool) inv
-                    .invokeFunction(GLOBAL_SELECT_POOL_FUNCTION);
+                    .invokeMethod(entitlementNameSpace, GLOBAL_SELECT_POOL_FUNCTION);
                 log.info("Excuted javascript rule: " +
                     GLOBAL_SELECT_POOL_FUNCTION);
             }
@@ -362,7 +363,7 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
     
-    private void callPreRules(List<Rule> matchingRules) {
+    private void callPreEntitlementRules(List<Rule> matchingRules) {
         Invocable inv = (Invocable) jsEngine;
         for (Rule rule : matchingRules) {
             try {
@@ -370,7 +371,7 @@ public class JavascriptEnforcer implements Enforcer {
                 log.debug("Ran rule: " + PRE_PREFIX + rule.getRuleName());
             }
             catch (NoSuchMethodException e) {
-                invokeGlobalPreRule();
+                invokeGlobalPreEntitlementRule();
             }
             catch (ScriptException e) {
                 throw new RuleExecutionException(e);
@@ -378,7 +379,7 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
-    private void callPostRules(List<Rule> matchingRules) {
+    private void callPostEntitlementRules(List<Rule> matchingRules) {
         Invocable inv = (Invocable) jsEngine;
         for (Rule rule : matchingRules) {
             try {
@@ -386,7 +387,7 @@ public class JavascriptEnforcer implements Enforcer {
                 log.debug("Ran rule: " + POST_PREFIX + rule.getRuleName());
             }
             catch (NoSuchMethodException e) {
-                invokeGlobalPostRule();
+                invokeGlobalPostEntitlementRule();
             }
             catch (ScriptException e) {
                 throw new RuleExecutionException(e);
@@ -394,7 +395,7 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
-    private void invokeGlobalPreRule() {
+    private void invokeGlobalPreEntitlementRule() {
         Invocable inv = (Invocable) jsEngine;
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
@@ -411,7 +412,7 @@ public class JavascriptEnforcer implements Enforcer {
         }
     }
 
-    private void invokeGlobalPostRule() {
+    private void invokeGlobalPostEntitlementRule() {
         Invocable inv = (Invocable) jsEngine;
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.

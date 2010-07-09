@@ -43,20 +43,23 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
-    public PostEntHelper post(Consumer consumer, PostEntHelper postEntHelper,
+    public PostEntHelper postEntitlement(Consumer consumer, PostEntHelper postEntHelper,
         Entitlement ent) {
         if (isCandlepinConsumer(consumer)) {
-            return candlepinEnforcer.post(consumer, postEntHelper, ent);
+            return candlepinEnforcer.postEntitlement(consumer, postEntHelper, ent);
         }
-        return jsEnforcer.post(consumer, postEntHelper, ent);
+        return jsEnforcer.postEntitlement(consumer, postEntHelper, ent);
     }
 
     @Override
-    public PreEntHelper pre(Consumer consumer, Pool entitlementPool, Integer quantity) {
+    public PreEntHelper preEntitlement(
+        Consumer consumer, Pool entitlementPool, Integer quantity) {
+        
         if (isCandlepinConsumer(consumer)) {
-            return candlepinEnforcer.pre(consumer, entitlementPool, quantity);
+            return candlepinEnforcer.preEntitlement(consumer, entitlementPool, quantity);
         }
-        return jsEnforcer.pre(consumer, entitlementPool, quantity);
+        
+        return jsEnforcer.preEntitlement(consumer, entitlementPool, quantity);
     }
 
     private boolean isCandlepinConsumer(Consumer consumer) {

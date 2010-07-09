@@ -199,7 +199,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
         
-        ValidationResult result = enforcer.pre(
+        ValidationResult result = enforcer.preEntitlement(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, 
                 expiryDate(2010, 10, 10)),
@@ -216,7 +216,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
-        ValidationResult result = enforcer.pre(
+        ValidationResult result = enforcer.preEntitlement(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 1, 
                 expiryDate(2010, 10, 10)),
@@ -234,7 +234,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
-        ValidationResult result = enforcer.pre(
+        ValidationResult result = enforcer.preEntitlement(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
                 expiryDate(2000, 1, 1)),
@@ -253,7 +253,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
         
-        ValidationResult result = enforcer.pre(
+        ValidationResult result = enforcer.preEntitlement(
             TestUtil.createConsumer(), 
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, 
                 expiryDate(2000, 1, 1)),

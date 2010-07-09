@@ -29,13 +29,14 @@ import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 public class CandlepinConsumerTypeEnforcer implements Enforcer {
 
     @Override
-    public PostEntHelper post(Consumer consumer, PostEntHelper postEntHelper, 
+    public PostEntHelper postEntitlement(Consumer consumer, PostEntHelper postEntHelper, 
         Entitlement ent) {
         return postEntHelper;
     }
 
     @Override
-    public PreEntHelper pre(Consumer consumer, Pool entitlementPool, Integer quantity) {
+    public PreEntHelper preEntitlement(
+            Consumer consumer, Pool entitlementPool, Integer quantity) {
         return new PreEntHelper(1);
     }
 
