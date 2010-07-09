@@ -57,6 +57,8 @@ public class JavascriptEnforcer implements Enforcer {
     private ScriptEngine jsEngine;
     private I18n i18n;
     private final Map<String, Set<Rule>> attributesToRules;
+    
+    private Object entitlementNameSpace;
 
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
@@ -83,8 +85,11 @@ public class JavascriptEnforcer implements Enforcer {
 
         try {
             this.jsEngine.eval(rulesReader);
+            this.entitlementNameSpace = 
+                ((Invocable) this.jsEngine).invokeFunction("entitlement_name_space");
             attributesToRules = parseAttributeMappings(
-                (String) ((Invocable) this.jsEngine).invokeFunction("attribute_mappings"));
+                (String) ((Invocable) this.jsEngine).invokeMethod(
+                    entitlementNameSpace, "attribute_mappings"));
         }
         catch (ScriptException ex) {
             throw new RuleParseException(ex);
@@ -361,7 +366,7 @@ public class JavascriptEnforcer implements Enforcer {
         Invocable inv = (Invocable) jsEngine;
         for (Rule rule : matchingRules) {
             try {
-                inv.invokeFunction(PRE_PREFIX + rule.getRuleName());
+                inv.invokeMethod(entitlementNameSpace, PRE_PREFIX + rule.getRuleName());
                 log.debug("Ran rule: " + PRE_PREFIX + rule.getRuleName());
             }
             catch (NoSuchMethodException e) {
@@ -377,7 +382,7 @@ public class JavascriptEnforcer implements Enforcer {
         Invocable inv = (Invocable) jsEngine;
         for (Rule rule : matchingRules) {
             try {
-                inv.invokeFunction(POST_PREFIX + rule.getRuleName());
+                inv.invokeMethod(entitlementNameSpace, POST_PREFIX + rule.getRuleName());
                 log.debug("Ran rule: " + POST_PREFIX + rule.getRuleName());
             }
             catch (NoSuchMethodException e) {
@@ -394,7 +399,7 @@ public class JavascriptEnforcer implements Enforcer {
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
         try {
-            inv.invokeFunction(GLOBAL_PRE_FUNCTION);
+            inv.invokeMethod(entitlementNameSpace, GLOBAL_PRE_FUNCTION);
             log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
         }
         catch (NoSuchMethodException ex) {

@@ -2,128 +2,132 @@
  * Default Candlepin rule set.
  */
 
-// defines mapping of product attributes to functions
-// the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
-// func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
-function attribute_mappings() {
-	return "virtualization_host:1:virtualization_host, " +
-			"virtualization_host_platform:1:virtualization_host_platform, " +
-			"architecture:1:arch, " +
-			"sockets:1:sockets, " +
-			"requires_consumer_type:1:requires_consumer_type," +
-			"user_license:1:user_license";
+function entitlement_name_space() {
+	return Entitlement;
 }
 
-function post_user_license() {
-	// Default to using the same product from the pool.
-	var productId = pool.getProductId()
-
-	// Check if the sub-pool should be for a different product:
-	if (attributes.containsKey("user_license_product")) {
-		productId = attributes.get("user_license_product");
-	}
-
-	// Create a sub-pool for this user
-	post.createUserRestrictedPool(productId, pool.getProvidedProductIds(),
-			attributes.get("user_license"));
-}
-
-function pre_requires_consumer_type() {
-	if (!attributes.get("requires_consumer_type").equals(consumer.getType())) {
-		pre.addError("rulefailed.consumer.type.mismatch");
-	}
-}
-
-function pre_architecture() {
-	if ((product.getAttribute("arch").toUpperCase() != "ALL") &&
-			(!consumer.hasFact("cpu.architecture") ||
-			(product.getAttribute("arch") != consumer.getFact("cpu.architecture")))) {
-		pre.addWarning("rulewarning.architecture.mismatch");
-	}
-}
-
-function post_architecture() {
-}
-
-function pre_sockets() {
-	if (!consumer.hasFact("cpu.cpu_socket(s)") ||
-	    (parseInt(product.getAttribute("sockets")) < parseInt(consumer.getFact("cpu.cpu_socket(s)")))) {
-		pre.addWarning("rulewarning.unsupported.number.of.sockets");
-	}
-}
-
-function post_sockets() {
+var Entitlement = {
+		
+	// defines mapping of product attributes to functions
+	// the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
+	// func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
+	attribute_mappings: function() {
+		return "virtualization_host:1:virtualization_host, " +
+				"virtualization_host_platform:1:virtualization_host_platform, " +
+				"architecture:1:arch, " +
+				"sockets:1:sockets, " +
+				"requires_consumer_type:1:requires_consumer_type," +
+				"user_license:1:user_license";
+	},
+		
+	post_user_license: function() {
+		// Default to using the same product from the pool.
+		var productId = pool.getProductId()
 	
-}
-
-// Checks common for both virt host and virt platform entitlements:
-function virtualization_common() {
-
-// XXX: this check is bad, as we don't do virt based on consumer type anymore
-	// Can only be given to a physical system:
-//	if (consumer.getType() != "system") {
-//		pre.addError("rulefailed.virt.ents.only.for.physical.systems");
-//	}
-
-	// Host must not have any guests currently (could be changed but for simplicities sake):
-//	if (consumer.hasFact("total_guests") && parseInt(consumer.getFact("total_guests")) > 0) {
-//		pre.addError("rulefailed.host.already.has.guests");
-//	}
-}
-
-function pre_virtualization_host() {
-	virtualization_common();
-}
-
-function post_virtualization_host() {
-}
-
-
-function pre_virtualization_host_platform() {
-	virtualization_common();
-}
-
-function post_virtualization_host_platform() {
-	// unlimited guests;
-}
-
-function pre_global() {
-	if (consumer.hasEntitlement(product) && product.getAttribute("multi-entitlement") != "yes") {
-		pre.addError("rulefailed.consumer.already.has.product");
-	}
-
-	// domain consumers can only consume products for domains
-	if (consumer.getType() == "domain" && product.getAttribute("requires_consumer_type") != "domain") {
-		pre.addError("rulefailed.consumer.type.mismatch");
-	}
-	
-	if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
-		pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
-	}
-	
-	// Support free entitlements for guests, if their parent has virt host or
-	// platform,
-	// and is entitled to the product the guest is requesting:
-	if (consumer.getType() == "virt_system" && consumer.getParent() != null) {
-		var parent = consumer.getParent();
-		if ((parent.hasEntitlement("virtualization_host") || parent.hasEntitlement("virtualization_host_platform"))
-				&& parent.hasEntitlement(product)) {
-			pre.grantFreeEntitlement();
+		// Check if the sub-pool should be for a different product:
+		if (attributes.containsKey("user_license_product")) {
+			productId = attributes.get("user_license_product");
 		}
-	} else {
-		pre.checkQuantity(pool);
+	
+		// Create a sub-pool for this user
+		post.createUserRestrictedPool(productId, pool.getProvidedProductIds(),
+				attributes.get("user_license"));
+	},
+	
+	pre_requires_consumer_type: function() {
+		if (!attributes.get("requires_consumer_type").equals(consumer.getType())) {
+			pre.addError("rulefailed.consumer.type.mismatch");
+		}
+	},
+	
+	pre_architecture: function() {
+		if ((product.getAttribute("arch").toUpperCase() != "ALL") &&
+				(!consumer.hasFact("cpu.architecture") ||
+				(product.getAttribute("arch") != consumer.getFact("cpu.architecture")))) {
+			pre.addWarning("rulewarning.architecture.mismatch");
+		}
+	},
+	
+	post_architecture: function() {
+	},
+	
+	pre_sockets: function() {
+		if (!consumer.hasFact("cpu.cpu_socket(s)") ||
+		    (parseInt(product.getAttribute("sockets")) < parseInt(consumer.getFact("cpu.cpu_socket(s)")))) {
+			pre.addWarning("rulewarning.unsupported.number.of.sockets");
+		}
+	},
+	
+	post_sockets: function() {
+	},
+	
+	// Checks common for both virt host and virt platform entitlements:
+	virtualization_common: function() {
+	
+	// XXX: this check is bad, as we don't do virt based on consumer type anymore
+		// Can only be given to a physical system:
+	//	if (consumer.getType() != "system") {
+	//		pre.addError("rulefailed.virt.ents.only.for.physical.systems");
+	//	}
+	
+		// Host must not have any guests currently (could be changed but for simplicities sake):
+	//	if (consumer.hasFact("total_guests") && parseInt(consumer.getFact("total_guests")) > 0) {
+	//		pre.addError("rulefailed.host.already.has.guests");
+	//	}
+	},
+	
+	pre_virtualization_host: function() {
+		Entitlement.virtualization_common();
+	},
+	
+	post_virtualization_host: function() {
+	},
+	
+	pre_virtualization_host_platform: function() {
+		Entitlement.virtualization_common();
+	},
+	
+	post_virtualization_host_platform: function() {
+		// unlimited guests;
+	},
+	
+	pre_global: function() {
+		if (consumer.hasEntitlement(product) && product.getAttribute("multi-entitlement") != "yes") {
+			pre.addError("rulefailed.consumer.already.has.product");
+		}
+	
+		// domain consumers can only consume products for domains
+		if (consumer.getType() == "domain" && product.getAttribute("requires_consumer_type") != "domain") {
+			pre.addError("rulefailed.consumer.type.mismatch");
+		}
+		
+		if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
+			pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
+		}
+		
+		// Support free entitlements for guests, if their parent has virt host or
+		// platform,
+		// and is entitled to the product the guest is requesting:
+		if (consumer.getType() == "virt_system" && consumer.getParent() != null) {
+			var parent = consumer.getParent();
+			if ((parent.hasEntitlement("virtualization_host") || parent.hasEntitlement("virtualization_host_platform"))
+					&& parent.hasEntitlement(product)) {
+				pre.grantFreeEntitlement();
+			}
+		} else {
+			pre.checkQuantity(pool);
+		}
+	},
+	
+	post_global: function() {
+	},
+	
+	select_pool_global: function() {
+	    if (pools.size() > 0) {
+		return pools.get(0);
+	    }
+	
+	    return null;
 	}
-}
-
-function post_global() {
-
-}
-
-function select_pool_global() {
-    if (pools.size() > 0) {
-	return pools.get(0);
-    }
-
-    return null;
 }
 
