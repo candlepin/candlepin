@@ -140,4 +140,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
     }
+
+    public void refresh(E object) {
+        getEntityManager().refresh(object);
+    }
 }

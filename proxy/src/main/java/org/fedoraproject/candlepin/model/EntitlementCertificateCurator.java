@@ -52,4 +52,12 @@ public class EntitlementCertificateCurator extends
             .add(Restrictions.eq("ent.consumer", c))
             .list();
     }
+
+    @Transactional
+    public void delete(EntitlementCertificate cert) {
+        //make sure to delete it! else get ready to face
+        //javax.persistence.EntityNotFoundException('deleted entity passed to persist')
+        cert.getEntitlement().getCertificates().remove(cert);
+        super.delete(cert);
+    }
 }

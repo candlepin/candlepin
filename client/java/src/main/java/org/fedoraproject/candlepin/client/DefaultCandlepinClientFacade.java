@@ -140,22 +140,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
             Response.Status.Family.SUCCESSFUL)) {
             throw new ClientException(response.getResponseStatus().toString());
         }
+        recordIdentity(response.getEntity());        
         return true;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.fedoraproject.candlepin.client.CandlepinClientFacade#
-     * registerExistingCustomerWithId(java.lang.String)
-     */
-    public void registerExistingCustomerWithId(String uuid) {
-        L.debug("Trying to register existing customer.uuid={}", uuid);
-        HttpClient httpclient = new HttpClient();
-        httpclient.getParams().setAuthenticationPreemptive(true);
-        CandlepinConsumerClient client = ProxyFactory.create(
-            CandlepinConsumerClient.class, this.config.getServerURL(),
-            new ApacheHttpClientExecutor(httpclient));
-        getSafeResult(client.getConsumer(uuid));
     }
 
     /* (non-Javadoc)

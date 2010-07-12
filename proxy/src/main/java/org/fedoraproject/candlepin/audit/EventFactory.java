@@ -80,21 +80,23 @@ public class EventFactory {
     }
 
     public Event entitlementCreated(Entitlement e) {
-        String newJson = entityToJson(e);
-        Owner o = e.getOwner();
-        Event event = new Event(Event.Type.CREATED, Event.Target.ENTITLEMENT, 
-            principalProvider.get(), o.getId(), e.getConsumer().getId(), e.getId(),
-            null, newJson);
-        return event;
+        return entitlementEvent(e, Event.Type.CREATED);
     }
     
     public Event entitlementDeleted(Entitlement e) {
+        return entitlementEvent(e, Event.Type.DELETED);
+    }
+
+    public Event entitlementChanged(Entitlement e) {
+        return entitlementEvent(e, Event.Type.MODIFIED);
+    }
+
+    private Event entitlementEvent(Entitlement e, Event.Type type) {
         String json = entityToJson(e);
-        Owner o = e.getOwner();
-        Event event = new Event(Event.Type.DELETED, Event.Target.ENTITLEMENT, 
-            principalProvider.get(), o.getId(), e.getConsumer().getId(), e.getId(),
-            json, null);
-        return event;
+        Owner owner = e.getOwner();
+        return new Event(type, Event.Target.ENTITLEMENT,
+            principalProvider.get(), owner.getId(), e.getConsumer().getId(), e
+                .getId(), json, null);
     }
 
     public Event ownerCreated(Owner newOwner) {

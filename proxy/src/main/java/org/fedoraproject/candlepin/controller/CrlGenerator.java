@@ -21,12 +21,11 @@ import static org.fedoraproject.candlepin.util.Util.newMap;
 import java.math.BigInteger;
 import java.security.cert.X509CRL;
 import java.security.cert.X509CRLEntry;
+import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.security.auth.x500.X500Principal;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.x509.CRLNumber;
@@ -101,10 +100,9 @@ public class CrlGenerator {
      * Update crl.
      * 
      * @param x509crl the x509crl
-     * @param principal the principal
      * @return the x509 crl
      */
-    public X509CRL updateCRL(X509CRL x509crl, String principal) {
+    public X509CRL updateCRL(X509CRL x509crl) {
         List<SimpleCRLEntry> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
         log.info("Old CRLNumber is : " + no);
@@ -120,18 +118,17 @@ public class CrlGenerator {
         crlEntries.addAll(getNewSerialsToAppendAndSetThemConsumed());
         this.certificateSerialCurator.deleteExpiredSerials();
         
-        return this.generateCRL(crlEntries, principal, no
+        return this.generateCRL(crlEntries, no
             .add(BigInteger.ONE));
     }
     
     /**
      * Generate a new CRL.
      * 
-     * @param principal the DN of the cert issuer
      * @return the x509 CRL
      */
-    public X509CRL createCRL(String principal) {
-        return updateCRL(null, principal);
+    public X509CRL createCRL() {
+        return updateCRL(null);
     }
     
     /**
@@ -139,15 +136,14 @@ public class CrlGenerator {
      * 
      * @param entries the entries
      * @param principal the principal
-     * @param crlNumber the crl number
      * @return the x509 crl
      */
-    private X509CRL generateCRL(List<SimpleCRLEntry> entries,
-        String principal, BigInteger crlNumber) {
+    private X509CRL generateCRL(List<SimpleCRLEntry> entries, BigInteger crlNumber) {
         
         try {
+            X509Certificate caCert = pkiReader.getCACert();
             X509V2CRLGenerator generator = new X509V2CRLGenerator();
-            generator.setIssuerDN(new X500Principal(principal));
+            generator.setIssuerDN(caCert.getIssuerX500Principal());
             generator.setThisUpdate(new Date());
             generator.setNextUpdate(Util.tomorrow());
             generator.setSignatureAlgorithm(algorithm);
@@ -158,7 +154,7 @@ public class CrlGenerator {
             }
             log.info("Completed adding CRL numbers to the certificate.");
             generator.addExtension(X509Extensions.AuthorityKeyIdentifier,
-                false, new AuthorityKeyIdentifierStructure(pkiReader.getCACert()));
+                false, new AuthorityKeyIdentifierStructure(caCert));
             generator.addExtension(X509Extensions.CRLNumber, false,
                 new CRLNumber(crlNumber));
             return generator.generate(pkiReader.getCaKey());
@@ -179,7 +175,7 @@ public class CrlGenerator {
             this.certificateSerialCurator.retrieveTobeCollectedSerials();
         for (CertificateSerial cs : serials) {
             entries.add(new SimpleCRLEntry(cs.getSerial(),
-                    cs.getExpiration()));
+                   new Date()));
             cs.setCollected(true);
         }
         if (log.isTraceEnabled()) {

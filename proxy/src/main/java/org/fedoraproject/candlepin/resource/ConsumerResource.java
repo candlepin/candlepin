@@ -642,4 +642,13 @@ public class ConsumerResource {
         feed.setTitle("Event feed for consumer " + consumer.getUuid());
         return feed;
     }
+
+    @PUT
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @Path("/{consumer_uuid}/certificates/")
+    public void regenerateEntitlementCertificates(
+        @PathParam("consumer_uuid") String consumerUuid) {
+        Consumer c = verifyAndLookupConsumer(consumerUuid);
+        this.entitler.regenerateEntitlementCertificates(c);
+    }
 }

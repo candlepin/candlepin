@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.controller;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -140,7 +141,7 @@ public class CrlGeneratorTest {
         for (int i = 0; i < serials.size(); i++) {
             CertificateSerial cs = serials.get(i);
             assertEquals(cs.getSerial(), entries.get(i).serialNumber);
-            assertEquals(cs.getExpiration(), entries.get(i).revocationDate);
+            assertFalse(cs.getExpiration().equals(entries.get(i).revocationDate));
         }
     }
     
@@ -193,7 +194,7 @@ public class CrlGeneratorTest {
         List<CertificateSerial> serials = getStubCSList();
         when(this.curator.retrieveTobeCollectedSerials())
             .thenReturn(serials);
-        X509CRL x509crl = this.generator.updateCRL((X509CRL) null, generateFakePrincipal());
+        X509CRL x509crl = this.generator.updateCRL((X509CRL) null);
         verify(this.curator).deleteExpiredSerials();
         assertEquals(BigInteger.ONE, this.generator.getCRLNumber(x509crl));
         Set<? extends X509CRLEntry> entries = x509crl.getRevokedCertificates();
@@ -226,7 +227,7 @@ public class CrlGeneratorTest {
                     add(stubCS(1002L, new Date()));
                 }
             });
-        X509CRL newCRL = this.generator.updateCRL(oldCert, generateFakePrincipal());
+        X509CRL newCRL = this.generator.updateCRL(oldCert);
         
         verify(this.curator, times(1)).retrieveTobeCollectedSerials();
         verify(this.curator, times(1)).deleteExpiredSerials();

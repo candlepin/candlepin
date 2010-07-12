@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.21
+Version: 0.0.22
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -106,6 +106,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/log/%{name}
 
 %changelog
+* Mon Jul 12 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.22-1
+- Adding a few more CRL functional tests. (jharris@redhat.com)
+- Adding CRL functional test scenarios. (jharris@redhat.com)
+- Modifying the CRL job schedule to once a day (calfonso@redhat.com)
+- Rhino/JS != weirdness? (morazi@redhat.com)
+- Adding CRL resource and matching ruby api (jharris@redhat.com)
+- another resource leak - in CandlepinPKIReader.java (ddolguik@redhat.com)
+- fixed a resource leak in CertificateRevocationListTask.java (ddolguik@redhat.com)
+- fixed a small null-dereferencing issue (ddolguik@redhat.com)
+- added buildr task for coverity report generation (ddolguik@redhat.com)
+- Pulling the CRL generation task into a separate controller. (jharris@redhat.com)
+
 * Thu Jul 08 2010 Adrian Likins <alikins@redhat.com> 0.0.21-1
 - candlepin pki reader now caches certificate & keys (anadathu@redhat.com)
 - * Adding bulk revocation script * Refactoring Pinsetter to use common config

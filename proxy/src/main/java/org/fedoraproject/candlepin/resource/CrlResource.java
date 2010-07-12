@@ -57,7 +57,7 @@ public class CrlResource {
     public String getCurrentCrl(@Context Principal principal) 
         throws CRLException, IOException {
         
-        X509CRL crl = this.crlGenerator.createCRL(getDN(principal));
+        X509CRL crl = this.crlGenerator.createCRL();
         
         StringWriter stringWriter = new StringWriter();
         PEMWriter pemWriter = new PEMWriter(stringWriter);
@@ -66,15 +66,5 @@ public class CrlResource {
         pemWriter.close();
         
         return stringWriter.toString();
-    }
-    
-    // TODO:  Not sure if this is the desired method of 
-    //        generating the DN...
-    private String getDN(Principal principal) {
-        StringBuilder sb = new StringBuilder("CN=");
-        sb.append(principal.getOwner().getDisplayName());
-        sb.append(", UID=");
-        sb.append(principal.hashCode());
-        return sb.toString();
     }
 }

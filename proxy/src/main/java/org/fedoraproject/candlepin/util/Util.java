@@ -24,11 +24,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.collections.Transformer;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
 
@@ -137,5 +139,38 @@ public class Util {
             throw new IllegalArgumentException(message);
         }
         return value;
+    }
+
+    public static String defaultIfEmpty(String str, String def) {
+        if (str == null || str.trim().length() == 0) {
+            return def;
+        }
+        return str;
+    }
+
+    public static boolean equals(String str, String str1) {
+        if (str == str1) {
+            return true;
+        }
+
+        if ((str == null) ^ (str1 == null)) {
+            return false;
+        }
+
+        return str.equals(str1);
+    }
+
+    public static int safeHashCode(Object object, int hash) {
+        return object == null ? hash : object.hashCode();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Set<T> transform(Set<?> set,
+        Transformer t) {
+        Set<T> result = Util.newSet();
+        for (Iterator iterator = set.iterator(); iterator.hasNext();) {
+            result.add((T) t.transform(iterator.next()));
+        }
+        return result;
     }
 }
