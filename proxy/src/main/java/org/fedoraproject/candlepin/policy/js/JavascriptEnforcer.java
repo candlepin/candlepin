@@ -59,6 +59,8 @@ public class JavascriptEnforcer implements Enforcer {
     private final Map<String, Set<Rule>> attributesToRules;
     
     private Object entitlementNameSpace;
+    private Object consumerDeleteNameSpace;
+    private ConsumerDeleteHelper consumerDeleteHelper;
 
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
@@ -72,12 +74,14 @@ public class JavascriptEnforcer implements Enforcer {
     public JavascriptEnforcer(DateSource dateSource,
         @Named("RulesReader") Reader rulesReader,
         ProductServiceAdapter prodAdapter,
-        ScriptEngine jsEngine, I18n i18n) {
+        ScriptEngine jsEngine, I18n i18n,
+        ConsumerDeleteHelper consumerDeleteHelper) {
         this.dateSource = dateSource;
 
         this.prodAdapter = prodAdapter;
         this.jsEngine = jsEngine;
         this.i18n = i18n;
+        this.consumerDeleteHelper = consumerDeleteHelper;
 
         if (jsEngine == null) {
             throw new RuntimeException("No Javascript engine");
@@ -85,8 +89,12 @@ public class JavascriptEnforcer implements Enforcer {
 
         try {
             this.jsEngine.eval(rulesReader);
-            this.entitlementNameSpace = 
+            
+            entitlementNameSpace = 
                 ((Invocable) this.jsEngine).invokeFunction("entitlement_name_space");
+            consumerDeleteNameSpace = 
+                ((Invocable) this.jsEngine).invokeFunction("consumer_delete_name_space");
+            
             attributesToRules = parseAttributeMappings(
                 (String) ((Invocable) this.jsEngine).invokeMethod(
                     entitlementNameSpace, "attribute_mappings"));
@@ -113,6 +121,31 @@ public class JavascriptEnforcer implements Enforcer {
         }
 
         return preHelper;
+    }
+    
+    @Override
+    public ConsumerDeleteHelper onConsumerDelete(Consumer consumer) {
+        jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
+        jsEngine.put("helper", consumerDeleteHelper);
+
+        invokeRule(consumerDeleteNameSpace, "consumer delete", "global");
+        
+        return consumerDeleteHelper;
+    }
+    
+    private void invokeRule(Object namespace, String namespaceName, String ruleName) {
+        Invocable inv = (Invocable) jsEngine;
+        try {
+            inv.invokeMethod(namespace, ruleName);
+            log.debug("Ran rule: " + ruleName + "in namespace: " + namespaceName);
+        }
+        catch (NoSuchMethodException ex) {
+            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION + 
+                "in namespace: " + namespaceName);
+        }
+        catch (ScriptException ex) {
+            throw new RuleExecutionException(ex);
+        }
     }
 
     /**

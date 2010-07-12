@@ -53,7 +53,6 @@ import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -65,6 +64,8 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -100,13 +101,14 @@ public class ConsumerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private EventCurator eventCurator;
+    private Enforcer enforcer;
     private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
     
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductServiceAdapter productAdapter, Entitler entitler,
+        ProductServiceAdapter productAdapter, Entitler entitler, Enforcer enforcer,
         SubscriptionServiceAdapter subAdapter, PoolCurator epCurator,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
@@ -123,6 +125,7 @@ public class ConsumerResource {
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
         this.entitler = entitler;
+        this.enforcer = enforcer;
         this.poolCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
@@ -289,8 +292,12 @@ public class ConsumerResource {
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
+        
         unbindAll(uuid);
+
         Event event = eventFactory.consumerDeleted(toDelete);
+        enforcer.onConsumerDelete(toDelete);
+        
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
         sink.sendEvent(event);

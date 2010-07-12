@@ -96,6 +96,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         flush();
     }
     
+    public void bulkDelete(List<E> entities) {
+        for (E entity : entities) {
+            delete(entity);
+        }
+    }
+    
     /**
      * @param entity entity to be merged.
      * @return merged entity.

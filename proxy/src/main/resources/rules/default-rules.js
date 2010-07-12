@@ -7,7 +7,7 @@ function entitlement_name_space() {
 }
 
 function revocation_name_space() {
-	return Revocation;
+	return ConsumerDelete;
 }
 
 var Entitlement = {
@@ -135,11 +135,9 @@ var Entitlement = {
 	}
 }
 
-var Revocation = {
-	pre_global: function() {
-	},
-	
-	post_global: function() {
+var ConsumerDelete = {
+	global: function() {
+		helper.deleteUserRestrictedPools(consumer.getUsername());
 	}
 }
 

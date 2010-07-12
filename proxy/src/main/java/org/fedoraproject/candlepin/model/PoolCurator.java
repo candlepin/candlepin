@@ -39,6 +39,7 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
@@ -301,6 +302,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         return results;
+    }
+    
+    @Transactional
+    @EnforceAccessControl
+    public List<Pool> listPoolsRestrictedToUser(String username) {
+        return listByCriteria(
+            DetachedCriteria.forClass(Pool.class)
+                .add(Restrictions.eq("restrictedToUsername", username)));
     }
     
     // set a single name, if its not already there
