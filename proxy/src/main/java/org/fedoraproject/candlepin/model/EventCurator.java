@@ -77,8 +77,10 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
      * @return Atom feed for these events.
      */
     public Feed toFeed(List<Event> events) {
+        String name = this.getClass().getCanonicalName();
         Feed feed = new Feed();
         feed.setUpdated(new Date());
+        feed.setTitle(name);
         for (Event e : events) {
             Entry entry = new Entry();
             entry.setTitle(e.getTarget().toString() + " " + e.getType().toString());
