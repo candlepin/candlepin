@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import static org.apache.commons.collections.CollectionUtils.containsAny;
+import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
+import static org.fedoraproject.candlepin.util.Util.transform;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -23,23 +26,29 @@ import static org.junit.Assert.fail;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -64,12 +73,12 @@ public class EntitlerTest extends DatabaseTestFixture {
     private Consumer parentSystem;
     private Consumer childVirtSystem;
     private Entitler entitler;
+    private EventSink eventSink;
 
     @Before
     public void setUp() throws Exception {
         o = createOwner();
         ownerCurator.create(o);
-
         virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
         virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, 
             PRODUCT_VIRT_HOST_PLATFORM);
@@ -236,6 +245,63 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertEquals(new Long(0), monitoringPool.getConsumed());
     }
     
+    @Test
+    public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
+        throws Exception {
+        this.entitlementCurator.refresh(this.entitler.entitleByProduct(this.childVirtSystem,
+            provisioning.getId(), 3));
+        regenerateECAndAssertNotSameCertificates();
+    }
+
+    @Test
+    public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
+        throws EntitlementRefusedException {
+        this.entitlementCurator.refresh(this.entitler.entitleByProduct(
+            this.childVirtSystem, provisioning.getId(), 3));
+        this.entitlementCurator.refresh(this.entitler.entitleByProduct(this.childVirtSystem,
+            monitoring.getId(), 4));
+        regenerateECAndAssertNotSameCertificates();
+    }
+
+    @Test
+    public void testRegenerateEntitlementCertificatesWithNoEntitlement() {
+        this.entitler.regenerateEntitlementCertificates(childVirtSystem);
+        assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
+        Mockito.verifyZeroInteractions(this.eventSink);
+    }
+
+    /**
+     *
+     */
+    private void regenerateECAndAssertNotSameCertificates() {
+        Set<EntitlementCertificate> oldsIds =
+            collectEntitlementCertIds(this.childVirtSystem);
+        this.entitler.regenerateEntitlementCertificates(childVirtSystem);
+        Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
+            .sendEvent((Event) Mockito.any());
+        Set<EntitlementCertificate> newIds =
+            collectEntitlementCertIds(this.childVirtSystem);
+        assertFalse(containsAny(transform(oldsIds, invokerTransformer("getId")),
+            transform(newIds, invokerTransformer("getId"))));
+        assertFalse(containsAny(
+            transform(oldsIds, invokerTransformer("getKey")),
+            transform(newIds, invokerTransformer("getKey"))));
+        assertFalse(containsAny(
+            transform(oldsIds, invokerTransformer("getCert")),
+            transform(newIds, invokerTransformer("getCert"))));
+    }
+
+    private Set<EntitlementCertificate> collectEntitlementCertIds(
+        Consumer consumer) {
+        Set<EntitlementCertificate> ids = Util.newSet();
+        for (Entitlement entitlement : consumer.getEntitlements()) {
+            for (EntitlementCertificate ec : entitlement.getCertificates()) {
+                ids.add(ec);
+            }
+        }
+        return ids;
+    }
+
     @Override
     protected Module getGuiceOverrideModule() {
         return new AbstractModule() {
@@ -243,6 +309,8 @@ public class EntitlerTest extends DatabaseTestFixture {
             @Override
             protected void configure() {
                 bind(Enforcer.class).to(JavascriptEnforcer.class);
+                eventSink = Mockito.mock(EventSink.class);
+                bind(EventSink.class).toInstance(eventSink);
             }
         };
     }

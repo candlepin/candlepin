@@ -270,7 +270,6 @@ public class DatabaseTestFixture {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
         certSerialCurator.create(certSerial);
-        
         toReturn.setKeyAsBytes(key.getBytes());
         toReturn.setCertAsBytes(cert.getBytes());
         toReturn.setSerial(certSerial);

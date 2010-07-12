@@ -116,4 +116,27 @@ public class EntitlementCertificate extends AbstractCertificate
     public boolean shouldGrantAccessTo(Consumer consumer) {
         return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
+
+    @Override
+    public int hashCode() {
+        return this.id == null ? super.hashCode() : id.intValue();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || (getClass() != obj.getClass())) {
+            return false;
+        }
+        EntitlementCertificate other = (EntitlementCertificate) obj;
+        if (id == other.id) {
+            if (other.getEntitlement().getId() == this.getEntitlement().getId()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

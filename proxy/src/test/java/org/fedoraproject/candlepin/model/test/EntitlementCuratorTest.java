@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 
@@ -79,4 +79,5 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             BigInteger.valueOf(EXPECTED_CERTIFICATE_SERIAL));
         assertEquals(secondEntitlement, e);
     }
+
 }

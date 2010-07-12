@@ -34,6 +34,21 @@ Then /^the filtered certificates are not in the CRL$/ do
   @serials.each { |serial| revoked_serials.should_not include(serial) }
 end
 
+When /^I regenerate all my entitlement certificates$/ do
+  @old_certs = @consumer_cp.get_certificates()
+  @consumer_cp.regenerate_entitlement_certificates()
+end
+
+Then /^I have new entitlement certificates$/ do
+  new_certs = @consumer_cp.get_certificates()
+  @old_certs.size.should == new_certs.size
+  old_ids = @old_certs.map { |cert| cert['serial']['id']}
+  new_ids = new_certs.map { |cert| cert['serial']['id']}
+  puts old_ids.inspect
+  puts new_ids.inspect
+  (old_ids & new_ids).size.should == 0
+end
+
 def revoked_serials
   @candlepin.get_crl.revoked.collect { |entry| entry.serial }
 end

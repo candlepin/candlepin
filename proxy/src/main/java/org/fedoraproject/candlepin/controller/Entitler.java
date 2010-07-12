@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -55,7 +56,7 @@ public class Entitler {
     private EventFactory eventFactory;
     private EventSink sink;
     private PostEntHelper postEntHelper;
-    
+    private EntitlementCertificateCurator entitlementCertificateCurator;
     @Inject
     protected Entitler(PoolCurator epCurator,
         EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
@@ -63,7 +64,7 @@ public class Entitler {
         SubscriptionServiceAdapter subAdapter,
         EventFactory eventFactory,
         EventSink sink,
-        PostEntHelper postEntHelper) {
+        PostEntHelper postEntHelper, EntitlementCertificateCurator ecC) {
         
         this.epCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
@@ -74,6 +75,7 @@ public class Entitler {
         this.eventFactory = eventFactory;
         this.sink = sink;
         this.postEntHelper = postEntHelper;
+        this.entitlementCertificateCurator = ecC;
     }
 
     /**
@@ -161,8 +163,20 @@ public class Entitler {
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
         Pool mergedPool = epCurator.merge(pool);
-        
-        Subscription sub = subAdapter.getSubscription(mergedPool.getSubscriptionId());
+        generateEntitlementCertificate(consumer, mergedPool, e);
+        return e;
+    }
+
+    /**
+     * @param consumer
+     * @param pool
+     * @param e
+     * @param mergedPool
+     * @return
+     */
+    private EntitlementCertificate generateEntitlementCertificate(
+        Consumer consumer, Pool pool, Entitlement e) {
+        Subscription sub = subAdapter.getSubscription(pool.getSubscriptionId());
         
         if (sub == null) {
             log.warn("Cannot generate entitlement certificate, no subscription for pool: " +
@@ -173,7 +187,7 @@ public class Entitler {
             // TODO: Assuming every entitlement = generate a cert, most likely we'll want
             // to know if this product entails granting a cert someday.
             try {
-                EntitlementCertificate cert = entCertAdapter.
+                return entCertAdapter.
                     generateEntitlementCert(consumer, e, sub, sub.getProduct(),
                     sub.getEndDate());
             }
@@ -181,8 +195,39 @@ public class Entitler {
                 throw new RuntimeException(ex);
             }
         }
+        return null;
+    }
 
-        return e;
+    @Transactional
+    public void regenerateEntitlementCertificates(Consumer consumer) {
+        log.info("Regenerating #" + consumer.getEntitlements().size() +
+            " entitlement's certificates for consumer :" + consumer);
+        //TODO - Assumes only 1 entitlement certificate exists per entitlement
+        for (Entitlement e : consumer.getEntitlements()) {
+            if (log.isDebugEnabled()) {
+                log.debug("Revoking entitlementCertificates of : " + e);
+            }
+            this.entCertAdapter.revokeEntitlementCertificates(e);
+            for (EntitlementCertificate ec : e.getCertificates()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Deleting entitlementCertificate: #" + ec.getId());
+                }
+                this.entitlementCertificateCurator.delete(ec);
+            }
+            e.getCertificates().clear();
+            //below call creates new certificates and saves it to the backend.
+            EntitlementCertificate generated =
+                this.generateEntitlementCertificate(consumer, e.getPool(), e);
+            this.entitlementCurator.refresh(e);
+
+            //send entitlement changed event.
+            this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
+            if (log.isDebugEnabled()) {
+                log.debug("Generated entitlementCertificate: #" + generated.getId());
+            }
+        }
+        log.info("Completed Regenerating #" + consumer.getEntitlements().size() +
+            " entitlement's certificates for consumer: " + consumer);
     }
 
     // TODO: Does the enforcer have any rules around removing entitlements?

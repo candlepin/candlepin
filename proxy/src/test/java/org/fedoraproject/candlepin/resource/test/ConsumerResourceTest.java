@@ -28,6 +28,7 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -56,6 +57,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.inject.internal.Lists;
@@ -655,6 +657,31 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
 
         consumerResource.getConsumerAtomFeed(c.getUuid());
+    }
+
+
+    /**
+     * Basic test. If invalid id is given, should throw {@link NotFoundException}
+     */
+    @Test(expected = NotFoundException.class)
+    public void testRegenerateEntitlementCertificatesWithInvalidConsumerId() {
+        this.consumerResource.regenerateEntitlementCertificates("xyz");
+    }
+
+    /**
+     * Test just verifies that entitler is called only once and it doesn't need any
+     * other object to execute.
+     */
+    @Test
+    public void testRegenerateEntitlementCertificateWithValidConsumer() {
+        Entitler entitler = Mockito.mock(Entitler.class);
+        ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
+            null, entitler, null, null, null, null, null, null, null, null,
+            null, null);
+        cr.regenerateEntitlementCertificates(this.consumer.getUuid());
+        Mockito.verify(entitler, Mockito.times(1))
+            .regenerateEntitlementCertificates(Mockito.eq(this.consumer));
+
     }
 
 }

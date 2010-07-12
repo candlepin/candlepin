@@ -74,7 +74,6 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
     private X509Certificate loadCACertificate() {
         InputStream inStream = null;
         try {
-            System.out.println(caCertPath);
             inStream = new FileInputStream(this.caCertPath);
             X509Certificate cert = (X509Certificate) this.certFactory
                 .generateCertificate(inStream);

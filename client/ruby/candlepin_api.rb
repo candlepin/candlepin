@@ -316,6 +316,10 @@ class Candlepin
     return get(path)
   end
 
+  def regenerate_entitlement_certificates
+    return put("/consumers/#{@uuid}/certificates")
+  end
+
   def get_status
     return get("/status/")
   end
