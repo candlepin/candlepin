@@ -64,13 +64,6 @@ public interface CandlepinClientFacade {
     boolean registerExisting(String username, String password, String uuid);
 
     /**
-     * Register an existing consumer based on the uuid.
-     *
-     * @param uuid - the consumer id
-     */
-    void registerExistingCustomerWithId(String uuid);
-
-    /**
      * Remove he consumer from candlepin and all of the entitlements which the
      * conumser have subscribed to.
      *

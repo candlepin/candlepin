@@ -88,12 +88,6 @@ public class RegisterCommand extends BaseCommand {
                     "consumerid are required to register,try --help.\n");
             return;
         }
-        else if (bothUserPassPresent && consumerId != null) {
-            System.err
-                .println("Error: username and password or" +
-                    " consumerid are required, not both. try --help.\n");
-            return;
-        }
         CandlepinClientFacade client = this.getClient();
 
         if (client.isRegistered() && !force) {
@@ -101,9 +95,9 @@ public class RegisterCommand extends BaseCommand {
                 .println("This system is already registered. Use --force to override");
             return;
         }
-        // register based on client id. Go ahead with invocation
+        //register based on client id. Go ahead with invocation
         if (consumerId != null) {
-            this.client.registerExistingCustomerWithId(consumerId);
+            this.client.registerExisting(username, password, consumerId);
             autoSubscribe(autosubscribe);
             return;
         }
