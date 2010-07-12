@@ -179,7 +179,7 @@ public class CrlGenerator {
             this.certificateSerialCurator.retrieveTobeCollectedSerials();
         for (CertificateSerial cs : serials) {
             entries.add(new SimpleCRLEntry(cs.getSerial(),
-                    cs.getExpiration()));
+                   new Date()));
             cs.setCollected(true);
         }
         if (log.isTraceEnabled()) {

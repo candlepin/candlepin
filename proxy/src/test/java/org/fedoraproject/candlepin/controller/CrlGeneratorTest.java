@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.controller;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -140,7 +141,7 @@ public class CrlGeneratorTest {
         for (int i = 0; i < serials.size(); i++) {
             CertificateSerial cs = serials.get(i);
             assertEquals(cs.getSerial(), entries.get(i).serialNumber);
-            assertEquals(cs.getExpiration(), entries.get(i).revocationDate);
+            assertFalse(cs.getExpiration().equals(entries.get(i).revocationDate));
         }
     }
     
