@@ -194,7 +194,7 @@ public class CrlGeneratorTest {
         List<CertificateSerial> serials = getStubCSList();
         when(this.curator.retrieveTobeCollectedSerials())
             .thenReturn(serials);
-        X509CRL x509crl = this.generator.updateCRL((X509CRL) null, generateFakePrincipal());
+        X509CRL x509crl = this.generator.updateCRL((X509CRL) null);
         verify(this.curator).deleteExpiredSerials();
         assertEquals(BigInteger.ONE, this.generator.getCRLNumber(x509crl));
         Set<? extends X509CRLEntry> entries = x509crl.getRevokedCertificates();
@@ -227,7 +227,7 @@ public class CrlGeneratorTest {
                     add(stubCS(1002L, new Date()));
                 }
             });
-        X509CRL newCRL = this.generator.updateCRL(oldCert, generateFakePrincipal());
+        X509CRL newCRL = this.generator.updateCRL(oldCert);
         
         verify(this.curator, times(1)).retrieveTobeCollectedSerials();
         verify(this.curator, times(1)).deleteExpiredSerials();

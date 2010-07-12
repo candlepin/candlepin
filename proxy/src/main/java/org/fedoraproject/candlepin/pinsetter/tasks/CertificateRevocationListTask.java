@@ -93,7 +93,7 @@ public class CertificateRevocationListTask implements Job {
                 x509crl = (X509CRL) CertificateFactory.getInstance("X.509")
                     .generateCRL(in);
             }
-            x509crl = this.crlGenerator.updateCRL(x509crl, principal);
+            x509crl = this.crlGenerator.updateCRL(x509crl);
             PEMWriter writer = new PEMWriter(new OutputStreamWriter(out));
             writer.writeObject(x509crl);
             writer.flush();
