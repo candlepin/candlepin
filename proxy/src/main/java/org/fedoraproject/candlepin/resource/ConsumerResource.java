@@ -637,7 +637,9 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public Feed getConsumerAtomFeed(@PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        return this.eventCurator.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
+        Feed feed =  this.eventCurator.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
             consumer));
+        feed.setTitle("Event feed for consumer " + consumer.getUuid());
+        return feed;
     }
 }
