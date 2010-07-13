@@ -14,14 +14,10 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import static org.apache.commons.collections.CollectionUtils.containsAny;
-import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
-import static org.fedoraproject.candlepin.util.Util.transform;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.apache.commons.collections.CollectionUtils.*;
+import static org.apache.commons.collections.TransformerUtils.*;
+import static org.fedoraproject.candlepin.util.Util.*;
+import static org.junit.Assert.*;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -47,6 +43,7 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -135,6 +132,8 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertNotNull(virtHostPool);
     }
 
+    // support for virtualized systems has been changed
+    @Ignore
     @Test(expected = EntitlementRefusedException.class)
     public void testVirtEntitleFailsIfAlreadyHasGuests() 
         throws EntitlementRefusedException {
@@ -178,6 +177,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         assertEquals(new Long(1), provisioningPool.getConsumed());
     }
     
+    @Ignore // Support for virtualized systems has been changed
     @Test
     public void testVirtSystemPhysicalEntitlement() throws Exception {
         // Give parent virt host ent:

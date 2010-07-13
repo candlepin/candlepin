@@ -20,6 +20,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.js.ConsumerDeleteHelper;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
@@ -48,5 +49,11 @@ public class EnforcerForTesting implements Enforcer {
             return null;
         }
         return pools.get(0);
+    }
+
+    @Override
+    public ConsumerDeleteHelper onConsumerDelete(
+        ConsumerDeleteHelper consumerDeleteHelper, Consumer consumer) {
+        return null;
     }
 }
