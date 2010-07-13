@@ -6,7 +6,7 @@ function entitlement_name_space() {
 	return Entitlement;
 }
 
-function revocation_name_space() {
+function consumer_delete_name_space() {
 	return ConsumerDelete;
 }
 

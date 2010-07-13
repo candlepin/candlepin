@@ -55,7 +55,8 @@ public interface Enforcer {
      */
     PostEntHelper postEntitlement(Consumer c, PostEntHelper postEntHelper, Entitlement ent);
     
-    ConsumerDeleteHelper onConsumerDelete(Consumer consumer);
+    ConsumerDeleteHelper onConsumerDelete(
+        ConsumerDeleteHelper consumerDeleteHelper, Consumer consumer);
 
     /**
      * Select the best entitlement pool available for the given product ID.

@@ -179,7 +179,7 @@ class Candlepin
   end
 
   def unregister(uuid = nil)
-    uuid = @uuid unless uuid
+    uuid = @uuid unless uuid    
     delete("/consumers/#{uuid}")
   end
 
@@ -389,7 +389,6 @@ class Candlepin
   def post(uri, data=nil)
     data = data.to_json if not data.nil?
     response = @client[URI.escape(uri)].post(data, :content_type => :json, :accept => :json)
-
     return JSON.parse(response.body)
   end
   

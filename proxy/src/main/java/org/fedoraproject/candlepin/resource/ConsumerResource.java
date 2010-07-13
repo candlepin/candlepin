@@ -67,6 +67,7 @@ import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.policy.js.ConsumerDeleteHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -102,6 +103,7 @@ public class ConsumerResource {
     private EventFactory eventFactory;
     private EventCurator eventCurator;
     private Enforcer enforcer;
+    private ConsumerDeleteHelper consumerDeleteHelper;
     private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
     
@@ -118,7 +120,8 @@ public class ConsumerResource {
         EventFactory eventFactory,
         EventCurator eventCurator,
         UserServiceAdapter userService,
-        Exporter exporter) {
+        Exporter exporter,
+        ConsumerDeleteHelper consumerDeleteHelper) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -136,6 +139,7 @@ public class ConsumerResource {
         this.eventCurator = eventCurator;
         this.userService = userService;
         this.exporter = exporter;
+        this.consumerDeleteHelper = consumerDeleteHelper;
     }
 
     /**
@@ -296,7 +300,7 @@ public class ConsumerResource {
         unbindAll(uuid);
 
         Event event = eventFactory.consumerDeleted(toDelete);
-        enforcer.onConsumerDelete(toDelete);
+        enforcer.onConsumerDelete(consumerDeleteHelper, toDelete);
         
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);

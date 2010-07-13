@@ -37,4 +37,4 @@ Feature: Products with "user-license" attribute creates a sub-pool
       And I create a consumer of type person
       And I create a pool of unlimited license and consumer type person
       When I delete the consumer
-      Then pool of unlimited license should be deleted too      	
+      Then pool of unlimited license should be deleted too

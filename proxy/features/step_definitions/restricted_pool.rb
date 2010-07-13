@@ -120,9 +120,9 @@ Then /^the consumer's username should be "([^\"]*)"$/ do |arg1|
 end
 
 When /^I delete the consumer$/ do
-  @candlepin.unregister
+  @candlepin.unregister(@consumer['uuid'])
 end
 
 Then /^pool of unlimited license should be deleted too$/ do
-  @candlepin.get_pools.any? {|pool| pool['attributes']['requires_consumer_type'] != nil}.should == false
+  @candlepin.get_pools.any? {|pool| pool['restrictedToUsername'] != nil}.should == false
 end

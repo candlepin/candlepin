@@ -60,7 +60,6 @@ public class JavascriptEnforcer implements Enforcer {
     
     private Object entitlementNameSpace;
     private Object consumerDeleteNameSpace;
-    private ConsumerDeleteHelper consumerDeleteHelper;
 
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
@@ -74,14 +73,12 @@ public class JavascriptEnforcer implements Enforcer {
     public JavascriptEnforcer(DateSource dateSource,
         @Named("RulesReader") Reader rulesReader,
         ProductServiceAdapter prodAdapter,
-        ScriptEngine jsEngine, I18n i18n,
-        ConsumerDeleteHelper consumerDeleteHelper) {
+        ScriptEngine jsEngine, I18n i18n) {
         this.dateSource = dateSource;
 
         this.prodAdapter = prodAdapter;
         this.jsEngine = jsEngine;
         this.i18n = i18n;
-        this.consumerDeleteHelper = consumerDeleteHelper;
 
         if (jsEngine == null) {
             throw new RuntimeException("No Javascript engine");
@@ -124,7 +121,8 @@ public class JavascriptEnforcer implements Enforcer {
     }
     
     @Override
-    public ConsumerDeleteHelper onConsumerDelete(Consumer consumer) {
+    public ConsumerDeleteHelper onConsumerDelete(
+            ConsumerDeleteHelper consumerDeleteHelper, Consumer consumer) {
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("helper", consumerDeleteHelper);
 
