@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Generate a diff file of the candlepin schema between two points in history.
+# 
+# Useage:
+# schemadiff PERIOD
+#
+# ie schemadiff "one day ago"
+
+function gen_schema() {
+    local out_file=$1
+    buildr -s clean compile candlepin:genschema > $out_file 2> /dev/null
+}
+
+function diff_schemas() {
+    local schema1=$1
+    local schema2=$2
+    diff -u $schema1 $schema2
+   
+    return $?
+}
+
+since=$1
+
+echo "Schemadiff run for $(date)"
+echo
+
+git checkout master &> /dev/null
+git pull &> /dev/null
+
+echo "master - $(git log --pretty=format:%h -n1)"
+
+gen_schema schema1.txt
+git checkout "@{$since}" &> /dev/null
+
+echo "$since - $(git log --pretty=format:%h -n1)"
+echo
+
+gen_schema schema2.txt
+git checkout master &> /dev/null
+
+diff_schemas schema1.txt schema2.txt
+
+if [ "$?" -eq "0" ]; then
+    echo "No changes detected"
+fi
+
+rm schema1.txt
+rm schema2.txt
