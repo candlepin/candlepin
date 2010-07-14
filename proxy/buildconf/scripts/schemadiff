@@ -25,25 +25,28 @@ since=$1
 echo "Schemadiff run for $(date)"
 echo
 
-git checkout master &> /dev/null
+git checkout -f master &> /dev/null
 git pull &> /dev/null
 
 echo "master - $(git log --pretty=format:%h -n1)"
 
 gen_schema schema1.txt
-git checkout "@{$since}" &> /dev/null
+git checkout -f "@{$since}" &> /dev/null
 
 echo "$since - $(git log --pretty=format:%h -n1)"
 echo
 
 gen_schema schema2.txt
-git checkout master &> /dev/null
+git checkout -f master &> /dev/null
 
 diff_schemas schema1.txt schema2.txt
 
-if [ "$?" -eq "0" ]; then
+retcode=$?
+if [ "$retcode" -eq "0" ]; then
     echo "No changes detected"
 fi
 
 rm schema1.txt
 rm schema2.txt
+
+exit $retcode
