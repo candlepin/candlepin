@@ -36,8 +36,8 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
-import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
+import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -64,7 +64,7 @@ public class DefaultRulesTest {
         URL url = this.getClass().getClassLoader().getResource("rules/default-rules.js");
         InputStreamReader inputStreamReader = new InputStreamReader(url.openStream());
 
-        enforcer = new JavascriptEnforcer(new DateSourceImpl(), inputStreamReader,
+        enforcer = new EntitlementRules(new DateSourceImpl(), inputStreamReader,
             prodAdapter, new ScriptEngineManager().getEngineByName("JavaScript"), 
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
 

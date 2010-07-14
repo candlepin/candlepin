@@ -38,7 +38,7 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
-import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
+import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
@@ -309,7 +309,7 @@ public class EntitlerTest extends DatabaseTestFixture {
             
             @Override
             protected void configure() {
-                bind(Enforcer.class).to(JavascriptEnforcer.class);
+                bind(Enforcer.class).to(EntitlementRules.class);
                 eventSink = Mockito.mock(EventSink.class);
                 bind(EventSink.class).toInstance(eventSink);
             }

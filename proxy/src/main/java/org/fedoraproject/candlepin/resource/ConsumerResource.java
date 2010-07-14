@@ -65,9 +65,9 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
-import org.fedoraproject.candlepin.policy.js.ConsumerDeleteHelper;
+import org.fedoraproject.candlepin.policy.js.consumer.ConsumerDeleteHelper;
+import org.fedoraproject.candlepin.policy.js.consumer.ConsumerRules;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -102,15 +102,16 @@ public class ConsumerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private EventCurator eventCurator;
-    private Enforcer enforcer;
     private ConsumerDeleteHelper consumerDeleteHelper;
+    private ConsumerRules consumerRules;
     private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
     
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductServiceAdapter productAdapter, Entitler entitler, Enforcer enforcer,
+        ProductServiceAdapter productAdapter, Entitler entitler, 
+        ConsumerRules consumerRules,
         SubscriptionServiceAdapter subAdapter, PoolCurator epCurator,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
@@ -128,7 +129,7 @@ public class ConsumerResource {
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
         this.entitler = entitler;
-        this.enforcer = enforcer;
+        this.consumerRules = consumerRules;
         this.poolCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
@@ -300,7 +301,7 @@ public class ConsumerResource {
         unbindAll(uuid);
 
         Event event = eventFactory.consumerDeleted(toDelete);
-        enforcer.onConsumerDelete(consumerDeleteHelper, toDelete);
+        consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
         
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);

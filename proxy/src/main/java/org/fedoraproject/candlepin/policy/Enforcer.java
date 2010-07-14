@@ -19,10 +19,9 @@ import java.util.List;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.policy.js.ConsumerDeleteHelper;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
-import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 /**
  * Enforces the entitlement rules definitions.
@@ -55,9 +54,6 @@ public interface Enforcer {
      */
     PostEntHelper postEntitlement(Consumer c, PostEntHelper postEntHelper, Entitlement ent);
     
-    ConsumerDeleteHelper onConsumerDelete(
-        ConsumerDeleteHelper consumerDeleteHelper, Consumer consumer);
-
     /**
      * Select the best entitlement pool available for the given product ID.
      *

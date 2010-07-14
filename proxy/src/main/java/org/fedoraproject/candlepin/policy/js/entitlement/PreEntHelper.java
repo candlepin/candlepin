@@ -12,9 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.policy.js;
+package org.fedoraproject.candlepin.policy.js.entitlement;
 
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
 
 /**
  * Helper class for the pre-entitlement functions in our Javascript rules.

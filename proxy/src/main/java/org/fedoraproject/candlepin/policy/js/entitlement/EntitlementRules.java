@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.policy.js;
+package org.fedoraproject.candlepin.policy.js.entitlement;
 
 import java.io.Reader;
 import java.util.Collections;
@@ -37,6 +37,12 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationWarning;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyEntitlement;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
+import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.RuleParseException;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
@@ -47,9 +53,9 @@ import com.google.inject.name.Named;
 /**
  * Enforces the Javascript Rules definition.
  */
-public class JavascriptEnforcer implements Enforcer {
+public class EntitlementRules implements Enforcer {
 
-    private static Logger log = Logger.getLogger(JavascriptEnforcer.class);
+    private static Logger log = Logger.getLogger(EntitlementRules.class);
     private DateSource dateSource;
 
     private ProductServiceAdapter prodAdapter;
@@ -59,7 +65,6 @@ public class JavascriptEnforcer implements Enforcer {
     private final Map<String, Set<Rule>> attributesToRules;
     
     private Object entitlementNameSpace;
-    private Object consumerDeleteNameSpace;
 
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
@@ -70,7 +75,7 @@ public class JavascriptEnforcer implements Enforcer {
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
 
     @Inject
-    public JavascriptEnforcer(DateSource dateSource,
+    public EntitlementRules(DateSource dateSource,
         @Named("RulesReader") Reader rulesReader,
         ProductServiceAdapter prodAdapter,
         ScriptEngine jsEngine, I18n i18n) {
@@ -89,8 +94,6 @@ public class JavascriptEnforcer implements Enforcer {
             
             entitlementNameSpace = 
                 ((Invocable) this.jsEngine).invokeFunction("entitlement_name_space");
-            consumerDeleteNameSpace = 
-                ((Invocable) this.jsEngine).invokeFunction("consumer_delete_name_space");
             
             attributesToRules = parseAttributeMappings(
                 (String) ((Invocable) this.jsEngine).invokeMethod(
@@ -120,32 +123,6 @@ public class JavascriptEnforcer implements Enforcer {
         return preHelper;
     }
     
-    @Override
-    public ConsumerDeleteHelper onConsumerDelete(
-            ConsumerDeleteHelper consumerDeleteHelper, Consumer consumer) {
-        jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("helper", consumerDeleteHelper);
-
-        invokeRule(consumerDeleteNameSpace, "consumer delete", "global");
-        
-        return consumerDeleteHelper;
-    }
-    
-    private void invokeRule(Object namespace, String namespaceName, String ruleName) {
-        Invocable inv = (Invocable) jsEngine;
-        try {
-            inv.invokeMethod(namespace, ruleName);
-            log.debug("Ran rule: " + ruleName + "in namespace: " + namespaceName);
-        }
-        catch (NoSuchMethodException ex) {
-            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION + 
-                "in namespace: " + namespaceName);
-        }
-        catch (ScriptException ex) {
-            throw new RuleExecutionException(ex);
-        }
-    }
-
     /**
      * Both products and pools can carry attributes, we need to trigger rules for each.
      * In this map, pool attributes will override product attributes, should the same

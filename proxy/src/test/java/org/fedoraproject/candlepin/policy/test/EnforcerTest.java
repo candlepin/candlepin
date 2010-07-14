@@ -38,8 +38,8 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
-import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
@@ -77,7 +77,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             = new BufferedReader(new InputStreamReader(
                 getClass().getResourceAsStream("/rules/test-rules.js")));
         
-        enforcer = new JavascriptEnforcer(new DateSourceForTesting(2010, 1, 1),
+        enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
             reader, productAdapter,
             new ScriptEngineManager().getEngineByName("JavaScript"), i18n);
     }
@@ -85,28 +85,28 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Test
     public void shouldParseValidMapping() {
         assertEquals(
-            new JavascriptEnforcer.Rule(
+            new EntitlementRules.Rule(
                 "func1", 1, 
                 new HashSet<String>() { { add("attr1"); add("attr2"); add("attr3"); } }
             ),
-            ((JavascriptEnforcer) enforcer).parseRule("func1:1:attr1:attr2:attr3"));
+            ((EntitlementRules) enforcer).parseRule("func1:1:attr1:attr2:attr3"));
         
         assertEquals(
-            new JavascriptEnforcer.Rule(
+            new EntitlementRules.Rule(
                 "func3", 3, 
                 new HashSet<String>() { { add("attr4"); } }
             ),
-            ((JavascriptEnforcer) enforcer).parseRule("func3:3:attr4"));
+            ((EntitlementRules) enforcer).parseRule("func3:3:attr4"));
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailParsingIfNoOderIsPresent() {
-        ((JavascriptEnforcer) enforcer).parseRule("func3:attr4");
+        ((EntitlementRules) enforcer).parseRule("func3:attr4");
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailParsingIfNotAllParametersArePresent() {
-        ((JavascriptEnforcer) enforcer).parseRule("func3:3");
+        ((EntitlementRules) enforcer).parseRule("func3:3");
     }
     
     @Test
@@ -114,8 +114,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         String attributesAndRules = 
             "func1:1:attr1:attr2:attr3, func2:2:attr1, func3:3:attr4, func5:5:attr1:attr4";
         
-        Map<String, Set<JavascriptEnforcer.Rule>> parsed =
-            ((JavascriptEnforcer) enforcer).parseAttributeMappings(attributesAndRules);
+        Map<String, Set<EntitlementRules.Rule>> parsed =
+            ((EntitlementRules) enforcer).parseAttributeMappings(attributesAndRules);
         
         assertTrue(parsed.get("attr1").contains(
             rule("func1", 1, "attr1", "attr2", "attr3")));
@@ -127,8 +127,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     @Test
     public void shouldSelectAllRulesMappedToSingleAttribute() {
-        Map<String, Set<JavascriptEnforcer.Rule>> rules =
-            new HashMap<String, Set<JavascriptEnforcer.Rule>>() {
+        Map<String, Set<EntitlementRules.Rule>> rules =
+            new HashMap<String, Set<EntitlementRules.Rule>>() {
                 {
                     put("attr1", rules(rule("func5", 5, "attr1"), rule("func1", 2,
                         "attr1")));
@@ -136,12 +136,12 @@ public class EnforcerTest extends DatabaseTestFixture {
                 }
             };
         
-        List<JavascriptEnforcer.Rule> orderedAndFilteredRules = 
-            ((JavascriptEnforcer) enforcer).rulesForAttributes(
+        List<EntitlementRules.Rule> orderedAndFilteredRules = 
+            ((EntitlementRules) enforcer).rulesForAttributes(
                 new HashSet<String>() { { add("attr1"); } }, rules);
         
         assertEquals(
-            new LinkedList<JavascriptEnforcer.Rule>() { 
+            new LinkedList<EntitlementRules.Rule>() { 
                 {
                     add(rule("func5", 5, "attr1"));
                     add(rule("func1", 2, "attr1"));
@@ -154,8 +154,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     
     @Test
     public void shouldSelectAllRulesMappedToMultipleAttributes() {
-        Map<String, Set<JavascriptEnforcer.Rule>> rules 
-            = new HashMap<String, Set<JavascriptEnforcer.Rule>>() {
+        Map<String, Set<EntitlementRules.Rule>> rules 
+            = new HashMap<String, Set<EntitlementRules.Rule>>() {
                 {
                     put("attr1",
                         rules(
@@ -167,8 +167,8 @@ public class EnforcerTest extends DatabaseTestFixture {
                 } 
             };
         
-        List<JavascriptEnforcer.Rule> orderedAndFilteredRules = 
-            ((JavascriptEnforcer) enforcer).rulesForAttributes(
+        List<EntitlementRules.Rule> orderedAndFilteredRules = 
+            ((EntitlementRules) enforcer).rulesForAttributes(
                 new HashSet<String>() { 
                     { 
                         add("attr1"); add("attr2"); add("attr3"); 
@@ -176,7 +176,7 @@ public class EnforcerTest extends DatabaseTestFixture {
                 }, rules);
         
         assertEquals(
-            new LinkedList<JavascriptEnforcer.Rule>() { 
+            new LinkedList<EntitlementRules.Rule>() { 
                 {
                     add(rule("func5", 5, "attr1", "attr2", "attr3"));
                     add(rule("func3", 3, "attr3"));
@@ -392,16 +392,16 @@ public class EnforcerTest extends DatabaseTestFixture {
         assertEquals(pool1.getId(), result.getId());
     }
     
-    private JavascriptEnforcer.Rule rule(String name, int priority, String... attrs) {
+    private EntitlementRules.Rule rule(String name, int priority, String... attrs) {
         Set<String> attributes = new HashSet<String>();
         for (String attr : attrs) {
             attributes.add(attr);
         }
-        return new JavascriptEnforcer.Rule(name, priority, attributes);
+        return new EntitlementRules.Rule(name, priority, attributes);
     }
     
-    private Set<JavascriptEnforcer.Rule> rules(JavascriptEnforcer.Rule... rules) {
-        return new HashSet<JavascriptEnforcer.Rule>(Arrays.asList(rules));
+    private Set<EntitlementRules.Rule> rules(EntitlementRules.Rule... rules) {
+        return new HashSet<EntitlementRules.Rule>(Arrays.asList(rules));
     }
     
     private Date expiryDate(int year, int month, int day) {

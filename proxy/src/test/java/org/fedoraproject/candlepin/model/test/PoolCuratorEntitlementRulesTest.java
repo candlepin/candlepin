@@ -27,7 +27,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
-import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
+import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -127,7 +127,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
             
             @Override
             protected void configure() {
-                bind(Enforcer.class).to(JavascriptEnforcer.class);
+                bind(Enforcer.class).to(EntitlementRules.class);
             }
         };
     }
