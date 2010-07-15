@@ -30,9 +30,6 @@ public class AbstractCertificate extends TimeStampedEntity {
     /** The x509 certificate. */
     private X509Certificate x509Certificate;
     
-    /** The serial. */
-    private BigInteger serial;
-    
     /**
      * Instantiates a new abstract certificate.
      * 
@@ -94,19 +91,7 @@ public class AbstractCertificate extends TimeStampedEntity {
      */
     @JsonIgnore
     public BigInteger getSerial() {
-        if (this.serial != null) {
-            return serial;
-        }
         return this.getX509Certificate().getSerialNumber();
-    }
-
-    /**
-     * Sets the serial.
-     * 
-     * @param bg the new serial
-     */
-    public void setSerial(BigInteger bg) {
-        this.serial = bg;
     }
 
     /**

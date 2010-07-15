@@ -14,13 +14,9 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
-import java.math.BigInteger;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * IdentityCertificate
@@ -30,8 +26,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 public class IdentityCertificate extends TimeStampedEntity{
     protected String key;
     protected String cert;
-    private BigInteger serial;
-
+    
     public String getKey() {
         return key;
     }
@@ -46,20 +41,5 @@ public class IdentityCertificate extends TimeStampedEntity{
 
     public void setCert(String cert) {
         this.cert = cert;
-    }
-
-    public BigInteger getSerial() {
-        return serial;
-    }
-
-    public void setSerial(BigInteger serial) {
-        this.serial = serial;
-    }
-
-    @JsonIgnore
-    public void setKeyAsBytes(byte[] key) {
-    }
-
-    @JsonIgnore void setCertAsBytes(byte [] key) {
     }
 }
