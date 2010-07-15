@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.model;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -30,11 +29,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_content")
-@SequenceGenerator(name = "seq_content", sequenceName = "seq_content", allocationSize = 1)
-public class Content extends AbstractHibernateObject{
+public class Content extends AbstractHibernateObject {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_content")
     private Long id;
     
     @Column(nullable = false)
@@ -54,18 +51,9 @@ public class Content extends AbstractHibernateObject{
     @Column(nullable = true)
     private String contentUrl;
     
-    
     // attribute?
     @Column(nullable = true)
     private String gpgUrl;
-    
-    
-
- //   @ManyToOne
-//    @ForeignKey(name = "fk_product_content")
- //   @JoinColumn
- //   private Content Content;
-    
     
     public Content(String name, Long id, String label, String type,
                     String vendor, String contentUrl,
@@ -87,7 +75,6 @@ public class Content extends AbstractHibernateObject{
      */
     @Override
     public Long getId() {
-        // TODO Auto-generated method stub
         return id;
     }
     

@@ -34,30 +34,6 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     }
 
     /**
-     * Returns a list of subscriptions filtered by owner and product.
-     * @param o Owner of the subscription.
-     * @param productId Product Id to filter the subscription for.
-     * @return a list of subscriptions filtered by owner and product.
-     */
-    @SuppressWarnings("unchecked")
-    public List<Subscription> listByOwnerAndProduct(Owner o, String productId) {
-        Criteria subscriptionCriteria = currentSession().createCriteria(Subscription.class);
-            
-        if (o != null) {
-            subscriptionCriteria.add(Restrictions.eq("owner", o));
-        }
-        if (productId != null) {
-            subscriptionCriteria.add(Restrictions.eq("productId", productId));
-        }
-        
-        List<Subscription> subs = subscriptionCriteria.list();
-        if (subs == null) {
-            return new LinkedList<Subscription>();
-        }
-        return subs;
-    }
-
-    /**
      * Return Subscription for the given subscription id.
      * @param subId subscription id
      * @return subscription whose id matches the given value.
@@ -85,13 +61,36 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     }
     
     /**
+     * Return a list of subscriptions for the given product.
+     *
+     * NOTE: This method does not include results for "provided" products,
+     * only the primary.
+     *
+     * @param product product to search for.
+     * @return a list of subscriptions
+     */
+    @SuppressWarnings("unchecked")
+    public List<Subscription> listByProduct(Product product) {
+
+        Criteria subscriptionCriteria = currentSession().createCriteria(Subscription.class);
+
+        subscriptionCriteria.add(Restrictions.eq("product", product));
+
+        List<Subscription> subs = subscriptionCriteria.list();
+        if (subs == null) {
+            return new LinkedList<Subscription>();
+        }
+        return subs;
+    }
+
+    /**
      * Return a list of subscriptions filtered by owner, product, since date.
      * @param o Owner of the subscription.
      * @param sinceDate date since modified.
      * @return a list of subscriptions filtered by owner, product, since date.
      */
     @SuppressWarnings("unchecked")
-    public List<Subscription> listByOwnerAndProductSince(Owner o, Date sinceDate) {
+    public List<Subscription> listByOwnerSince(Owner o, Date sinceDate) {
         List<Subscription> subs = currentSession().createCriteria(
                 Subscription.class)
             .add(Restrictions.eq("owner", o))

@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.pki;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -27,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -51,6 +53,11 @@ import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
  * PKIUtility
  */
 public class PKIUtility {
+    
+    public static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
+    public static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
+    public static final String BEGIN_KEY = "-----BEGIN RSA PRIVATE KEY-----";
+    public static final String END_KEY = "-----END RSA PRIVATE KEY-----";
     
     // TODO : configurable?
     private static final int RSA_KEY_SIZE = 2048;
@@ -166,4 +173,16 @@ public class PKIUtility {
         writer.close();
         return byteArrayOutputStream.toByteArray();
     }
+    
+    public static X509Certificate createCert(byte[] certData) {
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X509");
+            X509Certificate cert = (X509Certificate) cf
+            .generateCertificate(new ByteArrayInputStream(certData));
+            return cert;
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }    
 }

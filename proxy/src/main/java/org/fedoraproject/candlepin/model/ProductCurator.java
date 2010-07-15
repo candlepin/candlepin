@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.hibernate.criterion.Restrictions;
 
 import com.wideplay.warp.persist.Transactional;
@@ -56,47 +53,19 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
     
     /**
-     * @param updated Product to update
-     * @return the updated Product
+     * Create the given product if it does not already exist, otherwise update
+     * existing product.
+     *
+     * @param p Product to create or update.
      */
-    @Transactional
-    public Product update(Product updated) {
-        Product existingProduct = find(updated.getId());
-        if (existingProduct == null) {
-            existingProduct = create(updated);    
+    public void createOrUpdate(Product p) {
+        Product existing = lookupById(p.getId());
+        if (existing == null) {
+            create(p);
+            return;
         }
-        
-        if (updated.getContent() != null) {
-            existingProduct.setContent(bulkContentUpdate(updated.getContent()));
-//            existingProduct.setContent(updated.getContent());
-        }
-        existingProduct.setId(updated.getId());
-        existingProduct.setName(updated.getName());
-        save(existingProduct);
-        flush();
-        
-        return existingProduct;
-    }
-    
-    
-    public Set<Content> bulkContentUpdate(Set<Content> content) {
-        Set<Content> toReturn = new HashSet<Content>();
-        for (Content toUpdate : content) {
-            toReturn.add(toUpdate);
-        }
-        return toReturn;
-    }
-    /**
-     * @param products set of products to update.
-     * @return updated products.
-     */
-    @Transactional
-    public Set<Product> bulkUpdate(Set<Product> products) {
-        Set<Product> toReturn = new HashSet<Product>();
-        for (Product toUpdate : products) {
-            toReturn.add(update(toUpdate));
-        }
-        return toReturn;
+
+        merge(p);
     }
 
 }

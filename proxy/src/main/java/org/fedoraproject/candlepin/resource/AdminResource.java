@@ -97,5 +97,4 @@ public class AdminResource {
 
         return "Initialized!";
     }
-    
 }

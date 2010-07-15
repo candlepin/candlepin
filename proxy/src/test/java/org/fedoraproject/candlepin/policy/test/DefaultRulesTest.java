@@ -26,7 +26,6 @@ import java.util.Locale;
 
 import javax.script.ScriptEngineManager;
 
-import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -34,6 +33,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
@@ -78,7 +78,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A product for testing");
         Pool pool = TestUtil.createEntitlementPool(owner, product);
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -92,10 +92,10 @@ public class DefaultRulesTest {
     @Test
     public void testBindFromSameProductAllowedWithMultiEntitlementAttribute() {
         Product product = new Product(productId, "A product for testing");
-        product.addAttribute(new Attribute("multi-entitlement", "yes"));
+        product.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
         Pool pool = TestUtil.createEntitlementPool(owner, product);
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -112,7 +112,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A product for testing");
         Pool pool = TestUtil.createEntitlementPool(owner, product, 0);
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Integer("1"));
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
         
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -188,7 +188,7 @@ public class DefaultRulesTest {
             final String factName, final String factValue) {
 
         Product product = new Product(productId, "A product for testing");
-        product.addAttribute(new Attribute(attributeName, attributeValue));
+        product.addAttribute(new ProductAttribute(attributeName, attributeValue));
         Pool pool = TestUtil.createEntitlementPool(owner, product);
         
         consumer.setFacts(new HashMap<String, String>() {
@@ -249,7 +249,7 @@ public class DefaultRulesTest {
     public void userLicensePostCreatesSubPool() {
         Pool pool = setupUserLicensedPool();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
-        Entitlement e = new Entitlement(pool, consumer, new Date(), 1);
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
 
         PostEntHelper postHelper = mock(PostEntHelper.class);
         enforcer.post(postHelper, e);
@@ -264,7 +264,7 @@ public class DefaultRulesTest {
         pool.setAttribute("user_license_product", subProductId);
 
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
-        Entitlement e = new Entitlement(pool, consumer, new Date(), 1);
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
 
         PostEntHelper postHelper = mock(PostEntHelper.class);
         enforcer.post(postHelper, e);

@@ -23,9 +23,12 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -64,13 +67,18 @@ public class Product extends AbstractHibernateObject {
     //       product we are... 
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "cp_product_attribute")
-    private Set<Attribute> attributes = new HashSet<Attribute>();
+    @Cascade({org.hibernate.annotations.CascadeType.ALL, 
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
     
     @CollectionOfElements
     @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
     private Set<ProductContent> productContent = new HashSet<ProductContent>();
-   
+
+    @ManyToMany(mappedBy = "providedProducts")
+    private Set<Subscription> subscriptions = new HashSet<Subscription>();
+    
     /**
      * Constructor
      * 
@@ -160,16 +168,16 @@ public class Product extends AbstractHibernateObject {
     }
 
     public void setAttribute(String key, String value) {
-        Attribute existing = getAttribute(key);
+        ProductAttribute existing = getAttribute(key);
         if (existing != null) {
             existing.setValue(value);
         }
         else {
-            addAttribute(new Attribute(key, value));
+            addAttribute(new ProductAttribute(key, value));
         }
     }
 
-    public Set<Attribute> getAttributes() {
+    public Set<ProductAttribute> getAttributes() {
         return attributes;
     }
     
@@ -177,22 +185,23 @@ public class Product extends AbstractHibernateObject {
     public Set<String> getAttributeNames() {
         Set<String> toReturn = new HashSet<String>();
         
-        for (Attribute attribute : attributes) {
+        for (ProductAttribute attribute : attributes) {
             toReturn.add(attribute.getName());
         }
         return toReturn;
     }
 
-    public void setAttributes(Set<Attribute> attributes) {
+    public void setAttributes(Set<ProductAttribute> attributes) {
         this.attributes = attributes;
     }
 
-    public void addAttribute(Attribute attrib) {
+    public void addAttribute(ProductAttribute attrib) {
+        attrib.setProduct(this);
         this.attributes.add(attrib);
     }
     
-    public Attribute getAttribute(String key) {
-        for (Attribute a : attributes) {
+    public ProductAttribute getAttribute(String key) {
+        for (ProductAttribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a;
             }
@@ -200,9 +209,8 @@ public class Product extends AbstractHibernateObject {
         return null;
     }
     
-
     public String getAttributeValue(String key) {
-        for (Attribute a : attributes) {
+        for (ProductAttribute a : attributes) {
             if (a.getName().equals(key)) {
                 return a.getValue();
             }
@@ -257,7 +265,6 @@ public class Product extends AbstractHibernateObject {
     /**
      * @return the productContent
      */
-    @XmlTransient
     public Set<ProductContent> getProductContent() {
         return productContent;
     }
@@ -280,28 +287,14 @@ public class Product extends AbstractHibernateObject {
             productContent.add(new ProductContent(this, newContent, true));
         }
     }
-    
-    // FIXME: this seems wrong
-    public Set<Content> getContent() {
-        Set<Content> content = new HashSet<Content>();
-        for (ProductContent pc : productContent) {
-            content.add(pc.getContent());
-        }
-        return content;
-        
+
+    @XmlTransient
+    public Set<Subscription> getSubscriptions() {
+        return subscriptions;
     }
 
-    public Set<Content> getEnabledContent() {
-        Set<Content> enabledContent = new HashSet<Content>();
-        
-        for (ProductContent pc : productContent) {
-            if (pc.getEnabled()) {
-                enabledContent.add(pc.getContent());
-            }
-        }
-        return enabledContent;
-        
+    public void setSubscriptions(Set<Subscription> subscriptions) {
+        this.subscriptions = subscriptions;
     }
- 
-       
+    
 }

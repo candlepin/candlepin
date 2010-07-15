@@ -21,20 +21,22 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 
-public class ProductTest extends DatabaseTestFixture {
+public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     @SuppressWarnings("unchecked")
@@ -84,15 +86,6 @@ public class ProductTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUpdate() {
-        Product product = new Product("test-product", "Test Product");
-        Product updatedProduct = productCurator.update(product);
-     
-        assertEquals(product.getId(), updatedProduct.getId());
-        assertEquals(product.getName(), updatedProduct.getName());
-    }
-    
-    @Test
     public void testEquality() {
         assertEquals(new Product("label", "name"), new Product("label", "name"));
         assertFalse(new Product("label", "name").equals(null));
@@ -101,7 +94,7 @@ public class ProductTest extends DatabaseTestFixture {
         assertFalse(new Product("label", "name").equals(new Product(
                 "another_label", "name")));
     }
-    
+
     @Test
     public void testWithSimpleJsonAttribute() throws Exception {
         Map<String, String> data = new HashMap<String, String>();
@@ -109,16 +102,16 @@ public class ProductTest extends DatabaseTestFixture {
         data.put("b", "2");
         ObjectMapper mapper = new ObjectMapper();
         String jsonData = mapper.writeValueAsString(data);
-        
+
         Product prod = new Product("cptest-label", "My Product");
-        Attribute a = new Attribute("content_sets", jsonData);
+        ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
-        attributeCurator.create(a);
         productCurator.create(prod);
-        
+        attributeCurator.create(a);
+
         Product lookedUp = productCurator.find(prod.getId());
         assertEquals(jsonData, lookedUp.getAttribute("content_sets").getValue());
-        
+
         data = mapper.readValue(lookedUp.getAttribute("content_sets").getValue(),
             new TypeReference<Map<String, String>>(){});
         assertEquals("1", data.get("a"));
@@ -131,75 +124,33 @@ public class ProductTest extends DatabaseTestFixture {
         Map<String, String> contentSet1 = new HashMap<String, String>();
         contentSet1.put("name", "cs1");
         contentSet1.put("url", "url");
-        
+
         Map<String, String> contentSet2 = new HashMap<String, String>();
         contentSet2.put("name", "cs2");
         contentSet2.put("url", "url2");
-        
+
         data.add(contentSet1);
         data.add(contentSet2);
 
         ObjectMapper mapper = new ObjectMapper();
         String jsonData = mapper.writeValueAsString(data);
-        System.out.println(jsonData);
-        
+
         Product prod = new Product("cptest-label", "My Product");
-        Attribute a = new Attribute("content_sets", jsonData);
+        ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
-        attributeCurator.create(a);
         productCurator.create(prod);
-        
+        attributeCurator.create(a);
+
         Product lookedUp = productCurator.find(prod.getId());
         assertEquals(jsonData, lookedUp.getAttribute("content_sets").getValue());
-        
+
         data = mapper.readValue(lookedUp.getAttribute("content_sets").getValue(),
             new TypeReference<List<Map<String, String>>>(){});
         Map<String, String> cs1 = data.get(0);
         assertEquals("cs1", cs1.get("name"));
-        
+
         Map<String, String> cs2 = data.get(1);
         assertEquals("cs2", cs2.get("name"));
-    }
-
-    @Test
-    public void testProductWithContentSets() {
-        // NOTE: Not using value on the Attributes which have children, but you
-        // easily could, perhaps a string list of the children labels or
-        // what not.
-        Attribute contentSets = new Attribute("content_sets", "");
-        for (int i = 0; i < 5; i++) {
-            // assume family label as attribute name:
-            Attribute channelFamily = new Attribute("channelfamilylabel" + i, "");
-            channelFamily.addChildAttribute("family_id", "some family id");
-            channelFamily.addChildAttribute("family_name", "some family name");
-            channelFamily.addChildAttribute("flex_quantity", "5");
-            channelFamily.addChildAttribute("physical_quantity", "10");
-
-            // Now add the channels as a child of the channel family:
-            Attribute channels = new Attribute("channels", "");
-            for (int j = 0; j < 3; j++) {
-                Attribute channel = new Attribute("channel" + j, ""); // assume channel ID?
-                channel.addChildAttribute("channel_name", "chan name");
-                channel.addChildAttribute("channel_desc", "description");
-                channel.addChildAttribute("channel_basedir", "basedir");
-                channels.addChildAttribute(channel);
-            }
-
-            // Finish the mapping:
-            channelFamily.addChildAttribute(channels);
-            contentSets.addChildAttribute(channelFamily);
-        }
-
-        Product prod = new Product("cptest-label", "My Product");
-        prod.addAttribute(contentSets);
-        productCurator.create(prod);
-
-        Product lookedUp = productCurator.find(prod.getId());
-        Attribute testing = lookedUp.getAttribute("content_sets");
-        assertEquals(5, testing.getChildAttributes().size());
-        testing = testing.getChildAttribute("channelfamilylabel0");
-        testing = testing.getChildAttribute("channels");
-        assertEquals(3, testing.getChildAttributes().size());
     }
 
     /**
@@ -210,15 +161,15 @@ public class ProductTest extends DatabaseTestFixture {
     public void testCreationDate() {
         Product prod = new Product("test-label", "test-product-name");
         productCurator.create(prod);
-        
+
         assertNotNull(prod.getCreated());
     }
-    
+
     @Test
     public void testInitialUpdate() {
         Product prod = new Product("test-label", "test-product-name");
         productCurator.create(prod);
-        
+
         assertNotNull(prod.getUpdated());
     }
 
@@ -229,11 +180,11 @@ public class ProductTest extends DatabaseTestFixture {
     public void testSubsequentUpdate() {
         Product prod = new Product("test-label", "test-product-name");
         productCurator.create(prod);
-        
+
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -2);
         prod.setUpdated(calendar.getTime());
-        
+
         long updated = prod.getUpdated().getTime();
 
         prod.setName("test-changed-name");
@@ -241,38 +192,92 @@ public class ProductTest extends DatabaseTestFixture {
         assertTrue(prod.getUpdated().getTime() > updated);
     }
 
-    
+
     @Test
     public void testProductFullConstructor() {
         Product prod = new Product("cp_test-label", "variant",
                                    "version", "arch", "", "SVC");
         productCurator.create(prod);
-       
+
         productCurator.find(prod.getId());
     }
-    
+
     @Test
     public void setMultiplierBasic() {
         Product product = new Product("test", "Test Product");
         product.setMultiplier(4L);
-        
+
         assertEquals(new Long(4), product.getMultiplier());
     }
-    
+
     @Test
     public void setMultiplierNull() {
         Product product = new Product("test", "Test Product");
         product.setMultiplier(null);
-        
+
         assertEquals(new Long(1), product.getMultiplier());
     }
-    
+
     @Test
     public void setMultiplierNegative() {
         Product product = new Product("test", "Test Product");
         product.setMultiplier(-15L);
-        
+
         assertEquals(new Long(1), product.getMultiplier());
     }
-    
+
+    private Product createTestProduct() {
+        Product p = new Product("testProductId", "Test Product");
+
+        ProductAttribute a1 = new ProductAttribute("a1", "a1");
+        p.addAttribute(a1);
+
+        ProductAttribute a2 = new ProductAttribute("a2", "a2");
+        p.addAttribute(a2);
+
+        ProductAttribute a3 = new ProductAttribute("a3", "a3");
+        p.addAttribute(a3);
+
+        p.setMultiplier(new Long(1));
+        return p;
+    }
+
+    @Test
+    public void testUpdateProduct() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        // Will have same ID, but we'll modify other data:
+        Product modified = createTestProduct();
+        String newName = "new name";
+        modified.setName(newName);
+
+        // Hack up the attributes, keep a1, skip a2, modify a3, add a4:
+        Set<ProductAttribute> newAttributes = new HashSet<ProductAttribute>();
+        newAttributes.add(modified.getAttribute("a1"));
+        ProductAttribute a3 = modified.getAttribute("a3");
+        a3.setValue("a3-modified");
+        newAttributes.add(a3);
+        ProductAttribute a4 = new ProductAttribute("a4", "a4");
+        newAttributes.add(a4);
+        modified.setAttributes(newAttributes);
+
+        productCurator.createOrUpdate(modified);
+
+        Product lookedUp = productCurator.lookupById(original.getId());
+        assertEquals(newName, lookedUp.getName());
+        assertEquals(3, lookedUp.getAttributes().size());
+        assertEquals("a1", lookedUp.getAttributeValue("a1"));
+        assertEquals("a3-modified", lookedUp.getAttributeValue("a3"));
+        assertEquals("a4", lookedUp.getAttributeValue("a4"));
+
+        // TODO: test content merging
+
+        // TODO: test attribute cleanup:
+        List<ProductAttribute> all = attributeCurator.listAll();
+        for (ProductAttribute a : all) {
+            System.out.println(a);
+        }
+        // Old attributes should get cleaned up:
+        assertEquals(3, all.size());
+    }
 }

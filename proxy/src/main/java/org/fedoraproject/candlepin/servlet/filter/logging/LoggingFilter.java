@@ -60,8 +60,7 @@ public class LoggingFilter implements Filter {
                 log.debug(String.format("Request: '%s %s'", lRequest
                     .getMethod(), lRequest.getRequestURL()));
             }
-            log.debug("====RequestBody====");
-            log.debug(lRequest.getBody());
+            logBody("Request", lRequest);
 
             Enumeration<?> headerNames = lRequest.getHeaderNames();
 
@@ -75,12 +74,24 @@ public class LoggingFilter implements Filter {
 
             log.debug("====Response====");
             log.debug("Status: " + lResponse.getStatus());
-            log.debug("Response Body:" + lResponse.getResponseBody());
+            log.debug("Content-type: " + lResponse.getContentType());
+
+            logBody("Response", lResponse);
             lResponse.getWriter().close();
         }
         else {
             chain.doFilter(request, response);
         }
 
+    }
+
+    private void logBody(String type, BodyLogger bodyLogger) {
+        // Don't log file download responses, they make a mess of the log:
+        if (log.isDebugEnabled() && (bodyLogger.getContentType() == null ||
+            (!bodyLogger.getContentType().equals("application/x-download") &&
+            !bodyLogger.getContentType().equals("application/zip")))) {
+            log.debug("====" + type + "Body====");
+            log.debug(bodyLogger.getBody());
+        }
     }
 }

@@ -146,7 +146,8 @@ public class Entitler {
             throw new EntitlementRefusedException(result);
         }
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), quantity);
+        Entitlement e 
+            = new Entitlement(pool, consumer, new Date(), pool.getEndDate(), quantity);
         consumer.addEntitlement(e);
 
         if (preHelper.getGrantFreeEntitlement()) {

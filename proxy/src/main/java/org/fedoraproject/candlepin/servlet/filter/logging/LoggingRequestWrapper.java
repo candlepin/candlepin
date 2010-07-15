@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.servlet.filter.logging;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,46 +28,30 @@ import javax.servlet.http.HttpServletRequestWrapper;
 /**
  * LoggingRequestWrapper
  */
-public class LoggingRequestWrapper extends HttpServletRequestWrapper {
+public class LoggingRequestWrapper extends HttpServletRequestWrapper implements BodyLogger {
 
-    private final String body;
+    private final byte [] body;
 
     public LoggingRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
-        StringBuilder stringBuilder = new StringBuilder();
-        BufferedReader bufferedReader = null;
-        try {
-            InputStream inputStream = request.getInputStream();
-            if (inputStream != null) {
-                bufferedReader = new BufferedReader(new InputStreamReader(
-                    inputStream));
-                char[] charBuffer = new char[128];
-                int bytesRead = -1;
-                while ((bytesRead = bufferedReader.read(charBuffer)) > 0) {
-                    stringBuilder.append(charBuffer, 0, bytesRead);
-                }
+        InputStream inputStream = request.getInputStream();
+        if (inputStream != null) {
+            ByteArrayOutputStream byteBuilder = new ByteArrayOutputStream();
+            byte[] buffer = new byte[128];
+            int bytesRead = -1;
+            while ((bytesRead = inputStream.read(buffer)) > 0) {
+                byteBuilder.write(buffer, 0, bytesRead);
             }
-            else {
-                stringBuilder.append("");
-            }
+            body = byteBuilder.toByteArray();
         }
-        finally {
-            if (bufferedReader != null) {
-                try {
-                    bufferedReader.close();
-                }
-                catch (IOException ex) {
-                    throw ex;
-                }
-            }
+        else {
+            body = new byte[0];
         }
-        body = stringBuilder.toString();
     }
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(
-            body.getBytes());
+        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(body);
         ServletInputStream servletInputStream = new ServletInputStream() {
             public int read() throws IOException {
                 return byteArrayInputStream.read();
@@ -81,6 +66,6 @@ public class LoggingRequestWrapper extends HttpServletRequestWrapper {
     }
 
     public String getBody() {
-        return this.body;
+        return new String(this.body);
     }
 }

@@ -22,7 +22,6 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductContent;
@@ -118,8 +117,6 @@ public class X509ExtensionUtil {
     public Set<X509ExtensionWrapper> contentExtensions(Product product) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
         Set<ProductContent> productContent = product.getProductContent();
-        Set<Content> content = product.getContent();
-        Set<Content> enabledContent = product.getEnabledContent();
 
         // for (Content con : content) {
         for (ProductContent pc : productContent) {

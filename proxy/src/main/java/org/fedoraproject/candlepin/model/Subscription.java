@@ -34,7 +34,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
 
 /**
@@ -81,14 +80,13 @@ public class Subscription extends AbstractHibernateObject {
  
     private String contractNumber;
     
-    @CollectionOfElements
-    @JoinTable(name = "SUBSCRIPTION_ATTRIBUTE")
-    private Set<Attribute> attributes;
-    
     @OneToMany(mappedBy = "subscription")
     private Set<SubscriptionToken> tokens;
     
     private Date modified;
+    
+    @Column(name = "upstream_pool_id")
+    private Long upstreamPoolId;
 
     public Subscription() {
     }
@@ -196,21 +194,6 @@ public class Subscription extends AbstractHibernateObject {
     }
 
     /**
-     * @return the attributes of the subscription.
-     */
-    public Set<Attribute> getAttributes() {
-        return attributes;
-    }
-
-    /**
-     * Replaces all of the attributes of the subscription.
-     * @param attributes set of attributes for the subscription.
-     */
-    public void setAttributes(Set<Attribute> attributes) {
-        this.attributes = attributes;
-    }
-
-    /**
      * @return when the subscription was last changed.
      */
     public Date getModified() {
@@ -274,6 +257,14 @@ public class Subscription extends AbstractHibernateObject {
 
     public void setProvidedProducts(Set<Product> providedProducts) {
         this.providedProducts = providedProducts;
+    }
+
+    public void setUpstreamPoolId(Long upstreamPoolId) {
+        this.upstreamPoolId = upstreamPoolId;
+    }
+
+    public Long getUpstreamPoolId() {
+        return upstreamPoolId;
     }
 
 }

@@ -24,7 +24,8 @@ import javax.servlet.http.HttpServletResponseWrapper;
 /**
  * LoggingResponseWrapper
  */
-public class LoggingResponseWrapper extends HttpServletResponseWrapper {
+public class LoggingResponseWrapper extends HttpServletResponseWrapper
+    implements BodyLogger {
 
     protected StringBuffer buffer = new StringBuffer();
     protected HttpServletResponse realResponse;
@@ -77,5 +78,8 @@ public class LoggingResponseWrapper extends HttpServletResponseWrapper {
         return status;
     }
     
+    public String getBody() {
+        return getResponseBody();
+    }
 
 }

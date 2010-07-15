@@ -12,15 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.exceptions;
+
+import javax.ws.rs.core.Response.Status;
 
 /**
- * AttributeCurator
+ * IseException
  */
-public class AttributeCurator extends AbstractHibernateCurator<Attribute> {
-    
-    protected AttributeCurator() {
-        super(Attribute.class);
+public class IseException extends CandlepinException {
+
+    public IseException(String message) {
+        super(Status.INTERNAL_SERVER_ERROR, message);
     }
+
+    private static final long serialVersionUID = 4256788923174204495L;
 
 }

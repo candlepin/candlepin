@@ -112,6 +112,7 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     private Pool pool;
 
     private Date startDate;
+    private Date endDate;
     
     // Not positive this should be mapped here, not all entitlements will have
     // certificates.
@@ -153,11 +154,12 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
      * @param startDateIn when the entitlement starts.
      */
     public Entitlement(Pool poolIn, Consumer consumerIn, Date startDateIn,
-            Integer quantityIn) {
+            Date endDateIn, Integer quantityIn) {
         pool = poolIn;
         owner = consumerIn.getOwner();
         consumer = consumerIn;
         startDate = startDateIn;
+        endDate = endDateIn;
         quantity = quantityIn == null || quantityIn.intValue() < 1 ? 
             new Integer(1) : quantityIn;
     }
@@ -213,6 +215,20 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     }
 
     /**
+     * @return Returns the endDate.
+     */
+    public Date getEndDate() {
+        return endDate;
+    }
+    
+    /**
+     * @param endDateIn The endDate to set.
+     */
+    public void setEndDate(Date endDateIn) {
+        endDate = endDateIn;
+    }
+    
+    /**
      * @return return the associated Consumer
      */
     @XmlTransient
@@ -266,6 +282,11 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     public void setCertificates(Set<EntitlementCertificate> certificates) {
         this.certificates = certificates;
     } 
+    
+    public void addCertificate(EntitlementCertificate certificate) {
+        certificate.setEntitlement(this);
+        certificates.add(certificate);
+    }
     
     public String toString() {
         return "Entitlement[id=" + getId() + ", product=" + getProductId() + 

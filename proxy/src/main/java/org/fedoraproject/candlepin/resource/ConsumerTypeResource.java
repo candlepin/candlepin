@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 
 /**
- * Acess Path for consumer types
+ * Access Path for consumer types
  */
 @Path("/consumertypes")
 public class ConsumerTypeResource {

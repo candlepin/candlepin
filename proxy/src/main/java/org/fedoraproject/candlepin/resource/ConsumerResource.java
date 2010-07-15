@@ -14,12 +14,14 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -45,6 +47,7 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -68,6 +71,8 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.sync.ExportCreationException;
+import org.fedoraproject.candlepin.sync.Exporter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.xnap.commons.i18n.I18n;
@@ -96,6 +101,7 @@ public class ConsumerResource {
     private EventFactory eventFactory;
     private EventCurator eventCurator;
     private static final int FEED_LIMIT = 1000;
+    private Exporter exporter;
     
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -109,7 +115,8 @@ public class ConsumerResource {
         EventSink sink,
         EventFactory eventFactory,
         EventCurator eventCurator,
-        UserServiceAdapter userService) {
+        UserServiceAdapter userService,
+        Exporter exporter) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -125,6 +132,7 @@ public class ConsumerResource {
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
         this.userService = userService;
+        this.exporter = exporter;
     }
 
     /**
@@ -650,5 +658,26 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") String consumerUuid) {
         Consumer c = verifyAndLookupConsumer(consumerUuid);
         this.entitler.regenerateEntitlementCertificates(c);
+    }
+
+    @GET
+    @Produces("application/zip")
+    @Path("{consumer_uuid}/export")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    public File exportData(
+        @Context HttpServletResponse response, 
+        @PathParam("consumer_uuid") String consumerUuid) {
+        
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        File archive;
+        try {
+            archive = exporter.getExport(consumer);
+            response.addHeader("Content-Disposition", 
+                "attachment; filename=" + archive.getName());
+            return archive;
+        }
+        catch (ExportCreationException e) {
+            throw new IseException(i18n.tr("Unable to create export archive"));
+        }
     }
 }

@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 
 /**
  * Represents a read-only copy of a Product.
@@ -84,7 +85,7 @@ public class ReadOnlyProduct {
 
     private void initializeReadOnlyAttributes() {
         attributes = new HashMap<String, String>();
-        Set<Attribute> attributeList = product.getAttributes();
+        Set<ProductAttribute> attributeList = product.getAttributes();
         if (attributeList != null) {
             for (Attribute current : attributeList) {
                 attributes.put(current.getName(), current.getValue());

@@ -53,6 +53,8 @@ public class ConfigProperties {
         SubscriptionSyncTask.class.getName(),
         CertificateRevocationListTask.class.getName()
     };
+    
+    public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -72,6 +74,9 @@ public class ConfigProperties {
                 this.put(PRETTY_PRINT, "false");
                 this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
                 this.put(CRL_FILE_PATH, "/etc/candlepin/candlepin-crl.crl");
+
+                this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
+
                 
                 // Pinsetter
                 this.put("org.quartz.threadPool.class", 

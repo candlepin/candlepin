@@ -54,6 +54,12 @@ import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
 import org.fedoraproject.candlepin.resteasy.JsonProvider;
 import org.fedoraproject.candlepin.resteasy.interceptor.AuthInterceptor;
+import org.fedoraproject.candlepin.sync.ConsumerExporter;
+import org.fedoraproject.candlepin.sync.ConsumerTypeExporter;
+import org.fedoraproject.candlepin.sync.EntitlementCertExporter;
+import org.fedoraproject.candlepin.sync.Exporter;
+import org.fedoraproject.candlepin.sync.MetaExporter;
+import org.fedoraproject.candlepin.sync.RulesExporter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
@@ -116,6 +122,14 @@ public class CandlepinModule extends AbstractModule {
         bind(CertificateRevocationListTask.class);
         bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
             .toInstance("SHA1withRSA");
+                    
+        bind(Exporter.class).asEagerSingleton();
+        bind(MetaExporter.class);
+        bind(ConsumerTypeExporter.class);
+        bind(ConsumerExporter.class);
+        bind(RulesExporter.class);
+        bind(EntitlementCertExporter.class);
+        
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(
