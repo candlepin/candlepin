@@ -242,6 +242,12 @@ public class Entitler {
         Consumer consumer = entitlement.getConsumer();
         consumer.removeEntitlement(entitlement);
 
+        // Look for pools referencing this entitlement as their source entitlement
+        // and clean them up as well:
+        for (Pool p : epCurator.listBySourceEntitlement(entitlement)) {
+            epCurator.delete(p);
+        }
+
         Event event = eventFactory.entitlementDeleted(entitlement); 
         
         epCurator.merge(entitlement.getPool());
