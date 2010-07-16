@@ -28,6 +28,7 @@ import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
  */
 public interface Enforcer {
     
+    
     /**
      * Run pre-entitlement checks.
      * 
@@ -51,7 +52,7 @@ public interface Enforcer {
      * @param ent The entitlement that was just granted.
      * @return post-entitlement processor
      */
-    PostEntHelper post(PostEntHelper postEntHelper, Entitlement ent);
+    PostEntHelper post(Consumer c, PostEntHelper postEntHelper, Entitlement ent);
 
     /**
      * Select the best entitlement pool available for the given product ID.

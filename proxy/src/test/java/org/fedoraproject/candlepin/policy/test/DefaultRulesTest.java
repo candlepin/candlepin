@@ -252,7 +252,7 @@ public class DefaultRulesTest {
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
 
         PostEntHelper postHelper = mock(PostEntHelper.class);
-        enforcer.post(postHelper, e);
+        enforcer.post(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(pool.getProductId(), 
             pool.getProvidedProductIds(), "unlimited");
     }
@@ -267,7 +267,7 @@ public class DefaultRulesTest {
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
 
         PostEntHelper postHelper = mock(PostEntHelper.class);
-        enforcer.post(postHelper, e);
+        enforcer.post(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(subProductId,
             pool.getProvidedProductIds(), "unlimited");
     }

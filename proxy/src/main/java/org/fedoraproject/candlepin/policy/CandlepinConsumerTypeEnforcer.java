@@ -12,22 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.test;
+package org.fedoraproject.candlepin.policy;
 
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 
 /**
- * EnforcerForTesting
+ * CandlepinConsumerTypeEnforcer
  */
-public class EnforcerForTesting implements Enforcer {
+public class CandlepinConsumerTypeEnforcer implements Enforcer {
 
     @Override
     public PostEntHelper post(Consumer consumer, PostEntHelper postEntHelper, 
@@ -36,13 +35,14 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
-    public PreEntHelper pre(Consumer consumer, Pool enitlementPool, Integer quantity) {
-        return new PreEntHelper(new Integer(1));
+    public PreEntHelper pre(Consumer consumer, Pool entitlementPool, Integer quantity) {
+        return new PreEntHelper(1);
     }
 
     @Override
-    public Pool selectBestPool(Consumer consumer, String productId,
-        List<Pool> pools) throws RuleExecutionException {
+    public Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools) 
+        throws RuleExecutionException {
+        
         if (pools.isEmpty()) {
             return null;
         }

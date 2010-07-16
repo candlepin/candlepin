@@ -159,7 +159,7 @@ public class Entitler {
         }
 
         postEntHelper.init(e);
-        enforcer.post(postEntHelper, e);
+        enforcer.post(consumer, postEntHelper, e);
 
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
