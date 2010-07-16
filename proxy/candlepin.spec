@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.22
+Version: 0.0.23
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,21 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Fri Jul 16 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.23-1
+- Add support for exporting data to downstream Candlepin. (jbowes@redhat.com)
+- Add schemadiff, a script to check for schema changes over time
+  (jbowes@redhat.com)
+- Setting the CRL issuer dn using the CA certificate issuer
+  (calfonso@redhat.com)
+- CRL entries should use the current date of revocation rather than the serial
+  number / certificate date of expiration. (calfonso@redhat.com)
+- Drop the attribute hierarchy. (dgoodwin@redhat.com)
+- Update logging filter to deal with application/zip (jbowes@redhat.com)
+- Make Product -> Subscription relationship bi-directional.
+  (dgoodwin@redhat.com)
+- Fix orphaned attributes. (dgoodwin@redhat.com)
+- Split Attributes into separate tables for Pools and Products.
+  (dgoodwin@redhat.com)
 * Mon Jul 12 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.22-1
 - Adding a few more CRL functional tests. (jharris@redhat.com)
 - Adding CRL functional test scenarios. (jharris@redhat.com)
