@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.controller;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -94,6 +95,38 @@ public class EntitlerMockTest {
         Pool pool2 = TestUtil.createPool(e.getOwner(), p);
         pools.add(pool2);
         return pools;
+    }
+
+    @Test
+    public void testCleanup() throws Exception {
+        Pool p = createPoolWithEntitlements();
+
+        entitler.deletePool(p);
+
+        // Every entitlement should be revoked:
+        /*
+        for (Entitlement e : p.getEntitlements()) {
+            verify(entitlerMock).revokeEntitlement(e);
+        }
+        */
+
+        // And the pool should be deleted:
+        verify(poolCuratorMock).delete(p);
+
+        // Check that appropriate events were sent out:
+        verify(eventFactoryMock).poolDeleted(p);
+        verify(sinkMock, times(3)).sendEvent((Event) any());
+    }
+
+    private Pool createPoolWithEntitlements() {
+        Pool pool = TestUtil.createPool(o, product);
+        Entitlement e1 = new Entitlement(pool, TestUtil.createConsumer(o),
+            pool.getStartDate(), pool.getEndDate(), 1);
+        Entitlement e2 = new Entitlement(pool, TestUtil.createConsumer(o),
+            pool.getStartDate(), pool.getEndDate(), 1);
+        pool.getEntitlements().add(e1);
+        pool.getEntitlements().add(e2);
+        return pool;
     }
 
 }

@@ -248,7 +248,7 @@ public class Entitler {
         // Look for pools referencing this entitlement as their source entitlement
         // and clean them up as well:
         for (Pool p : epCurator.listBySourceEntitlement(entitlement)) {
-            epCurator.delete(p);
+            deletePool(p);
         }
 
         Event event = eventFactory.entitlementDeleted(entitlement); 
@@ -264,6 +264,21 @@ public class Entitler {
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
             revokeEntitlement(e);
         }
+    }
+
+    /**
+     * Cleanup entitlements and safely delete the given pool.
+     *
+     * @param pool
+     */
+    public void deletePool(Pool pool) {
+        Event event = eventFactory.poolDeleted(pool);
+        // Must do a full revoke for all entitlements:
+        for (Entitlement e : pool.getEntitlements()) {
+            revokeEntitlement(e);
+        }
+        epCurator.delete(pool);
+        sink.sendEvent(event);
     }
 
 }
