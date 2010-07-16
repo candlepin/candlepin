@@ -107,8 +107,6 @@ public class DefaultIdentityCertServiceAdapter implements
         sb.append(consumer.getName());
         sb.append(", UID=");
         sb.append(consumer.getUuid());
-        sb.append(", OU=");
-        sb.append(username);
 
         return sb.toString();
     }

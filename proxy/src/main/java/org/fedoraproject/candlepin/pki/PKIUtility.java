@@ -36,6 +36,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.Set;
 
+import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
@@ -48,6 +49,8 @@ import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
+
+import sun.security.x509.SubjectAlternativeNameExtension;
 
 /**
  * PKIUtility
@@ -110,6 +113,9 @@ public class PKIUtility {
             new AuthorityKeyIdentifierStructure(caCert));
         certGen.addExtension(X509Extensions.SubjectKeyIdentifier, false,
             new SubjectKeyIdentifierStructure(clientKeyPair.getPublic()));
+        certGen.addExtension(X509Extensions.SubjectAlternativeName, false,
+            new DEROctetString("bk".getBytes()));
+        
 
         certGen.addExtension(X509Extensions.ExtendedKeyUsage, false, 
             new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
