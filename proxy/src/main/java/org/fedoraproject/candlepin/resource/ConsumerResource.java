@@ -669,6 +669,12 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") String consumerUuid) {
         
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        if (!consumer.getType().isType(ConsumerTypeEnum.CANDLEPIN)) {
+            throw new ForbiddenException(
+                i18n.tr("Consumer {0} cannot be exported, as it's of wrong consumer type.",
+                    consumerUuid));
+        }
+        
         File archive;
         try {
             archive = exporter.getExport(consumer);
