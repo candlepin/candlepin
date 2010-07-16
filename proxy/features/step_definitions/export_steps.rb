@@ -2,8 +2,14 @@ require 'spec/expectations'
 require 'candlepin_api'
 require 'zip/zip'
 
+Given /I am a consumer "([^\"]*)" of type \"candlepin\""/ do |consumer_name|
+  Given "I am logged in as \"#{user_name}\""
+  set_consumer(@current_owner_cp.register(consumer_name, :candlepin))
+end
+
 When /I perform export/ do 
   @export_filename = @consumer_cp.export_consumer
+  puts @export_filename
 end
 
 Then /I get an archived extract of data/ do

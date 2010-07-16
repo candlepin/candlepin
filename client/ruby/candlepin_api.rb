@@ -161,7 +161,11 @@ class Candlepin
   
   def export_consumer
     path = "/consumers/#{@uuid}/export"
-    get_file(path)
+    begin
+      get_file(path)
+    rescue Exception => e
+      puts e.response
+    end
   end
 
   # TODO: Add support for serial filtering:

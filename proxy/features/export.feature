@@ -11,7 +11,7 @@ Feature: Export of ConsumerType, Consumer, Products, and Entitlements
     And test owner has 4 entitlements for "monitoring"
     
   Scenario: A Consumer can export data
-    Given I am a consumer "random_box"
+    Given I am a consumer "random_box" of type "candlepin"
     And I consume an entitlement for the "virtualization_host" product
     When I perform export
     Then I get an archived extract of data
