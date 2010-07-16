@@ -62,7 +62,7 @@ public class EntitlerMockTest {
         MockitoAnnotations.initMocks(this);
         product = TestUtil.createProduct();
         o = new Owner("key", "displayname");
-        pool = TestUtil.createEntitlementPool(o, product);
+        pool = TestUtil.createPool(o, product);
 
         entitler = new Entitler(poolCuratorMock, entCuratorMock, consumerCuratorMock,
             enforcerMock, entCertAdapterMock, subAdapterMock, eventFactoryMock, sinkMock,
@@ -89,9 +89,9 @@ public class EntitlerMockTest {
 
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
         List<Pool> pools = new LinkedList<Pool>();
-        Pool pool1 = TestUtil.createEntitlementPool(e.getOwner(), p);
+        Pool pool1 = TestUtil.createPool(e.getOwner(), p);
         pools.add(pool1);
-        Pool pool2 = TestUtil.createEntitlementPool(e.getOwner(), p);
+        Pool pool2 = TestUtil.createPool(e.getOwner(), p);
         pools.add(pool2);
         return pools;
     }

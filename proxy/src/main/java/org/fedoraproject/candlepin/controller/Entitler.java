@@ -57,8 +57,9 @@ public class Entitler {
     private EventSink sink;
     private PostEntHelper postEntHelper;
     private EntitlementCertificateCurator entitlementCertificateCurator;
+
     @Inject
-    protected Entitler(PoolCurator epCurator,
+    protected Entitler(PoolCurator poolCurator,
         EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
@@ -66,7 +67,7 @@ public class Entitler {
         EventSink sink,
         PostEntHelper postEntHelper, EntitlementCertificateCurator ecC) {
         
-        this.epCurator = epCurator;
+        this.epCurator = poolCurator;
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.enforcer = enforcer;

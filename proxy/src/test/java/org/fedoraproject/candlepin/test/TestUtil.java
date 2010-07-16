@@ -113,20 +113,20 @@ public class TestUtil {
         
     }
     
-    public static Pool createEntitlementPool(Product product) {
-        return createEntitlementPool(new Owner("Test Owner " + randomInt()), product);
+    public static Pool createPool(Product product) {
+        return createPool(new Owner("Test Owner " + randomInt()), product);
     }
 
-    public static Pool createEntitlementPool(Owner owner, Product product) {
-        return createEntitlementPool(owner, product, 5);
+    public static Pool createPool(Owner owner, Product product) {
+        return createPool(owner, product, 5);
     }
 
-    public static Pool createEntitlementPool(Owner owner, Product product, int quantity) {
-        return createEntitlementPool(owner, product.getId(), new HashSet<String>(), 
+    public static Pool createPool(Owner owner, Product product, int quantity) {
+        return createPool(owner, product.getId(), new HashSet<String>(),
             quantity);
     }
     
-    public static Pool createEntitlementPool(Owner owner, String productId, 
+    public static Pool createPool(Owner owner, String productId,
         Set<String> productIds, int quantity) {
 
         Pool pool = new Pool(owner, productId, productIds, new Long(quantity),
