@@ -466,8 +466,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
      *
      * @return The entitlements.
      */
-    public Set<Entitlement> getEntitlements()
-    {
+    public Set<Entitlement> getEntitlements() {
         return this.entitlements;
     }
 
@@ -476,8 +475,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
      *
      * @param entitlements The entitlements.
      */
-    public void setEntitlements(Set<Entitlement> entitlements)
-    {
+    public void setEntitlements(Set<Entitlement> entitlements) {
         this.entitlements = entitlements;
     }
 
