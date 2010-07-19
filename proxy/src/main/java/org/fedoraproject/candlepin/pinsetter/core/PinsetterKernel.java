@@ -14,18 +14,14 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.util.PropertyUtil;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
+import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -34,8 +30,13 @@ import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * Pinsetter Kernel.
@@ -114,10 +115,8 @@ public class PinsetterKernel implements SchedulerService {
             log.debug("Scheduling tasks");
         }
         Map<String, String[]> pendingJobs = new HashMap<String, String[]>();
-        List<String> jobImpls = new ArrayList<String>();
-        if (log.isDebugEnabled()) {
-            log.debug("No manual overrides detected...Using configuration");
-        }
+        // use a set to remove potential duplicate jobs from config
+        Set<String> jobImpls = new HashSet<String>();
 
         // get the default tasks first
         String[] jobs = this.config.getStringArray(ConfigProperties.DEFAULT_TASKS);
@@ -132,7 +131,7 @@ public class PinsetterKernel implements SchedulerService {
         }
 
         // Bail if there is nothing to configure
-        if (jobImpls == null || jobImpls.size() == 0) {
+        if (jobImpls.size() == 0) {
             log.warn("No tasks to schedule");
             return;
         }
