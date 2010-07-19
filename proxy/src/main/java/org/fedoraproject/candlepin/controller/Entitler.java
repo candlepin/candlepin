@@ -271,6 +271,7 @@ public class Entitler {
      *
      * @param pool
      */
+    @Transactional
     public void deletePool(Pool pool) {
         Event event = eventFactory.poolDeleted(pool);
         // Must do a full revoke for all entitlements:
