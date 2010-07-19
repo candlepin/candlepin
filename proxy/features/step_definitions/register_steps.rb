@@ -16,6 +16,13 @@ Given /^I register a consumer "([^\"]*)" with the following facts:$/ do |consume
   set_consumer(@current_owner_cp.register(consumer_name, :system, nil, facts))
 end
 
+Given /^I am a consumer "([^\"]*)" of type "([^\"]*)" with facts:$/ do |consumer_name, consumer_type, facts_table|
+  Given "I am logged in as \"#{@username}\""
+  facts = facts_table.rows_hash.delete_if { |key, val| key == 'Name' }
+  set_consumer(@current_owner_cp.register(consumer_name, consumer_type, nil, facts))
+end
+
+
 def set_consumer(created_consumer)
     @consumer = created_consumer
     @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])

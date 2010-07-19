@@ -8,8 +8,19 @@ Feature: Consume an Entitlement
         And I am logged in as "test_owner"
         And product "virtualization_host" exists
         And product "monitoring" exists
+        And product "super_awesome" exists with the following attributes:
+         | Name             | Value   |
+         | cpu.cpu_socket(s)| 4       |
         And test owner has 20 entitlements for "virtualization_host"
         And test owner has 4 entitlements for "monitoring"
+        And test owner has 4 entitlements for "super_awesome"
+
+    Scenario: Candlepin Consumer entitlement bypasses rules
+        Given I am a consumer "random_box" of type "candlepin" with facts:
+         | Name             | Value   |
+         | cpu.cpu_socket(s)| 8       |
+        When I consume an entitlement for the "super_awesome" product
+        Then I have an entitlement for the "super_awesome" product
 
     Scenario: An Exception is thrown When Consumer filters Entitlement by Invalid Product ID
         Given I am a consumer "consumer"
@@ -88,4 +99,5 @@ Feature: Consume an Entitlement
         When I consume an entitlement for the "virtualization_host" pool
         And I try to consume an entitlement for the "virtualization_host" pool again
         Then I recieve an http forbidden response
+        
 
