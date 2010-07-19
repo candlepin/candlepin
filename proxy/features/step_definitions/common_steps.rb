@@ -11,8 +11,8 @@ Before do
     if $config.nil?
         initialize_config()
     end
-    @candlepin = Candlepin.new(username=$config['username'], 
-                               password=$config['password'])
+    @candlepin = Candlepin.new($config['username'], 
+                               $config['password'])
     @test_owner = @candlepin.create_owner(
         gen_random_string('testowner'))
 
@@ -23,7 +23,7 @@ Before do
 end
 
 After do
-    @candlepin.delete_owner(@test_owner['id'])
+  @candlepin.delete_owner(@test_owner['id'])
 end
 
 # Reads the cucumber.conf file for test config if it exists, uses default
@@ -79,5 +79,5 @@ end
 
 def connect(username=nil, password=nil, cert=nil, key=nil)
     Candlepin.new(username=username, password=password,
-        cert=cert, key=key, hostname=$config['hostname'], port=$config['port'])
+        cert=cert, key=key, $config['hostname'], $config['port'])
 end

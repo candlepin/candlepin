@@ -11,7 +11,7 @@ Feature: Update a Consumer's Facts
       Given I register a consumer "mymachine" with the following facts:
           | Name             | Value   |
           | cpu.architecture | i686    |
-          | memory.memtotal  | 2004036 | 
+          | memory.memtotal  | 2004036 |
       When I update my facts to:
           | Name             | Value   |
           | cpu.architecture | i686    |

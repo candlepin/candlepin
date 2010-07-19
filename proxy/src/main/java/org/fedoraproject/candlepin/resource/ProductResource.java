@@ -141,7 +141,6 @@ public class ProductResource {
         ProductContent productContent = new ProductContent(product, content, enabled);
         product.getProductContent().add(productContent);
         return prodAdapter.createProduct(product);
-        
     }
     
     

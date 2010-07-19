@@ -7,18 +7,26 @@
   'version' => '4'
 }
 
+Before do
+  @products = {}
+end
+
 Given /^product "([^\"]*)" exists$/ do |product_name|
   create_product product_name
 end
 
-Given /^product "([^\"]*)" exists with multiplier (-?\d+)$/ do |product_name, multiplier|
-  create_product(product_name, multiplier.to_i)
+Given /^product "([^\"]*)" exists with ID (\d+)$/ do |product_name, product_id|
+  create_product(product_name, product_id)
 end
 
-Then /^I can create a product called "([^\"]*)"$/ do |product_name|
-  create_product product_name
+Given /^product "([^\"]*)" exists with multiplier (-?\d+)$/ do |product_name, multiplier|
+  create_product(product_name, nil, multiplier.to_i)
+end
 
-  @product.should_not be_nil
+Given /^product "([^\"]*)" exists with the following attributes:$/ do |product_name, table|
+      # table is a Cucumber::Ast::Table
+  attrs = table.rows_hash.delete_if { |key, value| key == 'Name' } # Get rid of the Name:Value entry
+  create_product(product_name, nil, 1, attrs)
 end
 
 Then /^the certificate for "([^\"]*)" is valid$/ do |product_name|
@@ -41,34 +49,22 @@ Then /^the certificate for "([^\"]*)" has extension "([^\"]*)" with value "([^\"
   value.should == expected_value
 end
 
-Given /^product "([^\"]*)" exists with the following attributes:$/ do |product_name, table|
-      # table is a Cucumber::Ast::Table
-  attrs = table.rows_hash.delete_if { |key, val| key == 'Name' } # Get rid of the Name:Value entry
-  create_product(product_name, 1, attrs)
-end
+def create_product(product_name, product_id=nil, multiplier=1, attrs={})
+  # Product ID is a string - just reuse the name for simplicity
+  product_id ||= product_name.hash.abs
 
-def create_product(product_name, multiplier=1, attrs=nil)
-  id = get_product_id(product_name)
-  if attrs.nil?
-      attrs = {'virtualization_host' => 'virtualization_host' }
-  end
-
-  @product = @candlepin.create_product(product_name, id, multiplier,
-                                       1, 'ALL', 'ALL', 'SVC', [], attrs)
-end
-
-def get_product_id(product_name)
-  product_name.hash.abs
+  @products[product_name] = @candlepin.create_product(product_name, product_id, multiplier,
+                                                      1, 'ALL', 'ALL', 'SVC', [], attrs)
 end
 
 def get_product_certificate(product_name)
-  id = get_product_id(product_name)
+  id = @products[product_name]['id']
   product_cert = @candlepin.get_product_cert(id)
   OpenSSL::X509::Certificate.new(product_cert['cert'])
 end
 
 def get_oid(product_name, label)
-  product_id = get_product_id(product_name)
+  product_id = @products[product_name]['id']
   oid = @@oid_map[label]
   
   "1.3.6.1.4.1.2312.9.1.#{product_id}.#{oid}"

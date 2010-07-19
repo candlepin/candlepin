@@ -5,6 +5,18 @@ Before do
   @subscriptions = {}
 end
 
+
+Given /^owner "([^\"]*)" has a subscription for product "([^\"]*)" with quantity (\d+)$/ do |owner_name, product_name, quantity|
+  owner_id = @owners[owner_name]['id']
+  product_id = @products[product_name]['id']
+  @candlepin.create_subscription(owner_id, product_id, quantity)
+
+  # Just refesh the entitlement pools each time
+  @candlepin.refresh_pools(@owners[owner_name]['key'])
+end
+
+# Deprecated - use named owners instead of @test_owner
+
 Given /^test owner has (\d+) entitlements for "([^\"]*)"$/ do |quantity, product|
   create_subscription(product, quantity)
 

@@ -219,7 +219,7 @@ class Candlepin
     
   # TODO: label is unused here, needs to be dropped across the board.
   def create_product(name, hash, multiplier = 1, version = 1, variant = 'ALL', 
-                     arch='ALL', type='SVC',childProducts=[], attributes = {})
+                     arch='ALL', type='SVC',child_products=[], attributes = {})
     attributes['arch'] = arch
     attributes['version'] = version
     attributes['variant'] = variant

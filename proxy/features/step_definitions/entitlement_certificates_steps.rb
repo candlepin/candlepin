@@ -1,6 +1,11 @@
 require 'spec/expectations'
 require 'candlepin_api'
 
+Then /^consumer "([^\"]*)" has (\d+) entitlement certificates?$/ do |consumer_name, count|
+  @consumer_clients[consumer_name].get_certificates.length.should == count.to_i
+end
+
+# Deprecated
 Before do
     @serials = []
 end

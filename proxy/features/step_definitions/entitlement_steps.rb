@@ -1,6 +1,11 @@
 require 'spec/expectations'
-require 'candlepin_api'
 
+When /^consumer "([^\"]*)" consumes an entitlement for product "([^\"]*)"$/ do |consumer_name, product_name|
+  product_id = @products[product_name]['id']
+  @consumer_clients[consumer_name].consume_product(product_id)
+end
+
+# Deprecated - let's stop using 'I'
 Before do
   # Map to store named entitlements
   @entitlements = {}

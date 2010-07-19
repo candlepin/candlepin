@@ -1,25 +1,34 @@
 require 'spec/expectations'
-require 'candlepin_api'
 
+Then /^consumer "([^\"]*)" has access to a pool for product "([^\"]*)"$/ do |consumer_name, product_name|
+  consumer = @consumer_clients[consumer_name]
+
+  pools = consumer.get_pools(:consumer => consumer.uuid)
+  products = pools.collect { |pool| pool['productName'] }
+
+  products.should include(product_name)
+end
+
+# Deprecated - Get rid of the 'I's
 Before do
     @found_pools = []
 end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)"$/ do |quantity, product|
   p = @candlepin.get_product(product.hash.abs)
-  @candlepin.create_pool(p['id'], @test_owner['id'], nil)  
+  @candlepin.create_pool(p['id'], @test_owner['id'], nil)
 end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)" restricted to user "([^\"]*)"$/ do |quantity, product, user|
   p = @candlepin.get_product(product.hash.abs)
-  @candlepin.create_pool(p['id'], @test_owner['id'], nil, {}, nil, nil, 100, user)  
+  @candlepin.create_pool(p['id'], @test_owner['id'], nil, {}, nil, nil, quantity, user)
 end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)" with the following attributes:$/ do |quantity, product, table|
   p = @candlepin.get_product(product.hash.abs)
   attrs = table.rows_hash.delete_if { |key, val| key == 'Name' }
-  
-  @candlepin.create_pool(p['id'], @test_owner['id'], nil, attrs)
+
+  @candlepin.create_pool(p['id'], @test_owner['id'], nil, attrs, nil, nil, quantity)
 end
 
 When /^I view all of my pools$/ do
@@ -36,6 +45,13 @@ Then /^I have access to a pool for product "([^\"]*)"$/ do |product_name|
   products = pools.collect { |pool| pool['productName'] }
 
   products.should include(product_name)
+end
+
+Then /^I do not have access to a pool for product "([^\"]*)"$/ do |product_name|
+  pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid)
+  products = pools.collect { |pool| pool['productName'] }
+
+  products.should_not include(product_name)
 end
 
 Then /^I have access to (\d*) pools?$/ do |num_pools|
