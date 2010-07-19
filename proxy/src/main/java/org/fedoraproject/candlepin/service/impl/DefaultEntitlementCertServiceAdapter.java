@@ -131,8 +131,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(consumer));
         
-        X509Certificate x509Cert = this.pki.createX509Certificate(createDN(consumer), 
-            extensions, sub.getStartDate(), endDate, keyPair, serialNumber);
+        X509Certificate x509Cert = this.pki.createX509Certificate(createDN(ent),
+            extensions, sub.getStartDate(), endDate, keyPair, serialNumber,
+            null);
         return x509Cert;
     }
     
@@ -152,11 +153,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
     }
     
-    private String createDN(Consumer consumer) {
+    private String createDN(Entitlement ent) {
         StringBuilder sb = new StringBuilder("CN=");
-        sb.append(consumer.getName());
-        sb.append(", UID=");
-        sb.append(consumer.getUuid());
+        sb.append(ent.getId());
         return sb.toString();
     }
 

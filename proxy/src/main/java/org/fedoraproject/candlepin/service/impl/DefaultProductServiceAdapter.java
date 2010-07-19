@@ -140,7 +140,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
         X509Certificate x509Cert = this.pki.createX509Certificate("CN=" +
             product.getId(), extensions, new Date(), future.getTime(), keyPair,
-            serial);
+            serial, null);
 
         ProductCertificate cert = new ProductCertificate();
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));

@@ -31,7 +31,7 @@ class Candlepin
     if not cert.nil?
       @identity_certificate = OpenSSL::X509::Certificate.new(cert)
       @identity_key = OpenSSL::PKey::RSA.new(key)
-      @uuid = @identity_certificate.subject.to_s.scan(/\/UID=([^\/=]+)/)[0][0]
+      @uuid = @identity_certificate.subject.to_s.scan(/\/CN=([^\/=]+)/)[0][0]
       create_ssl_client()
     else
       create_basic_client(username, password)

@@ -119,7 +119,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         
         verify(mockedPKI).createX509Certificate(any(String.class), 
             argThat(new ListContainsContentExtensions()), 
-            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class));
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
     }
     
     @Test
@@ -132,7 +133,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         
         verify(mockedPKI).createX509Certificate(any(String.class), 
             argThat(new ListContainsEntitlementExtensions()), 
-            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class));
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
     }
     
     private boolean isEncodedContentValid(Set<X509ExtensionWrapper> content) {
