@@ -70,8 +70,7 @@ public class SSLAuthTest {
                 new ConsumerType(ConsumerTypeEnum.SYSTEM));
         ConsumerPrincipal expected = new ConsumerPrincipal(consumer);
 
-        String dn = "CN=machine_name, OU=someguy@itcenter.org, " +
-            "O=Green Mountain, UID=453-44423-235";
+        String dn = "CN=453-44423-235";
 
         mockCert(dn);
         when(this.consumerCurator.lookupByUuid("453-44423-235")).thenReturn(consumer);
@@ -85,7 +84,7 @@ public class SSLAuthTest {
      */
     @Test
     public void noUuidOnCert() throws Exception {
-        mockCert("CN=something, OU=jimmy@ibm.com, O=IBM");
+        mockCert("OU=something");
         when(this.consumerCurator.lookupByUuid(anyString())).thenReturn(
                 new Consumer("machine_name", "test user", null, null));
         assertNull(this.auth.getPrincipal(request));
@@ -98,7 +97,7 @@ public class SSLAuthTest {
      */
     @Test
     public void noValidConsumerEntity() throws Exception {
-        mockCert("CN=my_box, OU=billy@jaspersoft.com, O=Jaspersoft, UID=235-8");
+        mockCert("CN=235-8");
         when(this.consumerCurator.lookupByUuid("235-8")).thenReturn(null);
         assertNull(this.auth.getPrincipal(request));
     }
