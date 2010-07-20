@@ -7,7 +7,7 @@ end
 
 Given /^I am a consumer "([^\"]*)" registered by "([^\"]*)"$/ do |consumer_name, user_name|
   Given "I am logged in as \"#{user_name}\""
-  When "I register a consumer \"#{consumer_name}\""  
+  When "I register a consumer \"#{consumer_name}\""
 end
 
 Given /^I register a consumer "([^\"]*)" with the following facts:$/ do |consumer_name, facts_table|
@@ -26,6 +26,10 @@ end
 def set_consumer(created_consumer)
     @consumer = created_consumer
     @x509_cert = OpenSSL::X509::Certificate.new(@consumer['idCert']['cert'])
+    @cert_extensions = {}
+    @x509_cert.extensions.each do |ext|
+        @cert_extensions[ext.oid] = ext.value
+    end
     @consumer_cp = connect(username=nil, password=nil,
                            cert=@consumer['idCert']['cert'],
                            key=@consumer['idCert']['key'])
@@ -51,7 +55,7 @@ end
 
 Given /^I am a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|
   # This will register with the user you are logged in as
-  Given "I am logged in as \"#{@username}\"" 
+  Given "I am logged in as \"#{@username}\""
 
   set_consumer(@current_owner_cp.register(consumer_name, type))
 end
@@ -111,6 +115,12 @@ Then /the "([^\"]*)" on my identity certificate's subject is my consumer's UUID/
     subject_value(@x509_cert, subject_property).should == uuid
 end
 
+Then /the consumers name in the certificate is "([^\"]*)"$/ do |consumer_name|
+    altName = @cert_extensions["subjectAltName"]
+    altName.gsub!("DirName:/CN=", "")
+    altName.should == consumer_name
+end
+
 Then /the "([^\"]*)" on my identity certificate's subject is "([^\"]*)"$/ do |subject_property, expected|
     subject_value(@x509_cert, subject_property).should == expected
 end
@@ -119,4 +129,4 @@ end
 def subject_value(x509_cert, key)
     subject = x509_cert.subject
     subject.to_s.scan(/\/#{key}=([^\/=]+)/)[0][0]
-end 
+end

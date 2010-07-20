@@ -13,7 +13,8 @@ Feature: Register a Personal Consumer
     Given an owner admin "test-account"
     And I am logged in as "test-account"
     When I register a personal consumer
-    Then the "CN" on my identity certificate's subject is "test-account"
+    Then the "CN" on my identity certificate's subject is my consumer's UUID
+    Then the consumers name in the certificate is "test-account"
 
   Scenario:  Multiple personal consumers cannot be registered
     Given an owner admin "Roger"
