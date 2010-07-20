@@ -12,6 +12,7 @@ https_connector_configuration="""
            keystoreFile="conf/keystore"
            truststoreFile="conf/keystore" 
            keystorePass="password"
+           keystoreType="PKCS12"
            truststorePass="password" />"""
 
 existing_https_connector_pattern = '<Connector port="8443".*?/>'

@@ -3,7 +3,12 @@
 CERTS_HOME=/etc/candlepin/certs
 CA_KEY=$CERTS_HOME/candlepin-ca.key
 CA_CERT=$CERTS_HOME/candlepin-ca.crt
+KEYSTORE=$CERTS_HOME/keystore
 
+# Read in user defined variables
+if [ -f $HOME/.candlepinrc ] ; then
+    source $HOME/.candlepinrc
+fi
 
 rpm -q openssl > /dev/null
 if [ "$?" -ne 0 ]; then
@@ -25,4 +30,6 @@ else
     sudo openssl genrsa -out $CA_KEY 1024
     echo "Creating CA certificate"
     sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj "/CN=$HOSTNAME/C=US/L=Raleigh/"
+    sudo openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE -name tomcat -CAfile $CA_CERT -caname root -chain -password pass:password
+    sudo chmod a+r $KEYSTORE
 fi

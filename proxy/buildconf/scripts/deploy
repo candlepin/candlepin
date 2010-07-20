@@ -51,54 +51,15 @@ function isrpm ()
     return $?
 }
 
-function import_ca_cert_into_keystore
-{
-	echo "importing ca certificate"
-	echo y | sudo keytool -importcert -alias candlepin_ca_crt -file /etc/candlepin/certs/candlepin-ca.crt -keystore $CONTAINER_CONF_DIR/keystore -storepass password
-}
-
-HOSTNAME=${HOSTNAME:-$(hostname)}
-function generate_tomcat_certificate
-{
-	echo -n "\n" | sudo keytool -genkeypair -dname "CN=$HOSTNAME, OU=ateam, O=redhat,C=us"  -alias tomcat -keyalg RSA -keystore $CONTAINER_CONF_DIR/keystore -storepass password
-
-}
-
-function update_keystore_with_delete
-{
-    ALIAS=$1
-    if [ "$ALIAS" = "tomcat" ]; then
-        generate_tomcat_certificate
-    else
-        import_ca_cert_into_keystore
-    fi
-	if [ "$?" -ne "0" ] && [ "$FORCECERT" != "" ]; then
-		echo "alias already exists. deleting..."
-		sudo keytool -delete -alias $ALIAS -keystore $CONTAINER_CONF_DIR/keystore -storepass password
-		if [ "$?" -ne "0" ]; then
-			echo "couldn't delete $ALIAS alias, bailing."
-			exit 1
-		else
-			echo "deleted $ALIAS."
-		fi
-        
-        if [ "$ALIAS" = "tomcat" ]; then
-            generate_tomcat_certificate
-        else
-            import_ca_cert_into_keystore
-        fi
-
-		if [ "$?" -ne "0" ]; then
-			echo "failed to import cert. bailing."
-			exit 1
-		fi
-	fi
-}
 
 function update_keystore
 {
-    update_keystore_with_delete "tomcat"
-    update_keystore_with_delete "candlepin_ca_crt"
+	if [ "$FORCECERT" = "" ]; then
+	    echo "Using existing keystore"
+	else
+	    echo "Move the keystore to tomcats location"
+	    cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+	fi
 }
 
 function upload_products
@@ -199,7 +160,7 @@ sh -x `dirname $0`/gen-certs
 update_keystore
 
 # update server.xml
-sudo python buildconf/scripts/update-server-xml.python $CONTAINER_CONF_DIR
+sudo python buildconf/scripts/update-server-xml.py $CONTAINER_CONF_DIR
 
 create_var_lib_candlepin
 create_var_log_candlepin
