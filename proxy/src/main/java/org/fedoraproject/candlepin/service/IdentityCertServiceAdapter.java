@@ -30,16 +30,25 @@ public interface IdentityCertServiceAdapter {
      * consumer during all future communication between Candlepin and the
      * consumer.
      * 
-     * @param consumer
-     *            Consumer.
+     * @param consumer Consumer.
      * @param username
-     * @return consumer's identity certificate.
-     * @throws IOException
-     *             if there is a file system problem
-     * @throws GeneralSecurityException
-     *             if there is a violation of policy
+     * @return the identity certificate for the given consumer.
+     * @throws IOException if there is a file system problem
+     * @throws GeneralSecurityException if there is a violation of policy
      */
     IdentityCertificate generateIdentityCert(Consumer consumer, String username)
+        throws GeneralSecurityException, IOException;
+
+    /**
+     * Regenerates the identity certificate for the given consumer.
+     *
+     * @param consumer Consumer.
+     * @param username
+     * @return a new identity certificate for the given consumer.
+     * @throws IOException if there is a file system problem
+     * @throws GeneralSecurityException if there is a violation of policy
+     */
+    IdentityCertificate regenerateIdentityCert(Consumer consumer, String username)
         throws GeneralSecurityException, IOException;
 
     /**

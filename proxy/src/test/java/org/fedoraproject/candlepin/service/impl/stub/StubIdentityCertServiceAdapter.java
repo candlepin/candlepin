@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.service.impl.stub;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Date;
 import java.util.Random;
 
@@ -43,13 +45,15 @@ public class StubIdentityCertServiceAdapter implements IdentityCertServiceAdapte
         return idCert;
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.service.IdentityCertServiceAdapter#
-     * deleteIdentityCert(org.fedoraproject.candlepin.model.Consumer)
-     */
     @Override
     public void deleteIdentityCert(Consumer consumer) {
         //No Op.  Pretend to delete the cert
+    }
+
+    @Override
+    public IdentityCertificate regenerateIdentityCert(Consumer consumer,
+        String username) throws GeneralSecurityException, IOException {
+        return generateIdentityCert(consumer, username);
     }
 
 }

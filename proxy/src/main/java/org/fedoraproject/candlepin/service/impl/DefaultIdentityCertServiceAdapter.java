@@ -43,7 +43,7 @@ public class DefaultIdentityCertServiceAdapter implements
     private PKIUtility pki;
     private static Logger log = Logger
         .getLogger(DefaultIdentityCertServiceAdapter.class);
-    private IdentityCertificateCurator identityCertCurator;
+    private IdentityCertificateCurator idCertCurator;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
 
@@ -53,34 +53,69 @@ public class DefaultIdentityCertServiceAdapter implements
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator) {
         this.pki = pki;
-        this.identityCertCurator = identityCertCurator;
+        this.idCertCurator = identityCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
     }
 
     @Override
     public void deleteIdentityCert(Consumer consumer) {
-        IdentityCertificate certificate = identityCertCurator
+        IdentityCertificate certificate = idCertCurator
             .find(consumer.getIdCert().getId());
         if (certificate != null) {
-            identityCertCurator.delete(certificate);
+            idCertCurator.delete(certificate);
         }
     }
 
     @Override
     public IdentityCertificate generateIdentityCert(Consumer consumer,
         String username) throws GeneralSecurityException, IOException {
-        log.debug("Generating identity cert for consumer: " +
-            consumer.getUuid());
-        Date startDate = new Date();
-        Date endDate = getFutureDate(1);
 
-        IdentityCertificate certificate = identityCertCurator
+        if (log.isDebugEnabled()) {
+            log.debug("Generating identity cert for consumer: " +
+                consumer.getUuid());
+        }
+
+        IdentityCertificate certificate = idCertCurator
             .find(consumer.getId());
 
         if (certificate != null) {
             return certificate;
         }
+
+        return generate(consumer, username);
+    }
+
+    @Override
+    public IdentityCertificate regenerateIdentityCert(Consumer consumer,
+        String username) throws GeneralSecurityException, IOException {
+
+        IdentityCertificate certificate = idCertCurator.find(consumer
+            .getId());
+
+        if (certificate != null) {
+            consumer.setIdCert(null);
+            idCertCurator.delete(certificate);
+        }
+
+        return generate(consumer, username);
+    }
+
+    private String createDN(Consumer consumer, String username) {
+        StringBuilder sb = new StringBuilder("CN=");
+        sb.append(consumer.getName());
+        sb.append(", UID=");
+        sb.append(consumer.getUuid());
+        sb.append(", OU=");
+        sb.append(username);
+
+        return sb.toString();
+    }
+
+    private IdentityCertificate generate(Consumer consumer, String username)
+        throws GeneralSecurityException, IOException {
+        Date startDate = new Date();
+        Date endDate = getFutureDate(1);
 
         CertificateSerial serial = new CertificateSerial(endDate);
         // We need the sequence generated id before we create the EntitlementCertificate,
@@ -100,7 +135,7 @@ public class DefaultIdentityCertServiceAdapter implements
         identityCert.setConsumer(consumer);
         consumer.setIdCert(identityCert);
 
-        return identityCertCurator.create(identityCert);
+        return idCertCurator.create(identityCert);
     }
 
     private String createDN(Consumer consumer, String username) {
