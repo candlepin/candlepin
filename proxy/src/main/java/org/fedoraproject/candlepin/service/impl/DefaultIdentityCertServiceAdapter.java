@@ -101,17 +101,6 @@ public class DefaultIdentityCertServiceAdapter implements
         return generate(consumer, username);
     }
 
-    private String createDN(Consumer consumer, String username) {
-        StringBuilder sb = new StringBuilder("CN=");
-        sb.append(consumer.getName());
-        sb.append(", UID=");
-        sb.append(consumer.getUuid());
-        sb.append(", OU=");
-        sb.append(username);
-
-        return sb.toString();
-    }
-
     private IdentityCertificate generate(Consumer consumer, String username)
         throws GeneralSecurityException, IOException {
         Date startDate = new Date();
