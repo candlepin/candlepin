@@ -32,7 +32,7 @@ import com.google.inject.Inject;
  */
 class SSLAuth {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
-    private static final String UUID_DN_ATTRIBUTE = "UID";
+    private static final String UUID_DN_ATTRIBUTE = "CN";
     
     private static Logger log = Logger.getLogger(SSLAuth.class);
 
