@@ -63,7 +63,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         Product anotherProduct = new Product("another_product", "another product");
         productCurator.create(anotherProduct);
         
-        Pool p = TestUtil.createEntitlementPool(anotherOwner, anotherProduct);
+        Pool p = TestUtil.createPool(anotherOwner, anotherProduct);
         poolCurator.create(p);
 
         assertEquals(2, poolCurator.listAll().size());
@@ -84,7 +84,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         Product anotherProduct = new Product("another_product", "another product");
         productCurator.create(anotherProduct);
         
-        Pool p = TestUtil.createEntitlementPool(anotherOwner, anotherProduct);
+        Pool p = TestUtil.createPool(anotherOwner, anotherProduct);
         poolCurator.create(p);
 
         assertEquals(2, poolCurator.listAll().size());
@@ -100,7 +100,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void shouldReturnUserRestrictedPoolForTheMatchingUser() {
-        Pool p = TestUtil.createEntitlementPool(owner, product);
+        Pool p = TestUtil.createPool(owner, product);
         p.setRestrictedToUsername("username");
         poolCurator.create(p);
         
@@ -119,7 +119,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void shouldNotReturnUserRestrictedPoolForNonMatchingUser() {
-        Pool p = TestUtil.createEntitlementPool(owner, product);
+        Pool p = TestUtil.createPool(owner, product);
         p.setRestrictedToUsername("username");
         poolCurator.create(p);
         

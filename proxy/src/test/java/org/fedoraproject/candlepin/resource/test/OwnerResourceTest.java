@@ -207,7 +207,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerCurator.create(c2);
 
         // Create a pool for this owner:
-        Pool pool = TestUtil.createEntitlementPool(owner, product);
+        Pool pool = TestUtil.createPool(owner, product);
         poolCurator.create(pool);
 
         // Give those consumers entitlements:
@@ -246,8 +246,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Product p = TestUtil.createProduct();
         productCurator.create(p);
-        Pool pool1 = TestUtil.createEntitlementPool(owner, p);
-        Pool pool2 = TestUtil.createEntitlementPool(owner, p);
+        Pool pool1 = TestUtil.createPool(owner, p);
+        Pool pool2 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 
@@ -263,8 +263,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Product p = TestUtil.createProduct();
         productCurator.create(p);
-        Pool pool1 = TestUtil.createEntitlementPool(owner, p);
-        Pool pool2 = TestUtil.createEntitlementPool(owner, p);
+        Pool pool1 = TestUtil.createPool(owner, p);
+        Pool pool2 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 

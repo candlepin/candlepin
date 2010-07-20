@@ -180,7 +180,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
 
         poolResource.createPool(
-            TestUtil.createEntitlementPool(owner1, TestUtil.createProduct()));
+            TestUtil.createPool(owner1, TestUtil.createProduct()));
     }
     
     @Test

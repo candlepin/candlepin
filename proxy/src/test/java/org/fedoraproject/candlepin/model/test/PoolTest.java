@@ -55,7 +55,7 @@ public class PoolTest extends DatabaseTestFixture {
         Set<String> providedProductIds = new HashSet<String>();
         providedProductIds.add(prod2.getId());
         
-        pool = TestUtil.createEntitlementPool(owner, prod1.getId(), providedProductIds,
+        pool = TestUtil.createPool(owner, prod1.getId(), providedProductIds,
             1000);
         poolCurator.create(pool);
         owner = pool.getOwner();
@@ -148,7 +148,7 @@ public class PoolTest extends DatabaseTestFixture {
         Set<String> productIds = new HashSet<String>();
         productIds.add(childProduct.getId());
 
-        Pool pool = TestUtil.createEntitlementPool(owner, parentProduct.getId(), 
+        Pool pool = TestUtil.createPool(owner, parentProduct.getId(),
             productIds, 5);
         poolCurator.create(pool);
         

@@ -126,6 +126,14 @@ public class EventFactory {
         e.setNewEntity(entityToJson(after));
     }
     
+    public Event poolDeleted(Pool pool) {
+        String oldJson = entityToJson(pool);
+        Owner o = pool.getOwner();
+        Event e = new Event(Event.Type.DELETED, Event.Target.POOL,
+            principalProvider.get(), o.getId(), null, pool.getId(), oldJson, null);
+        return e;
+    }
+
     public Event ownerDeleted(Owner owner) {
         Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principalProvider.get(),
             owner.getId(), null, owner.getId(), entityToJson(owner), null);

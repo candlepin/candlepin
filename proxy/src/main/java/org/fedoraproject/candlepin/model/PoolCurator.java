@@ -105,6 +105,21 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listAvailableEntitlementPools(null, o, (String) null, true);
     }
     
+    /**
+     * Return all pools referencing the given entitlement as their source entitlement.
+     *
+     * @param e Entitlement
+     * @return Pools created as a result of this entitlement.
+     */
+    public List<Pool> listBySourceEntitlement(Entitlement e) {
+        List<Pool> results = (List<Pool>) currentSession().createCriteria(Pool.class)
+            .add(Restrictions.eq("sourceEntitlement", e)).list();
+        if (results == null) {
+            results = new LinkedList<Pool>();
+        }
+        return results;
+    }
+
     
     /**
      * Returns list of pools available to the consumer.

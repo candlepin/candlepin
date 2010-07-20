@@ -130,6 +130,9 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
+
+    @OneToMany
+    private Set<Entitlement> entitlements = new HashSet<Entitlement>();
     
     private String restrictedToUsername;
     
@@ -458,6 +461,24 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         this.productId = productId;
     }
     
+    /**
+     * Gets the entitlements for this instance.
+     *
+     * @return The entitlements.
+     */
+    public Set<Entitlement> getEntitlements() {
+        return this.entitlements;
+    }
+
+    /**
+     * Sets the entitlements for this instance.
+     *
+     * @param entitlements The entitlements.
+     */
+    public void setEntitlements(Set<Entitlement> entitlements) {
+        this.entitlements = entitlements;
+    }
+
     public String getRestrictedToUsername() {
         return restrictedToUsername;
     }

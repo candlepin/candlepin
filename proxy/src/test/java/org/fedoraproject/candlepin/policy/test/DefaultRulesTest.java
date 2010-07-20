@@ -76,7 +76,7 @@ public class DefaultRulesTest {
     @Test
     public void testBindForSameProductNotAllowed() {
         Product product = new Product(productId, "A product for testing");
-        Pool pool = TestUtil.createEntitlementPool(owner, product);
+        Pool pool = TestUtil.createPool(owner, product);
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
@@ -93,7 +93,7 @@ public class DefaultRulesTest {
     public void testBindFromSameProductAllowedWithMultiEntitlementAttribute() {
         Product product = new Product(productId, "A product for testing");
         product.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
-        Pool pool = TestUtil.createEntitlementPool(owner, product);
+        Pool pool = TestUtil.createPool(owner, product);
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
@@ -110,7 +110,7 @@ public class DefaultRulesTest {
     @Test
     public void bindFromExhaustedPoolShouldFail() {
         Product product = new Product(productId, "A product for testing");
-        Pool pool = TestUtil.createEntitlementPool(owner, product, 0);
+        Pool pool = TestUtil.createPool(owner, product, 0);
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
@@ -189,7 +189,7 @@ public class DefaultRulesTest {
 
         Product product = new Product(productId, "A product for testing");
         product.addAttribute(new ProductAttribute(attributeName, attributeValue));
-        Pool pool = TestUtil.createEntitlementPool(owner, product);
+        Pool pool = TestUtil.createPool(owner, product);
         
         consumer.setFacts(new HashMap<String, String>() {
             { put(factName, factValue); }
@@ -231,7 +231,7 @@ public class DefaultRulesTest {
     private Pool setupProductWithRequiresConsumerTypeAttribute() {
         Product product = new Product(productId, "A product for testing");
         product.setAttribute("requires_consumer_type", ConsumerTypeEnum.DOMAIN.toString());
-        Pool pool = TestUtil.createEntitlementPool(owner, product);
+        Pool pool = TestUtil.createPool(owner, product);
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }
@@ -274,7 +274,7 @@ public class DefaultRulesTest {
 
     private Pool setupUserLicensedPool() {
         Product product = new Product(productId, "A user licensed product");
-        Pool pool = TestUtil.createEntitlementPool(owner, product);
+        Pool pool = TestUtil.createPool(owner, product);
         pool.setAttribute("user_license", "unlimited");
         pool.setAttribute("requires_consumer_type", ConsumerTypeEnum.PERSON.toString());
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -303,7 +303,7 @@ public class DefaultRulesTest {
 
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
-        Pool pool = TestUtil.createEntitlementPool(owner, product);
+        Pool pool = TestUtil.createPool(owner, product);
         pool.setRestrictedToUsername("bob");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;

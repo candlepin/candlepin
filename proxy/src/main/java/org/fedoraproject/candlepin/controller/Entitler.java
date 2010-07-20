@@ -57,8 +57,9 @@ public class Entitler {
     private EventSink sink;
     private PostEntHelper postEntHelper;
     private EntitlementCertificateCurator entitlementCertificateCurator;
+
     @Inject
-    protected Entitler(PoolCurator epCurator,
+    protected Entitler(PoolCurator poolCurator,
         EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
@@ -66,7 +67,7 @@ public class Entitler {
         EventSink sink,
         PostEntHelper postEntHelper, EntitlementCertificateCurator ecC) {
         
-        this.epCurator = epCurator;
+        this.epCurator = poolCurator;
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.enforcer = enforcer;
@@ -163,6 +164,8 @@ public class Entitler {
 
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
+        // TODO: This does not look like it should need a merge, just edit
+        // the pool directly.
         Pool mergedPool = epCurator.merge(pool);
         generateEntitlementCertificate(consumer, mergedPool, e);
         return e;
@@ -242,6 +245,12 @@ public class Entitler {
         Consumer consumer = entitlement.getConsumer();
         consumer.removeEntitlement(entitlement);
 
+        // Look for pools referencing this entitlement as their source entitlement
+        // and clean them up as well:
+        for (Pool p : epCurator.listBySourceEntitlement(entitlement)) {
+            deletePool(p);
+        }
+
         Event event = eventFactory.entitlementDeleted(entitlement); 
         
         epCurator.merge(entitlement.getPool());
@@ -255,6 +264,22 @@ public class Entitler {
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
             revokeEntitlement(e);
         }
+    }
+
+    /**
+     * Cleanup entitlements and safely delete the given pool.
+     *
+     * @param pool
+     */
+    @Transactional
+    public void deletePool(Pool pool) {
+        Event event = eventFactory.poolDeleted(pool);
+        // Must do a full revoke for all entitlements:
+        for (Entitlement e : pool.getEntitlements()) {
+            revokeEntitlement(e);
+        }
+        epCurator.delete(pool);
+        sink.sendEvent(event);
     }
 
 }

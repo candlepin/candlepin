@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -124,7 +125,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Set<String> providedProductIds = new HashSet<String>();
         providedProductIds.add(product.getId());
 
-        Pool p = TestUtil.createEntitlementPool(owner, parent.getId(), 
+        Pool p = TestUtil.createPool(owner, parent.getId(),
             providedProductIds, 5);
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
@@ -139,7 +140,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Set<String> providedProductIds = new HashSet<String>();
         providedProductIds.add(another.getId());
         
-        Pool pool = TestUtil.createEntitlementPool(owner, product.getId(), 
+        Pool pool = TestUtil.createPool(owner, product.getId(),
             providedProductIds, 5);
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
@@ -161,6 +162,27 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
         
         assertEquals(160L, pool.getQuantity().longValue());
+    }
+
+    @Test
+    public void testListBySourceEntitlement() {
+
+        Pool sourcePool = TestUtil.createPool(owner, product);
+        poolCurator.create(sourcePool);
+        Entitlement e = new Entitlement(sourcePool, consumer, sourcePool.getStartDate(),
+            sourcePool.getEndDate(), 1);
+        entitlementCurator.create(e);
+
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setSourceEntitlement(e);
+        Pool pool3 = TestUtil.createPool(owner, product);
+        pool3.setSourceEntitlement(e);
+
+        poolCurator.create(pool2);
+        poolCurator.create(pool3);
+
+        assertEquals(2, poolCurator.listBySourceEntitlement(e).size());
+
     }
 
     
