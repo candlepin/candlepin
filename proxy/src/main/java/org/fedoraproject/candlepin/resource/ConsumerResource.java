@@ -184,7 +184,6 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Consumer regenIdCerts(@PathParam("consumer_uuid") String uuid,
         @Context Principal principal) {
-        System.out.println("************ ENTERED REGENIDCERTS");
         Consumer c = verifyAndLookupConsumer(uuid);
         try {
 
