@@ -28,9 +28,8 @@ Feature: Products with "user-license" attribute creates a sub-pool
       And consumer "jay-consumer" consumes an entitlement for product "tooling"
       And user "jay" registers consumer "sys2" with type "system"
       And consumer "sys2" consumes an entitlement for product "editor"
-
-      # Currently legitimately failing
-      #Then consumer "sys2" has 1 entitlement certificate
+      
+      Then consumer "sys2" has 1 entitlement certificate
 
     Scenario: Restricted Pools should be deleted when consumer is deleted
       Given I am a user "bob"

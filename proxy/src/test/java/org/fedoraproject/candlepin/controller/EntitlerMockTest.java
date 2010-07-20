@@ -14,8 +14,11 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import java.util.ArrayList;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +37,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -54,6 +58,7 @@ public class EntitlerMockTest {
     @Mock private Enforcer enforcerMock;
     @Mock private EntitlementCertServiceAdapter entCertAdapterMock;
     @Mock private SubscriptionServiceAdapter subAdapterMock;
+    @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private EventFactory eventFactoryMock;
     @Mock private EventSink sinkMock;
     @Mock private PostEntHelper postEntHelperMock;
@@ -67,8 +72,8 @@ public class EntitlerMockTest {
         pool = TestUtil.createPool(o, product);
 
         entitler = new Entitler(poolCuratorMock, entCuratorMock, consumerCuratorMock,
-            enforcerMock, entCertAdapterMock, subAdapterMock, eventFactoryMock, sinkMock,
-            postEntHelperMock, certCuratorMock);
+            enforcerMock, entCertAdapterMock, subAdapterMock, productAdapterMock, 
+            eventFactoryMock, sinkMock, postEntHelperMock, certCuratorMock);
 
     }
 
@@ -102,14 +107,10 @@ public class EntitlerMockTest {
     public void testCleanup() throws Exception {
         Pool p = createPoolWithEntitlements();
 
-        entitler.deletePool(p);
+        when(poolCuratorMock.entitlementsIn(p)).thenReturn(
+                new ArrayList<Entitlement>(p.getEntitlements()));
 
-        // Every entitlement should be revoked:
-        /*
-        for (Entitlement e : p.getEntitlements()) {
-            verify(entitlerMock).revokeEntitlement(e);
-        }
-        */
+        entitler.deletePool(p);
 
         // And the pool should be deleted:
         verify(poolCuratorMock).delete(p);
@@ -120,14 +121,14 @@ public class EntitlerMockTest {
     }
 
     private Pool createPoolWithEntitlements() {
-        Pool pool = TestUtil.createPool(o, product);
-        Entitlement e1 = new Entitlement(pool, TestUtil.createConsumer(o),
-            pool.getStartDate(), pool.getEndDate(), 1);
-        Entitlement e2 = new Entitlement(pool, TestUtil.createConsumer(o),
-            pool.getStartDate(), pool.getEndDate(), 1);
-        pool.getEntitlements().add(e1);
-        pool.getEntitlements().add(e2);
-        return pool;
+        Pool newPool = TestUtil.createPool(o, product);
+        Entitlement e1 = new Entitlement(newPool, TestUtil.createConsumer(o),
+            newPool.getStartDate(), newPool.getEndDate(), 1);
+        Entitlement e2 = new Entitlement(newPool, TestUtil.createConsumer(o),
+            newPool.getStartDate(), newPool.getEndDate(), 1);
+        newPool.getEntitlements().add(e1);
+        newPool.getEntitlements().add(e2);
+        return newPool;
     }
 
 }

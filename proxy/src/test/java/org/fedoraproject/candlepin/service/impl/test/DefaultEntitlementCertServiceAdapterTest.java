@@ -14,9 +14,10 @@
  */
 package org.fedoraproject.candlepin.service.impl.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.verify;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -45,6 +46,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 /**
@@ -98,6 +100,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
+        entitlement.setConsumer(Mockito.mock(Consumer.class));
         
         product.setContent(Collections.singleton(content));
     }
@@ -113,9 +116,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void contentExtentionsShouldBeAddedDuringCertificateGeneration() 
         throws Exception {
         
-        certServiceAdapter.createX509Certificate(mock(Consumer.class),
-            entitlement, subscription, product, mock(Date.class), new BigInteger("1234"),
-            keyPair());
+        certServiceAdapter.createX509Certificate(entitlement, subscription, 
+            product, new BigInteger("1234"), keyPair());
         
         verify(mockedPKI).createX509Certificate(any(String.class), 
             argThat(new ListContainsContentExtensions()), 
@@ -127,9 +129,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void entitlementQuantityShouldBeAddedDuringCertificateGeneration() 
         throws Exception {
         
-        certServiceAdapter.createX509Certificate(mock(Consumer.class),
-            entitlement, subscription, product, mock(Date.class), new BigInteger("1234"),
-            keyPair());
+        certServiceAdapter.createX509Certificate(entitlement, subscription, product, 
+            new BigInteger("1234"), keyPair());
         
         verify(mockedPKI).createX509Certificate(any(String.class), 
             argThat(new ListContainsEntitlementExtensions()), 

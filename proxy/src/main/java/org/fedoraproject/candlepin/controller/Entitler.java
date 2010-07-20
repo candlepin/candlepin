@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
@@ -36,6 +37,7 @@ import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -53,6 +55,7 @@ public class Entitler {
     private static Logger log = Logger.getLogger(Entitler.class);
     private EntitlementCertServiceAdapter entCertAdapter;
     private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter productAdapter;
     private EventFactory eventFactory;
     private EventSink sink;
     private PostEntHelper postEntHelper;
@@ -63,6 +66,7 @@ public class Entitler {
         EntitlementCurator entitlementCurator, ConsumerCurator consumerCurator,
         Enforcer enforcer, EntitlementCertServiceAdapter entCertAdapter, 
         SubscriptionServiceAdapter subAdapter,
+        ProductServiceAdapter productAdapter,
         EventFactory eventFactory,
         EventSink sink,
         PostEntHelper postEntHelper, EntitlementCertificateCurator ecC) {
@@ -73,6 +77,7 @@ public class Entitler {
         this.enforcer = enforcer;
         this.entCertAdapter = entCertAdapter;
         this.subAdapter = subAdapter;
+        this.productAdapter = productAdapter;
         this.eventFactory = eventFactory;
         this.sink = sink;
         this.postEntHelper = postEntHelper;
@@ -182,24 +187,25 @@ public class Entitler {
         Consumer consumer, Pool pool, Entitlement e) {
         Subscription sub = subAdapter.getSubscription(pool.getSubscriptionId());
         
-        if (sub == null) {
-            log.warn("Cannot generate entitlement certificate, no subscription for pool: " +
-                pool.getId());
-            
+        Product product = null;
+        if (sub != null) {
+            // Just look this up off of the subscription if one exists
+            product = sub.getProduct();
         }
         else {
-            // TODO: Assuming every entitlement = generate a cert, most likely we'll want
-            // to know if this product entails granting a cert someday.
-            try {
-                return entCertAdapter.
-                    generateEntitlementCert(consumer, e, sub, sub.getProduct(),
-                    sub.getEndDate());
-            }
-            catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
+            // This is possible in a sub-pool, for example - the pool was not
+            // created directly from a subscription
+            product = productAdapter.getProductById(e.getProductId());
         }
-        return null;
+        
+        // TODO: Assuming every entitlement = generate a cert, most likely we'll want
+        // to know if this product entails granting a cert someday.
+        try {
+            return entCertAdapter.generateEntitlementCert(e, sub, product);
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Transactional
@@ -274,10 +280,12 @@ public class Entitler {
     @Transactional
     public void deletePool(Pool pool) {
         Event event = eventFactory.poolDeleted(pool);
+        
         // Must do a full revoke for all entitlements:
-        for (Entitlement e : pool.getEntitlements()) {
+        for (Entitlement e : epCurator.entitlementsIn(pool)) {
             revokeEntitlement(e);
         }
+        
         epCurator.delete(pool);
         sink.sendEvent(event);
     }

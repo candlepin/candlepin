@@ -16,12 +16,10 @@ package org.fedoraproject.candlepin.service.impl.stub;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
@@ -51,17 +49,17 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
     }
 
     @Override
-    public EntitlementCertificate generateEntitlementCert(Consumer consumer,
-        Entitlement entitlement, Subscription sub, Product product, Date endDate)
+    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, 
+        Subscription sub, Product product)
         throws GeneralSecurityException, IOException {
         
         log.debug("Generating entitlement cert for:");
-        log.debug("   consumer: " + consumer.getUuid());
+        log.debug("   consumer: " + entitlement.getConsumer().getUuid());
         log.debug("   product: " + product.getId());
-        log.debug("   end date: " + endDate);
+        log.debug("   end date: " + entitlement.getEndDate());
         
         EntitlementCertificate cert = new EntitlementCertificate();
-        CertificateSerial serial = new CertificateSerial(endDate);
+        CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
         serialCurator.create(serial);
        
         cert.setSerial(serial);

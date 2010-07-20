@@ -19,14 +19,12 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
-import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
@@ -72,23 +70,23 @@ public class DefaultEntitlementCertServiceAdapter extends
     // NOTE: we use entitlement here, but it version does not...
     // NOTE: we can get consumer from entitlement.getConsumer()
     @Override
-    public EntitlementCertificate generateEntitlementCert(Consumer consumer,
-        Entitlement entitlement, Subscription sub, Product product, Date endDate)
+    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, 
+        Subscription sub, Product product)
         throws GeneralSecurityException, IOException {
         
         log.debug("Generating entitlement cert for:");
-        log.debug("   consumer: " + consumer.getUuid());
+        log.debug("   consumer: " + entitlement.getConsumer().getUuid());
         log.debug("   product: " + product.getId());
-        log.debug("   end date: " + endDate);
+        log.debug("   end date: " + entitlement.getEndDate());
         
-        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
-        CertificateSerial serial = new CertificateSerial(endDate);
+        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
+        CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
         // We need the sequence generated id before we create the EntitlementCertificate,
         // otherwise we could have used cascading create
         serialCurator.create(serial);
         
-        X509Certificate x509Cert = createX509Certificate(consumer, entitlement, sub,
-            product, endDate, BigInteger.valueOf(serial.getId()), keyPair);
+        X509Certificate x509Cert = createX509Certificate(entitlement, sub,
+            product, BigInteger.valueOf(serial.getId()), keyPair);
         
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serial);
@@ -115,24 +113,27 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
     }
 
-    public X509Certificate createX509Certificate(Consumer consumer,
-        Entitlement ent, Subscription sub, Product product, Date endDate, 
-        BigInteger serialNumber, KeyPair keyPair) 
+    public X509Certificate createX509Certificate(Entitlement ent, 
+        Subscription sub, Product product, BigInteger serialNumber, KeyPair keyPair) 
         throws GeneralSecurityException, IOException {
         // oiduitl is busted at the moment, so do this manually
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
         
         addExtensionsForProduct(extensions, product);
-        for (Product provided : sub.getProvidedProducts()) {
-            addExtensionsForProduct(extensions, provided);
+        
+        if (sub != null) {
+            for (Product provided : sub.getProvidedProducts()) {
+                addExtensionsForProduct(extensions, provided);
+            }
+            
+            extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         }
 
-        extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
-        extensions.addAll(extensionUtil.consumerExtensions(consumer));
+        extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
         
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(ent),
-            extensions, sub.getStartDate(), endDate, keyPair, serialNumber,
+            extensions, ent.getStartDate(), ent.getEndDate(), keyPair, serialNumber,
             null);
         return x509Cert;
     }

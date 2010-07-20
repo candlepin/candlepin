@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.service;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Date;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
@@ -35,17 +34,15 @@ public interface EntitlementCertServiceAdapter {
      *
      * End date specified explicitly to allow for flexible termination policies.
      *
-     * @param consumer Consumer certificate is for.
      * @param entitlement entitlement which granted this cert.
      * @param sub Subscription being used.
      * @param product Product being consumed.
-     * @param endDate End date. (usually subscription end date, but not always)
      * @return Client entitlement certificate.
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
-    EntitlementCertificate generateEntitlementCert(Consumer consumer,
-        Entitlement entitlement, Subscription sub, Product product, Date endDate)
+    EntitlementCertificate generateEntitlementCert(Entitlement entitlement, 
+        Subscription sub, Product product)
         throws GeneralSecurityException, IOException;
     
     /**
