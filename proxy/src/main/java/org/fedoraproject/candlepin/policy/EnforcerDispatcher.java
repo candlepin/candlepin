@@ -20,10 +20,10 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
-import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.JavascriptEnforcer;
+import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
+import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 import com.google.inject.Inject;
 
@@ -33,10 +33,10 @@ import com.google.inject.Inject;
 public class EnforcerDispatcher implements Enforcer {
     
     private CandlepinConsumerTypeEnforcer candlepinEnforcer;
-    private JavascriptEnforcer jsEnforcer;
+    private EntitlementRules jsEnforcer;
 
     @Inject
-    public EnforcerDispatcher(JavascriptEnforcer jsEnforcer, 
+    public EnforcerDispatcher(EntitlementRules jsEnforcer, 
         CandlepinConsumerTypeEnforcer candlepinEnforcer) {
         this.jsEnforcer = jsEnforcer;
         this.candlepinEnforcer = candlepinEnforcer;

@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,7 +32,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -37,8 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import static org.mockito.Mockito.*;
 
 public class EntitlerMockTest {
 

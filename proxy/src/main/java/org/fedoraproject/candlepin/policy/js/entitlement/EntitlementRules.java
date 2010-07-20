@@ -184,7 +184,8 @@ public class EntitlementRules implements Enforcer {
     }
 
     @Override
-    public PostEntHelper postEntitlement(PostEntHelper postEntHelper, Entitlement ent) {
+    public PostEntHelper postEntitlement(
+            Consumer consumer, PostEntHelper postEntHelper, Entitlement ent) {
         runPostEntitlement(postEntHelper, ent);
         return postEntHelper;
     }

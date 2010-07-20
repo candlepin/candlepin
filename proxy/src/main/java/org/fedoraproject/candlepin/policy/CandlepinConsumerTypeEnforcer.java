@@ -19,9 +19,9 @@ import java.util.List;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.policy.js.PostEntHelper;
-import org.fedoraproject.candlepin.policy.js.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 /**
  * CandlepinConsumerTypeEnforcer
