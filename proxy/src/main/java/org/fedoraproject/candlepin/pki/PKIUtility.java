@@ -36,12 +36,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.Set;
 
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.DERGeneralString;
-import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERTaggedObject;
-import org.bouncycastle.asn1.DERTags;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
@@ -124,8 +118,6 @@ public class PKIUtility {
         
         // Add an alternate name if provided
         if (alternateName != null) {
-            ASN1TaggedObject ato = new DERTaggedObject(GeneralName.otherName,
-                new DEROctetString(alternateName.getBytes()));
             GeneralName name = new GeneralName(GeneralName.directoryName,
                 "CN=" + alternateName);
             certGen.addExtension(X509Extensions.SubjectAlternativeName, false,
