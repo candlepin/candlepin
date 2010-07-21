@@ -14,10 +14,6 @@
  */
 package org.fedoraproject.candlepin;
 
-import java.io.Reader;
-
-import javax.script.ScriptEngine;
-
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
@@ -52,21 +48,26 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.ConfigUserServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.stub.StubIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.EnforcerForTesting;
 import org.fedoraproject.candlepin.test.EventSinkForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+
+import org.xnap.commons.i18n.I18n;
+
+import java.io.Reader;
+
+import javax.script.ScriptEngine;
 
 public class CandlepinCommonTestingModule extends AbstractModule {
 
@@ -95,8 +96,6 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
-        bind(IdentityCertServiceAdapter.class).to(
-            StubIdentityCertServiceAdapter.class);
         bind(EntitlementCertServiceAdapter.class).to(
             StubEntitlementCertServiceAdapter.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
@@ -136,6 +135,10 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(CertificateRevocationListTask.class);
         bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
             .toInstance("SHA1withRSA");
+        
+        // temporary
+        bind(IdentityCertServiceAdapter.class).to(
+            DefaultIdentityCertServiceAdapter.class);
     }
     
     public TestingInterceptor crudInterceptor() {

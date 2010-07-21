@@ -14,12 +14,10 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -36,6 +34,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -46,9 +45,13 @@ import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
+
+import com.google.inject.internal.Lists;
+
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
@@ -58,7 +61,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.inject.internal.Lists;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * ConsumerResourceTest
@@ -209,8 +216,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(serial2, certificates.get(1).getSerial().getId());
     }
 
-    //@Test
+    @Test
     public void testCreateConsumer() {
+        System.out.println("******** START CREATE TEST");
         Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, 
             null, standardSystemType);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
@@ -222,9 +230,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNotNull(consumerCurator.find(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
+        System.out.println("******** END CREATE TEST");
     }
     
-    //@Test(expected = BadRequestException.class)
+    @Test(expected = BadRequestException.class)
     public void testCreateConsumerWithUUID() {
         String uuid = "Jar Jar Binks";
         Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, 
@@ -260,10 +269,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void testUsername() {
+    public void testUsername() throws IOException, GeneralSecurityException {
+        
         // not setting the username here - this should be set by
         // examining the user principal
-        Consumer consumer = new Consumer(CONSUMER_NAME, null, 
+        Consumer consumer = new Consumer("random consumer", null, 
             null, standardSystemType);
 
         consumer  = consumerResource.create(consumer, principal);
@@ -310,7 +320,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         consumerResource.bind("notarealuuid", pool.getId(), null, null, null, null, null);
     }
 
-    //@Test
+    @Test
     public void testRegisterWithConsumerId() {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, 
             null, standardSystemType);
@@ -411,9 +421,20 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void consumerCanDeleteSelf() {
-        setupPrincipal(new ConsumerPrincipal(consumer));
-        consumerResource.deleteConsumer(consumer.getUuid());
+    public void consumerCanDeleteSelf() throws GeneralSecurityException, IOException {
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, 
+            owner, standardSystemType);
+
+        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
+        Consumer c = consumerCurator.create(toSubmit);
+
+        IdentityCertServiceAdapter icsa = injector
+            .getInstance(IdentityCertServiceAdapter.class);
+        IdentityCertificate idCert = icsa.generateIdentityCert(c,
+            USER_NAME);
+        c.setIdCert(idCert);
+        setupPrincipal(new ConsumerPrincipal(c));
+        consumerResource.deleteConsumer(c.getUuid());
     }
     
     @Test
@@ -571,14 +592,15 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void personalNameOverride() {
-        Consumer personal = TestUtil.createConsumer(personType, owner);        
+        Consumer personal = TestUtil.createConsumer(personType, owner);
+        
         personal = consumerResource.create(personal, principal);
         
         // Not sure if this should be hard-coded to default
         assertEquals(USER_NAME, personal.getName());
     }
     
-    //@Test(expected = BadRequestException.class)
+    @Test(expected = BadRequestException.class)
     public void onlyOnePersonalConsumer() {
         Consumer personal = TestUtil.createConsumer(personType, owner);        
         consumerResource.create(personal, principal);

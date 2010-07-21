@@ -58,7 +58,6 @@ import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
@@ -106,10 +105,8 @@ public class DatabaseTestFixture {
     protected Entitler entitler;
     protected TestingInterceptor crudInterceptor;
     protected TestingInterceptor securityInterceptor;
-    protected IdentityCertServiceAdapter identityCertService;
     protected EntitlementCertServiceAdapter entitlementCertService;
 
-    
     @Before
     public void init() {
         Module guiceOverrideModule = getGuiceOverrideModule();
@@ -159,7 +156,6 @@ public class DatabaseTestFixture {
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
         entCertCurator = injector.getInstance(EntitlementCertificateCurator.class);
         certSerialCurator = injector.getInstance(CertificateSerialCurator.class);
-        identityCertService = injector.getInstance(IdentityCertServiceAdapter.class);
         entitlementCertService = injector.getInstance(EntitlementCertServiceAdapter.class);
 
         i18n = injector.getInstance(I18n.class);
