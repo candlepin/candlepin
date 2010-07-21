@@ -114,8 +114,9 @@ public class PoolTest extends DatabaseTestFixture {
 
         entitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
 
-        assertFalse(poolCurator.find(consumerPool.getId())
-                .entitlementsAvailable(new Integer(1)));
+        consumerPool = poolCurator.find(consumerPool.getId());
+        assertFalse(consumerPool.entitlementsAvailable(new Integer(1)));
+        assertEquals(1, consumerPool.getEntitlements().size());
     }
 
     @Test

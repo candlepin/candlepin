@@ -155,6 +155,7 @@ public class Entitler {
         Entitlement e 
             = new Entitlement(pool, consumer, new Date(), pool.getEndDate(), quantity);
         consumer.addEntitlement(e);
+        pool.getEntitlements().add(e);
 
         if (preHelper.getGrantFreeEntitlement()) {
             log.info("Granting free entitlement.");

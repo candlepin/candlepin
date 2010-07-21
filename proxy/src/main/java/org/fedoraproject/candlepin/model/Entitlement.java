@@ -107,8 +107,10 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     private Consumer consumer;
     
     @ManyToOne
-    @ForeignKey(name = "fk_entitlement_entitlement_pool")
-    @JoinColumn(nullable = false)
+    @ForeignKey(name = "fk_pool_id", inverseName = "fk_entitlement_id")
+    @JoinTable(name = "cp_pool_entitlements",
+        joinColumns = @JoinColumn(name = "entitlement_id"),
+        inverseJoinColumns = @JoinColumn(name = "pool_id"))
     private Pool pool;
 
     private Date startDate;

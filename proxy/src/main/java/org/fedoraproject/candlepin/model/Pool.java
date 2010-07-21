@@ -131,7 +131,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
-    @OneToMany
+    @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
     
     private String restrictedToUsername;
@@ -466,6 +466,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
      *
      * @return The entitlements.
      */
+    @XmlTransient
     public Set<Entitlement> getEntitlements() {
         return this.entitlements;
     }
