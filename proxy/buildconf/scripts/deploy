@@ -58,7 +58,7 @@ function update_keystore
 	    echo "Using existing keystore"
 	else
 	    echo "Move the keystore to tomcats location"
-	    cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+	    sudo cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
 	fi
 }
 
