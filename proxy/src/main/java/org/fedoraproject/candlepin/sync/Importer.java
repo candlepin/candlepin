@@ -30,12 +30,12 @@ import java.util.zip.ZipInputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
@@ -77,23 +77,22 @@ public class Importer {
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
-    private PoolCurator poolCurator;
     private RulesCurator rulesCurator;
     private OwnerCurator ownerCurator;
     private ContentCurator contentCurator;
     private SubscriptionCurator subCurator;
-    
+    private PoolManager poolManager;
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
-        PoolCurator poolCurator, RulesCurator rulesCurator, OwnerCurator ownerCurator, 
-        ContentCurator contentCurator, SubscriptionCurator subCurator) {
+        RulesCurator rulesCurator, OwnerCurator ownerCurator,
+        ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
-        this.poolCurator = poolCurator;
         this.rulesCurator = rulesCurator;
         this.ownerCurator = ownerCurator;
         this.contentCurator = contentCurator;
         this.subCurator = subCurator;
+        this.poolManager = pm;
         this.mapper = SyncUtils.getObjectMapper();
     }
 
@@ -138,7 +137,7 @@ public class Importer {
         importEntitlements(owner, importedProducts,
             importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
         
-        poolCurator.refreshPools(owner);
+        poolManager.refreshPools(owner);
     }
     
     public void importRules(File[] rulesFiles) throws IOException {

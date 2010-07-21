@@ -42,6 +42,7 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -93,6 +94,7 @@ public class OwnerResource {
     private EventCurator eventCurator;
     private ProductCurator productCurator;
     private Importer importer;
+    private PoolManager poolManager;
     private static final int FEED_LIMIT = 1000;
     
 
@@ -103,7 +105,8 @@ public class OwnerResource {
         SubscriptionTokenCurator subscriptionTokenCurator,
         ConsumerCurator consumerCurator, I18n i18n,
         UserServiceAdapter userService, Entitler entitler, EventSink sink,
-        EventFactory eventFactory, EventCurator eventCurator, Importer importer) {
+        EventFactory eventFactory, EventCurator eventCurator, Importer importer,
+        PoolManager poolManager) {
 
         this.ownerCurator = ownerCurator;
         this.productCurator = productCurator;
@@ -118,6 +121,7 @@ public class OwnerResource {
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
         this.importer = importer;
+        this.poolManager = poolManager;
     }
 
     /**
@@ -344,13 +348,7 @@ public class OwnerResource {
                     "owner with key: {0} was not found.", ownerKey));
             }
         }
-        List<Entitlement> toRevoke = poolCurator.refreshPools(owner);
-        if (log.isInfoEnabled()) {
-            log.info("No of entitlements to revoke: #" + toRevoke.size());
-        }
-        for (Entitlement e : toRevoke) {
-            this.entitler.revokeEntitlement(e);
-        }
+        poolManager.refreshPools(owner);
     }
     
     @POST

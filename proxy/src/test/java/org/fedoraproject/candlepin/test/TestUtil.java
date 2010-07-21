@@ -17,10 +17,15 @@ package org.fedoraproject.candlepin.test;
 import java.sql.Date;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
@@ -97,6 +102,10 @@ public class TestUtil {
         return createSubscription(owner, product);
     }
     
+    public static Subscription createSubscription() {
+        return createSubscription(createProduct());
+    }
+
     public static Subscription createSubscription(Owner owner, Product product) {
         Subscription sub = new Subscription(owner,
             product, new HashSet<Product>(), 1000L, createDate(2000, 1, 1),
@@ -165,9 +174,24 @@ public class TestUtil {
         return buf.toString();
     }
 
+
+    public static Principal createPrincipal(Owner owner, Role role) {
+        List<Role> roles = new LinkedList<Role>();
+        roles.add(role);
+        Principal ownerAdmin = new UserPrincipal("someuser", owner, roles);
+        return ownerAdmin;
+    }
+
+    public static Principal createOwnerPrincipal() {
+        Owner owner = new Owner("Test Owner " + randomInt());
+        return createPrincipal(owner, Role.OWNER_ADMIN);
+    }
+
+
     public static Set<String> createSet(String productId) {
         Set<String> results = new HashSet<String>();
         results.add(productId);
         return results;
     }
+
 }

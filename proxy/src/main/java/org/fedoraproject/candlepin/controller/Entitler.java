@@ -209,36 +209,47 @@ public class Entitler {
         }
     }
 
-    @Transactional
     public void regenerateEntitlementCertificates(Consumer consumer) {
         log.info("Regenerating #" + consumer.getEntitlements().size() +
             " entitlement's certificates for consumer :" + consumer);
         //TODO - Assumes only 1 entitlement certificate exists per entitlement
-        for (Entitlement e : consumer.getEntitlements()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Revoking entitlementCertificates of : " + e);
-            }
-            this.entCertAdapter.revokeEntitlementCertificates(e);
-            for (EntitlementCertificate ec : e.getCertificates()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Deleting entitlementCertificate: #" + ec.getId());
-                }
-                this.entitlementCertificateCurator.delete(ec);
-            }
-            e.getCertificates().clear();
-            //below call creates new certificates and saves it to the backend.
-            EntitlementCertificate generated =
-                this.generateEntitlementCertificate(consumer, e.getPool(), e);
-            this.entitlementCurator.refresh(e);
-
-            //send entitlement changed event.
-            this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
-            if (log.isDebugEnabled()) {
-                log.debug("Generated entitlementCertificate: #" + generated.getId());
-            }
-        }
+        this.regenerateCertificatesOf(consumer.getEntitlements());
         log.info("Completed Regenerating #" + consumer.getEntitlements().size() +
             " entitlement's certificates for consumer: " + consumer);
+    }
+
+    @Transactional
+    public void regenerateCertificatesOf(Iterable<Entitlement> iterable) {
+        for (Entitlement e : iterable) {
+            regenerateCertificatesOf(e);
+        }
+    }
+    /**
+     * @param e
+     */
+    @Transactional
+    public void regenerateCertificatesOf(Entitlement e) {
+        if (log.isDebugEnabled()) {
+            log.debug("Revoking entitlementCertificates of : " + e);
+        }
+        this.entCertAdapter.revokeEntitlementCertificates(e);
+        for (EntitlementCertificate ec : e.getCertificates()) {
+            if (log.isDebugEnabled()) {
+                log.debug("Deleting entitlementCertificate: #" + ec.getId());
+            }
+            this.entitlementCertificateCurator.delete(ec);
+        }
+        e.getCertificates().clear();
+        //below call creates new certificates and saves it to the backend.
+        EntitlementCertificate generated =
+            this.generateEntitlementCertificate(e.getConsumer(), e.getPool(), e);
+        this.entitlementCurator.refresh(e);
+
+        //send entitlement changed event.
+        this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
+        if (log.isDebugEnabled()) {
+            log.debug("Generated entitlementCertificate: #" + generated.getId());
+        }
     }
 
     // TODO: Does the enforcer have any rules around removing entitlements?

@@ -106,7 +106,7 @@ public class EntitlerTest extends DatabaseTestFixture {
         subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
         
-        poolCurator.refreshPools(o);
+        poolManager.refreshPools(o);
         
         entitler = injector.getInstance(Entitler.class);
 

@@ -14,57 +14,8 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventFactory;
-import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.CandlepinException;
-import org.fedoraproject.candlepin.exceptions.ForbiddenException;
-import org.fedoraproject.candlepin.exceptions.IseException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.CertificateSerialDto;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.EventCurator;
-import org.fedoraproject.candlepin.model.IdentityCertificate;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
-import org.fedoraproject.candlepin.policy.js.consumer.ConsumerDeleteHelper;
-import org.fedoraproject.candlepin.policy.js.consumer.ConsumerRules;
-import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.fedoraproject.candlepin.sync.ExportCreationException;
-import org.fedoraproject.candlepin.sync.Exporter;
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
-import org.xnap.commons.i18n.I18n;
-
 import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.security.GeneralSecurityException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -84,6 +35,51 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.CandlepinException;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.IseException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.CertificateSerialDto;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.EventCurator;
+import org.fedoraproject.candlepin.model.IdentityCertificate;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.sync.ExportCreationException;
+import org.fedoraproject.candlepin.sync.Exporter;
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
 /**
  * API Gateway for Consumers
  */
@@ -93,7 +89,6 @@ public class ConsumerResource {
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
-    private PoolCurator poolCurator;
     private Entitler entitler;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
@@ -104,17 +99,15 @@ public class ConsumerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private EventCurator eventCurator;
-    private ConsumerDeleteHelper consumerDeleteHelper;
-    private ConsumerRules consumerRules;
     private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
+    private PoolManager poolManager;
     
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductServiceAdapter productAdapter, Entitler entitler, 
-        ConsumerRules consumerRules,
-        SubscriptionServiceAdapter subAdapter, PoolCurator epCurator,
+        ProductServiceAdapter productAdapter, Entitler entitler,
+        SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
@@ -123,16 +116,13 @@ public class ConsumerResource {
         EventFactory eventFactory,
         EventCurator eventCurator,
         UserServiceAdapter userService,
-        Exporter exporter,
-        ConsumerDeleteHelper consumerDeleteHelper) {
+        Exporter exporter, PoolManager poolManager) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
         this.entitler = entitler;
-        this.consumerRules = consumerRules;
-        this.poolCurator = epCurator;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
@@ -142,7 +132,7 @@ public class ConsumerResource {
         this.eventCurator = eventCurator;
         this.userService = userService;
         this.exporter = exporter;
-        this.consumerDeleteHelper = consumerDeleteHelper;
+        this.poolManager = poolManager;
     }
 
     /**
@@ -170,34 +160,6 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
         return verifyAndLookupConsumer(uuid);
-    }
-
-   /**
-    * Return the consumer identified by the given uuid.
-    *
-    * @param uuid uuid of the consumer sought.
-    * @return the consumer identified by the given uuid.
-    */
-    @POST
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Path("{consumer_uuid}")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public Consumer regenIdCerts(@PathParam("consumer_uuid") String uuid,
-        @Context Principal principal) {
-        Consumer c = verifyAndLookupConsumer(uuid);
-        try {
-
-            User user = getCurrentUsername(principal);
-            IdentityCertificate ic = generateIdCert(c, user, true);
-            c.setIdCert(ic);
-            consumerCurator.update(c);
-            return c;
-        }
-        catch (Exception e) {
-            log.error("Problem regenerating id cert for consumer:", e);
-            throw new BadRequestException(
-                i18n.tr("Problem regenerating id cert for consumer {0}", c));
-        }
     }
 
     /**
@@ -258,8 +220,24 @@ public class ConsumerResource {
         
         try {
             consumer = consumerCurator.create(consumer);
-            IdentityCertificate idCert = generateIdCert(consumer, user, false);
-            consumer.setIdCert(idCert);
+            IdentityCertificate idCert = null;
+
+            // This is pretty bad - I'm still not convinced that
+            // the id cert actually needs the username at all
+            if (user != null) {
+                idCert = identityCertService.generateIdentityCert(consumer,
+                    user.getUsername());
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Generated identity cert: " + idCert);
+                log.debug("Created consumer: " + consumer);
+            }
+
+            if (idCert == null) {
+                throw new RuntimeException(
+                    "Error generating identity certificate.");
+            }
 
             sink.emitConsumerCreated(consumer);
             return consumer;
@@ -269,48 +247,6 @@ public class ConsumerResource {
             throw new BadRequestException(
                 i18n.tr("Problem creating consumer {0}", consumer));
         }
-    }
-
-    /**
-     * Generates the identity certificate for the given consumer and user.
-     * Throws RuntimeException if there is a problem with generating the
-     * certificate.
-     * @param c Consumer whose certificate needs to be generated.
-     * @param u User owning the consumer.
-     * @param regen if true, forces a regen of the certificate.
-     * @return The identity certificate for the given consumer.
-     * @throws IOException thrown if there's a problem generating the cert.
-     * @throws GeneralSecurityException thrown incase of security error.
-     */
-    private IdentityCertificate generateIdCert(Consumer c, User u, boolean regen)
-        throws GeneralSecurityException, IOException {
-
-        IdentityCertificate idCert = null;
-
-        // This is pretty bad - I'm still not convinced that
-        // the id cert actually needs the username at all
-        if (u != null) {
-            if (regen) {
-                idCert = identityCertService.regenerateIdentityCert(c,
-                    u.getUsername());
-            }
-            else {
-                idCert = identityCertService.generateIdentityCert(c,
-                    u.getUsername());
-            }
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug("Generated identity cert: " + idCert);
-            log.debug("Created consumer: " + c);
-        }
-
-        if (idCert == null) {
-            throw new RuntimeException(
-                "Error generating identity certificate.");
-        }
-
-        return idCert;
     }
     
     private User getCurrentUsername(Principal principal) {
@@ -353,12 +289,8 @@ public class ConsumerResource {
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
-        
         unbindAll(uuid);
-
         Event event = eventFactory.consumerDeleted(toDelete);
-        consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
-        
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
         sink.sendEvent(event);
@@ -517,12 +449,12 @@ public class ConsumerResource {
         for (Subscription sub : subs) {
 
             // Make sure we have created/updated a pool for this subscription:
-            Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
+            Pool pool = poolManager.lookupBySubscriptionId(sub.getId());
             if (pool == null) {
-                poolCurator.createPoolForSubscription(sub);
+                poolManager.createPoolForSubscription(sub);
             }
             else {
-                poolCurator.updatePoolForSubscription(pool, sub);
+                poolManager.updatePoolForSubscription(pool, sub);
             }
 
             Product p = sub.getProduct();
@@ -532,7 +464,7 @@ public class ConsumerResource {
     }
 
     private List<Entitlement> bindByPool(Long poolId, Consumer consumer, Integer quantity) {
-        Pool pool = poolCurator.find(poolId);
+        Pool pool = poolManager.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
             throw new BadRequestException(

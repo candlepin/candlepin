@@ -371,7 +371,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testEntitlementsRevocationWithLifoOrder() {
         doTestEntitlementsRevocationCommon(7, 4, 5, false);
-        assertTrue(this.poolCurator.find(1L).getConsumed() == 5);
+        assertEquals(5L, this.poolCurator.find(1L).getConsumed().longValue());
         assertNull(this.entitlementCurator.find(1L));
         assertNotNull(this.entitlementCurator.find(2L));
     }
@@ -400,7 +400,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Subscription sub = this.subCurator.find(pool.getSubscriptionId());
         sub.setQuantity(subQ);
         this.subCurator.merge(sub);
-        this.ownerResource.refreshEntitlementPools(owner.getKey(), false);
+       // this.ownerResource.refreshEntitlementPools(owner.getKey(), false);
         pool = this.poolCurator.find(pool.getId());
         createEntitlementWithQ(pool, owner, consumer, e1, "01/02/2010");
         createEntitlementWithQ(pool, owner, consumer1, e2, "01/01/2010");

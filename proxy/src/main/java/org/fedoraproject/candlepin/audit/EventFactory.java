@@ -115,14 +115,14 @@ public class EventFactory {
         return e;
     }
     
-    public Event poolQuantityChangedFrom(Pool before) {
+    public Event poolChangedFrom(Pool before) {
         Owner o = before.getOwner();
         Event e = new Event(Event.Type.MODIFIED, Event.Target.POOL, principalProvider.get(),
             o.getId(), null, before.getId(), entityToJson(before), null);
         return e;
     }
     
-    public void poolQuantityChangedTo(Event e, Pool after) {
+    public void poolChangedTo(Event e, Pool after) {
         e.setNewEntity(entityToJson(after));
     }
     

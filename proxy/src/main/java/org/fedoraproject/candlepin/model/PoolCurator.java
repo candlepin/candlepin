@@ -18,26 +18,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventFactory;
-import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
@@ -52,26 +40,14 @@ import com.wideplay.warp.persist.Transactional;
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
-
-    private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;
     private Enforcer enforcer;
-    private EventSink sink;
-    private EventFactory eventFactory;
-    private Config config;
 
     @Inject
-    protected PoolCurator(SubscriptionServiceAdapter subAdapter, Enforcer enforcer, 
-        ProductServiceAdapter productAdapter, EventSink sink, EventFactory eventFactory,
-        Config cfg) {
-        
+    protected PoolCurator(ProductServiceAdapter productAdapter, Enforcer enforcer) {
         super(Pool.class);
-        this.subAdapter = subAdapter;
         this.productAdapter = productAdapter;
         this.enforcer = enforcer;
-        this.sink = sink;
-        this.eventFactory = eventFactory;
-        this.config = cfg; 
     }
     
     @Override
@@ -80,7 +56,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public Pool find(Serializable id) {
         Pool pool = super.find(id);
         addProductName(pool);
-        
         return pool;
     }
     
@@ -89,9 +64,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @EnforceAccessControl
     public List<Pool> listAll() {
         List<Pool> pools = super.listAll();
-        
         addProductNames(pools);
-        
         return pools;
     }
 
@@ -148,65 +121,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listAvailableEntitlementPools(null, owner, productId, false);
     }
 
-    /**
-     * Check our underlying subscription service and update the pool data. Note
-     * that refreshing the pools doesn't actually take any action, should a subscription
-     * be reduced, expired, or revoked. Pre-existing entitlements will need to be dealt
-     * with separately from this event.
-     *
-     * @param owner Owner to be refreshed.
-     * @return List of entitlements which need to be revoked
-     */
-    public List<Entitlement> refreshPools(Owner owner) {
-        log.debug("Refreshing pools");
-        
-        List<Subscription> subs = subAdapter.getSubscriptions(owner);
-        
-        if (log.isDebugEnabled()) {
-            log.debug("Found subscriptions: ");
-            for (Subscription sub : subs) {
-                log.debug("   " + sub);
-            }
-        }
-        
-        List<Pool> pools = listAvailableEntitlementPools(null, owner, (String) null, false);
-    
-        if (log.isDebugEnabled()) {
-            log.debug("Found pools: ");
-            for (Pool p : pools) {
-                log.debug("   " + p);
-            }
-        }
-        
-        // Map all  pools for this owner/product that have a
-        // subscription ID associated with them.
-        Map<Long, Pool> subToPoolMap = new HashMap<Long, Pool>();
-        for (Pool p : pools) {
-            if (p.getSubscriptionId() != null) {
-                subToPoolMap.put(p.getSubscriptionId(), p);
-            }
-        }
-        List<Entitlement> toRevoke = Util.newList();
-        for (Subscription sub : subs) {
-            if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                createPoolForSubscription(sub);
-                subToPoolMap.remove(sub.getId());
-            }
-            else {
-                Pool existingPool = subToPoolMap.get(sub.getId());
-                toRevoke.addAll(updatePoolForSubscription(existingPool, sub));
-                subToPoolMap.remove(sub.getId());
-            }
-        }
-    
-        // de-activate pools whose subscription disappeared:
-        for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
-            deactivatePool(entry.getValue());
-        }
-        return toRevoke;
-    }
-
-    /**
+       /**
      * List entitlement pools.
      * 
      * Pools will be refreshed from the underlying subscription service.
@@ -350,69 +265,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             }
         }
     }
-    
-    private boolean poolExistsForSubscription(Map<Long, Pool> subToPoolMap,
-            Long id) {
-        return subToPoolMap.containsKey(id);
+
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> retrieveFreeEntitlementsOfPool(Pool existingPool,
+        boolean lifo) {
+        return criteriaToSelectEntitlementForPool(existingPool)
+            .add(Restrictions.eq("isFree", false))
+            .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
+            .list();
     }
 
-    public List<Entitlement> updatePoolForSubscription(Pool existingPool,
-        Subscription sub) {
-        log.debug("Found existing pool for sub: " + sub.getId());
-        // Modify the pool only if the values have changed
-        if ((!sub.getQuantity().equals(existingPool.getQuantity())) ||
-            (!sub.getStartDate().equals(existingPool.getStartDate())) ||
-            (!sub.getEndDate().equals(existingPool.getEndDate())))  {      
-             
-            //TODO: Shoud have better events, one per type of change
-            Event e = eventFactory.poolQuantityChangedFrom(existingPool);
-            existingPool.setQuantity(sub.getQuantity());
-            existingPool.setStartDate(sub.getStartDate());
-            existingPool.setEndDate(sub.getEndDate());
-            merge(existingPool);  
-            
-            eventFactory.poolQuantityChangedTo(e, existingPool);
-            sink.sendEvent(e);
-        }
-        boolean lifo = !config
-        .getBoolean(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER);
-    
-        List<Entitlement> toRevoke = Util.newList();
-        if (existingPool.isOverflowing()) {
-            // if pool quantity has reduced, then start with revocation.
-            @SuppressWarnings("unchecked")
-            Iterator<Entitlement> iter = 
-                criteriaToSelectEntitlementForPool(existingPool)
-                    .add(Restrictions.eq("isFree", false))
-                    .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
-                    .list().iterator();
-            
-            long consumed = existingPool.getConsumed();
-            while ((consumed > existingPool.getQuantity()) && iter.hasNext()) {
-                Entitlement e = iter.next();
-                toRevoke.add(e);
-                consumed -= e.getQuantity();
-            }
-        }
-        return toRevoke;
-    }
-
-    public void createPoolForSubscription(Subscription sub) {
-        log.debug("Creating new pool for new sub: " + sub.getId());
-
-        Long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
-        Set<String> productIds = new HashSet<String>();
-        for (Product p : sub.getProvidedProducts()) {
-            productIds.add(p.getId());
-        }
-        Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), productIds,
-                quantity, sub.getStartDate(), sub.getEndDate());
-        newPool.setSubscriptionId(sub.getId());
-        create(newPool);
-        log.debug("   new pool: " + newPool);
-    }
-
-    private void deactivatePool(Pool pool) {
+    public void deactivatePool(Pool pool) {
         if (log.isDebugEnabled()) {
             log.info("Subscription disappeared for pool: " + pool);
         }
@@ -420,7 +283,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         merge(pool);
     }
     
-    public Criteria criteriaToSelectEntitlementForPool(Pool entitlementPool) {
+    private Criteria criteriaToSelectEntitlementForPool(Pool entitlementPool) {
         return currentSession().createCriteria(Entitlement.class)
         .add(Restrictions.eq("pool", entitlementPool));
     }

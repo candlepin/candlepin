@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
@@ -135,10 +136,10 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(CertificateRevocationListTask.class);
         bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
             .toInstance("SHA1withRSA");
-        
         // temporary
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);
+        bind(PoolManager.class);
     }
     
     public TestingInterceptor crudInterceptor() {
