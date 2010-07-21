@@ -123,6 +123,10 @@ When /^I delete the consumer$/ do
   @candlepin.unregister(@consumer['uuid'])
 end
 
+When /^I delete consumer "([^\"]*)"$/ do |consumer_name|
+  @consumer_clients[consumer_name].unregister(@consumer_clients[consumer_name].uuid)
+end
+
 Then /^pool of unlimited license should be deleted too$/ do
   @candlepin.get_pools.any? {|pool| pool['restrictedToUsername'] != nil}.should == false
 end

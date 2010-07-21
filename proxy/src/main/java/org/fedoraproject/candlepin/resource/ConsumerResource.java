@@ -66,6 +66,8 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.policy.js.consumer.ConsumerDeleteHelper;
+import org.fedoraproject.candlepin.policy.js.consumer.ConsumerRules;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -102,6 +104,8 @@ public class ConsumerResource {
     private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
     private PoolManager poolManager;
+    private ConsumerRules consumerRules;
+    private ConsumerDeleteHelper consumerDeleteHelper;
     
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -116,7 +120,8 @@ public class ConsumerResource {
         EventFactory eventFactory,
         EventCurator eventCurator,
         UserServiceAdapter userService,
-        Exporter exporter, PoolManager poolManager) {
+        Exporter exporter, PoolManager poolManager, 
+        ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -133,6 +138,8 @@ public class ConsumerResource {
         this.userService = userService;
         this.exporter = exporter;
         this.poolManager = poolManager;
+        this.consumerRules = consumerRules;
+        this.consumerDeleteHelper = consumerDeleteHelper;
     }
 
     /**
@@ -288,9 +295,13 @@ public class ConsumerResource {
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleting  consumer_uuid" + uuid);
-        Consumer toDelete = verifyAndLookupConsumer(uuid);
+        Consumer toDelete = verifyAndLookupConsumer(uuid);        
+
+        consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
         unbindAll(uuid);
+        
         Event event = eventFactory.consumerDeleted(toDelete);
+
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
         sink.sendEvent(event);

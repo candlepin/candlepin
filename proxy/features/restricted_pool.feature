@@ -16,6 +16,14 @@ Feature: Products with "user-license" attribute creates a sub-pool
       # Subscription definitions
       Given owner "awesome-shop" has a subscription for product "tooling" with quantity 15
 
+    Scenario: Consumers of sub-pools should have their entitlements revoked when pool is deleted
+      When user "jay" registers consumer "jay-consumer" with type "person"
+      And consumer "jay-consumer" consumes an entitlement for product "tooling"
+      And user "jay" registers consumer "sys2" with type "system"
+      And consumer "sys2" consumes an entitlement for product "editor"
+      When I delete consumer "jay-consumer"
+      Then consumer "sys2" has 0 entitlements
+
     Scenario: A sub-pool is created upon consumption of a parent pool entitlement
       When user "jay" registers consumer "jay-consumer" with type "person"
       And consumer "jay-consumer" consumes an entitlement for product "tooling"
@@ -28,7 +36,6 @@ Feature: Products with "user-license" attribute creates a sub-pool
       And consumer "jay-consumer" consumes an entitlement for product "tooling"
       And user "jay" registers consumer "sys2" with type "system"
       And consumer "sys2" consumes an entitlement for product "editor"
-      
       Then consumer "sys2" has 1 entitlement certificate
 
     Scenario: Restricted Pools should be deleted when consumer is deleted
@@ -37,3 +44,4 @@ Feature: Products with "user-license" attribute creates a sub-pool
       And I create a pool of unlimited license and consumer type person
       When I delete the consumer
       Then pool of unlimited license should be deleted too
+      
