@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.23
+Version: 0.0.24
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,23 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Jul 21 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.24-1
+- Fixing bind by pool without a subscription. (jharris@redhat.com)
+- adding identity cert regeneration. (jesusr@redhat.com)
+- merged revocation_rules into master (ddolguik@redhat.com)
+- rules for consumer delete events (ddolguik@redhat.com)
+- renamed pre- and post- methods in enforcer to preEntitlement- and
+  postEntitlement- (ddolguik@redhat.com)
+- introduced namespaces in js rules (ddolguik@redhat.com)
+- Use the CN to get the UUID, instead of UID (bkearney@redhat.com)
+- create the private key with a password (bkearney@redhat.com)
+- Have tomcats keystore use the cert and password from candlepin
+  (bkearney@redhat.com)
+- Implement Pool cleanup. (dgoodwin@redhat.com)
+- Make Pool -> Entitlement relationship bi-directional. (dgoodwin@redhat.com)
+- Add a curator method to list pools by source entitlement.
+  (dgoodwin@redhat.com)
+
 * Fri Jul 16 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.23-1
 - Add support for exporting data to downstream Candlepin. (jbowes@redhat.com)
 - Add schemadiff, a script to check for schema changes over time
