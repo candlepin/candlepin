@@ -20,7 +20,7 @@ RESTEASY = [group('jaxrs-api',
                   'resteasy-atom-provider',
                   'resteasy-multipart-provider',
                   :under => 'org.jboss.resteasy',
-                  :version => '2.0.0.GA'),
+                  :version => '2.0-beta-4'),
             'javax.persistence:persistence-api:jar:1.0',
             'org.scannotation:scannotation:jar:1.0.2',
             'commons-httpclient:commons-httpclient:jar:3.1']
