@@ -5,7 +5,6 @@ require  "../client/ruby/candlepin_api"
 require 'rubygems'
 require 'date'
 require 'json'
-require 'pp'
 
 filenames=["import_products.json"]
 if not ARGV.empty?
@@ -32,8 +31,9 @@ owner_id = owners[0]['id']
 owner_key = owners[0]['key']
 
 # import all the content sets
+puts "importing content set data..."
 data['content'].each do |content|
-	pp content
+	puts content[0] 
 	cp.create_content(content[0], content[1], content[2], content[3],
 			 content[4], content[5], content[6])
 end
@@ -45,12 +45,12 @@ if not File.directory? CERT_DIR
 end
 
 
+puts "import product data..."
 contract_number = 0
 data['products'].each do |product|
 	  # add arch as an attribute as wel
 
-          print "Product:\n"
-          pp product
+      
           # name, hash, multiplier, version, variant, arch, type, childProducts, attributes
 
           #FIXME: product data import file needs to move to dict's instead of lists
@@ -65,21 +65,15 @@ data['products'].each do |product|
           attrs = product[9]
           product_content = product[10]
 
-          print "Version:\n"
-          pp version
+      
           attrs['version'] = version
           attrs['variant'] = variant
-	      attrs['arch'] = arch
+          attrs['arch'] = arch
           attrs['type'] = type
-          print "Attrs:\n"
-          pp attrs
-          print "\n"
-	      product_ret = cp.create_product(name, id, multiplier,
+          product_ret = cp.create_product(name, id, multiplier,
 					version, variant, arch, type, [],
 					attrs)
-          print "Product created:\n"
-          pp product_ret
-          print "\n"
+          puts "product name: " + name + " version: " + version + " arch: " + arch + " type: " + type
 
           if attrs['type'] == 'MKT':
               # subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 
@@ -105,7 +99,6 @@ data['products'].each do |product|
               cert_file.puts(product_cert['cert'])
           end
 
-	  pp product
 	  product_content.each do |content|
 		cp.add_content_to_product(product_ret['id'], content[0], content[1])
 	  end
