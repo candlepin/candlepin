@@ -14,18 +14,25 @@
  */
 package org.fedoraproject.candlepin.service.impl.test;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DefaultUserServiceAdapterTest
@@ -149,5 +156,17 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         
         Assert.assertArrayEquals(users.toArray(), 
             this.service.listByOwner(owner).toArray());
+    }
+    
+    @Test
+    public void findByLogin() {
+        User u = mock(User.class);
+        UserCurator curator = mock(UserCurator.class);
+        UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator);
+        when(curator.findByLogin(anyString())).thenReturn(u);
+        
+        User foo = service.findByLogin("foo");
+        assertNotNull(foo);
+        assertEquals(foo, u);
     }
 }
