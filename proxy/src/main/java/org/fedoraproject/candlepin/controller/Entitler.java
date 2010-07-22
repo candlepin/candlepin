@@ -186,7 +186,10 @@ public class Entitler {
      */
     private EntitlementCertificate generateEntitlementCertificate(
         Consumer consumer, Pool pool, Entitlement e) {
-        Subscription sub = subAdapter.getSubscription(pool.getSubscriptionId());
+        Subscription sub = null;
+        if (pool.getSubscriptionId() != null) {
+            sub = subAdapter.getSubscription(pool.getSubscriptionId());
+        }
         
         Product product = null;
         if (sub != null) {

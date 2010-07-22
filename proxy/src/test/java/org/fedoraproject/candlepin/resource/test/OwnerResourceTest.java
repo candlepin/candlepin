@@ -160,15 +160,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
                 .listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
-
+        long poolId = newPool.getId();
         // Now delete the subscription:
         subCurator.delete(sub);
 
         // Trigger the refresh:
         ownerResource.refreshEntitlementPools(owner.getKey(), false);
-        assertEquals(1, pools.size());
-        newPool = pools.get(0);
-        assertFalse(newPool.isActive());
+        assertNull("Pool not having subscription should have been deleted",
+            poolCurator.find(poolId));
     }
 
     @Test

@@ -89,8 +89,7 @@ public class PoolManagerTest {
         when(mockCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), anyBoolean())).thenReturn(pools);
         this.manager.refreshPools(getOwner());
-        verifyZeroInteractions(mockEntitler);
-        verify(this.mockCurator).deactivatePool(same(p));
+        verify(this.mockEntitler).deletePool(same(p));
     }
 
     @Test

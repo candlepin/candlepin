@@ -58,3 +58,19 @@ def create_subscription(product, quantity)
   @subscriptions[product] = created
 end
 
+When /^test owner changes the "([^\"]*)" of the subscription by (-{0,1}\d+) days$/ do |field, d|
+  subscription = @current_owner_cp.get_subscriptions(@test_owner['id'])[0]
+  subscription[field] = Date.strptime(subscription[field], "%Y-%m-%d") + d.to_i
+  @candlepin.update_subscription(@test_owner['id'], subscription)
+end
+
+When /^he refreshes the pools$/ do
+  @old_certs = @consumer_cp.get_certificates()
+  @candlepin.refresh_pools(@test_owner['key'])
+end
+
+When /^test owner changes the quantity of the subscription by (-{0,1}\d+)$/ do |q|
+ subscription = @current_owner_cp.get_subscriptions(@test_owner['id'])[0]
+ subscription['quantity'] = subscription['quantity'].to_i + q.to_i
+ @candlepin.update_subscription(@test_owner['id'], subscription)
+end

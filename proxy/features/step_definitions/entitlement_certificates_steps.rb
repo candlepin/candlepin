@@ -49,7 +49,6 @@ Then /^I have new entitlement certificates$/ do
   @old_certs.size.should == new_certs.size
   old_ids = @old_certs.map { |cert| cert['serial']['id']}
   new_ids = new_certs.map { |cert| cert['serial']['id']}
-
   (old_ids & new_ids).size.should == 0
 end
 

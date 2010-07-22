@@ -35,10 +35,6 @@ Then /^I have (\d+) entitlement[s]?$/ do |entitlement_size|
     @consumer_cp.list_entitlements.length.should == entitlement_size.to_i
 end
 
-Then /^I have (\d+) entitlement[s]?$/ do |entitlement_size|
-    @consumer_cp.list_entitlements.length.should == entitlement_size.to_i
-end
-
 Then /^consumer "([^\"]*)" has (\d+) entitlement[s]?$/ do |consumer_name, entitlement_size|
     @consumer_clients[consumer_name].list_entitlements.length.should == entitlement_size.to_i
 end

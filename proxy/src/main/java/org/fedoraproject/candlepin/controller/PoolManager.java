@@ -123,7 +123,7 @@ public class PoolManager {
             }
         }
 
-        // de-activate pools whose subscription disappeared:
+        // delete pools whose subscription disappeared:
         for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
             entitler.deletePool(entry.getValue());
         }
