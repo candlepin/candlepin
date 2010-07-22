@@ -165,7 +165,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator);
         when(curator.findByLogin(anyString())).thenReturn(u);
         
-        User foo = service.findByLogin("foo");
+        User foo = dusa.findByLogin("foo");
         assertNotNull(foo);
         assertEquals(foo, u);
     }
