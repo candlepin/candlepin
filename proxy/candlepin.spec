@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.25
+Version: 0.0.26
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Jul 22 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.26-1
+- sync: make product cert export optional (jbowes@redhat.com)
+- minor changes around restricted pool cleanup on consumer delete (ddolguik@redhat.com)
+- consumers of sub-pool are being unentitled when the main consumer is deleted (ddolguik@redhat.com)
+
 * Thu Jul 22 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.25-1
 - Delete pools when their subscription is removed. (dgoodwin@redhat.com)
 - PoolManager created. Changes in Subscription dates re-creates entitlement
