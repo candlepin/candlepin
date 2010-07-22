@@ -351,6 +351,19 @@ public class OwnerResource {
         poolManager.refreshPools(owner);
     }
     
+    @PUT
+    @Path("/subscriptions")
+    public void updateSubscription(Subscription subscription) {
+        //TODO: Do we even need the owner id here?
+        Subscription existingSubscription = this.subscriptionCurator
+            .find(subscription.getId());
+        if (existingSubscription == null) {
+            throw new NotFoundException(i18n.tr(
+                "subscription with id: {0} not found.", subscription.getId()));
+        }
+        this.subscriptionCurator.merge(subscription);
+    }
+
     @POST
     @Path("{owner_id}/import")
     @AllowRoles(roles = Role.SUPER_ADMIN)

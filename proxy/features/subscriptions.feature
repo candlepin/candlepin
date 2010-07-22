@@ -22,3 +22,28 @@ Feature: Manipulate Subscriptions
         When I am logged in as "testowner"
         And I delete the subscription for product "monitoring"
         Then I have 0 subscriptions
+
+    Scenario: Update existing subscription's date and check that entitlement certificates are regenerated.
+        Given I am a consumer "jackiechan"
+        And test owner has 10 entitlements for "some_product"
+        When I consume an entitlement for the "some_product" product
+        When test owner changes the "endDate" of the subscription by 2 days
+	And he refreshes the pools
+        Then I have new entitlement certificates
+
+    Scenario: Update existing subscription quantity and check that entitlement certificates are deleted
+        Given I am a consumer "jackiechan"
+	And test owner has 10 entitlements for "some_product"
+	When I consume an entitlement for the "some_product" product with a quantity of 6
+	When test owner changes the quantity of the subscription by -5
+	And he refreshes the pools
+	Then I have 0 certificates
+
+     Scenario: Update existing subscription quantity and date, check that entitlement certificates are regenerated.
+        Given I am a consumer "jackiechan"
+	And test owner has 10 entitlements for "some_product"
+	When I consume an entitlement for the "some_product" product
+	When test owner changes the quantity of the subscription by 10
+	When test owner changes the "endDate" of the subscription by 10 days
+	And he refreshes the pools
+	Then I have new entitlement certificates

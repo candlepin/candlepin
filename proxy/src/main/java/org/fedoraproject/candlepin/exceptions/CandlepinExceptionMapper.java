@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.spi.DefaultOptionsMethodException;
 import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.util.HttpHeaderNames;
@@ -44,7 +45,7 @@ import com.google.inject.Injector;
 @Provider
 public class CandlepinExceptionMapper implements
     ExceptionMapper<RuntimeException> {
-
+    private Logger logger = Logger.getLogger(CandlepinExceptionMapper.class);
     private static final List<MediaType> DESIRED_RESPONSE_TYPES = 
         new LinkedList<MediaType>() {
             {
@@ -62,7 +63,7 @@ public class CandlepinExceptionMapper implements
 
     @Override
     public Response toResponse(RuntimeException exception) {
-
+        logger.error("Runtime exception:", exception);
         HttpServletRequest request = injector
             .getInstance(HttpServletRequest.class);
 
