@@ -33,6 +33,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
@@ -240,11 +241,17 @@ public class Exporter {
             
             // MKT products aren't 'real' products; we can't make certs from them.
             if (!product.getAttributeValue("type").equals("MKT")) {
-                file = new File(productDir.getCanonicalPath(), product.getId() + ".pem");
-                writer = new FileWriter(file);
-                productCertExporter.export(writer,
-                    productAdapter.getProductCertificate(product));
-                writer.close();
+                ProductCertificate cert = productAdapter.getProductCertificate(product);
+                // XXX: not all product adapters implement getProductCertificate,
+                // so just skip over this if we get null back
+                // XXX: need to decide if the cert should always be in the export, or never.
+                if (cert != null) {
+                    file = new File(productDir.getCanonicalPath(),
+                        product.getId() + ".pem");
+                    writer = new FileWriter(file);
+                    productCertExporter.export(writer, cert);
+                    writer.close();
+                }
             }
         }
     }
