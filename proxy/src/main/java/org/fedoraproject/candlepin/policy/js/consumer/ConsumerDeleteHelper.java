@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.policy.js.consumer;
 import java.util.List;
 
 import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -44,12 +43,8 @@ public class ConsumerDeleteHelper {
             = poolCurator.listPoolsRestrictedToUser(username);
         
         for (Pool pool : userRestrictedPools) {
-            for (Entitlement toRevoke : pool.getEntitlements()) {
-                entitler.revokeEntitlement(toRevoke);
-            }
+            entitler.deletePool(pool);
         }
-        
-        poolCurator.bulkDelete(userRestrictedPools);
     }
 
     /**

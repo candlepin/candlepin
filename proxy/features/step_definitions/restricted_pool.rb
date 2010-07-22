@@ -124,7 +124,7 @@ When /^I delete the consumer$/ do
 end
 
 When /^I delete consumer "([^\"]*)"$/ do |consumer_name|
-  @consumer_clients[consumer_name].unregister(@consumer_clients[consumer_name].uuid)
+  @candlepin.unregister(@consumer_clients[consumer_name].uuid)
 end
 
 Then /^pool of unlimited license should be deleted too$/ do
