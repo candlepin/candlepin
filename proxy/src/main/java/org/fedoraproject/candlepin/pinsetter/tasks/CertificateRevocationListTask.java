@@ -17,10 +17,13 @@ package org.fedoraproject.candlepin.pinsetter.tasks;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.security.cert.CRLException;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.util.UUID;
@@ -52,7 +55,8 @@ public class CertificateRevocationListTask implements Job {
     private Config config;
     private CrlGenerator crlGenerator;
     
-    private static Logger log = Logger.getLogger(CertificateRevocationListTask.class); 
+    private static Logger log = Logger.getLogger(CertificateRevocationListTask.class);
+
     /**
      * Instantiates a new certificate revocation list task.
      * 
@@ -65,52 +69,55 @@ public class CertificateRevocationListTask implements Job {
         this.config = conf;
     }
 
-    /* (non-Javadoc)
-     * @see org.quartz.Job#execute(org.quartz.JobExecutionContext)
-     */
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
         String filePath = config.getString(ConfigProperties.CRL_FILE_PATH);
         log.info("Executing CRL Job. CRL filePath=" + filePath);
-        File crlFile = new File(filePath);
-        Principal systemPrincipal = new SystemPrincipal();
-        ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
-        this.updateCRL(crlFile, "CN=test, UID=" + UUID.randomUUID());
-        ResteasyProviderFactory.popContextData(Principal.class);
-    }
 
-    /**
-     * Update crl.
-     * 
-     * @param in the in
-     * @param principal the principal
-     * @param out the out
-     */
-    public void updateCRL(InputStream in, String principal, OutputStream out) {
+        if (filePath == null) {
+            throw new JobExecutionException("Invalid " +
+                ConfigProperties.CRL_FILE_PATH, false);
+        }
+
         try {
-            X509CRL x509crl = null;
-            if (in != null) {
-                x509crl = (X509CRL) CertificateFactory.getInstance("X.509")
-                    .generateCRL(in);
-            }
-            x509crl = this.crlGenerator.updateCRL(x509crl);
-            PEMWriter writer = new PEMWriter(new OutputStreamWriter(out));
-            writer.writeObject(x509crl);
-            writer.flush();
-            writer.close();
+            File crlFile = new File(filePath);
+            Principal systemPrincipal = new SystemPrincipal();
+            ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
+            this.updateCRL(crlFile, "CN=test, UID=" + UUID.randomUUID());
+            ResteasyProviderFactory.popContextData(Principal.class);
         }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        catch (CRLException e) {
+            log.error(e);
+            throw new JobExecutionException(e, false);
+        }
+        catch (CertificateException e) {
+            log.error(e);
+            throw new JobExecutionException(e, false);
+        }
+        catch (IOException e) {
+            log.error(e);
+            throw new JobExecutionException(e, false);
         }
     }
 
-    /**
-     * Update crl.
-     * 
-     * @param file the file
-     * @param principal the principal
-     */
-    public void updateCRL(File file, String principal) {
+    private void updateCRL(InputStream in, String principal, OutputStream out)
+        throws IOException, CRLException, CertificateException {
+
+        X509CRL x509crl = null;
+        if (in != null) {
+            x509crl = (X509CRL) CertificateFactory.getInstance("X.509")
+                .generateCRL(in);
+        }
+        x509crl = this.crlGenerator.updateCRL(x509crl);
+        PEMWriter writer = new PEMWriter(new OutputStreamWriter(out));
+        writer.writeObject(x509crl);
+        writer.flush();
+        writer.close();
+    }
+
+    private void updateCRL(File file, String principal)
+        throws CRLException, CertificateException, IOException {
+
         FileInputStream in = null;
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
@@ -119,14 +126,11 @@ public class CertificateRevocationListTask implements Job {
                 in = new FileInputStream(file);
             }
             else {
-                log.info("CRL File: " + file + " either does not exist");
+                log.info("CRL File: " + file + " either does not exist or is empty.");
             }
             updateCRL(in, principal, stream);
             log.info("Completed generating CRL. Writing it to disk");
             FileUtils.writeByteArrayToFile(file, stream.toByteArray());
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
         }
         finally {
             if (in != null) {
