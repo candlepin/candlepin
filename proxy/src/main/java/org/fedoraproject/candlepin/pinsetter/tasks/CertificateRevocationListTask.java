@@ -14,10 +14,25 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.controller.CrlGenerator;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.bouncycastle.openssl.PEMWriter;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,21 +42,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.util.UUID;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.bouncycastle.openssl.PEMWriter;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.SystemPrincipal;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.controller.CrlGenerator;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-
-import com.google.inject.Inject;
 
 /**
  * CertificateRevocationListTask.
