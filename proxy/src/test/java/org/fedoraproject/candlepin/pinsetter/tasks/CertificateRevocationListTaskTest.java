@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
 
+import org.apache.commons.io.FileUtils;
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -102,10 +103,53 @@ public class CertificateRevocationListTaskTest {
             }
         }
     }
+    
+    @Test(expected = JobExecutionException.class)
+    public void handleCRLException() throws Exception {
+        File f = null;
+        try {
+            f = File.createTempFile("test", ".crl");
+            assertEquals(0, f.length());
+            // put some garbage in the file to cause the CRLException
+            FileUtils.writeByteArrayToFile(f, "gobbledygook".getBytes());
+            when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn(
+                f.getAbsolutePath());
+
+            task.execute(null);
+        }
+        finally {
+            if (f != null) {
+                f.delete();
+            }
+        }
+    }
 
     @Test
-    @Ignore("Create CRL file and verify it gets updated")
+    @Ignore("need to write a VALID CRL to the file first in order to verify")
     public void existingFile() throws Exception {
-        assertTrue(true);
+        File f = null;
+        try {
+            X509CRL crl = mock(X509CRL.class);
+            f = File.createTempFile("test", ".crl");
+            assertEquals(0, f.length());
+            when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn(
+                f.getAbsolutePath());
+
+            when(crl.getEncoded()).thenReturn(Base64.encode("encoded".getBytes()))
+                .thenReturn(Base64.encode("added".getBytes()));
+            when(generator.updateCRL(any(X509CRL.class))).thenReturn(crl);
+
+            task.execute(null);
+            long len = f.length();
+            assertTrue(len > 0);
+            task.execute(null);
+            // make sure we added to the file
+            assertTrue(f.length() > len);
+        }
+        finally {
+            if (f != null) {
+                f.delete();
+            }
+        }
     }
 }
