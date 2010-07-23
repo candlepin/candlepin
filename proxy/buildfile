@@ -8,6 +8,7 @@ COPYRIGHT = ""
 
 require 'buildr/java/emma'
 require 'net/http'
+require 'spec/rake/spectask'
 
 #############################################################################
 # DEPENDENCIES
@@ -317,6 +318,14 @@ task :deploy_check do
     Rake::Task[:deploy].invoke
   end
 end
+
+#==========================================================================
+# RSpec functional tests
+#==========================================================================
+Spec::Rake::SpecTask.new do |task|
+  task.libs << '../client/ruby' 
+end
+task :spec => :deploy_check
 
 #==========================================================================
 # Cucumber testing

@@ -218,8 +218,11 @@ class Candlepin
     end
     
   # TODO: label is unused here, needs to be dropped across the board.
-  def create_product(name, hash, multiplier = 1, version = 1, variant = 'ALL', 
+  def create_product(name, hash=nil, multiplier = 1, version = 1, variant = 'ALL',
                      arch='ALL', type='SVC',child_products=[], attributes = {})
+    # Generate a hash for the product if one is not supplied
+    hash ||= name.hash.abs
+
     attributes['arch'] = arch
     attributes['version'] = version
     attributes['variant'] = variant
@@ -416,4 +419,5 @@ class Candlepin
     @client[URI.escape(uri)].delete
   end
 end
+
 

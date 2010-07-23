@@ -9,7 +9,6 @@ end
 
 When /I perform export/ do 
   @export_filename = @consumer_cp.export_consumer
-  puts @export_filename
 end
 
 Then /I get an archived extract of data/ do

@@ -200,6 +200,10 @@ public class Entitler {
             // This is possible in a sub-pool, for example - the pool was not
             // created directly from a subscription
             product = productAdapter.getProductById(e.getProductId());
+
+            // in the case of a sub-pool, we want to find the originating
+            // subscription for cert generation
+            sub = findSubscription(e);
         }
         
         // TODO: Assuming every entitlement = generate a cert, most likely we'll want
@@ -210,6 +214,23 @@ public class Entitler {
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private Subscription findSubscription(Entitlement entitlement) {
+        Pool pool = entitlement.getPool();
+
+        if (pool.getSubscriptionId() != null) {
+            return subAdapter.getSubscription(pool.getSubscriptionId());
+        }
+
+        Entitlement source = pool.getSourceEntitlement();
+
+        if (source != null) {
+            return findSubscription(source);
+        }
+
+        // Cannot traverse any further - just give up
+        return null;
     }
 
     public void regenerateEntitlementCertificates(Consumer consumer) {

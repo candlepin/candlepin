@@ -120,15 +120,12 @@ public class DefaultEntitlementCertServiceAdapter extends
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
         
         addExtensionsForProduct(extensions, product);
-        
-        if (sub != null) {
-            for (Product provided : sub.getProvidedProducts()) {
-                addExtensionsForProduct(extensions, provided);
-            }
-            
-            extensions.addAll(extensionUtil.subscriptionExtensions(sub));
-        }
 
+        for (Product provided : sub.getProvidedProducts()) {
+            addExtensionsForProduct(extensions, provided);
+        }
+        
+        extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
         
