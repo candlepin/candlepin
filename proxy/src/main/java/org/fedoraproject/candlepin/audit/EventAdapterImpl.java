@@ -26,9 +26,6 @@ import org.jboss.resteasy.plugins.providers.atom.Feed;
  */
 public class EventAdapterImpl implements EventAdapter {
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.audit.EventAdapter#toFeed(java.util.List)
-     */
     @Override
     public Feed toFeed(List<Event> events) {
         Feed feed = new Feed();
