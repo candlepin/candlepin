@@ -20,11 +20,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * PrivilegedCommand - command which can be executed only by registered customers.
+ * PrivilegedCommand - command which can be executed only by registered
+ * customers.
  */
 public abstract class PrivilegedCommand extends BaseCommand {
 
-    private static final Logger L = LoggerFactory.getLogger(PrivilegedCommand.class);
+    private static final Logger L = LoggerFactory
+        .getLogger(PrivilegedCommand.class);
+
     /*
      * (non-Javadoc)
      * @see
@@ -42,5 +45,6 @@ public abstract class PrivilegedCommand extends BaseCommand {
         this.execute(cmdLine, client);
     }
 
-    protected abstract void execute(CommandLine cmdLine, CandlepinClientFacade client);
+    protected abstract void execute(CommandLine cmdLine,
+        CandlepinClientFacade client);
 }

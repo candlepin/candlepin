@@ -31,7 +31,8 @@ import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 /**
  * AbstractSLLProtocolSocketFactory
  */
-public abstract class AbstractSLLProtocolSocketFactory implements ProtocolSocketFactory {
+public abstract class AbstractSLLProtocolSocketFactory implements
+    ProtocolSocketFactory {
 
     public Socket createSocket(String host, int port, InetAddress clientHost,
         int localPort) throws IOException, UnknownHostException {

@@ -28,7 +28,7 @@ public class Content extends Entitlement {
             .branch("2") : extensions.branch("1");
         super.setProductId(productId);
     }
-    
+
     /**
      * 
      */
@@ -39,34 +39,33 @@ public class Content extends Entitlement {
     public String getName() {
         return extensions.getValue("1");
     }
-    
+
     public String getLabel() {
         return extensions.getValue("2");
     }
-    
+
     public int getPhysicalEntitlements() {
         return NumberUtils.toInt(extensions.getValue("3"), -1);
     }
-    
+
     public int getFlexGuestEntitlements() {
         return NumberUtils.toInt(extensions.getValue("4"), -1);
     }
-    
+
     public String getVendorID() {
         return extensions.getValue("5");
     }
-    
+
     public String getDownloadURL() {
         return extensions.getValue("6");
     }
-    
+
     public String getGPCKeyURL() {
         return extensions.getValue("7");
     }
-    
+
     public boolean isEnabled() {
         return Boolean.valueOf(extensions.getValue("8"));
     }
-    
-    
+
 }

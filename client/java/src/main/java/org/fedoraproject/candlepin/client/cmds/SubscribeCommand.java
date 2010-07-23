@@ -21,6 +21,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.fedoraproject.candlepin.client.CandlepinClientFacade;
+
 /**
  * RegisterCommand
  */
@@ -44,32 +45,30 @@ public class SubscribeCommand extends PrivilegedCommand {
         opts.addOption("q", "quantity", true,
             "The quantities of pool/product/regtoken used");
         opts.addOption("e", "email", true,
-            "email address which will receive confirmation e-mail " +
-            "(applies for only --regtoken)");
-        opts.addOption("l", "locale", true, "Preferred locale of email" +
-            "(applies for only --regtoken)");
+            "email address which will receive confirmation e-mail "
+                + "(applies for only --regtoken)");
+        opts.addOption("l", "locale", true, "Preferred locale of email"
+            + "(applies for only --regtoken)");
         return opts;
     }
-
-  
 
     @Override
     protected void execute(CommandLine cmdLine, CandlepinClientFacade client) {
         String[] pools = cmdLine.getOptionValues("p");
         String[] products = cmdLine.getOptionValues("pr");
         String[] regTokens = cmdLine.getOptionValues("r");
-        int [] quantity = Utils.toInt(cmdLine.getOptionValues("q"));
+        int[] quantity = Utils.toInt(cmdLine.getOptionValues("q"));
         String email = cmdLine.getOptionValue("e");
-        String defLocale = StringUtils.defaultIfEmpty(
-            cmdLine.getOptionValue("l"), SystemUtils.USER_LANGUAGE);
+        String defLocale = StringUtils.defaultIfEmpty(cmdLine
+            .getOptionValue("l"), SystemUtils.USER_LANGUAGE);
         int iter = 0;
         if (!this.getClient().isRegistered()) {
             System.out.println("This system is currently not registered.");
             return;
         }
         if (isEmpty(pools) && isEmpty(products) && isEmpty(regTokens)) {
-            System.err.println("Error: Need either --product or --pool" +
-                " or --regtoken, Try --help");
+            System.err.println("Error: Need either --product or --pool"
+                + " or --regtoken, Try --help");
             return;
         }
         if (!isEmpty(pools)) {
@@ -81,8 +80,8 @@ public class SubscribeCommand extends PrivilegedCommand {
 
         if (!isEmpty(products)) {
             for (String product : products) {
-                client.bindByProductId(product, Utils.getSafeInt(
-                    quantity, iter++, 1));
+                client.bindByProductId(product, Utils.getSafeInt(quantity,
+                    iter++, 1));
             }
         }
 

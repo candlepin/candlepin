@@ -28,12 +28,14 @@ public interface CandlepinClientFacade {
 
     /**
      * Returns true if the client is already registered
+     * 
      * @return true if registered
      */
     boolean isRegistered();
 
     /**
      * Returns the UUID for the consumer, or null if not registered.
+     * 
      * @return the UUID of the consumer
      */
     String getUUID();
@@ -41,10 +43,11 @@ public interface CandlepinClientFacade {
     /**
      * Registers a consumer with a provided name and type. The credentials are
      * user for authentication.
+     * 
      * @return The UUID of the new consumer.
      */
     String register(String username, String password, String name, String type);
-    
+
     /**
      * Updates the consumer information, based on the current jvm info.
      * 
@@ -55,7 +58,7 @@ public interface CandlepinClientFacade {
     /**
      * Register to an existing consumer. The credentials are user for
      * authentication.
-     *
+     * 
      * @param username the username
      * @param password the password
      * @param uuid the uuid
@@ -66,12 +69,12 @@ public interface CandlepinClientFacade {
     /**
      * Remove he consumer from candlepin and all of the entitlements which the
      * conumser have subscribed to.
-     *
      */
     void unRegister();
 
     /**
      * List the pools which the consumer could subscribe to
+     * 
      * @return the list of exception
      */
     List<Pool> listPools();
@@ -82,8 +85,8 @@ public interface CandlepinClientFacade {
 
     List<Entitlement> bindByRegNumber(String regNo, int quantity);
 
-    List<Entitlement> bindByRegNumber(String regNo, int quantity,
-        String email, String defLocale);
+    List<Entitlement> bindByRegNumber(String regNo, int quantity, String email,
+        String defLocale);
 
     void unBindBySerialNumber(int serialNumber);
 

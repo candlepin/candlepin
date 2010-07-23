@@ -42,11 +42,10 @@ public final class Utils {
     /**
      *
      */
-    private static final String DEF_PROPERTIES_PATH =
-        "org/fedoraproject/candlepin/client/defaultValues.properties";
+    private static final String DEF_PROPERTIES_PATH = "org/fedoraproject/candlepin/client/defaultValues.properties";
 
     private Utils() {
-        //prevent instantiation
+        // prevent instantiation
     }
 
     public static <E> List<E> newList() {
@@ -60,8 +59,8 @@ public final class Utils {
     public static Properties getDefaultProperties() {
         try {
             Properties properties = new Properties();
-            properties.load(
-                ClassLoader.getSystemResourceAsStream(DEF_PROPERTIES_PATH));
+            properties.load(ClassLoader
+                .getSystemResourceAsStream(DEF_PROPERTIES_PATH));
             replaceSystemPropertyValues(properties, Constants.CP_HOME_DIR);
             return properties;
         }
@@ -70,20 +69,21 @@ public final class Utils {
         }
     }
 
-    private static void replaceSystemPropertyValues(Properties properties, String key) {
-        properties.setProperty(key,
-            String.format(properties.getProperty(key), SystemUtils.USER_HOME));
+    private static void replaceSystemPropertyValues(Properties properties,
+        String key) {
+        properties.setProperty(key, String.format(properties.getProperty(key),
+            SystemUtils.USER_HOME));
     }
-    
+
     public static Map<String, String> getHardwareFacts() {
         Map<String, String> facts = new HashMap<String, String>();
-        
-        // TODO:  Just using system properties for now
+
+        // TODO: Just using system properties for now
         Properties properties = System.getProperties();
         for (String property : properties.stringPropertyNames()) {
             facts.put(property, properties.getProperty(property));
         }
-        
+
         // get rid of a few attributes
         facts.remove("java.class.path");
         facts.remove("java.io.tmpdir");
@@ -97,7 +97,7 @@ public final class Utils {
         facts.remove("java.ext.dirs");
         facts.remove("sun.boot.class.path");
         facts.remove("user.dir");
-        
+
         return facts;
     }
 
@@ -163,7 +163,5 @@ public final class Utils {
         }
     };
 
-    public static final TrustManager [] DUMMY_TRUST_MGRS = new TrustManager[]{
-        DUMMY_TRUST_MANAGER
-    };
+    public static final TrustManager[] DUMMY_TRUST_MGRS = new TrustManager[]{ DUMMY_TRUST_MANAGER };
 }

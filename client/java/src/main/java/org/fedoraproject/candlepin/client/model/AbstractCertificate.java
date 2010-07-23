@@ -26,10 +26,9 @@ import org.fedoraproject.candlepin.client.PemUtil;
  */
 public class AbstractCertificate extends TimeStampedEntity {
 
-
     /** The x509 certificate. */
     private X509Certificate x509Certificate;
-    
+
     /**
      * Instantiates a new abstract certificate.
      * 
@@ -44,7 +43,7 @@ public class AbstractCertificate extends TimeStampedEntity {
      */
     public AbstractCertificate() {
     }
-    
+
     /**
      * Gets the start date.
      * 
@@ -62,7 +61,6 @@ public class AbstractCertificate extends TimeStampedEntity {
     public Date getEndDate() {
         return this.x509Certificate.getNotAfter();
     }
-
 
     /**
      * Gets the x509 certificate.
@@ -108,7 +106,6 @@ public class AbstractCertificate extends TimeStampedEntity {
             throw new RuntimeException(e);
         }
     }
-
 
     public boolean isValid() {
         Date currentDate = new Date();

@@ -83,14 +83,14 @@ public class EntitlementCertificate extends ProductCertificate {
         List<Content> contents = Utils.newList();
         Extensions extensions = new Extensions(getX509Certificate(),
             Constants.CONTENT_NAMESPACE);
-        for (String hash : findUniqueHashes(extensions, Constants.CONTENT_NAMESPACE)) {
+        for (String hash : findUniqueHashes(extensions,
+            Constants.CONTENT_NAMESPACE)) {
             Content content = new Content(extensions.branch(hash), hash);
             content.setEntitlementCertificate(this);
             contents.add(content);
         }
         return contents;
     }
-
 
     public List<Role> getRoleEntitlements() {
         List<Role> roles = Utils.newList();
@@ -115,9 +115,9 @@ public class EntitlementCertificate extends ProductCertificate {
             return new Order(extensions);
         }
     }
-    
+
     @JsonIgnore
     public void setEntitlement(Entitlement entitlement) {
-        
+
     }
 }

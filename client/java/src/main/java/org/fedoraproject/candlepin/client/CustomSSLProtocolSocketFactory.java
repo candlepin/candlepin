@@ -14,12 +14,13 @@
  */
 package org.fedoraproject.candlepin.client;
 
-import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.httpclient.HttpClientError;
@@ -35,29 +36,46 @@ import org.fedoraproject.candlepin.client.cmds.Utils;
  * http://www.mombu.com/programming/java
  * /t-ssl-for-java-without-keystores-1366416.html
  */
-public class CustomSSLProtocolSocketFactory extends AbstractSLLProtocolSocketFactory{
+public class CustomSSLProtocolSocketFactory extends
+    AbstractSLLProtocolSocketFactory {
 
     private SSLContext sslcontext = null;
     private Configuration configuration;
+    private boolean clientAuth;
+
     /**
      * Constructor for CustomSSLProtocolSocketFactory.
+     * 
+     * @param config the configuration of the client
+     * @param clientAuth set to true if the context should present the identity
+     *        certificates for SSL client auth
      */
-    public CustomSSLProtocolSocketFactory(Configuration config) {
+    public CustomSSLProtocolSocketFactory(Configuration config,
+        boolean clientAuth) {
         super();
         this.configuration = config;
+        this.clientAuth = clientAuth;
     }
 
     private SSLContext createCustomSSLContext() {
         try {
-            char[] passwd = configuration.getKeyStorePassword().toCharArray();
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            String[] keyCert = FileUtil.readKeyAndCert(configuration
-                .getConsumerIdentityFilePath());
-            kmf.init(PemUtil.pemToKeyStore(keyCert[1], keyCert[0], "password"), passwd);
+            KeyManager[] keyManagers = null;
+            // Generate key managers off of the identity certificates if
+            // doing client auth.
+            if (clientAuth) {
+                KeyManagerFactory kmf = KeyManagerFactory
+                    .getInstance("SunX509");
+                String[] keyCert = FileUtil.readKeyAndCert(configuration
+                    .getConsumerIdentityFilePath());
+                kmf.init(PemUtil.pemToKeyStore(keyCert[1], keyCert[0],
+                    "password"), "password".toCharArray());
+                keyManagers = kmf.getKeyManagers();
+            }
             /* and provide them for the SSLContext */
             SSLContext ctx = SSLContext.getInstance("TLS");
             if (configuration.isIgnoreTrustManagers()) {
-                ctx.init(kmf.getKeyManagers(), Utils.DUMMY_TRUST_MGRS, new SecureRandom());
+                ctx.init(keyManagers, Utils.DUMMY_TRUST_MGRS,
+                    new SecureRandom());
             }
             else {
                 TrustManagerFactory tmf = TrustManagerFactory
@@ -65,14 +83,20 @@ public class CustomSSLProtocolSocketFactory extends AbstractSLLProtocolSocketFac
                 KeyStore ks2 = KeyStore.getInstance(KeyStore.getDefaultType());
                 ks2.load(null, null);
 
-                ks2.load(
-                    new FileInputStream(configuration.getKeyStoreFileLocation()),
-                    passwd);
+                ks2.setCertificateEntry("candlepin", PemUtil
+                    .readCert("/etc/candlepin/certs/candlepin-ca.crt"));
+                // ks2.load(
+                // new FileInputStream(configuration.getKeyStoreFileLocation()),
+                // passwd);
                 tmf.init(ks2);
-                ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
+                System.out.println("fdslkjflksdjfls");
+                for (TrustManager tm : tmf.getTrustManagers()) {
+                    System.out.println(tmf);
+                }
+                ctx.init(keyManagers, tmf.getTrustManagers(),
+                    new SecureRandom());
             }
 
-            
             return ctx;
         }
         catch (Exception e) {
@@ -87,6 +111,5 @@ public class CustomSSLProtocolSocketFactory extends AbstractSLLProtocolSocketFac
         }
         return this.sslcontext;
     }
-
 
 }

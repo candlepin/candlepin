@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.fedoraproject.candlepin.client.PemUtil;
 
@@ -96,18 +96,19 @@ public class Consumer extends TimeStampedEntity {
     public Map<String, String> getFacts() {
         return this.facts;
     }
-    
-    //@JsonIgnore
+
+    // @JsonIgnore
     public void setFacts(Map<String, String> facts) {
         this.facts = facts;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.reflectionToString(this);
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @JsonIgnore

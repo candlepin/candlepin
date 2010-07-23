@@ -25,8 +25,11 @@ import org.slf4j.LoggerFactory;
  */
 public class UnRegisterCommand extends PrivilegedCommand {
 
-    private static final Logger L = LoggerFactory.getLogger(UnRegisterCommand.class);
-    /* (non-Javadoc)
+    private static final Logger L = LoggerFactory
+        .getLogger(UnRegisterCommand.class);
+
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getDescription()
      */
     @Override
@@ -34,7 +37,8 @@ public class UnRegisterCommand extends PrivilegedCommand {
         return "unregister";
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getName()
      */
     @Override
@@ -54,13 +58,14 @@ public class UnRegisterCommand extends PrivilegedCommand {
         client.unRegister();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getOptions()
      */
     @Override
     public Options getOptions() {
         Options opts = super.getOptions();
-        opts.addOption("debug", true, "debug level"); //flag ignored.
+        opts.addOption("debug", true, "debug level"); // flag ignored.
         return opts;
     }
 

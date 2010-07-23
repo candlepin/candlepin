@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.math.NumberUtils;
 
 /**
@@ -23,6 +23,7 @@ import org.apache.commons.lang.math.NumberUtils;
 public class Order {
 
     private Extensions ex;
+
     /**
      * @param extensions
      */
@@ -33,33 +34,34 @@ public class Order {
     public String getName() {
         return ex.getValue("1");
     }
-    
+
     public int getOrderNumber() {
         return NumberUtils.toInt(ex.getValue("2"), -1);
     }
-    
+
     public String getSku() {
         return ex.getValue("3");
     }
-    
+
     public String getRegnum() {
         return ex.getValue("4");
     }
-    
+
     public int getQuantity() {
         return NumberUtils.toInt(ex.getValue("5"), -1);
     }
-    
+
     public int getUsedQuantity() {
         return NumberUtils.toInt(ex.getValue("13").trim(), -1);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.reflectionToString(this);
+        return ToStringBuilder.reflectionToString(this);
     }
-    
+
 }

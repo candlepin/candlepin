@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * RegisterCommand
  */
 public class ListCommand extends PrivilegedCommand {
-    
+
     private static final Logger L = LoggerFactory.getLogger(ListCommand.class);
 
     @Override
@@ -54,7 +54,8 @@ public class ListCommand extends PrivilegedCommand {
         return opts;
     }
 
-    protected final void execute(CommandLine cmdLine, CandlepinClientFacade client) {
+    protected final void execute(CommandLine cmdLine,
+        CandlepinClientFacade client) {
         if (cmdLine.hasOption("a")) {
             printAvailableProducts(client);
         }
@@ -83,52 +84,57 @@ public class ListCommand extends PrivilegedCommand {
             System.out.println("No installed Products to list");
             return;
         }
-        
-        toConsoleAndLogs("+-------------------------------------------" +
-            "+\n\tInstalled Product Status\n" +
-            "+-------------------------------------------+\n");
-        Map<Product, EntitlementCertificate> prodToEntitlementMap = Utils.newMap();
+
+        toConsoleAndLogs("+-------------------------------------------"
+            + "+\n\tInstalled Product Status\n"
+            + "+-------------------------------------------+\n");
+        Map<Product, EntitlementCertificate> prodToEntitlementMap = Utils
+            .newMap();
         Set<Product> listedProducts = Utils.newSet();
-        
+
         for (EntitlementCertificate certificate : entitlementCertificates) {
             for (Product product : certificate.getProducts()) {
                 prodToEntitlementMap.put(product, certificate);
             }
         }
-        
+
         for (ProductCertificate pc : productCertificates) {
             for (Product product : pc.getProducts()) {
                 L.debug("Examining product within ProductCertificate #{} {}",
                     pc.getSerial(), product);
-                if (listedProducts.contains(product)) { 
-                    //already printed out product. skip it.
+                if (listedProducts.contains(product)) {
+                    // already printed out product. skip it.
                     continue;
                 }
                 if (prodToEntitlementMap.get(product) != null) {
-                    String status = pc.isValid() ? "Subscribed" : "Expired"; 
-                    printProductDetails(product.getName(), status, 
-                        pc.getEndDate().toString(), pc.getSerial().toString(),
-                        prodToEntitlementMap.get(product).getOrder().getUsedQuantity());
+                    String status = pc.isValid() ? "Subscribed" : "Expired";
+                    printProductDetails(product.getName(), status, pc
+                        .getEndDate().toString(), pc.getSerial().toString(),
+                        prodToEntitlementMap.get(product).getOrder()
+                            .getUsedQuantity());
                 }
                 else {
-                    //product not subscribed yet.
-                    printProductDetails(product.getName(), "Not Subscribed", "", "", 0);
+                    // product not subscribed yet.
+                    printProductDetails(product.getName(), "Not Subscribed",
+                        "", "", 0);
                 }
-              
+
                 listedProducts.add(product);
             }
         }
 
         for (EntitlementCertificate certificate : entitlementCertificates) {
             for (Product product : certificate.getProducts()) {
-                L.debug("Examining product within EntitlementCertificate #{} {}",
+                L.debug(
+                    "Examining product within EntitlementCertificate #{} {}",
                     certificate.getSerial(), product);
                 if (listedProducts.contains(product)) {
                     continue;
                 }
                 printProductDetails(product.getName(), "Not Installed",
                     certificate.getEndDate().toString(), certificate
-                        .getSerial().toString(), certificate.getOrder().getQuantity());
+                        .getSerial().toString(), certificate.getOrder()
+                        .getQuantity());
                 listedProducts.add(product);
             }
         }
@@ -153,15 +159,13 @@ public class ListCommand extends PrivilegedCommand {
             toConsoleAndLogs("No Availale subscription pools to list");
             return;
         }
-        toConsoleAndLogs("+-------------------------------------------" +
-            "+\n\tAvailable Subscriptions\n" +
-            "+-------------------------------------------+\n");
+        toConsoleAndLogs("+-------------------------------------------"
+            + "+\n\tAvailable Subscriptions\n"
+            + "+-------------------------------------------+\n");
 
         for (Pool pool : pools) {
-            toConsoleAndLogs("%-25s%s\n", "ProductName:", pool
-                .getProductName());
-            toConsoleAndLogs("%-25s%s\n", "Product SKU:", pool
-                .getProductId());
+            toConsoleAndLogs("%-25s%s\n", "ProductName:", pool.getProductName());
+            toConsoleAndLogs("%-25s%s\n", "Product SKU:", pool.getProductId());
             toConsoleAndLogs("%-25s%s\n", "PoolId:", pool.getId());
             toConsoleAndLogs("%-25s%d\n", "quantity:", pool.getQuantity());
             toConsoleAndLogs("%-25s%s\n", "Expires:", pool.getEndDate());
@@ -179,14 +183,13 @@ public class ListCommand extends PrivilegedCommand {
             System.out.println("No Consumed subscription pools to list");
             return;
         }
-        System.out.println("+-------------------------------------------" +
-            "+\n\tConsumed Product Subscriptions\n" +
-            "+-------------------------------------------+\n");
+        System.out.println("+-------------------------------------------"
+            + "+\n\tConsumed Product Subscriptions\n"
+            + "+-------------------------------------------+\n");
         for (EntitlementCertificate cert : certs) {
             for (Product product : cert.getProducts()) {
                 toConsoleAndLogs("%-25s%s\n", "Name:", product.getName());
-                toConsoleAndLogs("%-25s%s\n", "SerialNumber:", cert
-                    .getSerial());
+                toConsoleAndLogs("%-25s%s\n", "SerialNumber:", cert.getSerial());
                 toConsoleAndLogs("%-25s%s\n", "Active:", BooleanUtils
                     .toStringTrueFalse(cert.isValid()));
                 toConsoleAndLogs("%-25s%s\n", "Begins:", cert.getStartDate());
@@ -195,8 +198,8 @@ public class ListCommand extends PrivilegedCommand {
             }
         }
     }
-    
-    private void toConsoleAndLogs(String msg, Object ... args) {
+
+    private void toConsoleAndLogs(String msg, Object... args) {
         if (args.length > 0) {
             msg = String.format(msg, args);
         }

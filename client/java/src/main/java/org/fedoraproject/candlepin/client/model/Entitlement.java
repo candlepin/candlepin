@@ -34,8 +34,7 @@ public class Entitlement extends TimeStampedEntity {
     private Pool pool;
     private Date startDate;
     private String productId;
-    private Set<EntitlementCertificate> certificates = 
-        new HashSet<EntitlementCertificate>();
+    private Set<EntitlementCertificate> certificates = new HashSet<EntitlementCertificate>();
     private Boolean free = Boolean.FALSE;
 
     public Long getId() {
@@ -89,7 +88,7 @@ public class Entitlement extends TimeStampedEntity {
     @JsonIgnore
     public void setIsFree(boolean bool) {
     }
-    
+
     private EntitlementCertificate entitlementCertificate;
 
     @JsonIgnore
@@ -101,6 +100,5 @@ public class Entitlement extends TimeStampedEntity {
     public void setEntitlementCertificate(EntitlementCertificate entitlement) {
         this.entitlementCertificate = entitlement;
     }
-    
-    
+
 }

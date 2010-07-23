@@ -24,6 +24,7 @@ public class Product {
 
     private Extensions ext;
     private String hash;
+
     /**
      * @param ext
      * @param hash
@@ -32,7 +33,7 @@ public class Product {
         this.ext = ext;
         this.hash = hash;
     }
-    
+
     public Product() {
         super();
     }
@@ -40,30 +41,31 @@ public class Product {
     public int getHash() {
         return NumberUtils.toInt(hash, -1);
     }
-    
+
     public String getName() {
-        //hack. remove junk characters at the beginning of the name
+        // hack. remove junk characters at the beginning of the name
         return ext.getValue("1").substring(4);
     }
-    
+
     public String getVariant() {
         return ext.getValue("2");
     }
-    
+
     public String getArchitecture() {
         return ext.getValue("3");
     }
-    
+
     public String getVersion() {
         return ext.getValue("4");
     }
-    
+
     @Override
     public int hashCode() {
         return hash.hashCode();
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -74,5 +76,5 @@ public class Product {
         }
         return false;
     }
-    
+
 }

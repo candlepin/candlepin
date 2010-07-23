@@ -39,12 +39,10 @@ public final class Constants {
     public static final String ROLE_ENTITLEMENT_NAMESPACE = "1.3.6.1.4.1.2312.9.3";
     public static final String ORDER_NAMESPACE = "1.3.6.1.4.1.2312.9.4";
     public static final String SYSTEM_NAMESPACE = "1.3.6.1.4.1.2312.9.5";
-    
+
     public static final String X509 = "X509";
     public static final String SERVER_URL_KEY = "serverURL";
     public static final String CP_HOME_DIR = "candlePinHomeDirectory";
-    public static final String KEY_STORE_LOC = "keyStoreLocation";
-    public static final String KEY_STORE_PASSWD = "keyStorepasswd";
     public static final String CP_CERT_LOC = "candlepinCertificate";
 
     public static final String CONFIG_LOCATION = "configLoc";

@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.client.model;
 
 import java.util.Date;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
@@ -30,6 +30,7 @@ public abstract class TimeStampedEntity {
 
     /**
      * Gets the created.
+     * 
      * @return the created
      */
     public final Date getCreated() {
@@ -38,8 +39,8 @@ public abstract class TimeStampedEntity {
 
     /**
      * Sets the created.
-     * @param createdDt
-     *            the new created
+     * 
+     * @param createdDt the new created
      */
     public final void setCreated(Date createdDt) {
         this.created = createdDt;
@@ -47,6 +48,7 @@ public abstract class TimeStampedEntity {
 
     /**
      * Gets the updated.
+     * 
      * @return the updated
      */
     public final Date getUpdated() {
@@ -55,15 +57,15 @@ public abstract class TimeStampedEntity {
 
     /**
      * Sets the updated.
-     * @param up
-     *            the new updated
+     * 
+     * @param up the new updated
      */
     public final void setUpdated(Date up) {
         this.updated = up;
     }
-    
+
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.reflectionToString(this);
+        return ToStringBuilder.reflectionToString(this);
     }
 }

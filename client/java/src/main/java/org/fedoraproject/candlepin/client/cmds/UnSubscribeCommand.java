@@ -26,8 +26,11 @@ import org.slf4j.LoggerFactory;
  */
 public class UnSubscribeCommand extends PrivilegedCommand {
 
-    private static final Logger L = LoggerFactory.getLogger(UnSubscribeCommand.class);
-    /* (non-Javadoc)
+    private static final Logger L = LoggerFactory
+        .getLogger(UnSubscribeCommand.class);
+
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getDescription()
      */
     @Override
@@ -35,7 +38,8 @@ public class UnSubscribeCommand extends PrivilegedCommand {
         return "unsubscribe the registered user from all or specific subscriptions.";
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getName()
      */
     @Override
@@ -43,13 +47,15 @@ public class UnSubscribeCommand extends PrivilegedCommand {
         return "unsubscribe";
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.cmds.BaseCommand#getOptions()
      */
     @Override
     public Options getOptions() {
         Options opts = super.getOptions();
-        opts.addOption("s", "serial", true, "Certificate serial to unsubscribe");
+        opts
+            .addOption("s", "serial", true, "Certificate serial to unsubscribe");
         return opts;
     }
 
@@ -63,7 +69,8 @@ public class UnSubscribeCommand extends PrivilegedCommand {
     protected void execute(CommandLine cmdLine, CandlepinClientFacade client) {
         String serial = cmdLine.getOptionValue("s");
         if (StringUtils.isEmpty(serial)) {
-            L.warn("Unsubscribing all entitlements for customer: {}", client.getUUID());
+            L.warn("Unsubscribing all entitlements for customer: {}", client
+                .getUUID());
             client.unBindAll();
         }
         else {

@@ -32,16 +32,16 @@ import org.fedoraproject.candlepin.client.model.Entitlement;
 import org.fedoraproject.candlepin.client.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.client.model.Pool;
 import org.jboss.resteasy.client.ClientResponse;
+
 /**
  * CandlepinConsumerClient
  */
-public interface CandlepinConsumerClient{
+public interface CandlepinConsumerClient {
 
     @POST
     @Path("consumers")
     @Consumes(MediaType.APPLICATION_JSON)
     Consumer register(Consumer aConsumer);
-    
 
     @GET
     @Path("consumers/{uuid}")
@@ -52,14 +52,12 @@ public interface CandlepinConsumerClient{
     @Path("consumers/{uuid}")
     @Consumes(MediaType.APPLICATION_JSON)
     Consumer updateConsumer(@PathParam("uuid") String uuid, Consumer consumer);
-    
+
     @DELETE
     @Path("consumers/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<Void> deleteConsumer(@PathParam("uuid") String uuid);
 
-    
-    
     @GET
     @Path("pools")
     @Produces(MediaType.APPLICATION_JSON)
@@ -82,33 +80,35 @@ public interface CandlepinConsumerClient{
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<EntitlementCertificate>> getEntitlementCertificates(
         @PathParam("uuid") String uuid);
-    
+
     @POST
     @Path("consumers/{uuid}/entitlements")
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Entitlement>> bindByProductId(
-            @PathParam("uuid") String uuid, @QueryParam("product") String productId,
-            @QueryParam("quantity") int quantity);
-    
-    @POST
-    @Path("consumers/{uuid}/entitlements")
-    @Produces(MediaType.APPLICATION_JSON)
-    ClientResponse<List<Entitlement>> bindByRegNumber(
-            @PathParam("uuid") String uuid, @QueryParam("token") String regnum,
-            @QueryParam("quantity") int quantity);
-    
+        @PathParam("uuid") String uuid,
+        @QueryParam("product") String productId,
+        @QueryParam("quantity") int quantity);
+
     @POST
     @Path("consumers/{uuid}/entitlements")
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Entitlement>> bindByRegNumber(
         @PathParam("uuid") String uuid, @QueryParam("token") String regnum,
-        @QueryParam("quantity") int quantity, @QueryParam("email") String email,
+        @QueryParam("quantity") int quantity);
+
+    @POST
+    @Path("consumers/{uuid}/entitlements")
+    @Produces(MediaType.APPLICATION_JSON)
+    ClientResponse<List<Entitlement>> bindByRegNumber(
+        @PathParam("uuid") String uuid, @QueryParam("token") String regnum,
+        @QueryParam("quantity") int quantity,
+        @QueryParam("email") String email,
         @QueryParam("emailLocale") String defLocale);
 
     @DELETE
     @Path("consumers/{uuid}/certificates/{serialNo}")
-    ClientResponse<Void>  unBindBySerialNumber(
-            @PathParam("uuid") String uuid, @PathParam("serialNo") int serialNumber);
+    ClientResponse<Void> unBindBySerialNumber(@PathParam("uuid") String uuid,
+        @PathParam("serialNo") int serialNumber);
 
     @DELETE
     @Path("consumers/{uuid}/entitlements/")

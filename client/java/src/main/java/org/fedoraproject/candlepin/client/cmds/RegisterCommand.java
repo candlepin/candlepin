@@ -32,7 +32,8 @@ import org.slf4j.LoggerFactory;
  */
 public class RegisterCommand extends BaseCommand {
 
-    private static final Logger L = LoggerFactory.getLogger(RegisterCommand.class);
+    private static final Logger L = LoggerFactory
+        .getLogger(RegisterCommand.class);
 
     /*
      * (non-Javadoc)
@@ -60,7 +61,8 @@ public class RegisterCommand extends BaseCommand {
         opts.addOption("u", "username", true, "Specify a username");
         opts.addOption("p", "password", true, "Specify a password");
         opts.addOption("n", "name", true, "Specify a name for the consumer");
-        opts.addOption("t", "type", true, "Specify a type for the consumer, defaults to system");
+        opts.addOption("t", "type", true,
+            "Specify a type for the consumer, defaults to system");
         opts.addOption("id", "consumerid", true,
             "Register to an Existing consumer");
         opts.addOption("a", "autosubscribe", false,
@@ -92,11 +94,11 @@ public class RegisterCommand extends BaseCommand {
         boolean force = cmdLine.hasOption("f");
         boolean bothUserPassPresent = isNotEmpty(username) &&
             isNotEmpty(password);
-        boolean autosubscribe = StringUtils.isNotEmpty(cmdLine.getOptionValue("a"));
+        boolean autosubscribe = StringUtils.isNotEmpty(cmdLine
+            .getOptionValue("a"));
         if (!bothUserPassPresent && consumerId == null) {
-            System.err
-                .println("Error: username and password or " +
-                    "consumerid are required to register,try --help.\n");
+            System.err.println("Error: username and password or "
+                + "consumerid are required to register,try --help.\n");
             return;
         }
         CandlepinClientFacade client = this.getClient();
@@ -106,7 +108,7 @@ public class RegisterCommand extends BaseCommand {
                 .println("This system is already registered. Use --force to override");
             return;
         }
-        //register based on client id. Go ahead with invocation
+        // register based on client id. Go ahead with invocation
         if (consumerId != null) {
             this.client.registerExisting(username, password, consumerId);
             autoSubscribe(autosubscribe);
@@ -132,26 +134,28 @@ public class RegisterCommand extends BaseCommand {
             for (ProductCertificate pc : productCertificates) {
                 for (Product product : pc.getProducts()) {
                     try {
-                        System.out.printf("\nTrying to bind product %s : %d", 
+                        System.out.printf("\nTrying to bind product %s : %d",
                             product.getName(), product.getHash());
                         L.info("Trying to bind product: {}", product);
                         this.client.bindByProductId(String.valueOf(product
                             .getHash()), 1);
-                        System.out.printf(
-                            "\nAutomatically subscribed the machine to product %s",
-                            product.getName());
+                        System.out
+                            .printf(
+                                "\nAutomatically subscribed the machine to product %s",
+                                product.getName());
                         L.info("Automagically binded product: {}", product);
                     }
                     catch (Exception e) {
-                        System.out.printf(
+                        System.out
+                            .printf(
                                 "\nWarning: Unable to auto subscribe the machine to %s",
                                 product.getName());
-                        L.warn("Unable to autosubscribe the machine to {}", product);
+                        L.warn("Unable to autosubscribe the machine to {}",
+                            product);
                     }
                 }
             }
         }
     }
 
-   
 }

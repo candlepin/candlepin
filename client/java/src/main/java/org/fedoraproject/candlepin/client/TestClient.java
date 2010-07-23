@@ -34,12 +34,12 @@ public class TestClient {
     public static void main(String[] args) {
         try {
             // This seems like a hack.
-            Configuration configuration = new Configuration(Utils.getDefaultProperties());
-            System.setProperty("javax.net.ssl.trustStore",
-                configuration.getKeyStoreFileLocation());
+            Configuration configuration = new Configuration(Utils
+                .getDefaultProperties());
             Security.addProvider(new BouncyCastleProvider());
             // this initialization only needs to be done once per VM
-            CandlepinClientFacade client = new DefaultCandlepinClientFacade(configuration);
+            CandlepinClientFacade client = new DefaultCandlepinClientFacade(
+                configuration);
             System.out.println("Should not be registered: " +
                 client.isRegistered());
             String uuid = client.register("admin", "admin", "Fred2", "system");

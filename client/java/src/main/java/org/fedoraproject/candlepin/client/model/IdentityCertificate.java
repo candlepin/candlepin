@@ -23,10 +23,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class IdentityCertificate extends TimeStampedEntity{
+public class IdentityCertificate extends TimeStampedEntity {
     protected String key;
     protected String cert;
-    
+
     public String getKey() {
         return key;
     }

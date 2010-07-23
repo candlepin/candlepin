@@ -28,9 +28,9 @@ public class Role extends Entitlement {
         this.extensions = extensions;
         this.hash = hash;
     }
-    
+
     public Role() {
-        
+
     }
 
     public String getName() {
@@ -44,7 +44,7 @@ public class Role extends Entitlement {
     public int getQuantity() {
         return NumberUtils.toInt(extensions.getValue("3"), -1);
     }
-    
+
     public String getHash() {
         return this.hash;
     }

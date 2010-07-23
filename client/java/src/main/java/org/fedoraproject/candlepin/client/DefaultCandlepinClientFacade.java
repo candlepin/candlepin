@@ -20,14 +20,11 @@ import java.io.FilenameFilter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -35,7 +32,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.fedoraproject.candlepin.client.cmds.Utils;
 import org.fedoraproject.candlepin.client.model.Consumer;
 import org.fedoraproject.candlepin.client.model.Entitlement;
@@ -50,11 +47,11 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.GenericType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
  * CandlepinConsumerClient
  */
 public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
-
 
     private Configuration config;
     static final Logger L = LoggerFactory
@@ -65,14 +62,17 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
         RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.client.CandlepinClientFacade#isRegistered()
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.fedoraproject.candlepin.client.CandlepinClientFacade#isRegistered()
      */
     public boolean isRegistered() {
         return getUUID() != null;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.CandlepinClientFacade#getUUID()
      */
     public String getUUID() {
@@ -94,8 +94,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
      */
     public String register(String username, String password, String name,
         String type) {
-        L.debug("Trying to register consumer with user:{} pass:{}",
-            username, password);
+        L.debug("Trying to register consumer with user:{} pass:{}", username,
+            password);
         CandlepinConsumerClient client = this.clientWithCredentials(username,
             password);
         Consumer cons = new Consumer();
@@ -117,12 +117,12 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
     public boolean updateConsumer() {
         String uuid = getUUID();
         CandlepinConsumerClient client = clientWithCert();
-        
+
         // Currently this just updates the hardware facts
         Consumer consumer = client.getConsumer(uuid).getEntity();
         consumer.setFacts(Utils.getHardwareFacts());
         client.updateConsumer(uuid, consumer);
-        
+
         return true;
     }
 
@@ -132,7 +132,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
      * org.fedoraproject.candlepin.client.CandlepinClientFacade#registerExisting
      * (java.lang.String, java.lang.String, java.lang.String)
      */
-    public boolean registerExisting(String username, String password, String uuid) {
+    public boolean registerExisting(String username, String password,
+        String uuid) {
         CandlepinConsumerClient client = this.clientWithCredentials(username,
             password);
         ClientResponse<Consumer> response = client.getConsumer(uuid);
@@ -140,12 +141,14 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
             Response.Status.Family.SUCCESSFUL)) {
             throw new ClientException(response.getResponseStatus().toString());
         }
-        recordIdentity(response.getEntity());        
+        recordIdentity(response.getEntity());
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.client.CandlepinClientFacade#unRegister()
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.fedoraproject.candlepin.client.CandlepinClientFacade#unRegister()
      */
     public void unRegister() {
         CandlepinConsumerClient client = clientWithCert();
@@ -155,7 +158,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.CandlepinClientFacade#listPools()
      */
     public List<Pool> listPools() {
@@ -172,8 +176,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
     public List<Entitlement> bindByPool(Long poolId, int quantity) {
         L.debug("bindByPool(poolId={})", poolId);
         CandlepinConsumerClient client = clientWithCert();
-        return getSafeResult(client
-            .bindByEntitlementID(getUUID(), poolId, quantity));
+        return getSafeResult(client.bindByEntitlementID(getUUID(), poolId,
+            quantity));
     }
 
     /*
@@ -185,32 +189,33 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
     public List<Entitlement> bindByProductId(String productId, int quantity) {
         L.debug("bindByProductId(productId={})", productId);
         CandlepinConsumerClient client = clientWithCert();
-        return getSafeResult(client.bindByProductId(
-            getUUID(), productId, quantity));
+        return getSafeResult(client.bindByProductId(getUUID(), productId,
+            quantity));
     }
 
     /**
      * Gets the safe result.
+     * 
      * @param <T> the generic type
      * @param response the response
      * @return the safe result
      */
     private <T> T getSafeResult(ClientResponse<T> response) {
         switch (response.getResponseStatus().getFamily()) {
-            case CLIENT_ERROR:
-                Map<String, String> msg = response
-                    .getEntity(new GenericType<Map<String, String>>() {
-                    });
-                L.warn("Operation failure. Status = {}. Response from server: {}",
-                    ReflectionToStringBuilder.reflectionToString(response
-                        .getResponseStatus()), Utils.toStr(msg));
-                throw new ClientException(response.getResponseStatus(), msg
-                    .get(Constants.ERR_DISPLAY_MSG));
-            default:
-                return response.getEntity();
+        case CLIENT_ERROR:
+            Map<String, String> msg = response
+                .getEntity(new GenericType<Map<String, String>>() {
+                });
+            L.warn("Operation failure. Status = {}. Response from server: {}",
+                ToStringBuilder
+                    .reflectionToString(response.getResponseStatus()), Utils
+                    .toStr(msg));
+            throw new ClientException(response.getResponseStatus(), msg
+                .get(Constants.ERR_DISPLAY_MSG));
+        default:
+            return response.getEntity();
         }
     }
-
 
     /*
      * (non-Javadoc)
@@ -221,8 +226,7 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
     public List<Entitlement> bindByRegNumber(String regNo, int quantity) {
         L.debug("bindByRegNumber(regNo={})", regNo);
         CandlepinConsumerClient client = clientWithCert();
-        return getSafeResult(client.bindByRegNumber(
-            getUUID(), regNo, quantity));
+        return getSafeResult(client.bindByRegNumber(getUUID(), regNo, quantity));
     }
 
     /*
@@ -250,11 +254,11 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
     public void unBindBySerialNumber(int serialNumber) {
         L.debug("unBindBySerialNumber(serialNumber={})", serialNumber);
         CandlepinConsumerClient client = clientWithCert();
-        getSafeResult(client.unBindBySerialNumber(getUUID(),
-            serialNumber));
+        getSafeResult(client.unBindBySerialNumber(getUUID(), serialNumber));
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.client.CandlepinClientFacade#unBindAll()
      */
     public void unBindAll() {
@@ -269,12 +273,15 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
      * updateEntitlementCertificates()
      */
     public boolean updateEntitlementCertificates() {
-        L.debug("updating current entitlement certificates of the customer {}", getUUID());
+        L.debug("updating current entitlement certificates of the customer {}",
+            getUUID());
         File entitlementDir = new File(config.getEntitlementDirPath());
         if (entitlementDir.exists() && entitlementDir.isDirectory()) {
-            L.debug("Removing files : {}", Arrays.toString(entitlementDir.list()));
+            L.debug("Removing files : {}", Arrays.toString(entitlementDir
+                .list()));
             FileUtil.removeFiles(entitlementDir.listFiles());
-            L.debug("Successfully removed files inside directory: {}", entitlementDir);
+            L.debug("Successfully removed files inside directory: {}",
+                entitlementDir);
         }
         FileUtil.mkdir(config.getEntitlementDirPath());
         CandlepinConsumerClient client = clientWithCert();
@@ -287,8 +294,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
                 cert.getSerial() + ".pem";
             FileUtil.dumpKeyAndCert(cert.getKey(), cert
                 .getX509CertificateAsPem(), fileName);
-            L.debug("Wrote key: {}, cert: {}",
-                cert.getKey(), cert.getX509CertificateAsPem());
+            L.debug("Wrote key: {}, cert: {}", cert.getKey(), cert
+                .getX509CertificateAsPem());
         }
         return true;
     }
@@ -306,25 +313,23 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
             return Collections.emptyList();
         }
 
-        File[] entitlementDirs = entitlementDir
-            .listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.matches("(\\d)+.pem");
-                }
-            });
-        L.debug("Number of entitlement certificates = #{}",
-            entitlementDir.list().length);
+        File[] entitlementDirs = entitlementDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.matches("(\\d)+.pem");
+            }
+        });
+        L.debug("Number of entitlement certificates = #{}", entitlementDir
+            .list().length);
 
         List<EntitlementCertificate> certs = Utils.newList();
         for (File file : entitlementDirs) {
-            String [] keyCert = FileUtil.readKeyAndCert(file.getAbsolutePath());
+            String[] keyCert = FileUtil.readKeyAndCert(file.getAbsolutePath());
             EntitlementCertificate entCert = new EntitlementCertificate(PemUtil
                 .createCert(keyCert[1]), PemUtil
                 .readPrivateKeyFromStr(keyCert[0]));
             certs.add(entCert);
-            L.debug("Read entitlement & key certificate: {}",
-                file);
+            L.debug("Read entitlement & key certificate: {}", file);
         }
         return certs;
     }
@@ -357,7 +362,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
             return productCertificates;
         }
         else {
-            L.info("Product certificates directory: {} could not be read.", file);
+            L.info("Product certificates directory: {} could not be read.",
+                file);
             return Collections.emptyList();
         }
     }
@@ -368,8 +374,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
             for (EntitlementCertificate cert : certs) {
                 KeyStore store = PKCS12Util.createPKCS12Keystore(cert
                     .getX509Certificate(), cert.getPrivateKey(), null);
-                File p12File = new File(config.getEntitlementDirPath() + File.separator +
-                    cert.getSerial() + ".p12");
+                File p12File = new File(config.getEntitlementDirPath() +
+                    File.separator + cert.getSerial() + ".p12");
                 store.store(new FileOutputStream(p12File), password
                     .toCharArray());
             }
@@ -382,8 +388,8 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
     protected CandlepinConsumerClient clientWithCert() {
         try {
             HttpClient httpclient = new HttpClient();
-            CustomSSLProtocolSocketFactory factory  =
-                new CustomSSLProtocolSocketFactory(config);
+            CustomSSLProtocolSocketFactory factory = new CustomSSLProtocolSocketFactory(
+                config, true);
             setHttpsProtocol(httpclient, factory);
             httpclient.getParams().setConnectionManagerTimeout(1000);
             CandlepinConsumerClient client = ProxyFactory.create(
@@ -404,22 +410,9 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
             UsernamePasswordCredentials creds = new UsernamePasswordCredentials(
                 username, password);
             httpclient.getState().setCredentials(AuthScope.ANY, creds);
-            if (config.isIgnoreTrustManagers()) {
-                setHttpsProtocol(httpclient,
-                    new AbstractSLLProtocolSocketFactory() {
-                        protected SSLContext getSSLContext() {
-                            try {
-                                SSLContext context = SSLContext.getInstance("TLS");
-                                context.init(new KeyManager[]{},
-                                    Utils.DUMMY_TRUST_MGRS, new SecureRandom());
-                                return context;
-                            }
-                            catch (Exception e) {
-                                throw new ClientException(e);
-                            }
-                        }
-                    });
-            }
+            CustomSSLProtocolSocketFactory factory = new CustomSSLProtocolSocketFactory(
+                config, false);
+            setHttpsProtocol(httpclient, factory);
             CandlepinConsumerClient client = ProxyFactory.create(
                 CandlepinConsumerClient.class, config.getServerURL(),
                 new ApacheHttpClientExecutor(httpclient));
@@ -448,11 +441,11 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
         L.debug("Recording identity of consumer: {}", cons);
         FileUtil.mkdir(config.getConsumerDirPath());
 
-        L.debug("Dumping key & certificate to file: {}",
-            config.getConsumerIdentityFilePath());
+        L.debug("Dumping key & certificate to file: {}", config
+            .getConsumerIdentityFilePath());
 
-        FileUtil.dumpKeyAndCert(cons.getIdCert().getKey(), cons.getIdCert().getCert(),
-            config.getConsumerIdentityFilePath());
+        FileUtil.dumpKeyAndCert(cons.getIdCert().getKey(), cons.getIdCert()
+            .getCert(), config.getConsumerIdentityFilePath());
     }
 
     protected void removeFiles() {

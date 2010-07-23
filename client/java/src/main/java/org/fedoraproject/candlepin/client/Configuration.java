@@ -17,8 +17,6 @@ package org.fedoraproject.candlepin.client;
 import java.io.File;
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * Configuration.
  */
@@ -35,46 +33,40 @@ public final class Configuration {
     }
 
     /**
-     * Gets the key store file location.
-     *
+     * Gets the ca certificate file
+     * 
      * @return the key store file location
      */
-    public String getKeyStoreFileLocation() {
-        return this.properties.getProperty(Constants.KEY_STORE_LOC);
-    }
-
-    public String getKeyStorePassword() {
-        return StringUtils.defaultIfEmpty(
-            this.properties.getProperty(Constants.KEY_STORE_PASSWD),
-            Constants.DEFAULT_KEY_STORE_PASSWD);
+    public String getCACertFile() {
+        return this.properties.getProperty(Constants.CP_CERT_LOC);
     }
 
     /**
      * Gets the server address.
-     *
+     * 
      * @return the server address
      */
     public String getServerURL() {
         return this.properties.getProperty(Constants.SERVER_URL_KEY);
     }
 
-     /**
+    /**
      * Gets the candlepin home dir.
-     *
+     * 
      * @return the candlepin home dir
      */
     public String getCandlepinHomeDir() {
         return this.properties.getProperty(Constants.CP_HOME_DIR);
     }
 
-     /**
+    /**
      * Gets the consumer directory name.
-     *
+     * 
      * @return the consumer directory name
      */
     public String getConsumerDirPath() {
-        return new StringBuilder().append(getCandlepinHomeDir())
-                .append(File.separator).append("consumer").toString();
+        return new StringBuilder().append(getCandlepinHomeDir()).append(
+            File.separator).append("consumer").toString();
     }
 
     public String getConsumerIdentityFilePath() {
@@ -82,25 +74,24 @@ public final class Configuration {
             File.separator).append("identity.pem").toString();
     }
 
-
     /**
      * Gets the entitlement directory name.
-     *
+     * 
      * @return the entitlement directory name
      */
     public String getEntitlementDirPath() {
-        return new StringBuilder().append(getCandlepinHomeDir())
-                .append(File.separator).append("entitlements").toString();
+        return new StringBuilder().append(getCandlepinHomeDir()).append(
+            File.separator).append("entitlements").toString();
     }
 
     /**
      * Gets the product directory name.
-     *
+     * 
      * @return the product directory name
      */
     public String getProductDirPath() {
-        return new StringBuilder().append(getCandlepinHomeDir())
-                .append(File.separator).append("products").toString();
+        return new StringBuilder().append(getCandlepinHomeDir()).append(
+            File.separator).append("products").toString();
     }
 
     public boolean isIgnoreTrustManagers() {

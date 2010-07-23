@@ -39,6 +39,7 @@ import org.fedoraproject.candlepin.client.cmds.UnSubscribeCommand;
 import org.fedoraproject.candlepin.client.cmds.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
  * ClientMain
  */
@@ -103,10 +104,6 @@ public class CLIMain {
             this.config = loadConfig(cmdLine);
             this.config.setIgnoreTrustManagers(cmdLine.hasOption("k"));
             L.info("Ignoring trust managers? :{}", cmdLine.hasOption("k"));
-            if (!this.config.isIgnoreTrustManagers()) {
-                System.setProperty("javax.net.ssl.trustStore", config
-                    .getKeyStoreFileLocation());
-            }
             cmd.setClient(new DefaultCandlepinClientFacade(this.config));
             cmd.execute(cmdLine);
         }
@@ -124,7 +121,8 @@ public class CLIMain {
     /**
      * @param e
      */
-    private void handleUnknownException(Exception e, BaseCommand cmd, String [] args) {
+    private void handleUnknownException(Exception e, BaseCommand cmd,
+        String[] args) {
         System.err.println("Unable to execute " + cmd.getName() + " command.");
         L.error("Unable to execute cmd : " + cmd.getName(), e);
     }
@@ -136,10 +134,10 @@ public class CLIMain {
             String loc = cmdLine.getOptionValue("cfg");
             File file = new File(StringUtils.defaultIfEmpty(loc,
                 Constants.DEFAULT_CONF_LOC));
-            //config file exists
+            // config file exists
             if (file.exists() && file.canRead() && !file.isDirectory()) {
-                L.debug("Config file {} exists. Trying to load values",
-                    file.getAbsolutePath());
+                L.debug("Config file {} exists. Trying to load values", file
+                    .getAbsolutePath());
                 Properties conf = new Properties();
                 FileInputStream inputStream = new FileInputStream(file);
                 conf.load(inputStream);
@@ -147,20 +145,21 @@ public class CLIMain {
                 pr = conf;
             }
             else {
-                L.debug("Config file {} does not exist. " +
-                    "Trying to load values from System.getProperty()", 
-                    file.getAbsolutePath());
-                /* config file not found. Try getting values from
-                 * from system environment*/
+                L.debug("Config file {} does not exist. "
+                    + "Trying to load values from System.getProperty()", file
+                    .getAbsolutePath());
+                /*
+                 * config file not found. Try getting values from from system
+                 * environment
+                 */
                 tryStoringSystemProperty(pr, Constants.SERVER_URL_KEY);
                 tryStoringSystemProperty(pr, Constants.CP_HOME_DIR);
-                tryStoringSystemProperty(pr, Constants.KEY_STORE_LOC);
-               // tryStoringSystemProperty(pr, Constants.CP_CERT_LOC);
+                tryStoringSystemProperty(pr, Constants.CP_CERT_LOC);
             }
         }
         catch (IOException e) {
-            //cannot and should not happen since
-            //defaultValues.properties is within the jar file
+            // cannot and should not happen since
+            // defaultValues.properties is within the jar file
             L.error("Exception trying to load config information", e);
             System.err.println("Unable to load configuration information.");
             System.exit(0);
@@ -171,7 +170,7 @@ public class CLIMain {
 
     /**
      * Try storing system property.
-     *
+     * 
      * @param properties the properties
      * @param key the key
      */
@@ -201,6 +200,5 @@ public class CLIMain {
         CLIMain cli = new CLIMain();
         cli.execute(args);
     }
-
 
 }

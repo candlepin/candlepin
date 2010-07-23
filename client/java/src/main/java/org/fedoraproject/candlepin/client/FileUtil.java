@@ -31,6 +31,7 @@ public class FileUtil {
 
     public static final Logger L = LoggerFactory.getLogger(FileUtil.class);
     private static final int BUF_SIZE = 4096;
+
     protected FileUtil() {
     };
 
@@ -52,9 +53,8 @@ public class FileUtil {
             file.delete();
         }
     }
-    
 
-    public static void removeFiles(File [] files) {
+    public static void removeFiles(File[] files) {
         for (File file : files) {
             file.delete();
         }
@@ -109,6 +109,7 @@ public class FileUtil {
             throw new ClientException(e);
         }
     }
+
     private static final String BEG_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
 
     public static String readAll(String filePath) {

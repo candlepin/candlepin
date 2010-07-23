@@ -68,6 +68,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the id.
+     * 
      * @return the id
      */
     public Long getId() {
@@ -76,8 +77,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the id.
-     * @param id
-     *            the new id
+     * 
+     * @param id the new id
      */
     public void setId(Long id) {
         this.id = id;
@@ -85,7 +86,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the product name.
-     *
+     * 
      * @return the product name
      */
     public String getProductName() {
@@ -94,8 +95,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the product name.
-     * @param productName
-     *            the new product name
+     * 
+     * @param productName the new product name
      */
     public void setProductName(String productName) {
         this.productName = productName;
@@ -103,6 +104,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the product id.
+     * 
      * @return the product id
      */
     public String getProductId() {
@@ -111,8 +113,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the product id.
-     * @param productId
-     *            the new product id
+     * 
+     * @param productId the new product id
      */
     public void setProductId(String productId) {
         this.productId = productId;
@@ -120,6 +122,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the quantity.
+     * 
      * @return the quantity
      */
     public Long getQuantity() {
@@ -128,8 +131,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the quantity.
-     * @param quantity
-     *            the new quantity
+     * 
+     * @param quantity the new quantity
      */
     public void setQuantity(Long quantity) {
         this.quantity = quantity;
@@ -137,6 +140,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the consumed.
+     * 
      * @return the consumed
      */
     public Long getConsumed() {
@@ -145,8 +149,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the consumed.
-     * @param consumed
-     *            the new consumed
+     * 
+     * @param consumed the new consumed
      */
     public void setConsumed(Long consumed) {
         this.consumed = consumed;
@@ -154,6 +158,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the start date.
+     * 
      * @return the start date
      */
     public Date getStartDate() {
@@ -162,8 +167,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the start date.
-     * @param startDate
-     *            the new start date
+     * 
+     * @param startDate the new start date
      */
     public void setStartDate(Date startDate) {
         this.startDate = startDate;
@@ -171,6 +176,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the end date.
+     * 
      * @return the end date
      */
     public Date getEndDate() {
@@ -179,8 +185,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the end date.
-     * @param endDate
-     *            the new end date
+     * 
+     * @param endDate the new end date
      */
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
@@ -188,6 +194,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the attributes.
+     * 
      * @return the attributes
      */
     public Set<Attribute> getAttributes() {
@@ -196,8 +203,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the attributes.
-     * @param attributes
-     *            the new attributes
+     * 
+     * @param attributes the new attributes
      */
     public void setAttributes(Set<Attribute> attributes) {
         this.attributes = attributes;
@@ -205,6 +212,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Checks if is active.
+     * 
      * @return true, if is active
      */
     public boolean isActive() {
@@ -213,8 +221,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the active.
-     * @param active
-     *            the new active
+     * 
+     * @param active the new active
      */
     public void setActive(boolean active) {
         this.active = active;
@@ -222,6 +230,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the subscription id.
+     * 
      * @return the subscription id
      */
     public Long getSubscriptionId() {
@@ -230,8 +239,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the subscription id.
-     * @param subscriptionId
-     *            the new subscription id
+     * 
+     * @param subscriptionId the new subscription id
      */
     public void setSubscriptionId(Long subscriptionId) {
         this.subscriptionId = subscriptionId;
@@ -239,8 +248,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the unlimited.
-     * @param value
-     *            the new unlimited
+     * 
+     * @param value the new unlimited
      */
     @JsonIgnore
     public void setUnlimited(boolean value) {
@@ -248,6 +257,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Gets the source entitlement.
+     * 
      * @return the source entitlement
      */
     public Entitlement getSourceEntitlement() {
@@ -256,8 +266,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the source entitlement.
-     * @param sourceEntitlement
-     *            the new source entitlement
+     * 
+     * @param sourceEntitlement the new source entitlement
      */
     public void setSourceEntitlement(Entitlement sourceEntitlement) {
         this.sourceEntitlement = sourceEntitlement;
@@ -265,6 +275,7 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Checks if is active subscription.
+     * 
      * @return true, if is active subscription
      */
     public boolean isActiveSubscription() {
@@ -273,8 +284,8 @@ public final class Pool extends TimeStampedEntity {
 
     /**
      * Sets the active subscription.
-     * @param activeSubscription
-     *            the new active subscription
+     * 
+     * @param activeSubscription the new active subscription
      */
     public void setActiveSubscription(boolean activeSubscription) {
         this.activeSubscription = activeSubscription;

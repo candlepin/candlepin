@@ -34,15 +34,15 @@ public class FactsCommand extends BaseCommand {
     public String getDescription() {
         return "View or refresh the hardware information about this consumer.";
     }
-    
+
     @Override
     public Options getOptions() {
         Options opts = super.getOptions();
-        
-        opts.addOption("l", "list", false,
-            "List the current hardware facts");
-        opts.addOption("u", "update", false,
-            "Updates the hardware information on the Unified Entitlement Platform.");
+
+        opts.addOption("l", "list", false, "List the current hardware facts");
+        opts
+            .addOption("u", "update", false,
+                "Updates the hardware information on the Unified Entitlement Platform.");
         return opts;
     }
 
@@ -51,11 +51,12 @@ public class FactsCommand extends BaseCommand {
         if (cmdLine.hasOption("l")) {
             Map<String, String> facts = Utils.getHardwareFacts();
             int keyLength = findLongestKey(facts);
-            
+
             System.out.println("--- Hardware Facts ---");
-            for (Entry<String, String> entry : Utils.getHardwareFacts().entrySet()) {
+            for (Entry<String, String> entry : Utils.getHardwareFacts()
+                .entrySet()) {
                 String key = padRight(entry.getKey(), keyLength);
-                
+
                 System.out.println(key + " = " + entry.getValue());
             }
         }
@@ -65,14 +66,14 @@ public class FactsCommand extends BaseCommand {
             }
         }
     }
-    
+
     private int findLongestKey(Map<String, String> map) {
         int longest = 0;
-        
+
         for (String key : map.keySet()) {
             longest = Math.max(longest, key.length());
         }
-        
+
         return longest;
     }
 

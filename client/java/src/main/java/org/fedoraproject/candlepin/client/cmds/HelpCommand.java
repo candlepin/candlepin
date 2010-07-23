@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
-import org.fedoraproject.candlepin.client.Constants;
 
 /**
  * HelpCommand

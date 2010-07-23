@@ -41,7 +41,7 @@ public class Extensions {
     public String getValue(String extension) {
         return getAbsoluteValue(this.namespace + "." + extension);
     }
-    
+
     public String getAbsoluteValue(String completeExtension) {
         byte[] value = this.x509Certificate
             .getExtensionValue(completeExtension);
@@ -56,7 +56,7 @@ public class Extensions {
     public Extensions branch(String extension) {
         return new Extensions(x509Certificate, namespace + "." + extension);
     }
-    
+
     public Set<String> find(String regex) {
         Set<String> matches = Utils.newSet();
         for (String ext : extensions) {

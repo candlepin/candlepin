@@ -28,13 +28,13 @@ public class ProductCertificate extends AbstractCertificate {
 
     /**
      * Instantiates a new product certificate.
-     * @param certificate
-     *            the certificate
+     * 
+     * @param certificate the certificate
      */
     public ProductCertificate(final X509Certificate certificate) {
         super(certificate);
     }
-    
+
     public ProductCertificate() {
     }
 
@@ -44,11 +44,12 @@ public class ProductCertificate extends AbstractCertificate {
             Constants.PRODUCT_NAMESPACE);
         for (String productHash : findUniqueHashes(extensions,
             Constants.PRODUCT_NAMESPACE)) {
-            products.add(new Product(extensions.branch(productHash), productHash));
+            products.add(new Product(extensions.branch(productHash),
+                productHash));
         }
         return products;
     }
-    
+
     public Product getProduct() {
         return getProducts().get(0);
     }
@@ -57,7 +58,8 @@ public class ProductCertificate extends AbstractCertificate {
      * @param extensions
      * @return
      */
-    protected Set<String> findUniqueHashes(Extensions extensions, String namespace) {
+    protected Set<String> findUniqueHashes(Extensions extensions,
+        String namespace) {
         Set<String> matches = extensions.find(".*1");
         Set<String> hashes = Utils.newSet();
         for (String match : matches) {

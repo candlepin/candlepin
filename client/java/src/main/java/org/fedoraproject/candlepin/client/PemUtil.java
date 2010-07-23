@@ -52,14 +52,15 @@ public class PemUtil {
             .readAll(privateKeyFile), password);
     }
 
-    public static KeyStore pemToKeyStore(String certificate, String key, String password) {
+    public static KeyStore pemToKeyStore(String certificate, String key,
+        String password) {
         try {
             X509Certificate cert = PemUtil.createCert(certificate);
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
             ks.setCertificateEntry("certificate", cert);
-            ks.setKeyEntry("privateKey", readPrivateKeyFromStr(key),
-                password.toCharArray(), new Certificate[] {cert});
+            ks.setKeyEntry("privateKey", readPrivateKeyFromStr(key), password
+                .toCharArray(), new Certificate[]{ cert });
             return ks;
         }
         catch (Exception e) {
@@ -69,8 +70,8 @@ public class PemUtil {
 
     public static PrivateKey readPrivateKeyFromStr(String privateKeyFileContent) {
         try {
-            return ((KeyPair) new PEMReader(new StringReader(privateKeyFileContent))
-                .readObject()).getPrivate();
+            return ((KeyPair) new PEMReader(new StringReader(
+                privateKeyFileContent)).readObject()).getPrivate();
         }
         catch (Exception e) {
             throw new ClientException(e);
