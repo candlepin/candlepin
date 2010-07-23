@@ -59,6 +59,8 @@ public class RegisterCommand extends BaseCommand {
         Options opts = super.getOptions();
         opts.addOption("u", "username", true, "Specify a username");
         opts.addOption("p", "password", true, "Specify a password");
+        opts.addOption("n", "name", true, "Specify a name for the consumer");
+        opts.addOption("t", "type", true, "Specify a type for the consumer, defaults to system");
         opts.addOption("id", "consumerid", true,
             "Register to an Existing consumer");
         opts.addOption("a", "autosubscribe", false,
@@ -78,6 +80,15 @@ public class RegisterCommand extends BaseCommand {
         String username = cmdLine.getOptionValue("u");
         String password = cmdLine.getOptionValue("p");
         String consumerId = cmdLine.getOptionValue("id");
+        String consumerName = cmdLine.getOptionValue("n");
+        String consumerType = cmdLine.getOptionValue("t");
+
+        if (consumerType == null) {
+            consumerType = "system";
+        }
+        if (consumerName == null) {
+            consumerName = username;
+        }
         boolean force = cmdLine.hasOption("f");
         boolean bothUserPassPresent = isNotEmpty(username) &&
             isNotEmpty(password);
@@ -103,8 +114,8 @@ public class RegisterCommand extends BaseCommand {
         }
         else {
             // register with username and password.
-            String uuid = client.register(username, password, "JavaClient",
-                "system");
+            String uuid = client.register(username, password, consumerName,
+                consumerType);
             System.out.println("Registered with UUID: " + uuid);
             autoSubscribe(autosubscribe);
 

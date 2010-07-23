@@ -53,9 +53,6 @@ public class HelpCommand extends BaseCommand {
                 cmd.getDescription()));
         }
         Properties properties = Utils.getDefaultProperties();
-        System.out.println("\n\n---Default configuration values used---\n");
-        System.out.printf("\t%s=%s\n", Constants.CONFIG_LOCATION,
-            Constants.DEFAULT_CONF_LOC);
         for (Object key : properties.keySet()) {
             System.out.printf("\t%s=%s\n", key, properties.get(key));
         }
