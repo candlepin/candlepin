@@ -18,6 +18,7 @@ import java.util.List;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -31,6 +32,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -49,6 +51,7 @@ public class EntitlementResource {
     private Entitler entitler;
     private final EntitlementCurator entitlementCurator;
     private I18n i18n;
+    private PoolCurator poolCurator;
     
     //private static Logger log = Logger.getLogger(EntitlementResource.class);
 
@@ -56,12 +59,14 @@ public class EntitlementResource {
     public EntitlementResource(PoolCurator epCurator, 
             EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
+            PoolCurator poolCurator,
             ProductServiceAdapter prodAdapter, SubscriptionServiceAdapter subAdapter, 
             Entitler entitler,
             I18n i18n) {
         
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
+        this.poolCurator = poolCurator;
         this.prodAdapter = prodAdapter;
         this.entitler = entitler;
         this.i18n = i18n;
@@ -201,5 +206,17 @@ public class EntitlementResource {
         }
         throw new NotFoundException(
             i18n.tr("Entitlement with ID '{0}' could not be found", dbid));
+    }
+    
+    @PUT
+    @Path("product/{product_id}")
+    public void updateEntitlementCertificatesForProduct(
+            @PathParam("product_id") String productId) {
+        List<Pool> poolsForProduct 
+            = poolCurator.listAvailableEntitlementPools(null, null, productId, false);
+        
+        for (Pool pool : poolsForProduct) {
+            entitler.regenerateCertificatesOf(pool.getEntitlements());
+        }
     }
 }
