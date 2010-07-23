@@ -106,7 +106,7 @@ public class ConsumerResource {
     private PoolManager poolManager;
     private ConsumerRules consumerRules;
     private ConsumerDeleteHelper consumerDeleteHelper;
-    
+
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
@@ -114,14 +114,11 @@ public class ConsumerResource {
         SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
-        EntitlementCertServiceAdapter entCertServiceAdapter,
-        I18n i18n,
-        EventSink sink,
-        EventFactory eventFactory,
-        EventCurator eventCurator,
-        UserServiceAdapter userService,
-        Exporter exporter, PoolManager poolManager, 
-        ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper) {
+        EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
+        EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
+        UserServiceAdapter userService, Exporter exporter,
+        PoolManager poolManager, ConsumerRules consumerRules,
+        ConsumerDeleteHelper consumerDeleteHelper) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -150,7 +147,7 @@ public class ConsumerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "consumers")
-    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Consumer> list() {
         return consumerCurator.listAll();
     }
@@ -164,7 +161,7 @@ public class ConsumerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
         return verifyAndLookupConsumer(uuid);
     }
@@ -180,37 +177,35 @@ public class ConsumerResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public Consumer create(Consumer consumer, @Context Principal principal)
         throws BadRequestException {
         // API:registerConsumer
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel(
-            consumer.getType().getLabel());
+        ConsumerType type = consumerTypeCurator.lookupByLabel(consumer
+            .getType().getLabel());
 
         if (type == null) {
-            throw new BadRequestException(
-                i18n.tr("No such consumer type: {0}", consumer.getType().getLabel()) 
-            );
+            throw new BadRequestException(i18n.tr("No such consumer type: {0}",
+                consumer.getType().getLabel()));
         }
 
         User user = getCurrentUsername(principal);
-        
-        // TODO:  Refactor out type specific checks?
+
+        // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
             Consumer existing = consumerCurator.lookupUsersConsumer(user);
-            
-            if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
-                // TODO:  This is not the correct error code for this situation!
-                throw new BadRequestException(
-                    i18n.tr(
-                        "User {0} has already registered a personal consumer", 
-                        user.getUsername()
-                    ));
+
+            if (existing != null &&
+                existing.getType().isType(ConsumerTypeEnum.PERSON)) {
+                // TODO: This is not the correct error code for this situation!
+                throw new BadRequestException(i18n.tr(
+                    "User {0} has already registered a personal consumer", user
+                        .getUsername()));
             }
             consumer.setName(user.getUsername());
         }
-        
+
         consumer.setUserName(user.getUsername());
         consumer.setOwner(principal.getOwner());
         consumer.setType(type);
@@ -224,7 +219,7 @@ public class ConsumerResource {
                 log.debug("   " + key + " = " + consumer.getFact(key));
             }
         }
-        
+
         try {
             consumer = consumerCurator.create(consumer);
             IdentityCertificate idCert = null;
@@ -251,37 +246,37 @@ public class ConsumerResource {
         }
         catch (Exception e) {
             log.error("Problem creating consumer:", e);
-            throw new BadRequestException(
-                i18n.tr("Problem creating consumer {0}", consumer));
+            throw new BadRequestException(i18n.tr(
+                "Problem creating consumer {0}", consumer));
         }
     }
-    
+
     private User getCurrentUsername(Principal principal) {
         if (principal instanceof UserPrincipal) {
             UserPrincipal user = (UserPrincipal) principal;
             return userService.findByLogin(user.getUsername());
         }
-        
+
         return null;
     }
-    
+
     @PUT
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @Transactional
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public void updateConsumer(@PathParam("consumer_uuid") String uuid, Consumer consumer) {
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
+    public void updateConsumer(@PathParam("consumer_uuid") String uuid,
+        Consumer consumer) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
-        
+
         if (!toUpdate.factsAreEqual(consumer)) {
             Event event = eventFactory.consumerModified(toUpdate, consumer);
-        
-            // TODO:  Just updating the facts for now
+
+            // TODO: Just updating the facts for now
             toUpdate.setFacts(consumer.getFacts());
             sink.sendEvent(event);
         }
     }
-    
 
     /**
      * delete the consumer.
@@ -292,14 +287,14 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @Transactional
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
         log.debug("deleting  consumer_uuid" + uuid);
-        Consumer toDelete = verifyAndLookupConsumer(uuid);        
+        Consumer toDelete = verifyAndLookupConsumer(uuid);
 
         consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
         unbindAll(uuid);
-        
+
         Event event = eventFactory.consumerDeleted(toDelete);
 
         consumerCurator.delete(toDelete);
@@ -316,7 +311,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces({ MediaType.APPLICATION_JSON })
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
@@ -333,12 +328,12 @@ public class ConsumerResource {
             }
         }
 
-        List<EntitlementCertificate> returnCerts =
-            new LinkedList<EntitlementCertificate>();
-        List<EntitlementCertificate> allCerts =
-            entCertService.listForConsumer(consumer);
+        List<EntitlementCertificate> returnCerts = new LinkedList<EntitlementCertificate>();
+        List<EntitlementCertificate> allCerts = entCertService
+            .listForConsumer(consumer);
         for (EntitlementCertificate cert : allCerts) {
-            if (serialSet.size() == 0 || serialSet.contains(cert.getSerial().getId())) {
+            if (serialSet.size() == 0 ||
+                serialSet.contains(cert.getSerial().getId())) {
                 returnCerts.add(cert);
             }
         }
@@ -357,7 +352,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "serials")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -366,8 +361,8 @@ public class ConsumerResource {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
-        for (EntitlementCertificate cert :
-            entCertService.listForConsumer(consumer)) {
+        for (EntitlementCertificate cert : entCertService
+            .listForConsumer(consumer)) {
             allCerts.add(new CertificateSerialDto(cert.getSerial().getId()));
         }
 
@@ -375,47 +370,52 @@ public class ConsumerResource {
     }
 
     /**
-     * Entitles the given Consumer to the given Product.
-     * 
-     * Will seek out pools which provide access to this product, either directly or as 
-     * a child, and select the best one based on a call to the rules engine.
+     * Entitles the given Consumer to the given Product. Will seek out pools
+     * which provide access to this product, either directly or as a child, and
+     * select the best one based on a call to the rules engine.
      * 
      * @param productId Product ID.
      * @return Entitlement object.
      */
-    private List<Entitlement> bindByProduct(String productId, Consumer consumer, 
-        Integer quantity) {
-        
+    private List<Entitlement> bindByProduct(String productId,
+        Consumer consumer, Integer quantity) {
+
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        entitlementList.add(createEntitlementByProduct(consumer, productId, quantity));
+        entitlementList.add(createEntitlementByProduct(consumer, productId,
+            quantity));
         return entitlementList;
     }
 
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlementByProduct(Consumer consumer, String productId, 
-        Integer quantity) {
+    private Entitlement createEntitlementByProduct(Consumer consumer,
+        String productId, Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitleByProduct(consumer, productId, quantity);
+            Entitlement e = entitler.entitleByProduct(consumer, productId,
+                quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
         catch (EntitlementRefusedException e) {
-            // Could be multiple errors, but we'll just report the first one for now:
+            // Could be multiple errors, but we'll just report the first one for
+            // now:
             // TODO: Convert resource key to user friendly string?
             // See below for more TODOS
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
-                throw new ForbiddenException(i18n.tr(
-                    "This consumer is already subscribed to the product ''{0}''",
-                    productId));
+                throw new ForbiddenException(
+                    i18n
+                        .tr(
+                            "This consumer is already subscribed to the product ''{0}''",
+                            productId));
             }
 
-            throw new ForbiddenException(e.getResult().getErrors().get(0).getResourceKey());
+            throw new ForbiddenException(e.getResult().getErrors().get(0)
+                .getResourceKey());
         }
     }
 
-    private Entitlement createEntitlementByPool(Consumer consumer, Pool pool, 
+    private Entitlement createEntitlementByPool(Consumer consumer, Pool pool,
         Integer quantity) {
         // Attempt to create an entitlement:
         try {
@@ -424,17 +424,20 @@ public class ConsumerResource {
             return e;
         }
         catch (EntitlementRefusedException e) {
-            // Could be multiple errors, but we'll just report the first one for now:
+            // Could be multiple errors, but we'll just report the first one for
+            // now:
             // TODO: Convert resource key to user friendly string?
-            // TODO: multiple checks here for the errors will get ugly, but the returned
+            // TODO: multiple checks here for the errors will get ugly, but the
+            // returned
             // string is dependent on the caller (ie pool vs product)
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
                 throw new ForbiddenException(i18n.tr(
                     "This consumer is already subscribed to the product matching pool " +
-                    "with id ''{0}''", pool.getId().toString()));
+                        "with id ''{0}''", pool.getId().toString()));
             }
-            throw new ForbiddenException(e.getResult().getErrors().get(0).getResourceKey());
+            throw new ForbiddenException(e.getResult().getErrors().get(0)
+                .getResourceKey());
         }
     }
 
@@ -445,15 +448,15 @@ public class ConsumerResource {
      * @param consumer Consumer to bind
      * @return token
      */
-    private List<Entitlement> bindByToken(String registrationToken, Consumer consumer, 
-            Integer quantity, String email, String emailLocale) {
-        
-        List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer.getOwner(), 
-            registrationToken, email, emailLocale);
+    private List<Entitlement> bindByToken(String registrationToken,
+        Consumer consumer, Integer quantity, String email, String emailLocale) {
+
+        List<Subscription> subs = subAdapter.getSubscriptionForToken(consumer
+            .getOwner(), registrationToken, email, emailLocale);
         if ((subs == null) || (subs.isEmpty())) {
             log.debug("token: " + registrationToken);
-            throw new BadRequestException(
-                i18n.tr("No such token: {0}", registrationToken));
+            throw new BadRequestException(i18n.tr("No such token: {0}",
+                registrationToken));
         }
 
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
@@ -469,17 +472,19 @@ public class ConsumerResource {
             }
 
             Product p = sub.getProduct();
-            entitlementList.add(createEntitlementByProduct(consumer, p.getId(), quantity));
+            entitlementList.add(createEntitlementByProduct(consumer, p.getId(),
+                quantity));
         }
         return entitlementList;
     }
 
-    private List<Entitlement> bindByPool(Long poolId, Consumer consumer, Integer quantity) {
+    private List<Entitlement> bindByPool(Long poolId, Consumer consumer,
+        Integer quantity) {
         Pool pool = poolManager.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
         if (pool == null) {
-            throw new BadRequestException(
-                i18n.tr("No such entitlement pool: {0}", poolId));
+            throw new BadRequestException(i18n.tr(
+                "No such entitlement pool: {0}", poolId));
         }
 
         // Attempt to create an entitlement:
@@ -491,7 +496,7 @@ public class ConsumerResource {
      * Request an entitlement.
      * 
      * @param consumerUuid Consumer identifier to be entitled
-     * @param poolId Entitlement pool id.
+     * @param poolIdString Entitlement pool id.
      * @param email TODO
      * @param emailLocale TODO
      * @return Entitlement.
@@ -500,20 +505,34 @@ public class ConsumerResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public List<Entitlement> bind(@PathParam("consumer_uuid") String consumerUuid,
-        @QueryParam("pool") Long poolId, @QueryParam("token") String token,
-        @QueryParam("product") String productId, 
-        @QueryParam("quantity") @DefaultValue("1") Integer quantity, 
-        @QueryParam("email") String email, 
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
+    public List<Entitlement> bind(
+        @PathParam("consumer_uuid") String consumerUuid,
+        @QueryParam("pool") String poolIdString,
+        @QueryParam("token") String token,
+        @QueryParam("product") String productId,
+        @QueryParam("quantity") @DefaultValue("1") Integer quantity,
+        @QueryParam("email") String email,
         @QueryParam("emailLocale") String emailLocale) {
+
+        // Verify that the poolId is a Long if provided
+        Long poolId = null;
+        if (poolIdString != null) {
+            try {
+                poolId = Long.parseLong(poolIdString);
+            }
+            catch (NumberFormatException e) {
+                throw new BadRequestException(i18n
+                    .tr("Pool ID should be numeric"));
+            }
+        }
 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||
             (poolId != null && productId != null) ||
             (token != null && productId != null)) {
-            throw new BadRequestException(
-                i18n.tr("Cannot bind by multiple parameters."));
+            throw new BadRequestException(i18n
+                .tr("Cannot bind by multiple parameters."));
         }
 
         // Verify consumer exists:
@@ -521,19 +540,19 @@ public class ConsumerResource {
         List<Entitlement> entitlements = null;
         try {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
-            
+
                 if (token != null) {
-                    entitlements = 
-                        bindByToken(token, consumer, quantity, email, emailLocale);
+                    entitlements = bindByToken(token, consumer, quantity,
+                        email, emailLocale);
                 }
                 else if (productId != null) {
                     entitlements = bindByProduct(productId, consumer, quantity);
                 }
                 else {
                     entitlements = bindByPool(poolId, consumer, quantity);
-                }                
+                }
             }
-        } 
+        }
         catch (CandlepinException e) {
             log.debug(e.getMessage());
             throw e;
@@ -552,8 +571,8 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
         if (consumer == null) {
 
-            throw new NotFoundException(
-                i18n.tr("No such consumer: {0}", consumerUuid));
+            throw new NotFoundException(i18n.tr("No such consumer: {0}",
+                consumerUuid));
         }
         return consumer;
     }
@@ -561,7 +580,7 @@ public class ConsumerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("product") String productId) {
@@ -570,14 +589,15 @@ public class ConsumerResource {
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
-                throw new BadRequestException(
-                    i18n.tr("No such product: {0}", productId));
+                throw new BadRequestException(i18n.tr("No such product: {0}",
+                    productId));
             }
-            return entitlementCurator.listByConsumerAndProduct(consumer, productId);
+            return entitlementCurator.listByConsumerAndProduct(consumer,
+                productId);
         }
 
         return entitlementCurator.listByConsumer(consumer);
-        
+
     }
 
     /**
@@ -587,7 +607,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public void unbindAll(@PathParam("consumer_uuid") String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
@@ -595,8 +615,8 @@ public class ConsumerResource {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(
-                i18n.tr("Consumer with ID " + consumerUuid + " could not be found."));
+            throw new NotFoundException(i18n.tr("Consumer with ID " +
+                consumerUuid + " could not be found."));
         }
 
         entitler.revokeAllEntitlements(consumer);
@@ -616,7 +636,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("dbid") Long dbid) {
 
@@ -627,43 +647,46 @@ public class ConsumerResource {
             entitler.revokeEntitlement(toDelete);
             return;
         }
-        throw new NotFoundException(
-            i18n.tr("Entitlement with ID '{0}' could not be found.", dbid));
+        throw new NotFoundException(i18n.tr(
+            "Entitlement with ID '{0}' could not be found.", dbid));
     }
-    
+
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid, 
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
+    public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("serial") Long serial) {
-        
+
         verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator
             .findByCertificateSerial(BigInteger.valueOf(serial));
-        
+
         if (toDelete != null) {
             entitler.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException(
-            i18n.tr("Entitlement Certificate with serial number {0} could not be found.", 
-                serial));
+            i18n
+                .tr(
+                    "Entitlement Certificate with serial number {0} could not be found.",
+                    serial));
     }
-    
+
     @GET
     @Produces("application/atom+xml")
     @Path("{consumer_uuid}/atom")
-    @AllowRoles(roles = {Role.OWNER_ADMIN})
-    public Feed getConsumerAtomFeed(@PathParam("consumer_uuid") String consumerUuid) {
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public Feed getConsumerAtomFeed(
+        @PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        Feed feed =  this.eventCurator.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
-            consumer));
+        Feed feed = this.eventCurator.toFeed(this.eventCurator.listMostRecent(
+            FEED_LIMIT, consumer));
         feed.setTitle("Event feed for consumer " + consumer.getUuid());
         return feed;
     }
 
     @PUT
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     @Path("/{consumer_uuid}/certificates/")
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid) {
@@ -674,23 +697,24 @@ public class ConsumerResource {
     @GET
     @Produces("application/zip")
     @Path("{consumer_uuid}/export")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public File exportData(
-        @Context HttpServletResponse response, 
+    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
+    public File exportData(@Context HttpServletResponse response,
         @PathParam("consumer_uuid") String consumerUuid) {
-        
+
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         if (!consumer.getType().isType(ConsumerTypeEnum.CANDLEPIN)) {
             throw new ForbiddenException(
-                i18n.tr("Consumer {0} cannot be exported, as it's of wrong consumer type.",
-                    consumerUuid));
+                i18n
+                    .tr(
+                        "Consumer {0} cannot be exported, as it's of wrong consumer type.",
+                        consumerUuid));
         }
-        
+
         File archive;
         try {
             archive = exporter.getExport(consumer);
-            response.addHeader("Content-Disposition", 
-                "attachment; filename=" + archive.getName());
+            response.addHeader("Content-Disposition", "attachment; filename=" +
+                archive.getName());
             return archive;
         }
         catch (ExportCreationException e) {
