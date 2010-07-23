@@ -41,8 +41,12 @@ public class DatabaseListener implements EventListener {
         // access control interceptor.
         Principal systemPrincipal = new SystemPrincipal();
         ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
-        log.debug("Received event: " + event);
-        eventCurator.create(event);
-    }
+        if (log.isDebugEnabled()) {
+            log.debug("Received event: " + event);
+        }
 
+        if (event != null) {
+            eventCurator.create(event);
+        }
+    }
 }
