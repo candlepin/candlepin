@@ -85,7 +85,9 @@ public class CandlepinExceptionMapper implements
             bldr = getBuilder((CandlepinException) cause, responseMediaType);
         }
         else if (cause instanceof DefaultOptionsMethodException) {
-            return ((Failure) cause).getResponse();
+            Response resp = ((Failure) cause).getResponse();
+            return (resp != null) ? resp : 
+                getDefaultBuilder(cause, responseMediaType).build();
         }
         else {
             bldr = getDefaultBuilder(cause, responseMediaType);

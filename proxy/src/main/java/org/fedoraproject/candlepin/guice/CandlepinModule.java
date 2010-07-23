@@ -111,7 +111,7 @@ public class CandlepinModule extends AbstractModule {
         bind(RulesResource.class);
         bind(AdminResource.class);
         bind(StatusResource.class);
-        bind(CandlepinExceptionMapper.class);
+        bind(CandlepinExceptionMapper.class);   
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
