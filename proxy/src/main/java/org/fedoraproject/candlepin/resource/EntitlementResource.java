@@ -25,6 +25,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -208,9 +210,11 @@ public class EntitlementResource {
             i18n.tr("Entitlement with ID '{0}' could not be found", dbid));
     }
     
+    
     @PUT
     @Path("product/{product_id}")
-    public void updateEntitlementCertificatesForProduct(
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    public void regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId) {
         List<Pool> poolsForProduct 
             = poolCurator.listAvailableEntitlementPools(null, null, productId, false);

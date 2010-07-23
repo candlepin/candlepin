@@ -1,6 +1,36 @@
 require 'spec/expectations'
 require 'candlepin_api'
 
+Given /^consumer "([^\"]*)" consumes an entitlement for the "([^\"]*)" product$/ do |consumer_name, product|
+   Given "I am logged in as \"#{@username}\""
+   
+   consumer = @current_owner_cp.register(consumer_name, :system)
+   @consumer_clients[consumer_name] = connect(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+   @consumer_clients[consumer_name].consume_product(product.hash.abs)
+end
+
+When /^I regenerate entitlement certificates for "([^\"]*)" product$/ do |product|
+  @old_certs ||= []
+  
+  @consumers.each do |consumer|
+    @old_certs.concat(consumer.get_certificates())
+  end
+
+  @current_owner_cp.regenerate_entitlement_certificates_for_product(product.hash.abs)  
+end
+
+Then /^consumers have new entitlement certificates$/ do
+  new_certs = []
+  @consumers.each do |consumer|
+    new_certs.concat(consumer.get_certificates())
+  end
+  
+  @old_certs.size.should == new_certs.size
+  old_ids = @old_certs.map { |cert| cert['serial']['id']}
+  new_ids = new_certs.map { |cert| cert['serial']['id']}
+  (old_ids & new_ids).size.should == 0  
+end
+
 Then /^consumer "([^\"]*)" has (\d+) entitlement certificates?$/ do |consumer_name, count|
   @consumer_clients[consumer_name].get_certificates.length.should == count.to_i
 end

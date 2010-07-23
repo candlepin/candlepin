@@ -332,6 +332,10 @@ class Candlepin
   def regenerate_entitlement_certificates
     return put("/consumers/#{@uuid}/certificates")
   end
+  
+  def regenerate_entitlement_certificates_for_product(product_id)
+    return put("/entitlements/product/#{product_id}")
+  end
 
   def get_status
     return get("/status/")
