@@ -33,6 +33,11 @@ public class EventAdapterImpl implements EventAdapter {
     public Feed toFeed(List<Event> events) {
         Feed feed = new Feed();
         feed.setUpdated(new Date());
+
+        if (events == null) {
+            return feed;
+        }
+
         for (Event e : events) {
             Entry entry = new Entry();
             entry.setTitle(e.getTarget().toString() + " " + e.getType().toString());
