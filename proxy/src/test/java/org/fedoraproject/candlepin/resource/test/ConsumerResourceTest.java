@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -29,6 +30,7 @@ import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -47,6 +49,7 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -66,7 +69,9 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 /**
  * ConsumerResourceTest
@@ -729,6 +734,54 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             return;
         }
         fail("No Exception was thrown");
+    }
+    
+    @Test
+    public void testRegenerateIdCerts()
+        throws GeneralSecurityException, IOException {
+        
+        // using lconsumer simply to avoid hiding consumer. This should
+        // get renamed once we refactor this test suite.
+        IdentityCertServiceAdapter mockedIdSvc = Mockito
+            .mock(IdentityCertServiceAdapter.class);
+        
+        UserServiceAdapter mockedUserSvc = Mockito.mock(UserServiceAdapter.class);
+        Consumer lconsumer = createConsumer();
+        lconsumer.setIdCert(createIdCert());
+        IdentityCertificate ic = lconsumer.getIdCert();
+        assertNotNull(ic);
+
+        when(mockedConsumerCurator.lookupByUuid(lconsumer.getUuid()))
+            .thenReturn(lconsumer);
+        when(mockedIdSvc.regenerateIdentityCert(lconsumer, USER_NAME))
+            .thenReturn(createIdCert());
+        when(mockedUserSvc.findByLogin(USER_NAME)).thenReturn(someuser);
+
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator,
+            null, null, null, null, null, mockedIdSvc, null, null,
+            null, null, null, mockedUserSvc, null, null, null, null);
+
+        Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid(),
+            principal);
+
+        assertNotNull(fooc);
+        IdentityCertificate ic1 = fooc.getIdCert();
+        assertNotNull(ic1);
+        assertFalse(ic.equals(ic1));
+    }
+
+    private IdentityCertificate createIdCert() {
+        IdentityCertificate idCert = new IdentityCertificate();
+        CertificateSerial serial = new CertificateSerial(new Date());
+        serial.setId(new Long(new Random().nextInt(1000000)));
+
+        // totally arbitrary
+        idCert.setId(new Long(new Random().nextInt(1000000)));
+        idCert.setKey("uh0876puhapodifbvj094");
+        idCert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
+        idCert.setSerial(serial);
+
+        return idCert;
     }
 
 }
