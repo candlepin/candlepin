@@ -14,28 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.io.File;
-import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -75,12 +53,37 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.ExportCreationException;
 import org.fedoraproject.candlepin.sync.Exporter;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 
 /**
  * API Gateway for Consumers
@@ -222,24 +225,8 @@ public class ConsumerResource {
 
         try {
             consumer = consumerCurator.create(consumer);
-            IdentityCertificate idCert = null;
-
-            // This is pretty bad - I'm still not convinced that
-            // the id cert actually needs the username at all
-            if (user != null) {
-                idCert = identityCertService.generateIdentityCert(consumer,
-                    user.getUsername());
-            }
-
-            if (log.isDebugEnabled()) {
-                log.debug("Generated identity cert: " + idCert);
-                log.debug("Created consumer: " + consumer);
-            }
-
-            if (idCert == null) {
-                throw new RuntimeException(
-                    "Error generating identity certificate.");
-            }
+            IdentityCertificate idCert = generateIdCert(consumer, user, false);
+            consumer.setIdCert(idCert);
 
             sink.emitConsumerCreated(consumer);
             return consumer;
@@ -721,4 +708,75 @@ public class ConsumerResource {
             throw new IseException(i18n.tr("Unable to create export archive"));
         }
     }
+
+   /**
+    * Return the consumer identified by the given uuid.
+    *
+    * @param uuid uuid of the consumer sought.
+    * @return the consumer identified by the given uuid.
+    */
+    @POST
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Path("{consumer_uuid}")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    public Consumer regenerateIdentityCertificates(@PathParam("consumer_uuid") String uuid,
+        @Context Principal principal) {
+        Consumer c = verifyAndLookupConsumer(uuid);
+        try {
+
+            User user = getCurrentUsername(principal);
+            IdentityCertificate ic = generateIdCert(c, user, true);
+            c.setIdCert(ic);
+            consumerCurator.update(c);
+            return c;
+        }
+        catch (Exception e) {
+            log.error("Problem regenerating id cert for consumer:", e);
+            throw new BadRequestException(
+                i18n.tr("Problem regenerating id cert for consumer {0}", c));
+        }
+    }
+
+    /**
+     * Generates the identity certificate for the given consumer and user.
+     * Throws RuntimeException if there is a problem with generating the
+     * certificate.
+     * @param c Consumer whose certificate needs to be generated.
+     * @param u User owning the consumer.
+     * @param regen if true, forces a regen of the certificate.
+     * @return The identity certificate for the given consumer.
+     * @throws IOException thrown if there's a problem generating the cert.
+     * @throws GeneralSecurityException thrown incase of security error.
+     */
+    private IdentityCertificate generateIdCert(Consumer c, User u, boolean regen)
+        throws GeneralSecurityException, IOException {
+
+        IdentityCertificate idCert = null;
+
+        // This is pretty bad - I'm still not convinced that
+        // the id cert actually needs the username at all
+        if (u != null) {
+            if (regen) {
+                idCert = identityCertService.regenerateIdentityCert(c,
+                    u.getUsername());
+            }
+            else {
+                idCert = identityCertService.generateIdentityCert(c,
+                    u.getUsername());
+            }
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Generated identity cert: " + idCert);
+            log.debug("Created consumer: " + c);
+        }
+
+        if (idCert == null) {
+            throw new RuntimeException(
+                "Error generating identity certificate.");
+        }
+
+        return idCert;
+    }
+
 }
