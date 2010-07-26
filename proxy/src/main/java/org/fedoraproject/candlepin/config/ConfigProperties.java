@@ -71,7 +71,7 @@ public class ConfigProperties {
 
                 this.put(PRETTY_PRINT, "false");
                 this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
-                this.put(CRL_FILE_PATH, "/etc/candlepin/candlepin-crl.crl");
+                this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
 
                 this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
 
