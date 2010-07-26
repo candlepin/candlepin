@@ -93,5 +93,11 @@ public class EventSinkImpl implements EventSink {
     
     public void emitExportCreated(Consumer consumer) {
         Event e = eventFactory.exportCreated(consumer);
+        sendEvent(e);
+    }
+    
+    public void emitImportCreated(Owner owner) {
+        Event e = eventFactory.importCreated(owner);
+        sendEvent(e);
     }
 }

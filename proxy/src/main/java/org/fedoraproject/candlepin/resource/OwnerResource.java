@@ -376,6 +376,8 @@ public class OwnerResource {
             File archive = part.getBody(new GenericType<File>(){});
             log.info("Importing archive: " + archive.getAbsolutePath());
             importer.loadExport(owner, archive);
+            
+            sink.emitImportCreated(owner);
         }
         catch (IOException e) {
             throw new IseException(i18n.tr("Error reading export archive"));

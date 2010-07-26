@@ -148,6 +148,13 @@ public class EventFactory {
         return e;
     }
     
+    public Event importCreated(Owner owner) {
+        Principal principal = principalProvider.get();
+        Event e = new Event(Event.Type.CREATED, Event.Target.IMPORT, principal, 
+            owner.getId(), null, null, null, null);
+        return e;
+    }
+    
     private String entityToJson(Object entity) {
         String newEntityJson = "";
         // TODO: Throw an auditing exception here

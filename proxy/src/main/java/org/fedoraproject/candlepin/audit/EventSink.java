@@ -32,4 +32,6 @@ public interface EventSink {
     void emitPoolCreated(Pool newPool);
     
     void emitExportCreated(Consumer consumer);
+    
+    void emitImportCreated(Owner owner);
 }

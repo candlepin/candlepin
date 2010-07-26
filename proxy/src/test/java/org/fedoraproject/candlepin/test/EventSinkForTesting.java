@@ -44,4 +44,8 @@ public class EventSinkForTesting implements EventSink {
     @Override
     public void emitExportCreated(Consumer consumer) {
     }
+
+    @Override
+    public void emitImportCreated(Owner owner) {
+    }
 }
