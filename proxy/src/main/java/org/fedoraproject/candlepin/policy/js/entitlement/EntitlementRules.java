@@ -56,6 +56,7 @@ import com.google.inject.name.Named;
 public class EntitlementRules implements Enforcer {
 
     private static Logger log = Logger.getLogger(EntitlementRules.class);
+    private static Logger rulesLogger = Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
     private DateSource dateSource;
 
     private ProductServiceAdapter prodAdapter;
@@ -158,6 +159,7 @@ public class EntitlementRules implements Enforcer {
         jsEngine.put("pool", new ReadOnlyPool(pool));
         jsEngine.put("pre", preHelper);
         jsEngine.put("attributes", allAttributes);
+        jsEngine.put("log", rulesLogger);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + topLevelProductId);
@@ -204,6 +206,7 @@ public class EntitlementRules implements Enforcer {
         jsEngine.put("pool", new ReadOnlyPool(pool));
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
         jsEngine.put("attributes", allAttributes);
+        jsEngine.put("log", rulesLogger);
 
         log.debug("Running post-entitlement rules for: " + c.getUuid() +
             " product: " + topLevelProductId);
