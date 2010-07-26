@@ -56,7 +56,8 @@ import com.google.inject.name.Named;
 public class EntitlementRules implements Enforcer {
 
     private static Logger log = Logger.getLogger(EntitlementRules.class);
-    private static Logger rulesLogger = Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
+    private static Logger rulesLogger =
+        Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
     private DateSource dateSource;
 
     private ProductServiceAdapter prodAdapter;
