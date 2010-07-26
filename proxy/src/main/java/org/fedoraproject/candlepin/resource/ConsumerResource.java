@@ -702,6 +702,8 @@ public class ConsumerResource {
             archive = exporter.getExport(consumer);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
+            
+            sink.sendEvent(eventFactory.exportCreated(consumer));
             return archive;
         }
         catch (ExportCreationException e) {

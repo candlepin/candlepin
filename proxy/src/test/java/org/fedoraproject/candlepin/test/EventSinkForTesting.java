@@ -40,4 +40,8 @@ public class EventSinkForTesting implements EventSink {
     @Override
     public void emitPoolCreated(Pool newPool) {
     }
+
+    @Override
+    public void emitExportCreated(Consumer consumer) {
+    }
 }

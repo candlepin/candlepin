@@ -90,4 +90,8 @@ public class EventSinkImpl implements EventSink {
         Event e = eventFactory.poolCreated(newPool);
         sendEvent(e);
     }
+    
+    public void emitExportCreated(Consumer consumer) {
+        Event e = eventFactory.exportCreated(consumer);
+    }
 }
