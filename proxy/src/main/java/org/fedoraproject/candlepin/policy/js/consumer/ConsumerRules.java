@@ -14,21 +14,21 @@
  */
 package org.fedoraproject.candlepin.policy.js.consumer;
 
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
+import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.RuleParseException;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
+import org.apache.log4j.Logger;
+
 import java.io.Reader;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
-import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.RuleParseException;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 /**
  * ConsumerRules
@@ -38,15 +38,13 @@ public class ConsumerRules {
     private Logger log = Logger.getLogger(ConsumerRules.class);
 
     private ScriptEngine jsEngine;
-    private I18n i18n;
     private Object consumerDeleteNameSpace;
 
     @Inject
     public ConsumerRules(@Named("RulesReader") Reader rulesReader,
-        ScriptEngine jsEngine, I18n i18n) {
+        ScriptEngine jsEngine) {
 
         this.jsEngine = jsEngine;
-        this.i18n = i18n;
 
         if (jsEngine == null) {
             throw new RuntimeException("No Javascript engine");
