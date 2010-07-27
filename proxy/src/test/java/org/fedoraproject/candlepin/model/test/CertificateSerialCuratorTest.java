@@ -103,7 +103,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
     private Set<Date> extractExpiredDates(List<CertificateSerial> lcs) {
         Set<Date> dates = newSet();
         for (Iterator<CertificateSerial> iterator = lcs.iterator(); iterator.hasNext();) {
-            CertificateSerial certificateSerial = (CertificateSerial) iterator.next();
+            CertificateSerial certificateSerial = iterator.next();
             dates.add(certificateSerial.getExpiration());
         }
         return dates;

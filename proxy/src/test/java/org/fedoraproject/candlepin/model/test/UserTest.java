@@ -37,7 +37,7 @@ public class UserTest extends DatabaseTestFixture {
         entityManager().persist(user);
         commitTransaction();
 
-        User lookedUp = (User) entityManager().find(User.class, user.getId());
+        User lookedUp = entityManager().find(User.class, user.getId());
         assertEquals(username, lookedUp.getUsername());
         assertEquals(password, lookedUp.getPassword());
     }

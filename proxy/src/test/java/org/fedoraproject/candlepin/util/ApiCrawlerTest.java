@@ -127,7 +127,7 @@ public class ApiCrawlerTest {
     private RestApiCall processMethod(String rootPath, Method m) {
         RestApiCall apiCall = new RestApiCall();
         
-        Path subPath = (Path) m.getAnnotation(Path.class);
+        Path subPath = m.getAnnotation(Path.class);
         if (subPath != null) {
             if (rootPath.endsWith("/") || subPath.value().startsWith("/")) {
                 apiCall.setUrl(rootPath + subPath.value());
