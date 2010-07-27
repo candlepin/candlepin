@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -27,11 +26,12 @@ import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * ConsumerResourceEntitlementRulesTest
@@ -43,12 +43,10 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     private Pool pool;
     
     private ConsumerResource consumerResource;
-    private Principal principal;
     private Owner owner;
 
     @Before
     public void setUp() {
-        principal = injector.getInstance(Principal.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
         
         standardSystemType = consumerTypeCurator.create(
