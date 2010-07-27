@@ -68,7 +68,7 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     public void consumerCanOnlySeeItself() {
         Owner owner = createOwner();
         Consumer first = createConsumer(owner);
-        Consumer second = createConsumer(owner);
+        createConsumer(owner); // make a 2nd one
         
         setupPrincipal(new ConsumerPrincipal(first));
         crudInterceptor.enable();
@@ -81,12 +81,12 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     @Test
     public void ownerCanOnlySeeOwnConsumers() {
         Owner owner = createOwner();
-        Consumer first = createConsumer(owner);
-        Consumer second = createConsumer(owner);
+        createConsumer(owner); // make a 1st
+        createConsumer(owner); // make a 2nd
         
         Owner anotherOwner = createOwner();
-        Consumer third = createConsumer(anotherOwner);
-        Consumer fourth = createConsumer(anotherOwner);
+        createConsumer(anotherOwner); // make a 1st
+        createConsumer(anotherOwner); // make a 2nd
         
         setupPrincipal(owner, Role.OWNER_ADMIN);
         crudInterceptor.enable();

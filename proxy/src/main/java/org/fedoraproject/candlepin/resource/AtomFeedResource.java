@@ -14,6 +14,14 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
+import org.fedoraproject.candlepin.model.EventCurator;
+
+import com.google.inject.Inject;
+
+import org.jboss.resteasy.plugins.providers.atom.Feed;
+
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -21,21 +29,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventAdapter;
-import org.fedoraproject.candlepin.model.EventCurator;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
-
-import com.google.inject.Inject;
-
 /**
  * Resource exposing an Atom feed of Candlepin events.
  */
 @Path("/atom")
 public class AtomFeedResource {
 
-    private static Logger log = Logger.getLogger(AtomFeedResource.class);
     private static final int ATOM_FEED_LIMIT = 1000;
 
     private EventCurator eventCurator;
