@@ -38,15 +38,4 @@ public class ContentTest extends DatabaseTestFixture {
         assertEquals(content.getContentUrl(), lookedUp.getContentUrl());
         
     }
-    
-    
-    @Test
-    public void testContentFoo() {
-        Long  contentHash = Math.abs(Long.valueOf("test-content".hashCode()));
-        Content content = new Content("test-content", contentHash, 
-                            "test-content-label", "yum", "test-vendor",
-                             "test-content-url", "test-gpg-url");
-           
-            
-    }
 }
