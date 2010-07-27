@@ -14,17 +14,19 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.Event.Type;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,7 +48,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
         consumerTypeCurator.create(newConsumer.getType());
         consumerCurator.create(newConsumer);
 
-        Principal p = setupPrincipal(owner, Role.OWNER_ADMIN);
+        setupPrincipal(owner, Role.OWNER_ADMIN);
         EventFactory eventFactory = injector.getInstance(EventFactory.class);
         Event event = eventFactory.consumerCreated(newConsumer);
         eventCurator.create(event);
