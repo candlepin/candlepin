@@ -107,7 +107,7 @@ public class DefaultIdentityCertServiceAdapterTest {
                 }
             });
 
-        IdentityCertificate ic = dicsa.generateIdentityCert(consumer, "test user");
+        IdentityCertificate ic = dicsa.generateIdentityCert(consumer);
 
         assertNotNull(ic);
         assertEquals("priv", ic.getKey());
@@ -123,10 +123,11 @@ public class DefaultIdentityCertServiceAdapterTest {
         Consumer consumer = mock(Consumer.class);
         IdentityCertificate mockic = mock(IdentityCertificate.class);
 
-        when(consumer.getUuid()).thenReturn(Util.generateUUID());
+        when(consumer.getIdCert()).thenReturn(mockic);
+        when(idcur.find(mockic.getId())).thenReturn(mockic);
         when(idcur.find(consumer.getId())).thenReturn(mockic);
 
-        IdentityCertificate ic = dicsa.generateIdentityCert(consumer, "test user");
+        IdentityCertificate ic = dicsa.generateIdentityCert(consumer);
 
         assertNotNull(ic);
         assertEquals(ic, mockic);
@@ -136,9 +137,9 @@ public class DefaultIdentityCertServiceAdapterTest {
     public void testRegenerateCallsDeletes() throws GeneralSecurityException, IOException {
         Consumer consumer = mock(Consumer.class);
         IdentityCertificate mockic = mock(IdentityCertificate.class);
-        when(consumer.getId()).thenReturn(new Long(42L));
-        when(consumer.getUuid()).thenReturn(Util.generateUUID());
-        when(idcur.find(consumer.getId())).thenReturn(mockic);
+        when(consumer.getIdCert()).thenReturn(mockic);
+        when(mockic.getId()).thenReturn(43L);
+        when(idcur.find(mockic.getId())).thenReturn(mockic);
 
 
         KeyPair kp = createKeyPair();
@@ -167,7 +168,7 @@ public class DefaultIdentityCertServiceAdapterTest {
                 }
             });
 
-        IdentityCertificate ic = dicsa.regenerateIdentityCert(consumer, "test user");
+        IdentityCertificate ic = dicsa.regenerateIdentityCert(consumer);
 
         verify(consumer).setIdCert(null);
         verify(idcur).delete(mockic);
@@ -222,7 +223,7 @@ public class DefaultIdentityCertServiceAdapterTest {
                 }
             });
 
-        IdentityCertificate ic = dicsa.regenerateIdentityCert(consumer, "test user");
+        IdentityCertificate ic = dicsa.regenerateIdentityCert(consumer);
 
         assertNotNull(ic);
         verify(consumer, never()).setIdCert(null);

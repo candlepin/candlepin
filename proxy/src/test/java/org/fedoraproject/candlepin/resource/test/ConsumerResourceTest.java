@@ -223,7 +223,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateConsumer() {
-        System.out.println("******** START CREATE TEST");
         Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
             standardSystemType);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
@@ -236,7 +235,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
         assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
-        System.out.println("******** END CREATE TEST");
     }
 
     @Test(expected = BadRequestException.class)
@@ -444,7 +442,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         IdentityCertServiceAdapter icsa = injector
             .getInstance(IdentityCertServiceAdapter.class);
-        IdentityCertificate idCert = icsa.generateIdentityCert(c, USER_NAME);
+        IdentityCertificate idCert = icsa.generateIdentityCert(c);
         c.setIdCert(idCert);
         setupPrincipal(new ConsumerPrincipal(c));
         consumerResource.deleteConsumer(c.getUuid());
@@ -753,16 +751,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         when(mockedConsumerCurator.lookupByUuid(lconsumer.getUuid()))
             .thenReturn(lconsumer);
-        when(mockedIdSvc.regenerateIdentityCert(lconsumer, USER_NAME))
+        when(mockedIdSvc.regenerateIdentityCert(lconsumer))
             .thenReturn(createIdCert());
-        when(mockedUserSvc.findByLogin(USER_NAME)).thenReturn(someuser);
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator,
             null, null, null, null, null, mockedIdSvc, null, null,
-            null, null, null, mockedUserSvc, null, null, null, null);
+            null, null, null, null, null, null, null, null);
 
-        Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid(),
-            principal);
+        Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid());
 
         assertNotNull(fooc);
         IdentityCertificate ic1 = fooc.getIdCert();

@@ -68,40 +68,46 @@ public class DefaultIdentityCertServiceAdapter implements
     }
 
     @Override
-    public IdentityCertificate generateIdentityCert(Consumer consumer,
-        String username) throws GeneralSecurityException, IOException {
+    public IdentityCertificate generateIdentityCert(Consumer consumer)
+        throws GeneralSecurityException, IOException {
 
         if (log.isDebugEnabled()) {
             log.debug("Generating identity cert for consumer: " +
                 consumer.getUuid());
         }
 
-        IdentityCertificate certificate = idCertCurator
-            .find(consumer.getId());
+        IdentityCertificate certificate = null;
+
+        if (consumer.getIdCert() != null) {
+            certificate = idCertCurator.find(consumer.getIdCert().getId());
+        }
 
         if (certificate != null) {
             return certificate;
         }
 
-        return generate(consumer, username);
+        return generate(consumer);
     }
 
     @Override
-    public IdentityCertificate regenerateIdentityCert(Consumer consumer,
-        String username) throws GeneralSecurityException, IOException {
+    public IdentityCertificate regenerateIdentityCert(Consumer consumer)
+        throws GeneralSecurityException, IOException {
 
-        IdentityCertificate certificate = idCertCurator.find(consumer
-            .getId());
+        IdentityCertificate certificate = null;
+
+        if (consumer.getIdCert() != null) {
+            certificate = idCertCurator.find(consumer.getIdCert().getId());
+        }
 
         if (certificate != null) {
             consumer.setIdCert(null);
             idCertCurator.delete(certificate);
         }
 
-        return generate(consumer, username);
+        return generate(consumer);
     }
 
-    private IdentityCertificate generate(Consumer consumer, String username)
+    private IdentityCertificate generate(Consumer consumer)
         throws GeneralSecurityException, IOException {
         Date startDate = new Date();
         Date endDate = getFutureDate(1);
@@ -111,7 +117,7 @@ public class DefaultIdentityCertServiceAdapter implements
         // otherwise we could have used cascading create
         serialCurator.create(serial);
         
-        String dn = createDN(consumer, username);
+        String dn = createDN(consumer);
         IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
@@ -127,7 +133,7 @@ public class DefaultIdentityCertServiceAdapter implements
         return idCertCurator.create(identityCert);
     }
 
-    private String createDN(Consumer consumer, String username) {
+    private String createDN(Consumer consumer) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(consumer.getUuid());
 

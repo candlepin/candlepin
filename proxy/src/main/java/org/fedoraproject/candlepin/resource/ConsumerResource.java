@@ -225,7 +225,7 @@ public class ConsumerResource {
 
         try {
             consumer = consumerCurator.create(consumer);
-            IdentityCertificate idCert = generateIdCert(consumer, user, false);
+            IdentityCertificate idCert = generateIdCert(consumer, false);
             consumer.setIdCert(idCert);
 
             sink.emitConsumerCreated(consumer);
@@ -721,13 +721,13 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{consumer_uuid}")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public Consumer regenerateIdentityCertificates(@PathParam("consumer_uuid") String uuid,
-        @Context Principal principal) {
-        Consumer c = verifyAndLookupConsumer(uuid);
-        try {
+    public Consumer regenerateIdentityCertificates(
+        @PathParam("consumer_uuid") String uuid) {
 
-            User user = getCurrentUsername(principal);
-            IdentityCertificate ic = generateIdCert(c, user, true);
+        Consumer c = verifyAndLookupConsumer(uuid);
+
+        try {
+            IdentityCertificate ic = generateIdCert(c, true);
             c.setIdCert(ic);
             consumerCurator.update(c);
             return c;
@@ -744,28 +744,21 @@ public class ConsumerResource {
      * Throws RuntimeException if there is a problem with generating the
      * certificate.
      * @param c Consumer whose certificate needs to be generated.
-     * @param u User owning the consumer.
      * @param regen if true, forces a regen of the certificate.
      * @return The identity certificate for the given consumer.
      * @throws IOException thrown if there's a problem generating the cert.
      * @throws GeneralSecurityException thrown incase of security error.
      */
-    private IdentityCertificate generateIdCert(Consumer c, User u, boolean regen)
+    private IdentityCertificate generateIdCert(Consumer c, boolean regen)
         throws GeneralSecurityException, IOException {
 
         IdentityCertificate idCert = null;
 
-        // This is pretty bad - I'm still not convinced that
-        // the id cert actually needs the username at all
-        if (u != null) {
-            if (regen) {
-                idCert = identityCertService.regenerateIdentityCert(c,
-                    u.getUsername());
-            }
-            else {
-                idCert = identityCertService.generateIdentityCert(c,
-                    u.getUsername());
-            }
+        if (regen) {
+            idCert = identityCertService.regenerateIdentityCert(c);
+        }
+        else {
+            idCert = identityCertService.generateIdentityCert(c);
         }
 
         if (log.isDebugEnabled()) {
