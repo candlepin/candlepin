@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.pki;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -28,6 +29,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
@@ -194,5 +198,41 @@ public class PKIUtility {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }    
+    }
+    
+    public byte[] getSHA256WithRSAHash(InputStream input) {
+        try {
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(reader.getCaKey());
+            
+            updateSignature(input, signature);
+            return signature.sign();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public boolean verifySHA256WithRSAHash(
+            InputStream input, byte[] signedHash, Certificate certificate) {
+        try {
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initVerify(certificate);
+
+            updateSignature(input, signature);
+            return signature.verify(signedHash);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void updateSignature(InputStream input, Signature signature)
+        throws IOException, SignatureException {
+        byte[] dataBytes = new byte[4096];
+        int nread = 0; 
+        while ((nread = input.read(dataBytes)) != -1) {
+            signature.update(dataBytes, 0, nread);
+        }
+    }
 }
