@@ -14,15 +14,15 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import static org.apache.commons.collections.CollectionUtils.*;
-import static org.apache.commons.collections.TransformerUtils.*;
-import static org.fedoraproject.candlepin.util.Util.*;
-import static org.junit.Assert.*;
-
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import static org.apache.commons.collections.CollectionUtils.containsAny;
+import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
+import static org.fedoraproject.candlepin.util.Util.transform;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -42,13 +42,19 @@ import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class EntitlerTest extends DatabaseTestFixture {
     
@@ -279,7 +285,7 @@ public class EntitlerTest extends DatabaseTestFixture {
             collectEntitlementCertIds(this.childVirtSystem);
         this.entitler.regenerateEntitlementCertificates(childVirtSystem);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
-            .sendEvent((Event) Mockito.any());
+            .sendEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =
             collectEntitlementCertIds(this.childVirtSystem);
         assertFalse(containsAny(transform(oldsIds, invokerTransformer("getId")),
