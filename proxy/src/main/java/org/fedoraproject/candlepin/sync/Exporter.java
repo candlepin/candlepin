@@ -183,7 +183,8 @@ public class Exporter {
 
         for (EntitlementCertificate cert : entCertAdapter.listForConsumer(consumer)) {
             log.debug("Exporting entitlement certificate: " + cert.getSerial());
-            File file = new File(entCertDir.getCanonicalPath(), cert.getSerial() + ".pem");
+            File file = new File(entCertDir.getCanonicalPath(), cert.getSerial().getId() +
+                ".pem");
             FileWriter writer = new FileWriter(file);
             entCert.export(writer, cert);
             writer.close();
