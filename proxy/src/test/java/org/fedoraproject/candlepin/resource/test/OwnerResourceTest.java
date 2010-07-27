@@ -383,9 +383,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(this.entitlementCurator.find(2L));
     }
 
-    /**
-     * @return
-     */
     private void doTestEntitlementsRevocationCommon(long subQ, int e1, int e2,
         boolean fifo) {
         Product prod = TestUtil.createProduct();
