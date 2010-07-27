@@ -19,6 +19,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.Event;
@@ -710,13 +712,13 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
      */
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumer() {
-        Entitler entitler = Mockito.mock(Entitler.class);
+        Entitler entitler = mock(Entitler.class);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, entitler, null, null, null, null, null, null, null, null,
             null, null, null, null, null);
         cr.regenerateEntitlementCertificates(this.consumer.getUuid());
         Mockito.verify(entitler, Mockito.times(1))
-            .regenerateEntitlementCertificates(Mockito.eq(this.consumer));
+            .regenerateEntitlementCertificates(eq(this.consumer));
 
     }
 
