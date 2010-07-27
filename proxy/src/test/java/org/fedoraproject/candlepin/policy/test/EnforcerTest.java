@@ -59,7 +59,6 @@ public class EnforcerTest extends DatabaseTestFixture {
     private static final String LONGEST_EXPIRY_PRODUCT = "LONGEST001";
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
     private static final String BAD_RULE_PRODUCT = "BADRULE001";
-    private static final String NO_RULE_PRODUCT = "NORULE001";
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
     @Before
