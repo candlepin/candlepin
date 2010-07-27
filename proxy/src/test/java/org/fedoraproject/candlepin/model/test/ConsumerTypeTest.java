@@ -15,12 +15,15 @@
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
-
-import java.util.List;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Test;
+
+import java.util.List;
 
 public class ConsumerTypeTest extends DatabaseTestFixture {
 
@@ -36,5 +39,27 @@ public class ConsumerTypeTest extends DatabaseTestFixture {
         List<?> results = entityManager().createQuery(
                 "select ct from ConsumerType as ct").getResultList();
         assertEquals(1, results.size());
+    }
+    
+    @Test
+    public void testIsType() {
+        ConsumerType ct = new ConsumerType("system");
+        
+        assertTrue(ct.isType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+    }
+    
+    @Test
+    public void testEquals() {
+        ConsumerType ct = new ConsumerType("system");
+        ConsumerType ct1 = new ConsumerType("system");
+        ConsumerType ct2 = new ConsumerType("fake");
+        
+        assertTrue(ct.equals(ct1));
+        assertFalse(ct.equals(ct2));
+        assertFalse(ct.equals(new Integer(1)));
+        
+        ct.setId(10L);
+        ct1.setId(11L);
+        assertTrue(ct.equals(ct1));
     }
 }
