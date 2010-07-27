@@ -49,7 +49,6 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -743,7 +742,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
         
-        UserServiceAdapter mockedUserSvc = Mockito.mock(UserServiceAdapter.class);
         Consumer lconsumer = createConsumer();
         lconsumer.setIdCert(createIdCert());
         IdentityCertificate ic = lconsumer.getIdCert();
