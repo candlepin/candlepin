@@ -30,6 +30,7 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -51,7 +52,8 @@ public class PoolManager {
     private EventFactory eventFactory;
     private Config config;
     private Entitler entitler;
-
+    private EntitlementCurator entitlementCurator;
+    
     /**
      * @param poolCurator
      * @param subAdapter
@@ -62,13 +64,15 @@ public class PoolManager {
     @Inject
     public PoolManager(PoolCurator poolCurator,
         SubscriptionServiceAdapter subAdapter, EventSink sink,
-        EventFactory eventFactory, Config config, Entitler entitler) {
+        EventFactory eventFactory, Config config, Entitler entitler,
+        EntitlementCurator curator1) {
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.config = config;
         this.entitler = entitler;
+        this.entitlementCurator = curator1;
     }
 
 
@@ -177,10 +181,17 @@ public class PoolManager {
         if (datesChanged) {
             existingPool.setStartDate(sub.getStartDate());
             existingPool.setEndDate(sub.getEndDate());
-            this.entitler.regenerateCertificatesOf(poolCurator
-                .retrieveFreeEntitlementsOfPool(existingPool, true));
+            List<Entitlement> entitlements = poolCurator
+            .retrieveFreeEntitlementsOfPool(existingPool, true);
+            //when subscription dates change, entitlement dates should change as well
+            for (Entitlement entitlement : entitlements) {
+                entitlement.setStartDate(sub.getStartDate());
+                entitlement.setEndDate(sub.getEndDate());
+              //TODO: perhaps optimize it to use hibernate query?
+                this.entitlementCurator.merge(entitlement);
+            }
+            this.entitler.regenerateCertificatesOf(entitlements);
         }
-
         //save changes for the pool
         this.poolCurator.merge(existingPool);
         eventFactory.poolChangedTo(e, existingPool);

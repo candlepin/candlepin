@@ -30,6 +30,8 @@ Feature: Manipulate Subscriptions
         When test owner changes the "endDate" of the subscription by 2 days
 	And he refreshes the pools
         Then I have new entitlement certificates
+        And the properties "endDate" of entitlement and certificates should equal subscriptions
+
 
     Scenario: Update existing subscription quantity and check that entitlement certificates are deleted
         Given I am a consumer "jackiechan"
@@ -44,6 +46,8 @@ Feature: Manipulate Subscriptions
 	And test owner has 10 entitlements for "some_product"
 	When I consume an entitlement for the "some_product" product
 	When test owner changes the quantity of the subscription by 10
+        When test owner changes the "startDate" of the subscription by -10 days
 	When test owner changes the "endDate" of the subscription by 10 days
 	And he refreshes the pools
-	Then I have new entitlement certificates
+        Then I have new entitlement certificates
+        And the properties "startDate, endDate" of entitlement and certificates should equal subscriptions

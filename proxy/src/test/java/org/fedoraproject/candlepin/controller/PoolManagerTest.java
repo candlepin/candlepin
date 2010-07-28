@@ -38,6 +38,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -63,7 +64,7 @@ public class PoolManagerTest {
     @Mock private Config mockConfig;
     @Mock private Entitler mockEntitler;
     @Mock private PrincipalProvider mockProvider;
-
+    @Mock private EntitlementCurator entitlementCurator;
     private EventFactory eventFactory;
     private PoolManager manager;
     private Principal principal;
@@ -73,7 +74,7 @@ public class PoolManagerTest {
         this.eventFactory = new EventFactory(mockProvider);
         this.principal = TestUtil.createOwnerPrincipal();
         this.manager = new PoolManager(mockCurator, mockAdapter, mockEventSink,
-            eventFactory, mockConfig, mockEntitler);
+            eventFactory, mockConfig, mockEntitler, entitlementCurator);
         when(this.mockProvider.get()).thenReturn(this.principal);
     }
 

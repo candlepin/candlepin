@@ -1,16 +1,19 @@
 require 'spec/expectations'
 require 'candlepin_api'
-
+require 'openssl'
 Before do
   @subscriptions = {}
 end
-
+class String
+  def to_date
+    return Date.strptime(self, "%Y-%m-%d")
+  end
+end
 
 Given /^owner "([^\"]*)" has a subscription for product "([^\"]*)" with quantity (\d+)$/ do |owner_name, product_name, quantity|
   owner_id = @owners[owner_name]['id']
   product_id = @products[product_name]['id']
   @candlepin.create_subscription(owner_id, product_id, quantity)
-
   # Just refesh the entitlement pools each time
   @candlepin.refresh_pools(@owners[owner_name]['key'])
 end
@@ -60,7 +63,7 @@ end
 
 When /^test owner changes the "([^\"]*)" of the subscription by (-{0,1}\d+) days$/ do |field, d|
   subscription = @current_owner_cp.get_subscriptions(@test_owner['id'])[0]
-  subscription[field] = Date.strptime(subscription[field], "%Y-%m-%d") + d.to_i
+  subscription[field] = subscription[field].to_date + d.to_i
   @candlepin.update_subscription(@test_owner['id'], subscription)
 end
 
@@ -74,3 +77,23 @@ When /^test owner changes the quantity of the subscription by (-{0,1}\d+)$/ do |
  subscription['quantity'] = subscription['quantity'].to_i + q.to_i
  @candlepin.update_subscription(@test_owner['id'], subscription)
 end
+
+Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |arg1|
+  @new_certs = @consumer_cp.get_certificates()
+  subs = @current_owner_cp.get_subscriptions(@test_owner['id'])[0]
+  certs = {}
+  @new_certs.each do |cert|
+    temp = OpenSSL::X509::Certificate.new(cert['cert'])
+    certs[cert['serial']['id']] = {
+      'startDate' => temp.not_before().strftime('%Y-%m-%d'),
+      'endDate'   => temp.not_after().strftime('%Y-%m-%d')
+    }
+  end
+  arg1.split(",").map{|str| str.strip }.each do |field|
+    @new_certs.each do |cert|
+      subs[field].to_date.should == cert['entitlement'][field].to_date
+      subs[field].to_date.should == certs[cert['serial']['id']][field].to_date if ['endDate', 'startDate'].include? field
+    end
+  end
+end
+
