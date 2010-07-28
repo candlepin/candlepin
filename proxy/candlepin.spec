@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.26
+Version: 0.0.27
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,49 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Jul 28 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.27-1
+- change in subscription dates should be reflected in entitlement
+  certificates (anadathu@redhat.com)
+- change istype to use getLabel(), add unit test (jesusr@redhat.com)
+- remove unused variables (jesusr@redhat.com)
+- use static import (jesusr@redhat.com)
+- sync: save entitlement certs as <serialId>.pem (jbowes@redhat.com)
+- remove unnecessary casts, tests, javadoc and ; (jesusr@redhat.com)
+- fix warning, reorg'd imports (jesusr@redhat.com)
+- don't need the user for regenerating id certs, just consumer. (jesusr@redhat.com)
+- I wish the line limit was 80 instead of 92.  (bkearney@redhat.com)
+- Push a logger into the rules execution context (bkearney@redhat.com)
+- import created event is emitted after import is complete (ddolguik@redhat.com)
+- export created event is emitted after consumer export (ddolguik@redhat.com)
+- remove duplicate changelog entry. (jesusr@redhat.com)
+- put crl file in /var/lib/candlepin by default instead of /etc/candlepin
+  (jesusr@redhat.com)
+- Changing sub-pool binding to look up the originating subscription.
+  (jharris@redhat.com)
+- unit test regenerateIdentityCertificate using Mockito! (jesusr@redhat.com)
+- reapply my changes from commit 126242b removed by Jython. (jesusr@redhat.com)
+- cucumber test for entitlement certificate regeneration for a given product
+  (ddolguik@redhat.com)
+- added regenration of entitlement certificates for a specified product
+  (ddolguik@redhat.com)
+- remove stupid generated comment (jesusr@redhat.com)
+- add a unit test (jesusr@redhat.com)
+- handle null events (jesusr@redhat.com)
+- test the logging wrapper (jesusr@redhat.com)
+- test the DatabaseListener, handle nulls properly. (jesusr@redhat.com)
+- fcs (bkearney@redhat.com)
+- Test for the invalid poolIds (bkearney@redhat.com)
+- Code, then test. Not the other way around (bkearney@redhat.com)
+- 608005 - Allow strings to be passed in for pool ids and then validate
+  internally (bkearney@redhat.com)
+- Move candlepin to resteasy 2.0 GA (bkearney@redhat.com)
+- test the CRLException case (jesusr@redhat.com)
+- Make import_products be a little less chatty. (alikins@redhat.com)
+- rework the CRL task and its unit test. (jesusr@redhat.com)
+- jUnit failures fixed. Added cuke test cases around subscription updates.
+  (anadathu@redhat.com)
+- Add null check before call to avoid ORA-00932 (morazi@redhat.com)
+
 * Thu Jul 22 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.26-1
 - sync: make product cert export optional (jbowes@redhat.com)
 - minor changes around restricted pool cleanup on consumer delete (ddolguik@redhat.com)
