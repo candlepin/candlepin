@@ -5,6 +5,7 @@ require  "../client/ruby/candlepin_api"
 require 'rubygems'
 require 'date'
 require 'json'
+require 'pp'
 
 filenames=["import_products.json"]
 if not ARGV.empty?
@@ -22,13 +23,30 @@ filenames.each do |filename|
   product_data = JSON product_data_buf
   data['products'] = data.fetch('products',[]) + product_data['products']
   data['content'] = data.fetch('content',[]) + product_data['content']
+  data['owners'] = data.fetch('owners', []) + product_data['owners']
+  data['users'] = data.fetch('users', []) + product_data['users']
 end
 
 cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
 
+
+
+# create some owners and users
+data["owners"].each do |new_owner|
+  owner = cp.create_owner(new_owner)
+end
+
+# the user to create the users as, use the first one...
 owners = cp.get_owners()
 owner_id = owners[0]['id']
 owner_key = owners[0]['key']
+
+
+# add some users
+data["users"].each do |new_user|
+  user = cp.create_user(owner_id, new_user["username"],new_user["password"] )
+end
+
 
 # import all the content sets
 puts "importing content set data..."
@@ -90,7 +108,8 @@ data['products'].each do |product|
             contract_number += 1
           end
 
-          start =  Date.new
+ 
+         start =  Date.new
 	  enddate = Date.new + 365
 
           if attrs['type'] != 'MKT':
