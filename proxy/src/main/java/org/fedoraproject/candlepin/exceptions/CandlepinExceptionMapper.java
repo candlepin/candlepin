@@ -96,7 +96,7 @@ public class CandlepinExceptionMapper implements
         return bldr.build();
     }
 
-    public ResponseBuilder getBuilder(CandlepinException exception,
+    private ResponseBuilder getBuilder(CandlepinException exception,
         MediaType responseMediaType) {
         ResponseBuilder bldr = Response.status(exception.httpReturnCode())
             .entity(exception.message()).type(responseMediaType);
@@ -108,7 +108,7 @@ public class CandlepinExceptionMapper implements
         return bldr;
     }
 
-    public ResponseBuilder getDefaultBuilder(Throwable exception,
+    private ResponseBuilder getDefaultBuilder(Throwable exception,
         MediaType responseMediaType) {
         Throwable cause = exception;
         while (cause.getCause() != null) {
