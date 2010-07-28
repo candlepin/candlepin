@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.sync;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,6 +35,7 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
@@ -60,6 +62,7 @@ public class Exporter {
     private EntitlementCertServiceAdapter entCertAdapter;
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entitlementCurator;
+    private PKIUtility pki;
 
 
     
@@ -69,7 +72,8 @@ public class Exporter {
         RulesExporter rules, EntitlementCertExporter entCert,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
-        EntitlementCurator entitlementCurator, EntitlementExporter entExporter) {
+        EntitlementCurator entitlementCurator, EntitlementExporter entExporter, 
+        PKIUtility pki) {
         
         mapper = SyncUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
@@ -85,6 +89,7 @@ public class Exporter {
         this.productCertExporter = productCertExporter;
         this.entitlementCurator = entitlementCurator;
         this.entExporter = entExporter;
+        this.pki = pki;
     }
 
     public File getExport(Consumer consumer) throws ExportCreationException {
@@ -121,16 +126,59 @@ public class Exporter {
         log.info("Creating archive of " + exportDir.getAbsolutePath() + " in: " +
             exportFileName);
 
-        File archive = new File(tempDir, exportFileName);
-        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
-
-        out.setComment("Candlepin export for " + consumer.getUuid());
-        addFilesToArchive(out, exportDir.getParent().length() + 1, exportDir);
-        out.close();
+        File archive = createZipArchiveWithDir(
+            tempDir, exportDir, "consumer_export.zip",
+            "Candlepin export for " + consumer.getUuid());
         
+        File signedArchive = createSignedZipArchive(
+            tempDir, archive, exportFileName, 
+            pki.getSHA256WithRSAHash(new FileInputStream(archive)),
+            "signed Candlepin export for " + consumer.getUuid());
+                
         log.debug("Returning file: " + archive.getAbsolutePath());
+        return signedArchive;
+    }
+
+    private File createZipArchiveWithDir(File tempDir, File exportDir,
+        String exportFileName, String comment) 
+        throws FileNotFoundException, IOException {
+        
+        File archive = new File(tempDir, exportFileName);
+        ZipOutputStream out = null;
+        try {
+            out = new ZipOutputStream(new FileOutputStream(archive));
+            out.setComment(comment);
+            addFilesToArchive(out, exportDir.getParent().length() + 1, exportDir);
+        }
+        finally {
+            if (out != null) {
+                out.close();
+            }
+        }
         return archive;
     }
+    
+    private File createSignedZipArchive(File tempDir, File toAdd,
+        String exportFileName, byte[] signature, String comment) 
+        throws FileNotFoundException, IOException {
+        
+        File archive = new File(tempDir, exportFileName);
+        ZipOutputStream out = null;
+        try {
+            out = new ZipOutputStream(new FileOutputStream(archive));
+            out.setComment(comment);
+            addFileToArchive(out, toAdd.getParent().length() + 1, toAdd);
+            addSignatureToArchive(out, signature);
+        }
+        finally {
+            if (out != null) {
+                out.close();
+            }
+        }
+        return archive;
+    }
+    
+    
 
     /**
      * @param out
@@ -144,21 +192,35 @@ public class Exporter {
                 addFilesToArchive(out, charsToDropFromName, file);
             }
             else {
-                log.debug("Adding file to archive: " +
-                    file.getAbsolutePath().substring(charsToDropFromName));
-                out.putNextEntry(new ZipEntry(
-                    file.getAbsolutePath().substring(charsToDropFromName)));
-                FileInputStream in = new FileInputStream(file);
-                
-                byte [] buf = new byte[1024];
-                int len;
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
-                }
-                out.closeEntry();
-                in.close();
+                addFileToArchive(out, charsToDropFromName, file);
             }
         }
+    }
+
+    private void addFileToArchive(ZipOutputStream out, int charsToDropFromName,
+        File file) throws IOException, FileNotFoundException {
+        log.debug("Adding file to archive: " +
+            file.getAbsolutePath().substring(charsToDropFromName));
+        out.putNextEntry(new ZipEntry(
+            file.getAbsolutePath().substring(charsToDropFromName)));
+        FileInputStream in = new FileInputStream(file);
+        
+        byte [] buf = new byte[1024];
+        int len;
+        while ((len = in.read(buf)) > 0) {
+            out.write(buf, 0, len);
+        }
+        out.closeEntry();
+        in.close();
+    }
+    
+    private void addSignatureToArchive(ZipOutputStream out, byte[] signature)
+        throws IOException, FileNotFoundException {
+        
+        log.debug("Adding signature to archive.");
+        out.putNextEntry(new ZipEntry("signature"));
+        out.write(signature, 0, signature.length);
+        out.closeEntry();
     }
 
     private void exportMeta(File baseDir) throws IOException {

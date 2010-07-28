@@ -13,7 +13,9 @@ end
 
 Then /I get an archived extract of data/ do
   File.exist?(@export_filename).should == true
-  @export_dir = unzip_export_file(@export_filename)
+  unzip_export_file(@export_filename)
+  unzip_export_file("consumer_export.zip")
+  @export_dir = "export"
   
   assert_consumer_types
   assert_consumer
@@ -37,7 +39,9 @@ Then /I have data from extract in candlepin/ do
 end
 
 After do
-  File.delete(@export_filename) if @export_filename != nil && File.exist?(@export_filename)
+  File.delete("export.zip") if File.exist?("export.zip")
+  File.delete("signature") if File.exist?("signature")
+  File.delete("consumer_export.zip") if File.exist?("consumer_export.zip")
   FileUtils.rm_rf(@export_dir) if @export_dir != nil && File.exist?(@export_dir)
 end
 
@@ -135,7 +139,7 @@ def load_file(filename)
 end
 
 def unzip_export_file(filename)
-  Zip::ZipFile::open(filename) do |zf| 
+  Zip::ZipFile::open(filename) do |zf|
      zf.each do |e|
        fpath = File.join(Dir.pwd, e.name) 
        FileUtils.mkdir_p(File.dirname(fpath)) 
