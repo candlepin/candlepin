@@ -32,6 +32,7 @@ import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
@@ -211,6 +212,11 @@ public class PKIUtility {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public boolean verifySHA256WithRSAHashWithUpstreamCACert(
+        InputStream input, byte[] signedHash) throws CertificateException, IOException {
+        return verifySHA256WithRSAHash(input, signedHash, reader.getUpstreamCACert());
     }
     
     public boolean verifySHA256WithRSAHash(

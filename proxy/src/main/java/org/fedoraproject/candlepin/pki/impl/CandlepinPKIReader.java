@@ -45,9 +45,11 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
 
     private CertificateFactory certFactory;
     private String caCertPath;
+    private String upstreamCaCertPath;
     private String caKeyPath;
     private String caKeyPassword;
     private final X509Certificate x509Certificate;
+    private final X509Certificate upstreamX509Certificate;
     private final PrivateKey privateKey;
     
     static {
@@ -56,25 +58,29 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
 
     @Inject
     public CandlepinPKIReader(Config config) throws CertificateException {
-        this.certFactory = CertificateFactory.getInstance("X.509");
+        certFactory = CertificateFactory.getInstance("X.509");
         this.caCertPath = config.getString(ConfigProperties.CA_CERT);
+        this.upstreamCaCertPath = config.getString(ConfigProperties.CA_CERT_UPSTREAM);
         this.caKeyPath = config.getString(ConfigProperties.CA_KEY);
         Util.assertNotNull(this.caCertPath,
             "caCertPath cannot be null. Unable to load CA Certificate");
+        Util.assertNotNull(this.upstreamCaCertPath,
+            "upstreamCaCertPath cannot be null. Unable to load upstream CA Certificate");
         Util.assertNotNull(this.caKeyPath,
             "caKeyPath cannot be null. Unable to load PrivateKey");
         this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD);
-        this.x509Certificate = loadCACertificate();
+        this.x509Certificate = loadCACertificate(this.caCertPath);
+        this.upstreamX509Certificate = loadCACertificate(upstreamCaCertPath);
         this.privateKey = loadPrivateKey();
     }
 
     /**
      * @return
      */
-    private X509Certificate loadCACertificate() {
+    private X509Certificate loadCACertificate(String path) {
         InputStream inStream = null;
         try {
-            inStream = new FileInputStream(this.caCertPath);
+            inStream = new FileInputStream(path);
             X509Certificate cert = (X509Certificate) this.certFactory
                 .generateCertificate(inStream);
             inStream.close();
@@ -131,6 +137,11 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
     @Override
     public X509Certificate getCACert() throws IOException, CertificateException {
         return this.x509Certificate;
+    }
+    
+    @Override
+    public X509Certificate getUpstreamCACert() throws IOException, CertificateException {
+        return this.upstreamX509Certificate;
     }
 
     /**

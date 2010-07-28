@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -41,8 +42,10 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import com.wideplay.warp.persist.Transactional;
 
 /**
@@ -82,10 +85,13 @@ public class Importer {
     private ContentCurator contentCurator;
     private SubscriptionCurator subCurator;
     private PoolManager poolManager;
+    private PKIUtility pki;
+    
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         RulesCurator rulesCurator, OwnerCurator ownerCurator,
-        ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm) {
+        ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm, 
+        PKIUtility pki) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.rulesCurator = rulesCurator;
@@ -94,13 +100,27 @@ public class Importer {
         this.subCurator = subCurator;
         this.poolManager = pm;
         this.mapper = SyncUtils.getObjectMapper();
+        this.pki = pki;
     }
 
     public void loadExport(Owner owner, File exportFile) throws ImporterException {
         File tmpDir = null;
         try {
             tmpDir = new SyncUtils().makeTempDir("import");
-            File exportDir = extractArchive(tmpDir, exportFile);
+            
+            File exportArchiveAndSignatureDir = extractArchive(tmpDir, exportFile);
+            boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
+                new FileInputStream(
+                    new File(exportArchiveAndSignatureDir, "consumer_export.zip")),
+                loadSignature(new File("signature")));
+            
+            if (!verifiedSignature) {
+                throw new ImporterException("failed import file hash check.");
+            }
+            
+            File exportDir 
+                = extractArchive(tmpDir, 
+                    new File(exportArchiveAndSignatureDir, "consumer_export.zip"));
             
             Map<String, File> importFiles = new HashMap<String, File>();
             for (File file : exportDir.listFiles()) {
@@ -108,6 +128,9 @@ public class Importer {
             }
             
             importObjects(owner, importFiles);
+        }
+        catch (CertificateException e) {
+            throw new ImportExtractionException("unable to extract export archive", e);
         }
         catch (IOException e) {
             throw new ImportExtractionException("unable to extract export archive", e);
@@ -284,5 +307,37 @@ public class Importer {
 
         File extractDir = new File(tempDir.getAbsolutePath(), "export");
         return extractDir;
+    }
+    
+    private byte[] loadSignature(File signatureFile) throws IOException {
+        FileInputStream signature = null;
+        ByteOutputStream signatureBytes = null;
+        
+        try {
+            signature = new FileInputStream(signatureFile);
+            signatureBytes = new ByteOutputStream();
+            
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = signature.read(buf)) > 0) {
+                signatureBytes.write(buf, 0, len);
+            }
+    
+            byte[] toReturn = signatureBytes.getBytes();
+            return toReturn;
+        }
+        finally {
+            if (signature != null) {
+                try {
+                    signature.close();
+                }
+                catch (IOException e) {
+                    // nothing we can do about this
+                }
+            }
+            if (signatureBytes != null) {
+                signatureBytes.close();
+            }
+        }
     }
 }

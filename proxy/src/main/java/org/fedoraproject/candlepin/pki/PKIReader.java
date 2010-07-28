@@ -34,6 +34,8 @@ public interface PKIReader {
      */
     X509Certificate getCACert() throws IOException, CertificateException;
     
+    X509Certificate getUpstreamCACert()  throws IOException, CertificateException;
+    
     /**
      * Supplies the CA's {@link PrivateKey}.
      * 

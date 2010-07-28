@@ -31,6 +31,7 @@ public class ConfigProperties {
 
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
+    public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
     
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
@@ -60,6 +61,7 @@ public class ConfigProperties {
             {
                 this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
+                this.put(CA_CERT, "/etc/candlepin/certs/candlepin-upstream-ca.crt");
                 
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
                 this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());
