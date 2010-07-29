@@ -223,7 +223,7 @@ public class PKIUtility {
             InputStream input, byte[] signedHash, Certificate certificate) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initVerify(certificate);
+            signature.initVerify(certificate.getPublicKey());
 
             updateSignature(input, signature);
             return signature.verify(signedHash);

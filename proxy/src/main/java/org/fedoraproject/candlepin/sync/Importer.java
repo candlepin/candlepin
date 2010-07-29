@@ -45,7 +45,6 @@ import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import com.wideplay.warp.persist.Transactional;
 
 /**
@@ -108,19 +107,17 @@ public class Importer {
         try {
             tmpDir = new SyncUtils().makeTempDir("import");
             
-            File exportArchiveAndSignatureDir = extractArchive(tmpDir, exportFile);
+            extractArchive(tmpDir, exportFile);
             boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
-                new FileInputStream(
-                    new File(exportArchiveAndSignatureDir, "consumer_export.zip")),
-                loadSignature(new File("signature")));
+                new FileInputStream(new File(tmpDir, "consumer_export.zip")),
+                loadSignature(new File(tmpDir, "signature")));
             
             if (!verifiedSignature) {
                 throw new ImporterException("failed import file hash check.");
             }
             
             File exportDir 
-                = extractArchive(tmpDir, 
-                    new File(exportArchiveAndSignatureDir, "consumer_export.zip"));
+                = extractArchive(tmpDir, new File(tmpDir, "consumer_export.zip"));
             
             Map<String, File> importFiles = new HashMap<String, File>();
             for (File file : exportDir.listFiles()) {
@@ -289,7 +286,9 @@ public class Importer {
             FileOutputStream fileoutputstream;
             File newFile = new File(entryName);
             String directory = newFile.getParent();
-            new File(tempDir, directory).mkdirs();
+            if (directory != null) {
+                new File(tempDir, directory).mkdirs();
+            }
             
             fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
 
@@ -311,20 +310,21 @@ public class Importer {
     
     private byte[] loadSignature(File signatureFile) throws IOException {
         FileInputStream signature = null;
-        ByteOutputStream signatureBytes = null;
+        // signature is never going to be a huge file, therefore cast is a-okay
+        byte[] signatureBytes = new byte[(int) signatureFile.length()]; 
         
         try {
             signature = new FileInputStream(signatureFile);
-            signatureBytes = new ByteOutputStream();
             
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = signature.read(buf)) > 0) {
-                signatureBytes.write(buf, 0, len);
+            int offset = 0;
+            int numRead = 0;
+            while (offset < signatureBytes.length && 
+                (numRead 
+                    = signature.read(signatureBytes, offset, signatureBytes.length - offset)
+                ) >= 0) {
+                offset += numRead;
             }
-    
-            byte[] toReturn = signatureBytes.getBytes();
-            return toReturn;
+            return signatureBytes;
         }
         finally {
             if (signature != null) {
@@ -334,9 +334,6 @@ public class Importer {
                 catch (IOException e) {
                     // nothing we can do about this
                 }
-            }
-            if (signatureBytes != null) {
-                signatureBytes.close();
             }
         }
     }
