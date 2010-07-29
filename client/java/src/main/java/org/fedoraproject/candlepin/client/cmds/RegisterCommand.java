@@ -97,8 +97,8 @@ public class RegisterCommand extends BaseCommand {
         boolean autosubscribe = StringUtils.isNotEmpty(cmdLine
             .getOptionValue("a"));
         if (!bothUserPassPresent && consumerId == null) {
-            System.err.println("Error: username and password or "
-                + "consumerid are required to register,try --help.\n");
+            System.err.println("Error: username and password or " + 
+                "consumerid are required to register,try --help.\n");
             return;
         }
         CandlepinClientFacade client = this.getClient();

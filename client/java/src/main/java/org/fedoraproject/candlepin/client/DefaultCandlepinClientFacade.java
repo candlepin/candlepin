@@ -202,18 +202,16 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
      */
     private <T> T getSafeResult(ClientResponse<T> response) {
         switch (response.getResponseStatus().getFamily()) {
-        case CLIENT_ERROR:
-            Map<String, String> msg = response
-                .getEntity(new GenericType<Map<String, String>>() {
-                });
-            L.warn("Operation failure. Status = {}. Response from server: {}",
-                ToStringBuilder
-                    .reflectionToString(response.getResponseStatus()), Utils
-                    .toStr(msg));
-            throw new ClientException(response.getResponseStatus(), msg
-                .get(Constants.ERR_DISPLAY_MSG));
-        default:
-            return response.getEntity();
+            case CLIENT_ERROR:
+                Map<String, String> msg = response
+                    .getEntity(new GenericType<Map<String, String>>() { });
+                L.warn("Operation failure. Status = {}. Response from server: {}",
+                    ToStringBuilder.reflectionToString(response.getResponseStatus()), 
+                            Utils.toStr(msg));
+                throw new ClientException(response.getResponseStatus(), msg
+                    .get(Constants.ERR_DISPLAY_MSG));
+            default:
+                return response.getEntity();
         }
     }
 

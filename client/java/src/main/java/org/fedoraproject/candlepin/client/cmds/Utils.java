@@ -42,7 +42,8 @@ public final class Utils {
     /**
      *
      */
-    private static final String DEF_PROPERTIES_PATH = "org/fedoraproject/candlepin/client/defaultValues.properties";
+    private static final String DEF_PROPERTIES_PATH =
+        "org/fedoraproject/candlepin/client/defaultValues.properties";
 
     private Utils() {
         // prevent instantiation
@@ -163,5 +164,6 @@ public final class Utils {
         }
     };
 
-    public static final TrustManager[] DUMMY_TRUST_MGRS = new TrustManager[]{ DUMMY_TRUST_MANAGER };
+    public static final TrustManager[] DUMMY_TRUST_MGRS = 
+        new TrustManager[]{ DUMMY_TRUST_MANAGER };
 }

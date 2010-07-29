@@ -380,13 +380,13 @@ public class OwnerResource {
             sink.emitImportCreated(owner);
         }
         catch (IOException e) {
-            throw new IseException(i18n.tr("Error reading export archive"));
+            throw new IseException(i18n.tr("Error reading export archive"), e);
         }
         catch (SyncDataFormatException e) {
-            throw new BadRequestException(i18n.tr("Bad data in export archive"));
+            throw new BadRequestException(i18n.tr("Bad data in export archive"), e);
         }
         catch (ImporterException e) {
-            throw new IseException(i18n.tr("Error extracting export archive"));
+            throw new IseException(i18n.tr("Error extracting export archive"), e);
         }
     }
 }

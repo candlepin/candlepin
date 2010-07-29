@@ -128,7 +128,7 @@ else
     isrpm $TC_HOME
 
     if [ "$?" -ne 0 ]; then
-        START="$TC_HOME/bin/catalina.sh start"
+        START="$TC_HOME/bin/catalina.sh jpda start"
         STOP="$TC_HOME/bin/catalina.sh stop"
         CONTAINER_CONF_DIR="$TC_HOME/conf"
     else

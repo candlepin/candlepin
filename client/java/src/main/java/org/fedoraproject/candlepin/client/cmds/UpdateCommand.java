@@ -35,8 +35,8 @@ public class UpdateCommand extends BaseCommand {
     public Options getOptions() {
         Options opts = super.getOptions();
         opts.addOption("p", "pkcs12", true,
-            "Generate pkcs files for the entitlement "
-                + "certificates with the password provided");
+            "Generate pkcs files for the entitlement " +
+                "certificates with the password provided");
         return opts;
     }
 

@@ -85,9 +85,9 @@ public class ListCommand extends PrivilegedCommand {
             return;
         }
 
-        toConsoleAndLogs("+-------------------------------------------"
-            + "+\n\tInstalled Product Status\n"
-            + "+-------------------------------------------+\n");
+        toConsoleAndLogs("+-------------------------------------------" +
+            "+\n\tInstalled Product Status\n" +
+            "+-------------------------------------------+\n");
         Map<Product, EntitlementCertificate> prodToEntitlementMap = Utils
             .newMap();
         Set<Product> listedProducts = Utils.newSet();
@@ -159,9 +159,9 @@ public class ListCommand extends PrivilegedCommand {
             toConsoleAndLogs("No Availale subscription pools to list");
             return;
         }
-        toConsoleAndLogs("+-------------------------------------------"
-            + "+\n\tAvailable Subscriptions\n"
-            + "+-------------------------------------------+\n");
+        toConsoleAndLogs("+-------------------------------------------" +
+            "+\n\tAvailable Subscriptions\n" + 
+            "+-------------------------------------------+\n");
 
         for (Pool pool : pools) {
             toConsoleAndLogs("%-25s%s\n", "ProductName:", pool.getProductName());
@@ -183,9 +183,9 @@ public class ListCommand extends PrivilegedCommand {
             System.out.println("No Consumed subscription pools to list");
             return;
         }
-        System.out.println("+-------------------------------------------"
-            + "+\n\tConsumed Product Subscriptions\n"
-            + "+-------------------------------------------+\n");
+        System.out.println("+-------------------------------------------" + 
+            "+\n\tConsumed Product Subscriptions\n" + 
+            "+-------------------------------------------+\n");
         for (EntitlementCertificate cert : certs) {
             for (Product product : cert.getProducts()) {
                 toConsoleAndLogs("%-25s%s\n", "Name:", product.getName());

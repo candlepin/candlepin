@@ -23,16 +23,22 @@ import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.exceptions.IseException;
 
 /**
  * SyncUtils
  */
 class SyncUtils {
 
-    private String workDir;
-
+    private final File baseDir;
     SyncUtils() {
-        workDir = new Config().getString(ConfigProperties.SYNC_WORK_DIR);
+        baseDir = new File(new Config().getString(ConfigProperties.SYNC_WORK_DIR));
+        if (!baseDir.exists()) {
+            if (!baseDir.mkdirs()) {
+                throw new IseException(
+                    "Unable to create base dir for sync: " + baseDir);
+            }
+        }
     }
     
     static ObjectMapper getObjectMapper() {
@@ -48,11 +54,6 @@ class SyncUtils {
     }
 
     File makeTempDir(String baseName) throws IOException {
-        File baseDir = new File(workDir);
-        if (!baseDir.exists()) {
-            baseDir.mkdirs();
-        }
-        
         File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()),
             baseDir);
 

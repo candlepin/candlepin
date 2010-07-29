@@ -707,7 +707,7 @@ public class ConsumerResource {
             return archive;
         }
         catch (ExportCreationException e) {
-            throw new IseException(i18n.tr("Unable to create export archive"));
+            throw new IseException(i18n.tr("Unable to create export archive"), e);
         }
     }
 

@@ -30,9 +30,13 @@ public abstract class CandlepinException extends RuntimeException {
     private final ExceptionMessage message;
     
     public CandlepinException(Status returnCode, String message) {
+       this(returnCode, message, null);
+    }
+    
+    public CandlepinException(Status returnCode, String message, Throwable e) {
+        super(e);
         this.returnCode = returnCode;
-        this.message = new ExceptionMessage()
-            .setDisplayMessage(message);
+        this.message = new ExceptionMessage(message);
     }
 
     public ExceptionMessage message() {

@@ -145,8 +145,8 @@ public class CLIMain {
                 pr = conf;
             }
             else {
-                L.debug("Config file {} does not exist. "
-                    + "Trying to load values from System.getProperty()", file
+                L.debug("Config file {} does not exist. " +
+                    "Trying to load values from System.getProperty()", file
                     .getAbsolutePath());
                 /*
                  * config file not found. Try getting values from from system

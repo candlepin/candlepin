@@ -143,7 +143,7 @@ public class EventFactory {
     public Event exportCreated(Consumer consumer) {
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.CREATED, Event.Target.EXPORT, principal, 
-            principal.getOwner().getId(), consumer.getId(), null, null,
+            principal.getOwner().getId(), consumer.getId(), consumer.getId(), null,
             entityToJson(consumer));
         return e;
     }
@@ -151,7 +151,7 @@ public class EventFactory {
     public Event importCreated(Owner owner) {
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.CREATED, Event.Target.IMPORT, principal, 
-            owner.getId(), null, null, null, null);
+            owner.getId(), null, owner.getId(), null, entityToJson(owner));
         return e;
     }
     

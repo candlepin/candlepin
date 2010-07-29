@@ -45,10 +45,10 @@ public class SubscribeCommand extends PrivilegedCommand {
         opts.addOption("q", "quantity", true,
             "The quantities of pool/product/regtoken used");
         opts.addOption("e", "email", true,
-            "email address which will receive confirmation e-mail "
-                + "(applies for only --regtoken)");
-        opts.addOption("l", "locale", true, "Preferred locale of email"
-            + "(applies for only --regtoken)");
+            "email address which will receive confirmation e-mail " + 
+                "(applies for only --regtoken)");
+        opts.addOption("l", "locale", true, "Preferred locale of email" + 
+            "(applies for only --regtoken)");
         return opts;
     }
 
@@ -67,8 +67,8 @@ public class SubscribeCommand extends PrivilegedCommand {
             return;
         }
         if (isEmpty(pools) && isEmpty(products) && isEmpty(regTokens)) {
-            System.err.println("Error: Need either --product or --pool"
-                + " or --regtoken, Try --help");
+            System.err.println("Error: Need either --product or --pool" + 
+                " or --regtoken, Try --help");
             return;
         }
         if (!isEmpty(pools)) {
