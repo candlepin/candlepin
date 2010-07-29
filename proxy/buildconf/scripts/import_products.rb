@@ -33,6 +33,7 @@ cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='
 
 # create some owners and users
 data["owners"].each do |new_owner|
+  puts "owner: " + new_owner
   owner = cp.create_owner(new_owner)
 end
 
@@ -44,6 +45,7 @@ owner_key = owners[0]['key']
 
 # add some users
 data["users"].each do |new_user|
+  puts "user: " + new_user["username"] 
   user = cp.create_user(owner_id, new_user["username"],new_user["password"] )
 end
 
