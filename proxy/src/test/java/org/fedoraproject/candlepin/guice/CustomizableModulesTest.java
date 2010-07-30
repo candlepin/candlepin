@@ -29,20 +29,21 @@ public class CustomizableModulesTest {
 
     @Test
     public void shouldLoadAndParseConfigurationFile() throws Exception {
-        Config config = new Config(getAbsolutePath("customizable_modules_test.conf"));
+        Config config = new Config(
+            getAbsolutePath("customizable_modules_test.conf"));
         Set<Module> loaded = new CustomizableModulesForTesting(config).load();
 
         assertEquals(1, loaded.size());
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
     }
 
-    // TODO:  We should probably be more specific...
-    @Test(expected = RuntimeException.class)  
+    // TODO: We should probably be more specific...
+    @Test(expected = RuntimeException.class)
     public void shouldFailWhenConfigurationContainsMissingClass()
         throws Exception {
-        Config config = new Config(getAbsolutePath(
-            "customizable_modules_with_missing_class.conf"));
-            
+        Config config = new Config(
+            getAbsolutePath("customizable_modules_with_missing_class.conf"));
+
         new CustomizableModulesForTesting(config).load();
     }
 
@@ -59,7 +60,7 @@ public class CustomizableModulesTest {
             return config;
         }
     }
-    
+
     private String getAbsolutePath(String fileName) throws URISyntaxException {
         return getClass().getResource(fileName).toURI().getPath();
     }

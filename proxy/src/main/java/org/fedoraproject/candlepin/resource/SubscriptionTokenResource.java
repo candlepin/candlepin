@@ -27,15 +27,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
+import org.fedoraproject.candlepin.util.Util;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-
-
 
 /**
  * SubscriptionTokenResource
@@ -48,10 +45,10 @@ public class SubscriptionTokenResource {
     private I18n i18n;
 
     @Inject
-    public SubscriptionTokenResource(SubscriptionCurator subCurator,
-        SubscriptionTokenCurator subTokenCurator, OwnerCurator ownerCurator,
+    public SubscriptionTokenResource(SubscriptionTokenCurator subTokenCurator,
         I18n i18n) {
         this.subTokenCurator = subTokenCurator;
+        this.i18n = i18n;
     }
 
     @GET
@@ -65,7 +62,7 @@ public class SubscriptionTokenResource {
 
     @POST
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public SubscriptionToken createSubscription(
+    public SubscriptionToken createSubscriptionToken(
         SubscriptionToken subscriptionToken) {
         log.debug("subscriptionToken" + subscriptionToken);
         SubscriptionToken newSubscriptionToken = subTokenCurator
@@ -78,14 +75,17 @@ public class SubscriptionTokenResource {
     @Path("/{subscription_token_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public void deleteSubscription(
-        @PathParam("subscription_token_id") Long subscriptionTokenId) {
+        @PathParam("subscription_token_id") String subscriptionTokenIdString) {
+        Long subscriptionTokenId = Util.assertLong(subscriptionTokenIdString,
+            i18n.tr("subscription_token_id path parameter must be a number"));
+
         SubscriptionToken subscriptionToken = subTokenCurator
             .find(subscriptionTokenId);
 
         if (subscriptionToken == null) {
-            throw new BadRequestException(
-                i18n.tr("SubscriptionToken with id {0} could not be found",
-                    subscriptionTokenId));
+            throw new BadRequestException(i18n.tr(
+                "SubscriptionToken with id {0} could not be found",
+                subscriptionTokenId));
         }
 
         subTokenCurator.delete(subscriptionToken);

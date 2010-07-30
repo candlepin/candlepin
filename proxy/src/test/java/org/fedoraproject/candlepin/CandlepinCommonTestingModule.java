@@ -46,6 +46,7 @@ import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
+import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -81,17 +82,19 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(X509ExtensionUtil.class);
-        bind(Config.class).to(CandlepinCommonTestConfig.class).asEagerSingleton();
+        bind(Config.class).to(CandlepinCommonTestConfig.class)
+            .asEagerSingleton();
         bind(ConsumerResource.class);
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
+        bind(SubscriptionTokenResource.class);
         bind(ProductServiceAdapter.class)
             .to(DefaultProductServiceAdapter.class);
         bind(ProductResource.class);
         bind(DateSource.class).to(DateSourceForTesting.class)
             .asEagerSingleton();
-        bind(Enforcer.class).to(EnforcerForTesting.class); //.to(JavascriptEnforcer.class);
+        bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
         bind(PKIUtility.class).to(CandlepinPKIUtility.class);
         bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
         bind(SubscriptionServiceAdapter.class).to(
@@ -101,37 +104,31 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(RulesCurator.class).to(TestRulesCurator.class);
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
-                          .toProvider(RulesReaderProvider.class);
-        
+            .toProvider(RulesReaderProvider.class);
 
         bind(UserServiceAdapter.class).to(ConfigUserServiceAdapter.class);
-        
+
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         bind(EventSink.class).to(EventSinkForTesting.class);
-        
+
         SecurityInterceptor se = new SecurityInterceptor();
         requestInjection(se);
         securityInterceptor = new TestingInterceptor(se);
-        
-        bindInterceptor(
-            Matchers.inPackage(Package.getPackage("org.fedoraproject.candlepin.resource")),
-            Matchers.any(), 
-            securityInterceptor);
-        bindInterceptor(
-            Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(AllowRoles.class), 
-            securityInterceptor);
-        
+
+        bindInterceptor(Matchers.inPackage(Package
+            .getPackage("org.fedoraproject.candlepin.resource")), Matchers
+            .any(), securityInterceptor);
+        bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
+            Matchers.annotatedWith(AllowRoles.class), securityInterceptor);
+
         AccessControlInterceptor crud = new AccessControlInterceptor();
         requestInjection(crud);
         crudInterceptor = new TestingInterceptor(crud);
-        
-        bindInterceptor(
-            Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(EnforceAccessControl.class), 
-            crudInterceptor);
+
+        bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
+            Matchers.annotatedWith(EnforceAccessControl.class), crudInterceptor);
         bind(CertificateRevocationListTask.class);
         bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
             .toInstance("SHA1withRSA");
@@ -140,11 +137,11 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             DefaultIdentityCertServiceAdapter.class);
         bind(PoolManager.class);
     }
-    
+
     public TestingInterceptor crudInterceptor() {
         return crudInterceptor;
     }
-    
+
     public TestingInterceptor securityInterceptor() {
         return securityInterceptor;
     }
