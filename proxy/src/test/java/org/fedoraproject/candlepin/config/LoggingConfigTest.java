@@ -38,7 +38,7 @@ public class LoggingConfigTest {
     private LoggingConfig lc;
     
     @Before
-    public void setup() {
+    public void init() {
         config = mock(Config.class);
         lc = new LoggingConfig(config);
     }
