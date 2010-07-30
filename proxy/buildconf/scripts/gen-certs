@@ -3,7 +3,7 @@
 CERTS_HOME=/etc/candlepin/certs
 CA_KEY_PASSWORD=$CERTS_HOME/candlepin-ca-password.txt
 CA_KEY=$CERTS_HOME/candlepin-ca.key
-CA_UPSTREAM_KEY=$CERTS_HOME/candlepin-upstream-ca.key
+CA_UPSTREAM_CERT=$CERTS_HOME/candlepin-upstream-ca.crt
 CA_PUB_KEY=$CERTS_HOME/candlepin-ca-pub.key
 CA_CERT=$CERTS_HOME/candlepin-ca.crt
 KEYSTORE=$CERTS_HOME/keystore
@@ -38,6 +38,6 @@ else
     echo "Creating CA certificate"
     sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj "/CN=$HOSTNAME/C=US/L=Raleigh/"
     sudo openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE -name tomcat -CAfile $CA_CERT -caname root -chain -password pass:password
-    sudo cp $CA_KEY $CA_UPSTREAM_KEY
+    sudo cp $CA_CERT $CA_UPSTREAM_CERT
     sudo chmod a+r $KEYSTORE
 fi
