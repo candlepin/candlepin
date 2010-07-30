@@ -318,10 +318,9 @@ public class Importer {
             
             int offset = 0;
             int numRead = 0;
-            while (offset < signatureBytes.length && 
-                (numRead 
-                    = signature.read(signatureBytes, offset, signatureBytes.length - offset)
-                ) >= 0) {
+            while (offset < signatureBytes.length && numRead >= 0) {
+                numRead = signature.read(signatureBytes, offset,
+                    signatureBytes.length - offset);
                 offset += numRead;
             }
             return signatureBytes;
