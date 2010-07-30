@@ -46,6 +46,7 @@ import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
+import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -88,6 +89,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
+        bind(SubscriptionResource.class);        
         bind(SubscriptionTokenResource.class);
         bind(ProductServiceAdapter.class)
             .to(DefaultProductServiceAdapter.class);
