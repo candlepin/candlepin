@@ -16,14 +16,24 @@ package org.fedoraproject.candlepin.service.impl.test;
 
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 
 /**
  * DefaultProductServiceAdapterTest
  */
 public class ProductCertCreationTest extends DatabaseTestFixture {
+
+    @Override
+    protected Module getGuiceOverrideModule() {
+        return new ProductCertCreationModule(); 
+    }
 
     @Test
     public void hasCert() {
@@ -63,6 +73,13 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     private ProductCertificate createCert(Product product) {
         this.productAdapter.createProduct(product);
         return this.productAdapter.getProductCertificate(product);
+    }
+    
+    private class ProductCertCreationModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
+        }
     }
     
 }

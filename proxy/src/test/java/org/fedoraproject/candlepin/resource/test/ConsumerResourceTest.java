@@ -14,14 +14,17 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -48,15 +51,14 @@ import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-
-import com.google.inject.internal.Lists;
-
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
@@ -66,13 +68,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.internal.Lists;
 
 /**
  * ConsumerResourceTest
@@ -105,6 +103,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     private UserCurator userCurator;
     private User someuser;
+    
+    @Override
+    protected Module getGuiceOverrideModule() {
+        return new ProductCertCreationModule(); 
+    }
 
     @Before
     public void setUp() {
@@ -779,5 +782,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         return idCert;
     }
-
+    
+    private class ProductCertCreationModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
+        }
+    }    
 }

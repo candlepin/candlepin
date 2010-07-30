@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin;
 
+import java.io.Reader;
+
+import javax.script.ScriptEngine;
+
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
@@ -35,7 +39,6 @@ import org.fedoraproject.candlepin.model.test.TestRulesCurator;
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
-import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
@@ -56,19 +59,15 @@ import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceA
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.EnforcerForTesting;
 import org.fedoraproject.candlepin.test.EventSinkForTesting;
+import org.fedoraproject.candlepin.test.PKIReaderForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-
-import org.xnap.commons.i18n.I18n;
-
-import java.io.Reader;
-
-import javax.script.ScriptEngine;
 
 public class CandlepinCommonTestingModule extends AbstractModule {
 
@@ -94,7 +93,7 @@ public class CandlepinCommonTestingModule extends AbstractModule {
             .asEagerSingleton();
         bind(Enforcer.class).to(EnforcerForTesting.class); //.to(JavascriptEnforcer.class);
         bind(PKIUtility.class).to(CandlepinPKIUtility.class);
-        bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
+        bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
         bind(EntitlementCertServiceAdapter.class).to(
