@@ -53,6 +53,7 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.ExportCreationException;
 import org.fedoraproject.candlepin.sync.Exporter;
+import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -503,16 +504,8 @@ public class ConsumerResource {
         @QueryParam("emailLocale") String emailLocale) {
 
         // Verify that the poolId is a Long if provided
-        Long poolId = null;
-        if (poolIdString != null) {
-            try {
-                poolId = Long.parseLong(poolIdString);
-            }
-            catch (NumberFormatException e) {
-                throw new BadRequestException(i18n
-                    .tr("Pool ID should be numeric"));
-            }
-        }
+        Long poolId = Util.assertLong(poolIdString, i18n
+            .tr("Pool ID should be numeric"));
 
         // Check that only one query param was set:
         if ((poolId != null && token != null) ||

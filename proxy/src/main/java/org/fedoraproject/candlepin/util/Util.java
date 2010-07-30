@@ -33,6 +33,7 @@ import java.util.UUID;
 import org.apache.commons.collections.Transformer;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 
 /**
  * Genuinely random utilities.
@@ -140,6 +141,20 @@ public class Util {
         }
         return value;
     }
+    
+    public static Long assertLong(String value, String message) {
+        Long returnValue = null;
+        
+        if (value != null) {
+            try {
+                returnValue = Long.parseLong(value);
+            }
+            catch (NumberFormatException e) {
+                throw new BadRequestException(message);
+            }
+        }
+        return returnValue;
+    }    
 
     public static String defaultIfEmpty(String str, String def) {
         if (str == null || str.trim().length() == 0) {

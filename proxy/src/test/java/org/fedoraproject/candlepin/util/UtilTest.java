@@ -14,8 +14,12 @@
  */
 package org.fedoraproject.candlepin.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.junit.Test;
 
 /**
@@ -26,5 +30,21 @@ public class UtilTest {
     @Test
     public void testRandomUUIDS() {
         assertNotSame(Util.generateUUID(), Util.generateUUID());
+    }
+
+    @Test
+    public void testAssertLong() {
+        assertTrue("null should return null",
+            Util.assertLong(null, "fred") == null);
+        assertEquals("Longs should work", (Long) (long) 1, Util.assertLong("1",
+            "george"));
+        try {
+            Util.assertLong("JarJar", "This should fail");
+            fail("Exception was not thrown");
+        }
+        catch (BadRequestException e) {
+            assertEquals("Messages should match", "This should fail", e
+                .message().getDisplayMessage());
+        }
     }
 }
