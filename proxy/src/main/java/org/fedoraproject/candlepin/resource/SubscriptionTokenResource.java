@@ -74,7 +74,7 @@ public class SubscriptionTokenResource {
     @DELETE
     @Path("/{subscription_token_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public void deleteSubscription(
+    public void deleteSubscriptionToken(
         @PathParam("subscription_token_id") String subscriptionTokenIdString) {
         Long subscriptionTokenId = Util.assertLong(subscriptionTokenIdString,
             i18n.tr("subscription_token_id path parameter must be a number"));

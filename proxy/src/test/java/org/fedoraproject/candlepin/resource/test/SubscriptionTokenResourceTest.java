@@ -36,7 +36,7 @@ public class SubscriptionTokenResourceTest extends DatabaseTestFixture {
     @Test
     public void testInvalidTokenIdOnDelete() {
         try {
-            subTokenResource.deleteSubscription("JarJarBinks");
+            subTokenResource.deleteSubscriptionToken("JarJarBinks");
         }
         catch (BadRequestException e) {
             // this is expected.

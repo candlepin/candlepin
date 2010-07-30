@@ -28,7 +28,6 @@ public class SubscriptionResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-
         subResource = injector.getInstance(SubscriptionResource.class);
     }
 
