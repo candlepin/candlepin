@@ -50,7 +50,7 @@ public class Exporter {
     private ObjectMapper mapper;
 
     private MetaExporter meta;
-    private ConsumerExporter consumer;
+    private ConsumerExporter consumerExporter;
     private ProductExporter productExporter;
     private ProductCertExporter productCertExporter;
     private ConsumerTypeExporter consumerType;
@@ -68,7 +68,7 @@ public class Exporter {
     
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
-        ConsumerExporter consumer, ConsumerTypeExporter consumerType, 
+        ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType, 
         RulesExporter rules, EntitlementCertExporter entCert,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
@@ -79,7 +79,7 @@ public class Exporter {
         this.consumerTypeCurator = consumerTypeCurator;
         
         this.meta = meta;
-        this.consumer = consumer;
+        this.consumerExporter = consumerExporter;
         this.consumerType = consumerType;
         this.rules = rules;
         this.entCert = entCert;
@@ -233,7 +233,7 @@ public class Exporter {
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);
-        this.consumer.export(mapper, writer, consumer);
+        this.consumerExporter.export(mapper, writer, consumer);
         writer.close();
     }
 
