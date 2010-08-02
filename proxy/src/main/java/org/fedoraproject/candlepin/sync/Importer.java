@@ -306,8 +306,7 @@ public class Importer {
 
         zipinputstream.close();
 
-        File extractDir = new File(tempDir.getAbsolutePath(), "export");
-        return extractDir;
+        return new File(tempDir.getAbsolutePath(), "export");
     }
     
     private byte[] loadSignature(File signatureFile) throws IOException {
