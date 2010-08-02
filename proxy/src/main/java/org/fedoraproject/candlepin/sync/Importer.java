@@ -281,8 +281,9 @@ public class Importer {
         while (zipentry != null) {
             //for each entry to be extracted
             String entryName = zipentry.getName();
-            System.out.println("entryname " + entryName);
-            int n;
+            if (log.isDebugEnabled()) {
+                log.debug("entryname " + entryName);
+            }
             FileOutputStream fileoutputstream;
             File newFile = new File(entryName);
             String directory = newFile.getParent();
@@ -292,6 +293,7 @@ public class Importer {
             
             fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
 
+            int n;
             while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
                 fileoutputstream.write(buf, 0, n);
             }
