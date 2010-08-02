@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.27
+Version: 0.0.28
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,35 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Aug 02 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.28-1
+- rename consumer -> consumerExporter avoids warning. (jesusr@redhat.com)
+- don't bother with the assignment, just return it (jesusr@redhat.com)
+- remove System.out.println, move int n closer to block. (jesusr@redhat.com)
+- rename init (jesusr@redhat.com)
+- test the LoggingConfig (jesusr@redhat.com)
+- fix inner assignment complaint from checkstyle (jesusr@redhat.com)
+- Name clean ups (bkearney@redhat.com)
+- Add long asserts into the subscription token (bkearney@redhat.com)
+- Add assertLong logic to the subscription manager token resource class (bkearney@redhat.com)
+- missing files break the build (ddolguik@redhat.com)
+- Move the long check to a util class so it can be used in other places (bkearney@redhat.com)
+- a dummy PKIReader is used for majority of tests; ConsumerResourceTest.java
+  and ProductCertCreationTest.java use test-specific ca certs and key (ddolguik@redhat.com)
+- need to copy ca cert to create upstream ca cert, not the key (ddolguik@redhat.com)
+- create upstream ca cert by copying ca cert. (ddolguik@redhat.com)
+- export signature is now being correctly verified upon import (ddolguik@redhat.com)
+- fixed upstream ca cert configuration (ddolguik@redhat.com)
+- added hash check on import (ddolguik@redhat.com)
+- export files are now signed with sha256 with CA certificate (ddolguik@redhat.com)
+- added sha256rsa generation/verification (ddolguik@redhat.com)
+- Show what user/owners we are creating on import (alikins@redhat.com)
+- don't loose exceptions on import/export; checkstyle cleanup. fix eventfactory
+  bug(s) (anadathu@redhat.com)
+- unit test the CandlepinExceptionMapper (jesusr@redhat.com)
+- make response builder methods private (jesusr@redhat.com)
+- Reverting to resteasy 2.0-beta-4 to fix the exception mapper issue. (jharris@redhat.com)
+- Add support for creating some users and owners in the import (alikins@redhat.com)
+
 * Wed Jul 28 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.27-1
 - change in subscription dates should be reflected in entitlement
   certificates (anadathu@redhat.com)
