@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
@@ -104,12 +105,15 @@ public class Importer {
 
     public void loadExport(Owner owner, File exportFile) throws ImporterException {
         File tmpDir = null;
+        InputStream exportStream = null;
         try {
             tmpDir = new SyncUtils().makeTempDir("import");
             
             extractArchive(tmpDir, exportFile);
+            
+            exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
             boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
-                new FileInputStream(new File(tmpDir, "consumer_export.zip")),
+                exportStream,
                 loadSignature(new File(tmpDir, "signature")));
             
             if (!verifiedSignature) {
@@ -140,6 +144,14 @@ public class Importer {
                 catch (IOException e) {
                     log.error("Failed to delete extracted export");
                     log.error(e);
+                }
+            }
+            if (exportStream != null) {
+                try {
+                    exportStream.close();
+                }
+                catch (Exception e) {
+                    // nothing we can do.
                 }
             }
         }

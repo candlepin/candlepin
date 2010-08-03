@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -130,13 +131,27 @@ public class Exporter {
             tempDir, exportDir, "consumer_export.zip",
             "Candlepin export for " + consumer.getUuid());
         
-        File signedArchive = createSignedZipArchive(
-            tempDir, archive, exportFileName, 
-            pki.getSHA256WithRSAHash(new FileInputStream(archive)),
-            "signed Candlepin export for " + consumer.getUuid());
-                
-        log.debug("Returning file: " + archive.getAbsolutePath());
-        return signedArchive;
+        InputStream archiveInputStream = null;
+        try {
+            archiveInputStream = new FileInputStream(archive);
+            File signedArchive = createSignedZipArchive(
+                tempDir, archive, exportFileName, 
+                pki.getSHA256WithRSAHash(archiveInputStream),
+                "signed Candlepin export for " + consumer.getUuid());
+                    
+            log.debug("Returning file: " + archive.getAbsolutePath());
+            return signedArchive;
+        }
+        finally {
+            if (archiveInputStream != null) {
+                try {
+                    archiveInputStream.close();
+                }
+                catch (Exception e) {
+                    // nothing to do
+                }
+            }
+        }
     }
 
     private File createZipArchiveWithDir(File tempDir, File exportDir,
