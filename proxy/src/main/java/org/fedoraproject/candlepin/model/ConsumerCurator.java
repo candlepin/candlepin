@@ -65,10 +65,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Consumer for this user if one exists, null otherwise.
      */
     public Consumer lookupUsersConsumer(User user) {
-        // TODO: For now we are using consumer.name = user.login. This is a little
-        // dangerous as it can lead to dangling references or false hits. Probably
-        // want to make this an explicit part of the schema:
-        return lookupByName(user.getUsername());
+        return (Consumer) currentSession().createCriteria(Consumer.class)
+        .add(Restrictions.eq("username", user.getUsername()))
+        .uniqueResult();
     }
 
     /**

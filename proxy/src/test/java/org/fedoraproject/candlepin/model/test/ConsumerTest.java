@@ -28,10 +28,12 @@ import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -401,4 +403,16 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertFalse(first.factsAreEqual(second));
     }
 
+    @Test
+    public void testLookupUsersConsumer() {
+        ConsumerType personType = new ConsumerType(ConsumerTypeEnum.PERSON);
+        consumerTypeCurator.create(personType);
+        String newUsername = "newusername";
+        User user = new User(owner, newUsername, "password");
+        assertNull(consumerCurator.lookupUsersConsumer(user));
+
+        consumer = new Consumer(CONSUMER_NAME, newUsername, owner, personType);
+        consumerCurator.create(consumer);
+        assertEquals(consumer, consumerCurator.lookupUsersConsumer(user));
+    }
 }
