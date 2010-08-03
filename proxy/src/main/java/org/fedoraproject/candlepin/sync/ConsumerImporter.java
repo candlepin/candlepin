@@ -43,7 +43,7 @@ public class ConsumerImporter {
         }
         
         if (owner.getUpstreamUuid() != null &&
-            owner.getUpstreamUuid() != consumer.getUuid()) {
+            !owner.getUpstreamUuid().equals(consumer.getUuid())) {
             throw new SyncDataFormatException("mismatched consumer uuid for this owner");
         }
         
