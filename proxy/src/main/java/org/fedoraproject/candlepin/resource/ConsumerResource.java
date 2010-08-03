@@ -501,7 +501,7 @@ public class ConsumerResource {
         @QueryParam("product") String productId,
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
-        @QueryParam("emailLocale") String emailLocale) {
+        @QueryParam("email_locale") String emailLocale) {
 
         // Verify that the poolId is a Long if provided
         Long poolId = Util.assertLong(poolIdString, i18n

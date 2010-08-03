@@ -103,7 +103,7 @@ public interface CandlepinConsumerClient {
         @PathParam("uuid") String uuid, @QueryParam("token") String regnum,
         @QueryParam("quantity") int quantity,
         @QueryParam("email") String email,
-        @QueryParam("emailLocale") String defLocale);
+        @QueryParam("email_locale") String defLocale);
 
     @DELETE
     @Path("consumers/{uuid}/certificates/{serialNo}")
