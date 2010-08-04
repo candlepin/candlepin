@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resteasy;
 
+import com.google.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.ext.Provider;
@@ -33,13 +34,15 @@ import org.fedoraproject.candlepin.config.Config;
 @Produces({"application/*+json", "text/json"})
 @Consumes({"application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
-    public JsonProvider() {
+
+    @Inject
+    public JsonProvider(Config config) {
         // Prefer jackson annotations, but use jaxb if no jackson.
         super(Annotations.JACKSON, Annotations.JAXB);
        
         this._mapperConfig.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
             false);
-        if (new Config().indentJson()) {
+        if (config.indentJson()) {
             this._mapperConfig.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
         }
     }
