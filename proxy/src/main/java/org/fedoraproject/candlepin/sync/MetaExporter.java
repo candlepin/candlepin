@@ -14,31 +14,19 @@
  */
 package org.fedoraproject.candlepin.sync;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Date;
+import com.google.inject.Inject;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.google.inject.Inject;
+import java.io.IOException;
+import java.io.Writer;
 
 /**
  * Meta maps to meta.json in the export
  * 
  */
 public class MetaExporter {
-    private class Meta {
-        private static final String VERSION = "0.0.0";
-        
-        public String getVersion() {
-            return VERSION;
-        }
-        
-        public Date getCreated() {
-            return new Date();
-        }
-    }
-    
+
     @Inject
     MetaExporter() {
     }
