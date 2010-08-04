@@ -155,7 +155,7 @@ define "candlepin" do
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J
+  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, generate
 
   #
   # javadoc projects
@@ -164,6 +164,7 @@ define "candlepin" do
 
   package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/config','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', 'target/classes/org/fedoraproject/candlepin/exceptions', 'target/classes/org/fedoraproject/candlepin/util', :path=>"org/fedoraproject/candlepin/"  
   package(:war, :id=>"candlepin").libs << HSQLDB
+  package(:war, :id=>"candlepin").classes << generate  
 
   #
   # coverity report generation

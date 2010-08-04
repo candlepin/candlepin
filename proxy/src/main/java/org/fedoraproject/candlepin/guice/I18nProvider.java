@@ -18,6 +18,7 @@ import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Logger;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -31,6 +32,8 @@ import com.google.inject.internal.Nullable;
 public class I18nProvider implements Provider<I18n> {
     private I18n i18n;
 
+    private static Logger log = Logger.getLogger(I18nProvider.class);
+    
     @Inject
     public I18nProvider(@Nullable HttpServletRequest request) {
         Locale locale = null;
@@ -39,9 +42,13 @@ public class I18nProvider implements Provider<I18n> {
             locale = request.getLocale();
         }
         
+        locale = (locale == null) ? Locale.US : locale;
+        
+        log.debug("Getting i18n engine for locale " + locale);
+        
         i18n = I18nFactory.getI18n(
             getClass(), 
-            locale == null ? Locale.US : locale,
+            locale,
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
     }
@@ -49,5 +56,9 @@ public class I18nProvider implements Provider<I18n> {
     @Override
     public I18n get() {
         return i18n;
+    }
+    
+    public String  getTestString() {
+        return i18n.tr("Test");
     }
 }

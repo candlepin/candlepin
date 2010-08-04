@@ -69,6 +69,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
         I18n i18n = injector.getInstance(I18n.class);
+
         if (log.isDebugEnabled()) {
             log.debug("Authentication check for " + request.getUri().getPath());
         }
