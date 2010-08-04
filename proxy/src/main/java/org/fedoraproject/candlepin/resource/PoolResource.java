@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
@@ -145,6 +146,13 @@ public class PoolResource {
         }
 
         pool.setOwner(owner);
+        
+        // Make sure all the pool attributes correctly reference this pool, as this is
+        // awkward for the incoming json/xml to do:
+        for (PoolAttribute attr : pool.getAttributes()) {
+            attr.setPool(pool);
+        }
+        
         Pool toReturn = poolCurator.create(pool);
         
         if (toReturn != null) {

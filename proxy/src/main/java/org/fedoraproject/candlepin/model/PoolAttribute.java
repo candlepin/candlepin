@@ -21,10 +21,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * See Attributes interface for documentation.
@@ -47,6 +50,8 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     protected String value;
 
     @ManyToOne
+    @ForeignKey(name = "fk_pool_id", inverseName = "fk_pool_attribute_id")
+    @JoinColumn(nullable = false)
     private Pool pool;
     
     public PoolAttribute() {

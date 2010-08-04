@@ -16,15 +16,20 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Test;
 
 public class AttributeTest extends DatabaseTestFixture {
 
     @Test
     public void testLookup() {
+        Product p = TestUtil.createProduct();
+        productCurator.create(p);
         ProductAttribute newAttr = new ProductAttribute("OwesUsMoney_100", "100");
+        newAttr.setProduct(p);
         attributeCurator.create(newAttr);
 
         ProductAttribute foundAttr = attributeCurator.find(newAttr.getId());

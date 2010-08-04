@@ -125,7 +125,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @JoinTable(name = "pool_products", joinColumns = @JoinColumn(name = "pool_id"))
     private Set<String> providedProductIds = new HashSet<String>();
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL, 
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
@@ -296,7 +296,9 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
             existing.setValue(value);
         }
         else {
-            addAttribute(new PoolAttribute(key, value));
+            PoolAttribute attr = new PoolAttribute(key, value);
+            attr.setPool(this);
+            addAttribute(attr);
         }
     }
 

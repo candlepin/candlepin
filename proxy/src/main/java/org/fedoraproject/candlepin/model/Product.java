@@ -66,7 +66,7 @@ public class Product extends AbstractHibernateObject {
     // NOTE: we need a product "type" so we can tell what class of
     //       product we are... 
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
     @Cascade({org.hibernate.annotations.CascadeType.ALL, 
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
@@ -167,37 +167,29 @@ public class Product extends AbstractHibernateObject {
         }
     }
 
+    public void setAttributes(Set<ProductAttribute> attributes) {
+        this.attributes = attributes;
+    }
+
     public void setAttribute(String key, String value) {
         ProductAttribute existing = getAttribute(key);
         if (existing != null) {
             existing.setValue(value);
         }
         else {
-            addAttribute(new ProductAttribute(key, value));
+            ProductAttribute attr = new ProductAttribute(key, value);
+            attr.setProduct(this);
+            addAttribute(attr);
         }
-    }
-
-    public Set<ProductAttribute> getAttributes() {
-        return attributes;
-    }
-    
-    @XmlTransient
-    public Set<String> getAttributeNames() {
-        Set<String> toReturn = new HashSet<String>();
-        
-        for (ProductAttribute attribute : attributes) {
-            toReturn.add(attribute.getName());
-        }
-        return toReturn;
-    }
-
-    public void setAttributes(Set<ProductAttribute> attributes) {
-        this.attributes = attributes;
     }
 
     public void addAttribute(ProductAttribute attrib) {
         attrib.setProduct(this);
         this.attributes.add(attrib);
+    }
+    
+    public Set<ProductAttribute> getAttributes() {
+        return attributes;
     }
     
     public ProductAttribute getAttribute(String key) {
@@ -218,6 +210,15 @@ public class Product extends AbstractHibernateObject {
         return null;
     }
 
+    @XmlTransient
+    public Set<String> getAttributeNames() {
+        Set<String> toReturn = new HashSet<String>();
+        
+        for (ProductAttribute attribute : attributes) {
+            toReturn.add(attribute.getName());
+        }
+        return toReturn;
+    }
 
     @Override
     public boolean equals(Object anObject) {
