@@ -243,6 +243,12 @@ public class Exporter {
         FileWriter writer = new FileWriter(file);
         meta.export(mapper, writer);
         writer.close();
+
+        // TODO: store in DB
+        File save = new File("/tmp/metadata");
+        FileWriter savewriter = new FileWriter(save);
+        meta.export(mapper, savewriter);
+        savewriter.close();
     }
     
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {

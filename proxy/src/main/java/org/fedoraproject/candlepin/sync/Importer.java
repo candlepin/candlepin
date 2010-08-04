@@ -14,24 +14,6 @@
  */
 package org.fedoraproject.candlepin.sync;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.security.cert.CertificateException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
@@ -48,6 +30,25 @@ import org.fedoraproject.candlepin.pki.PKIUtility;
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
 /**
  * Importer
  */
@@ -59,6 +60,7 @@ public class Importer {
      * files we use to perform import
      */
     enum ImportFile {
+        META("meta.json"),
         CONSUMER_TYPE("consumer_types"),
         CONSUMER("consumer.json"),
         ENTITLEMENTS("entitlements"),
@@ -103,6 +105,17 @@ public class Importer {
         this.pki = pki;
     }
 
+    public void validateMetaJson(File meta) throws IOException, ImporterException {
+        // Only importing a single rules file now.
+        //importer.importObject(reader);
+        Meta m = mapper.readValue(meta, Meta.class);
+        // TODO: totally put this stuff in the DB, HACK ALERT!!!
+        Meta lastrun = mapper.readValue(new File("/tmp/meta"), Meta.class);
+        if (lastrun.getCreated().compareTo(m.getCreated()) > 0) {
+            throw new ImporterException("import is older than existing data");
+        }
+    }
+
     public void loadExport(Owner owner, File exportFile) throws ImporterException {
         File tmpDir = null;
         InputStream exportStream = null;
@@ -128,6 +141,8 @@ public class Importer {
                 importFiles.put(file.getName(), file);
             }
             
+            validateMetaJson(importFiles.get(ImportFile.META.fileName()));
+
             importObjects(owner, importFiles);
         }
         catch (CertificateException e) {
