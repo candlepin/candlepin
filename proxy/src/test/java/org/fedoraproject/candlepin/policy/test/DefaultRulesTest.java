@@ -287,9 +287,9 @@ public class DefaultRulesTest {
 
     private Pool setupUserLicensedPool() {
         Product product = new Product(productId, "A user licensed product");
+        product.setAttribute("requires_consumer_type", ConsumerTypeEnum.PERSON.toString());
         Pool pool = TestUtil.createPool(owner, product);
         pool.setAttribute("user_license", "unlimited");
-        pool.setAttribute("requires_consumer_type", ConsumerTypeEnum.PERSON.toString());
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }

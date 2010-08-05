@@ -24,7 +24,9 @@ import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 /**
- * CandlepinConsumerTypeEnforcer
+ * CandlepinConsumerTypeEnforcer - Exists primarily to allow consumers of type "candlepin"
+ * to skip all rules checks. When transferring to a downstream candlepin we do not want to
+ * run any rules checks. (otherwise we would need to add an exemption to every rule)
  */
 public class CandlepinConsumerTypeEnforcer implements Enforcer {
 

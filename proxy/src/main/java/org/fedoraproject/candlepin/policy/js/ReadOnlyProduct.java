@@ -69,6 +69,10 @@ public class ReadOnlyProduct {
     public Map<String, String> getAttributes() {
         return attributes;
     }
+
+    public boolean hasAttribute(String key) {
+        return product.hasAttribute(key);
+    }
    
     /**
      * Return a list of read-only products from the given set of products.

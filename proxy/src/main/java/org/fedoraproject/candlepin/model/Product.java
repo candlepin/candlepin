@@ -220,6 +220,15 @@ public class Product extends AbstractHibernateObject {
         return toReturn;
     }
 
+    public boolean hasAttribute(String key) {
+        for (ProductAttribute attribute : attributes) {
+            if (attribute.getName().equals(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object anObject) {
         if (this == anObject) {

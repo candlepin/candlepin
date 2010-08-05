@@ -100,9 +100,13 @@ var Entitlement = {
 			pre.addError("rulefailed.consumer.already.has.product");
 		}
 	
-		// domain consumers can only consume products for domains
-		if (consumer.getType() == "domain" && product.getAttribute("requires_consumer_type") != "domain") {
-			pre.addError("rulefailed.consumer.type.mismatch");
+		// If the product has no required consumer type, assume it is restricted to "system":
+		if (!product.hasAttribute("requires_consumer_type")) {
+			print("A\n");
+			if (!consumer.getType().equals("system")) {
+				pre.addError("rulefailed.consumer.type.mismatch");
+			}
+
 		}
 		
 		if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
