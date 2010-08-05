@@ -105,6 +105,12 @@ public class Importer {
         this.pki = pki;
     }
 
+    /**
+     * Check to make sure the meta data is newer than the imported data.
+     * @param meta meta.json file
+     * @throws IOException thrown if there's a problem reading the file
+     * @throws ImporterException thrown if the metadata is invalid.
+     */
     public void validateMetaJson(File meta) throws IOException, ImporterException {
         // Only importing a single rules file now.
         //importer.importObject(reader);
