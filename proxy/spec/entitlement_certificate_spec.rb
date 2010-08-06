@@ -25,4 +25,5 @@ describe 'Entitlement Certificate' do
     #Then
     system1.get_certificates.length.should == 1
   end
+
 end

@@ -117,6 +117,7 @@ class Candlepin
     get("/pools/#{poolid}'")
   end
 
+  # TODO: Should be list to match other methods in this lib
   def get_pools(params = {})
     path = "/pools?"
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
@@ -218,6 +219,9 @@ class Candlepin
     end
     
   # TODO: label is unused here, needs to be dropped across the board.
+  # TODO: This could stand to have optional parameters instead of forcing 
+  # every caller to specify all.
+  # TODO: version/variant/arch/type are all attributes, should not be part of method sig
   def create_product(name, hash=nil, multiplier = 1, version = 1, variant = 'ALL',
                      arch='ALL', type='SVC',child_products=[], attributes = {})
     # Generate a hash for the product if one is not supplied

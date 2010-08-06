@@ -1,7 +1,9 @@
 require 'candlepin_api'
+require 'pp'
 
 # Provides initialization and cleanup of data that was used in the scenario
 shared_examples_for 'Candlepin Scenarios' do
+
   before do
     @cp = Candlepin.new('admin', 'admin')
     @owners = []
@@ -33,10 +35,15 @@ module CandlepinMethods
     Candlepin.new(user_name, 'password')
   end
 
-  def consumer_client(user, consumer_name, type=:system)
-    consumer = user.register(consumer_name, type)
+  def consumer_client(cp_client, consumer_name, type=:system)
+    consumer = cp_client.register(consumer_name, type)
     Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
   end
+
+  def random_string(prefix)
+    "%s-%s" % [prefix, rand(100000)]
+  end
+
 end
 
 # This allows for dot notation instead of using hashes for everything

@@ -1,11 +1,11 @@
 require 'openssl'
 require 'candlepin_scenarios'
 
-describe 'Sub Pool' do
+describe 'Sub-Pool' do
   include CandlepinMethods
   it_should_behave_like 'Candlepin Scenarios'
 
-  it 'should have the correct certificate extension for order number' do
+  it 'should inherit order number extension from parent pool' do
     # ===== Given =====
     owner = create_owner 'test_owner'
     derived_product = create_product 'Awesome Linux'
@@ -54,7 +54,8 @@ describe 'Sub Pool' do
     return nil if extension.nil?
 
     value = extension.value
-    value = value[2..-1] if value.match(/^\.\./)    # Weird ssl cert issue - have to strip the leading dots
+    # Weird ssl cert issue - have to strip the leading dots:
+    value = value[2..-1] if value.match(/^\.\./)    
 
     return value
   end
