@@ -89,10 +89,6 @@ public class CustomSSLProtocolSocketFactory extends
                 // new FileInputStream(configuration.getKeyStoreFileLocation()),
                 // passwd);
                 tmf.init(ks2);
-                System.out.println("fdslkjflksdjfls");
-                for (TrustManager tm : tmf.getTrustManagers()) {
-                    System.out.println(tmf);
-                }
                 ctx.init(keyManagers, tmf.getTrustManagers(),
                     new SecureRandom());
             }
