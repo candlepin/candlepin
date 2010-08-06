@@ -102,7 +102,6 @@ var Entitlement = {
 	
 		// If the product has no required consumer type, assume it is restricted to "system":
 		if (!product.hasAttribute("requires_consumer_type")) {
-			print("A\n");
 			if (!consumer.getType().equals("system")) {
 				pre.addError("rulefailed.consumer.type.mismatch");
 			}
