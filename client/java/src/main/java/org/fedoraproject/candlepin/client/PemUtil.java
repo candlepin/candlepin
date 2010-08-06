@@ -85,11 +85,13 @@ public class PemUtil {
 
     public static String extractUUID(X509Certificate cert) {
         String name = cert.getSubjectDN().getName();
-        int location = name.indexOf("UID=");
-        if (location > 0) {
-            name = name.substring(location + 4);
+        int location = name.indexOf("CN=");
+        if (location >= 0) {
+            name = name.substring(location + 3);
             location = name.indexOf(",");
-            name = name.substring(0, location);
+            if (location >= 0) {
+                name = name.substring(0, location);
+            }
         }
         return name;
     }
