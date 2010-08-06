@@ -14,10 +14,12 @@
  */
 package org.fedoraproject.candlepin.util;
 
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.DERUTF8String;
@@ -34,7 +36,14 @@ import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 public class X509ExtensionUtil {
 
     private static Logger log = Logger.getLogger(X509ExtensionUtil.class);
+    private SimpleDateFormat iso8601DateFormat;
 
+    public X509ExtensionUtil() {
+        //Output everything in UTC
+        iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        iso8601DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
+    
     public Set<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
@@ -72,10 +81,10 @@ public class X509ExtensionUtil {
             new DERUTF8String(sub.getQuantity().toString())));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STARTDATE_KEY), false,
-            new DERUTF8String(sub.getStartDate().toString())));
+            new DERUTF8String(iso8601DateFormat.format(sub.getStartDate()))));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
-            new DERUTF8String(sub.getEndDate().toString())));
+            new DERUTF8String(iso8601DateFormat.format(sub.getEndDate()))));
         if (sub.getContractNumber() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
