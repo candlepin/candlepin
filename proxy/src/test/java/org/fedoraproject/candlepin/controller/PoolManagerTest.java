@@ -206,23 +206,26 @@ public class PoolManagerTest {
         assertEquals(s.getStartDate(), p.getStartDate());
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
     public void testUpdatePoolForSubscriptionWithBothChangesAndFewEntitlementsToRegen() {
         final Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         final Pool p = new Pool(s.getOwner(), s.getProduct().getId(), new HashSet<String>(),
             s.getQuantity().longValue() + 4, s.getStartDate(), Util.tomorrow());
-        when(this.mockCurator.retrieveFreeEntitlementsOfPool(any(Pool.class),
-            anyBoolean())).thenReturn(new ArrayList<Entitlement>() {
-                private static final long serialVersionUID = 1L;
+        List<Entitlement> mockedEntitlements = new ArrayList<Entitlement>() {
+            private static final long serialVersionUID = 1L;
 
-                {
-                    for (int i = 0; i < 4; i++) {
-                        add(mock(Entitlement.class));
-                    }
+            {
+                for (int i = 0; i < 4; i++) {
+                    add(mock(Entitlement.class));
                 }
-            });
+            }
+        };
+        when(this.mockCurator.retrieveFreeEntitlementsOfPool(any(Pool.class),
+            anyBoolean())).thenReturn(mockedEntitlements);
         this.manager.updatePoolForSubscription(p, s);
-        verify(mockEntitler, times(4)).regenerateCertificatesOf(any(Entitlement.class));
+        verify(mockEntitler, times(1)).regenerateCertificatesOf(any(Iterable.class));
         verifyAndAssertForAllChanges(s, p);
     }
 
