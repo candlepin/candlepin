@@ -324,6 +324,19 @@ end
 # RSpec functional tests
 #==========================================================================
 Spec::Rake::SpecTask.new do |task|
+
+  # Support optional features env variable, specify the spec files to run
+  # without the trailing '_spec.rb'. Specify multiple by separating with ':'.
+  # i.e. build spec features=flex_expiry:authorization
+  features = ENV['features']
+  if not features.nil?
+    feature_files = Array.new
+    features.split(":").each do |part|
+      feature_files << "spec/#{part}_spec.rb"
+    end
+    task.spec_files = feature_files
+  end
+
   task.libs << '../client/ruby' 
   task.spec_opts << '-f specdoc'
 end
