@@ -29,7 +29,7 @@ public class AccessControlValidator {
     }
     
     public static boolean shouldGrantAccess(Pool accessed, Consumer consumer) {
-        return accessed.getOwner().getConsumers().contains(consumer);
+        return accessed.getOwner().getId().equals(consumer.getOwner().getId());
     }
     
     public static boolean shouldGrantAccess(Pool accessed, Owner owner) {
