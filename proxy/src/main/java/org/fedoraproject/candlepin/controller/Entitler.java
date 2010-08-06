@@ -170,10 +170,8 @@ public class Entitler {
 
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
-        // TODO: This does not look like it should need a merge, just edit
-        // the pool directly.
-        Pool mergedPool = epCurator.merge(pool);
-        generateEntitlementCertificate(consumer, mergedPool, e);
+
+        generateEntitlementCertificate(consumer, pool, e);
         return e;
     }
 

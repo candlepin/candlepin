@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.service.impl.test;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.verify;
 
@@ -23,6 +24,7 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -101,6 +103,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
         entitlement.setConsumer(Mockito.mock(Consumer.class));
+        entitlement.setStartDate(subscription.getStartDate());
+        entitlement.setEndDate(subscription.getEndDate());
+        entitlement.setFlexExpiryDays(60);
         
         product.setContent(Collections.singleton(content));
     }
@@ -110,6 +115,23 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // AAAH!  This should be pulled out to its own test class!
         Set<X509ExtensionWrapper> content = extensionUtil.contentExtensions(product);
         assertTrue(isEncodedContentValid(content));
+    }
+
+    @Test
+    public void flexExpiryDates() throws Exception {
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair());
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(subscription.getEndDate());
+        cal.add(Calendar.DATE, entitlement.getFlexExpiryDays());
+        Date expectedEndDate = cal.getTime();
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsContentExtensions()),
+            any(Date.class), eq(expectedEndDate), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
     }
 
     @Test

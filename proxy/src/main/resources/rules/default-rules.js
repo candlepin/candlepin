@@ -21,7 +21,8 @@ var Entitlement = {
 				"architecture:1:arch, " +
 				"sockets:1:sockets, " +
 				"requires_consumer_type:1:requires_consumer_type," +
-				"user_license:1:user_license";
+				"user_license:1:user_license," +
+				"flex_expiry:1:flex_expiry";
 	},
 		
 	post_user_license: function() {
@@ -38,6 +39,11 @@ var Entitlement = {
 				attributes.get("user_license"));
 	},
 	
+	post_flex_expiry: function() {
+		var flexDays = parseInt(attributes.get("flex_expiry"));
+		post.setFlexExpiryDays(flexDays);
+	},
+
 	pre_requires_consumer_type: function() {
 		if (!attributes.get("requires_consumer_type").equals(consumer.getType())) {
 			pre.addError("rulefailed.consumer.type.mismatch");

@@ -129,6 +129,8 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     
     private Integer quantity;
 
+    private Integer flexExpiryDays = 0;
+
     /**
      * default ctor
      */
@@ -303,5 +305,13 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     @Override
     public boolean shouldGrantAccessTo(Consumer consumer) {
         return this.consumer.equals(consumer);
+    }
+
+    public Integer getFlexExpiryDays() {
+        return flexExpiryDays;
+    }
+
+    public void setFlexExpiryDays(Integer flexExpiryDays) {
+        this.flexExpiryDays = flexExpiryDays;
     }
 }

@@ -44,6 +44,20 @@ module CandlepinMethods
     "%s-%s" % [prefix, rand(100000)]
   end
 
+  # TODO:  This might be better if it were added to
+  # the OpenSSL::X509::Certificate class
+  def get_extension(cert, oid)
+    extension = cert.extensions.select { |ext| ext.oid == oid }[0]
+
+    return nil if extension.nil?
+
+    value = extension.value
+    # Weird ssl cert issue - have to strip the leading dots:
+    value = value[2..-1] if value.match(/^\.\./)
+
+    return value
+  end
+
 end
 
 # This allows for dot notation instead of using hashes for everything
