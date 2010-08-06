@@ -18,6 +18,8 @@ import java.util.Arrays;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -34,6 +36,7 @@ import com.google.inject.Provider;
  */
 public class AccessControlInterceptor implements MethodInterceptor {
     
+    private Log log = LogFactory.getLog(AccessControlInterceptor.class);
     @Inject private Provider<Principal> principalProvider;
     
     @Override
@@ -94,17 +97,19 @@ public class AccessControlInterceptor implements MethodInterceptor {
             ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
             if (!((AccessControlEnforced) entity).shouldGrantAccessTo(
                 consumer.consumer())) {
-                
+                log.warn("Denying: " + currentUser + " access to: " + entity);
                 throw new ForbiddenException("access denied.");
             }
         }
         else if (Role.OWNER_ADMIN == role) {
             if (!((AccessControlEnforced) entity)
                 .shouldGrantAccessTo(currentUser.getOwner())) {
+                log.warn("Denying: " + currentUser + " access to: " + entity);
                 throw new ForbiddenException("access denied.");
             }
         }
         else {
+            log.warn("Denying: " + currentUser + " access to: " + entity);
             throw new ForbiddenException("access denied.");
         }
     }
