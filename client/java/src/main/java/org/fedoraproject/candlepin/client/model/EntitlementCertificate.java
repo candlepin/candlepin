@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.client.model;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -119,5 +120,19 @@ public class EntitlementCertificate extends ProductCertificate {
     @JsonIgnore
     public void setEntitlement(Entitlement entitlement) {
 
+    }
+    
+    public Date getStartDate() {
+        return getOrder().getStartDate();
+    }
+    
+    public Date getEndDate() {
+        return getOrder().getEndDate();
+    }
+    
+    public boolean isValidWithGracePeriod() {
+        Date currentDate = new Date();
+        return currentDate.after(super.getStartDate()) &&
+            currentDate.before(super.getEndDate());
     }
 }

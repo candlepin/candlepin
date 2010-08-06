@@ -14,6 +14,11 @@
  */
 package org.fedoraproject.candlepin.client.model;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.math.NumberUtils;
 
@@ -21,14 +26,16 @@ import org.apache.commons.lang.math.NumberUtils;
  * Order
  */
 public class Order {
-
     private Extensions ex;
+    private SimpleDateFormat iso8601DateFormat;
 
     /**
      * @param extensions
      */
     public Order(Extensions extensions) {
         this.ex = extensions;
+        iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        iso8601DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     public String getName() {
@@ -64,4 +71,22 @@ public class Order {
         return ToStringBuilder.reflectionToString(this);
     }
 
+    public Date getStartDate() {
+        return parseDate(ex.getValue("6"));
+    }
+
+    public Date getEndDate() {
+        return parseDate(ex.getValue("7"));
+    }
+    
+    private Date parseDate(String date) {
+        try {
+            return iso8601DateFormat.parse(date.trim());
+        }
+        catch (ParseException e) {
+            // returning the current time assuming both fields are bad will at least make
+            // the cert invalid
+            return new Date();
+        }
+    }
 }
