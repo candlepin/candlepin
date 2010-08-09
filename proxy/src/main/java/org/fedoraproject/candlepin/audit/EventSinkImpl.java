@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
@@ -39,6 +40,8 @@ public class EventSinkImpl implements EventSink {
     private static Logger log = Logger.getLogger(EventSinkImpl.class);
     private EventFactory eventFactory;
     private ClientSessionFactory factory;
+    private ClientSession clientSession;
+    private ClientProducer clientProducer;
     private int largeMsgSize;
 
     @Inject
@@ -50,29 +53,28 @@ public class EventSinkImpl implements EventSink {
 
         largeMsgSize = new Config().getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
         factory.setMinLargeMessageSize(largeMsgSize);
+        try {
+            clientSession = factory.createSession();
+            clientProducer = clientSession.createProducer(EventSource.QUEUE_ADDRESS);
+        }
+        catch (HornetQException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     public void sendEvent(Event event) {
         if (log.isDebugEnabled()) {
             log.debug("Sending event - " + event);
         }
-        
         try {
-            ClientSession session = factory.createSession();
-            
-            ClientProducer producer = session.createProducer(EventSource.QUEUE_ADDRESS);
-            
-            ClientMessage message = session.createMessage(true);
-            
+            ClientMessage message = clientSession.createMessage(true);
             ObjectMapper mapper = new ObjectMapper();
             String eventString = mapper.writeValueAsString(event);
             message.getBodyBuffer().writeString(eventString);
-            
-            producer.send(message);
-            session.close();
+            clientProducer.send(message);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error while trying to send event: " + event, e);
         }
     }
     
