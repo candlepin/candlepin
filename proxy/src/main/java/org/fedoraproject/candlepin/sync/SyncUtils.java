@@ -31,8 +31,8 @@ import org.fedoraproject.candlepin.exceptions.IseException;
 class SyncUtils {
 
     private final File baseDir;
-    SyncUtils() {
-        baseDir = new File(new Config().getString(ConfigProperties.SYNC_WORK_DIR));
+    SyncUtils(Config config) {
+        baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
         if (!baseDir.exists()) {
             if (!baseDir.mkdirs()) {
                 throw new IseException(
