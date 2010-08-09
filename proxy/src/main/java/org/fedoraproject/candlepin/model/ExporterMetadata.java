@@ -54,7 +54,7 @@ public class ExporterMetadata extends AbstractHibernateObject {
         return id;
     }
 
-    public void setLong(Long anId) {
+    public void setId(Long anId) {
         id = anId;
     }
 
