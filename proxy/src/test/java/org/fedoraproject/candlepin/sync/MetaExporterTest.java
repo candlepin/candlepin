@@ -35,7 +35,7 @@ public class MetaExporterTest {
         
         StringWriter writer = new StringWriter();
         
-        meta.export(mapper, writer);
+        meta.export(mapper, writer, new Meta());
         assertTrue(writer.toString().contains("\"version\":\"0.0.0\""));
     }
 

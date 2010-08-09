@@ -14,26 +14,14 @@
  */
 package org.fedoraproject.candlepin.sync;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.ExporterMetadata;
+import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -41,6 +29,22 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Exporter
@@ -64,6 +68,7 @@ public class Exporter {
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entitlementCurator;
     private PKIUtility pki;
+    private ExporterMetadataCurator expMetaCurator;
 
 
     
@@ -74,7 +79,7 @@ public class Exporter {
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter, 
-        PKIUtility pki) {
+        PKIUtility pki, ExporterMetadataCurator emc) {
         
         mapper = SyncUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
@@ -91,6 +96,7 @@ public class Exporter {
         this.entitlementCurator = entitlementCurator;
         this.entExporter = entExporter;
         this.pki = pki;
+        this.expMetaCurator = emc;
     }
 
     public File getExport(Consumer consumer) throws ExportCreationException {
@@ -239,16 +245,21 @@ public class Exporter {
     }
 
     private void exportMeta(File baseDir) throws IOException {
+        ExporterMetadata em = expMetaCurator.lookupByType(ExporterMetadata.TYPE_METADATA);
+        if (em != null) {
+            em.setExported(new Date());
+        }
+        else {
+            em = new ExporterMetadata();
+            em.setType(ExporterMetadata.TYPE_METADATA);
+            em.setExported(new Date());
+            em = expMetaCurator.create(em);
+        }
+
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
         FileWriter writer = new FileWriter(file);
-        meta.export(mapper, writer);
+        meta.export(mapper, writer, null);
         writer.close();
-
-        // TODO: store in DB
-        File save = new File("/tmp/metadata");
-        FileWriter savewriter = new FileWriter(save);
-        meta.export(mapper, savewriter);
-        savewriter.close();
     }
     
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {

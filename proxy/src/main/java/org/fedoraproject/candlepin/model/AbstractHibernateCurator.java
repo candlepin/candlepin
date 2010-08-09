@@ -85,6 +85,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return query.getExecutableCriteria(currentSession()).list();
     }
     
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @EnforceAccessControl
+    public E getByCriteria(DetachedCriteria query) {
+        return (E) query.getExecutableCriteria(currentSession()).uniqueResult();
+    }
+
     /**
      * @param entity to be deleted.
      */

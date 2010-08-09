@@ -12,27 +12,27 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.sync;
+package org.fedoraproject.candlepin.model;
 
 import com.google.inject.Inject;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
-import java.io.IOException;
-import java.io.Writer;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
 
 /**
- * Meta maps to meta.json in the export
- * 
+ * ExportMetadataCurator
  */
-public class MetaExporter {
+public class ExporterMetadataCurator extends AbstractHibernateCurator<ExporterMetadata> {
 
     @Inject
-    MetaExporter() {
+    public ExporterMetadataCurator() {
+        super(ExporterMetadata.class);
     }
 
-    void export(ObjectMapper mapper, Writer writer, Meta meta) throws IOException {
-        mapper.writeValue(writer, meta);
+    public ExporterMetadata lookupByType(String type) {
+        DetachedCriteria query = DetachedCriteria.forClass(ExporterMetadata.class);
+        query.add(Restrictions.eq("type", type));
+        return getByCriteria(query);
     }
 
 }
