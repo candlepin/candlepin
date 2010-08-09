@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 
 import com.wideplay.warp.persist.Transactional;
@@ -66,6 +67,21 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
 
         merge(p);
+    }
+
+    @Transactional
+    @EnforceAccessControl
+    public Product create(Product entity) {
+
+        /* Ensure all referenced ProductAttributes are correctly pointing to
+         * this product. This is useful for products being created from
+         * incoming json.
+         */
+        for (ProductAttribute attr : entity.getAttributes()) {
+            attr.setProduct(entity);
+        }
+
+        return super.create(entity);
     }
 
 }

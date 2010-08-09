@@ -302,4 +302,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return (Pool) currentSession().createCriteria(Pool.class)
         .add(Restrictions.eq("subscriptionId", subId)).uniqueResult();
     }
+
+    @Transactional
+    @EnforceAccessControl
+    public Pool create(Pool entity) {
+
+        /* Ensure all referenced PoolAttributes are correctly pointing to
+         * this pool. This is useful for pools being created from
+         * incoming json.
+         */
+        for (PoolAttribute attr : entity.getAttributes()) {
+            attr.setPool(entity);
+        }
+
+        return super.create(entity);
+    }
 }

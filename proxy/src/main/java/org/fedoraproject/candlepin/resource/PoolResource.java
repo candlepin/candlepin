@@ -35,9 +35,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.xnap.commons.i18n.I18n;
 
@@ -49,12 +47,10 @@ import com.google.inject.Inject;
 
 @Path("/pools")
 public class PoolResource {
-    //private static Logger log = Logger.getLogger(PoolResource.class);
 
     private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
-    private ProductServiceAdapter productServiceAdapter;
     private I18n i18n;
     private EventSink eventSink;
 
@@ -62,13 +58,11 @@ public class PoolResource {
     public PoolResource(
         PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
-        ProductServiceAdapter productServiceAdapter,
         I18n i18n,
         EventSink eventSink) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
-        this.productServiceAdapter = productServiceAdapter;
         this.i18n = i18n;
         this.eventSink = eventSink;
     }
@@ -146,12 +140,6 @@ public class PoolResource {
         }
 
         pool.setOwner(owner);
-        
-        // Make sure all the pool attributes correctly reference this pool, as this is
-        // awkward for the incoming json/xml to do:
-        for (PoolAttribute attr : pool.getAttributes()) {
-            attr.setPool(pool);
-        }
         
         Pool toReturn = poolCurator.create(pool);
         

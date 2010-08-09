@@ -30,7 +30,6 @@ import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.model.ProductContent;
@@ -125,12 +124,6 @@ public class ProductResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public Product createProduct(Product product) {
-        // Rather than force incoming json/xml to map each attribute to the product
-        // it's already nested beneath, we'll manually make sure they all point to the
-        // correct product here:
-        for (ProductAttribute attr : product.getAttributes()) {
-            attr.setProduct(product);
-        }
         return prodAdapter.createProduct(product);
     }   
     
