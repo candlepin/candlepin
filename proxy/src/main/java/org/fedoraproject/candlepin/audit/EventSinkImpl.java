@@ -31,10 +31,12 @@ import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * EventSink - Reliably dispatches events to all configured listeners.
  */
+@Singleton
 public class EventSinkImpl implements EventSink {
     
     private static Logger log = Logger.getLogger(EventSinkImpl.class);
