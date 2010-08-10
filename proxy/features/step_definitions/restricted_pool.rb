@@ -62,7 +62,7 @@ When /^I consume entitlement from pool for consumer of type person$/ do
 end
 
 Then /^a new pool should have been created$/ do
-   pools = @person_cp.get_pools({ :consumer => @uuid})
+   pools = @person_cp.list_pools({ :consumer => @uuid})
    pools.size.should == 2
    @new_pool = pools.find { |pool| pool['id'] != @pool['id'] }
 end
@@ -96,7 +96,7 @@ Then /^I should not be able to consume entitlement for a system "([^\"]*)" does 
 end
 
 Then /^one of "([^\"]*)" pools should be unlimited pool$/ do |arg1|
-  any_unlimited_present(get_client(arg1).get_pools({ :consumer => @uuid})).should == true
+  any_unlimited_present(get_client(arg1).list_pools({ :consumer => @uuid})).should == true
 end
 
 def any_unlimited_present(pools)
@@ -104,7 +104,7 @@ def any_unlimited_present(pools)
 end
 
 Then /^pools from "([^\"]*)" pools should not be unlimited pool$/ do |arg1|
-  any_unlimited_present(get_client(arg1).get_pools({ :consumer => @uuid})).should == false
+  any_unlimited_present(get_client(arg1).list_pools({ :consumer => @uuid})).should == false
 end
 
 Then /^another consumer cannot see user-restricted pool$/ do
@@ -112,7 +112,7 @@ Then /^another consumer cannot see user-restricted pool$/ do
    tmp_client = Candlepin.new('alice', 'password')
    alice_consumer = tmp_client.register(nil, :person)
    alice_client = create_client(alice_consumer)
-   any_unlimited_present(alice_client.get_pools()).should == false
+   any_unlimited_present(alice_client.list_pools()).should == false
 end
 
 Then /^the consumer's username should be "([^\"]*)"$/ do |arg1|
@@ -128,5 +128,5 @@ When /^I delete consumer "([^\"]*)"$/ do |consumer_name|
 end
 
 Then /^pool of unlimited license should be deleted too$/ do
-  @candlepin.get_pools.any? {|pool| pool['restrictedToUsername'] != nil}.should == false
+  @candlepin.list_pools.any? {|pool| pool['restrictedToUsername'] != nil}.should == false
 end

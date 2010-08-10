@@ -40,11 +40,11 @@ Then /^consumer "([^\"]*)" has (\d+) entitlement[s]?$/ do |consumer_name, entitl
 end
 
 Then /^I have (\d+) certificate[s]?$/ do |certificates_size|
-    @consumer_cp.get_certificates.length.should == certificates_size.to_i
+    @consumer_cp.list_certificates.length.should == certificates_size.to_i
 end
 
 Then /^I have (\d+) certificate serial number$/ do |serials_size|
-    @consumer_cp.get_certificate_serials.length.should == serials_size.to_i
+    @consumer_cp.list_certificate_serials.length.should == serials_size.to_i
 end
 
 Then /^I have an entitlement for the "([^\"]*)" product$/ do |product_id|
@@ -58,7 +58,7 @@ end
 # need a test for a Pool created with a productid that doesn't exist...
 
 When /I consume an entitlement for the "([^\"]*)" pool$/ do |pool|
-  all_pools = @consumer_cp.get_pools({:consumer => @consumer_cp.consumer['uuid']})
+  all_pools = @consumer_cp.list_pools({:consumer => @consumer_cp.consumer['uuid']})
  
   product_pools = all_pools.select {|p| p.has_value?(pool)}
   product_pools.empty?.should == false

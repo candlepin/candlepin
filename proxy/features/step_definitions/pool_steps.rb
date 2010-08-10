@@ -3,7 +3,7 @@ require 'spec/expectations'
 Then /^consumer "([^\"]*)" has access to a pool for product "([^\"]*)"$/ do |consumer_name, product_name|
   consumer = @consumer_clients[consumer_name]
 
-  pools = consumer.get_pools(:consumer => consumer.uuid)
+  pools = consumer.list_pools(:consumer => consumer.uuid)
   products = pools.collect { |pool| pool['productName'] }
 
   products.should include(product_name)
@@ -32,30 +32,30 @@ Given /^I have a pool of quantity (\d+) for "([^\"]*)" with the following attrib
 end
 
 When /^I view all of my pools$/ do
-  @found_pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid,
+  @found_pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid,
                                         :listall => true)
 end
 
 When /^I view all pools for my owner$/ do
-  @found_pools = @candlepin.get_pools(:owner => @test_owner['id'])
+  @found_pools = @candlepin.list_pools(:owner => @test_owner['id'])
 end
 
 Then /^I have access to a pool for product "([^\"]*)"$/ do |product_name|
-  pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid)
+  pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid)
   products = pools.collect { |pool| pool['productName'] }
 
   products.should include(product_name)
 end
 
 Then /^I do not have access to a pool for product "([^\"]*)"$/ do |product_name|
-  pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid)
+  pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid)
   products = pools.collect { |pool| pool['productName'] }
 
   products.should_not include(product_name)
 end
 
 Then /^I have access to (\d*) pools?$/ do |num_pools|
-  pools = @consumer_cp.get_pools(:consumer => @consumer_cp.uuid)
+  pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid)
 
   pools.length.should == num_pools.to_i
 end
@@ -73,11 +73,11 @@ Then /^I see (\d*) available entitlements$/ do |num_entitlements|
 end
 
 Given /^test owner has no pools for "([^\"]*)"$/ do |productid|
-  pools = @candlepin.get_pools({:owner => @test_owner['id'], :product => productid.hash.abs})
+  pools = @candlepin.list_pools({:owner => @test_owner['id'], :product => productid.hash.abs})
   pools.length.should == 0
 end
 
 Then /^test owner has (\d+) pool for "([^\"]*)"$/ do |count, productid|
-  pools = @candlepin.get_pools({:owner => @test_owner['id'], :product => productid.hash.abs})
+  pools = @candlepin.list_pools({:owner => @test_owner['id'], :product => productid.hash.abs})
   pools.length.should == count.to_i
 end

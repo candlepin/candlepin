@@ -23,7 +23,7 @@ describe 'Entitlement Certificate' do
     system1.consume_product monitoring.id
 
     #Then
-    system1.get_certificates.length.should == 1
+    system1.list_certificates.length.should == 1
   end
 
 end

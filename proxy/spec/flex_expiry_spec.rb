@@ -20,7 +20,7 @@ describe 'Flex Expiry' do
     sub = @cp.create_subscription(owner.id, flex_product.id, 100, [], '',
       "2010-05-01", "2050-05-01")
     @cp.refresh_pools owner.key
-    pool = @cp.get_pools(:owner => owner.id).first
+    pool = @cp.list_pools(:owner => owner.id).first
 
     # Make sure we got the right pool:
     pool.subscriptionId.should == sub.id
@@ -30,7 +30,7 @@ describe 'Flex Expiry' do
     consumer_client = consumer_client(owner_client, random_string('testsystem'))
 
     result = consumer_client.consume_pool pool.id
-    ent_cert = consumer_client.get_certificates.first
+    ent_cert = consumer_client.list_certificates.first
 
     ent_cert.entitlement.flexExpiryDays.should == 30
 

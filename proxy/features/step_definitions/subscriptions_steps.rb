@@ -47,7 +47,7 @@ When /^I delete the subscription for product "([^\"]*)"$/ do |product|
 end
 
 Then /^I have (\d+) subscriptions$/ do |subscription_size|
-    subscriptions = @current_owner_cp.get_subscriptions(@test_owner['id'])
+    subscriptions = @current_owner_cp.list_subscriptions(@test_owner['id'])
     subscriptions.length.should == subscription_size.to_i
 end
 
@@ -62,25 +62,25 @@ def create_subscription(product, quantity)
 end
 
 When /^test owner changes the "([^\"]*)" of the subscription by (-{0,1}\d+) days$/ do |field, d|
-  subscription = @current_owner_cp.get_subscriptions(@test_owner['id'])[0]
+  subscription = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
   subscription[field] = subscription[field].to_date + d.to_i
   @candlepin.update_subscription(@test_owner['id'], subscription)
 end
 
 When /^he refreshes the pools$/ do
-  @old_certs = @consumer_cp.get_certificates()
+  @old_certs = @consumer_cp.list_certificates()
   @candlepin.refresh_pools(@test_owner['key'])
 end
 
 When /^test owner changes the quantity of the subscription by (-{0,1}\d+)$/ do |q|
- subscription = @current_owner_cp.get_subscriptions(@test_owner['id'])[0]
+ subscription = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
  subscription['quantity'] = subscription['quantity'].to_i + q.to_i
  @candlepin.update_subscription(@test_owner['id'], subscription)
 end
 
 Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |arg1|
-  @new_certs = @consumer_cp.get_certificates()
-  subs = @current_owner_cp.get_subscriptions(@test_owner['id'])[0]
+  @new_certs = @consumer_cp.list_certificates()
+  subs = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
   certs = {}
   @new_certs.each do |cert|
     temp = OpenSSL::X509::Certificate.new(cert['cert'])

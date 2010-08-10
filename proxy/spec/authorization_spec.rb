@@ -10,6 +10,6 @@ describe 'Authorization' do
 
   it 'should return a 401 if user credentials are invalid' do
     cp = Candlepin.new('random', 'not valid')
-    lambda {cp.get_owners}.should raise_exception(RestClient::Request::Unauthorized)
+    lambda {cp.list_owners}.should raise_exception(RestClient::Request::Unauthorized)
   end
 end

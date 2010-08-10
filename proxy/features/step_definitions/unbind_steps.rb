@@ -6,7 +6,7 @@ When /^I unbind my "([^\"]*)" entitlement$/ do |product_id|
 end
 
 Then /^my "([^\"]*)" entitlement is returned to the pool$/ do |product_id|
-    unbound_consumed = @consumer_cp.get_pools(:product=>product_id.hash.abs,
+    unbound_consumed = @consumer_cp.list_pools(:product=>product_id.hash.abs,
                                             :consumer=>@consumer_cp.uuid)[0]['consumed']
     unbound_consumed.should == @consumed - 1
 end

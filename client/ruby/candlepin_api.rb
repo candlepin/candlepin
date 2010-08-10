@@ -63,7 +63,7 @@ class Candlepin
     put("/consumers/#{uuid}", consumer)
   end
 
-  def get_owners(params = {})
+  def list_owners(params = {})
     path = "/owners?"
     path << "key=#{params[:key]}&" if params[:key]
     get(path)
@@ -95,7 +95,7 @@ class Candlepin
     post("/owners/#{owner_id}/users", user)
   end
 
-  def get_consumer_types
+  def list_consumer_types
     get('/consumertypes')
   end
 
@@ -119,8 +119,7 @@ class Candlepin
     get("/pools/#{poolid}'")
   end
 
-  # TODO: Should be list to match other methods in this lib
-  def get_pools(params = {})
+  def list_pools(params = {})
     path = "/pools?"
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "owner=#{params[:owner]}&" if params[:owner]
@@ -169,12 +168,6 @@ class Candlepin
     rescue Exception => e
       puts e.response
     end
-  end
-
-  # TODO: Add support for serial filtering:
-  def get_certificates()
-    path = "/consumers/#{@uuid}/certificates"
-    return get(path)
   end
 
   def get_entitlement(entitlement_id)
@@ -290,7 +283,7 @@ class Candlepin
     delete("/consumers/#{@uuid}/entitlements/#{eid}")
   end
 
-  def get_subscriptions(owner_id)
+  def list_subscriptions(owner_id)
     return get("/owners/#{owner_id}/subscriptions")
   end
 
@@ -320,7 +313,7 @@ class Candlepin
     return delete("/subscriptions/#{subscription_id}")
   end
 
-  def get_subscription_tokens
+  def list_subscription_tokens
     return get("/subscriptiontokens")
   end
 
@@ -332,7 +325,7 @@ class Candlepin
     return delete("/subscriptiontokens/#{subscription}")
   end
 
-  def get_certificates(serials = [])
+  def list_certificates(serials = [])
     path = "/consumers/#{@uuid}/certificates"
     path += "?serials=" + serials.join(",") if serials.length > 0
     return get(path)
@@ -350,19 +343,15 @@ class Candlepin
     return get("/status/")
   end
 
-  def get_certificate_serials
+  def list_certificate_serials
     return get("/consumers/#{@uuid}/certificates/serials")
-  end
-
-  def get_all_serials
-    get('/serials')
   end
 
   def get_serial(serial_id)
     get("/serials/#{serial_id}")
   end
 
-  def get_consumer_events(consumer_id=nil)
+  def list_consumer_events(consumer_id=nil)
     consumer_id ||= @uuid
     get_text("/consumers/#{consumer_id}/atom")
   end

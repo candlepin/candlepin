@@ -38,7 +38,7 @@ data["owners"].each do |new_owner|
 end
 
 # the user to create the users as, use the first one...
-owners = cp.get_owners()
+owners = cp.list_owners()
 owner_id = owners[0]['id']
 owner_key = owners[0]['key']
 

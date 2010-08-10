@@ -69,7 +69,7 @@ def assert_entitlement_certificates
   exported_entitlement_certs = files_in_dir(entitlement_certs_dir)
   
   available_certs ||= {}
-  @consumer_cp.get_certificates.each do |c|
+  @consumer_cp.list_certificates.each do |c|
     available_certs[c['serial']] = c
   end
   
@@ -87,7 +87,7 @@ def assert_consumer_types
   exported_consumer_types = files_in_dir(consumer_types_dir)
   
   available_consumer_types ||= {}
-  @candlepin.get_consumer_types.each do |t|
+  @candlepin.list_consumer_types.each do |t|
     available_consumer_types[t['label']] = t
   end
   
@@ -112,7 +112,7 @@ def assert_pools
   entitlements_dir = File.join(@export_dir, 'entitlements')
   
   available_pools ||= {}
-  @consumer_cp.get_pools(@consumer['uuid']).each do |p|
+  @consumer_cp.list_pools(@consumer['uuid']).each do |p|
     available_pools[p['productId']] = p
   end
   exported_entitlements = files_in_dir(entitlements_dir)

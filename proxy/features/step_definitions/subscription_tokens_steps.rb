@@ -8,7 +8,7 @@ Before do
 end
 
 Then /^I have at least (\d+) subscription token[s]?$/ do |token_size|
-    tokens = @candlepin.get_subscription_tokens()
+    tokens = @candlepin.list_subscription_tokens()
     tokens.length.should >= token_size.to_i
 
     # XXX tokens are backwards for standalone right now, refering to existing
@@ -55,7 +55,7 @@ Then /^I can delete a subscription token "([^\"]*)"$/ do |token_name|
 end
 
 def get_token_id(token_name)
-    tokens = @candlepin.get_subscription_tokens()
+    tokens = @candlepin.list_subscription_tokens()
     matches = tokens.find_all{|token|
         token['token'] == token_name}
 

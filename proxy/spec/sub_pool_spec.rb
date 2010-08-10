@@ -37,7 +37,7 @@ describe 'Sub-Pool' do
     system1.consume_product derived_product.id
 
     # ===== Then =====
-    entitlement_cert = system1.get_certificates.first
+    entitlement_cert = system1.list_certificates.first
     cert = OpenSSL::X509::Certificate.new(entitlement_cert.cert)
 
     # TODO:  This magic OID should be refactored...
