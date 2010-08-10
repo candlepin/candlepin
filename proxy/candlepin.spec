@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.28
+Version: 0.0.29
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,32 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Aug 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.29-1
+- ruby: More consistent list method names. (dgoodwin@redhat.com)
+- Support GET /owners?key=X. (dgoodwin@redhat.com)
+- make EventSinkImpl singleton (anadathu@redhat.com)
+- Add server side support for flex expiry. (dgoodwin@redhat.com)
+- re-use session and producer in hornetq (anadathu@redhat.com)
+- Fix bug with product import. (dgoodwin@redhat.com)
+- store the order start and end date in iso8601 format (and utc) (jbowes@redhat.com)
+- fix junit failure in PoolManagerTest (anadathu@redhat.com)
+- rspec: Test touchups. (dgoodwin@redhat.com)
+- Add some logging for ForbiddenExceptions. (dgoodwin@redhat.com)
+- rspec: Support running specific spec files from buildr. (dgoodwin@redhat.com)
+- rspec: Use nested output when running from buildr. (dgoodwin@redhat.com)
+- Remove print from rules. (dgoodwin@redhat.com)
+- Fix access control bug for consumers binding by pool. (dgoodwin@redhat.com)
+- Modify rules to require system consumer type by default. (dgoodwin@redhat.com)
+- schemadiff: fix diff ordering (jbowes@redhat.com)
+- Adding some test coverage for JsonProvider. (jharris@redhat.com)
+- 615362  -Translated strings were not being packaged correctly. Added them
+  into the build as well as a sample test string to test against (bkearney@redhat.com)
+- Fix product/pool attribute mappings. (dgoodwin@redhat.com)
+- 615404 - changed the name (bkearney@redhat.com)
+- Fix person consumer association. (dgoodwin@redhat.com)
+- fixed resource leaks (ddolguik@redhat.com)
+- replaced '==' comparison with a call to #equals (ddolguik@redhat.com)
+
 * Mon Aug 02 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.28-1
 - rename consumer -> consumerExporter avoids warning. (jesusr@redhat.com)
 - don't bother with the assignment, just return it (jesusr@redhat.com)
