@@ -63,8 +63,10 @@ class Candlepin
     put("/consumers/#{uuid}", consumer)
   end
 
-  def get_owners
-    get('/owners')
+  def get_owners(params = {})
+    path = "/owners?"
+    path << "key=#{params[:key]}&" if params[:key]
+    get(path)
   end
 
   def get_owner(owner_id)

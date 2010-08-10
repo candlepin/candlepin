@@ -132,7 +132,18 @@ public class OwnerResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "owners")    
-    public List<Owner> list() {
+    public List<Owner> list(@QueryParam("key") String keyFilter) {
+
+        // For now, assuming key filter is just one key:
+        if (keyFilter != null) {
+            List<Owner> results = new LinkedList<Owner>();
+            Owner o = ownerCurator.lookupByKey(keyFilter);
+            if (o != null) {
+                results.add(o);
+            }
+            return results;
+        }
+
         return ownerCurator.listAll();
     }
 

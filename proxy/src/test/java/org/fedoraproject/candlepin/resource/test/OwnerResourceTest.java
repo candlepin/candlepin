@@ -282,7 +282,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        ownerResource.list();
+        ownerResource.list(null);
     }
 
     @Test(expected = ForbiddenException.class)
