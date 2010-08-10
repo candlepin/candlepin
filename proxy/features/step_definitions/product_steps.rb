@@ -53,8 +53,8 @@ def create_product(product_name, product_id=nil, multiplier=1, attrs={})
   # Product ID is a string - just reuse the name for simplicity
   product_id ||= product_name.hash.abs
 
-  @products[product_name] = @candlepin.create_product(product_name, product_id, multiplier,
-                                                      1, 'ALL', 'ALL', 'SVC', [], attrs)
+  @products[product_name] = @candlepin.create_product(product_id, product_name,
+      {:multiplier => multiplier, :attributes => attrs})
 end
 
 def get_product_certificate(product_name)

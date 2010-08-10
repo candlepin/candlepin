@@ -158,7 +158,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         // Add extensions for this product, unless it is a MKT product,
         // then we just want the childProducts
-        if (!product.getAttributeValue("type").equals("MKT")) {
+        if (product.hasAttribute("type") &&
+            !product.getAttributeValue("type").equals("MKT")) {
             extensions.addAll(extensionUtil.productExtensions(product));
             extensions.addAll(extensionUtil.contentExtensions(product));
         }

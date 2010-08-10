@@ -8,13 +8,12 @@ describe 'Sub-Pool' do
   it 'should inherit order number extension from parent pool' do
     # ===== Given =====
     owner = create_owner 'test_owner'
-    derived_product = create_product 'Awesome Linux'
-    parent_product = create_product('Unlimited Install Linux',
-      nil, 1, 1, 'ALL','ALL', 'SVC',[], {
-      'user_license' => 'unlimited',
-      'user_license_product' => derived_product.id,
-      'requires_consumer_type' => 'person'
-    })
+    derived_product = create_product()
+    parent_product = create_product(nil, nil, {:attributes => {
+            'user_license' => 'unlimited',
+            'user_license_product' => derived_product.id,
+            'requires_consumer_type' => 'person'
+    }})
 
     # Create a subscription
     subscription = @cp.create_subscription(owner.id, parent_product.id, 5)

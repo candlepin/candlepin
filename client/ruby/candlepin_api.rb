@@ -209,27 +209,18 @@ class Candlepin
     get("/content/id/#{content_id}")
   end
 
-    def add_content_to_product(product_uuid, content_id, enabled=true) 
-      post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
-    end
+  def add_content_to_product(product_uuid, content_id, enabled=true)
+    post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
+  end
     
-  # TODO: label is unused here, needs to be dropped across the board.
-  # TODO: This could stand to have optional parameters instead of forcing 
-  # every caller to specify all.
-  # TODO: version/variant/arch/type are all attributes, should not be part of method sig
-  def create_product(name, hash=nil, multiplier = 1, version = 1, variant = 'ALL',
-                     arch='ALL', type='SVC',child_products=[], attributes = {})
-    # Generate a hash for the product if one is not supplied
-    hash ||= name.hash.abs
+  def create_product(id, name, params={})
 
-    attributes['arch'] = arch
-    attributes['version'] = version
-    attributes['variant'] = variant
-    attributes['type'] = type
+    multiplier = params[:multiplier] || 1
+    attributes = params[:attributes] || {}
 
     product = {
       'name' => name,
-      'id' => hash,
+      'id' => id,
       'multiplier' => multiplier,
       'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
     }

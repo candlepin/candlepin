@@ -8,8 +8,8 @@ describe 'Flex Expiry' do
 
   def create_flex_expiry_product
     product_id = random_string('testproduct')
-    return create_product(product_id, product_id, 1, 1, 'ALL', 'ALL', 'MKT', [],
-      {'flex_expiry' => '30'})
+    return create_product(product_id, product_id, {:attributes =>
+          {'flex_expiry' => '30'}})
   end
 
   it 'should create extended entitlement certificates' do

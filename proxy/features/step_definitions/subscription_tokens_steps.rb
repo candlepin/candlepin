@@ -2,7 +2,7 @@ require 'spec/expectations'
 require 'candlepin_api'
 
 Before do
-  p = @candlepin.create_product('provisioning', 1234, 1)
+  p = @candlepin.create_product(1234, 'provisioning')
   @product_id = p['id']
   @token_name = nil
 end

@@ -12,15 +12,8 @@ puts 'Creating User'
 user = cp.create_user(owner['id'], 'test_user', 'password')
 
 puts 'Creating Product'
-product = cp.create_product('new_product', 
-                            'new_product'.hash,
-                            1,
-                            1,
-                            'ALL',
-                            'ALL',
-                            'SVC',
-                            [],
-                            {'multi-entitlement' => 'yes'})
+product = cp.create_product('new_product'.hash, 'new_product',
+  {:attributes => {'multi-entitlement' => 'yes'}})
 
 puts 'Creating Subscription'
 cp.create_subscription(owner['id'], product['id'], 3000000)

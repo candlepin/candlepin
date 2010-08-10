@@ -90,10 +90,10 @@ data['products'].each do |product|
           attrs['variant'] = variant
           attrs['arch'] = arch
           attrs['type'] = type
-          product_ret = cp.create_product(name, id, multiplier,
-					version, variant, arch, type, [],
-					attrs)
-          puts "product name: " + name + " version: " + version + " arch: " + arch + " type: " + type
+          product_ret = cp.create_product(id, name, {:multiplier => multiplier,
+              :attributes => attrs})
+          puts "product name: " + name + " version: " + version + " arch: " + \
+            arch + " type: " + type
 
           if attrs['type'] == 'MKT':
               # subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 

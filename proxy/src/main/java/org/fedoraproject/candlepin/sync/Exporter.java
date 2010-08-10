@@ -318,7 +318,8 @@ public class Exporter {
             writer.close();
             
             // MKT products aren't 'real' products; we can't make certs from them.
-            if (!product.getAttributeValue("type").equals("MKT")) {
+            if (product.hasAttribute("type") &&
+                !product.getAttributeValue("type").equals("MKT")) {
                 ProductCertificate cert = productAdapter.getProductCertificate(product);
                 // XXX: not all product adapters implement getProductCertificate,
                 // so just skip over this if we get null back

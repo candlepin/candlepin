@@ -7,7 +7,7 @@ describe 'Entitlement Certificate' do
   it 'should be available after consuming an entitlement' do
     # Given
     owner = create_owner 'test_owner'
-    monitoring = create_product 'monitoring'
+    monitoring = create_product()
 
     # Create a subscription
     @cp.create_subscription(owner.id, monitoring.id, 10)

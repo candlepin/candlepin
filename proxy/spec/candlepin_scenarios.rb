@@ -26,8 +26,12 @@ module CandlepinMethods
     return owner
   end
 
-  def create_product(product_name, *args)
-    @cp.create_product(product_name, *args)
+  def create_product(id=nil, name=nil, params={})
+    # For purposes of testing, you can omit id and name to create with
+    # random strings.
+    id ||= random_string('testproduct')
+    product_name ||= random_string('testproduct')
+    @cp.create_product(id, name, params)
   end
 
   def user_client(owner, user_name)
