@@ -19,6 +19,9 @@ end
 
 module CandlepinMethods
 
+  # Wrapper for ruby API so we can track all owners we created and clean them
+  # up. Note that this entails cleanup of all objects beneath that owner, so
+  # most other objects can be created using the ruby API.
   def create_owner(owner_name)
     owner = @cp.create_owner(owner_name)
     @owners << owner
@@ -26,11 +29,13 @@ module CandlepinMethods
     return owner
   end
 
+  # Wrapper for the ruby API's create product. Products do not get cleaned
+  # up when an owner is deleted so we will need to track them.
   def create_product(id=nil, name=nil, params={})
     # For purposes of testing, you can omit id and name to create with
     # random strings.
     id ||= random_string('testproduct')
-    product_name ||= random_string('testproduct')
+    name ||= random_string('testproduct')
     @cp.create_product(id, name, params)
   end
 
