@@ -128,11 +128,12 @@ class Candlepin
     return get(path)
   end
   
-  def create_pool(product_id, owner_id,  subscription_id, 
-	          attributes = {}, start_date=nil, end_date=nil, 
-                  quantity = 100, user_restricted=nil)
-    start_date ||= Date.today
-    end_date ||= Date.today + 365
+  def create_pool(product_id, owner_id, quantity, params={})
+    subscription_id = params[:subscription_id] || nil
+    start_date = params[:start_date] || Date.today
+    end_date = params[:end_date] || Date.today + 365
+    user_restricted = params[:user_restricted] || nil
+    attributes = params[:attributes] || {}
 
     attribute_set = []
     attributes.each_pair do |name, value|

@@ -39,12 +39,12 @@ end
 When /^I create a pool of unlimited license and consumer type person$/ do
   @product = create_product('product1')
   @subscription = create_subscription('product1', 1)
-  @pool = @candlepin.create_pool(product_id=@product['id'],
-                                             owner_id=@test_owner['id'], @subscription['id'],
-                                             attributes={
-                                               'user_license' => 'unlimited',
-                                               'requires_consumer_type' => 'person'
-                                            })
+  @pool = @candlepin.create_pool(@product['id'], @test_owner['id'], 100,
+    {:subscription_id => @subscription['id'], 
+      :attributes => {
+        'user_license' => 'unlimited',
+        'requires_consumer_type' => 'person'
+  }})
 end
 
 Then /^pool should be of unlimited license and consumer type person$/ do

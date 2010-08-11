@@ -15,20 +15,21 @@ Before do
 end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)"$/ do |quantity, product|
+  # TODO: Unecessary server hit here:
   p = @candlepin.get_product(product.hash.abs)
-  @candlepin.create_pool(p['id'], @test_owner['id'], nil)
+  @candlepin.create_pool(p['id'], @test_owner['id'], quantity)
 end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)" restricted to user "([^\"]*)"$/ do |quantity, product, user|
   p = @candlepin.get_product(product.hash.abs)
-  @candlepin.create_pool(p['id'], @test_owner['id'], nil, {}, nil, nil, quantity, user)
+  @candlepin.create_pool(p['id'], @test_owner['id'], quantity, {:user_restricted => user})
 end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)" with the following attributes:$/ do |quantity, product, table|
   p = @candlepin.get_product(product.hash.abs)
   attrs = table.rows_hash.delete_if { |key, val| key == 'Name' }
 
-  @candlepin.create_pool(p['id'], @test_owner['id'], nil, attrs, nil, nil, quantity)
+  @candlepin.create_pool(p['id'], @test_owner['id'], quantity, {:attributes => attrs})
 end
 
 When /^I view all of my pools$/ do
