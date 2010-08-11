@@ -162,10 +162,10 @@ class Candlepin
     put("/owners/#{owner_key}/subscriptions")
   end
   
-  def export_consumer
+  def export_consumer(dest_dir)
     path = "/consumers/#{@uuid}/export"
     begin
-      get_file(path)
+      get_file(path, dest_dir)
     rescue Exception => e
       puts e.response
     end
@@ -379,9 +379,10 @@ class Candlepin
   end
   
   #assumes a zip archive atm
-  def get_file(uri)
+  def get_file(uri, dest_dir)
     response = @client[URI.escape(uri)].get    
     filename = response.headers[:content_disposition] == nil ? "tmp_#{rand}.zip" : response.headers[:content_disposition].split("filename=")[1]
+    filename = File.join(dest_dir, filename)
     File.open(filename, 'w') { |f| f.write(response.body) }
     filename
   end

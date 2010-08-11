@@ -49,7 +49,8 @@ module CandlepinMethods
     Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
   end
 
-  def random_string(prefix)
+  def random_string(prefix=nil)
+    prefix ||= ''
     "%s-%s" % [prefix, rand(100000)]
   end
 
