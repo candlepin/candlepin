@@ -21,6 +21,7 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -31,11 +32,13 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.KeyPairCurator;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
@@ -50,6 +53,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     private X509ExtensionUtil extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
+    private ProductServiceAdapter productAdapter;
     
     private static Logger log = Logger
         .getLogger(DefaultEntitlementCertServiceAdapter.class);
@@ -59,13 +63,15 @@ public class DefaultEntitlementCertServiceAdapter extends
         X509ExtensionUtil extensionUtil,
         EntitlementCertificateCurator entCertCurator, 
         KeyPairCurator keyPairCurator,
-        CertificateSerialCurator serialCurator) {
+        CertificateSerialCurator serialCurator,
+        ProductServiceAdapter productAdapter) {
         
         this.pki = pki;
         this.extensionUtil = extensionUtil;
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
+        this.productAdapter = productAdapter;
     }
 
     
@@ -115,6 +121,21 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
     }
 
+    private Set<Product> getProvidedProducts(Pool pool, Subscription sub) {
+        Set<Product> providedProducts = new HashSet<Product>();
+        if (sub != null) {
+            providedProducts = sub.getProvidedProducts();
+        }
+        else {
+            // If this pool doesn't have a subscription associated with it, we need to
+            // lookup all the Product objects manually:
+            for (String productId : pool.getProvidedProductIds()) {
+                providedProducts.add(productAdapter.getProductById(productId));
+            }
+        }
+        return providedProducts;
+    }
+
     public X509Certificate createX509Certificate(Entitlement ent, 
         Subscription sub, Product product, BigInteger serialNumber, KeyPair keyPair) 
         throws GeneralSecurityException, IOException {
@@ -122,12 +143,16 @@ public class DefaultEntitlementCertServiceAdapter extends
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
         
         addExtensionsForProduct(extensions, product);
+        Set<Product> providedProducts = getProvidedProducts(ent.getPool(), sub);
 
-        for (Product provided : sub.getProvidedProducts()) {
+        for (Product provided : providedProducts) {
             addExtensionsForProduct(extensions, provided);
         }
+
+        if (sub != null) {
+            extensions.addAll(extensionUtil.subscriptionExtensions(sub));
+        }
         
-        extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
         

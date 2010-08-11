@@ -41,6 +41,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
@@ -71,6 +72,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
     @Mock private PKIUtility mockedPKI;
     @Mock private CertificateSerialCurator serialCurator;
+    @Mock private ProductServiceAdapter productAdapter;
     private X509ExtensionUtil extensionUtil;
     private Product product;
     private Subscription subscription;
@@ -82,7 +84,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         
         certServiceAdapter 
             = new DefaultEntitlementCertServiceAdapter(mockedPKI, 
-                extensionUtil, null, null, serialCurator);
+                extensionUtil, null, null, serialCurator, productAdapter);
         
         product = new Product("a_product", "a product", 
                               "variant", "version", "arch", 
