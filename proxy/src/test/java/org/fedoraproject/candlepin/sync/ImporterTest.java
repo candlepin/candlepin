@@ -15,6 +15,11 @@
 package org.fedoraproject.candlepin.sync;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.fedoraproject.candlepin.model.ExporterMetadata;
+import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -50,8 +55,14 @@ public class ImporterTest {
 
         File f = createFile("/tmp/meta");
         File actualmeta = createFile("/tmp/meta.json");
-
-        Importer i = new Importer(null, null, null, null, null, null, null, null);
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        ExporterMetadata em = new ExporterMetadata();
+        em.setCreated(getDateBeforeDays(1));
+        em.setId(42L);
+        em.setType(ExporterMetadata.TYPE_METADATA);
+        when(emc.lookupByType(ExporterMetadata.TYPE_METADATA)).thenReturn(em);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, emc);
         i.validateMetaJson(actualmeta);
 
         assertTrue(f.delete());
@@ -63,8 +74,14 @@ public class ImporterTest {
         // create actual first
         File actualmeta = createFile("/tmp/meta.json");
         File f = createFile("/tmp/meta");
-
-        Importer i = new Importer(null, null, null, null, null, null, null, null);
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        ExporterMetadata em = new ExporterMetadata();
+        em.setCreated(getDateAfterDays(1));
+        em.setId(42L);
+        em.setType(ExporterMetadata.TYPE_METADATA);
+        when(emc.lookupByType(ExporterMetadata.TYPE_METADATA)).thenReturn(em);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, emc);
         i.validateMetaJson(actualmeta);
 
         assertTrue(f.delete());
@@ -78,5 +95,21 @@ public class ImporterTest {
         Meta meta = new Meta("0.0.0", new Date());
         mapper.writeValue(f, meta);
         return f;
+    }
+
+    private Date getDateBeforeDays(int days) {
+        long daysinmillis = 24 * 60 * 60 * 1000;
+        long ms = System.currentTimeMillis() - (days * daysinmillis);
+        Date backDate = new Date();
+        backDate.setTime(ms);
+        return backDate;
+    }
+
+    private Date getDateAfterDays(int days) {
+        long daysinmillis = 24 * 60 * 60 * 1000;
+        long ms = System.currentTimeMillis() + (days * daysinmillis);
+        Date backDate = new Date();
+        backDate.setTime(ms);
+        return backDate;
     }
 }

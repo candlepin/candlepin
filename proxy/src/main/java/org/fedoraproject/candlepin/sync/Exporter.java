@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.sync;
 
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
@@ -69,6 +70,7 @@ public class Exporter {
     private EntitlementCurator entitlementCurator;
     private PKIUtility pki;
     private ExporterMetadataCurator expMetaCurator;
+    private Config config;
 
 
     
@@ -79,7 +81,7 @@ public class Exporter {
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter, 
-        PKIUtility pki, ExporterMetadataCurator emc) {
+        PKIUtility pki, ExporterMetadataCurator emc, Config config) {
         
         mapper = SyncUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
@@ -97,13 +99,14 @@ public class Exporter {
         this.entExporter = entExporter;
         this.pki = pki;
         this.expMetaCurator = emc;
+        this.config = config;
     }
 
     public File getExport(Consumer consumer) throws ExportCreationException {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
-            File tmpDir = new SyncUtils().makeTempDir("export");
+            File tmpDir = new SyncUtils(config).makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
             
@@ -250,18 +253,19 @@ public class Exporter {
             em.setExported(new Date());
         }
         else {
-            em = new ExporterMetadata();
-            em.setType(ExporterMetadata.TYPE_METADATA);
-            em.setExported(new Date());
+            em = new ExporterMetadata(null,
+                ExporterMetadata.TYPE_METADATA, new Date());
             em = expMetaCurator.create(em);
         }
 
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
         FileWriter writer = new FileWriter(file);
-        meta.export(mapper, writer, null);
+        Meta m = new Meta();
+        m.setCreated(em.getExported());
+        meta.export(mapper, writer, m);
         writer.close();
     }
-    
+
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);

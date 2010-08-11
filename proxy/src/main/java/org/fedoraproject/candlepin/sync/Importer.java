@@ -14,10 +14,13 @@
  */
 package org.fedoraproject.candlepin.sync;
 
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.ContentCurator;
+import org.fedoraproject.candlepin.model.ExporterMetadata;
+import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -88,12 +91,14 @@ public class Importer {
     private SubscriptionCurator subCurator;
     private PoolManager poolManager;
     private PKIUtility pki;
+    private Config config;
+    private ExporterMetadataCurator expMetaCurator;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         RulesCurator rulesCurator, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm, 
-        PKIUtility pki) {
+        PKIUtility pki, Config config, ExporterMetadataCurator emc) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.rulesCurator = rulesCurator;
@@ -103,6 +108,8 @@ public class Importer {
         this.poolManager = pm;
         this.mapper = SyncUtils.getObjectMapper();
         this.pki = pki;
+        this.config = config;
+        this.expMetaCurator = emc;
     }
 
     /**
@@ -116,7 +123,9 @@ public class Importer {
         //importer.importObject(reader);
         Meta m = mapper.readValue(meta, Meta.class);
         // TODO: totally put this stuff in the DB, HACK ALERT!!!
-        Meta lastrun = mapper.readValue(new File("/tmp/meta"), Meta.class);
+        ExporterMetadata lastrun = expMetaCurator
+            .lookupByType(ExporterMetadata.TYPE_METADATA);
+
         if (lastrun.getCreated().compareTo(m.getCreated()) > 0) {
             throw new ImporterException("import is older than existing data");
         }
@@ -126,7 +135,7 @@ public class Importer {
         File tmpDir = null;
         InputStream exportStream = null;
         try {
-            tmpDir = new SyncUtils().makeTempDir("import");
+            tmpDir = new SyncUtils(config).makeTempDir("import");
             
             extractArchive(tmpDir, exportFile);
             

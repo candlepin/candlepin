@@ -50,6 +50,18 @@ public class ExporterMetadata extends AbstractHibernateObject {
     @Column(nullable = false)
     private Date exported;
 
+    public ExporterMetadata() {
+        id = null;
+        type = TYPE_METADATA;
+        exported = new Date();
+    }
+
+    public ExporterMetadata(Long id, String type, Date exported) {
+        this.id = id;
+        this.type = type;
+        this.exported = exported;
+    }
+
     public Long getId() {
         return id;
     }
