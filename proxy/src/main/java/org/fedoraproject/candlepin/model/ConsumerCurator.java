@@ -21,6 +21,7 @@ import java.util.Set;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -91,6 +92,30 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
     
     /**
+     * Search for Consumers with fields matching those provided.
+     * 
+     * @param userName the username to match, or null to ignore 
+     * @param type the type to match, or null to ignore
+     * @return a list of matching Consumers
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @EnforceAccessControl
+    public List<Consumer> listByUsernameAndType(String userName,
+        ConsumerType type) {
+        Criteria criteria = currentSession().createCriteria(Consumer.class);
+
+        if (userName != null) {
+            criteria.add(Restrictions.eq("username", userName));
+        }
+        if (type != null) {
+            criteria.add(Restrictions.eq("type", type));
+        }
+
+        return (List<Consumer>) criteria.list();
+    }
+    
+    /**
      * @param updatedConsumer updated Consumer values.
      * @return Updated consumers
      */
@@ -128,6 +153,5 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             toReturn.add(update(toUpdate));
         }
         return toReturn;
-    }
-    
+    }    
 }

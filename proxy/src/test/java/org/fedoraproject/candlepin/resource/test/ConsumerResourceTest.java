@@ -485,7 +485,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         setupPrincipal(new ConsumerPrincipal(consumer));
 
-        consumerResource.list();
+        consumerResource.list(null, null);
     }
 
     @Test

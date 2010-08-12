@@ -152,8 +152,17 @@ public class ConsumerResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "consumers")
     @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public List<Consumer> list() {
-        return consumerCurator.listAll();
+    public List<Consumer> list(@QueryParam("username") String userName,
+        @QueryParam("type") String typeLabel) {
+        ConsumerType type = null;
+        
+        if (typeLabel != null) {
+            type = lookupConsumerType(typeLabel);
+        }
+
+        // We don't look up the user and warn if it doesn't exist here to not
+        // give away usernames
+        return consumerCurator.listByUsernameAndType(userName, type);
     }
 
     /**
@@ -186,13 +195,7 @@ public class ConsumerResource {
         throws BadRequestException {
         // API:registerConsumer
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel(consumer
-            .getType().getLabel());
-
-        if (type == null) {
-            throw new BadRequestException(i18n.tr("No such consumer type: {0}",
-                consumer.getType().getLabel()));
-        }
+        ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
         User user = getCurrentUsername(principal);
 
@@ -237,6 +240,15 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr(
                 "Problem creating consumer {0}", consumer));
         }
+    }
+
+    private ConsumerType lookupConsumerType(String label) {
+        ConsumerType type = consumerTypeCurator.lookupByLabel(label);
+
+        if (type == null) {
+            throw new BadRequestException(i18n.tr("No such consumer type: {0}", label));
+        }
+        return type;
     }
 
     private User getCurrentUsername(Principal principal) {

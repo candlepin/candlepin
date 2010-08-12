@@ -266,6 +266,13 @@ class Candlepin
     post_text("/rules/", rule_set)
   end
 
+  def list_consumers(args={})
+    query = "/consumers?"
+    query << "username=#{args[:username]}&" if args[:username]
+    query << "type=#{args[:type]}" if args[:type]
+    get(query)
+  end
+  
   def get_consumer(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}")
