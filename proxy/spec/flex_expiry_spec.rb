@@ -17,8 +17,9 @@ describe 'Flex Expiry' do
     owner_client = user_client(owner, random_string('testuser'))
     flex_product = create_flex_expiry_product
 
+    end_date = Date.new(2050, 5, 1)
     sub = @cp.create_subscription(owner.id, flex_product.id, 100, [], '',
-      "2010-05-01", "2050-05-01")
+        "2010-05-01", end_date)
     @cp.refresh_pools owner.key
     pool = @cp.list_pools(:owner => owner.id).first
 
@@ -32,22 +33,7 @@ describe 'Flex Expiry' do
     result = consumer_client.consume_pool pool.id
     ent_cert = consumer_client.list_certificates.first
 
-    ent_cert.entitlement.flexExpiryDays.should == 30
-
-    cert = OpenSSL::X509::Certificate.new(ent_cert.cert)
-
-    # Check the entitlement end date:
-    end_date = cert.not_after
-    end_date.year.should == 2050
-    end_date.month.should == 5
-    end_date.day.should == 31
-
-    # Check the order namespace end date, this one should not have changed:
-    order_end_date = Date.strptime(get_extension(cert,
-        "1.3.6.1.4.1.2312.9.4.7"))
-    order_end_date.year.should == 2050
-    order_end_date.month.should == 5
-    order_end_date.day.should == 1
+    verify_cert_dates(ent_cert, end_date, 30)
 
   end
 

@@ -69,6 +69,27 @@ module CandlepinMethods
     return value
   end
 
+  # ent_cert here is the JSON representation:
+  def verify_cert_dates(ent_cert, end_date, flex_days)
+    ent_cert.entitlement.flexExpiryDays.should == flex_days
+
+    cert = OpenSSL::X509::Certificate.new(ent_cert.cert)
+
+    # Check the entitlement end date:
+    cert_end_date = cert.not_after
+    flex_end_date = end_date + flex_days
+    cert_end_date.year.should == flex_end_date.year
+    cert_end_date.month.should == flex_end_date.month
+    cert_end_date.day.should == flex_end_date.day
+
+    # Check the order namespace end date, this one should not have changed:
+    order_end_date = Date.strptime(get_extension(cert,
+        "1.3.6.1.4.1.2312.9.4.7"))
+    order_end_date.year.should == end_date.year
+    order_end_date.month.should == end_date.month
+    order_end_date.day.should == end_date.day
+  end
+
 end
 
 module ExportMethods
@@ -82,10 +103,11 @@ module ExportMethods
     @owner = @cp.create_owner(random_string('test_owner'))
 
     owner_client = user_client(@owner, random_string('testuser'))
+    @flex_days = 30
     product1 = create_product(random_string(), random_string(),
-        {:attributes => {"flex_expiry" => "30"}})
+        {:attributes => {"flex_expiry" => @flex_days.to_s}})
     product2 = create_product()
-    @end_date = "2040-05-29"
+    @end_date = Date.new(2040, 5, 29)
     pool1 = @cp.create_pool(product1.id, @owner.id, 2, {:end_date => @end_date})
     pool2 = @cp.create_pool(product2.id, @owner.id, 4, {:end_date => @end_date})
     @candlepin_client = consumer_client(owner_client, random_string(),
