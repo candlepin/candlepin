@@ -27,7 +27,6 @@ public class EntitlementExporter {
     void export(ObjectMapper mapper, Writer writer, Entitlement entitlement) 
         throws IOException {
         
-        EntitlementDto dto = new EntitlementDto(entitlement);
-        mapper.writeValue(writer, dto);
+        mapper.writeValue(writer, entitlement);
     }
 }

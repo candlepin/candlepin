@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -43,10 +44,10 @@ public class EntitlementImporter {
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
         Map<String, Product> productsById) throws IOException, SyncDataFormatException {
         
-        EntitlementDto entitlement = mapper.readValue(reader, EntitlementDto.class);
+        Entitlement entitlement = mapper.readValue(reader, Entitlement.class);
         Subscription subscription = new Subscription();
         
-        subscription.setUpstreamPoolId(entitlement.getPoolId());
+        subscription.setUpstreamPoolId(entitlement.getPool().getId());
         
         subscription.setOwner(owner);
         
@@ -58,7 +59,7 @@ public class EntitlementImporter {
         subscription.setProduct(findProduct(productsById, entitlement.getProductId()));
         
         Set<Product> products = new HashSet<Product>();
-        for (String productId : entitlement.getProvidedProductIds()) {
+        for (String productId : entitlement.getPool().getProvidedProductIds()) {
             
             products.add(findProduct(productsById, productId));
         }

@@ -331,6 +331,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
      * @param dateSource date to compare to.
      * @return true if the pool is considered expired based on the given date.
      */
+    @XmlTransient
     public boolean isExpired(DateSource dateSource) {
         return getEndDate().before(dateSource.currentDate());
     }
@@ -353,6 +354,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     /**
      * @return True if entitlement pool is unlimited.
      */
+    @XmlTransient
     public boolean isUnlimited() {
         if (this.getQuantity() < 0) {
             return true;
@@ -400,13 +402,6 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
      */
     public void setActiveSubscription(Boolean activeSubscription) {
         this.activeSubscription = activeSubscription;
-    }
-
-    /**
-     * @return true TODO
-     */
-    public Boolean isActive() {
-        return activeSubscription;
     }
 
     public String toString() {
@@ -495,6 +490,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
      * 
      * @return true if consumed>quantity else false.
      */
+    @XmlTransient
     public boolean isOverflowing() {
         return this.consumed > this.quantity;
     }

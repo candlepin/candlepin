@@ -186,6 +186,7 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     /**
      * @return Returns the product.
      */
+    @XmlTransient
     public String getProductId() {
         return this.pool.getProductId();
     }
@@ -251,6 +252,7 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
     /**
      * @return returns true if the entitlement is free.
      */
+    @XmlTransient
     public Boolean isFree() {
         return getIsFree();
     }

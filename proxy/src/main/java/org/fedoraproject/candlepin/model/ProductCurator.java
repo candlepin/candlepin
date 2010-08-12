@@ -66,6 +66,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             return;
         }
 
+        for (ProductAttribute attr : p.getAttributes()) {
+            attr.setProduct(p);
+        }
+
         merge(p);
     }
 
