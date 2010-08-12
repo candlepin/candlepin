@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.config.Config;
@@ -49,6 +50,9 @@ class SyncUtils {
         ObjectMapper mapper = new ObjectMapper();
         mapper.getSerializationConfig().setAnnotationIntrospector(pair);
         mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+        mapper.getSerializationConfig().set(
+            SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
+            false);
         
         return mapper;
     }
