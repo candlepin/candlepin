@@ -36,6 +36,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -48,6 +49,7 @@ public class PoolManager {
     private PoolCurator poolCurator;
     private Log log = LogFactory.getLog(PoolManager.class);
     private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter productAdapter;
     private EventSink sink;
     private EventFactory eventFactory;
     private Config config;
@@ -63,11 +65,13 @@ public class PoolManager {
      */
     @Inject
     public PoolManager(PoolCurator poolCurator,
-        SubscriptionServiceAdapter subAdapter, EventSink sink,
+        SubscriptionServiceAdapter subAdapter, 
+        ProductServiceAdapter productAdapter, EventSink sink,
         EventFactory eventFactory, Config config, Entitler entitler,
         EntitlementCurator curator1) {
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
+        this.productAdapter = productAdapter;
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.config = config;
@@ -88,6 +92,8 @@ public class PoolManager {
         if (log.isDebugEnabled()) {
             log.debug("Refreshing pools");
         }
+        
+        productAdapter.purgeCache();
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
         if (log.isDebugEnabled()) {

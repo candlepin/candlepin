@@ -67,4 +67,9 @@ public interface ProductServiceAdapter {
      */
     ProductCertificate getProductCertificate(Product product);
     
+    /**
+     * Used to purge product cache
+     */
+    void purgeCache();
+    
 }

@@ -18,13 +18,15 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,6 +45,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
@@ -59,7 +62,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class PoolManagerTest {
     @Mock private PoolCurator mockCurator;
-    @Mock private SubscriptionServiceAdapter mockAdapter;
+    @Mock private SubscriptionServiceAdapter mockSubAdapter;
+    @Mock private ProductServiceAdapter mockProductAdapter;
     @Mock private EventSink mockEventSink;
     @Mock private Config mockConfig;
     @Mock private Entitler mockEntitler;
@@ -73,7 +77,8 @@ public class PoolManagerTest {
     public void init() {
         this.eventFactory = new EventFactory(mockProvider);
         this.principal = TestUtil.createOwnerPrincipal();
-        this.manager = new PoolManager(mockCurator, mockAdapter, mockEventSink,
+        this.manager = new PoolManager(mockCurator, mockSubAdapter, 
+            mockProductAdapter, mockEventSink,
             eventFactory, mockConfig, mockEntitler, entitlementCurator);
         when(this.mockProvider.get()).thenReturn(this.principal);
     }
@@ -85,7 +90,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSubscriptionId(112L);
         pools.add(p);
-        when(mockAdapter.getSubscriptions(any(Owner.class)))
+        when(mockSubAdapter.getSubscriptions(any(Owner.class)))
             .thenReturn(subscriptions);
         when(mockCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), anyBoolean())).thenReturn(pools);
@@ -100,7 +105,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         subscriptions.add(s);
-        when(mockAdapter.getSubscriptions(any(Owner.class)))
+        when(mockSubAdapter.getSubscriptions(any(Owner.class)))
             .thenReturn(subscriptions);
         when(mockCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), anyBoolean())).thenReturn(pools);
@@ -126,7 +131,7 @@ public class PoolManagerTest {
         p.setId(423L);
         p.setSubscriptionId(s.getId());
         pools.add(p);
-        when(mockAdapter.getSubscriptions(any(Owner.class)))
+        when(mockSubAdapter.getSubscriptions(any(Owner.class)))
             .thenReturn(subscriptions);
         when(mockCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), anyBoolean())).thenReturn(pools);

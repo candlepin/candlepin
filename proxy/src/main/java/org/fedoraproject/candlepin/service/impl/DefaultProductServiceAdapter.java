@@ -150,4 +150,9 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return cert;
     }
 
+    @Override
+    public void purgeCache() {        
+        
+    }
+
 }
