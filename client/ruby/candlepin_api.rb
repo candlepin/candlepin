@@ -118,7 +118,7 @@ class Candlepin
   end
   
   def get_pool(poolid)
-    get("/pools/#{poolid}'")
+    get("/pools/#{poolid}")
   end
 
   def list_pools(params = {})
