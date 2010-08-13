@@ -42,7 +42,7 @@ describe 'Flex Expiry' do
     # Add ten days to the subscription end date:
     @end_date = @end_date + 10
     @sub['endDate'] = @end_date
-    @cp.update_subscription(nil, @sub)
+    @cp.update_subscription(@sub)
     @cp.refresh_pools(@owner.key)
 
     ent_cert = @consumer_client.list_certificates.first

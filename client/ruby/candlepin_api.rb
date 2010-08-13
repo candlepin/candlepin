@@ -306,7 +306,7 @@ class Candlepin
     return post("/owners/#{owner_id}/subscriptions", subscription)
   end
 
-  def update_subscription(owner_id, subscription)
+  def update_subscription(subscription)
     return put("/owners/subscriptions", subscription)
   end
 

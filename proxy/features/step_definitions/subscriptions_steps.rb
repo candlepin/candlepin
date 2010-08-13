@@ -64,7 +64,7 @@ end
 When /^test owner changes the "([^\"]*)" of the subscription by (-{0,1}\d+) days$/ do |field, d|
   subscription = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
   subscription[field] = subscription[field].to_date + d.to_i
-  @candlepin.update_subscription(@test_owner['id'], subscription)
+  @candlepin.update_subscription(subscription)
 end
 
 When /^he refreshes the pools$/ do
@@ -75,7 +75,7 @@ end
 When /^test owner changes the quantity of the subscription by (-{0,1}\d+)$/ do |q|
  subscription = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
  subscription['quantity'] = subscription['quantity'].to_i + q.to_i
- @candlepin.update_subscription(@test_owner['id'], subscription)
+ @candlepin.update_subscription(subscription)
 end
 
 Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |arg1|
