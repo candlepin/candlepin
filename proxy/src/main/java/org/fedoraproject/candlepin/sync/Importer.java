@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.security.cert.CertificateException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -119,15 +120,23 @@ public class Importer {
      * @throws ImporterException thrown if the metadata is invalid.
      */
     public void validateMetaJson(File meta) throws IOException, ImporterException {
-        // Only importing a single rules file now.
-        //importer.importObject(reader);
         Meta m = mapper.readValue(meta, Meta.class);
-        // TODO: totally put this stuff in the DB, HACK ALERT!!!
         ExporterMetadata lastrun = expMetaCurator
             .lookupByType(ExporterMetadata.TYPE_METADATA);
 
-        if (lastrun.getCreated().compareTo(m.getCreated()) > 0) {
-            throw new ImporterException("import is older than existing data");
+        if (lastrun == null) {
+            // this is our first import, let's create a new entry
+            lastrun = new ExporterMetadata(null,
+                ExporterMetadata.TYPE_METADATA, m.getCreated());
+            lastrun = expMetaCurator.create(lastrun);
+        }
+        else {
+            if (lastrun.getExported().compareTo(m.getCreated()) > 0) {
+                throw new ImporterException("import is older than existing data");
+            }
+            else {
+                lastrun.setExported(new Date());
+            }
         }
     }
 
