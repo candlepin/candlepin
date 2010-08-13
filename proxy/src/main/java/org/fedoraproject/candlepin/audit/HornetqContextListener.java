@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.audit;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
@@ -34,6 +35,7 @@ import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.JournalType;
 import org.hornetq.core.server.impl.HornetQServerImpl;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
 /**
@@ -56,6 +58,7 @@ public class HornetqContextListener {
             catch (Exception e) {
                 e.printStackTrace();
             }
+            
         }
     }
 
@@ -109,17 +112,23 @@ public class HornetqContextListener {
 
         cleanupOldQueues();
         
-        String [] listeners =
-            candlepinConfig.getStringArray(ConfigProperties.AUDIT_LISTENERS);
+        //AMQP integration here - If it is disabled, don't add it to listeners. 
+        List<String> listeners = Lists.newArrayList(candlepinConfig
+            .getStringArray(ConfigProperties.AUDIT_LISTENERS));
+        if (candlepinConfig
+            .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            listeners.add(AMQPBusPublisher.class.getName());
+        }
+
         eventSource = new EventSource();
-        for (int i = 0; i < listeners.length; i++) {
+        for (int i = 0; i < listeners.size(); i++) {
             try {
-                Class<?> clazz = this.getClass().getClassLoader().loadClass(listeners[i]);
-                
+                Class<?> clazz = this.getClass().getClassLoader().loadClass(
+                    listeners.get(i));
                 eventSource.registerListener((EventListener) injector.getInstance(clazz));
             }
             catch (Exception e) {
-                log.warn("Unable to load audit listener " + listeners[i]);
+                log.warn("Unable to load audit listener " + listeners.get(i), e);
             }
         }
     }

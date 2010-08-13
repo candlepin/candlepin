@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import com.google.common.base.Function;
 import java.util.Properties;
 
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -66,10 +67,13 @@ import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import org.fedoraproject.candlepin.audit.AMQPBusEventAdapter;
+import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 
 /**
  * CandlepinProductionConfiguration
@@ -113,6 +117,7 @@ public class CandlepinModule extends AbstractModule {
         bind(StatusResource.class);
         bind(CandlepinExceptionMapper.class);   
         bind(Principal.class).toProvider(PrincipalProvider.class);
+
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
         bind(JsonProvider.class);
@@ -150,6 +155,14 @@ public class CandlepinModule extends AbstractModule {
             Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(EnforceAccessControl.class), 
             accessControlInterceptor);
+        
+        //amqp stuff below...
+        
+        bind(Function.class).annotatedWith(Names.named("abc"))
+                .to(AMQPBusEventAdapter.class).in(Singleton.class);
+      //for lazy loading.
+        bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class) 
+                .in(Singleton.class);
     }
 
 }

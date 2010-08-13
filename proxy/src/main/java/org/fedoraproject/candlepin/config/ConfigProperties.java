@@ -44,6 +44,11 @@ public class ConfigProperties {
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = 
         "candlepin.entitlement.revoke.order.fifo";
+
+    //AMQP stuff
+    public static final String AMQP_INTEGRATION_ENABLED = 
+        "candlepin.amqp.enable";
+    public static final String AMQP_CONFIG_LOCATION = "candlepin.amqp.location";
     
     // Pinsetter
     public static final String TASKS = "pinsetter.tasks";
@@ -84,8 +89,10 @@ public class ConfigProperties {
                     "org.quartz.simpl.SimpleThreadPool");
                 this.put("org.quartz.threadPool.threadCount", "15");
                 this.put("org.quartz.threadPool.threadPriority", "5");
-                
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
+                
+                this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
+                this.put(AMQP_CONFIG_LOCATION, "/etc/candlepin/amqp.properties");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";

@@ -51,7 +51,7 @@ class EventSource {
             session.close();
         }
         catch (HornetQException e) {
-            e.printStackTrace();
+            log.warn("Exception while trying to shutdown hornetq", e);
         }
     }
     
@@ -75,7 +75,7 @@ class EventSource {
             consumer.setMessageHandler(new ListenerWrapper(listener));
         }
         catch (HornetQException e) {
-            e.printStackTrace();
+            log.fatal("Unable to register listener :" + listener, e);
         }
     }
 }

@@ -14,11 +14,7 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import java.io.IOException;
-
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.client.ClientMessage;
@@ -39,31 +35,24 @@ public class ListenerWrapper implements MessageHandler {
     @Override
     public void onMessage(ClientMessage msg) {
         String body = msg.getBodyBuffer().readString();
-        log.debug("Got event: " + body);
+        if (log.isDebugEnabled()) {
+            log.debug("Got event: " + body);
+        }
         ObjectMapper mapper = new ObjectMapper();
         Event event;
         try {
             event = mapper.readValue(body, Event.class);
             listener.onEvent(event);
         }
-        catch (JsonParseException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+        catch (Exception e1) {
+            log.fatal("Unable to deserialize event object from msg: " + body, e1);
         }
-        catch (JsonMappingException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-        catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+       
         try {
             msg.acknowledge();
         }
         catch (HornetQException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.fatal("Unable to ack msg", e);
         }
     }
 

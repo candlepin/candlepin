@@ -30,7 +30,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.collections.Closure;
+import org.apache.commons.collections.ClosureUtils;
 import org.apache.commons.collections.Transformer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -187,5 +191,39 @@ public class Util {
             result.add((T) t.transform(iterator.next()));
         }
         return result;
+    }
+
+    private static Closure closeInvoker = 
+        ClosureUtils.invokerClosure("close");
+    
+    public static void closeSafely(Object closable) {
+        closeSafely(closable, "Closing...",
+            "close() invocation was not successful");
+    }
+
+    private static Log log = LogFactory.getLog(Util.class);
+    
+    public static void closeSafely(Object closable, String msg) {
+        closeSafely(closable, "Going to close: " + msg,
+            msg + ".close() was not successful!"); 
+    }
+    
+    public static void closeSafely(Object closable, String infoMsg, String failMsg) {
+        if (closable == null) {
+            return;
+        }
+        try {
+            log.info(infoMsg);
+            closeInvoker.execute(closable);
+        }
+        catch (Exception e) {
+            log.warn(failMsg, e);
+        }
+    }
+    
+    public static String capitalize(String str) {
+        char [] chars = str.toCharArray();
+        chars[0] = Character.toUpperCase(chars[0]); 
+        return new String(chars);
     }
 }

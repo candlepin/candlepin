@@ -79,7 +79,7 @@ GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet',
            'com.google.inject:guice:jar:2.0',
            'aopalliance:aopalliance:jar:1.0',
            'com.wideplay.warp:warp-persist:jar:2.0-20090214',
-           'javax.servlet:servlet-api:jar:2.5']
+           'javax.servlet:servlet-api:jar:2.5', 'com.google.collections:google-collections:jar:0.9']
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
 HORNETQ = [group('hornetq-core',
@@ -88,9 +88,15 @@ HORNETQ = [group('hornetq-core',
                  :under=>'org.hornetq',
                  :version=>'2.1.1.Final'),
             'org.jboss.netty:netty:jar:3.2.1.Final']
+	    
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
-
+AMQP  = [group('qpid-common', 'qpid-client',
+       		 :under => 'org.apache.qpid',
+		 :version => '0.7-SNAPSHOT'), 'backport-util-concurrent:backport-util-concurrent:jar:2.2',
+		 group('mina-core', 'mina-filter-ssl', :under => 'org.apache.mina', :version => '1.0.1'),
+		 'commons-digester:commons-digester:jar:1.8.1', 'commons-configuration:commons-configuration:jar:1.6',
+		 'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
 #############################################################################
 # REPOSITORIES
 #
@@ -98,7 +104,7 @@ SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 repositories.remote << "http://www.ibiblio.org/maven2/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
-
+repositories.remote << "http://people.apache.org/~ebourg/qpid/maven/"
 #############################################################################
 # PROJECT BUILD
 #############################################################################
@@ -145,7 +151,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J
+      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP
  
   #
   # testing

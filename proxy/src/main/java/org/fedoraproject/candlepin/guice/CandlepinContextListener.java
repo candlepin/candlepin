@@ -39,8 +39,12 @@ import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 
+import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 import org.fedoraproject.candlepin.audit.HornetqContextListener;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener;
+import org.fedoraproject.candlepin.util.Util;
 
 /**
  * Customized Candlepin version of {@link GuiceResteasyBootstrapServletContextListener}.
@@ -55,7 +59,7 @@ public class CandlepinContextListener extends
         GuiceResteasyBootstrapServletContextListener {
     private HornetqContextListener hornetqListener;
     private PinsetterContextListener pinsetterListener;
-    
+    private Injector injector;
     // a bit of application-initialization code. Not sure if this is the best spot for it.
     static {
         I18nManager.getInstance().setDefaultLocale(Locale.US);
@@ -75,21 +79,30 @@ public class CandlepinContextListener extends
                 (ResteasyProviderFactory) context.getAttribute(
                     ResteasyProviderFactory.class.getName());
 
-        Injector injector = Guice.createInjector(getModules());
+        injector = Guice.createInjector(getModules());
         processInjector(registry, providerFactory, injector);
 
         hornetqListener = injector.getInstance(HornetqContextListener.class);
         hornetqListener.contextInitialized(injector);
         pinsetterListener = injector.getInstance(PinsetterContextListener.class);
         pinsetterListener.contextInitialized(injector);
+     
         
     }
-    
+
     public void contextDestroyed(ServletContextEvent event) {
         hornetqListener.contextDestroyed();
         pinsetterListener.contextDestroyed();
+        Config config = injector.getInstance(Config.class);
+        //if amqp is enabled, close all connections.
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
+                "AMQPBusPublisher");
+            Util.closeSafely(injector.getInstance(AMQPBusPubProvider.class),
+                "AMQPBusPubProvider");
+        }
     }
-    
+
     /**
      * Returns a list of Guice modules to initialize.
      * @return a list of Guice modules to initialize.
