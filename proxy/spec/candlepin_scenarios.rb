@@ -45,8 +45,8 @@ module CandlepinMethods
     Candlepin.new(user_name, 'password')
   end
 
-  def consumer_client(cp_client, consumer_name, type=:system)
-    consumer = cp_client.register(consumer_name, type)
+  def consumer_client(cp_client, consumer_name, type=:system, username=nil)
+    consumer = cp_client.register(consumer_name, type, nil, {}, username)
     Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
   end
 

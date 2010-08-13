@@ -39,7 +39,7 @@ class Candlepin
 
   end
 
-  def register(name, type=:system, uuid=nil, facts={})
+  def register(name, type=:system, uuid=nil, facts={}, username=nil)
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -48,7 +48,9 @@ class Candlepin
 
     consumer[:uuid] = uuid if not uuid.nil?
 
-    @consumer = post('/consumers', consumer)
+    path = "/consumers"
+    path += "?username=#{username}" if username
+    @consumer = post(path, consumer)
     return @consumer
   end
 

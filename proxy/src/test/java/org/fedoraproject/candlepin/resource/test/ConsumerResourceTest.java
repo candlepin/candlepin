@@ -232,7 +232,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer submitted = consumerResource.create(toSubmit,
             new UserPrincipal(someuser.getUsername(), owner, Collections
-                .singletonList(Role.OWNER_ADMIN)));
+                .singletonList(Role.OWNER_ADMIN)), null);
 
         assertNotNull(submitted);
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -250,7 +250,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.setUuid(uuid);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted = consumerResource.create(toSubmit, principal);
+        Consumer submitted = consumerResource.create(toSubmit, principal, null);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -266,7 +266,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         anotherToSubmit.setUuid(uuid);
         anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
-        consumerResource.create(anotherToSubmit, principal);
+        consumerResource.create(anotherToSubmit, principal, null);
     }
 
     public void testDeleteResource() {
@@ -285,7 +285,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("random consumer", null, null,
             standardSystemType);
 
-        consumer = consumerResource.create(consumer, principal);
+        consumer = consumerResource.create(consumer, principal, null);
 
         assertEquals(USER_NAME, consumer.getUsername());
     }
@@ -340,7 +340,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         Consumer submitted = consumerResource.create(toSubmit,
             new UserPrincipal(someuser.getUsername(), owner, Collections
-                .singletonList(Role.OWNER_ADMIN)));
+                .singletonList(Role.OWNER_ADMIN)), null);
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
@@ -355,7 +355,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(nulltypeid, new UserPrincipal(
             someuser.getUsername(), owner, Collections
-                .singletonList(Role.OWNER_ADMIN)));
+                .singletonList(Role.OWNER_ADMIN)), null);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
         assertNotNull(submitted.getType().getId());
@@ -613,7 +613,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void personalNameOverride() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
 
-        personal = consumerResource.create(personal, principal);
+        personal = consumerResource.create(personal, principal, null);
 
         // Not sure if this should be hard-coded to default
         assertEquals(USER_NAME, personal.getName());
@@ -622,10 +622,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void onlyOnePersonalConsumer() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
-        consumerResource.create(personal, principal);
+        consumerResource.create(personal, principal, null);
 
         personal = TestUtil.createConsumer(personType, owner);
-        consumerResource.create(personal, principal);
+        consumerResource.create(personal, principal, null);
     }
 
     private Event createConsumerCreatedEvent(Owner o) {

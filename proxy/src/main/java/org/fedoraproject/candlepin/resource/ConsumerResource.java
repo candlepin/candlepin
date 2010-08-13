@@ -191,13 +191,17 @@ public class ConsumerResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public Consumer create(Consumer consumer, @Context Principal principal)
+    public Consumer create(Consumer consumer, @Context Principal principal,
+        @QueryParam("username") String userName)
         throws BadRequestException {
         // API:registerConsumer
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
         User user = getCurrentUsername(principal);
+        if (userName != null) {
+            user = userService.findByLogin(userName);
+        }
 
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
@@ -214,7 +218,7 @@ public class ConsumerResource {
         }
 
         consumer.setUserName(user.getUsername());
-        consumer.setOwner(principal.getOwner());
+        consumer.setOwner(user.getOwner());
         consumer.setType(type);
 
         if (log.isDebugEnabled()) {
