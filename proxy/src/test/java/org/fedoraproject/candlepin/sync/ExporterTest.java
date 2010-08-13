@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
@@ -27,8 +26,6 @@ import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.ExporterMetadata;
-import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -39,8 +36,6 @@ import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -73,7 +68,6 @@ public class ExporterTest {
     private EntitlementCurator ec;
     private EntitlementExporter ee;
     private PKIUtility pki;
-    private ExporterMetadataCurator emc;
     private CandlepinCommonTestConfig config;
 
     @Before
@@ -92,7 +86,6 @@ public class ExporterTest {
         ec = mock(EntitlementCurator.class);
         ee = new EntitlementExporter();
         pki = mock(PKIUtility.class);
-        emc = mock(ExporterMetadataCurator.class);
         config = new CandlepinCommonTestConfig();
     }
 
@@ -105,28 +98,15 @@ public class ExporterTest {
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
             "signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
-        when(emc.lookupByType(ExporterMetadata.TYPE_METADATA)).thenReturn(null);
-        when(emc.create(any(ExporterMetadata.class))).thenAnswer(
-            new Answer<ExporterMetadata>() {
-                public ExporterMetadata answer(InvocationOnMock invocation)
-                    throws Throwable {
-                    Object[] args = invocation.getArguments();
-                    ExporterMetadata em = (ExporterMetadata) args[0];
-                    em.setId(42L);
-                    return em;
-                }
-
-            });
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, emc, config);
+            pce, ec, ee, pki, config);
         Consumer consumer = mock(Consumer.class);
         File export = e.getExport(consumer);
 
         assertNotNull(export);
         assertTrue(export.exists());
         verifyMetadata(export, start);
-        verify(emc).create(any(ExporterMetadata.class));
 
         // cleanup the mess
         FileUtils.deleteDirectory(export.getParentFile());

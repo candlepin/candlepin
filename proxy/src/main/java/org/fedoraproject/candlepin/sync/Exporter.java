@@ -21,8 +21,6 @@ import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.ExporterMetadata;
-import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -69,7 +67,6 @@ public class Exporter {
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entitlementCurator;
     private PKIUtility pki;
-    private ExporterMetadataCurator expMetaCurator;
     private Config config;
 
 
@@ -81,7 +78,7 @@ public class Exporter {
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter, 
-        PKIUtility pki, ExporterMetadataCurator emc, Config config) {
+        PKIUtility pki, Config config) {
         
         mapper = SyncUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
@@ -98,7 +95,6 @@ public class Exporter {
         this.entitlementCurator = entitlementCurator;
         this.entExporter = entExporter;
         this.pki = pki;
-        this.expMetaCurator = emc;
         this.config = config;
     }
 
@@ -248,20 +244,10 @@ public class Exporter {
     }
 
     private void exportMeta(File baseDir) throws IOException {
-        ExporterMetadata em = expMetaCurator.lookupByType(ExporterMetadata.TYPE_METADATA);
-        if (em != null) {
-            em.setExported(new Date());
-        }
-        else {
-            em = new ExporterMetadata(null,
-                ExporterMetadata.TYPE_METADATA, new Date());
-            em = expMetaCurator.create(em);
-        }
-
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
         FileWriter writer = new FileWriter(file);
         Meta m = new Meta();
-        m.setCreated(em.getExported());
+        m.setCreated(new Date());
         meta.export(mapper, writer, m);
         writer.close();
     }
