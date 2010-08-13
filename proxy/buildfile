@@ -338,7 +338,7 @@ Spec::Rake::SpecTask.new do |task|
   end
 
   task.libs << '../client/ruby' 
-  task.spec_opts << '-f specdoc'
+  task.spec_opts << '-c -f specdoc'
 end
 task :spec => :deploy_check
 
