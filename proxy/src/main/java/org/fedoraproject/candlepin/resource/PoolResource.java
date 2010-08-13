@@ -162,6 +162,7 @@ public class PoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
     public Pool getPool(@PathParam("pool_id") Long id) {
         Pool toReturn = poolCurator.find(id);
 
