@@ -5,7 +5,7 @@ describe 'Sub-Pool' do
   include CandlepinMethods
   it_should_behave_like 'Candlepin Scenarios'
 
-  it 'should inherit order number extension from parent pool' do
+  it 'inherits order number extension from parent pool' do
     # ===== Given =====
     owner = create_owner 'test_owner'
     derived_product = create_product()

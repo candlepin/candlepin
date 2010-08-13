@@ -15,7 +15,7 @@ describe 'Candlepin Export' do
     cleanup_candlepin_export()
   end
 
-  it 'should export consumer types' do
+  it 'exports consumer types' do
     consumer_types_dir = File.join(@export_dir, 'consumer_types')
 
     exported_consumer_types = files_in_dir(consumer_types_dir)
@@ -33,12 +33,12 @@ describe 'Candlepin Export' do
     end
   end
 
-  it 'should export consumers' do
+  it 'exports consumers' do
     exported_consumer = parse_file(File.join(@export_dir, 'consumer.json'))
     exported_consumer['uuid'].should == @candlepin_client.uuid
   end
 
-  it 'should export entitlements' do
+  it 'exports entitlements' do
     entitlements_dir = File.join(@export_dir, 'entitlements')
 
     available_entitlements ||= {}
@@ -55,7 +55,7 @@ describe 'Candlepin Export' do
     end
   end
 
-  it 'should not trigger flex expiry rules' do
+  it 'does not trigger flex expiry rules' do
     flex_ent_file = File.join(@export_dir, 'entitlements', '%s.json' %
         @flex_entitlement.id)
     exported_ent = parse_file(flex_ent_file)
@@ -70,7 +70,7 @@ describe 'Candlepin Export' do
     exported_ent['flexExpiryDays'].should == 0
   end
 
-  it 'should export entitlement certificates' do
+  it 'exports entitlement certificates' do
     entitlement_certs_dir = File.join(@export_dir, 'entitlement_certificates')
 
     exported_entitlement_certs = files_in_dir(entitlement_certs_dir)
@@ -88,7 +88,7 @@ describe 'Candlepin Export' do
     end
   end
 
-  it 'should export rules' do
+  it 'exports rules' do
     Base64.decode64(@cp.list_rules).should == load_file(
       File.join(@export_dir, "rules/rules.js"))
   end

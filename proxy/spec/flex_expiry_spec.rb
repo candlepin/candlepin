@@ -12,7 +12,7 @@ describe 'Flex Expiry' do
           {'flex_expiry' => '30'}})
   end
 
-  it 'should create extended entitlement certificates' do
+  it 'creates extended entitlement certificates' do
     owner = create_owner random_string('test_owner')
     owner_client = user_client(owner, random_string('testuser'))
     flex_product = create_flex_expiry_product

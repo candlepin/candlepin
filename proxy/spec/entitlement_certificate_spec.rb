@@ -4,7 +4,7 @@ describe 'Entitlement Certificate' do
   include CandlepinMethods
   it_should_behave_like 'Candlepin Scenarios'
 
-  it 'should be available after consuming an entitlement' do
+  it 'is available after consuming an entitlement' do
     # Given
     owner = create_owner 'test_owner'
     monitoring = create_product()

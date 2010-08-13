@@ -23,21 +23,21 @@ describe 'Candlepin Import' do
     system "curl -k -u admin:admin -F upload=@%s https://localhost:8443/candlepin/owners/%s/import" % [filename, owner_id]
   end
 
-  it 'should succeed' do
+  it 'succeeds' do
     $?.should == 0
   end
 
-  it 'should create pools' do
+  it 'creates pools' do
     pools = @import_owner_client.list_pools
     pools.length.should == 2
   end
 
-  it 'should modify owner to reference upstream consumer' do
+  it 'modifies owner to reference upstream consumer' do
     o = @cp.get_owner(@import_owner.id)
     o.upstreamUuid.should == @candlepin_client.uuid
   end
 
-  it 'should allow flex expiry for downstream consumers' do
+  it 'allows flex expiry for downstream consumers' do
     flex_pool = @import_owner_client.list_pools({:owner => @import_owner.id, 
         :product => @flex_entitlement.pool.productId})[0]
     consumer_client = consumer_client(@import_owner_client, 
