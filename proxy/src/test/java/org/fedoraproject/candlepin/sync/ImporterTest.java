@@ -15,7 +15,9 @@
 package org.fedoraproject.candlepin.sync;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.model.ExporterMetadata;
@@ -57,7 +59,8 @@ public class ImporterTest {
         File actualmeta = createFile("/tmp/meta.json");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         ExporterMetadata em = new ExporterMetadata();
-        em.setCreated(getDateBeforeDays(1));
+        Date daybefore = getDateBeforeDays(1);
+        em.setExported(daybefore);
         em.setId(42L);
         em.setType(ExporterMetadata.TYPE_METADATA);
         when(emc.lookupByType(ExporterMetadata.TYPE_METADATA)).thenReturn(em);
@@ -67,6 +70,21 @@ public class ImporterTest {
 
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
+        assertTrue(daybefore.compareTo(em.getExported()) < 0);
+    }
+
+    @Test
+    public void firstRun() throws Exception {
+        File f = createFile("/tmp/meta");
+        File actualmeta = createFile("/tmp/meta.json");
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        when(emc.lookupByType(ExporterMetadata.TYPE_METADATA)).thenReturn(null);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, emc);
+        i.validateMetaJson(actualmeta);
+        assertTrue(f.delete());
+        assertTrue(actualmeta.delete());
+        verify(emc).create(any(ExporterMetadata.class));
     }
 
     @Test(expected = ImporterException.class)
