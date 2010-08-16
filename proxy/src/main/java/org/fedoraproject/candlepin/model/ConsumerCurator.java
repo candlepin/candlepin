@@ -32,7 +32,8 @@ import com.wideplay.warp.persist.Transactional;
  */
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
-    @Inject private EntitlementCurator entitlementCurator;    
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
     //private static Logger log = Logger.getLogger(ConsumerCurator.class);
     
     protected ConsumerCurator() {
@@ -67,8 +68,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Consumer for this user if one exists, null otherwise.
      */
     public Consumer lookupUsersConsumer(User user) {
+        ConsumerType person = consumerTypeCurator.lookupByLabel(
+            ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
         return (Consumer) currentSession().createCriteria(Consumer.class)
         .add(Restrictions.eq("username", user.getUsername()))
+        .add(Restrictions.eq("type", person))
         .uniqueResult();
     }
 

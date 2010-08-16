@@ -405,9 +405,16 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testLookupUsersConsumer() {
+        String newUsername = "newusername";
+        
+        // Need to make sure another consumer already exists, different type:
+        Consumer existing = new Consumer("existing consumer", newUsername, owner, 
+            consumerType);
+        consumerCurator.create(existing);
+        
         ConsumerType personType = new ConsumerType(ConsumerTypeEnum.PERSON);
         consumerTypeCurator.create(personType);
-        String newUsername = "newusername";
+        
         User user = new User(owner, newUsername, "password");
         assertNull(consumerCurator.lookupUsersConsumer(user));
 
