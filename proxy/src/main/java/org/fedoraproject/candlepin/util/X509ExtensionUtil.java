@@ -85,6 +85,10 @@ public class X509ExtensionUtil {
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
             new DERUTF8String(iso8601DateFormat.format(sub.getEndDate()))));
+        // TODO : use keys
+        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_WARNING_PERIOD), false,
+            new DERUTF8String(sub.getProduct().getAttributeValue("warning_period"))));
         if (sub.getContractNumber() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
