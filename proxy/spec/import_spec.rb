@@ -20,7 +20,7 @@ describe 'Candlepin Import' do
 
   def import(filename, owner_id)
     # Could probably do this with some lib call but sticking with Curl for now:
-    system "curl -k -u admin:admin -F upload=@%s https://localhost:8443/candlepin/owners/%s/import" % [filename, owner_id]
+    system "curl -k -u admin:admin -F upload=@#{filename} https://localhost:8443/candlepin/owners/#{owner_id}/import"
   end
 
   it 'succeeds' do

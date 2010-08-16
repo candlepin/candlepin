@@ -107,7 +107,7 @@ module ExportMethods
     product1 = create_product(random_string(), random_string(),
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
     product2 = create_product()
-    @end_date = Date.new(2040, 5, 29)
+    @end_date = Date.new(2025, 5, 29)
     pool1 = @cp.create_pool(product1.id, @owner.id, 2, {:end_date => @end_date})
     pool2 = @cp.create_pool(product2.id, @owner.id, 4, {:end_date => @end_date})
     @candlepin_client = consumer_client(owner_client, random_string(),

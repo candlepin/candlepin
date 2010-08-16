@@ -9,7 +9,7 @@ describe 'Entitlement Certificate' do
     monitoring = create_product()
 
     @cp.create_subscription(@owner.id, monitoring.id, 10)
-    @cp.refresh_pools @owner.key
+    @cp.refresh_pools(@owner.key, false)
 
     user = user_client(@owner, 'billy')
 
@@ -36,7 +36,7 @@ describe 'Entitlement Certificate' do
   it 'can be manually regenerated for a product' do
     coolapp = create_product
     @cp.create_subscription(@owner.id, coolapp.id, 10)
-    @cp.refresh_pools @owner.key
+    @cp.refresh_pools(@owner.key, false)
     @system.consume_product coolapp.id
     
     @cp.regenerate_entitlement_certificates_for_product(coolapp.id)  

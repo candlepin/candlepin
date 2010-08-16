@@ -17,7 +17,7 @@ describe 'Sub-Pool' do
 
     # Create a subscription
     subscription = @cp.create_subscription(owner.id, parent_product.id, 5)
-    @cp.refresh_pools owner.key
+    @cp.refresh_pools(owner.key, false)
 
     # Set up user
     billy = user_client(owner, 'billy')

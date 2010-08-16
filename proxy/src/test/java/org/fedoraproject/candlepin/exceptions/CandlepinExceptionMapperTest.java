@@ -22,7 +22,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -30,18 +29,17 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
-import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.jboss.resteasy.spi.DefaultOptionsMethodException;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.junit.Before;
 import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import org.fedoraproject.candlepin.guice.CandlepinModule;
 
 
 
@@ -151,12 +149,11 @@ public class CandlepinExceptionMapperTest {
             em.getDisplayMessage().startsWith(expectedmsg));
     }
 
-    public static class MapperTestModule extends AbstractModule {
+    public static class MapperTestModule extends CandlepinModule {
 
         @Override
-        protected void configure() {
+        public void configure() {
             bind(CandlepinExceptionMapper.class);
-            bind(I18n.class).toProvider(I18nProvider.class);
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
         }
 

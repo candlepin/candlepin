@@ -67,13 +67,18 @@ import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import java.util.Locale;
+import javax.servlet.http.HttpServletRequest;
 import org.fedoraproject.candlepin.audit.AMQPBusEventAdapter;
 import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * CandlepinProductionConfiguration
@@ -118,7 +123,6 @@ public class CandlepinModule extends AbstractModule {
         bind(CandlepinExceptionMapper.class);   
         bind(Principal.class).toProvider(PrincipalProvider.class);
 
-        bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
@@ -163,6 +167,33 @@ public class CandlepinModule extends AbstractModule {
       //for lazy loading.
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class) 
                 .in(Singleton.class);
+    }
+
+    @Provides
+    public I18n provideI18n() {
+        HttpServletRequest request;
+        Locale locale = null;
+
+        try {
+            Provider<HttpServletRequest> requestProvider =
+                    this.getProvider(HttpServletRequest.class);
+            request = requestProvider.get();
+        }
+        catch (Exception e) {
+            request = null;
+        }
+
+        if (request != null) {
+            locale = request.getLocale();
+        }
+
+        locale = (locale == null) ? Locale.US : locale;
+
+        return I18nFactory.getI18n(
+            getClass(),
+            locale,
+            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
+        );
     }
 
 }

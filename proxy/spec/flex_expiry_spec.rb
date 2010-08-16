@@ -15,10 +15,10 @@ describe 'Flex Expiry' do
           {'flex_expiry' => @flex_days}})
 
     # Create a subscription and refresh pools:
-    @end_date = Date.new(2050, 5, 1)
+    @end_date = Date.civil(2025, 5, 1)
     @sub = @cp.create_subscription(@owner.id, flex_product.id, 100, [], '',
         "2010-05-01", @end_date)
-    @cp.refresh_pools @owner.key
+    @cp.refresh_pools(@owner.key, false)
     @pool = @cp.list_pools(:owner => @owner.id).first
 
     # Bind to create an entitlement cert:
@@ -43,7 +43,7 @@ describe 'Flex Expiry' do
     @end_date = @end_date + 10
     @sub['endDate'] = @end_date
     @cp.update_subscription(@sub)
-    @cp.refresh_pools(@owner.key)
+    @cp.refresh_pools(@owner.key, false)
 
     ent_cert = @consumer_client.list_certificates.first
     verify_cert_dates(ent_cert, @end_date, @flex_days)

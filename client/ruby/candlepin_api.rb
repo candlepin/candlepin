@@ -160,8 +160,11 @@ class Candlepin
     post('/pools', pool)
   end
 
-  def refresh_pools(owner_key)
-    put("/owners/#{owner_key}/subscriptions")
+  def refresh_pools(owner_key, async=true)
+    path = "/owners/#{owner_key}/subscriptions"
+    path << '?asynch=true' if async
+
+    put(path)
   end
   
   def export_consumer(dest_dir)
@@ -361,6 +364,10 @@ class Candlepin
     OpenSSL::X509::CRL.new(get_text('/crl'))
   end
 
+  def get_job(job_id)
+    get("/jobs/#{job_id}")
+  end
+
   private
 
   def create_basic_client(username=nil, password=nil)
@@ -409,7 +416,12 @@ class Candlepin
     data = data.to_json if not data.nil?
     response = @client[uri].put(data, :content_type => :json, :accept => :json)
 
-    return JSON.parse(response.body) unless response.body.empty?
+    # TODO:  Not sure if this is the best approach
+    if response.body.empty?
+      return response.headers
+    else
+      return JSON.parse(response.body)
+    end
   end
 
   def delete(uri)

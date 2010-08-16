@@ -3,6 +3,18 @@
      xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
      version="2.4">
 
+    <!-- enable the Asynchronous Job Service -->
+    <context-param>
+        <param-name>resteasy.async.job.service.enabled</param-name>
+        <param-value>true</param-value>
+    </context-param>
+
+    <!-- Set the base path for the Job uris -->
+    <context-param>
+        <param-name>resteasy.async.job.service.base.path</param-name>
+        <param-value>/jobs</param-value>
+    </context-param>
+
     <display-name>Candlepin</display-name>
     <filter>
         <filter-name>Guice Filter</filter-name>

@@ -63,7 +63,7 @@ describe 'Candlepin Export' do
     date = Date.strptime(exported_ent['endDate'])
     date.month.should == 5
     date.day.should == 29
-    date.year.should == 2040
+    date.year.should == 2025
 
     # Flex days should *not* have been set, Candlepin consumers do not
     # execute the rules. The product will carry the attribute downstream.
