@@ -122,12 +122,12 @@ public class Importer {
     public void validateMetaJson(File meta) throws IOException, ImporterException {
         Meta m = mapper.readValue(meta, Meta.class);
         ExporterMetadata lastrun = expMetaCurator
-            .lookupByType(ExporterMetadata.TYPE_METADATA);
+            .lookupByType(ExporterMetadata.TYPE_SYSTEM);
 
         if (lastrun == null) {
             // this is our first import, let's create a new entry
             lastrun = new ExporterMetadata(null,
-                ExporterMetadata.TYPE_METADATA, m.getCreated());
+                ExporterMetadata.TYPE_SYSTEM, m.getCreated());
             lastrun = expMetaCurator.create(lastrun);
         }
         else {

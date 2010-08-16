@@ -62,8 +62,8 @@ public class ImporterTest {
         Date daybefore = getDateBeforeDays(1);
         em.setExported(daybefore);
         em.setId(42L);
-        em.setType(ExporterMetadata.TYPE_METADATA);
-        when(emc.lookupByType(ExporterMetadata.TYPE_METADATA)).thenReturn(em);
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
+        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc);
         i.validateMetaJson(actualmeta);
@@ -78,7 +78,7 @@ public class ImporterTest {
         File f = createFile("/tmp/meta");
         File actualmeta = createFile("/tmp/meta.json");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        when(emc.lookupByType(ExporterMetadata.TYPE_METADATA)).thenReturn(null);
+        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc);
         i.validateMetaJson(actualmeta);
@@ -96,8 +96,8 @@ public class ImporterTest {
         ExporterMetadata em = new ExporterMetadata();
         em.setCreated(getDateAfterDays(1));
         em.setId(42L);
-        em.setType(ExporterMetadata.TYPE_METADATA);
-        when(emc.lookupByType(ExporterMetadata.TYPE_METADATA)).thenReturn(em);
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
+        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc);
         i.validateMetaJson(actualmeta);

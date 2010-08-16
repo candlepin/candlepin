@@ -22,6 +22,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -33,7 +35,7 @@ import javax.persistence.Table;
 @SequenceGenerator(name = "seq_exp_meta", sequenceName = "seq_exp_meta", allocationSize = 1)
 public class ExporterMetadata extends AbstractHibernateObject {
 
-    public static final String TYPE_METADATA = "metadata";
+    public static final String TYPE_SYSTEM = "system";
     public static final String TYPE_CONSUMER = "consumer";
     public static final String TYPE_CONSUMER_TYPE = "consumer_type";
     public static final String TYPE_ENTITLEMENT = "entitlement";
@@ -41,6 +43,8 @@ public class ExporterMetadata extends AbstractHibernateObject {
     public static final String TYPE_PRODUCT = "product";
     public static final String TYPE_PRODUCT_CERT = "product_cert";
     public static final String TYPE_RULES = "rules";
+
+    public static final String TYPE_PER_USER = "per_user";
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_exp_meta")
@@ -50,9 +54,13 @@ public class ExporterMetadata extends AbstractHibernateObject {
     @Column(nullable = false)
     private Date exported;
 
+    @OneToOne
+    @JoinColumn(name = "owner_id", nullable = true)
+    private Owner owner;
+
     public ExporterMetadata() {
         id = null;
-        type = TYPE_METADATA;
+        type = TYPE_SYSTEM;
         exported = new Date();
     }
 
@@ -96,5 +104,19 @@ public class ExporterMetadata extends AbstractHibernateObject {
      */
     public void setExported(Date exported) {
         this.exported = exported;
+    }
+
+    /**
+     * @return the owner
+     */
+    public Owner getOwner() {
+        return owner;
+    }
+
+    /**
+     * @param owner the owner to set
+     */
+    public void setOwner(Owner owner) {
+        this.owner = owner;
     }
 }

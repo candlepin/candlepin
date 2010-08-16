@@ -42,18 +42,19 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     @Test
     public void testCreation() {
         ExporterMetadata em = new ExporterMetadata();
-        em.setType(ExporterMetadata.TYPE_METADATA);
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
         assertNotNull(emdb);
         assertNotNull(emdb.getId());
+        assertNull(emdb.getOwner());
     }
 
     @Test
     public void testLookup() {
         ExporterMetadata em = new ExporterMetadata();
-        em.setType(ExporterMetadata.TYPE_METADATA);
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
@@ -66,12 +67,24 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     @Test
     public void lookupByType() {
         ExporterMetadata em = new ExporterMetadata();
-        em.setType(ExporterMetadata.TYPE_METADATA);
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
 
         assertNull(emc.lookupByType(ExporterMetadata.TYPE_CONSUMER));
-        assertEquals(emdb, emc.lookupByType(ExporterMetadata.TYPE_METADATA));
+        assertEquals(emdb, emc.lookupByType(ExporterMetadata.TYPE_SYSTEM));
+    }
+
+    @Test
+    public void setOwner() {
+        ExporterMetadata em = new ExporterMetadata();
+        em.setType(ExporterMetadata.TYPE_PER_USER);
+        em.setExported(new Date());
+        em.setOwner(createOwner());
+        ExporterMetadata emdb = emc.create(em);
+        assertNotNull(emdb);
+        assertNotNull(emdb.getOwner());
+        assertNotNull(emdb.getOwner().getId());
     }
 }
