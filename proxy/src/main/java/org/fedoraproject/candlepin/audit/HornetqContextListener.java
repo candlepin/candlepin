@@ -120,7 +120,7 @@ public class HornetqContextListener {
             listeners.add(AMQPBusPublisher.class.getName());
         }
 
-        eventSource = new EventSource();
+        eventSource = injector.getInstance(EventSource.class);
         for (int i = 0; i < listeners.size(); i++) {
             try {
                 Class<?> clazz = this.getClass().getClassLoader().loadClass(

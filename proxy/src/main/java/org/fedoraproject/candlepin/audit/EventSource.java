@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.audit;
 
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientConsumer;
@@ -23,26 +24,36 @@ import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 
+import com.google.inject.Inject;
+
 /**
  * EventSource
  */
-class EventSource {
+public class EventSource {
     private static  Logger log = Logger.getLogger(HornetqContextListener.class);
     static final String QUEUE_ADDRESS = "event";
-
     private ClientSession session;
+    private ObjectMapper mapper;
     
-    EventSource() {
-        ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
-
+    @Inject
+    public EventSource(ObjectMapper mapper) {
+        ClientSessionFactory factory =  createSessionFactory();
+        this.mapper = mapper;
         try {
             session = factory.createSession(true, true);
             session.start();
         }
-        catch (HornetQException e) {
-            e.printStackTrace();
+        catch (Exception e) {
+            throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * @return
+     */
+    protected ClientSessionFactory createSessionFactory() {
+        return HornetQClient.createClientSessionFactory(
+            new TransportConfiguration(InVMConnectorFactory.class.getName()));
     }
     
     void shutDown() {
@@ -72,7 +83,7 @@ class EventSource {
             }
             
             ClientConsumer consumer = session.createConsumer(queueName);
-            consumer.setMessageHandler(new ListenerWrapper(listener));
+            consumer.setMessageHandler(new ListenerWrapper(listener, mapper));
         }
         catch (HornetQException e) {
             log.fatal("Unable to register listener :" + listener, e);

@@ -27,9 +27,10 @@ public class ListenerWrapper implements MessageHandler {
 
     private EventListener listener;
     private static Logger log = Logger.getLogger(ListenerWrapper.class);
-    
-    public ListenerWrapper(EventListener listener) {
+    private ObjectMapper mapper;
+    public ListenerWrapper(EventListener listener, ObjectMapper mapper) {
         this.listener = listener;
+        this.mapper = mapper;
     }
     
     @Override
@@ -38,7 +39,6 @@ public class ListenerWrapper implements MessageHandler {
         if (log.isDebugEnabled()) {
             log.debug("Got event: " + body);
         }
-        ObjectMapper mapper = new ObjectMapper();
         Event event;
         try {
             event = mapper.readValue(body, Event.class);

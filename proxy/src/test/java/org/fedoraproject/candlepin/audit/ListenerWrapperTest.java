@@ -14,54 +14,88 @@
  */
 package org.fedoraproject.candlepin.audit;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.StringWriter;
+
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQBuffer;
+import org.hornetq.api.core.HornetQBuffers;
+import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.client.ClientMessage;
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-
-import java.io.StringWriter;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
 
 /**
  * ListenerWrapperTest
  */
+@RunWith(MockitoJUnitRunner.class)
 public class ListenerWrapperTest {
+    @Mock private EventListener mockEventListener;
+    @Mock private ClientMessage mockClientMessage;
+    @Spy private ObjectMapper mapper = new ObjectMapper();
+    @Spy private HornetQBuffer hornetQBuffer = HornetQBuffers.fixedBuffer(1000);
+    private ListenerWrapper listenerWrapper;
+
+    @Before
+    public void init() {
+        this.listenerWrapper = new ListenerWrapper(mockEventListener, mapper);
+        when(mockClientMessage.getBodyBuffer())
+            .thenReturn(hornetQBuffer);
+    }
 
     @Test
-    public void onMessage() throws Exception {
-        EventListener el = mock(EventListener.class);
-        ClientMessage cm = mock(ClientMessage.class);
-        ListenerWrapper lw = new ListenerWrapper(el);
-        HornetQBuffer hqbuf = mock(HornetQBuffer.class);
-        when(hqbuf.readString()).thenReturn(eventJson());
-        when(cm.getBodyBuffer()).thenReturn(hqbuf);
+    public void whenMapperReadThrowsExceptionThenOnMessageShouldntFail() throws Exception {
+        doReturn("test123").when(hornetQBuffer).readString();
+        doThrow(new JsonMappingException("Induced exception"))
+            .when(mapper).readValue(anyString(), eq(Event.class));
+        this.listenerWrapper.onMessage(mockClientMessage);
+        verify(this.mockClientMessage).acknowledge();
+    }
 
-        lw.onMessage(cm);
+    @Test
+    public void whenMsgAcknowledgeThrowsExceptionThenOnMessageShouldntFail()
+        throws Exception {
+        doReturn(eventJson()).when(hornetQBuffer).readString();
+        doThrow(new HornetQException(HornetQException.DISCONNECTED,
+            "Induced exception for junit testing"))
+            .when(mockClientMessage).acknowledge();
+        this.listenerWrapper.onMessage(mockClientMessage);
+        verify(this.mockEventListener).onEvent(any(Event.class));
+    }
 
-        verify(el).onEvent(any(Event.class));
+    @Test
+    public void whenProperClientMsgPassedThenOnMessageShouldSucceed()
+        throws Exception {
+        doReturn(eventJson()).when(hornetQBuffer).readString();
+        this.listenerWrapper.onMessage(mockClientMessage);
+        verify(this.mockEventListener).onEvent(any(Event.class));
+        verify(this.mockClientMessage).acknowledge();
     }
 
     @Test(expected = NullPointerException.class)
     public void onMessageNull() {
-        EventListener el = Mockito.mock(EventListener.class);
-        ListenerWrapper lw = new ListenerWrapper(el);
-
-        lw.onMessage(null);
+        this.listenerWrapper.onMessage(null);
     }
 
     private String eventJson() throws Exception {
-        ObjectMapper om = new ObjectMapper();
         StringWriter sw = new StringWriter();
         Event e = new Event();
         e.setId(10L);
         e.setConsumerId(20L);
         e.setPrincipal("not so random name");
-        om.writeValue(sw, e);
+        mapper.writeValue(sw, e);
         return sw.toString();
     }
 

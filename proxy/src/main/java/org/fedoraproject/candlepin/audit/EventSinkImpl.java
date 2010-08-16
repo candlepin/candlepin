@@ -45,13 +45,13 @@ public class EventSinkImpl implements EventSink {
     private ClientSession clientSession;
     private ClientProducer clientProducer;
     private int largeMsgSize;
+    private ObjectMapper mapper;
 
     @Inject
-    public EventSinkImpl(EventFactory eventFactory) {
+    public EventSinkImpl(EventFactory eventFactory, ObjectMapper mapper) {
         this.eventFactory = eventFactory;
-        
-        factory =  HornetQClient.createClientSessionFactory(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
+        this.mapper = mapper;
+        factory =  createClientSessionFactory();
 
         largeMsgSize = new Config().getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
         factory.setMinLargeMessageSize(largeMsgSize);
@@ -63,6 +63,14 @@ public class EventSinkImpl implements EventSink {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * @return
+     */
+    protected ClientSessionFactory createClientSessionFactory() {
+        return HornetQClient.createClientSessionFactory(
+            new TransportConfiguration(InVMConnectorFactory.class.getName()));
+    }
     
     public void sendEvent(Event event) {
         if (log.isDebugEnabled()) {
@@ -70,7 +78,6 @@ public class EventSinkImpl implements EventSink {
         }
         try {
             ClientMessage message = clientSession.createMessage(true);
-            ObjectMapper mapper = new ObjectMapper();
             String eventString = mapper.writeValueAsString(event);
             message.getBodyBuffer().writeString(eventString);
             clientProducer.send(message);
