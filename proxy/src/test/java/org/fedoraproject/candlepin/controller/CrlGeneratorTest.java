@@ -141,7 +141,6 @@ public class CrlGeneratorTest {
         for (int i = 0; i < serials.size(); i++) {
             CertificateSerial cs = serials.get(i);
             assertEquals(cs.getSerial(), entries.get(i).serialNumber);
-            assertFalse(cs.getExpiration().equals(entries.get(i).revocationDate));
         }
     }
     
