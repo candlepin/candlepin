@@ -119,15 +119,56 @@ public class Importer {
      * @throws IOException thrown if there's a problem reading the file
      * @throws ImporterException thrown if the metadata is invalid.
      */
-    public void validateMetaJson(File meta) throws IOException, ImporterException {
+//    public void validateMetaJson(File meta) throws IOException, ImporterException {
+//        Meta m = mapper.readValue(meta, Meta.class);
+//        ExporterMetadata lastrun = expMetaCurator
+//            .lookupByType(ExporterMetadata.TYPE_SYSTEM);
+//
+//        if (lastrun == null) {
+//            // this is our first import, let's create a new entry
+    // lastrun = new ExporterMetadata(ExporterMetadata.TYPE_SYSTEM,
+    // m.getCreated(), null);
+//            lastrun = expMetaCurator.create(lastrun);
+//        }
+//        else {
+//            if (lastrun.getExported().compareTo(m.getCreated()) > 0) {
+//                throw new ImporterException("import is older than existing data");
+//            }
+//            else {
+//                lastrun.setExported(new Date());
+//            }
+//        }
+//    }
+
+    /**
+     * Check to make sure the meta data is newer than the imported data.
+     * @param type ExporterMetadata.TYPE_PER_USER or TYPE_SYSTEM
+     * @param owner Owner in the case of PER_USER
+     * @param meta meta.json file
+     * @throws IOException thrown if there's a problem reading the file
+     * @throws ImporterException thrown if the metadata is invalid.
+     */
+    public void validateMetadata(String type, Owner owner, File meta)
+        throws IOException, ImporterException {
         Meta m = mapper.readValue(meta, Meta.class);
-        ExporterMetadata lastrun = expMetaCurator
-            .lookupByType(ExporterMetadata.TYPE_SYSTEM);
+        if (type == null) {
+            throw new ImporterException("Wrong metadata type");
+        }
+
+        ExporterMetadata lastrun = null;
+        if (ExporterMetadata.TYPE_SYSTEM.equals(type)) {
+            lastrun = expMetaCurator.lookupByType(type);
+        }
+        else if (ExporterMetadata.TYPE_PER_USER.equals(type)) {
+            if (owner == null) {
+                throw new ImporterException("invalid owner");
+            }
+            lastrun = expMetaCurator.lookupByTypeAndOwner(type, owner);
+        }
 
         if (lastrun == null) {
             // this is our first import, let's create a new entry
-            lastrun = new ExporterMetadata(null,
-                ExporterMetadata.TYPE_SYSTEM, m.getCreated());
+            lastrun = new ExporterMetadata(type, m.getCreated(), owner);
             lastrun = expMetaCurator.create(lastrun);
         }
         else {
@@ -164,8 +205,6 @@ public class Importer {
             for (File file : exportDir.listFiles()) {
                 importFiles.put(file.getName(), file);
             }
-            
-            validateMetaJson(importFiles.get(ImportFile.META.fileName()));
 
             importObjects(owner, importFiles);
         }
@@ -197,14 +236,21 @@ public class Importer {
     }
     
     @Transactional
-    public void importObjects(Owner owner, Map<String, File> importFiles) throws IOException,
-        SyncDataFormatException {
+    public void importObjects(Owner owner, Map<String, File> importFiles)
+        throws IOException, ImporterException {
         
-        importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
+        File metadata = importFiles.get(ImportFile.META.fileName());
+
+        // system level elements
+        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata);
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
         Set<Product> importedProducts =
             importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
+
+        // per user elements
+        validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata);
+        importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
         importEntitlements(owner, importedProducts,
             importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
         
