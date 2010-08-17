@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.sync;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,7 +67,7 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc);
-        i.validateMetaJson(actualmeta);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
 
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
@@ -81,7 +82,7 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc);
-        i.validateMetaJson(actualmeta);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
         verify(emc).create(any(ExporterMetadata.class));
@@ -100,10 +101,38 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc);
-        i.validateMetaJson(actualmeta);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
 
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
+    }
+
+    @Test(expected = ImporterException.class)
+    public void nullType() throws ImporterException, IOException {
+        File actualmeta = createFile("/tmp/meta.json");
+        try {
+            Importer i = new Importer(null, null, null, null, null, null, null,
+                null, null, null);
+            // null Type should cause exception
+            i.validateMetadata(null, null, actualmeta);
+        }
+        finally {
+            assertTrue(actualmeta.delete());
+        }
+    }
+
+    @Test(expected = ImporterException.class)
+    public void expectOwner() throws ImporterException, IOException {
+        File actualmeta = createFile("/tmp/meta.json");
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        when(emc.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null))
+            .thenReturn(null);
+
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, emc);
+        // null Type should cause exception
+        i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta);
+        verify(emc, never()).create(any(ExporterMetadata.class));
     }
 
     private File createFile(String filename)
