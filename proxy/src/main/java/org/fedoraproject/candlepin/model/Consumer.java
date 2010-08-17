@@ -81,7 +81,8 @@ import org.hibernate.annotations.ParamDef;
 })
 @Table(name = "cp_consumer")
 @SequenceGenerator(name = "seq_consumer", sequenceName = "seq_consumer", allocationSize = 1)
-public class Consumer extends AbstractHibernateObject implements AccessControlEnforced {
+public class Consumer extends AbstractHibernateObject 
+    implements AccessControlEnforced, Linkable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer")
@@ -448,5 +449,9 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     @Override
     public boolean shouldGrantAccessTo(Consumer consumer) {
         return AccessControlValidator.shouldGrantAccess(this, consumer);
+    }
+    
+    public String getHref() {
+        return "/consumers/" + getUuid();
     }
 }

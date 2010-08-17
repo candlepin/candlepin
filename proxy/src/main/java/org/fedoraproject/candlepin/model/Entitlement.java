@@ -85,7 +85,8 @@ import org.hibernate.annotations.ParamDef;
 @Table(name = "cp_entitlement")
 @SequenceGenerator(name = "seq_entitlement", sequenceName = "seq_entitlement",
         allocationSize = 1)
-public class Entitlement extends AbstractHibernateObject implements AccessControlEnforced {
+public class Entitlement extends AbstractHibernateObject 
+    implements AccessControlEnforced, Linkable {
     
     private static final long serialVersionUID = 1L;
     
@@ -315,5 +316,9 @@ public class Entitlement extends AbstractHibernateObject implements AccessContro
 
     public void setFlexExpiryDays(Integer flexExpiryDays) {
         this.flexExpiryDays = flexExpiryDays;
+    }
+    
+    public String getHref() {
+        return "/consumers/" + getConsumer().getUuid() + "/entitlements/" + getId();
     }
 }

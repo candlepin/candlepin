@@ -21,8 +21,14 @@ import javax.ws.rs.ext.Provider;
 
 import org.codehaus.jackson.jaxrs.Annotations;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Linkable;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * JsonProvider
@@ -45,5 +51,21 @@ public class JsonProvider extends JacksonJsonProvider {
         if (config.indentJson()) {
             this._mapperConfig.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
         }
+        Class [] serializeThese = {
+            Consumer.class,
+            Entitlement.class,
+            Owner.class,
+            Pool.class,
+        };
+        
+        ObjectMapper mapper = _mapperConfig.getDefaultMapper();
+        CandlepinSerializerProvider csp = new CandlepinSerializerProvider();
+        CandlepinSerializerFactory factory = new CandlepinSerializerFactory();
+        for (Class<Linkable> c : serializeThese) {
+            factory.addSpecificMapping(c, new CandlepinSerializer());
+        }
+        mapper.setSerializerFactory(factory);
+        mapper.setSerializerProvider(csp);
+        setMapper(mapper);
     }
 }

@@ -46,7 +46,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_product")
 @SequenceGenerator(name = "seq_product", sequenceName = "seq_product", allocationSize = 1)
-public class Product extends AbstractHibernateObject {
+public class Product extends AbstractHibernateObject implements Linkable {
    
     // Product ID is stored as a string.
     // This is a subset of the product OID known as the hash.
@@ -305,6 +305,11 @@ public class Product extends AbstractHibernateObject {
 
     public void setSubscriptions(Set<Subscription> subscriptions) {
         this.subscriptions = subscriptions;
+    }
+
+    @Override
+    public String getHref() {
+        return "/products/" + getId();
     }
     
 }

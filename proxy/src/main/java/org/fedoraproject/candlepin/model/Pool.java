@@ -77,7 +77,8 @@ import org.hibernate.annotations.ParamDef;
 @Table(name = "cp_pool")
 @SequenceGenerator(name = "seq_pool",
         sequenceName = "seq_pool", allocationSize = 1)
-public class Pool extends AbstractHibernateObject implements AccessControlEnforced {
+public class Pool extends AbstractHibernateObject 
+    implements AccessControlEnforced, Linkable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_pool")
@@ -493,5 +494,9 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @XmlTransient
     public boolean isOverflowing() {
         return this.consumed > this.quantity;
+    }
+    
+    public String getHref() {
+        return "/pools/" + getId();
     }
 }
