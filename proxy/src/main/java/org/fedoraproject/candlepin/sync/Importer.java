@@ -115,33 +115,6 @@ public class Importer {
 
     /**
      * Check to make sure the meta data is newer than the imported data.
-     * @param meta meta.json file
-     * @throws IOException thrown if there's a problem reading the file
-     * @throws ImporterException thrown if the metadata is invalid.
-     */
-//    public void validateMetaJson(File meta) throws IOException, ImporterException {
-//        Meta m = mapper.readValue(meta, Meta.class);
-//        ExporterMetadata lastrun = expMetaCurator
-//            .lookupByType(ExporterMetadata.TYPE_SYSTEM);
-//
-//        if (lastrun == null) {
-//            // this is our first import, let's create a new entry
-    // lastrun = new ExporterMetadata(ExporterMetadata.TYPE_SYSTEM,
-    // m.getCreated(), null);
-//            lastrun = expMetaCurator.create(lastrun);
-//        }
-//        else {
-//            if (lastrun.getExported().compareTo(m.getCreated()) > 0) {
-//                throw new ImporterException("import is older than existing data");
-//            }
-//            else {
-//                lastrun.setExported(new Date());
-//            }
-//        }
-//    }
-
-    /**
-     * Check to make sure the meta data is newer than the imported data.
      * @param type ExporterMetadata.TYPE_PER_USER or TYPE_SYSTEM
      * @param owner Owner in the case of PER_USER
      * @param meta meta.json file
