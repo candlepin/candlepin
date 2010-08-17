@@ -48,7 +48,7 @@ public class ConfigProperties {
     //AMQP stuff
     public static final String AMQP_INTEGRATION_ENABLED = 
         "candlepin.amqp.enable";
-    public static final String AMQP_CONFIG_LOCATION = "candlepin.amqp.location";
+    public static final String AMQP_CONNECT_STRING = "candlepin.amqp.connect";
     
     // Pinsetter
     public static final String TASKS = "pinsetter.tasks";
@@ -92,7 +92,7 @@ public class ConfigProperties {
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
                 
                 this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
-                this.put(AMQP_CONFIG_LOCATION, "/etc/candlepin/amqp.properties");
+                this.put(AMQP_CONNECT_STRING, "tcp://localhost:5672");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";

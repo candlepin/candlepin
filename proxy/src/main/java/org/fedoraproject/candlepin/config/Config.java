@@ -153,9 +153,6 @@ public class Config {
         return configuration.get(s);
     }
 
-    public File getAsFile(String key) {
-        return new File(configuration.get(key));
-    }
     /**
      * Get the configuration entry for the given string name.  If the value
      * is null, then return the given defValue.  defValue can be null as well.

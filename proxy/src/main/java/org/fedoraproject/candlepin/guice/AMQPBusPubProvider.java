@@ -14,11 +14,6 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import static org.fedoraproject.candlepin.config.ConfigProperties.AMQP_CONFIG_LOCATION;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.util.Map;
 import java.util.Properties;
 
@@ -38,11 +33,11 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.Event.Target;
 import org.fedoraproject.candlepin.audit.Event.Type;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.util.Util;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -64,12 +59,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     public AMQPBusPubProvider(Config config,
         @Named("abc") Function adapter) {
         try {
-            Properties properties = new Properties();
-            File file = config.getAsFile(AMQP_CONFIG_LOCATION);
-            Preconditions.checkState(file.canRead(), 
-                "Config for AMQP not found/can't read @ %s.", file);
-            properties.load(new BufferedReader(new FileReader(file)));
-            this.ctx = new InitialContext(properties);
+            this.ctx = new InitialContext(buildConfigurationProperties(config));
             ConnectionFactory connectionFactory = (ConnectionFactory) ctx
                 .lookup("qpidConnectionfactory");
             this.connection = (TopicConnection) connectionFactory
@@ -85,12 +75,33 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     }
     
 
+    /**
+     * @return A Properties object containing the amqp configuration for jms
+     */
+    private Properties buildConfigurationProperties(Config config) {
+        Properties properties = new Properties();
+        
+        properties.put("java.naming.factory.initial",
+            "org.apache.qpid.jndi.PropertiesFileInitialContextFactory");
+        properties.put("connectionfactory.qpidConnectionfactory",
+            "amqp://guest:guest@localhost/test?brokerlist='" +
+            config.getString(ConfigProperties.AMQP_CONNECT_STRING) + "'");
+        
+        for (Target target : Target.values()) {
+            for (Type type : Type.values()) {
+                String name = getTopicName(type, target);
+                properties.put("destination." + name, "amq.topic");
+            }
+        }
+        return properties;
+    }
+
+
     @Override
     public AMQPBusPublisher get() {
         try {
             Map<Target, Map<Type, TopicPublisher>> pm = Util.newMap();
-            Target [] targets = { Target.CONSUMER, Target.USER, Target.ROLE };
-            for (Target target : targets) {
+            for (Target target : Target.values()) {
                 Map<Type, TopicPublisher> typeToTpMap = Util.newMap();
                 storeTopicProducer(typeToTpMap, target);
                 pm.put(target, typeToTpMap);
@@ -110,12 +121,18 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     
     protected final void storeTopicProducer(Type type, Target target,
         Map<Type, TopicPublisher> map) throws JMSException, NamingException {
-        String name = target.toString().toLowerCase() +
-            Util.capitalize(type.toString().toLowerCase());
+        String name = getTopicName(type, target);
         Topic topic = (Topic) this.ctx.lookup(name);
         log.info("Creating publisher for topic: {}", name);
         TopicPublisher tp = this.session.createPublisher(topic);
         map.put(type, tp);
+    }
+
+
+    private String getTopicName(Type type, Target target) {
+        String name = target.toString().toLowerCase() +
+            Util.capitalize(type.toString().toLowerCase());
+        return name;
     }
 
     protected final void storeTopicProducer(Map<Type, TopicPublisher> map, Target target)
