@@ -36,14 +36,6 @@ import javax.persistence.Table;
 public class ExporterMetadata extends AbstractHibernateObject {
 
     public static final String TYPE_SYSTEM = "system";
-    public static final String TYPE_CONSUMER = "consumer";
-    public static final String TYPE_CONSUMER_TYPE = "consumer_type";
-    public static final String TYPE_ENTITLEMENT = "entitlement";
-    public static final String TYPE_ENTITLEMENT_CERT = "entitlement_cert";
-    public static final String TYPE_PRODUCT = "product";
-    public static final String TYPE_PRODUCT_CERT = "product_cert";
-    public static final String TYPE_RULES = "rules";
-
     public static final String TYPE_PER_USER = "per_user";
 
     @Id
@@ -64,10 +56,15 @@ public class ExporterMetadata extends AbstractHibernateObject {
         exported = new Date();
     }
 
-    public ExporterMetadata(Long id, String type, Date exported) {
+    public ExporterMetadata(String type, Date exported, Owner owner) {
+        this(null, type, exported, owner);
+    }
+
+    public ExporterMetadata(Long id, String type, Date exported, Owner owner) {
         this.id = id;
         this.type = type;
         this.exported = exported;
+        this.owner = owner;
     }
 
     public Long getId() {
