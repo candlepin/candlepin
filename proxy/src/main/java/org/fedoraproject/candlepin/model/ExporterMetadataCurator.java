@@ -35,4 +35,11 @@ public class ExporterMetadataCurator extends AbstractHibernateCurator<ExporterMe
         return getByCriteria(query);
     }
 
+    public ExporterMetadata lookupByTypeAndOwner(String type, Owner owner) {
+        DetachedCriteria query = DetachedCriteria.forClass(ExporterMetadata.class);
+        query.add(Restrictions.eq("type", type));
+        query.add(Restrictions.eq("owner", owner));
+        return getByCriteria(query);
+    }
+
 }
