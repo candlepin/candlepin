@@ -14,6 +14,30 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -38,6 +62,8 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -54,37 +80,12 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.ExportCreationException;
 import org.fedoraproject.candlepin.sync.Exporter;
 import org.fedoraproject.candlepin.util.Util;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -110,6 +111,7 @@ public class ConsumerResource {
     private PoolManager poolManager;
     private ConsumerRules consumerRules;
     private ConsumerDeleteHelper consumerDeleteHelper;
+    private OwnerCurator ownerCurator;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -122,7 +124,8 @@ public class ConsumerResource {
         EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
         UserServiceAdapter userService, Exporter exporter,
         PoolManager poolManager, ConsumerRules consumerRules,
-        ConsumerDeleteHelper consumerDeleteHelper) {
+        ConsumerDeleteHelper consumerDeleteHelper,
+        OwnerCurator ownerCurator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -141,6 +144,7 @@ public class ConsumerResource {
         this.poolManager = poolManager;
         this.consumerRules = consumerRules;
         this.consumerDeleteHelper = consumerDeleteHelper;
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -202,6 +206,7 @@ public class ConsumerResource {
         if (userName != null) {
             user = userService.findByLogin(userName);
         }
+        setOwner(user);
 
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
@@ -244,6 +249,17 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr(
                 "Problem creating consumer {0}", consumer));
         }
+    }
+
+    private void setOwner(User user) {
+        Owner owner = userService.getOwner(user.getUsername());
+        owner = ownerCurator.lookupByKey(owner.getKey());
+        if (owner == null) {
+            owner = userService.getOwner(user.getUsername());
+            ownerCurator.create(owner);
+        }
+        
+        user.setOwner(owner);
     }
 
     private ConsumerType lookupConsumerType(String label) {

@@ -171,7 +171,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, null, null, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null,
-            null, null, null, null);
+            null, null, null, null, null);
 
         List<CertificateSerialDto> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
@@ -718,7 +718,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Entitler entitler = mock(Entitler.class);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, entitler, null, null, null, null, null, null, null, null,
-            null, null, null, null, null);
+            null, null, null, null, null, null);
         cr.regenerateEntitlementCertificates(this.consumer.getUuid());
         Mockito.verify(entitler, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(this.consumer));
@@ -759,7 +759,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator,
             null, null, null, null, null, mockedIdSvc, null, null,
-            null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null);
 
         Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid());
 
