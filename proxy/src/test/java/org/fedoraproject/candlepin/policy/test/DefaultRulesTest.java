@@ -297,7 +297,7 @@ public class DefaultRulesTest {
     @Test
     public void userRestrictedPoolPassesPre() {
         Pool pool = setupUserRestrictedPool();
-        consumer.setUserName("bob");
+        consumer.setUsername("bob");
         
         ValidationResult result 
             = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
@@ -308,7 +308,7 @@ public class DefaultRulesTest {
     @Test
     public void userRestrictedPoolFailsPre() {
         Pool pool = setupUserRestrictedPool();
-        consumer.setUserName("notbob");
+        consumer.setUsername("notbob");
         
         ValidationResult result 
             = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();

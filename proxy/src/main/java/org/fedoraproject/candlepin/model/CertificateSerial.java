@@ -129,7 +129,7 @@ public class CertificateSerial extends AbstractHibernateObject{
         return Util.toBigInt(this.getId());
     }
     
-    public void setSerial(BigInteger serial){
+    public void setSerial(BigInteger serial) {
         this.id = serial.longValue();
     }
 
