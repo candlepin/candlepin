@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.29
+Version: 0.0.30
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,56 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Aug 19 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.30-1
+- clean up export metadata on owner deletion (jbowes@redhat.com)
+- cert: default to a warning period of 0 if none specified (jbowes@redhat.com)
+- test ContentResource, AtomFeedResource, AdminResource (jesusr@redhat.com)
+- Looking up the owner using the owner curator (calfonso@redhat.com)
+- Adding support for warning period (jomara@redhat.com)
+- amqp: generate queue configuration in code (jbowes@redhat.com)
+- remove old validate method (jesusr@redhat.com)
+- rework unit tests (jesusr@redhat.com)
+- adding tests (jesusr@redhat.com)
+- lookupByTypeAndOwner method (jesusr@redhat.com)
+- add owner and new constructor (jesusr@redhat.com)
+- rename TYPE_METADATA -> TYPE_SYSTEM, add Owner (jesusr@redhat.com)
+- tabs are EVIL! (jesusr@redhat.com)
+- Improve junit test coverage in audit package (anadathu@redhat.com)
+- silence checkstyle/bump my commit metrics (jbowes@redhat.com)
+- remove assertion checking cert expiration date vs revocation date (jbowes@redhat.com)
+- Adding resteasy's async funcionality. (jharris@redhat.com)
+- Fix still broken query for a users "person consumer". (dgoodwin@redhat.com)
+- make sure all is well by fixing the test (jesusr@redhat.com)
+- remove the metadatacurator from the exporter (jesusr@redhat.com)
+- store off the last time the importer ran. (jesusr@redhat.com)
+- rspec: convert entitlement regen tests from cukes to rspec (jbowes@redhat.com)
+- Open GET /pools/id to consumers and owner admins. (dgoodwin@redhat.com)
+- Contents: AMQP Integration with candlepin events using apache's qpid java
+  client. (anadathu@redhat.com)
+- ruby: Drop unused arg for update subscriptions. (dgoodwin@redhat.com)
+- rspec: Flex expiry test for refresh pools. (dgoodwin@redhat.com)
+- rspec: get rid of 'should' from our specs (jbowes@redhat.com)
+- rspec: output colourized results (jbowes@redhat.com)
+- Allow a super admin to create a consumer on behalf of another owner (jbowes@redhat.com)
+- rspec: Test flex expiry after import. (dgoodwin@redhat.com)
+- rspec: Test export and import process. (dgoodwin@redhat.com)
+- Drop EntitlementDto for export. (dgoodwin@redhat.com)
+- Fix date format in JSON export. (dgoodwin@redhat.com)
+- Port export tests to rspec. (dgoodwin@redhat.com)
+- Better support for pools not backed by a subscription. (dgoodwin@redhat.com)
+- Allow consumer list filtering by type and username (jbowes@redhat.com)
+- Purging product data caching when refreshing pools (calfonso@redhat.com)
+- verify metadata version upon import. (jesusr@redhat.com)
+- change setLong to setId (jesusr@redhat.com)
+- pass config in (jesusr@redhat.com)
+- Storing export metadata to the DB (jesusr@redhat.com)
+- comment the validatemetajson file (jesusr@redhat.com)
+- store off meta data to a tmp file (for now) (jesusr@redhat.com)
+- move Meta out to a real class (jesusr@redhat.com)
+- spec: Fix bad create_product variable name. (dgoodwin@redhat.com)
+- ruby: Touchup create_pool method for optional args. (dgoodwin@redhat.com)
+- ruby: Cleanup product creation. (dgoodwin@redhat.com)
+
 * Tue Aug 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.29-1
 - ruby: More consistent list method names. (dgoodwin@redhat.com)
 - Support GET /owners?key=X. (dgoodwin@redhat.com)
