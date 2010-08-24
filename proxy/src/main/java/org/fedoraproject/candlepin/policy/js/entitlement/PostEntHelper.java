@@ -77,14 +77,15 @@ public class PostEntHelper {
         poolCurator.create(consumerSpecificPool);
     }
 
-    /**
-     * Extend the dates on the entitlement certificate beyond the subscription end date.
-     * This value will be read when the certificate is generated.
-     *
-     * @param numberOfDays Number of days to extend the certificate.
-     */
-    public void setFlexExpiryDays(int numberOfDays) {
-        this.ent.setFlexExpiryDays(numberOfDays);
-    }
+// Disabling this code for now:
+//    /**
+//     * Extend the dates on the entitlement certificate beyond the subscription end date.
+//     * This value will be read when the certificate is generated.
+//     *
+//     * @param numberOfDays Number of days to extend the certificate.
+//     */
+//    public void setFlexExpiryDays(int numberOfDays) {
+//        this.ent.setFlexExpiryDays(numberOfDays);
+//    }
 
 }

@@ -37,16 +37,4 @@ describe 'Candlepin Import' do
     o.upstreamUuid.should == @candlepin_client.uuid
   end
 
-  it 'allows flex expiry for downstream consumers' do
-    flex_pool = @import_owner_client.list_pools({:owner => @import_owner.id, 
-        :product => @flex_entitlement.pool.productId})[0]
-    consumer_client = consumer_client(@import_owner_client, 
-        random_string('testsystem'))
-
-    ent = consumer_client.consume_pool(flex_pool.id)
-    ent_cert = consumer_client.list_certificates.first
-
-    verify_cert_dates(ent_cert, @end_date, @flex_days)
-  end
-
 end
