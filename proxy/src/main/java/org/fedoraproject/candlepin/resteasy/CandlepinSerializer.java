@@ -36,7 +36,7 @@ public class CandlepinSerializer extends JsonSerializer<Linkable> {
         
         // If serializing a nested object, we just want to serialize ID and href, if the
         // object supports it.
-        if (context.inObject()) {
+        if (context.inObject() || context.inArray()) {
             Class<Linkable> c = (Class<Linkable>) obj.getClass();
             // Assuming here the getHref method exists, as this serializer is only
             // called for classes we register:
