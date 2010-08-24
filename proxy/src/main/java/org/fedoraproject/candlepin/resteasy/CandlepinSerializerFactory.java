@@ -26,10 +26,13 @@ import org.codehaus.jackson.type.JavaType;
  */
 public class CandlepinSerializerFactory extends CustomSerializerFactory {
     
-    /* 
+    /* WARNING:
      * Copied directly from BeanSerializerFactory. This is technically the grandparent 
      * class to this one, but the method is hidden by implementation in 
      * CustomSerializerFactory, which we need to avoid. 
+     * 
+     * http://svn.codehaus.org/jackson/tags/1.5/1.5.5/src/mapper/
+     *      java/org/codehaus/jackson/map/ser/BasicSerializerFactory.java
      */
     public JsonSerializer<Object> createSerializerSkipCustom(
         Class type, SerializationConfig config) {
