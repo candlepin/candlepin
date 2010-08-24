@@ -308,7 +308,7 @@ namespace "gettext" do
 end
 
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, 'candlepin:checkstyle', :test, :deploy, 'cucumber:dots']
+task :check_all => [:clean, 'candlepin:checkstyle', :test, :deploy, 'cucumber:dots', :spec]
 
 #==========================================================================
 # Tomcat deployment

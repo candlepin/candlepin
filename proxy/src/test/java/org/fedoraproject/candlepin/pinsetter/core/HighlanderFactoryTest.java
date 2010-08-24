@@ -38,7 +38,7 @@ public class HighlanderFactoryTest extends DatabaseTestFixture{
 
     @Test
     public void testNewJob() throws SchedulerException, ParseException {
-        HighlanderJobFactory hf = new HighlanderJobFactory(injector);
+        GuiceJobFactory hf = new GuiceJobFactory(injector);
         assertNotNull(hf);
         try {
             hf.newJob(null);

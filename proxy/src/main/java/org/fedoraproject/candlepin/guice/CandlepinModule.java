@@ -14,9 +14,13 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import com.google.common.base.Function;
+import java.util.Locale;
 import java.util.Properties;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.fedoraproject.candlepin.audit.AMQPBusEventAdapter;
+import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -28,9 +32,12 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
-import org.fedoraproject.candlepin.pinsetter.core.HighlanderJobFactory;
+import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
+import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
+import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
@@ -46,6 +53,7 @@ import org.fedoraproject.candlepin.resource.ContentResource;
 import org.fedoraproject.candlepin.resource.CrlResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.EventResource;
+import org.fedoraproject.candlepin.resource.JobResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
@@ -55,6 +63,7 @@ import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
 import org.fedoraproject.candlepin.resteasy.JsonProvider;
 import org.fedoraproject.candlepin.resteasy.interceptor.AuthInterceptor;
+import org.fedoraproject.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
 import org.fedoraproject.candlepin.sync.ConsumerExporter;
 import org.fedoraproject.candlepin.sync.ConsumerTypeExporter;
 import org.fedoraproject.candlepin.sync.EntitlementCertExporter;
@@ -64,8 +73,12 @@ import org.fedoraproject.candlepin.sync.RulesExporter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
+import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -74,11 +87,6 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-import java.util.Locale;
-import javax.servlet.http.HttpServletRequest;
-import org.fedoraproject.candlepin.audit.AMQPBusEventAdapter;
-import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
-import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * CandlepinProductionConfiguration
@@ -115,6 +123,7 @@ public class CandlepinModule extends AbstractModule {
         bind(SubscriptionTokenResource.class);
         bind(CertificateSerialResource.class);
         bind(CrlResource.class);
+        bind(JobResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(EnforcerDispatcher.class);
         bind(RulesResource.class);
@@ -124,11 +133,14 @@ public class CandlepinModule extends AbstractModule {
         bind(Principal.class).toProvider(PrincipalProvider.class);
 
         bind(AuthInterceptor.class);
+        bind(PinsetterAsyncInterceptor.class);
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
-        bind(HighlanderJobFactory.class);
+        bind(JobFactory.class).to(GuiceJobFactory.class);
+        bind(JobListener.class).to(PinsetterJobListener.class);
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
+        bind(JobCleaner.class);
         bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
             .toInstance("SHA1withRSA");
                     
@@ -138,6 +150,9 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerExporter.class);
         bind(RulesExporter.class);
         bind(EntitlementCertExporter.class);
+
+        // Async Jobs
+        bind(RefreshPoolsJob.class);
         
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
@@ -169,6 +184,13 @@ public class CandlepinModule extends AbstractModule {
                 .in(Singleton.class);
     }
 
+    /**
+     * Provider for {@link I18n} - keyed off of the request, if it is available.
+     * If this is called outside of a request, or if the request does not have a
+     * locale, then a default localte (currently US) is used.
+     *
+     * @return the {@link I18n} based on the current request, or default
+     */
     @Provides
     public I18n provideI18n() {
         HttpServletRequest request;

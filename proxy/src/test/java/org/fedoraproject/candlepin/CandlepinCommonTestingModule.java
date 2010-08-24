@@ -68,6 +68,10 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 import org.fedoraproject.candlepin.guice.CandlepinModule;
+import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
@@ -106,6 +110,8 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
             .toProvider(RulesReaderProvider.class);
 
+        bind(JobFactory.class).to(GuiceJobFactory.class);
+        bind(JobListener.class).to(PinsetterJobListener.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
 
         bind(PrincipalProvider.class).to(TestPrincipalProvider.class);

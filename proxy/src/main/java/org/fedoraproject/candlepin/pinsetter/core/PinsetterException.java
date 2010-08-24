@@ -40,7 +40,7 @@ public class PinsetterException extends Exception {
      * permitted, and indicates that the cause is nonexistent or
      * unknown.)
      */
-    public PinsetterException(String message ,   Throwable cause) {
+    public PinsetterException(String message , Throwable cause) {
         super(message, cause);
     }
 }

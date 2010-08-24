@@ -25,11 +25,13 @@ import java.util.TreeMap;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.CandlepinConfigurationTest.CandlepinConfigurationForTesting;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.spi.JobFactory;
 
 /**
  * PinsetterKernelTest
@@ -72,7 +74,7 @@ public class PinsetterKernelTest {
                 }
             });
 
-        pk = new PinsetterKernel(config, null);
+        pk = new PinsetterKernel(config, Mockito.mock(JobFactory.class), null, null);
         assertNotNull(pk);
 
         try {
@@ -100,7 +102,7 @@ public class PinsetterKernelTest {
                 }
             });
 
-        pk = new PinsetterKernel(config, null);
+        pk = new PinsetterKernel(config, Mockito.mock(JobFactory.class), null, null);
         assertNotNull(pk);
 
         pk.startup();
