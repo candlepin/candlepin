@@ -88,15 +88,18 @@ HORNETQ = [group('hornetq-core',
                  :under=>'org.hornetq',
                  :version=>'2.1.1.Final'),
             'org.jboss.netty:netty:jar:3.2.1.Final']
-	    
+
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 AMQP  = [group('qpid-common', 'qpid-client',
-       		 :under => 'org.apache.qpid',
-		 :version => '0.7-SNAPSHOT'), 'backport-util-concurrent:backport-util-concurrent:jar:2.2',
-		 group('mina-core', 'mina-filter-ssl', :under => 'org.apache.mina', :version => '1.0.1'),
-		 'commons-digester:commons-digester:jar:1.8.1', 'commons-configuration:commons-configuration:jar:1.6',
-		 'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
+             :under => 'org.apache.qpid', :version => '0.7-SNAPSHOT'),
+         group('mina-core', 'mina-filter-ssl',
+             :under => 'org.apache.mina', :version => '1.0.1'),
+         'backport-util-concurrent:backport-util-concurrent:jar:2.2',
+         'commons-digester:commons-digester:jar:1.8.1',
+         'commons-configuration:commons-configuration:jar:1.6',
+         'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
+
 #############################################################################
 # REPOSITORIES
 #
@@ -265,14 +268,14 @@ define "candlepin" do
   end
   
   task :schemaspy do
-	 cp = Buildr.artifacts(DB, SCHEMASPY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-	 puts cp
-	 command = "-t pgsql -db candlepin -s public -host localhost -u candlepin -p candlepin -o target/schemaspy"
-	 ant('java') do |ant|
-		 ant.java(:classname => "net.sourceforge.schemaspy.Main", :classpath => cp, :fork => true) do |java|
-		 	command.split(/\s+/).each {|value| ant.arg :value => value}
-		 end
-	 end
+   cp = Buildr.artifacts(DB, SCHEMASPY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+   puts cp
+   command = "-t pgsql -db candlepin -s public -host localhost -u candlepin -p candlepin -o target/schemaspy"
+   ant('java') do |ant|
+     ant.java(:classname => "net.sourceforge.schemaspy.Main", :classpath => cp, :fork => true) do |java|
+       command.split(/\s+/).each {|value| ant.arg :value => value}
+     end
+   end
   end
 
 end

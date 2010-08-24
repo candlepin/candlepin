@@ -50,6 +50,8 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EventCurator;
+import org.fedoraproject.candlepin.model.ExporterMetadata;
+import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
@@ -95,6 +97,7 @@ public class OwnerResource {
     private ProductCurator productCurator;
     private Importer importer;
     private PoolManager poolManager;
+    private ExporterMetadataCurator exportCurator;
     private static final int FEED_LIMIT = 1000;
     
 
@@ -106,7 +109,7 @@ public class OwnerResource {
         ConsumerCurator consumerCurator, I18n i18n,
         UserServiceAdapter userService, Entitler entitler, EventSink sink,
         EventFactory eventFactory, EventCurator eventCurator, Importer importer,
-        PoolManager poolManager) {
+        PoolManager poolManager, ExporterMetadataCurator exportCurator) {
 
         this.ownerCurator = ownerCurator;
         this.productCurator = productCurator;
@@ -122,6 +125,7 @@ public class OwnerResource {
         this.eventCurator = eventCurator;
         this.importer = importer;
         this.poolManager = poolManager;
+        this.exportCurator = exportCurator;
     }
 
     /**
@@ -225,6 +229,12 @@ public class OwnerResource {
         for (Pool p : poolCurator.listByOwner(owner)) {
             log.info("Deleting pool: " + p);
             poolCurator.delete(p);
+        }
+        ExporterMetadata m =
+            exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner);
+        if (m != null) {
+            log.info("Deleting export metadata: " + m);
+            exportCurator.delete(m);
         }
         log.info("Deleting owner: " + owner);
         ownerCurator.delete(owner);

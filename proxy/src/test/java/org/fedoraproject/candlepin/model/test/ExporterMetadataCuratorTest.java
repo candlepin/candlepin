@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNull;
 
 import org.fedoraproject.candlepin.model.ExporterMetadata;
 import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
@@ -42,18 +43,19 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     @Test
     public void testCreation() {
         ExporterMetadata em = new ExporterMetadata();
-        em.setType(ExporterMetadata.TYPE_METADATA);
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
         assertNotNull(emdb);
         assertNotNull(emdb.getId());
+        assertNull(emdb.getOwner());
     }
 
     @Test
     public void testLookup() {
         ExporterMetadata em = new ExporterMetadata();
-        em.setType(ExporterMetadata.TYPE_METADATA);
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
@@ -66,12 +68,37 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     @Test
     public void lookupByType() {
         ExporterMetadata em = new ExporterMetadata();
-        em.setType(ExporterMetadata.TYPE_METADATA);
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
 
-        assertNull(emc.lookupByType(ExporterMetadata.TYPE_CONSUMER));
-        assertEquals(emdb, emc.lookupByType(ExporterMetadata.TYPE_METADATA));
+        assertNull(emc.lookupByType(ExporterMetadata.TYPE_PER_USER));
+        assertEquals(emdb, emc.lookupByType(ExporterMetadata.TYPE_SYSTEM));
+    }
+
+    @Test
+    public void setOwner() {
+        ExporterMetadata em = new ExporterMetadata();
+        em.setType(ExporterMetadata.TYPE_PER_USER);
+        em.setExported(new Date());
+        em.setOwner(createOwner());
+        ExporterMetadata emdb = emc.create(em);
+        assertNotNull(emdb);
+        assertNotNull(emdb.getOwner());
+        assertNotNull(emdb.getOwner().getId());
+    }
+
+    @Test
+    public void lookupByTypeAndOwner() {
+        ExporterMetadata em = new ExporterMetadata();
+        Owner owner = createOwner();
+        em.setType(ExporterMetadata.TYPE_PER_USER);
+        em.setExported(new Date());
+        em.setOwner(owner);
+        ExporterMetadata emdb = emc.create(em);
+
+        assertEquals(emdb, emc.lookupByTypeAndOwner(
+            ExporterMetadata.TYPE_PER_USER, owner));
     }
 }
