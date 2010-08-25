@@ -14,7 +14,7 @@ shared_examples_for 'Candlepin Scenarios' do
   after do
     @owners.each { |owner| @cp.delete_owner owner.id }
 
-    # TODO:  delete products
+    # TODO:  delete products?
   end
 end
 
