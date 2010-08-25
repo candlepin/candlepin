@@ -290,7 +290,6 @@ public class Consumer extends AbstractHibernateObject
     /**
      * @return the owner of this Consumer.
      */
-    @XmlTransient
     public Owner getOwner() {
         return owner;
     }
@@ -386,7 +385,6 @@ public class Consumer extends AbstractHibernateObject
     /**
      * @return Returns the entitlements.
      */
-    @XmlTransient
     public Set<Entitlement> getEntitlements() {
         return entitlements;
     }

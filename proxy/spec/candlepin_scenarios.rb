@@ -55,6 +55,11 @@ module CandlepinMethods
     "%s-%s" % [prefix, rand(100000)]
   end
 
+  def check_for_hateoas(json)
+    json.keys.length.should == 1
+    json.has_key?('href').should be_true
+  end
+
   # TODO:  This might be better if it were added to
   # the OpenSSL::X509::Certificate class
   def get_extension(cert, oid)

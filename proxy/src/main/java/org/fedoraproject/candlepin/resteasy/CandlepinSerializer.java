@@ -54,13 +54,6 @@ public class CandlepinSerializer extends JsonSerializer<Linkable> {
         
         // Otherwise, serialize normally:
         else {
-            
-//  This works, it just feels evil:
-//            ObjectMapper mapper = DoNotCommitThisTest.createObjectMapper(obj.getClass());
-//            StringWriter writer = new StringWriter();
-//            mapper.writeValue(writer, obj);
-//            jg.writeRaw(writer.toString());
-
             // Assume we only configure this serializer on a mapper that's using
             // our csp.
             CandlepinSerializerProvider csp = (CandlepinSerializerProvider) sp;
