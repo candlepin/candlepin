@@ -56,8 +56,9 @@ module CandlepinMethods
   end
 
   def check_for_hateoas(json)
-    json.keys.length.should == 1
+    json.keys.length.should == 2
     json.has_key?('href').should be_true
+    json.has_key?('id').should be_true
   end
 
   # TODO:  This might be better if it were added to

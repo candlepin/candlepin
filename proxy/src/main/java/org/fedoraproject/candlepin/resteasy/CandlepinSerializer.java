@@ -45,6 +45,11 @@ public class CandlepinSerializer extends JsonSerializer<Linkable> {
                 String s = (String) getHref.invoke(obj, new Object []{});
                 jg.writeStartObject();
                 jg.writeStringField("href", s);
+                
+                // IDs can be strings on some objects. :O
+                Method getId = c.getMethod("getId", new Class []{});
+                Object id = getId.invoke(obj, new Object []{});
+                jg.writeStringField("id", id.toString());
                 jg.writeEndObject();
             }
             catch (Exception e) {
