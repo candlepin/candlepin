@@ -87,7 +87,6 @@ public class Pool extends AbstractHibernateObject
     @ManyToOne
     @ForeignKey(name = "fk_pool_owner")
     @JoinColumn(nullable = false)
-    @XmlTransient    
     private Owner owner;
     
     private Boolean activeSubscription = Boolean.TRUE;
@@ -464,7 +463,6 @@ public class Pool extends AbstractHibernateObject
      *
      * @return The entitlements.
      */
-    @XmlTransient
     public Set<Entitlement> getEntitlements() {
         return this.entitlements;
     }

@@ -83,3 +83,34 @@ describe 'Consumer serialization' do
 
 end
 
+describe 'Pool serialization' do
+
+  include CandlepinMethods
+  it_should_behave_like 'Candlepin Scenarios'
+
+  before(:each) do
+    @owner = @cp.create_owner(random_string("test_owner"))
+    @owner_client = user_client(@owner, random_string('testuser'))
+    product1 = create_product()
+    @pool = @cp.create_pool(product1.id, @owner.id, 2)
+  end
+
+  it 'references owner as a link' do
+    @pool.has_key?('owner').should be_true
+    check_for_hateoas(@pool['owner'])
+  end
+
+  it 'references entitlements as links' do
+    consumer_client = consumer_client(@owner_client, random_string(),
+        "candlepin")
+    consumer_client.consume_pool(@pool.id)
+
+    @pool = @cp.get_pool(@pool.id)
+    pp @pool
+    @pool.has_key?('entitlements').should be_true
+    @pool['entitlements'].each do |e|
+      check_for_hateoas(e)
+    end
+  end
+end
+
