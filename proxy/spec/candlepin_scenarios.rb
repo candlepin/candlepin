@@ -177,6 +177,10 @@ class Hash
   end
 
   def method_missing(method, *args)
-    self[method.to_s]
+    if ((method.to_s =~ /=$/) != nil)
+        self[method.to_s.gsub(/=$/, '')] = args[0]
+    else
+        self[method.to_s]
+    end
   end
 end
