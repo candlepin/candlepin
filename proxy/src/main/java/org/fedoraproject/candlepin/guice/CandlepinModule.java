@@ -49,6 +49,7 @@ import org.fedoraproject.candlepin.resource.EventResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
+import org.fedoraproject.candlepin.resource.RootResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.SubscriptionResource;
@@ -110,6 +111,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
+        bind(RootResource.class);
         bind(ProductResource.class);
         bind(SubscriptionResource.class);
         bind(SubscriptionTokenResource.class);
