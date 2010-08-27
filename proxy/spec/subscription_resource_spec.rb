@@ -6,7 +6,7 @@ describe 'Subscription Resource' do
   it_should_behave_like 'Candlepin Scenarios'
 
   before do
-    @owner = create_owner 'test_owner'
+    @owner = create_owner random_string('test_owner')
     @some_product = create_product(name='some_product')
     @another_product = create_product('another_product')
     @one_more_product = create_product('one_more_product')

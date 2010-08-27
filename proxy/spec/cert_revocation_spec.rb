@@ -6,7 +6,7 @@ describe 'CRL' do
   it_should_behave_like 'Candlepin Scenarios'
   
   before do
-    @owner = create_owner 'test_owner'
+    @owner = create_owner random_string('test_owner')
     @virt_prod = create_product(name='virt')
     @monitoring_prod = create_product(name='monitoring')
 

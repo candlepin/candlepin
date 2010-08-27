@@ -7,7 +7,7 @@ describe 'Sub-Pool' do
 
   it 'inherits order number extension from parent pool' do
     # ===== Given =====
-    owner = create_owner 'test_owner'
+    owner = create_owner random_string('test_owner')
     derived_product = create_product()
     parent_product = create_product(nil, nil, {:attributes => {
             'user_license' => 'unlimited',
