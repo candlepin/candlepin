@@ -14,12 +14,12 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
+import com.google.common.base.Nullable;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.util.PropertyUtil;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
@@ -37,29 +37,27 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import org.fedoraproject.candlepin.model.JobCurator;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.quartz.JobListener;
+import org.quartz.SimpleTrigger;
+import org.quartz.spi.JobFactory;
 
 /**
  * Pinsetter Kernel.
  * @version $Rev$
  */
-public class PinsetterKernel implements SchedulerService {
+public class PinsetterKernel {
 
-    private static final String TASK_GROUP = "Pinsetter Batch Engine Group";
+    private static final String CRON_GROUP = "Pinsetter Batch Engine Group";
+    private static final String SINGLE_JOB_GROUP = "Pinsetter Long Running Job Group";
     
     private static Logger log = Logger.getLogger(PinsetterKernel.class);
 
-    private byte[] shutdownLock = new byte[0];
-    private Scheduler scheduler = null;
-    private ChainedListener chainedJobListener = null;
-    private Config config = null;
-    /**
-     * Kernel main driver behind Pinsetter
-     * @throws InstantiationException thrown if this.scheduler can't be
-     * initialized.
-     */
-    protected PinsetterKernel(Injector injector) throws InstantiationException {
-        this(new Config(), injector);
-    }
+    private Scheduler scheduler;
+    private ChainedListener chainedJobListener;
+    private Config config;
+    private JobCurator jobCurator;
 
     /**
      * Kernel main driver behind Pinsetter
@@ -68,8 +66,12 @@ public class PinsetterKernel implements SchedulerService {
      * initialized.
      */
     @Inject
-    public PinsetterKernel(Config conf, Injector injector) throws InstantiationException {
+    public PinsetterKernel(Config conf, JobFactory jobFactory, 
+        @Nullable JobListener listener, JobCurator jobCurator)
+        throws InstantiationException {
+
         this.config = conf;
+        this.jobCurator = jobCurator;
 
         Properties props = config.getNamespaceProperties("org.quartz");
 
@@ -77,9 +79,12 @@ public class PinsetterKernel implements SchedulerService {
         try {
             SchedulerFactory fact = new StdSchedulerFactory(props);
 
-            // this.scheduler
             scheduler = fact.getScheduler();
-            scheduler.setJobFactory(new HighlanderJobFactory(injector));
+            scheduler.setJobFactory(jobFactory);
+
+            if (listener != null) {
+                scheduler.addJobListener(listener);
+            }
 
             // Setup TriggerListener chains here.
             chainedJobListener = new ChainedListener();
@@ -183,22 +188,17 @@ public class PinsetterKernel implements SchedulerService {
 
     /**
      * Shuts down the application
+     *
+     * @throws PinsetterException if ther was a scheduling error in shutdown
      */
-    public void shutdown() {
+    public void shutdown() throws PinsetterException {
         try {
             scheduler.standby();
             deleteAllJobs();
             scheduler.shutdown();
         }
         catch (SchedulerException e) {
-            // TODO Figure out what to do with this guy
-            e.printStackTrace();
-        }
-        finally {
-            // Wake up thread waiting in startup() so it can exit
-            synchronized (this.shutdownLock) {
-                this.shutdownLock.notify();
-            }
+            throw new PinsetterException("Error shutting down Pinsetter.", e);
         }
     }
 
@@ -215,13 +215,11 @@ public class PinsetterKernel implements SchedulerService {
                 String jobImpl = data[0];
                 String crontab = data[1];
                 String jobName = jobImpl + "-" + suffix;
- 
+
                 Trigger trigger = null;
-                trigger = new CronTrigger(jobImpl,
-                        TASK_GROUP, crontab);
+                trigger = new CronTrigger(jobImpl, CRON_GROUP, crontab);
                 trigger
                     .setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
-                //trigger.addTriggerListener(this.chainedJobListener.getName());
                 
                 scheduleJob(
                     this.getClass().getClassLoader().loadClass(jobImpl),
@@ -234,18 +232,13 @@ public class PinsetterKernel implements SchedulerService {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @SuppressWarnings("rawtypes")
     public void scheduleJob(Class job, String jobName, String crontab)
         throws PinsetterException {
         
         try {
-            Trigger trigger = new CronTrigger(job.getName(), TASK_GROUP, crontab);
+            Trigger trigger = new CronTrigger(job.getName(), CRON_GROUP, crontab);
             trigger.setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
-            //trigger.addTriggerListener(chainedJobListener.getName());
+            
             scheduleJob(job, jobName, trigger);
         }
         catch (ParseException pe) {
@@ -253,16 +246,11 @@ public class PinsetterKernel implements SchedulerService {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @SuppressWarnings("rawtypes")
     public void scheduleJob(Class job, String jobName, Trigger trigger)
         throws PinsetterException {
         try {
-            JobDetail detail = new JobDetail(jobName, TASK_GROUP, job);
-            //trigger.addTriggerListener(chainedJobListener.getName());
+            JobDetail detail = new JobDetail(jobName, CRON_GROUP, job);
+
             this.scheduler.scheduleJob(detail, trigger);
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detail.getFullName());
@@ -272,32 +260,55 @@ public class PinsetterKernel implements SchedulerService {
             throw new PinsetterException("problem scheduling " + jobName, se);
         }       
     }
+
+    /**
+     * Schedule a long-running job for a single execution.
+     *
+     * @param jobDetail the long-running job to perform - assumed to be prepopulated
+     *                  with a valid job task and name
+     * @return the initial status of the submitted job
+     * @throws PinsetterException if there is an error scheduling the job
+     */
+    public JobStatus scheduleSingleJob(JobDetail jobDetail) throws PinsetterException {
+
+        jobDetail.setGroup(SINGLE_JOB_GROUP);
+        jobDetail.addJobListener(PinsetterJobListener.LISTENER_NAME);
+
+        try {
+            JobStatus status = this.jobCurator.create(new JobStatus(jobDetail));
+
+            this.scheduler.scheduleJob(jobDetail, new SimpleTrigger(
+                    jobDetail.getName() + " trigger", SINGLE_JOB_GROUP));
+
+            return status;
+        }
+        catch (SchedulerException e) {
+            throw new PinsetterException("There was a problem scheduling " +
+                    jobDetail.getName(), e);
+        }
+    }
     
     // TODO: GET RID OF ME!!
     Scheduler getScheduler() {
         return scheduler;
     }
-    
-    private void deleteAllJobs() {
-        boolean done = false;
-        while (!done) {
-            try {
-                String[] groups = this.scheduler.getJobGroupNames();
-                if (groups == null || groups.length == 0) {
-                    done = true;
-                }
-                else {
-                    String group = groups[0];
-                    String[] jobs = this.scheduler.getJobNames(group);
-                    for (int x = jobs.length - 1; x > -1; x--) {
-                        this.scheduler.deleteJob(jobs[x], group);
-                    }
-                }
-            }
-            catch (SchedulerException e) {
-                done = true;
+
+    private void deleteJobs(String groupName) {
+        try {
+            String[] jobs = this.scheduler.getJobNames(groupName);
+
+            for (String job : jobs) {
+                this.scheduler.deleteJob(job, groupName);
             }
         }
+        catch (SchedulerException e) {
+            // TODO:  Something better than nothing
+        }
+    }
+    
+    private void deleteAllJobs() {
+        deleteJobs(CRON_GROUP);
+        deleteJobs(SINGLE_JOB_GROUP);
     }
 
 }

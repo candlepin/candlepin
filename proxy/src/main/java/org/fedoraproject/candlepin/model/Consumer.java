@@ -232,7 +232,7 @@ public class Consumer extends AbstractHibernateObject
     /**
      * @param userName the userName to set
      */
-    public void setUserName(String userName) {
+    public void setUsername(String userName) {
         this.username = userName;
     }
 

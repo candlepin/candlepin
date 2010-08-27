@@ -222,7 +222,7 @@ public class ConsumerResource {
             consumer.setName(user.getUsername());
         }
 
-        consumer.setUserName(user.getUsername());
+        consumer.setUsername(user.getUsername());
         consumer.setOwner(user.getOwner());
         consumer.setType(type);
 

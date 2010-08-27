@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.30
+Version: 0.0.31
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Aug 26 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.31-1
+- Adding additional specs for refresh_pools (jharris@redhat.com)
+- cucumber -> rspec : certificate revocation scenario (anadathu@redhat.com)
+- Change setUserName to setUsername for marshalling (calfonso@redhat.com)
+- Added setSerial method to make json mashalling work (calfonso@redhat.com)
+- make Principal Serializeable for quartz clustering. (jesusr@redhat.com)
+- add QUARTZ to :genschema (jesusr@redhat.com)
+- Adding new quartz-based async functionality. (jharris@redhat.com)
+- Disable flex expiry for now. (dgoodwin@redhat.com)
+
 * Thu Aug 19 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.30-1
 - clean up export metadata on owner deletion (jbowes@redhat.com)
 - cert: default to a warning period of 0 if none specified (jbowes@redhat.com)

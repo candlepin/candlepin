@@ -107,7 +107,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listAll().size());
         
         Consumer anotherConsumer = TestUtil.createConsumer(owner);
-        anotherConsumer.setUserName("username");
+        anotherConsumer.setUsername("username");
         consumerTypeCurator.create(anotherConsumer.getType());
         consumerCurator.create(anotherConsumer);
         
@@ -126,7 +126,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listAll().size());
         
         Consumer anotherConsumer = TestUtil.createConsumer(owner);
-        anotherConsumer.setUserName("anotherusername");
+        anotherConsumer.setUsername("anotherusername");
         consumerTypeCurator.create(anotherConsumer.getType());
         consumerCurator.create(anotherConsumer);
         

@@ -42,7 +42,6 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.Entitler;
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -75,6 +74,9 @@ import org.jboss.resteasy.util.GenericType;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.quartz.JobDetail;
 
 /**
  * Owner Resource
@@ -96,7 +98,6 @@ public class OwnerResource {
     private EventCurator eventCurator;
     private ProductCurator productCurator;
     private Importer importer;
-    private PoolManager poolManager;
     private ExporterMetadataCurator exportCurator;
     private static final int FEED_LIMIT = 1000;
     
@@ -124,7 +125,6 @@ public class OwnerResource {
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
         this.importer = importer;
-        this.poolManager = poolManager;
         this.exportCurator = exportCurator;
     }
 
@@ -353,12 +353,14 @@ public class OwnerResource {
      * not supplied as an argument.
      * 
      * @param ownerKey unique id key of the owner whose pools should be updated
+     * @return the status of the pending job
      */
     @PUT
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{owner_key}/subscriptions")
-    public void refreshEntitlementPools(@PathParam("owner_key") String ownerKey, 
+    public JobDetail refreshEntitlementPools(@PathParam("owner_key") String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
+
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
             if (autoCreateOwner) {
@@ -369,7 +371,8 @@ public class OwnerResource {
                     "owner with key: {0} was not found.", ownerKey));
             }
         }
-        poolManager.refreshPools(owner);
+
+        return RefreshPoolsJob.forOwner(owner);
     }
     
     @PUT

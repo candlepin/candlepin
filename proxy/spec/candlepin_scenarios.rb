@@ -14,7 +14,7 @@ shared_examples_for 'Candlepin Scenarios' do
   after do
     @owners.each { |owner| @cp.delete_owner owner.id }
 
-    # TODO:  delete products
+    # TODO:  delete products?
   end
 end
 
@@ -183,6 +183,10 @@ class Hash
   end
 
   def method_missing(method, *args)
-    self[method.to_s]
+    if ((method.to_s =~ /=$/) != nil)
+        self[method.to_s.gsub(/=$/, '')] = args[0]
+    else
+        self[method.to_s]
+    end
   end
 end

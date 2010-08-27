@@ -199,7 +199,7 @@ define "candlepin" do
   
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
-          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, RESTEASY, JACKSON]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
       
         ant.schema :destdir=>'target/schemagen' do
           ant.classpath :path=>_('target/classes')
@@ -308,7 +308,7 @@ namespace "gettext" do
 end
 
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, 'candlepin:checkstyle', :test, :deploy, 'cucumber:dots']
+task :check_all => [:clean, 'candlepin:checkstyle', :test, :deploy, 'cucumber:dots', :spec]
 
 #==========================================================================
 # Tomcat deployment

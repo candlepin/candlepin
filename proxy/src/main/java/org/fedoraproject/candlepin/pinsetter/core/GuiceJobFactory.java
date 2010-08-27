@@ -14,38 +14,33 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
+import org.quartz.Job;
+import org.quartz.SchedulerException;
+import org.quartz.spi.JobFactory;
+import org.quartz.spi.TriggerFiredBundle;
+
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
- * PinsetterContextListener
+ * GuiceJobFactory is a custom Quartz JobFactory implementation which
+ * delegates job creation to the Guice injector.
+ * @version $Rev$
  */
-public class PinsetterContextListener {
-    private PinsetterKernel kernel;
-
+public class GuiceJobFactory implements JobFactory {
+    private Injector injector;
+    
     @Inject
-    public PinsetterContextListener(PinsetterKernel kernel) {
-        this.kernel = kernel;
+    public GuiceJobFactory(Injector injector) {
+        this.injector = injector;
     }
-
-    public void contextDestroyed() {
-        try {
-            kernel.shutdown();
-        }
-        catch (PinsetterException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Job newJob(TriggerFiredBundle trigger) throws SchedulerException {
+        Class<Job> jobClass = trigger.getJobDetail().getJobClass();
+        return injector.getInstance(jobClass);
     }
-
-    public void contextInitialized() {
-
-        try {
-            kernel.startup();
-        }
-        catch (PinsetterException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
 }

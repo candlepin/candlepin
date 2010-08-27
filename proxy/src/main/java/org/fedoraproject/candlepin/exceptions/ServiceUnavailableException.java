@@ -25,4 +25,8 @@ public class ServiceUnavailableException extends CandlepinException {
     public ServiceUnavailableException(String message) {
         super(Status.SERVICE_UNAVAILABLE, message);
     }
+
+    public ServiceUnavailableException(String message, Throwable cause) {
+        super(Status.SERVICE_UNAVAILABLE, message, cause);
+    }
 }

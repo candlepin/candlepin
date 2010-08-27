@@ -4,12 +4,29 @@ describe 'Entitlement Certificate' do
   include CandlepinMethods
   it_should_behave_like 'Candlepin Scenarios'
 
+  class String
+      def to_date
+          return Date.strptime(self, "%Y-%m-%d")
+      end
+  end
+
+  def change_dt_and_qty
+      sub = @cp.list_subscriptions(@owner.id)[0]
+      sub.endDate = sub.endDate.to_date + 10
+      sub.startDate = sub.startDate.to_date - 10
+      sub.quantity = sub.quantity + 10
+
+      @cp.update_subscription(sub)
+      @cp.refresh_pools(@owner.key)
+      return sub
+  end
+
   before(:each) do
     @owner = create_owner 'test_owner'
     monitoring = create_product()
 
     @cp.create_subscription(@owner.id, monitoring.id, 10)
-    @cp.refresh_pools(@owner.key, false)
+    @cp.refresh_pools(@owner.key)
 
     user = user_client(@owner, 'billy')
 
@@ -36,7 +53,7 @@ describe 'Entitlement Certificate' do
   it 'can be manually regenerated for a product' do
     coolapp = create_product
     @cp.create_subscription(@owner.id, coolapp.id, 10)
-    @cp.refresh_pools(@owner.key, false)
+    @cp.refresh_pools(@owner.key)
     @system.consume_product coolapp.id
     
     @cp.regenerate_entitlement_certificates_for_product(coolapp.id)  
@@ -52,4 +69,45 @@ describe 'Entitlement Certificate' do
     (old_ids & new_ids).size.should == 0
   end
 
+   it 'will be regenerated when changing existing subscription\'s end date' do
+      sub = @cp.list_subscriptions(@owner.id)[0]
+      sub.endDate = sub.endDate.to_date + 2
+      old_cert = @system.list_certificates()[0]
+      @cp.update_subscription(sub)
+
+      @cp.refresh_pools(@owner.key)
+
+      new_cert = @system.list_certificates()[0]
+      old_cert.serial.id.should_not == new_cert.serial.id
+      sub.endDate.should == new_cert.entitlement.endDate.to_date
+  end
+
+  it 'those in excess will be deleted when existing subscription quantity is decreased' do
+      prod = create_product()
+      sub = @cp.create_subscription(@owner.id, prod.id, 10)
+      @cp.refresh_pools(@owner.key)
+
+      @system.consume_product(prod.id, 6)
+      sub.quantity = sub.quantity.to_i - 5
+      @cp.update_subscription(sub)
+
+      @cp.refresh_pools(@owner.key)
+
+      @system.list_certificates().size.should == 1
+  end
+
+  it 'will be regenerated when existing subscription\'s quantity and dates are changed' do
+      old_cert = @system.list_certificates()[0]
+      change_dt_and_qty()
+      new_cert = @system.list_certificates()[0]
+      old_cert.serial.id.should_not == new_cert.serial.id
+  end
+
+  it 'will be regenerated and dates will have the same values as that of the subscription which was changed' do
+      sub = change_dt_and_qty()
+      new_cert = @system.list_certificates()[0]
+      x509 = OpenSSL::X509::Certificate.new(new_cert['cert'])
+      sub['startDate'].should == x509.not_before().strftime('%Y-%m-%d').to_date
+      sub['endDate'].should == x509.not_after().strftime('%Y-%m-%d').to_date
+  end
 end

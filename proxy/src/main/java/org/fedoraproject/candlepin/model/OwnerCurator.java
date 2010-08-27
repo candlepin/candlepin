@@ -31,6 +31,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     
     @AllowRoles(roles = Role.SUPER_ADMIN)
     @Transactional
+    @Override
     public Owner create(Owner entity) {
         return super.create(entity);
     }

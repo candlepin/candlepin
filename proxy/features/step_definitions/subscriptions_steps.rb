@@ -15,7 +15,7 @@ Given /^owner "([^\"]*)" has a subscription for product "([^\"]*)" with quantity
   product_id = @products[product_name]['id']
   @candlepin.create_subscription(owner_id, product_id, quantity)
   # Just refesh the entitlement pools each time
-  @candlepin.refresh_pools(@owners[owner_name]['key'], false)
+  @candlepin.refresh_pools(@owners[owner_name]['key'])
 end
 
 # Deprecated - use named owners instead of @test_owner
@@ -24,7 +24,7 @@ Given /^test owner has (\d+) entitlements for "([^\"]*)"$/ do |quantity, product
   create_subscription(product, quantity)
 
   # Just refesh the entitlement pools each time
-  @candlepin.refresh_pools(@test_owner['key'], false)
+  @candlepin.refresh_pools(@test_owner['key'])
 end
 
 Given /^test owner has a subscription for "([^\"]*)" with quantity (\d+) and token "([^\"]*)"$/ do |product, quantity, token|
@@ -69,7 +69,7 @@ end
 
 When /^he refreshes the pools$/ do
   @old_certs = @consumer_cp.list_certificates()
-  @candlepin.refresh_pools(@test_owner['key'], false)
+  @candlepin.refresh_pools(@test_owner['key'])
 end
 
 When /^test owner changes the quantity of the subscription by (-{0,1}\d+)$/ do |q|

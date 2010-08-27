@@ -160,11 +160,21 @@ class Candlepin
     post('/pools', pool)
   end
 
-  def refresh_pools(owner_key, async=true)
-    path = "/owners/#{owner_key}/subscriptions"
-    path << '?asynch=true' if async
+  def refresh_pools(owner_key, immediate=false)
+    status = put("/owners/#{owner_key}/subscriptions")
 
-    put(path)
+    # return the async call if desired
+    return status if immediate
+
+    # otherwise poll the server to make this call synchronous
+    while status['state'].downcase != 'finished'
+      sleep 1
+
+      # POSTing here will delete the job once it has finished
+      status = post(status['statusPath'])
+    end
+
+    return status['result']
   end
   
   def export_consumer(dest_dir)
@@ -364,23 +374,6 @@ class Candlepin
     OpenSSL::X509::CRL.new(get_text('/crl'))
   end
 
-  def get_job(job_id)
-    get("/jobs/#{job_id}")
-  end
-
-  private
-
-  def create_basic_client(username=nil, password=nil)
-    @client = RestClient::Resource.new(@base_url, 
-                                       username, password)
-  end
-
-  def create_ssl_client
-    @client = RestClient::Resource.new(@base_url,
-                                       :ssl_client_cert => @identity_certificate, 
-                                       :ssl_client_key => @identity_key)
-  end
-
   def get(uri, accept_header = :json)
     response = @client[URI.escape(uri)].get :accept => accept_header
 
@@ -416,17 +409,26 @@ class Candlepin
     data = data.to_json if not data.nil?
     response = @client[uri].put(data, :content_type => :json, :accept => :json)
 
-    # TODO:  Not sure if this is the best approach
-    if response.body.empty?
-      return response.headers
-    else
-      return JSON.parse(response.body)
-    end
+    return JSON.parse(response.body) unless response.body.empty?
   end
 
   def delete(uri)
     @client[URI.escape(uri)].delete
   end
+
+  private
+
+  def create_basic_client(username=nil, password=nil)
+    @client = RestClient::Resource.new(@base_url, 
+                                       username, password)
+  end
+
+  def create_ssl_client
+    @client = RestClient::Resource.new(@base_url,
+                                       :ssl_client_cert => @identity_certificate, 
+                                       :ssl_client_key => @identity_key)
+  end
+
 end
 
 
