@@ -21,8 +21,11 @@ import javax.ws.rs.ext.Provider;
 
 import org.codehaus.jackson.jaxrs.Annotations;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -51,21 +54,35 @@ public class JsonProvider extends JacksonJsonProvider {
         if (config.indentJson()) {
             this._mapperConfig.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
         }
+        
+        ObjectMapper mapper = _mapperConfig.getDefaultMapper();
+        JsonProvider.configureObjectMapper(mapper);
+        setMapper(mapper);
+    }
+    
+    public static void configureObjectMapper(ObjectMapper mapper) {
+        mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, false);
+        
+        CandlepinSerializerProvider csp = new CandlepinSerializerProvider();
+        CandlepinSerializerFactory factory = new CandlepinSerializerFactory();
         Class [] serializeThese = {
             Consumer.class,
             Entitlement.class,
             Owner.class,
             Pool.class,
         };
-        
-        ObjectMapper mapper = _mapperConfig.getDefaultMapper();
-        CandlepinSerializerProvider csp = new CandlepinSerializerProvider();
-        CandlepinSerializerFactory factory = new CandlepinSerializerFactory();
         for (Class<Linkable> c : serializeThese) {
             factory.addSpecificMapping(c, new CandlepinSerializer());
         }
         mapper.setSerializerFactory(factory);
         mapper.setSerializerProvider(csp);
-        setMapper(mapper);
+        
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        
+        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
+        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
     }
 }
