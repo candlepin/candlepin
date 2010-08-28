@@ -22,15 +22,15 @@ describe 'Entitlement Certificate' do
   end
 
   before(:each) do
-    @owner = create_owner random_string('test_owner')
+    @owner = create_owner 'test_owner'
     monitoring = create_product()
 
     @cp.create_subscription(@owner.id, monitoring.id, 10)
     @cp.refresh_pools(@owner.key)
 
-    user = user_client(@owner, random_string('billy'))
+    user = user_client(@owner, 'billy')
 
-    @system = consumer_client(user, random_string('system1'))
+    @system = consumer_client(user, 'system1')
     @system.consume_product monitoring.id
   end
 
@@ -79,8 +79,7 @@ describe 'Entitlement Certificate' do
 
       new_cert = @system.list_certificates()[0]
       old_cert.serial.id.should_not == new_cert.serial.id
-      ent = @cp.get_entitlement(new_cert.entitlement.id)
-      sub.endDate.should == ent.endDate.to_date
+      sub.endDate.should == new_cert.entitlement.endDate.to_date
   end
 
   it 'those in excess will be deleted when existing subscription quantity is decreased' do

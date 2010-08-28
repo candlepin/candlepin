@@ -37,17 +37,6 @@ class Candlepin
       create_basic_client(username, password)
     end
 
-    # Store top level HATEOAS resource links so we know what we can do:
-    results = get("/")
-    @links = {}
-    results.each do |link|
-      @links[link['rel']] = link['href']
-    end
-
-  end
-
-  def get_path(resource)
-    return @links[resource]
   end
 
   def register(name, type=:system, uuid=nil, facts={}, username=nil)
@@ -59,7 +48,7 @@ class Candlepin
 
     consumer[:uuid] = uuid if not uuid.nil?
 
-    path = get_path("consumers")
+    path = "/consumers"
     path += "?username=#{username}" if username
     @consumer = post(path, consumer)
     return @consumer
@@ -73,8 +62,7 @@ class Candlepin
       :facts => facts
     }
 
-    path = get_path("consumers")
-    put("#{path}/#{uuid}", consumer)
+    put("/consumers/#{uuid}", consumer)
   end
 
   def list_owners(params = {})

@@ -247,13 +247,4 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     public String getHref() {
         return "/owners/" + getId();
     }
-    
-    @Override
-    public void setHref(String href) {
-        /*
-         * No-op, here to aid with updating objects which have nested objects that were
-         * originally sent down to the client in HATEOAS form.
-         */
-    }
-
 }

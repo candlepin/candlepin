@@ -19,5 +19,4 @@ package org.fedoraproject.candlepin.model;
  */
 public interface Linkable {
     String getHref();
-    void setHref(String href);
 }

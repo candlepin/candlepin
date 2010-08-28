@@ -28,7 +28,6 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.resteasy.JsonProvider;
 
 import com.google.inject.Inject;
 
@@ -47,7 +46,8 @@ public class EventFactory {
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
         mapper = new ObjectMapper();
-        JsonProvider.configureObjectMapper(mapper);
+        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
+        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
     }
 
     public Event consumerCreated(Consumer newConsumer) {
