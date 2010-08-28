@@ -1,6 +1,6 @@
 require 'candlepin_scenarios'
 
-describe 'CRL' do
+describe 'Certificate Revocation List' do
 
   include CandlepinMethods
   it_should_behave_like 'Candlepin Scenarios'
@@ -53,7 +53,9 @@ describe 'CRL' do
   
   def filter_serial(product, consumer=@system)
       return consumer.list_certificates.find { |item|
-          item.entitlement.pool.productId == product.id
+          ent = @cp.get_entitlement(item.entitlement['id'])
+          pool = @cp.get_pool(ent['pool']['id'])
+          pool.productId == product.id
       }.serial.id
   end
   
