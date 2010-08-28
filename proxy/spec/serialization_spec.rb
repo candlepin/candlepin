@@ -15,25 +15,28 @@ describe 'Owner serialization' do
     @cp.create_pool(product1.id, @owner.id, 2)
   end
 
-  it "references consumers as links" do
-    
-    # Create a consumer, somewhat expensive:
-    consumer_client(@owner_client, random_string(), "candlepin")
-
-    o = @cp.get_owner(@owner.id)
-    o.has_key?('consumers').should be_true
-    o['consumers'].each do |c|
-      check_for_hateoas(c)
-    end
-  end
-
-  it "references pools as links" do
-    o = @cp.get_owner(@owner.id)
-    o.has_key?('pools').should be_true
-    o['pools'].each do |p|
-      check_for_hateoas(p)
-    end
-  end
+# Removed this functionality due to cyclical deps when serializing
+# without HATEOAS.
+# TODO: Expose /owners/id/pools and /owners/id/consumers instead?
+#  it "references consumers as links" do
+#    
+#    # Create a consumer, somewhat expensive:
+#    consumer_client(@owner_client, random_string(), "candlepin")
+#
+#    o = @cp.get_owner(@owner.id)
+#    o.has_key?('consumers').should be_true
+#    o['consumers'].each do |c|
+#      check_for_hateoas(c)
+#    end
+#  end
+#
+#  it "references pools as links" do
+#    o = @cp.get_owner(@owner.id)
+#    o.has_key?('pools').should be_true
+#    o['pools'].each do |p|
+#      check_for_hateoas(p)
+#    end
+#  end
 
   it "references owners collection as links" do
     owners = @cp.list_owners()
@@ -100,17 +103,18 @@ describe 'Pool serialization' do
     check_for_hateoas(@pool['owner'])
   end
 
-  it 'references entitlements as links' do
-    consumer_client = consumer_client(@owner_client, random_string(),
-        "candlepin")
-    consumer_client.consume_pool(@pool.id)
+#  it 'references entitlements as links' do
+#    consumer_client = consumer_client(@owner_client, random_string(),
+#        "candlepin")
+#    consumer_client.consume_pool(@pool.id)
+#
+#    @pool = @cp.get_pool(@pool.id)
+#    @pool.has_key?('entitlements').should be_true
+#    @pool['entitlements'].each do |e|
+#      check_for_hateoas(e)
+#    end
+#  end
 
-    @pool = @cp.get_pool(@pool.id)
-    @pool.has_key?('entitlements').should be_true
-    @pool['entitlements'].each do |e|
-      check_for_hateoas(e)
-    end
-  end
 end
 
 describe 'Entitlement serialization' do

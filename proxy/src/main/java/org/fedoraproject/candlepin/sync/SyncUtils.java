@@ -17,11 +17,14 @@ package org.fedoraproject.candlepin.sync;
 import java.io.File;
 import java.io.IOException;
 
+import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.IseException;
-import org.fedoraproject.candlepin.resteasy.JsonProvider;
 
 /**
  * SyncUtils
@@ -41,7 +44,16 @@ class SyncUtils {
     
     static ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        JsonProvider.configureObjectMapper(mapper);
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        
+        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
+        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+        mapper.getSerializationConfig().set(
+            SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
+            false);
+
         return mapper;
     }
 

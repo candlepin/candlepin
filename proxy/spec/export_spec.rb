@@ -43,7 +43,9 @@ describe 'Candlepin Export' do
 
     available_entitlements ||= {}
     @candlepin_client.list_entitlements.each do |e|
-      available_entitlements[e.pool.productId] = e
+      ent = @cp.get_entitlement(e['id'])
+      pool = @cp.get_pool(ent['pool']['id'])
+      available_entitlements[pool.productId] = e
     end
     exported_entitlements = files_in_dir(entitlements_dir)
 

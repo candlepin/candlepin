@@ -463,6 +463,7 @@ public class Pool extends AbstractHibernateObject
      *
      * @return The entitlements.
      */
+    @XmlTransient
     public Set<Entitlement> getEntitlements() {
         return this.entitlements;
     }

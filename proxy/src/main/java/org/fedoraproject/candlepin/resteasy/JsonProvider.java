@@ -56,11 +56,11 @@ public class JsonProvider extends JacksonJsonProvider {
         }
         
         ObjectMapper mapper = _mapperConfig.getDefaultMapper();
-        JsonProvider.configureObjectMapper(mapper);
+        configureHateoasObjectMapper(mapper);
         setMapper(mapper);
     }
     
-    public static void configureObjectMapper(ObjectMapper mapper) {
+    private void configureHateoasObjectMapper(ObjectMapper mapper) {
         mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
         mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, false);
         
