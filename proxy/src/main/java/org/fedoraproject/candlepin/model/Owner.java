@@ -29,6 +29,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents the owner of entitlements.
@@ -138,6 +139,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     /**
      * @return the consumers
      */
+    @XmlTransient
     public Set<Consumer> getConsumers() {
         return consumers;
     }
@@ -152,6 +154,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     /**
      * @return the entitlementPools
      */
+    @XmlTransient
     public Set<Pool> getPools() {
         return pools;
     }
