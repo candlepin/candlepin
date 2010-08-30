@@ -78,16 +78,14 @@ public class TestUtil {
         return new ConsumerType("test-consumer-type-" + randomInt());
     }
     
+    private static final Random RANDOM = new Random(System.currentTimeMillis());
+    
     public static int randomInt() {
-        return new Random().nextInt(10000);
+        return RANDOM.nextInt(10000);
     }
 
-    public static Product createProduct() {
-        int random =  randomInt();
-        Product rhel = new Product("test-product-" + random, 
-                "Test Product " + random);
-        rhel.setId("test-product-" + random);
-        
+    public static Product createProduct(String id, String name) {
+        Product rhel = new Product(name, id);
         ProductAttribute a1 = new ProductAttribute("a1", "a1");
         rhel.addAttribute(a1);
 
@@ -95,6 +93,11 @@ public class TestUtil {
         rhel.addAttribute(a2);
         
         return rhel;
+    }
+    public static Product createProduct() {
+        int random =  randomInt();
+        return createProduct("test-product-" + random,
+            "Test Product " + random);
     }
     
     public static Subscription createSubscription(Product product) {

@@ -141,8 +141,8 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testLookupPoolsProvidingProduct() {
-        Product parentProduct = TestUtil.createProduct();
-        Product childProduct = TestUtil.createProduct();
+        Product parentProduct = TestUtil.createProduct("1", "product-1");
+        Product childProduct = TestUtil.createProduct("2", "product-2");
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
         
