@@ -14,7 +14,15 @@ describe 'Consumer Resource' do
     user2 = user_client(owner2, random_string("user2"))
     consumer2 = consumer_client(user2, random_string("consumer2"))
 
-    @cp.list_consumers.length.should == 2
+    uuids = []
+    @cp.list_consumers.each do |c|
+      # These are HATEOAS serialized consumers, the ID is the numeric DB
+      # ID, so pull the UUID off the URL.
+      # TODO: Find a better way once client is more HATEOASy.
+      uuids << c['href'].split('/')[-1]
+    end
+    uuids.include?(consumer1.uuid).should be_true
+    uuids.include?(consumer2.uuid).should be_true
   end
 
   it 'lets an owner admin see only their consumers' do
