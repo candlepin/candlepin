@@ -34,10 +34,13 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.pinsetter.tasks.RegenEntitlementCertsJob;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.util.Util;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -214,13 +217,14 @@ public class EntitlementResource {
     @PUT
     @Path("product/{product_id}")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
-    public void regenerateEntitlementCertificatesForProduct(
+    public JobDetail regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId) {
-        List<Pool> poolsForProduct 
-            = poolCurator.listAvailableEntitlementPools(null, null, productId, false);
-        
-        for (Pool pool : poolsForProduct) {
-            entitler.regenerateCertificatesOf(pool.getEntitlements());
-        }
+        JobDetail detail = new JobDetail("regen_entitlement_cert_of_prod" +
+            Util.generateUUID(), RegenEntitlementCertsJob.class);
+        JobDataMap map = new JobDataMap();
+        map.put(RegenEntitlementCertsJob.PROD_ID, productId);
+        detail.setJobDataMap(map);
+        return detail;
     }
+    
 }

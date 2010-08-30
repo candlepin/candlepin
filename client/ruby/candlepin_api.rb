@@ -161,22 +161,23 @@ class Candlepin
   end
 
   def refresh_pools(owner_key, immediate=false)
-    status = put("/owners/#{owner_key}/subscriptions")
-
-    # return the async call if desired
+    return async_call(immediate) do
+      put("/owners/#{owner_key}/subscriptions")
+    end
+  end
+  
+  def async_call(immediate, *args, &blk)
+    status = blk.call(args)
     return status if immediate
-
     # otherwise poll the server to make this call synchronous
     while status['state'].downcase != 'finished'
       sleep 1
-
       # POSTing here will delete the job once it has finished
       status = post(status['statusPath'])
     end
-
     return status['result']
   end
-  
+      
   def export_consumer(dest_dir)
     path = "/consumers/#{@uuid}/export"
     begin
@@ -349,8 +350,10 @@ class Candlepin
     return put("/consumers/#{@uuid}/certificates")
   end
   
-  def regenerate_entitlement_certificates_for_product(product_id)
-    return put("/entitlements/product/#{product_id}")
+  def regenerate_entitlement_certificates_for_product(product_id, immediate=false)
+    return async_call(immediate) do
+      put("/entitlements/product/#{product_id}")
+    end
   end
 
   def get_status
