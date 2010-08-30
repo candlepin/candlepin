@@ -59,6 +59,8 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     public AMQPBusPubProvider(Config config,
         @Named("abc") Function adapter) {
         try {
+            configureSslProperties(config);
+            
             this.ctx = new InitialContext(buildConfigurationProperties(config));
             ConnectionFactory connectionFactory = (ConnectionFactory) ctx
                 .lookup("qpidConnectionfactory");
@@ -72,6 +74,20 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
             log.error("Unable to instantiate AMQPBusProvider: ", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+
+    private void configureSslProperties(Config config) {
+        // XXX: Setting the property here is dangerous,
+        // but in theory nothing else is setting/using it
+        System.setProperty("javax.net.ssl.keyStore",
+            config.getString(ConfigProperties.AMQP_KEYSTORE));
+        System.setProperty("javax.net.ssl.keyStorePassword",
+            config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
+        System.setProperty("javax.net.ssl.trustStore",
+            config.getString(ConfigProperties.AMQP_TRUSTSTORE));
+        System.setProperty("javax.net.ssl.trustStorePassword",
+            config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
     }
     
 
