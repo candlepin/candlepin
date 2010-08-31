@@ -12,7 +12,7 @@ shared_examples_for 'Candlepin Scenarios' do
   end
 
   after do
-    @owners.each { |owner| @cp.delete_owner owner.id }
+    @owners.each { |owner| @cp.delete_owner owner.key }
 
     # TODO:  delete products?
   end
@@ -41,7 +41,7 @@ module CandlepinMethods
   end
 
   def user_client(owner, user_name)
-    @cp.create_user(owner.id, user_name, 'password')
+    @cp.create_user(owner.key, user_name, 'password')
     Candlepin.new(user_name, 'password')
   end
 
@@ -133,7 +133,7 @@ module ExportMethods
     Dir.chdir(@orig_working_dir)
 
     FileUtils.rm_rf(@tmp_dir)
-    @cp.delete_owner(@owner.id)
+    @cp.delete_owner(@owner.key)
   end
 
   def unzip_export_file(filename, dest_dir)

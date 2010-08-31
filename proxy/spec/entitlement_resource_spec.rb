@@ -10,7 +10,7 @@ describe 'Entitlement Resource' do
     @monitoring_prod = create_product(name='monitoring')
 
     #entitle owner for the virt and monitoring products.
-    @cp.create_subscription(@owner.id, @monitoring_prod.id, 6)
+    @cp.create_subscription(@owner.key, @monitoring_prod.id, 6)
 
     @cp.refresh_pools(@owner.key)
 

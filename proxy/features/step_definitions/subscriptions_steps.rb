@@ -11,9 +11,9 @@ class String
 end
 
 Given /^owner "([^\"]*)" has a subscription for product "([^\"]*)" with quantity (\d+)$/ do |owner_name, product_name, quantity|
-  owner_id = @owners[owner_name]['id']
+  owner_key = @owners[owner_name]['key']
   product_id = @products[product_name]['id']
-  @candlepin.create_subscription(owner_id, product_id, quantity)
+  @candlepin.create_subscription(owner_key, product_id, quantity)
   # Just refesh the entitlement pools each time
   @candlepin.refresh_pools(@owners[owner_name]['key'])
 end
@@ -47,7 +47,7 @@ When /^I delete the subscription for product "([^\"]*)"$/ do |product|
 end
 
 Then /^I have (\d+) subscriptions$/ do |subscription_size|
-    subscriptions = @current_owner_cp.list_subscriptions(@test_owner['id'])
+    subscriptions = @current_owner_cp.list_subscriptions(@test_owner['key'])
     subscriptions.length.should == subscription_size.to_i
 end
 
@@ -56,13 +56,13 @@ end
 def create_subscription(product, quantity)
   
   p = @candlepin.get_product(product.hash.abs)
-  created = @candlepin.create_subscription(@test_owner['id'], p['id'], quantity)
+  created = @candlepin.create_subscription(@test_owner['key'], p['id'], quantity)
 
   @subscriptions[product] = created
 end
 
 When /^test owner changes the "([^\"]*)" of the subscription by (-{0,1}\d+) days$/ do |field, d|
-  subscription = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
+  subscription = @current_owner_cp.list_subscriptions(@test_owner['key'])[0]
   subscription[field] = subscription[field].to_date + d.to_i
   @candlepin.update_subscription(subscription)
 end
@@ -73,14 +73,14 @@ When /^he refreshes the pools$/ do
 end
 
 When /^test owner changes the quantity of the subscription by (-{0,1}\d+)$/ do |q|
- subscription = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
+ subscription = @current_owner_cp.list_subscriptions(@test_owner['key'])[0]
  subscription['quantity'] = subscription['quantity'].to_i + q.to_i
  @candlepin.update_subscription(subscription)
 end
 
 Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |arg1|
   @new_certs = @consumer_cp.list_certificates()
-  subs = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
+  subs = @current_owner_cp.list_subscriptions(@test_owner['key'])[0]
   certs = {}
   @new_certs.each do |cert|
     temp = OpenSSL::X509::Certificate.new(cert['cert'])

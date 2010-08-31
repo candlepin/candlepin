@@ -71,8 +71,8 @@ class Candlepin
     get(path)
   end
 
-  def get_owner(owner_id)
-    get("/owners/#{owner_id}")
+  def get_owner(owner_key)
+    get("/owners/#{owner_key}")
   end
 
   def create_owner(owner_name)
@@ -84,17 +84,17 @@ class Candlepin
     post('/owners', owner)
   end
 
-  def delete_owner(owner_id)
-    delete("/owners/#{owner_id}")
+  def delete_owner(owner_key)
+    delete("/owners/#{owner_key}")
   end
 
-  def create_user(owner_id, login, password)
+  def create_user(owner_key, login, password)
     user = {
       'username' => login,
       'password' => password
     }
 
-    post("/owners/#{owner_id}/users", user)
+    post("/owners/#{owner_key}/users", user)
   end
 
   def list_consumer_types
@@ -298,11 +298,11 @@ class Candlepin
     delete("/consumers/#{@uuid}/entitlements/#{eid}")
   end
 
-  def list_subscriptions(owner_id)
-    return get("/owners/#{owner_id}/subscriptions")
+  def list_subscriptions(owner_key)
+    return get("/owners/#{owner_key}/subscriptions")
   end
 
-  def create_subscription(owner_id, product_id, quantity=1,
+  def create_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           start_date=nil, end_date=nil)
     start_date ||= Date.today
@@ -317,7 +317,7 @@ class Candlepin
       'contractNumber' => contract_number
     }
 
-    return post("/owners/#{owner_id}/subscriptions", subscription)
+    return post("/owners/#{owner_key}/subscriptions", subscription)
   end
 
   def update_subscription(subscription)

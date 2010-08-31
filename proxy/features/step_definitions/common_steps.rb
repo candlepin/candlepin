@@ -23,7 +23,7 @@ Before do
 end
 
 After do
-  @candlepin.delete_owner(@test_owner['id'])
+  @candlepin.delete_owner(@test_owner['key'])
 end
 
 # Reads the cucumber.conf file for test config if it exists, uses default
