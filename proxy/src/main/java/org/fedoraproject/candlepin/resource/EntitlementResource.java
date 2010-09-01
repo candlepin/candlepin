@@ -207,6 +207,7 @@ public class EntitlementResource {
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public JobDetail regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId) {
+        prodAdapter.purgeCache();
         JobDetail detail = new JobDetail("regen_entitlement_cert_of_prod" +
             Util.generateUUID(), RegenEntitlementCertsJob.class);
         JobDataMap map = new JobDataMap();
