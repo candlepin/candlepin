@@ -319,7 +319,7 @@ public class Entitlement extends AbstractHibernateObject
     }
     
     public String getHref() {
-        return "/consumers/" + getConsumer().getUuid() + "/entitlements/" + getId();
+        return "/entitlements/" + getId();
     }
     
     @Override
