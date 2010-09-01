@@ -272,7 +272,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testDeleteResource() {
         Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME,
             USER_NAME, owner, standardSystemType));
-        consumerResource.deleteConsumer(consumer.getUuid());
+        consumerResource.deleteConsumer(consumer.getUuid(), principal);
 
         assertNull(consumerCurator.find(created.getId()));
     }
@@ -432,7 +432,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        consumerResource.deleteConsumer(consumer.getUuid());
+        consumerResource.deleteConsumer(consumer.getUuid(), principal);
     }
 
     @Test
@@ -449,7 +449,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         IdentityCertificate idCert = icsa.generateIdentityCert(c);
         c.setIdCert(idCert);
         setupPrincipal(new ConsumerPrincipal(c));
-        consumerResource.deleteConsumer(c.getUuid());
+        consumerResource.deleteConsumer(c.getUuid(), principal);
     }
 
     @Test

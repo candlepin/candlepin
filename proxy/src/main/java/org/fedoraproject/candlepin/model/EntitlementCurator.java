@@ -113,4 +113,5 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 .add(Restrictions.eq("serial.id", serial.longValue()))
             .uniqueResult();
     }
+    
 }

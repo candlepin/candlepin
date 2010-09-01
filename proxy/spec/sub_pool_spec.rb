@@ -5,8 +5,7 @@ describe 'Sub-Pool' do
   include CandlepinMethods
   it_should_behave_like 'Candlepin Scenarios'
 
-  it 'inherits order number extension from parent pool' do
-    # ===== Given =====
+  before(:each) do
     owner = create_owner 'test_owner'
     derived_product = create_product()
     parent_product = create_product(nil, nil, {:attributes => {
@@ -16,33 +15,53 @@ describe 'Sub-Pool' do
     }})
 
     # Create a subscription
-    subscription = @cp.create_subscription(owner.key, parent_product.id, 5)
+    @subscription = @cp.create_subscription(owner.key, parent_product.id, 5)
     @cp.refresh_pools(owner.key)
-
+    
     # Set up user
-    billy = user_client(owner, 'billy')
+    @user_client = user_client(owner, 'billy')
 
     # ===== When =====
     # Register his personal consumer
-    billy_consumer = consumer_client(billy, 'billy_consumer', :person)
+    @person_client = consumer_client(@user_client, 'billy_consumer', 
+        :person)
 
     # Subscribe to the parent pool
-    billy_consumer.consume_product parent_product.id
+    @parent_ent = @person_client.consume_product(parent_product.id)[0]
 
     # Now register a system
-    system1 = consumer_client(billy, 'system1')
+    @system = consumer_client(@user_client, 'system1')
 
     # And subscribe to the created sub-pool
-    system1.consume_product derived_product.id
+    @system.consume_product derived_product.id
+  end
 
+  it 'inherits order number extension from parent pool' do
     # ===== Then =====
-    entitlement_cert = system1.list_certificates.first
+    entitlement_cert = @system.list_certificates.first
     cert = OpenSSL::X509::Certificate.new(entitlement_cert.cert)
 
     # TODO:  This magic OID should be refactored...
     order_number = get_extension(cert, '1.3.6.1.4.1.2312.9.4.2')
 
-    order_number.should == subscription.id.to_s
+    order_number.should == @subscription.id.to_s
   end
+
+  it 'prevents unregister as consumer with outstanding entitlements' do
+    lambda {
+      @person_client.unregister(@person_client.uuid)
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
+  it 'allows unregister as admin with outstanding entitlements' do
+    @cp.unregister(@person_client.uuid)
+  end
+
+  it 'prevents unbind as consumer with outstanding entitlements' do
+    lambda {
+      @person_client.unbind_entitlement(@parent_ent['id'])
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
 
 end
