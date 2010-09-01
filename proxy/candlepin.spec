@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.31
+Version: 0.0.32
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Sep 01 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.32-1
+- Better error for unbind/unregister as consumer with sub-pools in use.  (dgoodwin@redhat.com)
+- Use owner keys instead of IDs in REST API. (dgoodwin@redhat.com)
+- Regenerating entitlement certificates based on product_id works 'async' (anadathu@redhat.com)
+- Fix junit failure (anadathu@redhat.com)
+- continue cucumber -> rspec. (subscriptions.feature ->
+  subscription_resource_spec + entitlement_certificate_spec)
+  (anadathu@redhat.com)
+
 * Thu Aug 26 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.31-1
 - Adding additional specs for refresh_pools (jharris@redhat.com)
 - cucumber -> rspec : certificate revocation scenario (anadathu@redhat.com)
