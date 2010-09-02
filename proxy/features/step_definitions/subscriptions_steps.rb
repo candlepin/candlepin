@@ -80,7 +80,8 @@ end
 
 Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |arg1|
   @new_certs = @consumer_cp.list_certificates()
-  subs = @current_owner_cp.list_subscriptions(@test_owner['id'])[0]
+  # Only admins can list subs for now, unlike with pools.
+  subs = @candlepin.list_subscriptions(@test_owner['id'], {:fetch => true})[0]
   certs = {}
   @new_certs.each do |cert|
     temp = OpenSSL::X509::Certificate.new(cert['cert'])
@@ -91,7 +92,8 @@ Then /^the properties "([^\"]*)" of entitlement and certificates should equal su
   end
   arg1.split(",").map{|str| str.strip }.each do |field|
     @new_certs.each do |cert|
-      subs[field].to_date.should == cert['entitlement'][field].to_date
+      ent = @current_owner_cp.get_entitlement(cert['entitlement']['id'])
+      subs[field].to_date.should == ent[field].to_date
       subs[field].to_date.should == certs[cert['serial']['id']][field].to_date if ['endDate', 'startDate'].include? field
     end
   end

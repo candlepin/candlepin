@@ -59,11 +59,27 @@ public class SubscriptionResource {
         return subList;
     }
 
+    @GET
+    @Path("/{subscription_id}")
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public Subscription getSubscription(
+        @PathParam("subscription_id") String subscriptionId) {
+        
+        Subscription subscription = verifyAndFind(subscriptionId);
+        return subscription;
+    }
+
     @DELETE
     @Path("/{subscription_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public void deleteSubscription(
         @PathParam("subscription_id") String subscriptionIdString) {
+        
+        Subscription subscription = verifyAndFind(subscriptionIdString);
+        subCurator.delete(subscription);
+    }
+
+    private Subscription verifyAndFind(String subscriptionIdString) {
         Long subscriptionId = Util.assertLong(subscriptionIdString,
             i18n.tr("subscription_id path parameter must be a number"));       
         
@@ -73,8 +89,6 @@ public class SubscriptionResource {
             throw new BadRequestException(
                 i18n.tr("Subscription with id {0} could not be found", subscriptionId));
         }
-
-        subCurator.delete(subscription);
-
+        return subscription;
     }
 }

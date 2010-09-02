@@ -45,7 +45,9 @@ end
 When /^I filter certificates on the serial number for "([^\"]*)"$/ do |entitlement|
     certificates = @consumer_cp.list_certificates()
     found = certificates.find {|item|
-        item['entitlement']['pool']['productId'] == entitlement.hash.abs.to_s}
+        ent = @consumer_cp.get_entitlement(item['entitlement']['id'])
+        pool = @consumer_cp.get_pool(ent['pool']['id'])
+        pool['productId'] == entitlement.hash.abs.to_s}
     @serials << found['serial']['id']
 end
 

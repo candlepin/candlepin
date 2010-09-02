@@ -139,7 +139,11 @@ class Candlepin
     path << "owner=#{params[:owner]}&" if params[:owner]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
-    return get(path)
+    results = get(path)
+
+    results = results.collect { |r| get_pool(r['id']) } if params[:fetch]
+
+    return results
   end
   
   def create_pool(product_id, owner_id, quantity, params={})
@@ -279,10 +283,13 @@ class Candlepin
     post("/consumers/#{@uuid}/entitlements?token=#{token}")
   end
 
-  def list_entitlements(product_id = nil)
+  # TODO: Could also fetch from /entitlements, a bit ambiguous:
+  def list_entitlements(params={})
     path = "/consumers/#{@uuid}/entitlements"
-    path << "?product=#{product_id}" if product_id
-    get(path)
+    path << "?product=#{params[:product_id]}" if params[:product_id]
+    results = get(path)
+    results = results.collect { |r| get_entitlement(r['id']) } if params[:fetch]
+    return results
   end
 
   def list_rules()
@@ -309,8 +316,14 @@ class Candlepin
     delete("/consumers/#{@uuid}/entitlements/#{eid}")
   end
 
-  def list_subscriptions(owner_id)
-    return get("/owners/#{owner_id}/subscriptions")
+  def list_subscriptions(owner_id, params={})
+    results = get("/owners/#{owner_id}/subscriptions")
+    results = results.collect { |r| get_subscription(r['id']) } if params[:fetch]
+    return results
+  end
+
+  def get_subscription(sub_id)
+    return get("/subscriptions/#{sub_id}")
   end
 
   def create_subscription(owner_id, product_id, quantity=1,
