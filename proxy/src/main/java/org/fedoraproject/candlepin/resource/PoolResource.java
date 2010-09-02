@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -49,22 +50,22 @@ import com.google.inject.Inject;
 public class PoolResource {
 
     private PoolCurator poolCurator;
+    private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
     private I18n i18n;
-    private EventSink eventSink;
 
     @Inject
     public PoolResource(
         PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         I18n i18n,
-        EventSink eventSink) {
+        EventSink eventSink, PoolManager poolManager) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
-        this.eventSink = eventSink;
+        this.poolManager = poolManager;
     }
 
     /**
@@ -141,10 +142,8 @@ public class PoolResource {
 
         pool.setOwner(owner);
         
-        Pool toReturn = poolCurator.create(pool);
-        
+        Pool toReturn = poolManager.createPool(pool);
         if (toReturn != null) {
-            eventSink.emitPoolCreated(toReturn);
             return toReturn;
         }
 

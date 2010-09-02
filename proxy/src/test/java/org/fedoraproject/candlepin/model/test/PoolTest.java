@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -39,7 +38,6 @@ public class PoolTest extends DatabaseTestFixture {
     private Product prod2;
     private Owner owner;
     private Consumer consumer;
-    private Entitler entitler;
 
     @Before
     public void createObjects() {
@@ -61,7 +59,6 @@ public class PoolTest extends DatabaseTestFixture {
         owner = pool.getOwner();
 
         consumer = TestUtil.createConsumer(owner);
-        entitler = injector.getInstance(Entitler.class);
 
         productCurator.create(prod1);
         poolCurator.create(pool);
@@ -112,7 +109,7 @@ public class PoolTest extends DatabaseTestFixture {
                 TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        entitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
+        poolManager.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
 
         consumerPool = poolCurator.find(consumerPool.getId());
         assertFalse(consumerPool.entitlementsAvailable(new Integer(1)));
@@ -131,7 +128,7 @@ public class PoolTest extends DatabaseTestFixture {
         consumerPool = poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
-        entitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
+        poolManager.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
 
         assertEquals(1, consumerCurator.find(consumer.getId())
                 .getEntitlements().size());

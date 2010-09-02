@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
-import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -89,9 +89,9 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        Entitler anotherEntitler = injector.getInstance(Entitler.class);
+        PoolManager anotherEntitler = injector.getInstance(PoolManager.class);
 
-        entitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
+        anotherEntitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
         anotherEntitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
 
         assertFalse(poolCurator.find(consumerPool.getId())
@@ -110,9 +110,9 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        Entitler anotherEntitler = injector.getInstance(Entitler.class);
+        PoolManager anotherEntitler = injector.getInstance(PoolManager.class);
 
-        Entitlement e1 = entitler.entitleByProduct(consumer, newProduct.getId(), 
+        Entitlement e1 = poolManager.entitleByProduct(consumer, newProduct.getId(),
             new Integer("1"));
         assertNotNull(e1);
 

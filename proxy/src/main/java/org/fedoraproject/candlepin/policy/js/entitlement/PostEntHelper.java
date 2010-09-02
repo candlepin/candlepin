@@ -17,12 +17,10 @@ package org.fedoraproject.candlepin.policy.js.entitlement;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
-
-import com.google.inject.Inject;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
@@ -32,18 +30,11 @@ import com.google.inject.Inject;
 public class PostEntHelper {
     
     private Entitlement ent;
-    private PoolCurator poolCurator;
+    private PoolManager poolManager;
     
-    @Inject
-    public PostEntHelper(PoolCurator poolCurator) {
-        this.poolCurator = poolCurator;
-    }
-    
-    /*
-     * Separate init step for args guice cannot inject.
-     */
-    public void init(Entitlement ent) {
-        this.ent = ent;
+    public PostEntHelper(PoolManager poolManager, Entitlement e) {
+        this.poolManager = poolManager;
+        this.ent = e;
     }
     
     /**
@@ -74,7 +65,7 @@ public class PostEntHelper {
         // temp - we need a way to specify this on the product
         consumerSpecificPool.setAttribute("requires_consumer_type", "system");
         
-        poolCurator.create(consumerSpecificPool);
+        poolManager.createPool(consumerSpecificPool);
     }
 
 // Disabling this code for now:

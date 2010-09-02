@@ -41,7 +41,6 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -91,7 +90,6 @@ public class OwnerResource {
     private UserServiceAdapter userService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
-    private Entitler entitler;
     private EventSink sink;
     private EventFactory eventFactory;
     private static Logger log = Logger.getLogger(OwnerResource.class);
@@ -99,6 +97,7 @@ public class OwnerResource {
     private ProductCurator productCurator;
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
+    private PoolManager poolManager;
     private static final int FEED_LIMIT = 1000;
     
 
@@ -108,7 +107,7 @@ public class OwnerResource {
         SubscriptionCurator subscriptionCurator,
         SubscriptionTokenCurator subscriptionTokenCurator,
         ConsumerCurator consumerCurator, I18n i18n,
-        UserServiceAdapter userService, Entitler entitler, EventSink sink,
+        UserServiceAdapter userService, EventSink sink,
         EventFactory eventFactory, EventCurator eventCurator, Importer importer,
         PoolManager poolManager, ExporterMetadataCurator exportCurator) {
 
@@ -120,12 +119,12 @@ public class OwnerResource {
         this.consumerCurator = consumerCurator;
         this.userService = userService;
         this.i18n = i18n;
-        this.entitler = entitler;
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
         this.importer = importer;
         this.exportCurator = exportCurator;
+        this.poolManager = poolManager;
     }
 
     /**
@@ -208,7 +207,7 @@ public class OwnerResource {
         for (Consumer c : consumerCurator.listByOwner(owner)) {
             log.info("Deleting consumer: " + c);
             
-            entitler.revokeAllEntitlements(c);
+            poolManager.revokeAllEntitlements(c);
             
             // need to check if this has been removed due to a 
             // parent being deleted

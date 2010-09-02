@@ -46,7 +46,6 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -97,7 +96,6 @@ public class ConsumerResource {
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
-    private Entitler entitler;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
@@ -117,7 +115,7 @@ public class ConsumerResource {
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductServiceAdapter productAdapter, Entitler entitler,
+        ProductServiceAdapter productAdapter,
         SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
@@ -132,7 +130,6 @@ public class ConsumerResource {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
-        this.entitler = entitler;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
@@ -467,7 +464,7 @@ public class ConsumerResource {
         String productId, Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitleByProduct(consumer, productId,
+            Entitlement e = poolManager.entitleByProduct(consumer, productId,
                 quantity);
             log.debug("Created entitlement: " + e);
             return e;
@@ -495,7 +492,7 @@ public class ConsumerResource {
         Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitleByPool(consumer, pool, quantity);
+            Entitlement e = poolManager.entitleByPool(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -687,7 +684,7 @@ public class ConsumerResource {
                 consumerUuid + " could not be found."));
         }
 
-        entitler.revokeAllEntitlements(consumer);
+        poolManager.revokeAllEntitlements(consumer);
 
         // Need to parse off the value of subscriptionNumberArgs, probably
         // use comma separated see IntergerList in sparklines example in
@@ -712,7 +709,7 @@ public class ConsumerResource {
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            entitler.revokeEntitlement(toDelete);
+            poolManager.revokeEntitlement(toDelete);
             return;
         }
         
@@ -738,7 +735,7 @@ public class ConsumerResource {
             .findByCertificateSerial(BigInteger.valueOf(serial));
 
         if (toDelete != null) {
-            entitler.revokeEntitlement(toDelete);
+            poolManager.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException(
@@ -767,7 +764,7 @@ public class ConsumerResource {
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid) {
         Consumer c = verifyAndLookupConsumer(consumerUuid);
-        this.entitler.regenerateEntitlementCertificates(c);
+        poolManager.regenerateEntitlementCertificates(c);
     }
 
     @GET

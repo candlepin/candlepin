@@ -43,4 +43,5 @@ describe 'Refresh Pools' do
     # -------- Then ----------
     @cp.list_pools({:owner => owner.id}).length.should == 6
   end
+
 end

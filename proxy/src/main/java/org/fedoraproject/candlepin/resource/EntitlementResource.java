@@ -27,17 +27,14 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.pinsetter.tasks.RegenEntitlementCertsJob;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -52,28 +49,19 @@ import com.google.inject.Inject;
 @Path("/entitlements")
 public class EntitlementResource {
     private final ConsumerCurator consumerCurator;
-    private final ProductServiceAdapter prodAdapter;
-    private Entitler entitler;
+    private PoolManager poolManager;
     private final EntitlementCurator entitlementCurator;
     private I18n i18n;
-    private PoolCurator poolCurator;
     
     //private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     @Inject
-    public EntitlementResource(PoolCurator epCurator, 
-            EntitlementCurator entitlementCurator,
+    public EntitlementResource(EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
-            PoolCurator poolCurator,
-            ProductServiceAdapter prodAdapter, SubscriptionServiceAdapter subAdapter, 
-            Entitler entitler,
             I18n i18n) {
         
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
-        this.poolCurator = poolCurator;
-        this.prodAdapter = prodAdapter;
-        this.entitler = entitler;
         this.i18n = i18n;
     }
     
@@ -206,7 +194,7 @@ public class EntitlementResource {
     public void unbind(@PathParam("dbid") Long dbid) {
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            entitler.revokeEntitlement(toDelete);
+            poolManager.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException(
