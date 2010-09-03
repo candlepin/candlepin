@@ -49,20 +49,17 @@ public class JsonProvider extends JacksonJsonProvider {
         // Prefer jackson annotations, but use jaxb if no jackson.
         super(Annotations.JACKSON, Annotations.JAXB);
        
-        this._mapperConfig.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
-            false);
-        if (config.indentJson()) {
-            this._mapperConfig.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-        }
-        
         ObjectMapper mapper = _mapperConfig.getDefaultMapper();
-        configureHateoasObjectMapper(mapper);
+        configureHateoasObjectMapper(mapper, config);
         setMapper(mapper);
     }
     
-    private void configureHateoasObjectMapper(ObjectMapper mapper) {
+    private void configureHateoasObjectMapper(ObjectMapper mapper, Config config) {
         mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
-        mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, false);
+        
+        if (config.indentJson()) {
+            mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+        }
         
         CandlepinSerializerProvider csp = new CandlepinSerializerProvider();
         CandlepinSerializerFactory factory = new CandlepinSerializerFactory();
