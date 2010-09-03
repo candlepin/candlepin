@@ -9,14 +9,14 @@ puts 'Creating Owner'
 owner = cp.create_owner('test_owner')
 
 puts 'Creating User'
-user = cp.create_user(owner['id'], 'test_user', 'password')
+user = cp.create_user(owner['key'], 'test_user', 'password')
 
 puts 'Creating Product'
 product = cp.create_product('new_product'.hash, 'new_product',
   {:attributes => {'multi-entitlement' => 'yes'}})
 
 puts 'Creating Subscription'
-cp.create_subscription(owner['id'], product['id'], 3000000)
+cp.create_subscription(owner['key'], product['id'], 3000000)
 cp.refresh_pools(owner['key'])
 
 cp_user = Candlepin.new('test_user', 'password')

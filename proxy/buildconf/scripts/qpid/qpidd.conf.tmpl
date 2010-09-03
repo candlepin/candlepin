@@ -1,0 +1,10 @@
+auth=yes
+load-module=/usr/@LIBARCH@/qpid/daemon/ssl.so
+require-encryption=yes
+ssl-require-client-authentication=yes
+ssl-cert-db=/etc/qpid/brokerdb
+ssl-cert-password-file=/etc/qpid/brokerdb/pfile
+ssl-cert-name=localhost
+ssl-port=5671
+log-to-file=/tmp/qpidd.log
+log-enable=info+

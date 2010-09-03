@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.reset;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -56,26 +57,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class EntitlerTest extends DatabaseTestFixture {
-    
+public class PoolManagerFunctionalTest extends DatabaseTestFixture {
+
     public static final String PRODUCT_MONITORING = "monitoring";
     public static final String PRODUCT_PROVISIONING = "provisioning";
     public static final String PRODUCT_VIRT_HOST = "virtualization_host";
     public static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
     public static final String PRODUCT_VIRT_GUEST = "virt_guest";
-    
+
     private Product virtHost;
     private Product virtHostPlatform;
     private Product virtGuest;
     private Product monitoring;
     private Product provisioning;
-    
+
     private ConsumerType systemType;
-    
+
     private Owner o;
     private Consumer parentSystem;
     private Consumer childVirtSystem;
-    private Entitler entitler;
     private EventSink eventSink;
 
     @Before
@@ -83,49 +83,47 @@ public class EntitlerTest extends DatabaseTestFixture {
         o = createOwner();
         ownerCurator.create(o);
         virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
-        virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, 
+        virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM,
             PRODUCT_VIRT_HOST_PLATFORM);
         virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST);
         monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING);
-        provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);        
-        
+        provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);
+
         virtHost.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST, ""));
-        virtHostPlatform.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST_PLATFORM, 
+        virtHostPlatform.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST_PLATFORM,
             ""));
         virtGuest.addAttribute(new ProductAttribute(PRODUCT_VIRT_GUEST, ""));
         monitoring.addAttribute(new ProductAttribute(PRODUCT_MONITORING, ""));
         provisioning.addAttribute(new ProductAttribute(PRODUCT_PROVISIONING, ""));
-        
+
         productAdapter.createProduct(virtHost);
         productAdapter.createProduct(virtHostPlatform);
         productAdapter.createProduct(virtGuest);
         productAdapter.createProduct(monitoring);
         productAdapter.createProduct(provisioning);
 
-        subCurator.create(new Subscription(o, virtHost, new HashSet<Product>(), 
+        subCurator.create(new Subscription(o, virtHost, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, virtHostPlatform, new HashSet<Product>(), 
+        subCurator.create(new Subscription(o, virtHostPlatform, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        
-        subCurator.create(new Subscription(o, monitoring, new HashSet<Product>(), 
+
+        subCurator.create(new Subscription(o, monitoring, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
         subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        
+
         poolManager.refreshPools(o);
-        
-        entitler = injector.getInstance(Entitler.class);
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
-        
+
         parentSystem = new Consumer("system", "user", o, systemType);
         parentSystem.getFacts().put("total_guests", "0");
         consumerCurator.create(parentSystem);
-        
+
         childVirtSystem = new Consumer("virt system", "user", o, systemType);
         parentSystem.addChildConsumer(childVirtSystem);
-        
+
         consumerCurator.create(childVirtSystem);
     }
 
@@ -141,63 +139,64 @@ public class EntitlerTest extends DatabaseTestFixture {
     // support for virtualized systems has been changed
     @Ignore
     @Test(expected = EntitlementRefusedException.class)
-    public void testVirtEntitleFailsIfAlreadyHasGuests() 
+    public void testVirtEntitleFailsIfAlreadyHasGuests()
         throws EntitlementRefusedException {
-        
+
         parentSystem.getFacts().put("total_guests", "10");
         consumerCurator.update(parentSystem);
-        entitler.entitleByProduct(parentSystem, virtHost.getId(), new Integer("1"));
+        poolManager.entitleByProduct(parentSystem, virtHost.getId(), new Integer("1"));
     }
-    
+
     // NOTE:  Disabled after virt_system was removed as a type
     //@Test(expected = EntitlementRefusedException.class)
     public void testVirtEntitleFailsForVirtSystem() throws Exception {
         parentSystem.setType(systemType);
         consumerCurator.update(parentSystem);
-        entitler.entitleByProduct(parentSystem, virtHost.getId(), new Integer("1"));
+        poolManager.entitleByProduct(parentSystem, virtHost.getId(), new Integer("1"));
     }
-    
+
     // NOTE:  Disabled after virt_system was removed as a type
     //@Test
     public void testVirtSystemGetsWhatParentHasForFree() throws Exception {
         // Give parent virt host ent:
-        Entitlement e = entitler.entitleByProduct(parentSystem, virtHost.getId(), 
+        Entitlement e = poolManager.entitleByProduct(parentSystem, virtHost.getId(),
             new Integer("1"));
         assertNotNull(e);
-        
+
         // Give parent provisioning:
-        e = entitler.entitleByProduct(parentSystem, provisioning.getId(), new Integer("1"));
+        e = poolManager.entitleByProduct(parentSystem, provisioning.getId(),
+            new Integer("1"));
         assertNotNull(e);
-        
-        Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
+
+        Pool provisioningPool = poolCurator.listByOwnerAndProduct(o,
                 provisioning.getId()).get(0);
-        
+
         Long provisioningCount = new Long(provisioningPool.getConsumed());
         assertEquals(new Long(1), provisioningCount);
-        
+
         // Now guest requests monitoring, and should get it for "free":
-        e = entitler.entitleByProduct(childVirtSystem, provisioning.getId(), 
+        e = poolManager.entitleByProduct(childVirtSystem, provisioning.getId(),
             new Integer("1"));
         assertNotNull(e);
         assertTrue(e.isFree());
         assertEquals(new Long(1), provisioningPool.getConsumed());
     }
-    
+
     @Ignore // Support for virtualized systems has been changed
     @Test
     public void testVirtSystemPhysicalEntitlement() throws Exception {
         // Give parent virt host ent:
-        Entitlement e = entitler.entitleByProduct(parentSystem, virtHost.getId(), 
+        Entitlement e = poolManager.entitleByProduct(parentSystem, virtHost.getId(),
             new Integer("1"));
         assertNotNull(e);
-        
-        Pool provisioningPool = poolCurator.listByOwnerAndProduct(o, 
+
+        Pool provisioningPool = poolCurator.listByOwnerAndProduct(o,
                 provisioning.getId()).get(0);
-        
+
         Long provisioningCount = new Long(provisioningPool.getConsumed());
         assertEquals(new Long(0), provisioningCount);
-        
-        e = entitler.entitleByProduct(childVirtSystem, provisioning.getId(), 
+
+        e = poolManager.entitleByProduct(childVirtSystem, provisioning.getId(),
             new Integer("1"));
         assertNotNull(e);
         assertFalse(e.isFree());
@@ -205,21 +204,22 @@ public class EntitlerTest extends DatabaseTestFixture {
         // parent does not have this.
         assertEquals(new Long(1), provisioningPool.getConsumed());
     }
-    
+
     @Test
     public void testQuantityCheck() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, 
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
                 monitoring.getId()).get(0);
         assertEquals(new Long(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
-            Entitlement e = entitler.entitleByProduct(parentSystem, monitoring.getId(), 
+            Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId(),
                 new Integer("1"));
             assertNotNull(e);
         }
-        
+
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         try {
-            entitler.entitleByProduct(parentSystem, monitoring.getId(), new Integer("1"));
+            poolManager.entitleByProduct(parentSystem, monitoring.getId(),
+                new Integer("1"));
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -230,32 +230,32 @@ public class EntitlerTest extends DatabaseTestFixture {
 
     @Test
     public void testRevocation() throws Exception {
-        Entitlement e = entitler.entitleByProduct(parentSystem, monitoring.getId(), 
+        Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId(),
             new Integer("1"));
-        entitler.revokeEntitlement(e);
+        poolManager.revokeEntitlement(e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
         assertTrue(entitlements.isEmpty());
     }
-    
+
     @Test
     public void testConsumeQuantity() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, 
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
             monitoring.getId()).get(0);
         assertEquals(new Long(5), monitoringPool.getQuantity());
-        
-        Entitlement e = entitler.entitleByProduct(parentSystem, monitoring.getId(), 3);
+
+        Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId(), 3);
         assertNotNull(e);
         assertEquals(new Long(3), monitoringPool.getConsumed());
-        
-        entitler.revokeEntitlement(e);
+
+        poolManager.revokeEntitlement(e);
         assertEquals(new Long(0), monitoringPool.getConsumed());
     }
-    
+
     @Test
     public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
         throws Exception {
-        this.entitlementCurator.refresh(this.entitler.entitleByProduct(this.childVirtSystem,
+        this.entitlementCurator.refresh(poolManager.entitleByProduct(this.childVirtSystem,
             provisioning.getId(), 3));
         regenerateECAndAssertNotSameCertificates();
     }
@@ -263,16 +263,17 @@ public class EntitlerTest extends DatabaseTestFixture {
     @Test
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
-        this.entitlementCurator.refresh(this.entitler.entitleByProduct(
+        this.entitlementCurator.refresh(poolManager.entitleByProduct(
             this.childVirtSystem, provisioning.getId(), 3));
-        this.entitlementCurator.refresh(this.entitler.entitleByProduct(this.childVirtSystem,
+        this.entitlementCurator.refresh(poolManager.entitleByProduct(this.childVirtSystem,
             monitoring.getId(), 4));
         regenerateECAndAssertNotSameCertificates();
     }
 
     @Test
     public void testRegenerateEntitlementCertificatesWithNoEntitlement() {
-        this.entitler.regenerateEntitlementCertificates(childVirtSystem);
+        reset(this.eventSink); // pool creation events went out from setup
+        poolManager.regenerateEntitlementCertificates(childVirtSystem);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
         Mockito.verifyZeroInteractions(this.eventSink);
     }
@@ -283,7 +284,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     private void regenerateECAndAssertNotSameCertificates() {
         Set<EntitlementCertificate> oldsIds =
             collectEntitlementCertIds(this.childVirtSystem);
-        this.entitler.regenerateEntitlementCertificates(childVirtSystem);
+        poolManager.regenerateEntitlementCertificates(childVirtSystem);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
             .sendEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =
@@ -312,7 +313,7 @@ public class EntitlerTest extends DatabaseTestFixture {
     @Override
     protected Module getGuiceOverrideModule() {
         return new AbstractModule() {
-            
+
             @Override
             protected void configure() {
                 bind(Enforcer.class).to(EntitlementRules.class);

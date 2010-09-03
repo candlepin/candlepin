@@ -21,7 +21,7 @@ Given /^I have a subscription token called "([^\"]*)"$/ do |token_name|
     @token_name = token_name
     token_id = get_token_id(token_name)
     if not token_id
-        sub = @candlepin.create_subscription(@test_owner['id'], @product_id, 37)
+        sub = @candlepin.create_subscription(@test_owner['key'], @product_id, 37)
         token = {
             'token' => token_name,
             'subscription' => {:id => sub['id']}
@@ -39,7 +39,7 @@ end
 
 Then /^I can create a subscription token "([^\"]*)"$/ do |token_name|
     @token_name = token_name
-    sub = @candlepin.create_subscription(@test_owner['id'], @product_id, 37)
+    sub = @candlepin.create_subscription(@test_owner['key'], @product_id, 37)
     token = {
         'token' => token_name,
         'subscription' => {:id => sub['id']}

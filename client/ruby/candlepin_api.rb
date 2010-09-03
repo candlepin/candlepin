@@ -78,13 +78,21 @@ class Candlepin
   end
 
   def list_owners(params = {})
-    path = "/owners?"
-    path << "key=#{params[:key]}&" if params[:key]
-    get(path)
+    path = "/owners"
+    results = get(path)
+    results = results.collect { |r| get_owner(r['href']) } if params[:fetch]
+    return results
   end
 
-  def get_owner(owner_id)
-    get("/owners/#{owner_id}")
+  # Can pass an owner key, or an href to follow:
+  def get_owner(owner)
+    # Looks like a path to follow:
+    if owner[0] = "/"
+      return get(owner)
+    end
+
+    # Otherwise, assume owner key was given:
+    get("/owners/#{owner_key}")
   end
 
   def create_owner(owner_name)
@@ -96,17 +104,17 @@ class Candlepin
     post('/owners', owner)
   end
 
-  def delete_owner(owner_id)
-    delete("/owners/#{owner_id}")
+  def delete_owner(owner_key)
+    delete("/owners/#{owner_key}")
   end
 
-  def create_user(owner_id, login, password)
+  def create_user(owner_key, login, password)
     user = {
       'username' => login,
       'password' => password
     }
 
-    post("/owners/#{owner_id}/users", user)
+    post("/owners/#{owner_key}/users", user)
   end
 
   def list_consumer_types
@@ -176,23 +184,28 @@ class Candlepin
     post('/pools', pool)
   end
 
+  def delete_pool(pool_id)
+    delete("/pools/#{pool_id}")
+  end
+
   def refresh_pools(owner_key, immediate=false)
-    status = put("/owners/#{owner_key}/subscriptions")
-
-    # return the async call if desired
+    return async_call(immediate) do
+      put("/owners/#{owner_key}/subscriptions")
+    end
+  end
+  
+  def async_call(immediate, *args, &blk)
+    status = blk.call(args)
     return status if immediate
-
     # otherwise poll the server to make this call synchronous
     while status['state'].downcase != 'finished'
       sleep 1
-
       # POSTing here will delete the job once it has finished
       status = post(status['statusPath'])
     end
-
     return status['result']
   end
-  
+      
   def export_consumer(dest_dir)
     path = "/consumers/#{@uuid}/export"
     begin
@@ -316,8 +329,8 @@ class Candlepin
     delete("/consumers/#{@uuid}/entitlements/#{eid}")
   end
 
-  def list_subscriptions(owner_id, params={})
-    results = get("/owners/#{owner_id}/subscriptions")
+  def list_subscriptions(owner_key, params={})
+    results = get("/owners/#{owner_key}/subscriptions")
     results = results.collect { |r| get_subscription(r['id']) } if params[:fetch]
     return results
   end
@@ -326,7 +339,7 @@ class Candlepin
     return get("/subscriptions/#{sub_id}")
   end
 
-  def create_subscription(owner_id, product_id, quantity=1,
+  def create_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           start_date=nil, end_date=nil)
     start_date ||= Date.today
@@ -341,7 +354,7 @@ class Candlepin
       'contractNumber' => contract_number
     }
 
-    return post("/owners/#{owner_id}/subscriptions", subscription)
+    return post("/owners/#{owner_key}/subscriptions", subscription)
   end
 
   def update_subscription(subscription)
@@ -374,8 +387,10 @@ class Candlepin
     return put("/consumers/#{@uuid}/certificates")
   end
   
-  def regenerate_entitlement_certificates_for_product(product_id)
-    return put("/entitlements/product/#{product_id}")
+  def regenerate_entitlement_certificates_for_product(product_id, immediate=false)
+    return async_call(immediate) do
+      put("/entitlements/product/#{product_id}")
+    end
   end
 
   def get_status

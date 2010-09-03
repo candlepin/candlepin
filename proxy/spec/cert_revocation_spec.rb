@@ -11,8 +11,8 @@ describe 'Certificate Revocation List' do
     @monitoring_prod = create_product(name='monitoring')
 
     #entitle owner for the virt and monitoring products.
-    @cp.create_subscription(@owner.id, @monitoring_prod.id, 6)
-    @cp.create_subscription(@owner.id, @virt_prod.id, 3)
+    @cp.create_subscription(@owner.key, @monitoring_prod.id, 6)
+    @cp.create_subscription(@owner.key, @virt_prod.id, 3)
     
     @cp.refresh_pools(@owner.key)
 

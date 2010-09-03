@@ -14,16 +14,18 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.util.Util;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -36,7 +38,13 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
     private ObjectMapper om = new ObjectMapper();
     private UserServiceAdapter userServiceAdapter;
     private static Log log = LogFactory.getLog(AMQPBusEventAdapter.class);
-    
+    private final ImmutableMap<Event.Target, ? extends Function<Event, String>> mp =
+        new ImmutableMap.Builder<Event.Target, Function<Event, String>>()
+            .put(Event.Target.CONSUMER, new ConsumerStrFunc())
+            .put(Event.Target.USER, new UserStrFunc())
+            .put(Event.Target.ROLE, new RoleStrFunc())
+      //      .put(Event.Target.PRODUCT, new ProductStrFunc())
+            .build();
     @Inject
     public AMQPBusEventAdapter(UserServiceAdapter serviceAdapter) {
         this.userServiceAdapter = serviceAdapter;
@@ -44,33 +52,72 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
     
     @Override
     public String apply(Event event) {
-        switch (event.getTarget()) {
-            case CONSUMER:
-                return consumerToKalpanaFmt(event);
-            case USER:
-                return usrToKalapanFmt(event);
-            case ROLE:
-                return roleEventToKalpanaFormat(event);
-            default:
-                log.warn("Unknown entity: " + event + " . Skipping serialization");
-                return "";
+        Function<Event, String> func = mp.get(event.getTarget());
+        if (func != null) {
+            return func.apply(event);
+        }
+        else {
+            log.warn("Unknown entity: " + event + " . Skipping serialization");
+            return "";
         }
     }
 
-    protected final String consumerToKalpanaFmt(Event event) {
-        Map<Object, Object> result = initializeWithEntityId(event);
-        //if not deleted, then it has to be either created/updated
-        if (!event.getType().equals(Event.Type.DELETED)) {
-            result.put("description", event.getNewEntity());
-            //TODO: What should description have? 
+    private class ProductStrFunc implements Function<Event, String> {
+        @Override
+        public String apply(Event event) {
+            Map<String, Object> result = initializeWithEntityId(event);
+            Product product = deserialize(event.getNewEntity(), Product.class);
+            result.put("name", product.getName());
+            //TODO: what to store in description field?
+            result.put("description", "product : " + product.toString());
+            //result.put("", product.)
+            return serialize(result);
         }
-        return serialize(result);
+
+    }
+
+    private class ConsumerStrFunc implements Function<Event, String> {
+        @Override
+        public String apply(Event event) {
+            Map<String, Object> result = initializeWithEntityId(event);
+            //if not deleted, then it has to be either created/updated
+            if (!event.getType().equals(Event.Type.DELETED)) {
+                result.put("description", event.getNewEntity());
+                //TODO: What should description have?
+            }
+            return serialize(result);
+        }
+    }
+
+    private class UserStrFunc implements Function<Event, String> {
+        @Override
+        public String apply(Event event) {
+            Map<String, Object> result = initializeWithEntityId(event);
+            if (!event.getType().equals(Event.Type.DELETED)) {
+                User user = deserialize(event.getNewEntity(), User.class);
+                if (user != null) {
+                    result.put("login", user.getUsername()); //TODO: login == name?
+                    result.put("name", user.getUsername());
+                    //TODO: use cache for user roles?
+                    result.put("roles", userServiceAdapter.getRoles(user.getUsername()));
+                }
+            }
+            return serialize(result);
+        }
+    }
+
+    private class RoleStrFunc implements Function<Event, String> {
+        @Override
+        public String apply(Event event) {
+          //TODO roles are static in candlpin for now..
+            return event.toString();
+        }
     }
 
     /**
      * @param result
      */
-    private String serialize(Map<Object, Object> result) {
+    private String serialize(Map<String, Object> result) {
         try {
             return this.om.writeValueAsString(result);
         }
@@ -90,32 +137,14 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         return null;
     }
 
-    protected final String usrToKalapanFmt(Event event) {
-        Map<Object, Object> result = initializeWithEntityId(event);
-        if (!event.getType().equals(Event.Type.DELETED)) {
-            User user = deserialize(event.getNewEntity(), User.class);
-            if (user != null) {
-                result.put("login", user.getUsername()); //TODO: login == name?
-                result.put("name", user.getUsername());
-                result.put("roles", this.userServiceAdapter.getRoles(user.getUsername()));
-            }
-        }
-        return serialize(result);
-    }
-
     /**
      * @param event
      * @return
      */
-    private Map<Object, Object> initializeWithEntityId(Event event) {
-        Map<Object, Object> result = new HashMap<Object, Object>();
+    private Map<String, Object> initializeWithEntityId(Event event) {
+        Map<String, Object> result = Util.newMap();
         result.put("id", event.getEntityId());
         return result;
-    }
-
-    protected final String roleEventToKalpanaFormat(Event event) {
-        //TODO roles are static in candlpin for now.. 
-        return event.toString(); 
     }
 
 }

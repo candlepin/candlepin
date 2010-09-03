@@ -44,10 +44,13 @@ data["owners"].each do |new_owner|
   end
 end
 
+owners = cp.list_owners({:fetch => true})
+owner_key = owners[0]['key']
+
 # add some users
 data["users"].each do |new_user|
   puts "user: " + new_user["username"] 
-  user = cp.create_user(owner_id, new_user["username"], new_user["password"])
+  user = cp.create_user(owner_key, new_user["username"], new_user["password"])
 end
 
 
@@ -97,13 +100,13 @@ data['products'].each do |product|
             arch + " type: " + type
 
           if attrs['type'] == 'MKT':
-              # subscription =  cp.create_subscription(owner_id, {'product' => { 'id' => product_ret['id'] }, 
+              # subscription =  cp.create_subscription(owner_key, {'product' => { 'id' => product_ret['id'] }, 
               #                                        'providedProducts' => provided_products,
               #                                        'quantity' => 10,
               #                                          'startDate' => '2007-07-13',
               #                                          'contractNumber' => contract_number,
               #                                          'endDate' => '2012-07-13'})
-              subscription = cp.create_subscription(owner_id, product_ret['id'], 10, provided_products,
+              subscription = cp.create_subscription(owner_key, product_ret['id'], 10, provided_products,
                                                     contract_number)
             # go ahead and create a token for each subscription, the token itself is just a random int
             token = cp.create_subscription_token({'token' => rand(10000000000), 

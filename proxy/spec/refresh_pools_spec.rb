@@ -35,7 +35,7 @@ describe 'Refresh Pools' do
       name = "product-#{i}"
       product = create_product(name, name)
 
-      @cp.create_subscription(owner.id, product.id)
+      @cp.create_subscription(owner.key, product.id)
     end
 
     # -------- When ----------
@@ -44,4 +44,5 @@ describe 'Refresh Pools' do
     # -------- Then ----------
     @cp.list_pools({:owner => owner.id}).length.should == 6
   end
+
 end

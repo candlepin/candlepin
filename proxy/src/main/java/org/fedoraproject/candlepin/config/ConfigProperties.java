@@ -50,6 +50,11 @@ public class ConfigProperties {
     public static final String AMQP_INTEGRATION_ENABLED = 
         "candlepin.amqp.enable";
     public static final String AMQP_CONNECT_STRING = "candlepin.amqp.connect";
+    public static final String AMQP_KEYSTORE = "candlepin.amqp.keystore";
+    public static final String AMQP_KEYSTORE_PASSWORD = "candlepin.amqp.keystore_password";
+    public static final String AMQP_TRUSTSTORE = "candlepin.amqp.truststore";
+    public static final String AMQP_TRUSTSTORE_PASSWORD =
+        "candlepin.amqp.truststore_password";
     
     // Pinsetter
     public static final String TASKS = "pinsetter.tasks";
@@ -94,7 +99,12 @@ public class ConfigProperties {
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
                 
                 this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
-                this.put(AMQP_CONNECT_STRING, "tcp://localhost:5672");
+                this.put(AMQP_CONNECT_STRING,
+                    "tcp://localhost:5671?ssl='true'&ssl_cert_alias='amqp-client'");
+                this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/keystore");
+                this.put(AMQP_KEYSTORE_PASSWORD, "password");
+                this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/truststore");
+                this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";

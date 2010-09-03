@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource;
 
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -28,7 +29,9 @@ import javax.ws.rs.core.MediaType;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -49,22 +52,22 @@ import com.google.inject.Inject;
 public class PoolResource {
 
     private PoolCurator poolCurator;
+    private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
     private I18n i18n;
-    private EventSink eventSink;
 
     @Inject
     public PoolResource(
         PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         I18n i18n,
-        EventSink eventSink) {
+        EventSink eventSink, PoolManager poolManager) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
-        this.eventSink = eventSink;
+        this.poolManager = poolManager;
     }
 
     /**
@@ -141,10 +144,8 @@ public class PoolResource {
 
         pool.setOwner(owner);
         
-        Pool toReturn = poolCurator.create(pool);
-        
+        Pool toReturn = poolManager.createPool(pool);
         if (toReturn != null) {
-            eventSink.emitPoolCreated(toReturn);
             return toReturn;
         }
 
@@ -174,4 +175,23 @@ public class PoolResource {
             i18n.tr("Entitlement Pool with ID '{0}' could not be found", id));
     }
 
+    @DELETE
+    @Path("/{pool_id}")
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    public void deletePool(@PathParam("pool_id") Long id) {
+        Pool toReturn = poolCurator.find(id);
+
+        if (toReturn == null) {
+            throw new NotFoundException(
+                i18n.tr("Entitlement Pool with ID '{0}' could not be found", id));
+        }
+        
+        // Block attempts to delete pools backed by a subscription.
+        if (toReturn.getSubscriptionId() != null) {
+            throw new ForbiddenException(
+                i18n.tr("Cannot directly delete a pool backed by a subscription"));
+        }
+        
+        poolManager.deletePool(toReturn);
+    }
 }

@@ -29,7 +29,6 @@ import org.fedoraproject.candlepin.TestingInterceptor;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.ProductAttributeCurator;
@@ -103,7 +102,6 @@ public class DatabaseTestFixture {
     protected EntitlementCertificateCurator entCertCurator;
     protected CertificateSerialCurator certSerialCurator;
     protected I18n i18n;
-    protected Entitler entitler;
     protected TestingInterceptor crudInterceptor;
     protected TestingInterceptor securityInterceptor;
     protected EntitlementCertServiceAdapter entitlementCertService;
@@ -152,14 +150,13 @@ public class DatabaseTestFixture {
         subTokenCurator = injector.getInstance(SubscriptionTokenCurator.class);
         contentCurator = injector.getInstance(ContentCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
-        entitler = injector.getInstance(Entitler.class);
         
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
         entCertCurator = injector.getInstance(EntitlementCertificateCurator.class);
         certSerialCurator = injector.getInstance(CertificateSerialCurator.class);
         entitlementCertService = injector.getInstance(EntitlementCertServiceAdapter.class);
-        this.poolManager = injector.getInstance(PoolManager.class);
+        poolManager = injector.getInstance(PoolManager.class);
         i18n = injector.getInstance(I18n.class);
         
         crudInterceptor = testingModule.crudInterceptor();

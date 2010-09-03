@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,17 +30,28 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * PoolManager
@@ -53,8 +65,11 @@ public class PoolManager {
     private EventSink sink;
     private EventFactory eventFactory;
     private Config config;
-    private Entitler entitler;
+    private Enforcer enforcer;
     private EntitlementCurator entitlementCurator;
+    private ConsumerCurator consumerCurator;
+    private EntitlementCertServiceAdapter entCertAdapter;
+    private EntitlementCertificateCurator entitlementCertificateCurator;
     
     /**
      * @param poolCurator
@@ -66,17 +81,23 @@ public class PoolManager {
     @Inject
     public PoolManager(PoolCurator poolCurator,
         SubscriptionServiceAdapter subAdapter, 
-        ProductServiceAdapter productAdapter, EventSink sink,
-        EventFactory eventFactory, Config config, Entitler entitler,
-        EntitlementCurator curator1) {
+        ProductServiceAdapter productAdapter, EntitlementCertServiceAdapter entCertAdapter,
+        EventSink sink, EventFactory eventFactory, Config config,
+        Enforcer enforcer,
+        EntitlementCurator curator1, ConsumerCurator consumerCurator,
+        EntitlementCertificateCurator ecC) {
+
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
         this.productAdapter = productAdapter;
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.config = config;
-        this.entitler = entitler;
         this.entitlementCurator = curator1;
+        this.consumerCurator = consumerCurator;
+        this.enforcer = enforcer;
+        this.entCertAdapter = entCertAdapter;
+        this.entitlementCertificateCurator = ecC;
     }
 
 
@@ -135,7 +156,7 @@ public class PoolManager {
 
         // delete pools whose subscription disappeared:
         for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
-            entitler.deletePool(entry.getValue());
+            deletePool(entry.getValue());
         }
     }
 
@@ -151,7 +172,7 @@ public class PoolManager {
             long consumed = existingPool.getConsumed();
             while ((consumed > existingPool.getQuantity()) && iter.hasNext()) {
                 Entitlement e = iter.next();
-                this.entitler.revokeEntitlement(e);
+                revokeEntitlement(e);
                 consumed -= e.getQuantity();
             }
         }
@@ -196,7 +217,7 @@ public class PoolManager {
               //TODO: perhaps optimize it to use hibernate query?
                 this.entitlementCurator.merge(entitlement);
             }
-            this.entitler.regenerateCertificatesOf(entitlements);
+            regenerateCertificatesOf(entitlements);
         }
         //save changes for the pool
         this.poolCurator.merge(existingPool);
@@ -226,10 +247,18 @@ public class PoolManager {
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), productIds,
                 quantity, sub.getStartDate(), sub.getEndDate());
         newPool.setSubscriptionId(sub.getId());
-        this.poolCurator.create(newPool);
+        createPool(newPool);
+    }
+
+    public Pool createPool(Pool p) {
+        Pool created = poolCurator.create(p);
         if (log.isDebugEnabled()) {
-            log.debug("   new pool: " + newPool);
+            log.debug("   new pool: " + p);
         }
+        if (created != null) {
+            sink.emitPoolCreated(created);
+        }
+        return created;
     }
 
 
@@ -243,6 +272,246 @@ public class PoolManager {
 
     public PoolCurator getPoolCurator() {
         return this.poolCurator;
+    }
+
+    /**
+     * Request an entitlement by product.
+     *
+     * If the entitlement cannot be granted, null will be returned.
+     *
+     * TODO: Throw exception if entitlement not granted. Report why.
+     *
+     * @param consumer
+     *            consumer requesting to be entitled
+     * @param productId
+     *            product to be entitled.
+     * @return Entitlement
+     * @throws EntitlementRefusedException if entitlement is refused
+     */
+    //
+    // NOTE: after calling this method both entitlement pool and consumer
+    // parameters
+    // will most certainly be stale. beware!
+    //
+    @Transactional
+    public Entitlement entitleByProduct(Consumer consumer, String productId,
+        Integer quantity)
+        throws EntitlementRefusedException {
+        Owner owner = consumer.getOwner();
+
+        Pool pool = enforcer.selectBestPool(consumer, productId,
+            poolCurator.listByOwnerAndProduct(owner, productId));
+        if (pool == null) {
+            throw new RuntimeException("No entitlements for product: " +
+                productId);
+        }
+
+        return addEntitlement(consumer, pool, quantity);
+    }
+
+    /**
+     * Request an entitlement by pool..
+     *
+     * If the entitlement cannot be granted, null will be returned.
+     *
+     * TODO: Throw exception if entitlement not granted. Report why.
+     *
+     * @param consumer
+     *            consumer requesting to be entitled
+     * @param pool
+     *            entitlement pool to consume from
+     * @return Entitlement
+     *
+     * @throws EntitlementRefusedException if entitlement is refused
+     */
+    @Transactional
+    public Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
+        throws EntitlementRefusedException {
+
+        return addEntitlement(consumer, pool, quantity);
+    }
+
+    private Entitlement addEntitlement(Consumer consumer, Pool pool, Integer quantity)
+        throws EntitlementRefusedException {
+        PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
+        ValidationResult result = preHelper.getResult();
+
+        if (!result.isSuccessful()) {
+            log.warn("Entitlement not granted: " +
+                result.getErrors().toString());
+            throw new EntitlementRefusedException(result);
+        }
+
+        Entitlement e
+            = new Entitlement(pool, consumer, new Date(), pool.getEndDate(), quantity);
+        consumer.addEntitlement(e);
+        pool.getEntitlements().add(e);
+
+        if (preHelper.getGrantFreeEntitlement()) {
+            log.info("Granting free entitlement.");
+            e.setIsFree(Boolean.TRUE);
+        }
+        else {
+            pool.bumpConsumed(quantity);
+        }
+
+        PostEntHelper postEntHelper = new PostEntHelper(this, e);
+        enforcer.postEntitlement(consumer, postEntHelper, e);
+
+        entitlementCurator.create(e);
+        consumerCurator.update(consumer);
+
+        generateEntitlementCertificate(consumer, pool, e);
+        return e;
+    }
+
+    /**
+     * @param consumer
+     * @param pool
+     * @param e
+     * @param mergedPool
+     * @return
+     */
+    private EntitlementCertificate generateEntitlementCertificate(
+        Consumer consumer, Pool pool, Entitlement e) {
+        Subscription sub = null;
+        if (pool.getSubscriptionId() != null) {
+            sub = subAdapter.getSubscription(pool.getSubscriptionId());
+        }
+
+        Product product = null;
+        if (sub != null) {
+            // Just look this up off of the subscription if one exists
+            product = sub.getProduct();
+        }
+        else {
+            // This is possible in a sub-pool, for example - the pool was not
+            // created directly from a subscription
+            product = productAdapter.getProductById(e.getProductId());
+
+            // in the case of a sub-pool, we want to find the originating
+            // subscription for cert generation
+            sub = findSubscription(e);
+        }
+
+        // TODO: Assuming every entitlement = generate a cert, most likely we'll want
+        // to know if this product entails granting a cert someday.
+        try {
+            return entCertAdapter.generateEntitlementCert(e, sub, product);
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private Subscription findSubscription(Entitlement entitlement) {
+        Pool pool = entitlement.getPool();
+
+        if (pool.getSubscriptionId() != null) {
+            return subAdapter.getSubscription(pool.getSubscriptionId());
+        }
+
+        Entitlement source = pool.getSourceEntitlement();
+
+        if (source != null) {
+            return findSubscription(source);
+        }
+
+        // Cannot traverse any further - just give up
+        return null;
+    }
+
+    public void regenerateEntitlementCertificates(Consumer consumer) {
+        log.info("Regenerating #" + consumer.getEntitlements().size() +
+            " entitlement's certificates for consumer :" + consumer);
+        //TODO - Assumes only 1 entitlement certificate exists per entitlement
+        this.regenerateCertificatesOf(consumer.getEntitlements());
+        log.info("Completed Regenerating #" + consumer.getEntitlements().size() +
+            " entitlement's certificates for consumer: " + consumer);
+    }
+
+    @Transactional
+    public void regenerateCertificatesOf(Iterable<Entitlement> iterable) {
+        for (Entitlement e : iterable) {
+            regenerateCertificatesOf(e);
+        }
+    }
+    /**
+     * @param e
+     */
+    @Transactional
+    public void regenerateCertificatesOf(Entitlement e) {
+        if (log.isDebugEnabled()) {
+            log.debug("Revoking entitlementCertificates of : " + e);
+        }
+        this.entCertAdapter.revokeEntitlementCertificates(e);
+        for (EntitlementCertificate ec : e.getCertificates()) {
+            if (log.isDebugEnabled()) {
+                log.debug("Deleting entitlementCertificate: #" + ec.getId());
+            }
+            this.entitlementCertificateCurator.delete(ec);
+        }
+        e.getCertificates().clear();
+        //below call creates new certificates and saves it to the backend.
+        EntitlementCertificate generated =
+            this.generateEntitlementCertificate(e.getConsumer(), e.getPool(), e);
+        this.entitlementCurator.refresh(e);
+
+        //send entitlement changed event.
+        this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
+        if (log.isDebugEnabled()) {
+            log.debug("Generated entitlementCertificate: #" + generated.getId());
+        }
+    }
+
+    // TODO: Does the enforcer have any rules around removing entitlements?
+    @Transactional
+    public void revokeEntitlement(Entitlement entitlement) {
+        if (!entitlement.isFree()) {
+            // put this entitlement back in the pool
+            Pool.dockConsumed(entitlement);
+        }
+
+        Consumer consumer = entitlement.getConsumer();
+        consumer.removeEntitlement(entitlement);
+
+        // Look for pools referencing this entitlement as their source entitlement
+        // and clean them up as well:
+        for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
+            deletePool(p);
+        }
+
+        Event event = eventFactory.entitlementDeleted(entitlement);
+
+        poolCurator.merge(entitlement.getPool());
+        entCertAdapter.revokeEntitlementCertificates(entitlement);
+        entitlementCurator.delete(entitlement);
+        sink.sendEvent(event);
+    }
+
+    @Transactional
+    public void revokeAllEntitlements(Consumer consumer) {
+        for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
+            revokeEntitlement(e);
+        }
+    }
+
+    /**
+     * Cleanup entitlements and safely delete the given pool.
+     *
+     * @param pool
+     */
+    @Transactional
+    public void deletePool(Pool pool) {
+        Event event = eventFactory.poolDeleted(pool);
+
+        // Must do a full revoke for all entitlements:
+        for (Entitlement e : poolCurator.entitlementsIn(pool)) {
+            revokeEntitlement(e);
+        }
+
+        poolCurator.delete(pool);
+        sink.sendEvent(event);
     }
 
 }

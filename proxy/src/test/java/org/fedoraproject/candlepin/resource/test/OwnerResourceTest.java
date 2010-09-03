@@ -82,7 +82,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testSimpleDeleteOwner() {
         Long id = owner.getId();
         ownerResource.deleteOwner(
-            id, 
+            owner.getKey(), 
             new UserPrincipal("someuser", owner, new LinkedList<Role>()));
         owner = ownerCurator.find(id);
         assertTrue(owner == null);
@@ -211,13 +211,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         // Give those consumers entitlements:
-        entitler.entitleByPool(c1, pool, new Integer(1));
+        poolManager.entitleByPool(c1, pool, new Integer(1));
 
         assertEquals(2, consumerCurator.listByOwner(owner).size());
         assertEquals(1, poolCurator.listByOwner(owner).size());
         assertEquals(1, entitlementCurator.listByOwner(owner).size());
 
-        ownerResource.deleteOwner(owner.getId(), null);
+        ownerResource.deleteOwner(owner.getKey(), null);
 
         assertEquals(0, consumerCurator.listByOwner(owner).size());
         assertNull(consumerCurator.lookupByUuid(c1.getUuid()));
@@ -237,7 +237,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
 
 
-        ownerResource.getOwner(owner.getId());
+        ownerResource.getOwner(owner.getKey());
     }
 
     @Test
@@ -251,7 +251,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 
-        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getId());
+        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getKey());
         assertEquals(2, pools.size());
     }
 
@@ -272,7 +272,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         
         // Filtering should just cause this to return no results:
-        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getId());
+        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getKey());
         assertEquals(0, pools.size());
     }
 
@@ -293,7 +293,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        ownerResource.deleteOwner(owner.getId(), principal);
+        ownerResource.deleteOwner(owner.getKey(), principal);
     }
     
     private Event createConsumerCreatedEvent(Owner o) {
@@ -323,7 +323,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Make sure we're acting as the correct owner admin:
         setupPrincipal(owner, Role.OWNER_ADMIN);
         
-        Feed feed = ownerResource.getOwnerAtomFeed(owner.getId());
+        Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         assertEquals(1, feed.getEntries().size());
         Entry entry = feed.getEntries().get(0);
         assertEquals(e1.getTimestamp(), entry.getPublished());
@@ -342,7 +342,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createConsumerCreatedEvent(owner);
         
         setupPrincipal(owner2, Role.OWNER_ADMIN);
-        Feed feed = ownerResource.getOwnerAtomFeed(owner.getId());
+        Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         System.out.println(feed);
         assertEquals(0, feed.getEntries().size());
     }
@@ -357,7 +357,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        ownerResource.getOwnerAtomFeed(owner.getId());
+        ownerResource.getOwnerAtomFeed(owner.getKey());
     }
     
     @Test

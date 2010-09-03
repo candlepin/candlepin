@@ -9,7 +9,7 @@ end
 
 After do
   @owners.values.each do |owner|
-    @candlepin.delete_owner owner['id']
+    @candlepin.delete_owner owner['key']
   end
 end
 
@@ -18,8 +18,8 @@ Given /^owner "([^\"]*)" exists$/ do |owner_name|
 end
 
 Given /^user "([^\"]*)" exists under owner "([^\"]*)"$/ do |user_name, owner_name|
-  owner_id = @owners[owner_name]['id']
-  @candlepin.create_user(owner_id, user_name, @password)
+  owner_key = @owners[owner_name]['key']
+  @candlepin.create_user(owner_key, user_name, @password)
   @user_clients[user_name] = connect(user_name, @password)
 end
 

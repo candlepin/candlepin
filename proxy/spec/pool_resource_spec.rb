@@ -46,4 +46,25 @@ describe 'Pool Resource' do
     }.should raise_exception(RestClient::Forbidden)
   end
 
+  it 'supports pool deletion' do
+    owner1 = create_owner random_string('test_owner')
+    owner1_client = user_client(owner1, random_string('testuser'))
+    product = create_product()
+    pool = @cp.create_pool(product.id, owner1.id, 10)
+    @cp.delete_pool(pool['id'])
+    lambda { @cp.get_pool(pool['id']) }.should \
+      raise_exception(RestClient::ResourceNotFound)
+  end
+
+  it 'prevents pool deletion if backed by subscription' do
+    owner1 = create_owner random_string('test_owner')
+    owner1_client = user_client(owner1, random_string('testuser'))
+    product = create_product()
+    @cp.create_subscription(owner1.key, product.id, 2)
+    @cp.refresh_pools(owner1.key)
+    pool = @cp.list_pools(:owner => owner1.id)[0]
+    lambda { @cp.delete_pool(pool['id']) }.should raise_exception(RestClient::Forbidden)
+  end
+
+
 end

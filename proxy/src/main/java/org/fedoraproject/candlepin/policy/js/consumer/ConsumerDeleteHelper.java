@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.policy.js.consumer;
 
 import java.util.List;
 
-import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -30,12 +30,12 @@ public class ConsumerDeleteHelper {
 
     private ValidationResult result = new ValidationResult();
     private PoolCurator poolCurator;
-    private Entitler entitler;
+    private PoolManager poolManager;
 
     @Inject
-    public ConsumerDeleteHelper(PoolCurator poolCurator, Entitler entitler) {
-        this.poolCurator = poolCurator;
-        this.entitler = entitler;
+    public ConsumerDeleteHelper(PoolManager poolManager) {
+        this.poolManager = poolManager;
+        this.poolCurator = poolManager.getPoolCurator();
     }
     
     public void deleteUserRestrictedPools(String username) {
@@ -43,7 +43,7 @@ public class ConsumerDeleteHelper {
             = poolCurator.listPoolsRestrictedToUser(username);
         
         for (Pool pool : userRestrictedPools) {
-            entitler.deletePool(pool);
+            poolManager.deletePool(pool);
         }
     }
 

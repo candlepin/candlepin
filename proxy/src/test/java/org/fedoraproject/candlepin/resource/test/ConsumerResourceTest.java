@@ -31,7 +31,7 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -169,7 +169,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             .thenReturn(consumer);
 
         ConsumerResource consumerResource = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, null, null,
+            mockedConsumerCurator, null, null, null, null, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null,
             null, null, null, null, null);
 
@@ -272,7 +272,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testDeleteResource() {
         Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME,
             USER_NAME, owner, standardSystemType));
-        consumerResource.deleteConsumer(consumer.getUuid());
+        consumerResource.deleteConsumer(consumer.getUuid(), principal);
 
         assertNull(consumerCurator.find(created.getId()));
     }
@@ -432,7 +432,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        consumerResource.deleteConsumer(consumer.getUuid());
+        consumerResource.deleteConsumer(consumer.getUuid(), principal);
     }
 
     @Test
@@ -449,7 +449,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         IdentityCertificate idCert = icsa.generateIdentityCert(c);
         c.setIdCert(idCert);
         setupPrincipal(new ConsumerPrincipal(c));
-        consumerResource.deleteConsumer(c.getUuid());
+        consumerResource.deleteConsumer(c.getUuid(), principal);
     }
 
     @Test
@@ -715,12 +715,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
      */
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumer() {
-        Entitler entitler = mock(Entitler.class);
+        PoolManager mgr = mock(PoolManager.class);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
-            null, entitler, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null,
+            null, null, mgr, null, null, null);
         cr.regenerateEntitlementCertificates(this.consumer.getUuid());
-        Mockito.verify(entitler, Mockito.times(1))
+        Mockito.verify(mgr, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(this.consumer));
 
     }
@@ -758,7 +758,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             .thenReturn(createIdCert());
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator,
-            null, null, null, null, null, mockedIdSvc, null, null,
+            null, null, null, null, mockedIdSvc, null, null,
             null, null, null, null, null, null, null, null, null);
 
         Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid());

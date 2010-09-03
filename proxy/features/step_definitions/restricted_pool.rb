@@ -17,7 +17,7 @@ end
 
 
 Given /^I am a user "([^\"]*)"$/ do |arg1|
-  @user = @candlepin.create_user(@test_owner['id'], arg1, 'password')
+  @user = @candlepin.create_user(@test_owner['key'], arg1, 'password')
 #  @clients = {} if @clients.nil?
   @client  = Candlepin.new(username=arg1, 'password')
 end
@@ -89,7 +89,7 @@ Then /^I should be able to consume entitlement for "([^\"]*)" system from this p
 end
 
 Then /^I should not be able to consume entitlement for a system "([^\"]*)" does not own$/ do |arg1|
-  alice_user = @candlepin.create_user(@test_owner['id'], 'alice', 'password')
+  alice_user = @candlepin.create_user(@test_owner['key'], 'alice', 'password')
   tmp_client = Candlepin.new('alice', 'password')
   alice_client = create_client(tmp_client.register('alice_system', :system))
   lambda { alice_client.consume_pool(@new_pool['id']) }.should raise_error(RestClient::ExceptionWithResponse)
@@ -108,7 +108,7 @@ Then /^pools from "([^\"]*)" pools should not be unlimited pool$/ do |arg1|
 end
 
 Then /^another consumer cannot see user-restricted pool$/ do
-   alice_user = @candlepin.create_user(@test_owner['id'], 'alice', 'password')
+   alice_user = @candlepin.create_user(@test_owner['key'], 'alice', 'password')
    tmp_client = Candlepin.new('alice', 'password')
    alice_consumer = tmp_client.register(nil, :person)
    alice_client = create_client(alice_consumer)

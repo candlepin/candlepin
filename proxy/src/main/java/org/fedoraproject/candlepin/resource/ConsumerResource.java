@@ -41,11 +41,11 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -96,7 +96,6 @@ public class ConsumerResource {
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
-    private Entitler entitler;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
@@ -116,7 +115,7 @@ public class ConsumerResource {
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductServiceAdapter productAdapter, Entitler entitler,
+        ProductServiceAdapter productAdapter,
         SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
@@ -131,7 +130,6 @@ public class ConsumerResource {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productAdapter = productAdapter;
         this.subAdapter = subAdapter;
-        this.entitler = entitler;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
@@ -308,9 +306,13 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     @Transactional
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public void deleteConsumer(@PathParam("consumer_uuid") String uuid) {
+    public void deleteConsumer(@PathParam("consumer_uuid") String uuid, 
+        @Context Principal principal) {
+        
         log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
+        
+        verifyConsumerCanBeDeleted(toDelete, principal);
 
         consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
         unbindAll(uuid);
@@ -321,6 +323,57 @@ public class ConsumerResource {
         identityCertService.deleteIdentityCert(toDelete);
         sink.sendEvent(event);
     }
+    
+    /**
+     * Check that a consumer can be deleted by the given principal.
+     * 
+     * Our security settings may block this in some situations. If
+     * the consumer has entitlements which are linked to sub-pools,
+     * other consumers are currently using those sub pools, *and* this operation is
+     * being performed by a consumer (as opposed to an admin). The exception thrown is 
+     * very cryptic, so we'll try to detect this case and throw a more friendly error.
+     * 
+     * @param consumer
+     * @param principal
+     */
+    private void verifyConsumerCanBeDeleted(Consumer consumer, 
+        Principal principal) {
+        
+        if (!(principal instanceof ConsumerPrincipal)) {
+            // This check is only required if unregistering as a consumer principal.
+            return;
+        }
+        
+        for (Entitlement e : consumer.getEntitlements()) {
+            
+            if (hasOutstandingSubPoolEntitlements(e)) {
+                throw new ForbiddenException(i18n.tr(
+                    "Cannot unregister due to outstanding entitlement: {0}",
+                    e.getId()));
+            }
+        }
+    }
+    
+    /**
+     * Check if the given entitlement has any pools referencing it as their source 
+     * entitlement, and those pools have outstanding entitlements.
+     * 
+     * This method is used to prevent security violations when unbinding as a consumer,
+     * where other consumers are using those sub-pool entitlements.
+     * 
+     * @param e Entitlement to check.
+     * @return True if there are outstanding sub-pool entitlements.
+     */
+    private boolean hasOutstandingSubPoolEntitlements(Entitlement e) {
+        for (Pool p : poolManager.getPoolCurator().listBySourceEntitlement(e)) {
+            if (p.getEntitlements().size() > 0) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
 
     /**
      * Return the entitlement certificate for the given consumer.
@@ -411,7 +464,7 @@ public class ConsumerResource {
         String productId, Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitleByProduct(consumer, productId,
+            Entitlement e = poolManager.entitleByProduct(consumer, productId,
                 quantity);
             log.debug("Created entitlement: " + e);
             return e;
@@ -439,7 +492,7 @@ public class ConsumerResource {
         Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = entitler.entitleByPool(consumer, pool, quantity);
+            Entitlement e = poolManager.entitleByPool(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -631,7 +684,7 @@ public class ConsumerResource {
                 consumerUuid + " could not be found."));
         }
 
-        entitler.revokeAllEntitlements(consumer);
+        poolManager.revokeAllEntitlements(consumer);
 
         // Need to parse off the value of subscriptionNumberArgs, probably
         // use comma separated see IntergerList in sparklines example in
@@ -650,15 +703,23 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/entitlements/{dbid}")
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
-        @PathParam("dbid") Long dbid) {
+        @PathParam("dbid") Long dbid, @Context Principal principal) {
 
         verifyAndLookupConsumer(consumerUuid);
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            entitler.revokeEntitlement(toDelete);
+            poolManager.revokeEntitlement(toDelete);
             return;
         }
+        
+        if ((principal instanceof ConsumerPrincipal) && 
+            hasOutstandingSubPoolEntitlements(toDelete)) {
+            throw new ForbiddenException(i18n.tr(
+                "Cannot unbind due to outstanding sub-pool entitlements"));
+        }
+            
+
         throw new NotFoundException(i18n.tr(
             "Entitlement with ID '{0}' could not be found.", dbid));
     }
@@ -674,7 +735,7 @@ public class ConsumerResource {
             .findByCertificateSerial(BigInteger.valueOf(serial));
 
         if (toDelete != null) {
-            entitler.revokeEntitlement(toDelete);
+            poolManager.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException(
@@ -703,7 +764,7 @@ public class ConsumerResource {
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid) {
         Consumer c = verifyAndLookupConsumer(consumerUuid);
-        this.entitler.regenerateEntitlementCertificates(c);
+        poolManager.regenerateEntitlementCertificates(c);
     }
 
     @GET
