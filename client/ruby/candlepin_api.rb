@@ -160,6 +160,10 @@ class Candlepin
     post('/pools', pool)
   end
 
+  def delete_pool(pool_id)
+    delete("/pools/#{pool_id}")
+  end
+
   def refresh_pools(owner_key, immediate=false)
     return async_call(immediate) do
       put("/owners/#{owner_key}/subscriptions")
