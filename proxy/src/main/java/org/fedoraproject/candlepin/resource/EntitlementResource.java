@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.pinsetter.tasks.RegenEntitlementCertsJob;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -52,17 +53,20 @@ public class EntitlementResource {
     private PoolManager poolManager;
     private final EntitlementCurator entitlementCurator;
     private I18n i18n;
+    private ProductServiceAdapter prodAdapter;
     
     //private static Logger log = Logger.getLogger(EntitlementResource.class);
 
     @Inject
-    public EntitlementResource(EntitlementCurator entitlementCurator,
+    public EntitlementResource(ProductServiceAdapter prodAdapter,
+            EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
             I18n i18n) {
         
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
+        this.prodAdapter = prodAdapter;
     }
     
     
