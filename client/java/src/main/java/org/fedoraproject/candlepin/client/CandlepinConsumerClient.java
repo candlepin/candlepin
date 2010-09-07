@@ -68,6 +68,11 @@ public interface CandlepinConsumerClient {
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Pool>> listPools(@QueryParam("consumer") String uuid);
 
+    @GET
+    @Path("pools/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    ClientResponse<Pool> getPool(@PathParam("id") Long id);
+
     @POST
     @Path("consumers/{uuid}/entitlements")
     @Produces(MediaType.APPLICATION_JSON)
