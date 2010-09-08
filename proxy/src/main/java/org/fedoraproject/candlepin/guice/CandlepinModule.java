@@ -72,6 +72,7 @@ import org.fedoraproject.candlepin.sync.MetaExporter;
 import org.fedoraproject.candlepin.sync.RulesExporter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
+import org.fedoraproject.candlepin.util.ExpiryDateFunction;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
@@ -182,6 +183,10 @@ public class CandlepinModule extends AbstractModule {
       //for lazy loading.
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class) 
                 .in(Singleton.class);
+        
+        //flexible end date for identity certificates
+        bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
+            .to(ExpiryDateFunction.class).in(Singleton.class);
     }
 
     /**
