@@ -62,8 +62,11 @@ import org.fedoraproject.candlepin.test.EnforcerForTesting;
 import org.fedoraproject.candlepin.test.EventSinkForTesting;
 import org.fedoraproject.candlepin.test.PKIReaderForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.fedoraproject.candlepin.util.ExpiryDateFunction;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
+import com.google.common.base.Function;
+import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
@@ -141,6 +144,10 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);
         bind(PoolManager.class);
+        
+        //flexible end date for identity certificates
+        bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
+            .to(ExpiryDateFunction.class).in(Singleton.class);
     }
 
     public TestingInterceptor crudInterceptor() {
