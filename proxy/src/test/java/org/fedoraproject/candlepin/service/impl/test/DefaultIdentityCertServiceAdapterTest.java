@@ -32,6 +32,7 @@ import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
+import org.fedoraproject.candlepin.util.ExpiryDateFunction;
 import org.fedoraproject.candlepin.util.Util;
 
 import org.junit.Before;
@@ -65,7 +66,8 @@ public class DefaultIdentityCertServiceAdapterTest {
 
     @Before
     public void setUp() {
-        dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, kpc, csc);
+        dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, kpc, csc,
+            new ExpiryDateFunction(1));
     }
 
     // can't mock a final class, so create a dummy one

@@ -114,7 +114,6 @@ public class PoolManager {
             log.debug("Refreshing pools");
         }
         
-        productAdapter.purgeCache();
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
         if (log.isDebugEnabled()) {

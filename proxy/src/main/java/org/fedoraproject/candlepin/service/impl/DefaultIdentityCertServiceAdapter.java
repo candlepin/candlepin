@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import static org.fedoraproject.candlepin.util.Util.getFutureDate;
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -33,7 +31,9 @@ import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 
+import com.google.common.base.Function;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 /**
  * DefaultIdentityCertServiceAdapter
@@ -46,16 +46,20 @@ public class DefaultIdentityCertServiceAdapter implements
     private IdentityCertificateCurator idCertCurator;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
+    private Function<Date, Date> endDateGenerator;
 
+    @SuppressWarnings("unchecked")
     @Inject
     public DefaultIdentityCertServiceAdapter(PKIUtility pki,
         IdentityCertificateCurator identityCertCurator,
         KeyPairCurator keyPairCurator,
-        CertificateSerialCurator serialCurator) {
+        CertificateSerialCurator serialCurator, 
+        @Named("endDateGenerator") Function endDtGen) {
         this.pki = pki;
         this.idCertCurator = identityCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
+        this.endDateGenerator = endDtGen;
     }
 
     @Override
@@ -110,7 +114,7 @@ public class DefaultIdentityCertServiceAdapter implements
     private IdentityCertificate generate(Consumer consumer)
         throws GeneralSecurityException, IOException {
         Date startDate = new Date();
-        Date endDate = getFutureDate(1);
+        Date endDate = this.endDateGenerator.apply(startDate);
 
         CertificateSerial serial = new CertificateSerial(endDate);
         // We need the sequence generated id before we create the EntitlementCertificate,

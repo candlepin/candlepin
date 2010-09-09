@@ -105,7 +105,10 @@ public class ConfigProperties {
                 this.put(AMQP_KEYSTORE_PASSWORD, "password");
                 this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/truststore");
                 this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
+                this.put(IDENTITY_CERT_YEAR_ADDENDUM, "1");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
+    public static final String IDENTITY_CERT_YEAR_ADDENDUM =
+            "candlepin.identityCert.yr.addendum";
 }
