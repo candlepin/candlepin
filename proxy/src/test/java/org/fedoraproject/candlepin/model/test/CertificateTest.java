@@ -16,35 +16,31 @@
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
 
-import java.util.List;
-
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificate;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.junit.Before;
-import org.junit.Ignore;
+
 import org.junit.Test;
+
+import java.util.Date;
+import java.util.List;
 
 public class CertificateTest extends DatabaseTestFixture {
 
-    @Before
-    public void setUpTestObjects() {
-
-        String ownerName = "Example Corporation";
-        Owner owner = new Owner(ownerName);
-
-        ownerCurator.create(owner);
-        certificateCurator.create(new SubscriptionsCertificate(
-            "This is not actually a certificate. No entitlements for you!",
-            owner));
+    protected SubscriptionsCertificate createSubCert(String key, String cert) {
+        return createSubCert(key, cert, new Date());
     }
 
-    @Ignore
-    public void testGetCertificate() {
-        // Certificate newCertificate =
-        new SubscriptionsCertificate();
+    protected SubscriptionsCertificate createSubCert(String key, String cert, Date dt) {
+        SubscriptionsCertificate sc = new SubscriptionsCertificate();
+        CertificateSerial ser = new CertificateSerial(dt);
+        certSerialCurator.create(ser);
+        sc.setCert(cert);
+        sc.setKey(key);
+        sc.setSerial(ser);
+        return sc;
     }
 
     @Test
@@ -54,10 +50,7 @@ public class CertificateTest extends DatabaseTestFixture {
         int beforeCount = certificates.size();
 
         for (int i = 0; i < 10; i++) {
-            Owner owner = new Owner("owner" + i);
-            ownerCurator.create(owner);
-            certificateCurator.create(new SubscriptionsCertificate(
-                "this is a test " + i, owner));
+            certificateCurator.create(createSubCert("key" + i, "cert" + i));
         }
 
         certificates = certificateCurator.listAll();
@@ -68,58 +61,25 @@ public class CertificateTest extends DatabaseTestFixture {
     @Test
     public void testLookup() throws Exception {
 
-        Owner owner = new Owner("test company");
-        SubscriptionsCertificate certificate = new SubscriptionsCertificate(
-            "not a cert", owner);
-
-        ownerCurator.create(owner);
+        SubscriptionsCertificate certificate = createSubCert("key", "cert");
         certificateCurator.create(certificate);
-
         SubscriptionsCertificate lookedUp = certificateCurator.find(certificate
             .getId());
 
+        assertNotNull(lookedUp);
         assertEquals(certificate.getId(), lookedUp.getId());
-        assertEquals(certificate.getCertificate(), lookedUp.getCertificate());
+        assertEquals(certificate.getKey(), lookedUp.getKey());
+        assertEquals(certificate.getCert(), lookedUp.getCert());
+        assertEquals(certificate.getSerial(), lookedUp.getSerial());
     }
 
     @Test
     public void createDuplicateCertSameOwnerThrowsException() throws Exception {
-        Owner owner = new Owner("test company");
-        SubscriptionsCertificate certificate1 = new SubscriptionsCertificate(
-            "not a cert", owner);
-        SubscriptionsCertificate certificate2 = new SubscriptionsCertificate(
-            "not a cert", owner);
+        Date now = new Date();
+        SubscriptionsCertificate certificate1 = createSubCert("not a cert", "booya", now);
+        SubscriptionsCertificate certificate2 = createSubCert("not a cert", "booya", now);
 
-        ownerCurator.create(owner);
         certificateCurator.create(certificate1);
-        try {
-            certificateCurator.create(certificate2);
-            fail();
-        }
-        catch (Exception e) {
-            // Expected
-        }
-    }
-
-    @Test
-    public void createDuplicateCertDifferentOwnerThrowsException()
-        throws Exception {
-        Owner owner1 = new Owner("test company 1");
-        Owner owner2 = new Owner("test company 2");
-        SubscriptionsCertificate certificate1 = new SubscriptionsCertificate(
-            "not a cert", owner1);
-        SubscriptionsCertificate certificate2 = new SubscriptionsCertificate(
-            "not a cert", owner2);
-
-        ownerCurator.create(owner1);
-        ownerCurator.create(owner2);
-        certificateCurator.create(certificate1);
-        try {
-            certificateCurator.create(certificate2);
-            fail();
-        }
-        catch (Exception e) {
-            // Expected
-        }
+        certificateCurator.create(certificate2);
     }
 }
