@@ -121,7 +121,8 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
 
         @Override
         protected void populate(Event event, Map<String, Object> result) {
-            Subscription subscription = deserialize(event.getNewEntity(), Subscription.class);
+            Subscription subscription = deserialize(event.getNewEntity(),
+                    Subscription.class);
 
             if (subscription != null) {
                 result.put("owner", subscription.getOwner().getKey());
@@ -131,7 +132,8 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
 
                     // no idea what this should be
                     result.put("description", event.getNewEntity());
-                    result.put("ca_cert", config.getString(ConfigProperties.CA_CERT_UPSTREAM));
+                    result.put("ca_cert", config.getString(
+                            ConfigProperties.CA_CERT_UPSTREAM));
 
                 }
             }
