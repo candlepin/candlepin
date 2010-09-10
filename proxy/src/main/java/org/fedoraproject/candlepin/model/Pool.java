@@ -122,7 +122,7 @@ public class Pool extends AbstractHibernateObject
     private String productId;
     
     @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "pool_products", joinColumns = @JoinColumn(name = "pool_id"))
+    @JoinTable(name = "cp_pool_products", joinColumns = @JoinColumn(name = "pool_id"))
     private Set<String> providedProductIds = new HashSet<String>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
