@@ -76,7 +76,8 @@ public class Event implements Persisted, AccessControlEnforced {
     /**
      * Target the type of entity operated on.
      */
-    public enum Target { CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, IMPORT, USER, ROLE }
+    public enum Target { CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, IMPORT, USER, ROLE,
+        SUBSCRIPTION }
     
     // Uniquely identifies the event:
     @Id

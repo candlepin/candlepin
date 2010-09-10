@@ -19,7 +19,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
@@ -28,6 +27,9 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.model.Subscription;
 
 /**
  * @author ajay
@@ -35,19 +37,24 @@ import com.google.inject.Singleton;
 @Singleton
 public class AMQPBusEventAdapter implements Function<Event, String> {
 
-    private ObjectMapper om = new ObjectMapper();
-    private UserServiceAdapter userServiceAdapter;
     private static Log log = LogFactory.getLog(AMQPBusEventAdapter.class);
+
+    private ObjectMapper om = new ObjectMapper();
     private final ImmutableMap<Event.Target, ? extends Function<Event, String>> mp =
         new ImmutableMap.Builder<Event.Target, Function<Event, String>>()
-            .put(Event.Target.CONSUMER, new ConsumerStrFunc())
-            .put(Event.Target.USER, new UserStrFunc())
-            .put(Event.Target.ROLE, new RoleStrFunc())
-      //      .put(Event.Target.PRODUCT, new ProductStrFunc())
+            .put(Event.Target.CONSUMER, new ConsumerFunction())
+            .put(Event.Target.USER, new UserFunction())
+            .put(Event.Target.ROLE, new RoleFunction())
+            .put(Event.Target.SUBSCRIPTION, new SubscriptionFunction())
             .build();
+
+    private UserServiceAdapter userServiceAdapter;
+    private Config config;
+
     @Inject
-    public AMQPBusEventAdapter(UserServiceAdapter serviceAdapter) {
+    public AMQPBusEventAdapter(UserServiceAdapter serviceAdapter, Config config) {
         this.userServiceAdapter = serviceAdapter;
+        this.config = config;
     }
     
     @Override
@@ -62,38 +69,35 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         }
     }
 
-    private class ProductStrFunc implements Function<Event, String> {
+    private abstract class EventFunction implements Function<Event, String> {
+
         @Override
         public String apply(Event event) {
-            Map<String, Object> result = initializeWithEntityId(event);
-            Product product = deserialize(event.getNewEntity(), Product.class);
-            result.put("name", product.getName());
-            //TODO: what to store in description field?
-            result.put("description", "product : " + product.toString());
-            //result.put("", product.)
+            Map<String, Object> result = Util.newMap();
+            result.put("id", event.getEntityId());
+
+            populate(event, result);
             return serialize(result);
         }
 
+        protected abstract void populate(Event event, Map<String, Object> result);
     }
 
-    private class ConsumerStrFunc implements Function<Event, String> {
+    private class ConsumerFunction extends EventFunction {
+
         @Override
-        public String apply(Event event) {
-            Map<String, Object> result = initializeWithEntityId(event);
-            //if not deleted, then it has to be either created/updated
-            if (!event.getType().equals(Event.Type.DELETED)) {
+        protected void populate(Event event, Map<String, Object> result) {
+            if (event.getType() != Event.Type.DELETED) {
                 result.put("description", event.getNewEntity());
                 //TODO: What should description have?
             }
-            return serialize(result);
         }
     }
 
-    private class UserStrFunc implements Function<Event, String> {
+    private class UserFunction extends EventFunction {
         @Override
-        public String apply(Event event) {
-            Map<String, Object> result = initializeWithEntityId(event);
-            if (!event.getType().equals(Event.Type.DELETED)) {
+        protected void populate(Event event, Map<String, Object> result) {
+            if (event.getType() != Event.Type.DELETED) {
                 User user = deserialize(event.getNewEntity(), User.class);
                 if (user != null) {
                     result.put("login", user.getUsername()); //TODO: login == name?
@@ -102,16 +106,37 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
                     result.put("roles", userServiceAdapter.getRoles(user.getUsername()));
                 }
             }
-            return serialize(result);
         }
     }
 
-    private class RoleStrFunc implements Function<Event, String> {
+    private class RoleFunction implements Function<Event, String> {
         @Override
         public String apply(Event event) {
           //TODO roles are static in candlpin for now..
             return event.toString();
         }
+    }
+
+    private class SubscriptionFunction extends EventFunction {
+
+        @Override
+        protected void populate(Event event, Map<String, Object> result) {
+            Subscription subscription = deserialize(event.getNewEntity(), Subscription.class);
+
+            if (subscription != null) {
+                result.put("owner", subscription.getOwner().getKey());
+                
+                if (event.getType() != Event.Type.DELETED) {
+                    result.put("name", subscription.getProduct().getId());
+
+                    // no idea what this should be
+                    result.put("description", event.getNewEntity());
+                    result.put("ca_cert", config.getString(ConfigProperties.CA_CERT_UPSTREAM));
+
+                }
+            }
+        }
+        
     }
 
     /**
@@ -135,16 +160,6 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
             log.warn("Unable to de-serialize :", e);
         }
         return null;
-    }
-
-    /**
-     * @param event
-     * @return
-     */
-    private Map<String, Object> initializeWithEntityId(Event event) {
-        Map<String, Object> result = Util.newMap();
-        result.put("id", event.getEntityId());
-        return result;
     }
 
 }
