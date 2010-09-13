@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.33
+Version: 0.0.34
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Sep 13 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.34-1
+- Disable HATEOAS for collections. (dgoodwin@redhat.com)
+- 629747 - made the table names consistent (bkearney@redhat.com)
+- Refreshed the string files (bkearney@redhat.com)
+
 * Thu Sep 09 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.33-1
 - Merge branch 'master' into hateros2 (dgoodwin@redhat.com)
 - Identity Certificate's endDate is configurable. (anadathu@redhat.com)
