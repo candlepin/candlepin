@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-09-10 13:22-0400\n"
+"POT-Creation-Date: 2010-09-13 14:30-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -86,8 +86,8 @@ msgstr ""
 msgid "No such consumer: {0}"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:188
-#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:205
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:189
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:206
 msgid "Entitlement with ID '{0}' could not be found"
 msgstr ""
 
@@ -155,11 +155,11 @@ msgstr ""
 msgid "SubscriptionToken with id {0} could not be found"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:68
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:84
 msgid "subscription_id path parameter must be a number"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:74
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:90
 #, java-format
 msgid "Subscription with id {0} could not be found"
 msgstr ""
