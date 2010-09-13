@@ -3,7 +3,7 @@ require 'spec/expectations'
 Then /^consumer "([^\"]*)" has access to a pool for product "([^\"]*)"$/ do |consumer_name, product_name|
   consumer = @consumer_clients[consumer_name]
 
-  pools = consumer.list_pools(:consumer => consumer.uuid, :fetch => true)
+  pools = consumer.list_pools(:consumer => consumer.uuid)
   products = pools.collect { |pool| pool['productName'] }
   products.should include(product_name)
 end
@@ -33,16 +33,15 @@ end
 
 When /^I view all of my pools$/ do
   @fount_pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid,
-      :listall => true, :fetch => true)
+      :listall => true)
 end
 
 When /^I view all pools for my owner$/ do
-  @found_pools = @candlepin.list_pools(:owner => @test_owner['id'], :fetch => true)
+  @found_pools = @candlepin.list_pools(:owner => @test_owner['id'])
 end
 
 Then /^I have access to a pool for product "([^\"]*)"$/ do |product_name|
-  products = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid,
-      :fetch => true).collect { |pool| pool['productName'] }
+  products = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid).collect { |pool| pool['productName'] }
   products.should include(product_name)
 end
 

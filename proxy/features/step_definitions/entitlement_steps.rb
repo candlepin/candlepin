@@ -26,7 +26,7 @@ When /^I consume an entitlement for the "([^\"]*)" product with a quantity of (\
 end
 
 Then /I have (\d+) entitlements? with a quantity of (\d+)/ do |entitlement_size, quantity|
-  entitlements = @consumer_cp.list_entitlements(:fetch => true)
+  entitlements = @consumer_cp.list_entitlements
   entitlements.select { |ent| ent['quantity'] == quantity.to_i }.length.should == entitlement_size.to_i
 end
 
@@ -48,7 +48,7 @@ end
 
 Then /^I have an entitlement for the "([^\"]*)" product$/ do |product_id|
   ents = @consumer_cp.list_entitlements(
-      :product_id => product_id.hash.abs, :fetch => true)
+      :product_id => product_id.hash.abs)
   ents.length.should == 1
 end
 
@@ -56,7 +56,7 @@ end
 
 When /I consume an entitlement for the "([^\"]*)" pool$/ do |pool|
   all_pools = @consumer_cp.list_pools({:consumer => 
-      @consumer_cp.consumer['uuid'], :fetch => true})
+      @consumer_cp.consumer['uuid']})
  
   product_pools = all_pools.select {|p| p.has_value?(pool)}
   product_pools.empty?.should == false

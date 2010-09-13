@@ -80,7 +80,6 @@ class Candlepin
   def list_owners(params = {})
     path = "/owners"
     results = get(path)
-    results = results.collect { |r| get_owner(r['href']) } if params[:fetch]
     return results
   end
 
@@ -148,8 +147,6 @@ class Candlepin
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
     results = get(path)
-
-    results = results.collect { |r| get_pool(r['id']) } if params[:fetch]
 
     return results
   end
@@ -301,7 +298,6 @@ class Candlepin
     path = "/consumers/#{@uuid}/entitlements"
     path << "?product=#{params[:product_id]}" if params[:product_id]
     results = get(path)
-    results = results.collect { |r| get_entitlement(r['id']) } if params[:fetch]
     return results
   end
 
@@ -331,7 +327,6 @@ class Candlepin
 
   def list_subscriptions(owner_key, params={})
     results = get("/owners/#{owner_key}/subscriptions")
-    results = results.collect { |r| get_subscription(r['id']) } if params[:fetch]
     return results
   end
 

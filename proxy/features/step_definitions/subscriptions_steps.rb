@@ -81,7 +81,7 @@ end
 Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |arg1|
   @new_certs = @consumer_cp.list_certificates()
   # Only admins can list subs for now, unlike with pools.
-  subs = @candlepin.list_subscriptions(@test_owner['key'], {:fetch => true})[0]
+  subs = @candlepin.list_subscriptions(@test_owner['key'])[0]
   certs = {}
   @new_certs.each do |cert|
     temp = OpenSSL::X509::Certificate.new(cert['cert'])
