@@ -16,10 +16,12 @@
 package org.fedoraproject.candlepin.model;
 
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -43,7 +45,8 @@ public class SubscriptionsCertificate extends AbstractCertificate {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_certificate")
     private Long id;
     
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "serial_id")
     private CertificateSerial serial;
 
     public CertificateSerial getSerial() {

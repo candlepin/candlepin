@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.sync;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.ContentCurator;
@@ -95,12 +96,14 @@ public class Importer {
     private PKIUtility pki;
     private Config config;
     private ExporterMetadataCurator expMetaCurator;
+    private CertificateSerialCurator csCurator;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         RulesCurator rulesCurator, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm, 
-        PKIUtility pki, Config config, ExporterMetadataCurator emc) {
+        PKIUtility pki, Config config, ExporterMetadataCurator emc,
+        CertificateSerialCurator csc) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.rulesCurator = rulesCurator;
@@ -112,6 +115,7 @@ public class Importer {
         this.pki = pki;
         this.config = config;
         this.expMetaCurator = emc;
+        this.csCurator = csc;
     }
 
     /**
@@ -347,7 +351,7 @@ public class Importer {
     
     public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements)
         throws IOException, SyncDataFormatException { 
-        EntitlementImporter importer = new EntitlementImporter(subCurator);
+        EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
