@@ -28,6 +28,7 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.model.SubscriptionsCertificate;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
@@ -226,10 +227,47 @@ public class Importer {
         importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
         importEntitlements(owner, importedProducts,
             importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
+        importSubscriptionCerts(importFiles.get(
+            ImportFile.ENTITLEMENT_CERTIFICATES.fileName()).listFiles());
         
         poolManager.refreshPools(owner);
     }
     
+    public void importSubscriptionCerts(File[] certs) throws IOException {
+        /*
+         *     public void importConsumerTypes(File[] consumerTypes) throws IOException {
+        ConsumerTypeImporter importer = new ConsumerTypeImporter(consumerTypeCurator);
+        Set<ConsumerType> consumerTypeObjs = new HashSet<ConsumerType>();
+        for (File consumerType : consumerTypes) {
+            Reader reader = null;
+            try {
+                reader = new FileReader(consumerType);
+                consumerTypeObjs.add(importer.createObject(mapper, reader));
+            }
+            finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+        }
+        importer.store(consumerTypeObjs);
+    }
+         */
+        Set<SubscriptionsCertificate> subcerts = new HashSet<SubscriptionsCertificate>();
+        for (File cert : certs) {
+            Reader reader = null;
+            try {
+                reader = new FileReader(cert);
+                subcerts.add(null);
+            }
+            finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+        }
+    }
+
     public void importRules(File[] rulesFiles) throws IOException {
         RulesImporter importer = new RulesImporter(rulesCurator);
         
