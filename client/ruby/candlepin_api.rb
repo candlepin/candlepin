@@ -11,12 +11,13 @@ class Candlepin
   attr_accessor :consumer
   attr_reader :identity_certificate
   attr_accessor :uuid
+  attr_reader :lang
 
   # Initialize a connection to candlepin. Can use username/password for 
   # basic authentication, or provide an identity certificate and key to
   # connect as a "consumer".
   def initialize(username=nil, password=nil, cert=nil, key=nil, 
-                 host='localhost', port=8443)
+                 host='localhost', port=8443, lang=nil)
 
     if not username.nil? and not cert.nil?
       raise "Cannot connect with both username and identity cert"
@@ -27,6 +28,8 @@ class Candlepin
     end
 
     @base_url = "https://#{host}:#{port}/candlepin"
+    
+    @lang = lang
 
     if not cert.nil?
       @identity_certificate = OpenSSL::X509::Certificate.new(cert)
@@ -36,6 +39,7 @@ class Candlepin
     else
       create_basic_client(username, password)
     end
+    
 
     # Store top level HATEOAS resource links so we know what we can do:
     results = get("/")
@@ -455,13 +459,15 @@ class Candlepin
 
   def create_basic_client(username=nil, password=nil)
     @client = RestClient::Resource.new(@base_url, 
-                                       username, password)
+                                       :user => username, :password => password,
+                                       :headers => {:accept_language => @lang})
   end
 
   def create_ssl_client
     @client = RestClient::Resource.new(@base_url,
                                        :ssl_client_cert => @identity_certificate, 
-                                       :ssl_client_key => @identity_key)
+                                       :ssl_client_key => @identity_key,
+                                       :headers => {:accept_language => @lang})
   end
 
 end

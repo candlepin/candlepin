@@ -266,5 +266,5 @@ msgstr ""
 msgid "second parameter should be the priority number."
 msgstr ""
 
-#~ msgid "Test"
-#~ msgstr "Untersuchung"
+msgid "Test"
+msgstr "Untersuchung"
