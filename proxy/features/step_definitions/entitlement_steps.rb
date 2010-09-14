@@ -27,7 +27,6 @@ end
 
 Then /I have (\d+) entitlements? with a quantity of (\d+)/ do |entitlement_size, quantity|
   entitlements = @consumer_cp.list_entitlements
-
   entitlements.select { |ent| ent['quantity'] == quantity.to_i }.length.should == entitlement_size.to_i
 end
 
@@ -48,17 +47,16 @@ Then /^I have (\d+) certificate serial number$/ do |serials_size|
 end
 
 Then /^I have an entitlement for the "([^\"]*)" product$/ do |product_id|
-    product_ids = @consumer_cp.list_entitlements.collect do |entitlement|
-        entitlement['pool']['productId']
-    end
-
-    product_ids.should include(product_id.hash.abs.to_s)
+  ents = @consumer_cp.list_entitlements(
+      :product_id => product_id.hash.abs)
+  ents.length.should == 1
 end
 
 # need a test for a Pool created with a productid that doesn't exist...
 
 When /I consume an entitlement for the "([^\"]*)" pool$/ do |pool|
-  all_pools = @consumer_cp.list_pools({:consumer => @consumer_cp.consumer['uuid']})
+  all_pools = @consumer_cp.list_pools({:consumer => 
+      @consumer_cp.consumer['uuid']})
  
   product_pools = all_pools.select {|p| p.has_value?(pool)}
   product_pools.empty?.should == false
@@ -69,7 +67,7 @@ When /I consume an entitlement for the "([^\"]*)" pool$/ do |pool|
 end
 
 Then /^I get (\d+) entitlements? when I filter by product ID "([^\"]*)"$/ do |entitlement_size, product_id|
-  @consumer_cp.list_entitlements(product_id.hash.abs).length.should == entitlement_size.to_i
+  @consumer_cp.list_entitlements(:product_id => product_id.hash.abs).length.should == entitlement_size.to_i
 end
 
 Then /^I get an exception if I filter by product ID "(\w+)"$/ do |product_id|

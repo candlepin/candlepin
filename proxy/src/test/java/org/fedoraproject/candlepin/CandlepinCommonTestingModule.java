@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
@@ -75,6 +76,7 @@ import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
@@ -112,6 +114,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
         bind(Reader.class).annotatedWith(Names.named("RulesReader"))
             .toProvider(RulesReaderProvider.class);
+        bind(I18n.class).toProvider(I18nProvider.class);
 
         bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);

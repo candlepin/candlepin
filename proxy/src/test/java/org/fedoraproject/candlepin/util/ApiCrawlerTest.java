@@ -37,41 +37,16 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.Status;
-import org.fedoraproject.candlepin.resource.AdminResource;
-import org.fedoraproject.candlepin.resource.AtomFeedResource;
-import org.fedoraproject.candlepin.resource.ConsumerResource;
-import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
-import org.fedoraproject.candlepin.resource.EntitlementResource;
-import org.fedoraproject.candlepin.resource.OwnerResource;
-import org.fedoraproject.candlepin.resource.PoolResource;
-import org.fedoraproject.candlepin.resource.ProductResource;
-import org.fedoraproject.candlepin.resource.RulesResource;
-import org.fedoraproject.candlepin.resource.StatusResource;
-import org.fedoraproject.candlepin.resource.SubscriptionResource;
-import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
+import org.fedoraproject.candlepin.resource.RootResource;
 import org.junit.Test;
 
 /**
  * ApiCrawler
  */
 public class ApiCrawlerTest {
-    private List<Class> resourceClasses;
     private List<Class> modelClasses;
     
     public ApiCrawlerTest() {
-        resourceClasses = new LinkedList<Class>();
-        resourceClasses.add(AdminResource.class);
-        resourceClasses.add(AtomFeedResource.class);        
-        resourceClasses.add(ConsumerResource.class);
-        resourceClasses.add(ConsumerTypeResource.class);
-        resourceClasses.add(EntitlementResource.class);
-        resourceClasses.add(OwnerResource.class);
-        resourceClasses.add(PoolResource.class);
-        resourceClasses.add(ProductResource.class);
-        resourceClasses.add(RulesResource.class);
-        resourceClasses.add(StatusResource.class);
-        resourceClasses.add(SubscriptionResource.class);
-        resourceClasses.add(SubscriptionTokenResource.class);
         
         modelClasses = new LinkedList<Class>();
         modelClasses.add(ConsumerType.class);
@@ -85,7 +60,7 @@ public class ApiCrawlerTest {
             writeSchema(c);
         }
         List<RestApiCall> allApiCalls = new LinkedList<RestApiCall>();
-        for (Class c : resourceClasses) {
+        for (Class c : RootResource.RESOURCE_CLASSES) {
             allApiCalls.addAll(processClass(c));
         }
         

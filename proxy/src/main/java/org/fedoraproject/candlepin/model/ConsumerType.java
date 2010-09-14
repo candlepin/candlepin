@@ -153,4 +153,5 @@ public class ConsumerType extends AbstractHibernateObject{
     public int hashCode() {
         return label.hashCode();
     }
+    
 }

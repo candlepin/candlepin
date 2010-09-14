@@ -30,22 +30,27 @@ end
 cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
 
 
+owner_id = nil
+owner_key = nil
 
 # create some owners and users
 data["owners"].each do |new_owner|
   puts "owner: " + new_owner
   owner = cp.create_owner(new_owner)
+  if owner_id.nil?
+    # This owner will be used to create all the test users:
+    owner_id = owner['id']
+    owner_key = owner['key']
+  end
 end
 
-# the user to create the users as, use the first one...
-owners = cp.list_owners()
+owners = cp.list_owners({:fetch => true})
 owner_key = owners[0]['key']
-
 
 # add some users
 data["users"].each do |new_user|
   puts "user: " + new_user["username"] 
-  user = cp.create_user(owner_key, new_user["username"],new_user["password"] )
+  user = cp.create_user(owner_key, new_user["username"], new_user["password"])
 end
 
 

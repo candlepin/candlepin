@@ -81,7 +81,8 @@ import org.hibernate.annotations.ParamDef;
 })
 @Table(name = "cp_consumer")
 @SequenceGenerator(name = "seq_consumer", sequenceName = "seq_consumer", allocationSize = 1)
-public class Consumer extends AbstractHibernateObject implements AccessControlEnforced {
+public class Consumer extends AbstractHibernateObject 
+    implements AccessControlEnforced, Linkable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer")
@@ -289,7 +290,6 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     /**
      * @return the owner of this Consumer.
      */
-    @XmlTransient
     public Owner getOwner() {
         return owner;
     }
@@ -385,7 +385,6 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     /**
      * @return Returns the entitlements.
      */
-    @XmlTransient
     public Set<Entitlement> getEntitlements() {
         return entitlements;
     }
@@ -449,4 +448,17 @@ public class Consumer extends AbstractHibernateObject implements AccessControlEn
     public boolean shouldGrantAccessTo(Consumer consumer) {
         return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
+    
+    public String getHref() {
+        return "/consumers/" + getUuid();
+    }
+    
+    @Override
+    public void setHref(String href) {
+        /*
+         * No-op, here to aid with updating objects which have nested objects that were
+         * originally sent down to the client in HATEOAS form.
+         */
+    }
+
 }

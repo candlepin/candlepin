@@ -6,7 +6,7 @@ describe 'Sub-Pool' do
   it_should_behave_like 'Candlepin Scenarios'
 
   before(:each) do
-    owner = create_owner 'test_owner'
+    owner = create_owner random_string('test_owner')
     derived_product = create_product()
     parent_product = create_product(nil, nil, {:attributes => {
             'user_license' => 'unlimited',

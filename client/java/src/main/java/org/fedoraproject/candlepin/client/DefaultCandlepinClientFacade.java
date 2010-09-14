@@ -23,6 +23,7 @@ import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -164,7 +165,13 @@ public class DefaultCandlepinClientFacade implements CandlepinClientFacade {
      */
     public List<Pool> listPools() {
         CandlepinConsumerClient client = clientWithCert();
-        return getSafeResult(client.listPools(getUUID()));
+
+        // This list is in HATEOAS form, need to lookup each pool for full details:
+        List<Pool> results = new LinkedList<Pool>();
+        for (Pool hateoasPool : getSafeResult(client.listPools(getUUID()))) {
+            results.add(getSafeResult(client.getPool(hateoasPool.getId())));
+        }
+        return results;
     }
 
     /*

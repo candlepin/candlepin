@@ -77,7 +77,8 @@ import org.hibernate.annotations.ParamDef;
 @Table(name = "cp_pool")
 @SequenceGenerator(name = "seq_pool",
         sequenceName = "seq_pool", allocationSize = 1)
-public class Pool extends AbstractHibernateObject implements AccessControlEnforced {
+public class Pool extends AbstractHibernateObject 
+    implements AccessControlEnforced, Linkable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_pool")
@@ -86,7 +87,6 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @ManyToOne
     @ForeignKey(name = "fk_pool_owner")
     @JoinColumn(nullable = false)
-    @XmlTransient    
     private Owner owner;
     
     private Boolean activeSubscription = Boolean.TRUE;
@@ -122,7 +122,7 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     private String productId;
     
     @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "pool_products", joinColumns = @JoinColumn(name = "pool_id"))
+    @JoinTable(name = "cp_pool_products", joinColumns = @JoinColumn(name = "pool_id"))
     private Set<String> providedProductIds = new HashSet<String>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
@@ -493,5 +493,17 @@ public class Pool extends AbstractHibernateObject implements AccessControlEnforc
     @XmlTransient
     public boolean isOverflowing() {
         return this.consumed > this.quantity;
+    }
+    
+    public String getHref() {
+        return "/pools/" + getId();
+    }
+    
+    @Override
+    public void setHref(String href) {
+        /*
+         * No-op, here to aid with updating objects which have nested objects that were
+         * originally sent down to the client in HATEOAS form.
+         */
     }
 }

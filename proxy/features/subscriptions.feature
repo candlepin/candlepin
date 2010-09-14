@@ -4,7 +4,7 @@ Feature: Manipulate Subscriptions
 
     Background:
         Given an owner admin "testowner"
-        And I am logged in as "test_owner"
+        And I am logged in as "testowner"
         And product "some_product" exists
         And product "another_product" exists
         And product "one_more_product" exists

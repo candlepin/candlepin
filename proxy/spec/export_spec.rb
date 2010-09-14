@@ -42,8 +42,9 @@ describe 'Candlepin Export' do
     entitlements_dir = File.join(@export_dir, 'entitlements')
 
     available_entitlements ||= {}
-    @candlepin_client.list_entitlements.each do |e|
-      available_entitlements[e.pool.productId] = e
+    @candlepin_client.list_entitlements.each do |ent|
+      pool = @cp.get_pool(ent['pool']['id'])
+      available_entitlements[pool.productId] = ent
     end
     exported_entitlements = files_in_dir(entitlements_dir)
 

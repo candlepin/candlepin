@@ -9,7 +9,7 @@ describe 'Refresh Pools' do
   it_should_behave_like 'Candlepin Scenarios'
 
   it 'creates a valid job' do
-    owner = create_owner 'test_owner'
+    owner = create_owner random_string('test_owner')
 
     status = @cp.refresh_pools(owner.key, true)
     status.state.should == 'CREATED'
@@ -19,10 +19,11 @@ describe 'Refresh Pools' do
   end
 
   it 'contains the proper return value' do
-    owner = create_owner 'test_owner'
+    test_owner = random_string('test_owner')
+    owner = create_owner test_owner
     result = @cp.refresh_pools(owner.key)
 
-    result.should == 'Pools refreshed for owner test_owner'
+    result.should == "Pools refreshed for owner #{test_owner}"
   end
 
   it 'creates the correct number of pools' do

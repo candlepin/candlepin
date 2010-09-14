@@ -42,7 +42,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_owner")
 @SequenceGenerator(name = "seq_owner", sequenceName = "seq_owner", allocationSize = 1)
-public class Owner extends AbstractHibernateObject implements Serializable {
+public class Owner extends AbstractHibernateObject implements Serializable, Linkable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_owner")
@@ -243,4 +243,17 @@ public class Owner extends AbstractHibernateObject implements Serializable {
     public String getUpstreamUuid() {
         return upstreamUuid;
     }
+    
+    public String getHref() {
+        return "/owners/" + getKey();
+    }
+    
+    @Override
+    public void setHref(String href) {
+        /*
+         * No-op, here to aid with updating objects which have nested objects that were
+         * originally sent down to the client in HATEOAS form.
+         */
+    }
+
 }

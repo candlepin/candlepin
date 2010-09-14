@@ -179,6 +179,7 @@ public class EntitlementResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{dbid}")
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Entitlement getEntitlement(@PathParam("dbid") Long dbid) {
         Entitlement toReturn = entitlementCurator.find(dbid);
         if (toReturn != null) {

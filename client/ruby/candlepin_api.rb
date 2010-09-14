@@ -11,12 +11,13 @@ class Candlepin
   attr_accessor :consumer
   attr_reader :identity_certificate
   attr_accessor :uuid
+  attr_reader :lang
 
   # Initialize a connection to candlepin. Can use username/password for 
   # basic authentication, or provide an identity certificate and key to
   # connect as a "consumer".
   def initialize(username=nil, password=nil, cert=nil, key=nil, 
-                 host='localhost', port=8443)
+                 host='localhost', port=8443, lang=nil)
 
     if not username.nil? and not cert.nil?
       raise "Cannot connect with both username and identity cert"
@@ -27,6 +28,8 @@ class Candlepin
     end
 
     @base_url = "https://#{host}:#{port}/candlepin"
+    
+    @lang = lang
 
     if not cert.nil?
       @identity_certificate = OpenSSL::X509::Certificate.new(cert)
@@ -36,7 +39,19 @@ class Candlepin
     else
       create_basic_client(username, password)
     end
+    
 
+    # Store top level HATEOAS resource links so we know what we can do:
+    results = get("/")
+    @links = {}
+    results.each do |link|
+      @links[link['rel']] = link['href']
+    end
+
+  end
+
+  def get_path(resource)
+    return @links[resource]
   end
 
   def register(name, type=:system, uuid=nil, facts={}, username=nil)
@@ -48,7 +63,7 @@ class Candlepin
 
     consumer[:uuid] = uuid if not uuid.nil?
 
-    path = "/consumers"
+    path = get_path("consumers")
     path += "?username=#{username}" if username
     @consumer = post(path, consumer)
     return @consumer
@@ -62,17 +77,25 @@ class Candlepin
       :facts => facts
     }
 
-    put("/consumers/#{uuid}", consumer)
+    path = get_path("consumers")
+    put("#{path}/#{uuid}", consumer)
   end
 
   def list_owners(params = {})
-    path = "/owners?"
-    path << "key=#{params[:key]}&" if params[:key]
-    get(path)
+    path = "/owners"
+    results = get(path)
+    return results
   end
 
-  def get_owner(owner_key)
-    get("/owners/#{owner_key}")
+  # Can pass an owner key, or an href to follow:
+  def get_owner(owner)
+    # Looks like a path to follow:
+    if owner[0,1] == "/"
+      return get(owner)
+    end
+
+    # Otherwise, assume owner key was given:
+    get("/owners/#{owner}")
   end
 
   def create_owner(owner_name)
@@ -127,7 +150,9 @@ class Candlepin
     path << "owner=#{params[:owner]}&" if params[:owner]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
-    return get(path)
+    results = get(path)
+
+    return results
   end
   
   def create_pool(product_id, owner_id, quantity, params={})
@@ -272,10 +297,12 @@ class Candlepin
     post("/consumers/#{@uuid}/entitlements?token=#{token}")
   end
 
-  def list_entitlements(product_id = nil)
+  # TODO: Could also fetch from /entitlements, a bit ambiguous:
+  def list_entitlements(params={})
     path = "/consumers/#{@uuid}/entitlements"
-    path << "?product=#{product_id}" if product_id
-    get(path)
+    path << "?product=#{params[:product_id]}" if params[:product_id]
+    results = get(path)
+    return results
   end
 
   def list_rules()
@@ -302,8 +329,13 @@ class Candlepin
     delete("/consumers/#{@uuid}/entitlements/#{eid}")
   end
 
-  def list_subscriptions(owner_key)
-    return get("/owners/#{owner_key}/subscriptions")
+  def list_subscriptions(owner_key, params={})
+    results = get("/owners/#{owner_key}/subscriptions")
+    return results
+  end
+
+  def get_subscription(sub_id)
+    return get("/subscriptions/#{sub_id}")
   end
 
   def create_subscription(owner_key, product_id, quantity=1,
@@ -427,13 +459,15 @@ class Candlepin
 
   def create_basic_client(username=nil, password=nil)
     @client = RestClient::Resource.new(@base_url, 
-                                       username, password)
+                                       :user => username, :password => password,
+                                       :headers => {:accept_language => @lang})
   end
 
   def create_ssl_client
     @client = RestClient::Resource.new(@base_url,
                                        :ssl_client_cert => @identity_certificate, 
-                                       :ssl_client_key => @identity_key)
+                                       :ssl_client_key => @identity_key,
+                                       :headers => {:accept_language => @lang})
   end
 
 end

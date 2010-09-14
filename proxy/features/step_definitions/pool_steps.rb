@@ -5,7 +5,6 @@ Then /^consumer "([^\"]*)" has access to a pool for product "([^\"]*)"$/ do |con
 
   pools = consumer.list_pools(:consumer => consumer.uuid)
   products = pools.collect { |pool| pool['productName'] }
-
   products.should include(product_name)
 end
 
@@ -33,8 +32,8 @@ Given /^I have a pool of quantity (\d+) for "([^\"]*)" with the following attrib
 end
 
 When /^I view all of my pools$/ do
-  @found_pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid,
-                                        :listall => true)
+  @fount_pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid,
+      :listall => true)
 end
 
 When /^I view all pools for my owner$/ do
@@ -42,9 +41,7 @@ When /^I view all pools for my owner$/ do
 end
 
 Then /^I have access to a pool for product "([^\"]*)"$/ do |product_name|
-  pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid)
-  products = pools.collect { |pool| pool['productName'] }
-
+  products = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid).collect { |pool| pool['productName'] }
   products.should include(product_name)
 end
 

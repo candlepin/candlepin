@@ -43,17 +43,17 @@ class SyncUtils {
     }
     
     static ObjectMapper getObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
         
-        ObjectMapper mapper = new ObjectMapper();
         mapper.getSerializationConfig().setAnnotationIntrospector(pair);
         mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
         mapper.getSerializationConfig().set(
             SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
             false);
-        
+
         return mapper;
     }
 

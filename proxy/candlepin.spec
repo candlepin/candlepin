@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.32
+Version: 0.0.34
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,45 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Sep 13 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.34-1
+- Disable HATEOAS for collections. (dgoodwin@redhat.com)
+- 629747 - made the table names consistent (bkearney@redhat.com)
+- Refreshed the string files (bkearney@redhat.com)
+
+* Thu Sep 09 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.33-1
+- Merge branch 'master' into hateros2 (dgoodwin@redhat.com)
+- Identity Certificate's endDate is configurable. (anadathu@redhat.com)
+- Injecting the product adapter in the EntitlementResource (calfonso@redhat.com)
+- Moving the cache purging to the product/{product_id} api (calfonso@redhat.com)
+- Fix owner rspec tests after merge. (dgoodwin@redhat.com)
+- Fix JSON config discrepancy. (dgoodwin@redhat.com)
+- Fix Cucumber tests after HATEOAS changes. (dgoodwin@redhat.com)
+- Support pool deletion. (dgoodwin@redhat.com)
+- Refractored the code in AMQPBusEventAdapter(FTW). (anadathu@redhat.com)
+- Emit pool creation events. (dgoodwin@redhat.com)
+- amqp: add bash script to configure ssl (jbowes@redhat.com)
+- amqp: use ssl to connect to the message bus (jbowes@redhat.com)
+- Fix Entitlement href, expose at top level URL. (dgoodwin@redhat.com)
+- Fix consumer resource spec. (dgoodwin@redhat.com)
+- Fix cert revocation spec. (dgoodwin@redhat.com)
+- Repair export spec. (dgoodwin@redhat.com)
+- Fix authorization spec. (dgoodwin@redhat.com)
+- Repair entitlement cert spec. (dgoodwin@redhat.com)
+- Add setHref to Linkable interface. (dgoodwin@redhat.com)
+- Make owner pools and consumers XmlTransient once more. (dgoodwin@redhat.com)
+- Randomize owner names. (dgoodwin@redhat.com)
+- HATEOAS: Repair entitlement cert spec. (dgoodwin@redhat.com)
+- Add top level linking for HATEOAS. (dgoodwin@redhat.com)
+- Test entitlement serialization. (dgoodwin@redhat.com)
+- Include "id" in HATEOAS serialized form. (dgoodwin@redhat.com)
+- Test / cleanup Pool serialization. (dgoodwin@redhat.com)
+- Test and touchup consumer serialization. (dgoodwin@redhat.com)
+- Start serializing owner consumer/pool collections. (dgoodwin@redhat.com)
+- Enable HATEOAS serialization for collections. (dgoodwin@redhat.com)
+- Add link to Jackson BeanSerializerFactory source. (dgoodwin@redhat.com)
+- Merge branch 'master' into hateros2 (dgoodwin@redhat.com)
+- Add HATEOAS support. (dgoodwin@redhat.com)
+
 * Wed Sep 01 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.32-1
 - Better error for unbind/unregister as consumer with sub-pools in use.  (dgoodwin@redhat.com)
 - Use owner keys instead of IDs in REST API. (dgoodwin@redhat.com)
