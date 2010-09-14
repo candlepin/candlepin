@@ -43,7 +43,9 @@ public class EntitlementImporter {
     private SubscriptionCurator subscriptionCurator;
     private CertificateSerialCurator csCurator;
     
-    public EntitlementImporter(SubscriptionCurator subscriptionCurator, CertificateSerialCurator csCurator) {
+    public EntitlementImporter(SubscriptionCurator subscriptionCurator, 
+        CertificateSerialCurator csCurator) {
+        
         this.subscriptionCurator = subscriptionCurator;
         this.csCurator = csCurator;
     }
