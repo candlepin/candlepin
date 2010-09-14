@@ -39,22 +39,19 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
 
     private static Log log = LogFactory.getLog(AMQPBusEventAdapter.class);
 
-    private ObjectMapper om = new ObjectMapper();
     private final ImmutableMap<Event.Target, ? extends Function<Event, String>> mp =
         new ImmutableMap.Builder<Event.Target, Function<Event, String>>()
             .put(Event.Target.CONSUMER, new ConsumerFunction())
-            .put(Event.Target.USER, new UserFunction())
-            .put(Event.Target.ROLE, new RoleFunction())
             .put(Event.Target.SUBSCRIPTION, new SubscriptionFunction())
             .build();
 
-    private UserServiceAdapter userServiceAdapter;
     private Config config;
+    private ObjectMapper mapper;
 
     @Inject
-    public AMQPBusEventAdapter(UserServiceAdapter serviceAdapter, Config config) {
-        this.userServiceAdapter = serviceAdapter;
+    public AMQPBusEventAdapter(Config config, ObjectMapper mapper) {
         this.config = config;
+        this.mapper = mapper;
     }
     
     @Override
@@ -94,29 +91,6 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         }
     }
 
-    private class UserFunction extends EventFunction {
-        @Override
-        protected void populate(Event event, Map<String, Object> result) {
-            if (event.getType() != Event.Type.DELETED) {
-                User user = deserialize(event.getNewEntity(), User.class);
-                if (user != null) {
-                    result.put("login", user.getUsername()); //TODO: login == name?
-                    result.put("name", user.getUsername());
-                    //TODO: use cache for user roles?
-                    result.put("roles", userServiceAdapter.getRoles(user.getUsername()));
-                }
-            }
-        }
-    }
-
-    private class RoleFunction implements Function<Event, String> {
-        @Override
-        public String apply(Event event) {
-          //TODO roles are static in candlpin for now..
-            return event.toString();
-        }
-    }
-
     private class SubscriptionFunction extends EventFunction {
 
         @Override
@@ -146,7 +120,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
      */
     private String serialize(Map<String, Object> result) {
         try {
-            return this.om.writeValueAsString(result);
+            return this.mapper.writeValueAsString(result);
         }
         catch (Exception e) {
             log.warn("Unable to serialize :", e);
@@ -156,7 +130,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
     
     private <T> T deserialize(String value, Class<T> clas) {
         try {
-            return om.readValue(value, clas);
+            return this.mapper.readValue(value, clas);
         }
         catch (Exception e) {
             log.warn("Unable to de-serialize :", e);
