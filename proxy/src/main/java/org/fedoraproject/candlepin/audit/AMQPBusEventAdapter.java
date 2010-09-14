@@ -18,11 +18,8 @@ import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.audit.Event.Type;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +28,15 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductContent;
+import org.fedoraproject.candlepin.model.Subscription;
 
 /**
  */
@@ -153,18 +159,36 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
                     Subscription.class);
 
             if (subscription != null) {
+                // Owner is in every type
                 result.put("owner", subscription.getOwner().getKey());
                 
                 if (event.getType() != Event.Type.DELETED) {
                     result.put("name", subscription.getProduct().getId());
-
-                    // no idea what this should be
-                    result.put("description", event.getNewEntity());
+                    result.put("entitlement_cert", subscription.getCertificate().getCert());
+                    result.put("cert_public_key", subscription.getCertificate().getKey());
                     result.put("ca_cert", config.getString(
                             ConfigProperties.CA_CERT_UPSTREAM));
-
+                    result.put("content_sets", createContentMap(subscription));
                 }
             }
+        }
+
+        private List<Map<String, String>> createContentMap(Subscription sub) {
+            List<Map<String, String>> contentList = new LinkedList<Map<String, String>>();
+
+            for (Product product : sub.getProvidedProducts()) {
+                for (ProductContent prodContent : product.getProductContent()) {
+                    Content content = prodContent.getContent();
+
+                    Map<String, String> contentMap = new HashMap<String, String>();
+                    contentMap.put("content_set_label", content.getLabel());
+                    contentMap.put("content_rel_url", content.getContentUrl());
+
+                    contentList.add(contentMap);
+                }
+            }
+
+            return contentList;
         }
         
     }

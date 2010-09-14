@@ -90,6 +90,7 @@ public class AMQPBusEventAdapterTest {
     public void init() throws IOException {
         MockitoAnnotations.initMocks(this);
 
+        // given
         this.eventAdapter = new AMQPBusEventAdapter(null, mapper);
         this.event = new Event(this.type, this.target, principal, 1L, 1L, 42L,
             "Old Entity", "New Entity");
@@ -102,10 +103,14 @@ public class AMQPBusEventAdapterTest {
      */
     @Test
     public void objectMapperUsed() throws IOException {
+        // given
         String serializedMap = "SERIALIZED_MAP_VALUE";
         when(mapper.writeValueAsString(anyMap())).thenReturn(serializedMap);
 
+        // when
         String translatedEvent = this.eventAdapter.apply(this.event);
+
+        // then
         assertThat(serializedMap, is(equalTo(translatedEvent)));
     }
 
@@ -116,8 +121,10 @@ public class AMQPBusEventAdapterTest {
      */
     @Test
     public void idSerialized() throws IOException {
+        // when
         this.eventAdapter.apply(this.event);
 
+        // then
         verify(mapper).writeValueAsString(argThat(hasEntry("id", 42L)));
     }
 
