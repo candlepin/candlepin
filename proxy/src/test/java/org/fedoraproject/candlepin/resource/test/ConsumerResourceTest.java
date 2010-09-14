@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -71,6 +70,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.internal.Lists;
+import org.fedoraproject.candlepin.audit.EventSink;
 
 /**
  * ConsumerResourceTest
@@ -746,7 +746,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // get renamed once we refactor this test suite.
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
-        
+
+        EventSink sink = Mockito.mock(EventSink.class);
+        EventFactory factory = Mockito.mock(EventFactory.class);
+
         Consumer lconsumer = createConsumer();
         lconsumer.setIdCert(createIdCert());
         IdentityCertificate ic = lconsumer.getIdCert();
@@ -759,7 +762,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator,
             null, null, null, null, mockedIdSvc, null, null,
-            null, null, null, null, null, null, null, null, null);
+            sink, factory, null, null, null, null, null, null, null);
 
         Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid());
 
