@@ -16,31 +16,34 @@ package org.fedoraproject.candlepin.audit;
 
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.audit.Event.Type;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.model.Subscription;
 
 /**
- * @author ajay
  */
 @Singleton
 public class AMQPBusEventAdapter implements Function<Event, String> {
 
-    private static Log log = LogFactory.getLog(AMQPBusEventAdapter.class);
+    private static Logger log = LoggerFactory.getLogger(AMQPBusEventAdapter.class);
 
     private final ImmutableMap<Event.Target, ? extends Function<Event, String>> mp =
         new ImmutableMap.Builder<Event.Target, Function<Event, String>>()
             .put(Event.Target.CONSUMER, new ConsumerFunction())
             .put(Event.Target.SUBSCRIPTION, new SubscriptionFunction())
+            .put(Event.Target.ENTITLEMENT, new EntitlementFunction())
             .build();
 
     private Config config;
@@ -56,10 +59,12 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
     public String apply(Event event) {
         Function<Event, String> func = mp.get(event.getTarget());
         if (func != null) {
-            return func.apply(event);
+            String result = func.apply(event);
+            log.debug("AMQPBusEventAdapter.apply(event) = {}", result);
+            return result;
         }
         else {
-            log.warn("Unknown entity: " + event + " . Skipping serialization");
+            log.warn("Unknown entity: {}. Skipping serialization", event);
             return "";
         }
     }
@@ -70,7 +75,6 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         public String apply(Event event) {
             Map<String, Object> result = Util.newMap();
             result.put("id", event.getEntityId());
-
             populate(event, result);
             return serialize(result);
         }
@@ -78,17 +82,69 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         protected abstract void populate(Event event, Map<String, Object> result);
     }
 
+
     private class ConsumerFunction extends EventFunction {
+        @Override
+        protected void populate(Event event, Map<String, Object> result) {
+            Consumer consumer = deserialize(event, Consumer.class);
+            if (consumer != null) {
+                result.put("id", consumer.getUuid());
+                result.put("owner", event.getOwnerId());
+                switch (event.getType()) {
+                    case CREATED:
+                        consumerCreated(consumer, result, event);
+                        break;
+                    case DELETED:
+                        consumerDeleted(consumer, result, event);
+                        break;
+                    case MODIFIED:
+                        consumerModified(consumer, result, event);
+                        break;
+                    default:
+                        log.debug("Unknown eventType: " + event.getType());
+                }
+            }
+        }
+        
+        private void consumerModified(Consumer consumer,
+            Map<String, Object> result, Event event) {
+            consumerCreated(consumer, result, event);
+        }
+
+        private void consumerDeleted(Consumer consumer,
+            Map<String, Object> rs, Event event) {
+            //no extra attributes to take care of... but maybe in future.
+        }
+
+        private void consumerCreated(Consumer consumer,
+            Map<String, Object> rs, Event event) {
+            rs.put("identity_cert", consumer.getIdCert().getCert());
+            rs.put("identity_cert_key", consumer.getIdCert().getKey());
+            rs.put("hardware_facts", consumer.getFacts());            
+        }
+    }
+    
+
+    /**
+     * EntitlementStrFunc
+     */
+    private class EntitlementFunction extends EventFunction {
 
         @Override
         protected void populate(Event event, Map<String, Object> result) {
-            if (event.getType() != Event.Type.DELETED) {
-                result.put("description", event.getNewEntity());
-                //TODO: What should description have?
+            Entitlement entitlement = deserialize(event, Entitlement.class);
+            if (event.getType() == Type.CREATED ||
+                event.getType() == Type.DELETED) {
+                Consumer consumer = entitlement.getConsumer();
+                result.put("id", consumer.getUuid());
+                result.put("owner", event.getOwnerId());
+                result.put("consumer_os_arch", consumer.getFact("uname.machine"));
+                result.put("consumer_os_version", consumer.getFact("distribution.version"));
+                result.put("product_id", entitlement.getProductId());
             }
         }
-    }
 
+    }
     private class SubscriptionFunction extends EventFunction {
 
         @Override
@@ -134,6 +190,11 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
             log.warn("Unable to de-serialize :", e);
         }
         return null;
+    }
+    
+    private <T> T deserialize(Event event, Class<T> clas) {
+        return deserialize(event.getType() == Type.DELETED ? event
+            .getOldEntity() : event.getNewEntity(), clas);
     }
 
 }
