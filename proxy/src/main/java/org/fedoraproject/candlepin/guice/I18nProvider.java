@@ -52,7 +52,6 @@ public class I18nProvider implements Provider<I18n> {
             locale = request.getLocale();
         }
         
-        System.out.println("LOCALE is locale: " + locale);
         locale = (locale == null) ? Locale.US : locale;
         
         log.debug("Getting i18n engine for locale " + locale);

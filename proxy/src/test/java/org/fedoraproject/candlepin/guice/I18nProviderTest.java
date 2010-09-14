@@ -22,6 +22,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.google.inject.Injector;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -30,23 +32,25 @@ import static org.mockito.Mockito.when;
  */
 public class I18nProviderTest {
     @Mock private HttpServletRequest request;
+    @Mock private Injector injector;
     
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        when(injector.getInstance(HttpServletRequest.class)).thenReturn(request);
     }    
 
     @Test 
     public void verifyEnglishTestString() {
         when(request.getLocale()).thenReturn(Locale.US);
-        I18nProvider provider = new I18nProvider(request);
+        I18nProvider provider = new I18nProvider(injector);
         assertEquals("Test", provider.getTestString());
     }
     
     @Test 
     public void verifyGermanTestString() {
         when(request.getLocale()).thenReturn(Locale.GERMAN);
-        I18nProvider provider = new I18nProvider(request);
+        I18nProvider provider = new I18nProvider(injector);
         assertEquals("Untersuchung", provider.getTestString());
     }    
 }
