@@ -19,8 +19,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.common.base.Function;
