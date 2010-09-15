@@ -55,12 +55,20 @@ public class AMQPSubscriptionEventTest {
         this.eventAdapter = new AMQPBusEventAdapter(this.config, this.mapper);
     }
 
-    // This is pretty crazy - should these be broken up into smaller tests
-    // for each entry?
     @Test
     public void subscriptionCreated() throws IOException {
+        verifySubscriptionEvent(Event.Type.CREATED);
+    }
+    
+    @Test public void subscriptionModified() throws IOException {
+        verifySubscriptionEvent(Event.Type.MODIFIED);
+    }
+
+    // This is pretty crazy - should these be broken up into smaller tests
+    // for each entry?
+    private void verifySubscriptionEvent(Event.Type type) throws IOException {
         // given
-        Event event = new Event(Event.Type.CREATED, Event.Target.SUBSCRIPTION,
+        Event event = new Event(type, Event.Target.SUBSCRIPTION,
             principal, 1L, 1L, 33L, "Old Subscription", "New Subscription");
 
         Subscription sub = mock(Subscription.class, Mockito.RETURNS_DEEP_STUBS);
@@ -71,7 +79,7 @@ public class AMQPSubscriptionEventTest {
         when(sub.getCertificate().getCert()).thenReturn("test-cert");
         when(sub.getCertificate().getKey()).thenReturn("test-key");
         when(config.getString(ConfigProperties.CA_CERT_UPSTREAM)).thenReturn("ca-cert");
-        
+
         when(sub.getProvidedProducts()).thenReturn(
                 Sets.newHashSet(createProductWithContent(
                 "content1", "http://dummy.com/content")));
