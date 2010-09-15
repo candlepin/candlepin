@@ -133,17 +133,22 @@ public class EntitlementImporter {
             
             if (local == null) {
                 subscriptionCurator.create(subscription);
+
+                // send out created event
             }
             else {
                 subscription.setId(local.getId());
                 subscriptionCurator.merge(subscription);
                 
                 existingSubByEntitlement.remove(subscription.getUpstreamPoolId());
+
+                // send updated event
             }
         }
         
         for (Subscription subscription : existingSubByEntitlement.values()) {
             subscriptionCurator.delete(subscription);
+            // send out deleted event
         }
     }
 }
