@@ -29,7 +29,6 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionsCertificate;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
