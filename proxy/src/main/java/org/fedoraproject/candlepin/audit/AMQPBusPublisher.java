@@ -58,7 +58,11 @@ public class AMQPBusPublisher implements EventListener{
             if (m != null) {
                 TopicPublisher tp = m.get(e.getType());
                 if (tp != null) {
+                    log.debug("Sending event to tp");
                     tp.send(session.createTextMessage(adapter.apply(e)));
+                }
+                else {
+                    log.warn("TopicPublisher is NULL!");
                 }
             }
         }

@@ -215,8 +215,9 @@ public class Event implements Persisted, AccessControlEnforced {
     }
 
     public String toString() {
-        return "Event [" + "id=" + getId() + ", type=" + getType() + ", time=" +
-            getTimestamp() + ", entity=" + getEntityId() + "]";
+        return "Event [" + "id=" + getId() + ", target=" + getTarget() +
+               ", type=" + getType() + ", time=" + getTimestamp() +
+               ", entity=" + getEntityId() + "]";
     }
 
     /*

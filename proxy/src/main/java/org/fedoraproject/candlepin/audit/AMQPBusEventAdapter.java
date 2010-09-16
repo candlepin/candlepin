@@ -159,10 +159,12 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
                     Subscription.class);
 
             if (subscription != null) {
+                log.debug("Subscription message:" + subscription.getId());
                 // Owner is in every type
                 result.put("owner", subscription.getOwner().getKey());
                 
                 if (event.getType() != Event.Type.DELETED) {
+                    log.debug("Subscription is NOT DELETED, which is good");
                     result.put("name", subscription.getProduct().getId());
                     result.put("entitlement_cert", subscription.getCertificate().getCert());
                     result.put("cert_public_key", subscription.getCertificate().getKey());
