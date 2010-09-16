@@ -45,7 +45,7 @@ public class EntitlementImporterTest {
         
         when(curator.listByOwner(owner)).thenReturn(new LinkedList<Subscription>());
         
-        EntitlementImporter importer = new EntitlementImporter(curator, null);
+        EntitlementImporter importer = new EntitlementImporter(curator, null, null);
         importer.store(owner, new HashSet<Subscription>() {
             {
                 add(testSub);
@@ -73,7 +73,7 @@ public class EntitlementImporterTest {
             }
         });
         
-        EntitlementImporter importer = new EntitlementImporter(curator, null);
+        EntitlementImporter importer = new EntitlementImporter(curator, null, null);
         importer.store(owner, new HashSet<Subscription>() {
             {
                 add(testSub);
@@ -100,7 +100,7 @@ public class EntitlementImporterTest {
                 add(testSub);
             }
         });
-        EntitlementImporter importer = new EntitlementImporter(curator, null);
+        EntitlementImporter importer = new EntitlementImporter(curator, null, null);
         importer.store(owner, new HashSet<Subscription>());
         
         verify(curator, never()).create(testSub);

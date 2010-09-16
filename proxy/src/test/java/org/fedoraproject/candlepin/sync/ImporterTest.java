@@ -66,7 +66,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null);
+            null, null, emc, null, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
 
         assertTrue(f.delete());
@@ -81,7 +81,7 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null);
+            null, null, emc, null, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
@@ -100,7 +100,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null);
+            null, null, emc, null, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
 
         assertTrue(f.delete());
@@ -112,7 +112,7 @@ public class ImporterTest {
         File actualmeta = createFile("/tmp/meta.json");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
-                null, null, null, null);
+                null, null, null, null, null);
             // null Type should cause exception
             i.validateMetadata(null, null, actualmeta);
         }
@@ -129,7 +129,7 @@ public class ImporterTest {
             .thenReturn(null);
 
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null);
+            null, null, emc, null, null);
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta);
         verify(emc, never()).create(any(ExporterMetadata.class));

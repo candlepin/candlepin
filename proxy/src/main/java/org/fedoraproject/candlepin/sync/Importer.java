@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.sync;
 
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
@@ -96,13 +97,14 @@ public class Importer {
     private Config config;
     private ExporterMetadataCurator expMetaCurator;
     private CertificateSerialCurator csCurator;
+    private EventSink sink;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         RulesCurator rulesCurator, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm, 
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc) {
+        CertificateSerialCurator csc, EventSink sink) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.rulesCurator = rulesCurator;
@@ -115,6 +117,7 @@ public class Importer {
         this.config = config;
         this.expMetaCurator = emc;
         this.csCurator = csc;
+        this.sink = sink;
     }
 
     /**
@@ -313,7 +316,7 @@ public class Importer {
     
     public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements)
         throws IOException, SyncDataFormatException { 
-        EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator);
+        EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator, sink);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {

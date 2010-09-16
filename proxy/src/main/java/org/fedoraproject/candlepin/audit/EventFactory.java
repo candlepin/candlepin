@@ -34,6 +34,8 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Subscription;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,6 +190,15 @@ public class EventFactory {
         return e;
     }
     
+    public Event subscriptionCreated(Subscription subscription) {
+        Principal principal = principalProvider.get();
+
+        Event e = new Event(Event.Type.CREATED, Event.Target.SUBSCRIPTION,
+            principal, principal.getOwner().getId(), null, subscription.getId(),
+            null, entityToJson(subscription));
+        return e;
+    }
+
     private String entityToJson(Object entity) {
         String newEntityJson = "";
         // TODO: Throw an auditing exception here
@@ -243,5 +254,4 @@ public class EventFactory {
             return ser;
         }
     }
-    
 }
