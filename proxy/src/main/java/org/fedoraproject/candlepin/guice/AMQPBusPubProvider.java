@@ -106,7 +106,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         for (Target target : Target.values()) {
             for (Type type : Type.values()) {
                 String name = getTopicName(type, target);
-                properties.put("destination." + name, "amq.topic");
+                properties.put("destination." + name, "event");
             }
         }
         return properties;
