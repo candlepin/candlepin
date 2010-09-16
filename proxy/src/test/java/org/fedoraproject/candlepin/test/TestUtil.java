@@ -14,8 +14,8 @@
  */
 package org.fedoraproject.candlepin.test;
 
-import java.sql.Date;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,8 +26,12 @@ import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -195,6 +199,40 @@ public class TestUtil {
         Set<String> results = new HashSet<String>();
         results.add(productId);
         return results;
+    }
+
+    public static IdentityCertificate createIdCert() {
+        IdentityCertificate idCert = new IdentityCertificate();
+        CertificateSerial serial = new CertificateSerial(new Date());
+        serial.setId(new Long(new Random().nextInt(1000000)));
+
+        // totally arbitrary
+        idCert.setId(new Long(new Random().nextInt(1000000)));
+        idCert.setKey("uh0876puhapodifbvj094");
+        idCert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
+        idCert.setSerial(serial);
+        return idCert;
+    }
+
+    public static Entitlement createEntitlement(Owner owner, Consumer consumer,
+        Pool pool, EntitlementCertificate cert) {
+        Entitlement toReturn = new Entitlement();
+        toReturn.setOwner(owner);
+        toReturn.setPool(pool);
+        toReturn.setOwner(owner);
+        toReturn.setConsumer(consumer);
+        if (cert != null) {
+            cert.setEntitlement(toReturn);
+            toReturn.getCertificates().add(cert);
+        }
+        return toReturn;
+    }
+
+    public static Entitlement createEntitlement() {
+        Owner owner = new Owner("Test Owner |" + randomInt());
+        owner.setId(RANDOM.nextLong());
+        return createEntitlement(owner, createConsumer(owner), createPool(
+            owner, createProduct()), null);
     }
 
 }

@@ -247,18 +247,9 @@ public class DatabaseTestFixture {
         return token;
     }
     
-    protected Entitlement createEntitlement(Owner owner, Consumer consumer, 
-            Pool pool, EntitlementCertificate cert) {
-        Entitlement toReturn = new Entitlement();
-        toReturn.setOwner(owner);
-        toReturn.setPool(pool);
-        toReturn.setOwner(owner);
-        toReturn.setConsumer(consumer);
-        if (cert != null) {
-            cert.setEntitlement(toReturn);
-            toReturn.getCertificates().add(cert);
-        }
-        return toReturn;
+    protected Entitlement createEntitlement(Owner owner, Consumer consumer,
+        Pool pool, EntitlementCertificate cert) {
+        return TestUtil.createEntitlement(owner, consumer, pool, cert);
     }
     
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
