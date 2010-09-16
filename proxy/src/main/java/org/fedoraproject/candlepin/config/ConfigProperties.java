@@ -66,6 +66,8 @@ public class ConfigProperties {
     };
     
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
+    public static final String CONSUMER_FACTS_MATCHER =
+        "candlepin.consumer.facts.match_regex";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -89,6 +91,7 @@ public class ConfigProperties {
                 this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
 
                 this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
+                this.put(CONSUMER_FACTS_MATCHER, ".*");
 
                 
                 // Pinsetter

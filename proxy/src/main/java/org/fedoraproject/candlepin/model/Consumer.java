@@ -365,21 +365,12 @@ public class Consumer extends AbstractHibernateObject
     }
     
     /**
-     * Set a metadata field
+     * Set a fact
      * @param name to set
      * @param value to set
      */
-    public void setMetadataField(String name, String value) {
+    public void setFact(String name, String value) {
         this.facts.put(name, value);
-    }
-    
-    /**
-     * Get a metadata field value
-     * @param nameIn of field to fetch
-     * @return String field value.
-     */
-    public String getMetadataField(String nameIn) {
-        return facts.get(nameIn);
     }
 
     /**
