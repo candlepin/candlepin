@@ -99,4 +99,13 @@ public interface SubscriptionServiceAdapter {
      * if there are terms to be accepted
      */
     boolean hasUnacceptedSubscriptionTerms(Owner owner);
+    
+    
+    /**
+     * A pool for a subscription id has been created. Send the activation email
+     * if necessary
+     * 
+     * @param subscriptionId
+     */
+    void sendActivationEmail(Long subscriptionId);
 }

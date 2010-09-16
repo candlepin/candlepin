@@ -80,7 +80,8 @@ public class ConfigProperties {
                 this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());
                 this.put(AUDIT_LISTENERS,
                     "org.fedoraproject.candlepin.audit.DatabaseListener," +
-                    "org.fedoraproject.candlepin.audit.LoggingListener,");
+                    "org.fedoraproject.candlepin.audit.LoggingListener," + 
+                    "org.fedoraproject.candlepin.audit.ActivationListener");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
                 this.put(AUDIT_LOG_VERBOSE, "false");
 
