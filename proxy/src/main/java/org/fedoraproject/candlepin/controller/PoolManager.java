@@ -190,8 +190,9 @@ public class PoolManager {
             existingPool.getStartDate())) ||
             (!sub.getEndDate().equals(existingPool.getEndDate()));
         boolean quantityChanged = !sub.getQuantity().equals(existingPool.getQuantity());
+        boolean productsChanged = checkForChangedProducts(existingPool, sub);
 
-        if (!(quantityChanged || datesChanged)) {
+        if (!(quantityChanged || datesChanged || productsChanged)) {
             //TODO: Should we check whether pool is overflowing here?
             return; //no changes, just return.
         }
@@ -204,7 +205,7 @@ public class PoolManager {
         }
 
         //dates changed. regenerate all entitlement certificates
-        if (datesChanged) {
+        if (datesChanged || productsChanged) {
             existingPool.setStartDate(sub.getStartDate());
             existingPool.setEndDate(sub.getEndDate());
             List<Entitlement> entitlements = poolCurator
@@ -222,6 +223,21 @@ public class PoolManager {
         this.poolCurator.merge(existingPool);
         eventFactory.poolChangedTo(e, existingPool);
         sink.sendEvent(e);
+    }
+
+    private boolean checkForChangedProducts(Pool existingPool, Subscription sub) {
+        Set<String> poolProductIds = new HashSet<String>();
+        Set<String> subProductIds = new HashSet<String>();
+        
+        poolProductIds.add(existingPool.getProductId());
+        poolProductIds.addAll(existingPool.getProvidedProductIds());
+        
+        subProductIds.add(sub.getProduct().getId());
+        for (Product product : sub.getProvidedProducts()) {
+            subProductIds.add(product.getId());
+        }
+        
+        return !poolProductIds.equals(subProductIds);
     }
 
 
