@@ -50,6 +50,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
             .put(Event.Target.CONSUMER, new ConsumerFunction())
             .put(Event.Target.SUBSCRIPTION, new SubscriptionFunction())
             .put(Event.Target.ENTITLEMENT, new EntitlementFunction())
+            .put(Event.Target.OWNER, new OwnerFunction())
             .build();
 
     private Config config;
@@ -195,6 +196,20 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         
     }
 
+    
+
+    /**
+     * OwnerFunction
+     */
+    class OwnerFunction extends EventFunction implements
+        Function<Event, String> {
+        @Override
+        protected void populate(Event event, Map<String, Object> result) {
+            //does nothing for now. owner id already in there...
+        }
+
+    }
+    
     /**
      * @param result
      */
