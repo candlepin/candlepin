@@ -711,7 +711,7 @@ public class ConsumerResource {
         if ((principal instanceof ConsumerPrincipal) && 
             hasOutstandingSubPoolEntitlements(toDelete)) {
             throw new ForbiddenException(i18n.tr(
-            "Cannot unbind due to outstanding sub-pool entitlements"));
+                "Cannot unbind due to outstanding sub-pool entitlements"));
         }
         
         if (toDelete != null) {
