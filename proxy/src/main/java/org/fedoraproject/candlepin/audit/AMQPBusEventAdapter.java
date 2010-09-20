@@ -80,10 +80,13 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
 
         @Override
         public String apply(Event event) {
-            Map<String, Object> result = Util.newMap();
-            result.put("id", event.getEntityId());
-            populate(event, result);
-            return serialize(result);
+            Map<String, Object> envelope = Util.newMap();
+            Map<String, Object> body = Util.newMap();
+            envelope.put("version", "0.1"); // FIXME: how do we avoid hardcoded
+            body.put("id", event.getEntityId());
+            populate(event, body);
+            envelope.put("event", body);
+            return serialize(envelope);
         }
 
         protected abstract void populate(Event event, Map<String, Object> result);
