@@ -10,11 +10,6 @@ Feature: Entitlement Certificates
         And test owner has 2 entitlements for "virtualization_host"
         And test owner has 4 entitlements for "monitoring"
 
-    Scenario: List certificates
-        Given I am a consumer "test_consumer"
-        When I consume an entitlement for the "monitoring" product
-        Then I have 1 certificate
-
     Scenario: Filter certificates by serial number
         Given I am a consumer "test_consumer"
         When I consume an entitlement for the "monitoring" product
