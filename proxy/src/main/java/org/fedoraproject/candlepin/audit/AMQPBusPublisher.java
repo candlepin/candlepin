@@ -14,22 +14,23 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import org.fedoraproject.candlepin.audit.Event.Target;
+import org.fedoraproject.candlepin.audit.Event.Type;
+import org.fedoraproject.candlepin.util.Util;
+
+import com.google.common.base.Function;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.jms.JMSException;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
-
-import org.fedoraproject.candlepin.audit.Event.Target;
-import org.fedoraproject.candlepin.audit.Event.Type;
-import org.fedoraproject.candlepin.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 /**
  *
