@@ -35,6 +35,12 @@ describe 'Sub-Pool' do
     # And subscribe to the created sub-pool
     @system.consume_product derived_product.id
   end
+  
+  it 'unregistering system consumer should not result in deletion of the parent pool' do
+    @system.unregister(@system.uuid)
+    @system = consumer_client(@user_client, 'system2')
+    @system.list_pools({:consumer => @system.uuid}).size.should == 1
+  end
 
   it 'inherits order number extension from parent pool' do
     # ===== Then =====
