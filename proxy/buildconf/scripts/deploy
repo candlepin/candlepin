@@ -54,11 +54,11 @@ function isrpm ()
 
 function update_keystore
 {
-	if [ "$FORCECERT" = "" ]; then
-	    echo "Using existing keystore"
-	else
+	if [ "$FORCECERT" = "1" ]; then
 	    echo "Move the keystore to tomcats location"
 	    sudo cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+	else
+	    echo "Using existing keystore"
 	fi
 }
 
@@ -149,7 +149,7 @@ eval $STOP
 
 buildr clean package test=no
 
-if [ "$GENDB" != "" ]; then
+if [ "$GENDB" == "1" ]; then
 	gendb	
 fi
 

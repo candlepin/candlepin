@@ -26,7 +26,7 @@ fi
 
 HOSTNAME=${HOSTNAME:-$(hostname)}
 
-if [ -f $CA_KEY ] && [ -f $CA_CERT ] && [ "$FORCECERT" = "" ]; then
+if [ -f $CA_KEY ] && [ -f $CA_CERT ] && [ "$FORCECERT" != "1" ]; then
     echo "Certificates are already present."
 else
     echo "Creating CA private key password"
