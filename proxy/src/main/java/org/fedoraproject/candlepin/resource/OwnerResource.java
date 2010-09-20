@@ -408,8 +408,9 @@ public class OwnerResource {
         catch (SyncDataFormatException e) {
             throw new BadRequestException(i18n.tr("Bad data in export archive"), e);
         }
+        // These come back with internationalized messages, so we can transfer:
         catch (ImporterException e) {
-            throw new IseException(i18n.tr("Error extracting export archive"), e);
+            throw new IseException(e.getMessage(), e);
         }
     }
 }

@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -94,12 +95,13 @@ public class Importer {
     private PKIUtility pki;
     private Config config;
     private ExporterMetadataCurator expMetaCurator;
+    private I18n i18n;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         RulesCurator rulesCurator, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm, 
-        PKIUtility pki, Config config, ExporterMetadataCurator emc) {
+        PKIUtility pki, Config config, ExporterMetadataCurator emc, I18n i18n) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.rulesCurator = rulesCurator;
@@ -111,6 +113,7 @@ public class Importer {
         this.pki = pki;
         this.config = config;
         this.expMetaCurator = emc;
+        this.i18n = i18n;
     }
 
     /**
@@ -125,7 +128,7 @@ public class Importer {
         throws IOException, ImporterException {
         Meta m = mapper.readValue(meta, Meta.class);
         if (type == null) {
-            throw new ImporterException("Wrong metadata type");
+            throw new ImporterException(i18n.tr("Wrong metadata type"));
         }
 
         ExporterMetadata lastrun = null;
@@ -134,7 +137,7 @@ public class Importer {
         }
         else if (ExporterMetadata.TYPE_PER_USER.equals(type)) {
             if (owner == null) {
-                throw new ImporterException("invalid owner");
+                throw new ImporterException(i18n.tr("Invalid owner"));
             }
             lastrun = expMetaCurator.lookupByTypeAndOwner(type, owner);
         }
@@ -146,7 +149,7 @@ public class Importer {
         }
         else {
             if (lastrun.getExported().compareTo(m.getCreated()) > 0) {
-                throw new ImporterException("import is older than existing data");
+                throw new ImporterException(i18n.tr("Import is older than existing data"));
             }
             else {
                 lastrun.setExported(new Date());
@@ -168,7 +171,7 @@ public class Importer {
                 loadSignature(new File(tmpDir, "signature")));
             
             if (!verifiedSignature) {
-                throw new ImporterException("failed import file hash check.");
+                throw new ImporterException(i18n.tr("Failed import file hash check."));
             }
             
             File exportDir 
