@@ -14,22 +14,20 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import static org.mockito.Mockito.anyMap;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.argThat;
-
-import static org.junit.Assert.assertThat;
-
+import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.collection.IsMapContaining.hasEntry;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +35,10 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Testing common functionality for all event types and supported event targets.
@@ -54,6 +56,8 @@ public class AMQPBusEventAdapterTest {
 
     private Event.Type type;
     private Event.Target target;
+    private PKIReader reader;
+    private PKIUtility pkiutil;
 
     /**
      * This defines the event targets that we care about creating AMQP events for.
@@ -91,7 +95,7 @@ public class AMQPBusEventAdapterTest {
         MockitoAnnotations.initMocks(this);
 
         // given
-        this.eventAdapter = new AMQPBusEventAdapter(null, mapper);
+        this.eventAdapter = new AMQPBusEventAdapter(null, mapper, reader, pkiutil);
         this.event = new Event(this.type, this.target, principal, 1L, 1L, 42L,
             "Old Entity", "New Entity");
     }

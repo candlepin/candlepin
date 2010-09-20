@@ -14,29 +14,33 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import com.google.common.collect.Sets;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+
+import com.google.common.collect.Sets;
+
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -47,12 +51,14 @@ public class AMQPSubscriptionEventTest {
     @Mock private Config config;
     @Mock private ObjectMapper mapper;
     @Mock private Principal principal;
+    @Mock private PKIReader reader;
+    private PKIUtility pkiutil;
 
     private AMQPBusEventAdapter eventAdapter;
 
     @Before
     public void init() {
-        this.eventAdapter = new AMQPBusEventAdapter(this.config, this.mapper);
+        this.eventAdapter = new AMQPBusEventAdapter(config, mapper, reader, pkiutil);
     }
 
     @Test

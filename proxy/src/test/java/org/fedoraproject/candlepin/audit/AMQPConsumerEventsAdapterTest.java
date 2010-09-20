@@ -23,14 +23,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Random;
-
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.config.Config;
@@ -38,8 +30,15 @@ import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -50,6 +49,10 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Random;
+
 @RunWith(MockitoJUnitRunner.class)
 public class AMQPConsumerEventsAdapterTest {
     private AMQPBusEventAdapter adapter;
@@ -59,6 +62,8 @@ public class AMQPConsumerEventsAdapterTest {
     private ObjectMapper mapper = new ObjectMapper();
     private Principal principal;
     private EventFactory factory;
+    private PKIReader reader;
+    private PKIUtility pkiutil;
 
     @Before
     public void init() {
@@ -66,7 +71,7 @@ public class AMQPConsumerEventsAdapterTest {
         this.principal = TestUtil.createOwnerPrincipal();
         this.principal.getOwner().setId(new Random().nextLong());
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
-        this.adapter = new AMQPBusEventAdapter(mockConfig, spiedMapper);
+        this.adapter = new AMQPBusEventAdapter(mockConfig, spiedMapper, reader, pkiutil);
     }
 
     @Test

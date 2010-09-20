@@ -14,29 +14,31 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import java.util.Map;
-
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.audit.Event.Type;
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductContent;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.model.Content;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductContent;
-import org.fedoraproject.candlepin.model.Subscription;
+import java.util.Map;
 
 /**
  */
@@ -55,11 +57,17 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
 
     private Config config;
     private ObjectMapper mapper;
+    private PKIReader reader;
+    private PKIUtility pkiutil;
 
     @Inject
-    public AMQPBusEventAdapter(Config config, ObjectMapper mapper) {
+    public AMQPBusEventAdapter(Config config, ObjectMapper mapper,
+        PKIReader rdr, PKIUtility util) {
+        
         this.config = config;
         this.mapper = mapper;
+        this.reader = rdr;
+        this.pkiutil = util;
     }
     
     @Override
@@ -172,8 +180,15 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
                     result.put("name", subscription.getProduct().getId());
                     result.put("entitlement_cert", subscription.getCertificate().getCert());
                     result.put("cert_public_key", subscription.getCertificate().getKey());
-                    result.put("ca_cert", config.getString(
-                            ConfigProperties.CA_CERT_UPSTREAM));
+                    try {
+                        // FIXME: wow this is crappy new String ...
+                        result.put("ca_cert", new String(pkiutil.getPemEncoded(
+                            reader.getUpstreamCACert())));
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    } 
                     result.put("content_sets", createContentMap(subscription));
                 }
             }
