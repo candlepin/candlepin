@@ -74,14 +74,6 @@ Then /^the filtered certificates are not revoked$/ do
   @serials.each { |serial| @candlepin.get_serial(serial)['revoked'].should == false }
 end
 
-Then /^the filtered certificates are in the CRL$/ do
-  @serials.each { |serial| revoked_serials.should include(serial) }
-end
-
-Then /^the filtered certificates are not in the CRL$/ do
-  @serials.each { |serial| revoked_serials.should_not include(serial) }
-end
-
 When /^I regenerate all my entitlement certificates$/ do
   @old_certs = @consumer_cp.list_certificates()
   @consumer_cp.regenerate_entitlement_certificates()
