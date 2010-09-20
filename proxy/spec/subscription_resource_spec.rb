@@ -22,7 +22,6 @@ describe 'Subscription Resource' do
 
   it 'should allow owners to delete their subscriptions' do
       subs = @cp.create_subscription(@owner.key, @monitoring_product.id, 5)
-      puts "deleting subscription #{subs.id}"
       @cp.delete_subscription(subs.id)
       @cp.list_subscriptions(@owner.key).size.should == 0
   end
