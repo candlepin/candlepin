@@ -48,7 +48,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         consumer = TestUtil.createConsumer(owner);
-        consumer.setMetadataField("cpu_cores", "4");
+        consumer.setFact("cpu_cores", "4");
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
     }

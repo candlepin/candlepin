@@ -81,18 +81,18 @@ public class PoolResourceTest extends DatabaseTestFixture {
         // Consumer system with too many cpu cores:
         
         failConsumer = TestUtil.createConsumer(createOwner());
-        failConsumer.setMetadataField("cpu_cores", "4");
+        failConsumer.setFact("cpu_cores", "4");
         consumerTypeCurator.create(failConsumer.getType());
         consumerCurator.create(failConsumer);
 
         // Consumer system with appropriate number of cpu cores:
         passConsumer = TestUtil.createConsumer(owner1);
-        passConsumer.setMetadataField("cpu_cores", "2");
+        passConsumer.setFact("cpu_cores", "2");
         consumerTypeCurator.create(passConsumer.getType());
         consumerCurator.create(passConsumer);
         
         foreignConsumer = TestUtil.createConsumer(owner2);
-        foreignConsumer.setMetadataField("cpu_cores", "2");
+        foreignConsumer.setFact("cpu_cores", "2");
         consumerTypeCurator.create(foreignConsumer.getType());
         consumerCurator.create(foreignConsumer);
 

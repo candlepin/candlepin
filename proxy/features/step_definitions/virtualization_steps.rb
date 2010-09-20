@@ -2,7 +2,6 @@ Then /^attempting to Consume an entitlement for the "([^\"]*)" product is forbid
     begin
         @consumer_cp.consume_product(name.hash.abs)
     rescue RestClient::Exception => e
-        e.message.should == "Forbidden"
         e.http_code.should == 403
     else
         assert(fail, "Excepted exception was not raised")

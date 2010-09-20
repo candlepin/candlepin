@@ -19,8 +19,6 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -156,19 +154,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
         
-        // Adjust certificates actual end date for flex expiry:
-        Date endDate = ent.getEndDate();
-        if (ent.getFlexExpiryDays() > 0) {
-            log.debug("Adjusting cert expiry date, old = " + endDate);
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(endDate);
-            cal.add(Calendar.DATE, ent.getFlexExpiryDays());
-            endDate = cal.getTime();
-            log.debug("new = " + endDate);
-        }
-
         X509Certificate x509Cert = this.pki.createX509Certificate(createDN(ent),
-            extensions, ent.getStartDate(), endDate, keyPair, serialNumber,
+            extensions, ent.getStartDate(), ent.getEndDate(), keyPair, serialNumber,
             null);
         return x509Cert;
     }

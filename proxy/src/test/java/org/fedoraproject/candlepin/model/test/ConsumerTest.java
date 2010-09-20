@@ -20,11 +20,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.PersistenceException;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -65,8 +69,8 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);
         consumer = new Consumer(CONSUMER_NAME, USER_NAME, owner, consumerType);
-        consumer.setMetadataField("foo", "bar");
-        consumer.setMetadataField("foo1", "bar1");
+        consumer.setFact("foo", "bar");
+        consumer.setFact("foo1", "bar1");
 
         consumerCurator.create(consumer);
 
@@ -106,7 +110,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testMetadataInfo() {
         Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
-        consumer2.setMetadataField("foo", "bar2");
+        consumer2.setFact("foo", "bar2");
         consumerCurator.create(consumer2);
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
@@ -125,11 +129,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testModifyMetadata() {
-        consumer.setMetadataField("foo", "notbar");
+        consumer.setFact("foo", "notbar");
         consumerCurator.merge(consumer);
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
-        assertEquals("notbar", lookedUp.getMetadataField("foo"));
+        assertEquals("notbar", lookedUp.getFact("foo"));
     }
 
     @Test
@@ -156,11 +160,11 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testConsumerHierarchy() {
         Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
-        child1.setMetadataField("foo", "bar");
+        child1.setFact("foo", "bar");
         consumerCurator.create(child1);
 
         Consumer child2 = new Consumer("child2", USER_NAME, owner, consumerType);
-        child2.setMetadataField("foo", "bar");
+        child2.setFact("foo", "bar");
         consumerCurator.create(child2);
 
         consumer.addChildConsumer(child1);
@@ -176,7 +180,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         unitOfWork.beginWork();
 
         Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
-        child1.setMetadataField("foo", "bar");
+        child1.setFact("foo", "bar");
         consumer.addChildConsumer(child1);
         consumerCurator.create(child1);
         consumerCurator.merge(consumer);
@@ -198,7 +202,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testParentDeleteCascadesToChildren() {
         Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
-        child1.setMetadataField("foo", "bar");
+        child1.setFact("foo", "bar");
         consumer.addChildConsumer(child1);
         consumerCurator.create(child1);
         consumerCurator.merge(consumer);
@@ -421,5 +425,34 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer = new Consumer(CONSUMER_NAME, newUsername, owner, personType);
         consumerCurator.create(consumer);
         assertEquals(consumer, consumerCurator.lookupUsersConsumer(user));
+    }
+    
+    @Test
+    public void testConsumerFactsFilter() {
+        CandlepinCommonTestConfig config =
+            (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        String oldValue = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
+        config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^goodkey.*");
+        
+        Consumer consumer = new Consumer("a consumer", "username", owner, consumerType);
+        
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("badkey.something", "zaz");
+        facts.put("goodkey.something", "foobar");
+        
+        consumer.setFacts(facts);
+        
+        consumer = consumerCurator.create(consumer);
+        
+        assertNull(consumer.getFact("badkey.something"));
+        assertEquals("foobar", consumer.getFact("goodkey.something"));
+        
+        consumer.setFact("anotherbadkey", "zippy");
+        
+        consumer = consumerCurator.update(consumer);
+        
+        assertNull(consumer.getFact("anotherbadkey"));
+        
+        config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, oldValue);
     }
 }

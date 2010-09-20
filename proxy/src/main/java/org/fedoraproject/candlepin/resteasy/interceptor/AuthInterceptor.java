@@ -14,10 +14,13 @@
  */
 package org.fedoraproject.candlepin.resteasy.interceptor;
 
+import java.util.Date;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -26,6 +29,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -53,6 +57,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
     private SSLAuth sslAuth;
     private boolean sslAuthEnabled; 
     private Injector injector;
+    private ConsumerCurator consumerCurator;
     
     @Inject
     public AuthInterceptor(Config config, UserServiceAdapter userService,
@@ -62,6 +67,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
         sslAuth = new SSLAuth(consumerCurator);
         
         sslAuthEnabled = config.sslAuthEnabled();
+        this.consumerCurator = consumerCurator;
         this.injector = injector;
     }
 
@@ -109,9 +115,12 @@ public class AuthInterceptor implements PreProcessInterceptor {
                     i18n.tr("Error contacting user service"));
             }
         }
+
+        boolean isConsumerPrincipal = false;
         if (principal == null) {
             if (sslAuthEnabled) {
                 principal = sslAuth.getPrincipal(request);
+                isConsumerPrincipal = true;
             }
             else {
                 log.debug("SSLAuth disabled, setting NoAuth Principal");
@@ -123,9 +132,24 @@ public class AuthInterceptor implements PreProcessInterceptor {
         if (principal != null) {
             // Expose the principal for Resteasy to inject via @Context
             ResteasyProviderFactory.pushContext(Principal.class, principal);
+
+            if (isConsumerPrincipal) {
+                // HACK: We need to do this after the principal has been pushed, lest
+                // our security settings start getting upset when we try to update a
+                // consumer without any roles:
+                ConsumerPrincipal p = (ConsumerPrincipal) principal;
+                Consumer c = p.consumer();
+                updateLastCheckin(c);
+            }
+
             return null;
         }
         
         throw new UnauthorizedException(i18n.tr("Invalid username or password"));
+    }
+
+    private void updateLastCheckin(Consumer consumer) {
+        consumer.setLastCheckin(new Date());
+        consumerCurator.update(consumer);
     }
 }

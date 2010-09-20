@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -181,6 +182,73 @@ public class PoolManagerTest {
 
     }
 
+    @Test
+    public void testRefreshPoolsWithModifiedProductCausesEntitlementRegen() {
+        Subscription s = TestUtil.createSubscription(getOwner(),
+            TestUtil.createProduct());
+        Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
+            new HashSet<String>(), s.getQuantity(), s.getStartDate(),
+            s.getEndDate());
+        p.setSubscriptionId(s.getId());
+        
+        s.setProduct(TestUtil.createProduct());
+        
+        this.manager.updatePoolForSubscription(p, s);
+        verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
+            eq(true));
+        verify(manager).regenerateCertificatesOf(anySet());
+        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
+    }
+
+    @Test
+    public void testRefreshPoolsWithNewProvidedProductsCausesEntitlementRegen() {
+        Subscription s = TestUtil.createSubscription(getOwner(),
+            TestUtil.createProduct());
+        Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
+            new HashSet<String>(), s.getQuantity(), s.getStartDate(),
+            s.getEndDate());
+        p.setSubscriptionId(s.getId());
+        
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(TestUtil.createProduct());
+        s.setProvidedProducts(providedProducts);
+        
+        this.manager.updatePoolForSubscription(p, s);
+        verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
+            eq(true));
+        verify(manager).regenerateCertificatesOf(anySet());
+        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
+    }
+
+    @Test
+    public void testRefreshPoolsWithRemovedProvidedProductsCausesEntitlementRegen() {
+        Subscription s = TestUtil.createSubscription(getOwner(),
+            TestUtil.createProduct());
+
+        Product providedProduct = TestUtil.createProduct();
+        
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(providedProduct);
+        s.setProvidedProducts(providedProducts);
+        
+        Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
+            new HashSet<String>(), s.getQuantity(), s.getStartDate(),
+            s.getEndDate());
+        p.setSubscriptionId(s.getId());
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(providedProduct.getId());
+        
+        p.setProvidedProductIds(providedProductIds);
+
+        providedProducts.clear();
+        
+        this.manager.updatePoolForSubscription(p, s);
+        verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
+            eq(true));
+        verify(manager).regenerateCertificatesOf(anySet());
+        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
+    }
+    
     @Test
     public void testUpdatePoolForSubscriptionWithNoChanges() {
         Subscription s = TestUtil.createSubscription(getOwner(),

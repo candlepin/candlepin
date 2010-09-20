@@ -238,7 +238,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNotNull(consumerCurator.find(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
-        assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
+        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
     }
 
     @Test(expected = BadRequestException.class)
@@ -257,7 +257,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNotNull(consumerCurator.lookupByUuid(uuid));
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
-        assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
+        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
         assertEquals("The Uuids do not match", uuid, submitted.getUuid());
 
         // The second post should fail because of constraint failures
@@ -347,7 +347,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNotNull(consumerCurator.find(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
-        assertEquals(METADATA_VALUE, submitted.getMetadataField(METADATA_NAME));
+        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
 
         // now pass in consumer type with null id just like the client would
         ConsumerType type = new ConsumerType(standardSystemType.getLabel());
