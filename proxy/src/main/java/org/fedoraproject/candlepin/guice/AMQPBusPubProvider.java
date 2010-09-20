@@ -14,6 +14,22 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.Event.Target;
+import org.fedoraproject.candlepin.audit.Event.Type;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.util.Util;
+
+import com.google.common.base.Function;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
+
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -28,20 +44,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
-import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.Event.Target;
-import org.fedoraproject.candlepin.audit.Event.Type;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.util.Util;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
-
 /**
  *
  * @author ajay
@@ -54,6 +56,15 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     private TopicSession session;
     private static org.slf4j.Logger log = LoggerFactory.getLogger(AMQPBusPubProvider.class);
     
+    // external events may not have the same name as the internal events
+    private Map<String, String> targetToEvent = new HashMap<String, String>() {
+        private static final long serialVersionUID = 2L;
+        {
+            this.put(Event.Target.SUBSCRIPTION.toString().toLowerCase(), "product");
+            // add more mappings when necessary
+        }
+    };
+
     @SuppressWarnings("unchecked")
     @Inject
     public AMQPBusPubProvider(Config config,
@@ -78,7 +89,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
 
 
     private void configureSslProperties(Config config) {
-        // XXX: Setting the property here is dangerous,
+        // FIXME: Setting the property here is dangerous,
         // but in theory nothing else is setting/using it
         System.setProperty("javax.net.ssl.keyStore",
             config.getString(ConfigProperties.AMQP_KEYSTORE));
@@ -105,8 +116,13 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         
         for (Target target : Target.values()) {
             for (Type type : Type.values()) {
+                // topic name is the internal key used to find the
+                // AMQP topic.
                 String name = getTopicName(type, target);
-                properties.put("destination." + name, "event");
+
+                // this represents the destination
+                String destination = getDestination(type, target);
+                properties.put("destination." + name, "event/" + destination);
             }
         }
         return properties;
@@ -149,6 +165,12 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         String name = target.toString().toLowerCase() +
             Util.capitalize(type.toString().toLowerCase());
         return name;
+    }
+
+    private String getDestination(Type type, Target target) {
+        String key = target.toString().toLowerCase();
+        String object = targetToEvent.get(key);
+        return (object == null ? key : object) + "." + type.toString().toLowerCase();
     }
 
     protected final void storeTopicProducer(Map<Type, TopicPublisher> map, Target target)
