@@ -218,14 +218,22 @@ public class Importer {
         validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata);
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
-        Set<Product> importedProducts =
-            importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
-
+        
         // per user elements
         validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata);
         importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
-        importEntitlements(owner, importedProducts,
-            importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
+
+        // If the consumer has no entitlements, this products directory will end up empty.
+        // This also implies there will be no entitlements to import.
+        if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
+            Set<Product> importedProducts = importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
+            importEntitlements(owner, importedProducts,
+                importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
+        }
+        else {
+            log.warn("No products found to import, skipping product and entitlement import.");
+        }
+
         
         poolManager.refreshPools(owner);
     }
