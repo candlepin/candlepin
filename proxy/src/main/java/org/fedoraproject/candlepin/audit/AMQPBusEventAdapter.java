@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.audit;
 
 import org.fedoraproject.candlepin.audit.Event.Type;
-import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -55,16 +54,14 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
             .put(Event.Target.OWNER, new OwnerFunction())
             .build();
 
-    private Config config;
     private ObjectMapper mapper;
     private PKIReader reader;
     private PKIUtility pkiutil;
 
     @Inject
-    public AMQPBusEventAdapter(Config config, ObjectMapper mapper,
+    public AMQPBusEventAdapter(ObjectMapper mapper,
         PKIReader rdr, PKIUtility util) {
         
-        this.config = config;
         this.mapper = mapper;
         this.reader = rdr;
         this.pkiutil = util;
