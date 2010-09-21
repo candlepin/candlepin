@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-09-10 13:22-0400\n"
+"POT-Creation-Date: 2010-09-17 12:44-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,12 +16,16 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/AuthInterceptor.java:109
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/AuthInterceptor.java:115
 msgid "Error contacting user service"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/AuthInterceptor.java:129
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/AuthInterceptor.java:148
 msgid "Invalid username or password"
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/guice/I18nProvider.java:72
+msgid "Test"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/exceptions/CandlepinExceptionMapper.java:122
@@ -75,19 +79,19 @@ msgstr ""
 msgid "couldn't read rules file"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:104
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:106
 #, java-format
 msgid "Consumer: {0} has no entitlement for product {1}"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:165
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:167
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:639
 #, java-format
 msgid "No such consumer: {0}"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:188
-#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:205
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:191
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:208
 msgid "Entitlement with ID '{0}' could not be found"
 msgstr ""
 
@@ -155,11 +159,11 @@ msgstr ""
 msgid "SubscriptionToken with id {0} could not be found"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:68
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:84
 msgid "subscription_id path parameter must be a number"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:74
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:90
 #, java-format
 msgid "Subscription with id {0} could not be found"
 msgstr ""

@@ -14,13 +14,17 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -34,6 +38,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private Config config;
     //private static Logger log = Logger.getLogger(ConsumerCurator.class);
     
     protected ConsumerCurator() {
@@ -45,6 +50,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @EnforceAccessControl
     public Consumer create(Consumer entity) {
         entity.ensureUUID();
+        entity.setFacts(filterFacts(entity.getFacts()));
         return super.create(entity);
     }
     
@@ -136,17 +142,32 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
         existingConsumer.setEntitlements(
                 entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
-        existingConsumer.setFacts(updatedConsumer.getFacts());
+        existingConsumer.setFacts(filterFacts(updatedConsumer.getFacts()));
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
         existingConsumer.setParent(updatedConsumer.getParent());
         existingConsumer.setType(updatedConsumer.getType());
-        existingConsumer.setUuid(updatedConsumer.getUuid());        
+        existingConsumer.setUuid(updatedConsumer.getUuid());
+
         save(existingConsumer);
         
         return existingConsumer;
     }
     
+    /**
+     * @param facts
+     * @return the list of facts filtered by the fact filter regex config
+     */
+    private Map<String, String> filterFacts(Map<String, String> factsIn) {
+        Map<String, String> facts = new HashMap<String, String>();
+        for (String key : factsIn.keySet()) {
+            if (key.matches(config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER))) {
+                facts.put(key, factsIn.get(key));
+            }
+        }
+        return facts;
+    }
+
     /**
      * @param consumers consumers to update
      * @return updated consumers

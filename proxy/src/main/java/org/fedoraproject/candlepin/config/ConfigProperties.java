@@ -66,6 +66,8 @@ public class ConfigProperties {
     };
     
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
+    public static final String CONSUMER_FACTS_MATCHER =
+        "candlepin.consumer.facts.match_regex";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -80,7 +82,8 @@ public class ConfigProperties {
                 this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());
                 this.put(AUDIT_LISTENERS,
                     "org.fedoraproject.candlepin.audit.DatabaseListener," +
-                    "org.fedoraproject.candlepin.audit.LoggingListener,");
+                    "org.fedoraproject.candlepin.audit.LoggingListener," + 
+                    "org.fedoraproject.candlepin.audit.ActivationListener");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
                 this.put(AUDIT_LOG_VERBOSE, "false");
 
@@ -89,6 +92,7 @@ public class ConfigProperties {
                 this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
 
                 this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
+                this.put(CONSUMER_FACTS_MATCHER, ".*");
 
                 
                 // Pinsetter

@@ -708,18 +708,17 @@ public class ConsumerResource {
         verifyAndLookupConsumer(consumerUuid);
 
         Entitlement toDelete = entitlementCurator.find(dbid);
-        if (toDelete != null) {
-            poolManager.revokeEntitlement(toDelete);
-            return;
-        }
-        
         if ((principal instanceof ConsumerPrincipal) && 
             hasOutstandingSubPoolEntitlements(toDelete)) {
             throw new ForbiddenException(i18n.tr(
                 "Cannot unbind due to outstanding sub-pool entitlements"));
         }
-            
-
+        
+        if (toDelete != null) {
+            poolManager.revokeEntitlement(toDelete);
+            return;
+        }
+        
         throw new NotFoundException(i18n.tr(
             "Entitlement with ID '{0}' could not be found.", dbid));
     }

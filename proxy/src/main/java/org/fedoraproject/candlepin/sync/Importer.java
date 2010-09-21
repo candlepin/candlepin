@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -98,13 +99,14 @@ public class Importer {
     private ExporterMetadataCurator expMetaCurator;
     private CertificateSerialCurator csCurator;
     private EventSink sink;
+    private I18n i18n;
     
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         RulesCurator rulesCurator, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm, 
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc, EventSink sink) {
+        CertificateSerialCurator csc, EventSink sink, I18n i18n) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.rulesCurator = rulesCurator;
@@ -118,6 +120,7 @@ public class Importer {
         this.expMetaCurator = emc;
         this.csCurator = csc;
         this.sink = sink;
+        this.i18n = i18n;
     }
 
     /**
@@ -132,7 +135,7 @@ public class Importer {
         throws IOException, ImporterException {
         Meta m = mapper.readValue(meta, Meta.class);
         if (type == null) {
-            throw new ImporterException("Wrong metadata type");
+            throw new ImporterException(i18n.tr("Wrong metadata type"));
         }
 
         ExporterMetadata lastrun = null;
@@ -141,7 +144,7 @@ public class Importer {
         }
         else if (ExporterMetadata.TYPE_PER_USER.equals(type)) {
             if (owner == null) {
-                throw new ImporterException("invalid owner");
+                throw new ImporterException(i18n.tr("Invalid owner"));
             }
             lastrun = expMetaCurator.lookupByTypeAndOwner(type, owner);
         }
@@ -153,7 +156,7 @@ public class Importer {
         }
         else {
             if (lastrun.getExported().compareTo(m.getCreated()) > 0) {
-                throw new ImporterException("import is older than existing data");
+                throw new ImporterException(i18n.tr("Import is older than existing data"));
             }
             else {
                 lastrun.setExported(new Date());
@@ -175,7 +178,7 @@ public class Importer {
                 loadSignature(new File(tmpDir, "signature")));
             
             if (!verifiedSignature) {
-                throw new ImporterException("failed import file hash check.");
+                throw new ImporterException(i18n.tr("Failed import file hash check."));
             }
             
             File exportDir 
@@ -225,14 +228,22 @@ public class Importer {
         validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata);
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
-        Set<Product> importedProducts =
-            importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
-
+        
         // per user elements
         validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata);
         importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
-        importEntitlements(owner, importedProducts,
-            importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
+
+        // If the consumer has no entitlements, this products directory will end up empty.
+        // This also implies there will be no entitlements to import.
+        if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
+            Set<Product> importedProducts = importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
+            importEntitlements(owner, importedProducts,
+                importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
+        }
+        else {
+            log.warn("No products found to import, skipping product and entitlement import.");
+        }
+
         
         poolManager.refreshPools(owner);
     }

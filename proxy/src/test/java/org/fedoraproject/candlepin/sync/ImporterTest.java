@@ -29,10 +29,13 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Locale;
 
 
 /**
@@ -41,10 +44,12 @@ import java.util.Date;
 public class ImporterTest {
 
     private ObjectMapper mapper;
+    private I18n i18n;
 
     @Before
     public void init() {
         mapper = SyncUtils.getObjectMapper();
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
     @Test
@@ -66,7 +71,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null);
+            null, null, emc, null, null, i18n);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
 
         assertTrue(f.delete());
@@ -81,7 +86,7 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null);
+            null, null, emc, null, null, i18n);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
@@ -100,7 +105,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null);
+            null, null, emc, null, null, i18n);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
 
         assertTrue(f.delete());
@@ -112,7 +117,8 @@ public class ImporterTest {
         File actualmeta = createFile("/tmp/meta.json");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
-                null, null, null, null, null);
+                null, null, null, null, null, i18n);
+
             // null Type should cause exception
             i.validateMetadata(null, null, actualmeta);
         }
@@ -129,7 +135,8 @@ public class ImporterTest {
             .thenReturn(null);
 
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null);
+            null, null, emc, null, null, i18n);
+
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta);
         verify(emc, never()).create(any(ExporterMetadata.class));

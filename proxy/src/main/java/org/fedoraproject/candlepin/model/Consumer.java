@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -139,12 +140,8 @@ public class Consumer extends AbstractHibernateObject
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
     
-    /**
-     * ctor
-     * @param name name of consumer
-     * @param owner owner of the consumer
-     * @param type the type
-     */
+    private Date lastCheckin;
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
         
@@ -154,9 +151,6 @@ public class Consumer extends AbstractHibernateObject
         this.type = type;
     }
 
-    /**
-     * default ctor
-     */
     public Consumer() {
         // This constructor is for creating a new Consumer in the DB, so we'll
         // generate a UUID at this point.
@@ -365,21 +359,12 @@ public class Consumer extends AbstractHibernateObject
     }
     
     /**
-     * Set a metadata field
+     * Set a fact
      * @param name to set
      * @param value to set
      */
-    public void setMetadataField(String name, String value) {
+    public void setFact(String name, String value) {
         this.facts.put(name, value);
-    }
-    
-    /**
-     * Get a metadata field value
-     * @param nameIn of field to fetch
-     * @return String field value.
-     */
-    public String getMetadataField(String nameIn) {
-        return facts.get(nameIn);
     }
 
     /**
@@ -459,6 +444,14 @@ public class Consumer extends AbstractHibernateObject
          * No-op, here to aid with updating objects which have nested objects that were
          * originally sent down to the client in HATEOAS form.
          */
+    }
+
+    public Date getLastCheckin() {
+        return lastCheckin;
+    }
+
+    public void setLastCheckin(Date lastCheckin) {
+        this.lastCheckin = lastCheckin;
     }
 
 }

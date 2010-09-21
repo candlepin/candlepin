@@ -140,7 +140,9 @@ var Entitlement = {
 
 var ConsumerDelete = {
 	global: function() {
-		helper.deleteUserRestrictedPools(consumer.getUsername());
+	    if (consumer.getType() == "person") {
+	    	helper.deleteUserRestrictedPools(consumer.getUsername());
+	    }
 	}
 }
 

@@ -61,12 +61,14 @@ public class EntitlementResource {
     public EntitlementResource(ProductServiceAdapter prodAdapter,
             EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
+            PoolManager poolManager,
             I18n i18n) {
         
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
         this.prodAdapter = prodAdapter;
+        this.poolManager = poolManager;
     }
     
     

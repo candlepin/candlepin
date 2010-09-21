@@ -72,8 +72,8 @@ public class TestUtil {
 
         Consumer consumer = new Consumer("testconsumer" + randomInt(),
             "User", owner, consumerType);
-        consumer.setMetadataField("foo", "bar");
-        consumer.setMetadataField("foo1", "bar1");
+        consumer.setFact("foo", "bar");
+        consumer.setFact("foo1", "bar1");
 
         return consumer;
     }

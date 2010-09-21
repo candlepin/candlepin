@@ -107,4 +107,9 @@ public class DefaultSubscriptionServiceAdapter implements
     public boolean hasUnacceptedSubscriptionTerms(Owner owner) {
         return false;
     }
+
+    @Override
+    public void sendActivationEmail(Long subscriptionId) {
+        // hosted-only
+    }
 }
