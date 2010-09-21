@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -56,7 +55,6 @@ import java.util.Random;
 @RunWith(MockitoJUnitRunner.class)
 public class AMQPConsumerEventsAdapterTest {
     private AMQPBusEventAdapter adapter;
-    @Mock private Config mockConfig;
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Spy private ObjectMapper spiedMapper = new ObjectMapper();
     private ObjectMapper mapper = new ObjectMapper();
@@ -71,7 +69,7 @@ public class AMQPConsumerEventsAdapterTest {
         this.principal = TestUtil.createOwnerPrincipal();
         this.principal.getOwner().setId(new Random().nextLong());
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
-        this.adapter = new AMQPBusEventAdapter(mockConfig, spiedMapper, reader, pkiutil);
+        this.adapter = new AMQPBusEventAdapter(spiedMapper, reader, pkiutil);
     }
 
     @Test
@@ -96,7 +94,8 @@ public class AMQPConsumerEventsAdapterTest {
     private void verifyMap(Consumer consumer, IdentityCertificate idCert,
         Event event) throws IOException, JsonParseException,
         JsonMappingException {
-        Map<String, Object> map = unmarshall(this.adapter.apply(event));
+        Map<String, Object> map = unmarshallEvent(event);
+
         verify(spiedMapper, times(1)).readValue(eq(event.getNewEntity()),
             eq(Consumer.class));
 
@@ -121,6 +120,10 @@ public class AMQPConsumerEventsAdapterTest {
             new TypeReference<Map<String, Object>>() {});
     }
 
+    private Map<String, Object> unmarshallEvent(Event event) throws IOException {
+        Map<String, Object> map = unmarshall(this.adapter.apply(event));
+        return (Map<String, Object>) map.get("event");
+    }
 
     @Test
     public void consumerModifiedEventShouldSerializeSuccessfully() throws Exception {
@@ -137,7 +140,7 @@ public class AMQPConsumerEventsAdapterTest {
     public void consumerDeletedEventShouldSerializeSuccessfully() throws Exception {
         Consumer consumer = TestUtil.createConsumer(this.principal.getOwner());
         Event event = factory.consumerDeleted(consumer);
-        Map<String, Object> map = unmarshall(this.adapter.apply(event));
+        Map<String, Object> map = unmarshallEvent(event);
 
         assertThat(map, containsEntry("id", consumer.getUuid()));
         assertThat(map, containsEntry("owner", consumer.getOwner().getId()));
@@ -163,7 +166,7 @@ public class AMQPConsumerEventsAdapterTest {
      */
     private void verifyMap(Entitlement ent, Event event) throws IOException,
         JsonParseException, JsonMappingException {
-        Map<String, Object> map = unmarshall(this.adapter.apply(event));
+        Map<String, Object> map = unmarshallEvent(event);
 
         assertThat(map, containsEntry("id", ent.getConsumer().getUuid()));
         assertThat(map, containsEntry("owner", ent.getOwner().getId()));
@@ -180,6 +183,7 @@ public class AMQPConsumerEventsAdapterTest {
         Event event = factory.entitlementDeleted(ent);
         verifyMap(ent, event);
     }
+
     /**
      * @param key
      * @param id

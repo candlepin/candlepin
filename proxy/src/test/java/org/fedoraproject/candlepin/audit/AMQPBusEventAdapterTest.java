@@ -95,7 +95,7 @@ public class AMQPBusEventAdapterTest {
         MockitoAnnotations.initMocks(this);
 
         // given
-        this.eventAdapter = new AMQPBusEventAdapter(null, mapper, reader, pkiutil);
+        this.eventAdapter = new AMQPBusEventAdapter(mapper, reader, pkiutil);
         this.event = new Event(this.type, this.target, principal, 1L, 1L, 42L,
             "Old Entity", "New Entity");
     }
@@ -129,7 +129,8 @@ public class AMQPBusEventAdapterTest {
         this.eventAdapter.apply(this.event);
 
         // then
-        verify(mapper).writeValueAsString(argThat(hasEntry("id", 42L)));
+        verify(mapper).writeValueAsString(argThat(
+            hasEntry(equalTo("event"), hasEntry("id", 42L))));
     }
 
 }

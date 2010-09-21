@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import static org.hamcrest.Matchers.hasEntry;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -38,6 +38,7 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,31 +49,30 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.class)
 public class AMQPSubscriptionEventTest {
 
-    @Mock private Config config;
     @Mock private ObjectMapper mapper;
     @Mock private Principal principal;
     @Mock private PKIReader reader;
-    private PKIUtility pkiutil;
+    @Mock private PKIUtility pkiutil;
 
     private AMQPBusEventAdapter eventAdapter;
 
     @Before
     public void init() {
-        this.eventAdapter = new AMQPBusEventAdapter(config, mapper, reader, pkiutil);
+        this.eventAdapter = new AMQPBusEventAdapter(mapper, reader, pkiutil);
     }
 
     @Test
-    public void subscriptionCreated() throws IOException {
+    public void subscriptionCreated() throws Exception {
         verifySubscriptionEvent(Event.Type.CREATED);
     }
     
-    @Test public void subscriptionModified() throws IOException {
+    @Test public void subscriptionModified() throws Exception {
         verifySubscriptionEvent(Event.Type.MODIFIED);
     }
 
     // This is pretty crazy - should these be broken up into smaller tests
     // for each entry?
-    private void verifySubscriptionEvent(Event.Type type) throws IOException {
+    private void verifySubscriptionEvent(Event.Type type) throws Exception {
         // given
         Event event = new Event(type, Event.Target.SUBSCRIPTION,
             principal, 1L, 1L, 33L, "Old Subscription", "New Subscription");
@@ -84,7 +84,7 @@ public class AMQPSubscriptionEventTest {
         when(sub.getProduct().getId()).thenReturn("test-product-id");
         when(sub.getCertificate().getCert()).thenReturn("test-cert");
         when(sub.getCertificate().getKey()).thenReturn("test-key");
-        when(config.getString(ConfigProperties.CA_CERT_UPSTREAM)).thenReturn("ca-cert");
+        when(pkiutil.getPemEncoded((X509Certificate) null)).thenReturn("ca-cert".getBytes());
 
         when(sub.getProvidedProducts()).thenReturn(
                 Sets.newHashSet(createProductWithContent(
@@ -108,7 +108,7 @@ public class AMQPSubscriptionEventTest {
 
         expectedMap.put("content_sets", Arrays.asList(new Map[] { content }));
 
-        verify(mapper).writeValueAsString(expectedMap);
+        verify(mapper).writeValueAsString(argThat(hasEntry("event", expectedMap)));
     }
 
     private Product createProductWithContent(String label, String url) {
@@ -141,6 +141,6 @@ public class AMQPSubscriptionEventTest {
         expectedMap.put("id", 33L);
         expectedMap.put("owner", "test-owner");
 
-        verify(mapper).writeValueAsString(expectedMap);
+        verify(mapper).writeValueAsString(argThat(hasEntry("event", expectedMap)));
     }
 }
