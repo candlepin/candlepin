@@ -81,4 +81,34 @@ describe 'Consumer Resource' do
     }.should raise_exception(RestClient::BadRequest)
   end
 
+  it 'returns a 404 for a non-existant consumer' do
+    begin
+      @cp.get_consumer('fake-uuid')
+    rescue RestClient::Exception => e
+      e.http_code.should == 404
+    end
+  end
+
+  it 'lets a consumer view their own information' do
+    owner1 = create_owner random_string('test_owner1')
+    user1 = user_client(owner1, random_string("user1"))
+    consumer1 = consumer_client(user1, random_string("consumer1"))
+
+    consumer = consumer1.get_consumer(consumer1.uuid)
+    consumer['uuid'].should == consumer1.uuid
+  end
+
+  it "does not let a consumer view another consumer's information" do
+    owner1 = create_owner random_string('test_owner1')
+    user1 = user_client(owner1, random_string("user1"))
+    consumer1 = consumer_client(user1, random_string("consumer1"))
+    consumer2 = consumer_client(user1, random_string("consumer2"))
+    
+    begin
+      consumer1.get_consumer(consumer2.uuid)
+    rescue RestClient::Exception => e
+      e.http_code.should == 403
+    end
+
+  end
 end
