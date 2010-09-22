@@ -14,20 +14,26 @@
  */
 package org.fedoraproject.candlepin.sync;
 
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.model.CertificateSerial;
+import org.fedoraproject.candlepin.model.CertificateSerialCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.model.SubscriptionsCertificate;
+
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionCurator;
 
 /**
  * EntitlementImporter - turn an upstream Entitlement into a local subscription
@@ -36,9 +42,15 @@ public class EntitlementImporter {
     private static Logger log = Logger.getLogger(EntitlementImporter.class);
     
     private SubscriptionCurator subscriptionCurator;
+    private CertificateSerialCurator csCurator;
+    private EventSink sink;
     
-    public EntitlementImporter(SubscriptionCurator subscriptionCurator) {
+    public EntitlementImporter(SubscriptionCurator subscriptionCurator, 
+        CertificateSerialCurator csCurator, EventSink sink) {
+        
         this.subscriptionCurator = subscriptionCurator;
+        this.csCurator = csCurator;
+        this.sink = sink;
     }
     
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
@@ -64,6 +76,29 @@ public class EntitlementImporter {
             products.add(findProduct(productsById, productId));
         }
         subscription.setProvidedProducts(products);
+        Set<EntitlementCertificate> certs = entitlement.getCertificates();
+
+        // subscriptions have one cert
+        int entcnt = 0;
+        for (EntitlementCertificate cert : certs) {
+            entcnt++;
+            CertificateSerial cs = new CertificateSerial();
+            cs.setCollected(cert.getSerial().isCollected());
+            cs.setExpiration(cert.getSerial().getExpiration());
+            cs.setRevoked(cert.getSerial().isRevoked());
+            cs.setUpdated(cert.getSerial().getUpdated());
+            cs.setCreated(cert.getSerial().getCreated());
+            csCurator.create(cs);
+            SubscriptionsCertificate sc = new SubscriptionsCertificate();
+            sc.setKey(cert.getKey());
+            sc.setCertAsBytes(cert.getCertAsBytes());
+            sc.setSerial(cs);
+            subscription.setCertificate(sc);
+        }
+
+        if (entcnt > 1) {
+            log.error("More than one entitlement cert found for subscription");
+        }
         
         return subscription;
     }
@@ -101,17 +136,25 @@ public class EntitlementImporter {
             
             if (local == null) {
                 subscriptionCurator.create(subscription);
+
+                // send out created event
+                log.debug("emitting subscription event");
+                sink.emitSubscriptionCreated(subscription);
             }
             else {
                 subscription.setId(local.getId());
                 subscriptionCurator.merge(subscription);
                 
                 existingSubByEntitlement.remove(subscription.getUpstreamPoolId());
+
+                // send updated event
+                //sink.emitSubscriptionUpdated(subscription);
             }
         }
         
         for (Subscription subscription : existingSubByEntitlement.values()) {
             subscriptionCurator.delete(subscription);
+            // send out deleted event
         }
     }
 }

@@ -245,7 +245,7 @@ public class EntitlementRules implements Enforcer {
                     SELECT_POOL_PREFIX + rule.getRuleName());
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
-                    productId);
+                    rule.getRuleName());
                 break;
             }
             catch (NoSuchMethodException e) {
@@ -323,7 +323,7 @@ public class EntitlementRules implements Enforcer {
         
         // Always run the global rule, and run it first
         matches.add(new Rule("global", 0, new HashSet<String>()));
-        
+
         Collections.sort(matches, new RuleOrderComparator());
         return matches;
     }

@@ -281,7 +281,6 @@ public class Entitlement extends AbstractHibernateObject
         this.quantity = quantity;
     }
 
-    @XmlTransient
     public Set<EntitlementCertificate> getCertificates() {
         return certificates;
     }
@@ -297,7 +296,7 @@ public class Entitlement extends AbstractHibernateObject
     
     public String toString() {
         return "Entitlement[id=" + getId() + ", product=" + getProductId() + 
-            ", consumer= " + consumer.getUuid() + "]";
+            ", consumer= " + (consumer == null ? "null" : consumer.getUuid()) + "]";
     }
 
     @Override

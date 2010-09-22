@@ -14,20 +14,25 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.fedoraproject.candlepin.test.TestUtil.createIdCert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
@@ -35,7 +40,6 @@ import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -746,7 +750,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // get renamed once we refactor this test suite.
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
-        
+
+        EventSink sink = Mockito.mock(EventSink.class);
+        EventFactory factory = Mockito.mock(EventFactory.class);
+
         Consumer lconsumer = createConsumer();
         lconsumer.setIdCert(createIdCert());
         IdentityCertificate ic = lconsumer.getIdCert();
@@ -759,7 +766,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator,
             null, null, null, null, mockedIdSvc, null, null,
-            null, null, null, null, null, null, null, null, null);
+            sink, factory, null, null, null, null, null, null, null);
 
         Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid());
 
@@ -767,20 +774,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         IdentityCertificate ic1 = fooc.getIdCert();
         assertNotNull(ic1);
         assertFalse(ic.equals(ic1));
-    }
-
-    private IdentityCertificate createIdCert() {
-        IdentityCertificate idCert = new IdentityCertificate();
-        CertificateSerial serial = new CertificateSerial(new Date());
-        serial.setId(new Long(new Random().nextInt(1000000)));
-
-        // totally arbitrary
-        idCert.setId(new Long(new Random().nextInt(1000000)));
-        idCert.setKey("uh0876puhapodifbvj094");
-        idCert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
-        idCert.setSerial(serial);
-
-        return idCert;
     }
     
     private class ProductCertCreationModule extends AbstractModule {

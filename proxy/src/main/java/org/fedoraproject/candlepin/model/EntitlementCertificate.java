@@ -14,6 +14,15 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
+
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.ParamDef;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -27,14 +36,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.ParamDef;
 
 /**
  * Represents certificate used to entitle a consumer
@@ -99,6 +100,7 @@ public class EntitlementCertificate extends AbstractCertificate
         this.id = id;
     }
 
+    @XmlTransient
     public Entitlement getEntitlement() {
         return entitlement;
     }

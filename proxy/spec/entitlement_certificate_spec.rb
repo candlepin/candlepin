@@ -31,7 +31,7 @@ describe 'Entitlement Certificate' do
     user = user_client(@owner, random_string('billy'))
 
     @system = consumer_client(user, random_string('system1'))
-    @system.consume_product monitoring.id
+    @entitlement = @system.consume_product(monitoring.id)[0]
   end
 
   it 'is available after consuming an entitlement' do
@@ -69,18 +69,19 @@ describe 'Entitlement Certificate' do
     (old_ids & new_ids).size.should == 0
   end
 
-   it 'will be regenerated when changing existing subscription\'s end date' do
-      sub = @cp.list_subscriptions(@owner.key)[0]
-      sub.endDate = sub.endDate.to_date + 2
-      old_cert = @system.list_certificates()[0]
-      @cp.update_subscription(sub)
+  it 'will be regenerated when changing existing subscription\'s end date' do
+    sub = @cp.list_subscriptions(@owner.key)[0]
+    sub.endDate = sub.endDate.to_date + 2
+    old_cert = @system.list_certificates()[0]
+    @cp.update_subscription(sub)
 
-      @cp.refresh_pools(@owner.key)
+    @cp.refresh_pools(@owner.key)
 
-      new_cert = @system.list_certificates()[0]
-      old_cert.serial.id.should_not == new_cert.serial.id
-      ent = @cp.get_entitlement(new_cert.entitlement.id)
-      sub.endDate.should == ent.endDate.to_date
+    new_cert = @system.list_certificates()[0]
+    old_cert.serial.id.should_not == new_cert.serial.id
+
+    ent = @cp.get_entitlement(@entitlement.id)
+    sub.endDate.should == ent.endDate.to_date
   end
 
   it 'those in excess will be deleted when existing subscription quantity is decreased' do

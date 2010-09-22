@@ -14,22 +14,23 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import org.fedoraproject.candlepin.audit.Event.Target;
+import org.fedoraproject.candlepin.audit.Event.Type;
+import org.fedoraproject.candlepin.util.Util;
+
+import com.google.common.base.Function;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.jms.JMSException;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
-
-import org.fedoraproject.candlepin.audit.Event.Target;
-import org.fedoraproject.candlepin.audit.Event.Type;
-import org.fedoraproject.candlepin.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 /**
  *
@@ -44,9 +45,9 @@ public class AMQPBusPublisher implements EventListener{
     @Inject
     public AMQPBusPublisher(TopicSession session, 
             @Named("eventToQpidAdapter")Function<Event, String> amqpbea,
-            Map<Target, Map<Type, TopicPublisher>> producerMap2) {
+            Map<Target, Map<Type, TopicPublisher>> producerMap) {
         this.session = session;
-        this.producerMap = producerMap2;
+        this.producerMap = producerMap;
         this.adapter = amqpbea;
     }
 
@@ -58,7 +59,11 @@ public class AMQPBusPublisher implements EventListener{
             if (m != null) {
                 TopicPublisher tp = m.get(e.getType());
                 if (tp != null) {
+                    log.debug("Sending event to tp");
                     tp.send(session.createTextMessage(adapter.apply(e)));
+                }
+                else {
+                    log.warn("TopicPublisher is NULL!");
                 }
             }
         }

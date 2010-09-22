@@ -14,10 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.annotations.ForeignKey;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,13 +31,12 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * Represents a Subscription
@@ -87,6 +89,10 @@ public class Subscription extends AbstractHibernateObject {
     
     @Column(name = "upstream_pool_id")
     private Long upstreamPoolId;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "certificate_id")
+    private SubscriptionsCertificate cert;
 
     public Subscription() {
     }
@@ -265,6 +271,14 @@ public class Subscription extends AbstractHibernateObject {
 
     public Long getUpstreamPoolId() {
         return upstreamPoolId;
+    }
+
+    public SubscriptionsCertificate getCertificate() {
+        return cert;
+    }
+
+    public void setCertificate(SubscriptionsCertificate c) {
+        cert = c;
     }
 
 }

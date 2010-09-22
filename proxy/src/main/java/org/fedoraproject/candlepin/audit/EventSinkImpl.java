@@ -21,6 +21,8 @@ import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Subscription;
+
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
@@ -64,9 +66,6 @@ public class EventSinkImpl implements EventSink {
         }
     }
 
-    /**
-     * @return
-     */
     protected ClientSessionFactory createClientSessionFactory() {
         return HornetQClient.createClientSessionFactory(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
@@ -109,6 +108,12 @@ public class EventSinkImpl implements EventSink {
     
     public void emitImportCreated(Owner owner) {
         Event e = eventFactory.importCreated(owner);
+        sendEvent(e);
+    }
+
+    @Override
+    public void emitSubscriptionCreated(Subscription subscription) {
+        Event e = eventFactory.subscriptionCreated(subscription);
         sendEvent(e);
     }
 }

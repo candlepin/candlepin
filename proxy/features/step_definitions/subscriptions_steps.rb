@@ -78,23 +78,31 @@ When /^test owner changes the quantity of the subscription by (-{0,1}\d+)$/ do |
  @candlepin.update_subscription(subscription)
 end
 
-Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |arg1|
-  @new_certs = @consumer_cp.list_certificates()
+Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |properties|
   # Only admins can list subs for now, unlike with pools.
   subs = @candlepin.list_subscriptions(@test_owner['key'])[0]
+  entitlements = @consumer_cp.list_entitlements
   certs = {}
-  @new_certs.each do |cert|
-    temp = OpenSSL::X509::Certificate.new(cert['cert'])
-    certs[cert['serial']['id']] = {
-      'startDate' => temp.not_before().strftime('%Y-%m-%d'),
-      'endDate'   => temp.not_after().strftime('%Y-%m-%d')
-    }
+  
+  entitlements.each do |ent|
+    ent['certificates'].each do |cert|
+      ssl_cert = OpenSSL::X509::Certificate.new(cert['cert'])
+      certs[cert['serial']['id']] = {
+        'startDate' => ssl_cert.not_before().strftime('%Y-%m-%d'),
+        'endDate'   => ssl_cert.not_after().strftime('%Y-%m-%d')
+      }
+    end
   end
-  arg1.split(",").map{|str| str.strip }.each do |field|
-    @new_certs.each do |cert|
-      ent = @current_owner_cp.get_entitlement(cert['entitlement']['id'])
+
+  properties.split(",").each do |field|
+    field.strip!
+
+    entitlements.each do |ent|
       subs[field].to_date.should == ent[field].to_date
-      subs[field].to_date.should == certs[cert['serial']['id']][field].to_date if ['endDate', 'startDate'].include? field
+
+      ent['certificates'].each do |cert|
+        subs[field].to_date.should == certs[cert['serial']['id']][field].to_date if ['endDate', 'startDate'].include? field
+      end
     end
   end
 end

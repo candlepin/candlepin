@@ -52,14 +52,14 @@ describe 'Certificate Revocation List' do
   end
   
   def filter_serial(product, consumer=@system)
-      return consumer.list_certificates.find { |item|
-          ent = @cp.get_entitlement(item.entitlement['id'])
-          pool = @cp.get_pool(ent['pool']['id'])
-          pool.productId == product.id
-      }.serial.id
+    entitlement = consumer.list_entitlements.find do |ent|
+      @cp.get_pool(ent.pool.id).productId == product.id
+    end
+
+    return entitlement.certificates[0].serial.id unless entitlement.certificates.empty?
   end
   
   def revoked_serials
-      return @cp.get_crl.revoked.map {|entry| entry.serial }
+    return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
   end
 end

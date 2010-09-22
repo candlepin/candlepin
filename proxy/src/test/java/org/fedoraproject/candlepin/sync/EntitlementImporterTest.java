@@ -14,44 +14,61 @@
  */
 package org.fedoraproject.candlepin.sync;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import org.fedoraproject.candlepin.audit.EventSink;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * EntitlementImporterTest
  */
+@RunWith(MockitoJUnitRunner.class)
 public class EntitlementImporterTest {
- 
+
+    @Mock private EventSink sink;
+    @Mock private SubscriptionCurator curator;
+    private Owner owner;
+    private Subscription testSub;
+    private EntitlementImporter importer;
+
+    @Before
+    public void init() {
+        this.testSub = new Subscription();
+        this.testSub.setProduct(new Product("test-prod", "Test Prod"));
+        this.testSub.setUpstreamPoolId(1L);
+
+        this.owner = new Owner();
+        this.testSub.setOwner(this.owner);
+
+        this.importer = new EntitlementImporter(this.curator, null, this.sink);
+    }
+
     @Test
     public void testSingleSubscriptionInListNotInDbCausesSave() {
-        final Subscription testSub = new Subscription();
-        testSub.setProduct(new Product("test-prod", "Test Prod"));
-        testSub.setUpstreamPoolId(1L);
-        Owner owner = new Owner();
-        testSub.setOwner(owner);
-        
-        SubscriptionCurator curator = mock(SubscriptionCurator.class);
-        
+        // given
         when(curator.listByOwner(owner)).thenReturn(new LinkedList<Subscription>());
-        
-        EntitlementImporter importer = new EntitlementImporter(curator);
+
+        // when
         importer.store(owner, new HashSet<Subscription>() {
             {
                 add(testSub);
             }
         });
-        
+
+        // then
         verify(curator).create(testSub);
         verify(curator, never()).delete(testSub);
         verify(curator, never()).merge(testSub);
@@ -59,27 +76,21 @@ public class EntitlementImporterTest {
     
     @Test
     public void testSingleSubscriptionInDbAndListCausesMerge() {
-        final Subscription testSub = new Subscription();
-        testSub.setProduct(new Product("test-prod", "Test Prod"));
-        testSub.setUpstreamPoolId(1L);
-        Owner owner = new Owner();
-        testSub.setOwner(owner);
-        
-        SubscriptionCurator curator = mock(SubscriptionCurator.class);
-        
+        // given
         when(curator.listByOwner(owner)).thenReturn(new LinkedList<Subscription>() {
             {
                 add(testSub);
             }
         });
-        
-        EntitlementImporter importer = new EntitlementImporter(curator);
+
+        // when
         importer.store(owner, new HashSet<Subscription>() {
             {
                 add(testSub);
             }
         });
-        
+
+        // then
         verify(curator, never()).create(testSub);
         verify(curator).merge(testSub);
         verify(curator, never()).delete(testSub);
@@ -87,22 +98,17 @@ public class EntitlementImporterTest {
     
     @Test
     public void testEmptyListCausesDbRemove() {
-        final Subscription testSub = new Subscription();
-        testSub.setProduct(new Product("test-prod", "Test Prod"));
-        testSub.setUpstreamPoolId(1L);
-        Owner owner = new Owner();
-        testSub.setOwner(owner);
-        
-        SubscriptionCurator curator = mock(SubscriptionCurator.class);
-        
+        // given
         when(curator.listByOwner(owner)).thenReturn(new LinkedList<Subscription>() {
             {
                 add(testSub);
             }
         });
-        EntitlementImporter importer = new EntitlementImporter(curator);
+
+        // when
         importer.store(owner, new HashSet<Subscription>());
-        
+
+        // then
         verify(curator, never()).create(testSub);
         verify(curator, never()).merge(testSub);
         verify(curator).delete(testSub);

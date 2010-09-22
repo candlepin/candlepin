@@ -42,13 +42,24 @@ end
 
 # TODO: this test should actually be using ?serials=x,y,z to test serial filtering
 # server side, not client side:
-When /^I filter certificates on the serial number for "([^\"]*)"$/ do |entitlement|
-    certificates = @consumer_cp.list_certificates()
-    found = certificates.find {|item|
-        ent = @consumer_cp.get_entitlement(item['entitlement']['id'])
-        pool = @consumer_cp.get_pool(ent['pool']['id'])
-        pool['productId'] == entitlement.hash.abs.to_s}
-    @serials << found['serial']['id']
+When /^I filter certificates on the serial number for "([^\"]*)"$/ do |product|
+  product_id = product.hash.abs.to_s
+  entitlements = @consumer_cp.list_entitlements()
+
+  # filter out entitlements for different products
+  entitlements = entitlements.select do |ent|
+    @consumer_cp.get_pool(ent['pool']['id'])['productId'] == product_id
+  end
+
+  # Just grab the cert serial ids
+  entitlements.collect! do |ent|
+    ent['certificates'].collect do |cert|
+      cert['serial']['id']
+    end
+  end
+
+  @serials << entitlements
+  @serials.flatten!
 end
 
 Then /^I have (\d+) filtered certificate[s]?$/ do |certificates_size|
@@ -85,5 +96,5 @@ Then /^I have new entitlement certificates$/ do
 end
 
 def revoked_serials
-  @candlepin.get_crl.revoked.collect { |entry| entry.serial }
+  @candlepin.get_crl.revoked.collect { |entry| entry.serial.to_i }
 end

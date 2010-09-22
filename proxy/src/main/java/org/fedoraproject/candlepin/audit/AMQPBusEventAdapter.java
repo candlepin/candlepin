@@ -14,14 +14,15 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.audit.Event.Type;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.model.ProductContent;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.common.base.Function;
@@ -29,97 +30,207 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 /**
- * @author ajay
  */
 @Singleton
 public class AMQPBusEventAdapter implements Function<Event, String> {
 
-    private ObjectMapper om = new ObjectMapper();
-    private UserServiceAdapter userServiceAdapter;
-    private static Log log = LogFactory.getLog(AMQPBusEventAdapter.class);
+    private static Logger log = LoggerFactory.getLogger(AMQPBusEventAdapter.class);
+
     private final ImmutableMap<Event.Target, ? extends Function<Event, String>> mp =
         new ImmutableMap.Builder<Event.Target, Function<Event, String>>()
-            .put(Event.Target.CONSUMER, new ConsumerStrFunc())
-            .put(Event.Target.USER, new UserStrFunc())
-            .put(Event.Target.ROLE, new RoleStrFunc())
-      //      .put(Event.Target.PRODUCT, new ProductStrFunc())
+            .put(Event.Target.CONSUMER, new ConsumerFunction())
+            .put(Event.Target.SUBSCRIPTION, new SubscriptionFunction())
+            .put(Event.Target.ENTITLEMENT, new EntitlementFunction())
+            .put(Event.Target.OWNER, new OwnerFunction())
             .build();
+
+    private ObjectMapper mapper;
+    private PKIReader reader;
+    private PKIUtility pkiutil;
+
     @Inject
-    public AMQPBusEventAdapter(UserServiceAdapter serviceAdapter) {
-        this.userServiceAdapter = serviceAdapter;
+    public AMQPBusEventAdapter(ObjectMapper mapper,
+        PKIReader rdr, PKIUtility util) {
+        
+        this.mapper = mapper;
+        this.reader = rdr;
+        this.pkiutil = util;
     }
     
     @Override
     public String apply(Event event) {
         Function<Event, String> func = mp.get(event.getTarget());
         if (func != null) {
-            return func.apply(event);
+            String result = func.apply(event);
+            log.debug("AMQPBusEventAdapter.apply(event) = {}", result);
+            return result;
         }
         else {
-            log.warn("Unknown entity: " + event + " . Skipping serialization");
+            log.warn("Unknown entity: {}. Skipping serialization", event);
             return "";
         }
     }
 
-    private class ProductStrFunc implements Function<Event, String> {
+    private abstract class EventFunction implements Function<Event, String> {
+
         @Override
         public String apply(Event event) {
-            Map<String, Object> result = initializeWithEntityId(event);
-            Product product = deserialize(event.getNewEntity(), Product.class);
-            result.put("name", product.getName());
-            //TODO: what to store in description field?
-            result.put("description", "product : " + product.toString());
-            //result.put("", product.)
-            return serialize(result);
+            Map<String, Object> envelope = Util.newMap();
+            Map<String, Object> body = Util.newMap();
+            envelope.put("version", "0.1"); // FIXME: how do we avoid hardcoded
+            body.put("id", event.getEntityId());
+            populate(event, body);
+            envelope.put("event", body);
+            return serialize(envelope);
         }
 
+        protected abstract void populate(Event event, Map<String, Object> result);
     }
 
-    private class ConsumerStrFunc implements Function<Event, String> {
-        @Override
-        public String apply(Event event) {
-            Map<String, Object> result = initializeWithEntityId(event);
-            //if not deleted, then it has to be either created/updated
-            if (!event.getType().equals(Event.Type.DELETED)) {
-                result.put("description", event.getNewEntity());
-                //TODO: What should description have?
-            }
-            return serialize(result);
-        }
-    }
 
-    private class UserStrFunc implements Function<Event, String> {
+    private class ConsumerFunction extends EventFunction {
         @Override
-        public String apply(Event event) {
-            Map<String, Object> result = initializeWithEntityId(event);
-            if (!event.getType().equals(Event.Type.DELETED)) {
-                User user = deserialize(event.getNewEntity(), User.class);
-                if (user != null) {
-                    result.put("login", user.getUsername()); //TODO: login == name?
-                    result.put("name", user.getUsername());
-                    //TODO: use cache for user roles?
-                    result.put("roles", userServiceAdapter.getRoles(user.getUsername()));
+        protected void populate(Event event, Map<String, Object> result) {
+            Consumer consumer = deserialize(event, Consumer.class);
+            if (consumer != null) {
+                result.put("id", consumer.getUuid());
+                result.put("owner", event.getOwnerId());
+                switch (event.getType()) {
+                    case CREATED:
+                        consumerCreated(consumer, result, event);
+                        break;
+                    case DELETED:
+                        consumerDeleted(consumer, result, event);
+                        break;
+                    case MODIFIED:
+                        consumerModified(consumer, result, event);
+                        break;
+                    default:
+                        log.debug("Unknown eventType: " + event.getType());
                 }
             }
-            return serialize(result);
+        }
+        
+        private void consumerModified(Consumer consumer,
+            Map<String, Object> result, Event event) {
+            consumerCreated(consumer, result, event);
+        }
+
+        private void consumerDeleted(Consumer consumer,
+            Map<String, Object> rs, Event event) {
+            //no extra attributes to take care of... but maybe in future.
+        }
+
+        private void consumerCreated(Consumer consumer,
+            Map<String, Object> rs, Event event) {
+            rs.put("identity_cert", consumer.getIdCert().getCert());
+            rs.put("identity_cert_key", consumer.getIdCert().getKey());
+            rs.put("hardware_facts", consumer.getFacts());            
         }
     }
+    
 
-    private class RoleStrFunc implements Function<Event, String> {
+    /**
+     * EntitlementStrFunc
+     */
+    private class EntitlementFunction extends EventFunction {
+
         @Override
-        public String apply(Event event) {
-          //TODO roles are static in candlpin for now..
-            return event.toString();
+        protected void populate(Event event, Map<String, Object> result) {
+            Entitlement entitlement = deserialize(event, Entitlement.class);
+            if (event.getType() == Type.CREATED ||
+                event.getType() == Type.DELETED) {
+                Consumer consumer = entitlement.getConsumer();
+                result.put("id", consumer.getUuid());
+                result.put("owner", event.getOwnerId());
+                result.put("consumer_os_arch", consumer.getFact("uname.machine"));
+                result.put("consumer_os_version", consumer.getFact("distribution.version"));
+                result.put("product_id", entitlement.getProductId());
+            }
         }
+
+    }
+    private class SubscriptionFunction extends EventFunction {
+
+        @Override
+        protected void populate(Event event, Map<String, Object> result) {
+            Subscription subscription = deserialize(event.getNewEntity(),
+                    Subscription.class);
+
+            if (subscription != null) {
+                log.debug("Subscription message:" + subscription.getId());
+                // Owner is in every type
+                result.put("owner", subscription.getOwner().getKey());
+                
+                if (event.getType() != Event.Type.DELETED) {
+                    log.debug("Subscription is NOT DELETED, which is good");
+                    result.put("name", subscription.getProduct().getId());
+                    result.put("entitlement_cert", subscription.getCertificate().getCert());
+                    result.put("cert_public_key", subscription.getCertificate().getKey());
+                    try {
+                        // FIXME: wow this is crappy new String ...
+                        result.put("ca_cert", new String(pkiutil.getPemEncoded(
+                            reader.getUpstreamCACert())));
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    } 
+                    result.put("content_sets", createContentMap(subscription));
+                }
+            }
+        }
+
+        private List<Map<String, String>> createContentMap(Subscription sub) {
+            List<Map<String, String>> contentList = new LinkedList<Map<String, String>>();
+
+            for (Product product : sub.getProvidedProducts()) {
+                for (ProductContent prodContent : product.getProductContent()) {
+                    Content content = prodContent.getContent();
+
+                    Map<String, String> contentMap = new HashMap<String, String>();
+                    contentMap.put("content_set_label", content.getLabel());
+                    contentMap.put("content_rel_url", content.getContentUrl());
+
+                    contentList.add(contentMap);
+                }
+            }
+
+            return contentList;
+        }
+        
     }
 
+    
+
+    /**
+     * OwnerFunction
+     */
+    class OwnerFunction extends EventFunction implements
+        Function<Event, String> {
+        @Override
+        protected void populate(Event event, Map<String, Object> result) {
+            //does nothing for now. owner id already in there...
+        }
+
+    }
+    
     /**
      * @param result
      */
     private String serialize(Map<String, Object> result) {
         try {
-            return this.om.writeValueAsString(result);
+            return this.mapper.writeValueAsString(result);
         }
         catch (Exception e) {
             log.warn("Unable to serialize :", e);
@@ -129,22 +240,17 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
     
     private <T> T deserialize(String value, Class<T> clas) {
         try {
-            return om.readValue(value, clas);
+            return this.mapper.readValue(value, clas);
         }
         catch (Exception e) {
             log.warn("Unable to de-serialize :", e);
         }
         return null;
     }
-
-    /**
-     * @param event
-     * @return
-     */
-    private Map<String, Object> initializeWithEntityId(Event event) {
-        Map<String, Object> result = Util.newMap();
-        result.put("id", event.getEntityId());
-        return result;
+    
+    private <T> T deserialize(Event event, Class<T> clas) {
+        return deserialize(event.getType() == Type.DELETED ? event
+            .getOldEntity() : event.getNewEntity(), clas);
     }
 
 }
