@@ -21,18 +21,25 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import org.fedoraproject.candlepin.audit.EventSink;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * EntitlementImporterTest
  */
+@RunWith(MockitoJUnitRunner.class)
 public class EntitlementImporterTest {
- 
+
+    @Mock private EventSink sink;
+
     @Test
     public void testSingleSubscriptionInListNotInDbCausesSave() {
         final Subscription testSub = new Subscription();
@@ -45,7 +52,7 @@ public class EntitlementImporterTest {
         
         when(curator.listByOwner(owner)).thenReturn(new LinkedList<Subscription>());
         
-        EntitlementImporter importer = new EntitlementImporter(curator, null, null);
+        EntitlementImporter importer = new EntitlementImporter(curator, null, this.sink);
         importer.store(owner, new HashSet<Subscription>() {
             {
                 add(testSub);
@@ -73,7 +80,7 @@ public class EntitlementImporterTest {
             }
         });
         
-        EntitlementImporter importer = new EntitlementImporter(curator, null, null);
+        EntitlementImporter importer = new EntitlementImporter(curator, null, this.sink);
         importer.store(owner, new HashSet<Subscription>() {
             {
                 add(testSub);
