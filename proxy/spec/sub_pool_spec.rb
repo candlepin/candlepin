@@ -36,6 +36,12 @@ describe 'Sub-Pool' do
     @system.consume_product derived_product.id
   end
   
+  it 'should un-entitle system when unregistering person consumer' do
+    @system.list_entitlements.size.should == 1
+    @cp.unregister(@person_client.uuid)
+    @system.list_entitlements.size.should == 0
+  end
+  
   it 'unregistering system consumer should not result in deletion of the parent pool' do
     @system.unregister(@system.uuid)
     @system = consumer_client(@user_client, 'system2')
