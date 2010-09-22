@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.34
+Version: 0.0.35
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,61 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Sep 22 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.35-1
+- Making checkstyle happy (jharris@redhat.com)
+- Fixing date comparison rule in test-rules (jharris@redhat.com)
+- Re-extract and merge I18N strings. (dgoodwin@redhat.com)
+- I18N tweaks. (dgoodwin@redhat.com)
+- Doing some refactoring of entitlement importer tests (jharris@redhat.com)
+- Fixing EntitlementImporterTest (jharris@redhat.com)
+- Forgot to clean out config collaborator (jharris@redhat.com)
+- Fixing up unit tests (jharris@redhat.com)
+- submit the cacert body not the path (jesusr@redhat.com)
+- Internationalize import errors. (dgoodwin@redhat.com)
+- Fix import failure if export has no entitlements/products. (dgoodwin@redhat.com)
+- calculate topic based on event name, adding mapping map too (jesusr@redhat.com)
+- add version and id to envelope (jesusr@redhat.com)
+- 626509 - unentitle the consumer, but do not delete the pools (ddolguik@redhat.com)
+- Adding an activation listener to send activation emails (jomara@redhat.com)
+- Tweak deploy script env vars, set to 1 to enable. (dgoodwin@redhat.com)
+- Fixing up rspecs (jharris@redhat.com)
+- Regenerate entitlement certificates if a pool's provided product set has
+  changed (jbowes@redhat.com)
+- Lots of cuke fixes to get tests passing again. (jharris@redhat.com)
+- 631878 - Remove the code and test cases (bkearney@redhat.com)
+- fixed style problem (ddolguik@redhat.com)
+- verify if sub-pools are present BEFORE deleting the pool (ddolguik@redhat.com)
+- new Strings (bkearney@redhat.com)
+- owner.* -> amqp in AMQPBusEventAdapter (anadathu@redhat.com)
+- Do another string merge (bkearney@redhat.com)
+- add subscription.created event during import (jesusr@redhat.com)
+- send to the right topic (jesusr@redhat.com)
+- add logging statements (jesusr@redhat.com)
+- junit test cases for consumer.* events (anadathu@redhat.com)
+- Track last checkin time for consumers. (dgoodwin@redhat.com)
+- Introduce a configurable consumer facts filter (jbowes@redhat.com)
+- Cleaning out error status message check to be compatible with newer versions
+  of rest-client. (jharris@redhat.com)
+- Injecting poolManager into the EntitlementResource (calfonso@redhat.com)
+- mark event locations (jesusr@redhat.com)
+- remove unused import (jesusr@redhat.com)
+- remove importSubscriptionCerts method, certs coming from json. (jesusr@redhat.com)
+- Expanding subscription creation event tests to cover modifications as well (jharris@redhat.com)
+- Fixing checkstyle issues in EntitlementImporter (jharris@redhat.com)
+- Fixing up consumer resource test (jharris@redhat.com)
+- Adding tests and functionality for subscription creation events.  (jharris@redhat.com)
+- fix failing unit tests (jbowes@redhat.com)
+- 615362 - Fix i18n/l10n (jbowes@redhat.com)
+- AMQPBusEventAdapter supports consumer events. (anadathu@redhat.com)
+- import the certificates with the subscription (jesusr@redhat.com)
+- added importing certs method (jesusr@redhat.com)
+- Reuse cp_certificate table to store Subscription certs. (jesusr@redhat.com)
+- Cleaning up imports (jharris@redhat.com)
+- Redoing changes to AMQP event adapter. (jharris@redhat.com)
+- Refactoring event adapter and adding unit tests. (jharris@redhat.com)
+- Checkstyle fixes (jharris@redhat.com)
+- Refactoring the event adapter and adding subscription event translation. (jharris@redhat.com)
+
 * Mon Sep 13 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.34-1
 - Disable HATEOAS for collections. (dgoodwin@redhat.com)
 - 629747 - made the table names consistent (bkearney@redhat.com)
