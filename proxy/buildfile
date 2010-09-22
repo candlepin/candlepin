@@ -297,12 +297,12 @@ end
 
 namespace "gettext" do
     task :extract do
-      %x{xgettext -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")}
+      %x{xgettext -ktrc:1c,2 -k -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")}
     end
     task :merge do
       sources = FileList["po/*.po"]
       sources.each do |source|
-        sh "msgmerge --backup=none -U #{source} po/keys.pot"
+        sh "msgmerge -N --backup=none -U #{source} po/keys.pot"
       end
     end
 end
