@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.sync;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,7 +42,7 @@ public class EntitlementImporterTest {
     @Mock private SubscriptionCurator curator;
     private Owner owner;
     private Subscription testSub;
-    EntitlementImporter importer;
+    private EntitlementImporter importer;
 
     @Before
     public void init() {

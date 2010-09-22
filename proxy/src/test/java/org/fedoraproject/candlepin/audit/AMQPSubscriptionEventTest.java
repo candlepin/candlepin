@@ -84,7 +84,8 @@ public class AMQPSubscriptionEventTest {
         when(sub.getProduct().getId()).thenReturn("test-product-id");
         when(sub.getCertificate().getCert()).thenReturn("test-cert");
         when(sub.getCertificate().getKey()).thenReturn("test-key");
-        when(pkiutil.getPemEncoded((X509Certificate) null)).thenReturn("ca-cert".getBytes());
+        when(pkiutil.getPemEncoded((X509Certificate) null))
+                .thenReturn("ca-cert".getBytes());
 
         when(sub.getProvidedProducts()).thenReturn(
                 Sets.newHashSet(createProductWithContent(
