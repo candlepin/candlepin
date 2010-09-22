@@ -334,12 +334,11 @@ public class EnforcerTest extends DatabaseTestFixture {
         Pool pool2 = createPoolAndSub(owner, product, new Long(500),
             TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2020, 02, 26));
         
-        when(this.productAdapter.getProductById("a-product"))
-            .thenReturn(product);
-        
-        List<Pool> availablePools 
-            = Arrays.asList(new Pool[] {pool1, pool2, desired});
+        when(this.productAdapter.getProductById("a-product")).thenReturn(product);
+
+        List<Pool> availablePools = Arrays.asList(new Pool[] {pool1, pool2, desired});
         Pool result = enforcer.selectBestPool(consumer, "a-product", availablePools);
+
         assertEquals(desired.getId(), result.getId());
     }
 

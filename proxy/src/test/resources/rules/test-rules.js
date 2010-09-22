@@ -64,7 +64,8 @@ var Entitlement = {
 		var iter = pools.iterator();
 		while (iter.hasNext()) {
 			var p = iter.next();
-			if ((furthest == null) || (p.getEndDate() > furthest.getEndDate())) {
+
+			if ((furthest == null) || (p.getEndDate().after(furthest.getEndDate()))) {
 				furthest = p;
 			}
 		}
