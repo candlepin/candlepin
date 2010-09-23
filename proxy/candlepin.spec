@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.35
+Version: 0.0.36
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,22 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Sep 23 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.36-1
+- change << HSQLDB to += artifacts(HSQLDB) (jesusr@redhat.com)
+- spec: fix filter certificates by serial number (jbowes@redhat.com)
+- spec: convert facts_update.feature to rspec (jbowes@redhat.com)
+- cuke: remove consumer_pool_query.feature (its already covered in rspec) (jbowes@redhat.com)
+- spec: convert authorization.feature to rspec (jbowes@redhat.com)
+- cuke: remove unused rules.feature (jbowes@redhat.com)
+- spec: convert entitlement_certificates.feature to rspec (jbowes@redhat.com)
+- spec: convert status.feature to rspec (jbowes@redhat.com)
+- cuke: remove unused virt feature (jbowes@redhat.com)
+- spec: add missing localization_spec (forgot to git add) (jbowes@redhat.com)
+- cuke: remove CRL tests (its in spec already) (jbowes@redhat.com)
+- cuke: remove pool feature (its in spec already) (jbowes@redhat.com)
+- cuke: remove an already ported test (jbowes@redhat.com)
+- spec: remove stray puts (jbowes@redhat.com)
+
 * Wed Sep 22 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.35-1
 - Making checkstyle happy (jharris@redhat.com)
 - Fixing date comparison rule in test-rules (jharris@redhat.com)
