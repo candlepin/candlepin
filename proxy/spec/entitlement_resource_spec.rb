@@ -32,13 +32,25 @@ describe 'Entitlement Resource' do
   it 'allows filtering certificates by serial number' do
     @system.consume_product(@monitoring_prod.id)
     @system.consume_product(@virt_prod.id)
-    certificates = @system.list_certificates()
-    found = certificates.find {|item|
-      ent = @system.get_entitlement(item['entitlement']['id'])
-      pool = @system.get_pool(ent['pool']['id'])
-      pool['productId'] == @monitoring_prod.id}
 
-    @system.list_certificates([found['serial']['id']]).length.should == 1
+    entitlements = @system.list_entitlements()
+
+    # filter out entitlements for different products
+    entitlements = entitlements.select do |ent|
+      @system.get_pool(ent['pool']['id'])['productId'] == @monitoring_prod.id
+    end
+
+    # Just grab the cert serial ids
+    entitlements.collect! do |ent|
+      ent['certificates'].collect do |cert|
+        cert['serial']['id']
+      end
+    end
+
+    serials = entitlements
+    serials.flatten!
+
+    @system.list_certificates(serials).length.should == 1
   end
 
   it 'allows listing certificates by serial numbers' do
