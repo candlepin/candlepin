@@ -815,7 +815,7 @@ public class ConsumerResource {
             IdentityCertificate ic = generateIdCert(c, true);
             c.setIdCert(ic);
             consumerCurator.update(c);
-            Event consumerModified = this.eventFactory.consumerModified(null, c);
+            Event consumerModified = this.eventFactory.consumerModified(c);
             this.sink.sendEvent(consumerModified);
             return c;
         }
