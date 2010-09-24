@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.sync;
 
+import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
@@ -148,13 +149,14 @@ public class EntitlementImporter {
                 existingSubByEntitlement.remove(subscription.getUpstreamPoolId());
 
                 // send updated event
-                //sink.emitSubscriptionUpdated(subscription);
+                sink.emitSubscriptionModified(null, subscription);
             }
         }
         
         for (Subscription subscription : existingSubByEntitlement.values()) {
+            Event e = sink.createSubscriptionDeleted(subscription);
             subscriptionCurator.delete(subscription);
-            // send out deleted event
+            sink.sendEvent(e);
         }
     }
 }

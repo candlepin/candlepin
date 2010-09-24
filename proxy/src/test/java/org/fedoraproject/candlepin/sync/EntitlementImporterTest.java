@@ -14,23 +14,27 @@
  */
 package org.fedoraproject.candlepin.sync;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.HashSet;
-import java.util.LinkedList;
+import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
-
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.HashSet;
+import java.util.LinkedList;
 
 /**
  * EntitlementImporterTest
@@ -72,6 +76,7 @@ public class EntitlementImporterTest {
         verify(curator).create(testSub);
         verify(curator, never()).delete(testSub);
         verify(curator, never()).merge(testSub);
+        verify(sink, atLeastOnce()).emitSubscriptionCreated(testSub);
     }
     
     @Test
@@ -94,6 +99,7 @@ public class EntitlementImporterTest {
         verify(curator, never()).create(testSub);
         verify(curator).merge(testSub);
         verify(curator, never()).delete(testSub);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(null, testSub);
     }
     
     @Test
@@ -112,5 +118,8 @@ public class EntitlementImporterTest {
         verify(curator, never()).create(testSub);
         verify(curator, never()).merge(testSub);
         verify(curator).delete(testSub);
+        verify(sink, atLeastOnce()).createSubscriptionDeleted(testSub);
+        verify(sink, atLeastOnce()).sendEvent(any(Event.class));
+
     }
 }

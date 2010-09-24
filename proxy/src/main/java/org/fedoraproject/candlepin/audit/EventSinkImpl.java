@@ -116,4 +116,12 @@ public class EventSinkImpl implements EventSink {
         Event e = eventFactory.subscriptionCreated(subscription);
         sendEvent(e);
     }
+
+    public void emitSubscriptionModified(Subscription old, Subscription newSub) {
+        sendEvent(eventFactory.subscriptionModified(old, newSub));
+    }
+
+    public Event createSubscriptionDeleted(Subscription todelete) {
+        return eventFactory.subscriptionDeleted(todelete);
+    }
 }

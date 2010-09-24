@@ -37,4 +37,8 @@ public interface EventSink {
     void emitImportCreated(Owner owner);
 
     void emitSubscriptionCreated(Subscription subscription);
+
+    void emitSubscriptionModified(Subscription old, Subscription newSub);
+
+    Event createSubscriptionDeleted(Subscription todelete);
 }

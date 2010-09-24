@@ -52,7 +52,14 @@ public class EventSinkForTesting implements EventSink {
 
     @Override
     public void emitSubscriptionCreated(Subscription subscription) {
-        // TODO Auto-generated method stub
+    }
 
+    @Override
+    public Event createSubscriptionDeleted(Subscription todelete) {
+        return null;
+    }
+
+    @Override
+    public void emitSubscriptionModified(Subscription old, Subscription newSub) {
     }
 }
