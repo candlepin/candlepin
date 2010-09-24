@@ -169,7 +169,7 @@ define "candlepin" do
   #
   # javadoc projects
   #
-  javadoc
+  doc
 
   package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/config','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', 'target/classes/org/fedoraproject/candlepin/exceptions', 'target/classes/org/fedoraproject/candlepin/util', :path=>"org/fedoraproject/candlepin/"  
   package(:war, :id=>"candlepin").libs += artifacts(HSQLDB)
