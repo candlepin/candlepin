@@ -82,6 +82,14 @@ public class EventFactory {
             principal, principal.getOwner().getId(), oldConsumer.getId(),
             oldConsumer.getId(), oldEntityJson, newEntityJson);
     }
+    
+    public Event subscriptionModified(Subscription oldSub, Subscription newSub) {
+        String olds = entityToJson(oldSub);
+        String news = entityToJson(newSub);
+        Principal principal = principalProvider.get();
+        return new Event(Event.Type.MODIFIED, Event.Target.SUBSCRIPTION,
+            principal, principal.getOwner().getId(), null, newSub.getId(), olds, news);
+    }
 
     public Event consumerDeleted(Consumer oldConsumer) {
         String oldEntityJson = entityToJson(oldConsumer);
