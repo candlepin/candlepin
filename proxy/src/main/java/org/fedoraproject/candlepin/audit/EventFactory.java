@@ -91,14 +91,6 @@ public class EventFactory {
             principal, principal.getOwner().getId(), oldConsumer.getId(),
             oldConsumer.getId(), oldEntityJson, newEntityJson);
     }
-    
-    public Event subscriptionModified(Subscription oldSub, Subscription newSub) {
-        String olds = entityToJson(oldSub);
-        String news = entityToJson(newSub);
-        Principal principal = principalProvider.get();
-        return new Event(Event.Type.MODIFIED, Event.Target.SUBSCRIPTION,
-            principal, principal.getOwner().getId(), null, newSub.getId(), olds, news);
-    }
 
     public Event consumerDeleted(Consumer oldConsumer) {
         String oldEntityJson = entityToJson(oldConsumer);
@@ -213,6 +205,22 @@ public class EventFactory {
         Event e = new Event(Event.Type.CREATED, Event.Target.SUBSCRIPTION,
             principal, principal.getOwner().getId(), null, subscription.getId(),
             null, entityToJson(subscription));
+        return e;
+    }
+
+    public Event subscriptionModified(Subscription oldSub, Subscription newSub) {
+        String olds = entityToJson(oldSub);
+        String news = entityToJson(newSub);
+        Principal principal = principalProvider.get();
+        return new Event(Event.Type.MODIFIED, Event.Target.SUBSCRIPTION,
+            principal, principal.getOwner().getId(), null, newSub.getId(), olds, news);
+    }
+
+    public Event subscriptionDeleted(Subscription todelete) {
+        String oldJson = entityToJson(todelete);
+        Owner o = todelete.getOwner();
+        Event e = new Event(Event.Type.DELETED, Event.Target.SUBSCRIPTION,
+            principalProvider.get(), o.getId(), null, todelete.getId(), oldJson, null);
         return e;
     }
 
