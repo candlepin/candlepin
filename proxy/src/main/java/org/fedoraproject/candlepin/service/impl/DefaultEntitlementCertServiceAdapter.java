@@ -40,6 +40,7 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.util.Util;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -153,10 +154,13 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
-        
-        X509Certificate x509Cert = this.pki.createX509Certificate(createDN(ent),
-            extensions, ent.getStartDate(), ent.getEndDate(), keyPair, serialNumber,
-            null);
+
+        // TODO: rounding time could give the consumer like extra 1 day atmost.
+        // Should we check that?
+        X509Certificate x509Cert = this.pki
+            .createX509Certificate(createDN(ent), extensions, ent
+                .getStartDate(), Util.roundToMidnight(ent.getEndDate()),
+                keyPair, serialNumber, null);
         return x509Cert;
     }
     

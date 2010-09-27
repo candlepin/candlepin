@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.commons.collections.Closure;
@@ -109,7 +111,15 @@ public class Util {
         calendar.add(Calendar.YEAR, yr);
         return calendar.getTime();
     }
-    
+    public static final TimeZone GMT_TZ  = new SimpleTimeZone(0, "GMT");
+    public static Date roundToMidnight(Date dt) {
+        Calendar cal = Calendar.getInstance(GMT_TZ);
+        cal.setTime(dt);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        return cal.getTime();
+    }
 
     public static BigInteger toBigInt(long l) {
         return new BigInteger(String.valueOf(l));

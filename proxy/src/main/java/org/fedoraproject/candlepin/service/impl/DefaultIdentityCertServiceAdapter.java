@@ -30,6 +30,7 @@ import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
+import org.fedoraproject.candlepin.util.Util;
 
 import com.google.common.base.Function;
 import com.google.inject.Inject;
@@ -125,8 +126,8 @@ public class DefaultIdentityCertServiceAdapter implements
         IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
-            startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()),
-            consumer.getName());
+            startDate, Util.roundToMidnight(endDate), keyPair, BigInteger
+                .valueOf(serial.getId()), consumer.getName());
         
         identityCert.setCert(new String(pki.getPemEncoded(x509cert)));
         identityCert.setKey(new String(pki.getPemEncoded(keyPair.getPrivate())));

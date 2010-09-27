@@ -39,7 +39,6 @@ public class ExpiryDateFunction implements Function<Date, Date> {
     public ExpiryDateFunction(Config config) {
         this(config.getInt(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM));
     }
-
     /* (non-Javadoc)
      * @see com.google.common.base.Function#apply(java.lang.Object)
      */
@@ -48,7 +47,7 @@ public class ExpiryDateFunction implements Function<Date, Date> {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime((Date) arg0.clone());
         calendar.add(Calendar.YEAR, yrAddendum);
-        return calendar.getTime();
+        return Util.roundToMidnight(calendar.getTime());
     }
 
 }
