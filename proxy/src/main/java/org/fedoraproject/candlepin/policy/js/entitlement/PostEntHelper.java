@@ -48,7 +48,7 @@ public class PostEntHelper {
         String quantity) {
 
         Long q = null;
-        if (quantity.equals("unlimited")) {
+        if (quantity.equalsIgnoreCase("unlimited")) {
             q = new Long(-1);
         }
         else {
