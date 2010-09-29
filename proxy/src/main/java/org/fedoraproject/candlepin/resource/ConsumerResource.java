@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.resource;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -551,7 +550,7 @@ public class ConsumerResource {
         return entitlementList;
     }
 
-    private List<Entitlement> bindByPool(Long poolId, Consumer consumer,
+    private List<Entitlement> bindByPool(String poolId, Consumer consumer,
         Integer quantity) {
         Pool pool = poolManager.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
@@ -588,13 +587,9 @@ public class ConsumerResource {
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale) {
 
-        // Verify that the poolId is a Long if provided
-        Long poolId = Util.assertLong(poolIdString, i18n
-            .tr("Pool ID should be numeric"));
-
         // Check that only one query param was set:
-        if ((poolId != null && token != null) ||
-            (poolId != null && productId != null) ||
+        if ((poolIdString != null && token != null) ||
+            (poolIdString != null && productId != null) ||
             (token != null && productId != null)) {
             throw new BadRequestException(i18n
                 .tr("Cannot bind by multiple parameters."));
@@ -614,6 +609,8 @@ public class ConsumerResource {
                     entitlements = bindByProduct(productId, consumer, quantity);
                 }
                 else {
+                    String poolId = Util.assertNotNull(poolIdString, i18n
+                        .tr("Pool ID must be provided"));
                     entitlements = bindByPool(poolId, consumer, quantity);
                 }
             }
@@ -703,7 +700,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/entitlements/{dbid}")
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
-        @PathParam("dbid") Long dbid, @Context Principal principal) {
+        @PathParam("dbid") String dbid, @Context Principal principal) {
 
         verifyAndLookupConsumer(consumerUuid);
 
@@ -731,7 +728,7 @@ public class ConsumerResource {
 
         verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator
-            .findByCertificateSerial(BigInteger.valueOf(serial));
+            .findByCertificateSerial(serial);
 
         if (toDelete != null) {
             poolManager.revokeEntitlement(toDelete);

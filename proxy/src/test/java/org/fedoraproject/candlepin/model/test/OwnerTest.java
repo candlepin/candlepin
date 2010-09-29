@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -42,7 +41,7 @@ public class OwnerTest extends DatabaseTestFixture {
         assertNotNull(result);
         assertEquals(ownerName, result.getKey());
         assertEquals(ownerName, result.getDisplayName());
-        assertTrue(result.getId() > 0);
+        assertNotNull(result.getId());
         assertEquals(o.getId(), result.getId());
     }
 

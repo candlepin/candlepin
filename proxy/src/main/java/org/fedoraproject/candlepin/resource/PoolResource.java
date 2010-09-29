@@ -88,7 +88,7 @@ public class PoolResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Wrapped(element = "pools")
     @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
-    public List<Pool> list(@QueryParam("owner") Long ownerId,
+    public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll) {
@@ -164,7 +164,7 @@ public class PoolResource {
     @Path("/{pool_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
-    public Pool getPool(@PathParam("pool_id") Long id) {
+    public Pool getPool(@PathParam("pool_id") String id) {
         Pool toReturn = poolCurator.find(id);
 
         if (toReturn != null) {
@@ -178,7 +178,7 @@ public class PoolResource {
     @DELETE
     @Path("/{pool_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public void deletePool(@PathParam("pool_id") Long id) {
+    public void deletePool(@PathParam("pool_id") String id) {
         Pool toReturn = poolCurator.find(id);
 
         if (toReturn == null) {

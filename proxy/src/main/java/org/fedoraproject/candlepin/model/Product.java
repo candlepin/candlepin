@@ -25,15 +25,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
 
 /**
  * Represents a Product that can be consumed and entitled. Products define
@@ -45,7 +44,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_product")
-@SequenceGenerator(name = "seq_product", sequenceName = "seq_product", allocationSize = 1)
 public class Product extends AbstractHibernateObject implements Linkable {
    
     // Product ID is stored as a string.

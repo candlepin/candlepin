@@ -52,7 +52,7 @@ public class EntitlementImporterTest {
     public void init() {
         this.testSub = new Subscription();
         this.testSub.setProduct(new Product("test-prod", "Test Prod"));
-        this.testSub.setUpstreamPoolId(1L);
+        this.testSub.setUpstreamPoolId("1");
 
         this.owner = new Owner();
         this.testSub.setOwner(this.owner);

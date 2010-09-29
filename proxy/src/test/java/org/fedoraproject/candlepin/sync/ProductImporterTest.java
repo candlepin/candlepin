@@ -119,7 +119,7 @@ public class ProductImporterTest {
 
     // Returns the Content object added
     private void addContentTo(Product p) {
-        Content c = new Content("name", new Long(100130), "label", "type",
+        Content c = new Content("name", "100130", "label", "type",
             "vendor", "url", "gpgurl");
         p.getProductContent().add(new ProductContent(p, c, true));
     }

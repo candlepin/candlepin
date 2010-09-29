@@ -19,10 +19,10 @@ import java.security.PublicKey;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * KeyPair: Simple wrapper for a Java security keypair. We need to store these in
@@ -30,12 +30,12 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "cp_key_pair")
-@SequenceGenerator(name = "seq_keypair", sequenceName = "seq_keypair", allocationSize = 1)
 public class KeyPair extends AbstractHibernateObject{
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_keypair")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
     private PrivateKey privateKey;
     private PublicKey publicKey;
@@ -61,11 +61,11 @@ public class KeyPair extends AbstractHibernateObject{
         this.publicKey = publicKey;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 }

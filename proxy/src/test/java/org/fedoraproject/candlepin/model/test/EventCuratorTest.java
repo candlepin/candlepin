@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -56,7 +56,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
         Event lookedUp = eventCurator.find(event.getId());
         assertNull(lookedUp.getOldEntity());
         assertEquals(Type.CREATED, lookedUp.getType());
-        assertTrue(lookedUp.getId() > 0);
+        assertNotNull(lookedUp.getId());
     }
 
 }

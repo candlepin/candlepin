@@ -21,15 +21,15 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents the owner of entitlements.
@@ -41,14 +41,14 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_owner")
-@SequenceGenerator(name = "seq_owner", sequenceName = "seq_owner", allocationSize = 1)
 public class Owner extends AbstractHibernateObject implements Serializable, Linkable {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_owner")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "account", nullable = false, unique = true)
     private String key;
 
     @Column(nullable = false)
@@ -103,14 +103,14 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
      * @return the id
      */
     @Override
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     /**
      * @param id the id to set
      */
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

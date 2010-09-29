@@ -71,7 +71,7 @@ public class ConsumerTypeResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("/{id}")
-    public ConsumerType getConsumerType(@PathParam("id") Long id) {
+    public ConsumerType getConsumerType(@PathParam("id") String id) {
         ConsumerType toReturn = consumerTypeCurator.find(id);
 
         if (toReturn != null) {
@@ -132,7 +132,7 @@ public class ConsumerTypeResource {
     @DELETE
     @Path("/{id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    public void deleteConsumerType(@PathParam("id") Long id) {
+    public void deleteConsumerType(@PathParam("id") String id) {
         ConsumerType type = consumerTypeCurator.find(id);
 
         if (type == null) {

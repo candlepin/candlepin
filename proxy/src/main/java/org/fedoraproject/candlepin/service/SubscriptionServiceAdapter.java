@@ -84,7 +84,7 @@ public interface SubscriptionServiceAdapter {
      * @param subscriptionId id of the subscription to return.
      * @return Subscription whose id matches subscriptionId
      */
-    Subscription getSubscription(Long subscriptionId);
+    Subscription getSubscription(String subscriptionId);
     
     /**
      * Return all subscriptions.
@@ -107,5 +107,5 @@ public interface SubscriptionServiceAdapter {
      * 
      * @param subscriptionId
      */
-    void sendActivationEmail(Long subscriptionId);
+    void sendActivationEmail(String subscriptionId);
 }

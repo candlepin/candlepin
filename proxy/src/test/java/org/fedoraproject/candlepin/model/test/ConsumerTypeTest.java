@@ -58,8 +58,8 @@ public class ConsumerTypeTest extends DatabaseTestFixture {
         assertFalse(ct.equals(ct2));
         assertFalse(ct.equals(new Integer(1)));
         
-        ct.setId(10L);
-        ct1.setId(11L);
+        ct.setId("10");
+        ct1.setId("11");
         assertTrue(ct.equals(ct1));
     }
 }

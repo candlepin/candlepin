@@ -118,8 +118,8 @@ public class EntitlementImporter {
      * @param subscriptionsToImport
      */
     public void store(Owner owner, Set<Subscription> subscriptionsToImport) {
-        Map<Long, Subscription> existingSubByEntitlement =
-            new HashMap<Long, Subscription>();
+        Map<String, Subscription> existingSubByEntitlement =
+            new HashMap<String, Subscription>();
         for (Subscription subscription : subscriptionCurator.listByOwner(owner)) {
             // if the upstream pool id is null,
             // this must be a locally controlled sub.

@@ -20,24 +20,24 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Rules
  */
 @Entity
 @Table(name = "cp_rules")
-@SequenceGenerator(name = "seq_rules", sequenceName = "seq_rules", allocationSize = 1)
 @Embeddable
 public class Rules extends AbstractHibernateObject{
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_rules")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
     @Lob
     @Column(name = "rules_blob")

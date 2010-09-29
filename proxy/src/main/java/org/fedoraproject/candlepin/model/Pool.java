@@ -22,13 +22,11 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -44,6 +42,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ParamDef;
 
 /**
@@ -56,11 +55,11 @@ import org.hibernate.annotations.ParamDef;
 @FilterDefs({
     @FilterDef(
         name = "Pool_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_id", type = "long")
+        parameters = @ParamDef(name = "owner_id", type = "string")
     ),
     @FilterDef(
         name = "Pool_CONSUMER_FILTER", 
-        parameters = @ParamDef(name = "consumer_id", type = "long")
+        parameters = @ParamDef(name = "consumer_id", type = "string")
     )
 })
 @Filters({
@@ -75,14 +74,13 @@ import org.hibernate.annotations.ParamDef;
     )
 })
 @Table(name = "cp_pool")
-@SequenceGenerator(name = "seq_pool",
-        sequenceName = "seq_pool", allocationSize = 1)
 public class Pool extends AbstractHibernateObject 
     implements AccessControlEnforced, Linkable {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_pool")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
     
     @ManyToOne
     @ForeignKey(name = "fk_pool_owner")
@@ -96,7 +94,7 @@ public class Pool extends AbstractHibernateObject
     // in another system only accessible to us as a service. Actual implementations
     // of our SubscriptionService will be used to use this data.
     @Column(nullable = true, unique = true)
-    private Long subscriptionId;
+    private String subscriptionId;
 
     /* Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
@@ -157,14 +155,14 @@ public class Pool extends AbstractHibernateObject
     }
 
     /** {@inheritDoc} */
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     /**
      * @param id new db id.
      */
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -379,14 +377,14 @@ public class Pool extends AbstractHibernateObject
     /**
      * @return subscription id associated with this pool.
      */
-    public Long getSubscriptionId() {
+    public String getSubscriptionId() {
         return subscriptionId;
     }
 
     /**
      * @param subscriptionId associates the given subscription.
      */
-    public void setSubscriptionId(Long subscriptionId) {
+    public void setSubscriptionId(String subscriptionId) {
         this.subscriptionId = subscriptionId;
     }
 

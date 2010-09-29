@@ -182,7 +182,7 @@ public class EntitlementResource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @Path("{dbid}")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
-    public Entitlement getEntitlement(@PathParam("dbid") Long dbid) {
+    public Entitlement getEntitlement(@PathParam("dbid") String dbid) {
         Entitlement toReturn = entitlementCurator.find(dbid);
         if (toReturn != null) {
             return toReturn;
@@ -198,7 +198,7 @@ public class EntitlementResource {
      */
     @DELETE
     @Path("/{dbid}")
-    public void unbind(@PathParam("dbid") Long dbid) {
+    public void unbind(@PathParam("dbid") String dbid) {
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
             poolManager.revokeEntitlement(toDelete);

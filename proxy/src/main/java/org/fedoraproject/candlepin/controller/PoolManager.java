@@ -135,7 +135,7 @@ public class PoolManager {
 
         // Map all  pools for this owner/product that have a
         // subscription ID associated with them.
-        Map<Long, Pool> subToPoolMap = new HashMap<Long, Pool>();
+        Map<String, Pool> subToPoolMap = new HashMap<String, Pool>();
         for (Pool p : pools) {
             if (p.getSubscriptionId() != null) {
                 subToPoolMap.put(p.getSubscriptionId(), p);
@@ -154,7 +154,7 @@ public class PoolManager {
         }
 
         // delete pools whose subscription disappeared:
-        for (Entry<Long, Pool> entry : subToPoolMap.entrySet()) {
+        for (Entry<String, Pool> entry : subToPoolMap.entrySet()) {
             deletePool(entry.getValue());
         }
     }
@@ -241,8 +241,8 @@ public class PoolManager {
     }
 
 
-    private boolean poolExistsForSubscription(Map<Long, Pool> subToPoolMap,
-            Long id) {
+    private boolean poolExistsForSubscription(Map<String, Pool> subToPoolMap,
+            String id) {
         return subToPoolMap.containsKey(id);
     }
 
@@ -277,11 +277,11 @@ public class PoolManager {
     }
 
 
-    public Pool find(Long poolId) {
+    public Pool find(String poolId) {
         return this.poolCurator.find(poolId);
     }
 
-    public Pool lookupBySubscriptionId(Long id) {
+    public Pool lookupBySubscriptionId(String id) {
         return this.poolCurator.lookupBySubscriptionId(id);
     }
 

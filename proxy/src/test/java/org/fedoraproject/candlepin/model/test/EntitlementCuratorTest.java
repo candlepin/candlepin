@@ -15,8 +15,7 @@
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
-
-import java.math.BigInteger;
+import static org.junit.Assert.assertNotSame;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -35,9 +34,9 @@ import org.junit.Test;
 public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Entitlement secondEntitlement;
     private Entitlement firstEntitlement;
-    
-    private final Long EXPECTED_CERTIFICATE_SERIAL = 2L;
-
+    private EntitlementCertificate firstCertificate;
+    private EntitlementCertificate secondCertificate;
+  
     @Before
     public void setUp() {
         Owner owner = createOwner();
@@ -53,8 +52,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             owner, product, 1L, dateSource.currentDate(), dateSource.currentDate());
         poolCurator.create(firstPool);
         
-        EntitlementCertificate firstCertificate 
-            = createEntitlementCertificate("key", "certificate");
+        firstCertificate = createEntitlementCertificate("key", "certificate");
         
         firstEntitlement = createEntitlement(owner, null, firstPool, firstCertificate);
         entitlementCurator.create(firstEntitlement);
@@ -66,8 +64,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             owner, product1, 1L, dateSource.currentDate(), dateSource.currentDate());
         poolCurator.create(secondPool);
         
-        EntitlementCertificate secondCertificate 
-            = createEntitlementCertificate("key", "certificate");
+        secondCertificate = createEntitlementCertificate("key", "certificate");
         
         secondEntitlement = createEntitlement(owner, null, secondPool, secondCertificate);
         entitlementCurator.create(secondEntitlement);
@@ -76,8 +73,15 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void shouldReturnCorrectCertificate() {
         Entitlement e = entitlementCurator.findByCertificateSerial(
-            BigInteger.valueOf(EXPECTED_CERTIFICATE_SERIAL));
+            secondCertificate.getSerial().getId());
         assertEquals(secondEntitlement, e);
+    }
+    
+    @Test
+    public void shouldReturnInCorrectCertificate() {
+        Entitlement e = entitlementCurator.findByCertificateSerial(
+            firstCertificate.getSerial().getId());
+        assertNotSame(secondEntitlement, e);
     }
 
 }

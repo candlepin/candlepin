@@ -204,10 +204,10 @@ public class TestUtil {
     public static IdentityCertificate createIdCert() {
         IdentityCertificate idCert = new IdentityCertificate();
         CertificateSerial serial = new CertificateSerial(new Date());
-        serial.setId(new Long(new Random().nextInt(1000000)));
+        serial.setId(Long.valueOf(new Random().nextInt(1000000)));
 
         // totally arbitrary
-        idCert.setId(new Long(new Random().nextInt(1000000)));
+        idCert.setId(String.valueOf(new Random().nextInt(1000000)));
         idCert.setKey("uh0876puhapodifbvj094");
         idCert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         idCert.setSerial(serial);
@@ -230,7 +230,7 @@ public class TestUtil {
 
     public static Entitlement createEntitlement() {
         Owner owner = new Owner("Test Owner |" + randomInt());
-        owner.setId(RANDOM.nextLong());
+        owner.setId(String.valueOf(RANDOM.nextLong()));
         return createEntitlement(owner, createConsumer(owner), createPool(
             owner, createProduct()), null);
     }

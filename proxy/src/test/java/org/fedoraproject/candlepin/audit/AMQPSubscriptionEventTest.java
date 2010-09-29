@@ -75,7 +75,7 @@ public class AMQPSubscriptionEventTest {
     private void verifySubscriptionEvent(Event.Type type) throws Exception {
         // given
         Event event = new Event(type, Event.Target.SUBSCRIPTION,
-            principal, 1L, 1L, 33L, "Old Subscription", "New Subscription");
+            principal, "1", "1", "33", "Old Subscription", "New Subscription");
 
         Subscription sub = mock(Subscription.class, Mockito.RETURNS_DEEP_STUBS);
 
@@ -96,7 +96,7 @@ public class AMQPSubscriptionEventTest {
 
         // then
         Map<String, Object> expectedMap = new HashMap<String, Object>();
-        expectedMap.put("id", 33L);
+        expectedMap.put("id", "33");
         expectedMap.put("owner", "test-owner");
         expectedMap.put("name", "test-product-id");
         expectedMap.put("entitlement_cert", "test-cert");
@@ -127,7 +127,7 @@ public class AMQPSubscriptionEventTest {
     public void subscriptionDeleted() throws IOException {
         // given
         Event event = new Event(Event.Type.DELETED, Event.Target.SUBSCRIPTION,
-            principal, 1L, 1L, 33L, "Old Subscription", "New Subscription");
+            principal, "1", "1", "33", "Old Subscription", "New Subscription");
 
         Subscription sub = mock(Subscription.class, Mockito.RETURNS_DEEP_STUBS);
         
@@ -139,7 +139,7 @@ public class AMQPSubscriptionEventTest {
 
         // then
         Map<String, Object> expectedMap = new HashMap<String, Object>();
-        expectedMap.put("id", 33L);
+        expectedMap.put("id", "33");
         expectedMap.put("owner", "test-owner");
 
         verify(mapper).writeValueAsString(argThat(hasEntry("event", expectedMap)));

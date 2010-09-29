@@ -21,9 +21,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -40,6 +38,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ParamDef;
 
 /**
@@ -50,13 +49,12 @@ import org.hibernate.annotations.ParamDef;
  */
 @Entity
 @Table(name = "cp_event")
-@SequenceGenerator(name = "seq_event", sequenceName = "seq_event", allocationSize = 1)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @FilterDefs({
     @FilterDef(
         name = "Event_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_id", type = "long")
+        parameters = @ParamDef(name = "owner_id", type = "string")
     )
 })
 @Filters({
@@ -82,8 +80,9 @@ public class Event implements Persisted, AccessControlEnforced {
     
     // Uniquely identifies the event:
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_event")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -104,13 +103,13 @@ public class Event implements Persisted, AccessControlEnforced {
     // Uniquely identifies the entity's ID when combined with the event type.
     // The entity type can be determined from the type field.
     @Column(nullable = false)
-    private Long entityId;
+    private String entityId;
     
     @Column(nullable = false)
-    private Long ownerId;
+    private String ownerId;
 
     @Column(nullable = true)
-    private Long consumerId;
+    private String consumerId;
 
     // Both old/new may be null for creation/deletion events. These are marked
     // Transient as we decided we do not necessarily want to store the object state
@@ -125,7 +124,8 @@ public class Event implements Persisted, AccessControlEnforced {
     }
 
     public Event(Type type, Target target, Principal principal,
-        Long ownerId, Long consumerId, Long entityId, String oldEntity, String newEntity) {
+        String ownerId, String consumerId, String entityId,
+        String oldEntity, String newEntity) {
         this.type = type;
         this.target = target;
 
@@ -142,11 +142,11 @@ public class Event implements Persisted, AccessControlEnforced {
         this.timestamp = new Date();
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -182,19 +182,19 @@ public class Event implements Persisted, AccessControlEnforced {
         this.timestamp = timestamp;
     }
 
-    public Long getOwnerId() {
+    public String getOwnerId() {
         return ownerId;
     }
 
-    public void setOwnerId(Long ownerId) {
+    public void setOwnerId(String ownerId) {
         this.ownerId = ownerId;
     }
     
-    public Long getEntityId() {
+    public String getEntityId() {
         return entityId;
     }
 
-    public void setEntityId(Long entityId) {
+    public void setEntityId(String entityId) {
         this.entityId = entityId;
     }
 
@@ -242,11 +242,11 @@ public class Event implements Persisted, AccessControlEnforced {
         return false;
     }
 
-    public Long getConsumerId() {
+    public String getConsumerId() {
         return consumerId;
     }
 
-    public void setConsumerId(Long consumerId) {
+    public void setConsumerId(String consumerId) {
         this.consumerId = consumerId;
     }
 }

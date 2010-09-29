@@ -96,7 +96,7 @@ public class AMQPBusEventAdapterTest {
 
         // given
         this.eventAdapter = new AMQPBusEventAdapter(mapper, reader, pkiutil);
-        this.event = new Event(this.type, this.target, principal, 1L, 1L, 42L,
+        this.event = new Event(this.type, this.target, principal, "1", "1", "42",
             "Old Entity", "New Entity");
     }
 
@@ -130,7 +130,7 @@ public class AMQPBusEventAdapterTest {
 
         // then
         verify(mapper).writeValueAsString(argThat(
-            hasEntry(equalTo("event"), hasEntry("id", 42L))));
+            hasEntry(equalTo("event"), hasEntry("id", "42"))));
     }
 
 }

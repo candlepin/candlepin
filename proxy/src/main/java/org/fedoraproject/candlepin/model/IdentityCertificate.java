@@ -17,15 +17,15 @@ package org.fedoraproject.candlepin.model;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents certificate used to identify a consumer
@@ -34,12 +34,12 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_id_cert")
-@SequenceGenerator(name = "seq_id_cert", sequenceName = "seq_id_cert", allocationSize = 1)
 public class IdentityCertificate extends AbstractCertificate {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_id_cert")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
     @OneToOne
     private CertificateSerial serial;
@@ -56,11 +56,11 @@ public class IdentityCertificate extends AbstractCertificate {
     }
 
     @XmlTransient
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

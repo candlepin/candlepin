@@ -19,15 +19,15 @@ package org.fedoraproject.candlepin.model;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.hibernate.annotations.GenericGenerator;
 
 
 /**
@@ -37,13 +37,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_certificate")
-@SequenceGenerator(name = "seq_certificate", sequenceName = "seq_certificate",
-        allocationSize = 1)
 public class SubscriptionsCertificate extends AbstractCertificate {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_certificate")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
     
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "serial_id")
@@ -60,14 +59,14 @@ public class SubscriptionsCertificate extends AbstractCertificate {
     /**
      * @return the id
      */
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     /**
      * @param id the id to set
      */
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 }

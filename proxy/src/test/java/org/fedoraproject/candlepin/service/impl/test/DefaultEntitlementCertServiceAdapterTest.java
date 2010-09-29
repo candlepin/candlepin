@@ -58,7 +58,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class DefaultEntitlementCertServiceAdapterTest {
 
     private static final String CONTENT_LABEL = "label";
-    private static final long CONTENT_ID = 1234L;
+    private static final String CONTENT_ID = "1234";
     private static final String CONTENT_TYPE = "type";
     private static final String CONTENT_ENABLED = "enabled";
     private static final String CONTENT_GPG_URL = "gpgUrl";
@@ -98,7 +98,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         
         subscription = new Subscription(null, product, new HashSet<Product>(), 
                 1L, new Date(), new Date(), new Date());
-        subscription.setId(1L);
+        subscription.setId("1");
         
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));

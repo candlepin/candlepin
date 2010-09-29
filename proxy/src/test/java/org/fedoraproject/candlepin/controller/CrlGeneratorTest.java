@@ -257,7 +257,7 @@ public class CrlGeneratorTest {
         };
     }
     
-    private CertificateSerial stubCS(long id, Date expiration) {
+    private CertificateSerial stubCS(Long id, Date expiration) {
         CertificateSerial cs = new CertificateSerial(id, expiration);
         cs.setCollected(false);
         return cs;

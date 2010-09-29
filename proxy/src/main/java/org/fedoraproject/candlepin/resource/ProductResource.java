@@ -132,7 +132,7 @@ public class ProductResource {
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     @Path("/{product_uuid}/content/{content_id}")
     public Product addContent(@PathParam("product_uuid") String pid,
-                              @PathParam("content_id") Long contentId, 
+                              @PathParam("content_id") String contentId, 
                               @QueryParam("enabled") Boolean enabled) {
         Product product = prodAdapter.getProductById(pid);
         Content content = contentCurator.find(contentId);

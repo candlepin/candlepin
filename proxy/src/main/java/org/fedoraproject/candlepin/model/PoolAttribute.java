@@ -19,15 +19,14 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * See Attributes interface for documentation.
@@ -35,13 +34,12 @@ import org.hibernate.annotations.ForeignKey;
 @Entity
 @Table(name = "cp_pool_attribute")
 @Embeddable
-@SequenceGenerator(name = "seq_pool_attribute", sequenceName = "seq_pool_attribute",
-    allocationSize = 1)
 public class PoolAttribute extends AbstractHibernateObject implements Attribute {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_pool_attribute")
-    protected Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    protected String id;
 
     @Column(nullable = false)
     protected String name;
@@ -80,11 +78,11 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     }
 
     @XmlTransient
-    public Long getId() {
+    public String getId() {
         return this.id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

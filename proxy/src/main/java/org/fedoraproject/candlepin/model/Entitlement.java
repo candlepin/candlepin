@@ -21,13 +21,11 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -39,6 +37,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ParamDef;
 
 
@@ -65,11 +64,11 @@ import org.hibernate.annotations.ParamDef;
 @FilterDefs({
     @FilterDef(
         name = "Entitlement_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_id", type = "long")
+        parameters = @ParamDef(name = "owner_id", type = "string")
     ),
     @FilterDef(
         name = "Entitlement_CONSUMER_FILTER", 
-        parameters = @ParamDef(name = "consumer_id", type = "long")
+        parameters = @ParamDef(name = "consumer_id", type = "string")
     )
 })
 @Filters({
@@ -83,16 +82,15 @@ import org.hibernate.annotations.ParamDef;
     )
 })
 @Table(name = "cp_entitlement")
-@SequenceGenerator(name = "seq_entitlement", sequenceName = "seq_entitlement",
-        allocationSize = 1)
 public class Entitlement extends AbstractHibernateObject 
     implements AccessControlEnforced, Linkable {
     
     private static final long serialVersionUID = 1L;
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_entitlement")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
     
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_owner")
@@ -141,14 +139,14 @@ public class Entitlement extends AbstractHibernateObject
     /**
      * @return the id
      */
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     /**
      * @param id the id to set
      */
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

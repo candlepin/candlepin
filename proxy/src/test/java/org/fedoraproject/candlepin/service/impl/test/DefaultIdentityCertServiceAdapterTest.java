@@ -80,7 +80,7 @@ public class DefaultIdentityCertServiceAdapterTest {
     @Test
     public void testGenerate() throws GeneralSecurityException, IOException {
         Consumer consumer = mock(Consumer.class);
-        when(consumer.getId()).thenReturn(new Long(42L));
+        when(consumer.getId()).thenReturn("42");
         when(consumer.getUuid()).thenReturn(Util.generateUUID());
         KeyPair kp = createKeyPair();
         when(kpc.getConsumerKeyPair(consumer)).thenReturn(kp);
@@ -104,7 +104,7 @@ public class DefaultIdentityCertServiceAdapterTest {
                 public IdentityCertificate answer(InvocationOnMock invocation) {
                     Object[] args = invocation.getArguments();
                     IdentityCertificate ic = (IdentityCertificate) args[0];
-                    ic.setId(42L);
+                    ic.setId("42");
                     return ic;
                 }
             });
@@ -140,7 +140,7 @@ public class DefaultIdentityCertServiceAdapterTest {
         Consumer consumer = mock(Consumer.class);
         IdentityCertificate mockic = mock(IdentityCertificate.class);
         when(consumer.getIdCert()).thenReturn(mockic);
-        when(mockic.getId()).thenReturn(43L);
+        when(mockic.getId()).thenReturn("43");
         when(idcur.find(mockic.getId())).thenReturn(mockic);
 
 
@@ -165,7 +165,7 @@ public class DefaultIdentityCertServiceAdapterTest {
                 public IdentityCertificate answer(InvocationOnMock invocation) {
                     Object[] args = invocation.getArguments();
                     IdentityCertificate ic = (IdentityCertificate) args[0];
-                    ic.setId(42L);
+                    ic.setId("42");
                     return ic;
                 }
             });
@@ -186,7 +186,7 @@ public class DefaultIdentityCertServiceAdapterTest {
 
     private Consumer mockConsumer() {
         Consumer c = mock(Consumer.class);
-        when(c.getId()).thenReturn(new Long(42L));
+        when(c.getId()).thenReturn("42");
         when(c.getUuid()).thenReturn(Util.generateUUID());
         return c;
     }
@@ -194,7 +194,7 @@ public class DefaultIdentityCertServiceAdapterTest {
     @Test
     public void testRegenerate() throws GeneralSecurityException, IOException {
         Consumer consumer = mock(Consumer.class);
-        when(consumer.getId()).thenReturn(new Long(42L));
+        when(consumer.getId()).thenReturn("42L");
         when(consumer.getUuid()).thenReturn(Util.generateUUID());
         when(idcur.find(consumer.getId())).thenReturn(null);
 
@@ -220,7 +220,7 @@ public class DefaultIdentityCertServiceAdapterTest {
                 public IdentityCertificate answer(InvocationOnMock invocation) {
                     Object[] args = invocation.getArguments();
                     IdentityCertificate ic = (IdentityCertificate) args[0];
-                    ic.setId(42L);
+                    ic.setId("42");
                     return ic;
                 }
             });

@@ -65,7 +65,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateProductWithContent() {
         Product toSubmit = createProduct();
-        Long  contentHash = Math.abs(Long.valueOf("test-content".hashCode()));
+        String  contentHash = String.valueOf(
+            Math.abs(Long.valueOf("test-content".hashCode())));
         Content testContent = new Content("test-content", contentHash, 
                             "test-content-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url");

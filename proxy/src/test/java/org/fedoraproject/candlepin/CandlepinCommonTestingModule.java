@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.guice.CandlepinModule;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
@@ -36,6 +37,8 @@ import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.test.TestRulesCurator;
+import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -65,18 +68,15 @@ import org.fedoraproject.candlepin.test.PKIReaderForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.ExpiryDateFunction;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-import org.fedoraproject.candlepin.guice.CandlepinModule;
-import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
-import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 

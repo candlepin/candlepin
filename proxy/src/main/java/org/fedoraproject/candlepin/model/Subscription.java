@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,7 +22,6 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -32,11 +29,13 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents a Subscription
@@ -45,13 +44,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_subscription")
-@SequenceGenerator(name = "seq_subscription", sequenceName = "seq_subscription",
-allocationSize = 1)
 public class Subscription extends AbstractHibernateObject {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_subscription")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
     @ManyToOne
     @ForeignKey(name = "fk_subscription_owner")
@@ -88,7 +86,7 @@ public class Subscription extends AbstractHibernateObject {
     private Date modified;
     
     @Column(name = "upstream_pool_id")
-    private Long upstreamPoolId;
+    private String upstreamPoolId;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "certificate_id")
@@ -118,14 +116,14 @@ public class Subscription extends AbstractHibernateObject {
     /**
      * @return the subscription id
      */
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     /**
      * @param id subscription id
      */
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -265,11 +263,11 @@ public class Subscription extends AbstractHibernateObject {
         this.providedProducts = providedProducts;
     }
 
-    public void setUpstreamPoolId(Long upstreamPoolId) {
+    public void setUpstreamPoolId(String upstreamPoolId) {
         this.upstreamPoolId = upstreamPoolId;
     }
 
-    public Long getUpstreamPoolId() {
+    public String getUpstreamPoolId() {
         return upstreamPoolId;
     }
 

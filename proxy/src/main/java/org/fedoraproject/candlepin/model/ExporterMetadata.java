@@ -20,27 +20,27 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * ExporterMetadata
  */
 @Entity
 @Table(name = "cp_export_metadata")
-@SequenceGenerator(name = "seq_exp_meta", sequenceName = "seq_exp_meta", allocationSize = 1)
 public class ExporterMetadata extends AbstractHibernateObject {
 
     public static final String TYPE_SYSTEM = "system";
     public static final String TYPE_PER_USER = "per_user";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_exp_meta")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
     @Column(nullable = false)
     private String type;
     @Column(nullable = false)
@@ -60,18 +60,18 @@ public class ExporterMetadata extends AbstractHibernateObject {
         this(null, type, exported, owner);
     }
 
-    public ExporterMetadata(Long id, String type, Date exported, Owner owner) {
+    public ExporterMetadata(String id, String type, Date exported, Owner owner) {
         this.id = id;
         this.type = type;
         this.exported = exported;
         this.owner = owner;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long anId) {
+    public void setId(String anId) {
         id = anId;
     }
 

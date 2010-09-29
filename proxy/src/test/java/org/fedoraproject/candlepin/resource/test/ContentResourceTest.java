@@ -70,15 +70,15 @@ public class ContentResourceTest {
     @Test
     public void createContent() {
         Content content = mock(Content.class);
-        when(content.getId()).thenReturn(10L);
-        when(cc.find(eq(10L))).thenReturn(content);
+        when(content.getId()).thenReturn("10");
+        when(cc.find(eq("10"))).thenReturn(content);
         assertEquals(content, cr.createContent(content));
     }
     
     @Test
     public void createContentNull()  {
         Content content = mock(Content.class);
-        when(content.getId()).thenReturn(10L);
+        when(content.getId()).thenReturn("10");
         when(cc.find(eq(10L))).thenReturn(null);
         cr.createContent(content);
         verify(cc, atLeastOnce()).create(content);

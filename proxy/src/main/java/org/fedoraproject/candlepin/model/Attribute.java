@@ -24,7 +24,7 @@ package org.fedoraproject.candlepin.model;
  */
 public interface Attribute {
 
-    Long getId();
+    String getId();
     String getName();
     String getValue();
 

@@ -45,7 +45,7 @@ public class LoggingListener implements EventListener {
     @Override
     public void onEvent(Event e) {
         auditLog.info(String.format(
-            "%s - %s %s on %d owner %d performed by %s\n",
+            "%s - %s %s on %s owner %s performed by %s\n",
             e.getTimestamp(), e.getTarget(), e.getType(), e.getEntityId(),
             e.getOwnerId(), e.getPrincipal()));
         if (verbose) {

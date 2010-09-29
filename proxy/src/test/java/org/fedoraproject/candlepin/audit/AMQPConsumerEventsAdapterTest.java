@@ -67,7 +67,7 @@ public class AMQPConsumerEventsAdapterTest {
     public void init() {
         this.factory = new EventFactory(mockPrincipalProvider);
         this.principal = TestUtil.createOwnerPrincipal();
-        this.principal.getOwner().setId(new Random().nextLong());
+        this.principal.getOwner().setId(String.valueOf(new Random().nextLong()));
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         this.adapter = new AMQPBusEventAdapter(spiedMapper, reader, pkiutil);
     }

@@ -19,11 +19,9 @@ import java.util.Formatter;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -31,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents the user.
@@ -41,12 +40,12 @@ import org.hibernate.annotations.ForeignKey;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_user")
-@SequenceGenerator(name = "seq_user", sequenceName = "seq_user", allocationSize = 1)
 public class User extends AbstractHibernateObject{
     
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_user")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
     @ManyToOne
     @ForeignKey(name = "fk_user_owner_id")
@@ -78,14 +77,14 @@ public class User extends AbstractHibernateObject{
     /**
      * @return the id
      */
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     /**
      * @param id the id to set
      */
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

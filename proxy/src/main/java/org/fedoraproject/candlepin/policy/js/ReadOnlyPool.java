@@ -46,7 +46,7 @@ public class ReadOnlyPool {
         return entPool.entitlementsAvailable(quantityToConsume);
     }
 
-    public Long getId() {
+    public String getId() {
         return entPool.getId();
     }
 

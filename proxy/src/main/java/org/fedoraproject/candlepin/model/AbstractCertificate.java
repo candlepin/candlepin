@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "Certificate")
 public abstract class AbstractCertificate extends AbstractHibernateObject {
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "privatekey")
     private byte[] key;
 
     @Column(nullable = false)

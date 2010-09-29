@@ -19,12 +19,11 @@ import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.fedoraproject.candlepin.util.Util;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * CertificateSerial: A simple database sequence used to ensure certificates receive
@@ -32,13 +31,12 @@ import org.fedoraproject.candlepin.util.Util;
  */
 @Entity
 @Table(name = "cp_cert_serial")
-@SequenceGenerator(name = "seq_certificate_serial", sequenceName = "seq_certificate_serial",
-        allocationSize = 1)
 public class CertificateSerial extends AbstractHibernateObject{
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator =
-        "seq_certificate_serial")
+    @GeneratedValue(generator = "serial-number")
+    @GenericGenerator(name = "serial-number", 
+        strategy = "org.fedoraproject.candlepin.util.SerialNumberGenerator")
     private Long id;
     
     /**Flag which indicates whether the certificate is revoked */
@@ -129,8 +127,8 @@ public class CertificateSerial extends AbstractHibernateObject{
         return Util.toBigInt(this.getId());
     }
     
-    public void setSerial(BigInteger serial) {
-        this.id = serial.longValue();
+    public void setSerial(Long serial) {
+        this.id = serial;
     }
 
 }

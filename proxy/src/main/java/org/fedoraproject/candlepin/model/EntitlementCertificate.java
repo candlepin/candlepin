@@ -14,28 +14,26 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
-
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.ParamDef;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.ParamDef;
 
 /**
  * Represents certificate used to entitle a consumer
@@ -44,17 +42,15 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_ent_certificate")
-@SequenceGenerator(name = "seq_ent_cert", 
-                   sequenceName = "seq_ent_cert", allocationSize = 1)
 
 @FilterDefs({
     @FilterDef(
         name = "EntitlementCertificate_CONSUMER_FILTER", 
-        parameters = @ParamDef(name = "consumer_id", type = "long")
+        parameters = @ParamDef(name = "consumer_id", type = "string")
     ),
     @FilterDef(
         name = "EntitlementCertificate_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_id", type = "long")
+        parameters = @ParamDef(name = "owner_id", type = "string")
     )
 })
 @Filters({
@@ -71,9 +67,9 @@ import javax.xml.bind.annotation.XmlTransient;
 public class EntitlementCertificate extends AbstractCertificate
     implements AccessControlEnforced {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, 
-                    generator = "seq_ent_cert")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
     @OneToOne
     private CertificateSerial serial;
@@ -92,11 +88,11 @@ public class EntitlementCertificate extends AbstractCertificate
     }
 
     @XmlTransient
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -121,7 +117,7 @@ public class EntitlementCertificate extends AbstractCertificate
 
     @Override
     public int hashCode() {
-        return this.id == null ? super.hashCode() : id.intValue();
+        return this.id == null ? super.hashCode() : 31 * id.hashCode();
     }
 
     @Override

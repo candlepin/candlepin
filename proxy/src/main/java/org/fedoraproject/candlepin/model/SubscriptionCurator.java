@@ -38,7 +38,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      * @param subId subscription id
      * @return subscription whose id matches the given value.
      */
-    public Subscription lookupByOwnerAndId(Long subId) {
+    public Subscription lookupByOwnerAndId(String subId) {
         return (Subscription) currentSession().createCriteria(Subscription.class)
             .add(Restrictions.eq("id", subId)).uniqueResult();
     }

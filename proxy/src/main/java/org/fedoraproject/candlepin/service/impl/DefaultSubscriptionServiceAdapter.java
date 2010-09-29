@@ -72,7 +72,7 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public Subscription getSubscription(Long subscriptionId) {
+    public Subscription getSubscription(String subscriptionId) {
         return subCurator.lookupByOwnerAndId(subscriptionId);
     }
 
@@ -109,7 +109,7 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public void sendActivationEmail(Long subscriptionId) {
+    public void sendActivationEmail(String subscriptionId) {
         // hosted-only
     }
 }

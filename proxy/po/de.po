@@ -36,7 +36,6 @@ msgstr ""
 #, java-format
 msgid "User {0} has already registered a personal consumer"
 msgstr ""
-
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:248
 #, java-format
 msgid "Problem creating consumer {0}"
@@ -75,7 +74,7 @@ msgid "No such entitlement pool: {0}"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:593
-msgid "Pool ID should be numeric"
+msgid "Pool ID must be provided"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:600

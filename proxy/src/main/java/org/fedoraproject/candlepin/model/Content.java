@@ -32,7 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Content extends AbstractHibernateObject {
 
     @Id
-    private Long id;
+    private String id;
     
     @Column(nullable = false)
     private String type;
@@ -55,7 +55,7 @@ public class Content extends AbstractHibernateObject {
     @Column(nullable = true)
     private String gpgUrl;
     
-    public Content(String name, Long id, String label, String type,
+    public Content(String name, String id, String label, String type,
                     String vendor, String contentUrl,
                     String gpgUrl) {
         setName(name);
@@ -74,14 +74,14 @@ public class Content extends AbstractHibernateObject {
      * @see org.fedoraproject.candlepin.model.Persisted#getId()
      */
     @Override
-    public Long getId() {
+    public String getId() {
         return id;
     }
     
     /**
      * @param id product id
      */
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
     

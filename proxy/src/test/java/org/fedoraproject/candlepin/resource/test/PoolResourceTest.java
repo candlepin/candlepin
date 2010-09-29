@@ -159,7 +159,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test(expected = NotFoundException.class)
     public void testListNoSuchOwner() {
-        poolResource.list(new Long(-1), null, null, false);
+        poolResource.list("-1", null, null, false);
     }
     
     @Test(expected = NotFoundException.class)

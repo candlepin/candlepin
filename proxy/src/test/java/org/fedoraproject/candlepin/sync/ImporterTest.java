@@ -67,7 +67,7 @@ public class ImporterTest {
         ExporterMetadata em = new ExporterMetadata();
         Date daybefore = getDateBeforeDays(1);
         em.setExported(daybefore);
-        em.setId(42L);
+        em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
@@ -101,7 +101,7 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         ExporterMetadata em = new ExporterMetadata();
         em.setCreated(getDateAfterDays(1));
-        em.setId(42L);
+        em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,

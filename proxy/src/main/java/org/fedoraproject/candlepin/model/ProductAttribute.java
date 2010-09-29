@@ -19,29 +19,27 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * See Attributes interface for documentation.
  */
 @Entity
 @Table(name = "cp_product_attribute")
-@SequenceGenerator(name = "seq_product_attribute", sequenceName = "seq_product_attribute",
-        allocationSize = 1)
 @Embeddable
 public class ProductAttribute extends AbstractHibernateObject implements Attribute {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_product_attribute")
-    protected Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    protected String id;
 
     @Column(nullable = false)
     protected String name;
@@ -82,11 +80,11 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     }
 
     @XmlTransient
-    public Long getId() {
+    public String getId() {
         return this.id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -92,8 +92,8 @@ public class ListenerWrapperTest {
     private String eventJson() throws Exception {
         StringWriter sw = new StringWriter();
         Event e = new Event();
-        e.setId(10L);
-        e.setConsumerId(20L);
+        e.setId("10");
+        e.setConsumerId("20");
         e.setPrincipal("not so random name");
         mapper.writeValue(sw, e);
         return sw.toString();

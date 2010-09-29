@@ -14,7 +14,10 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -80,7 +83,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     
     @Test    
     public void testSimpleDeleteOwner() {
-        Long id = owner.getId();
+        String id = owner.getId();
         ownerResource.deleteOwner(
             owner.getKey(), 
             new UserPrincipal("someuser", owner, new LinkedList<Role>()));
@@ -160,7 +163,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
                 .listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
-        long poolId = newPool.getId();
+        String poolId = newPool.getId();
         // Now delete the subscription:
         subCurator.delete(sub);
 
@@ -362,29 +365,23 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testEntitlementsRevocationWithFifoOrder() {
-        doTestEntitlementsRevocationCommon(7, 4, 4, true);
-        assertTrue(this.poolCurator.find(1L).getConsumed() == 4);
-        assertNull(this.entitlementCurator.find(2L));
-        assertNotNull(this.entitlementCurator.find(1L));
+        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 4, true);
+        assertTrue(this.poolCurator.find(pool.getId()).getConsumed() == 4);
     }
 
     @Test
     public void testEntitlementsRevocationWithLifoOrder() {
-        doTestEntitlementsRevocationCommon(7, 4, 5, false);
-        assertEquals(5L, this.poolCurator.find(1L).getConsumed().longValue());
-        assertNull(this.entitlementCurator.find(1L));
-        assertNotNull(this.entitlementCurator.find(2L));
+        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5, false);
+        assertEquals(5L, this.poolCurator.find(pool.getId()).getConsumed().longValue());
     }
     
     @Test
     public void testEntitlementsRevocationWithNoOverflow() {
-        doTestEntitlementsRevocationCommon(10, 4, 5, false);
-        assertTrue(this.poolCurator.find(1L).getConsumed() == 9);
-        assertNotNull(this.entitlementCurator.find(1L));
-        assertNotNull(this.entitlementCurator.find(2L));
+        Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5, false);
+        assertTrue(this.poolCurator.find(pool.getId()).getConsumed() == 9);
     }
 
-    private void doTestEntitlementsRevocationCommon(long subQ, int e1, int e2,
+    private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2,
         boolean fifo) {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
@@ -406,6 +403,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             fifo ? "true" : "false");
         poolManager.refreshPools(owner);
         pool = poolCurator.find(pool.getId());
+        return pool;
     }
     
     /**

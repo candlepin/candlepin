@@ -298,7 +298,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return criteriaToSelectEntitlementForPool(entitlementPool).list();
     }
     
-    public Pool lookupBySubscriptionId(Long subId) {
+    public Pool lookupBySubscriptionId(String subId) {
         return (Pool) currentSession().createCriteria(Pool.class)
         .add(Restrictions.eq("subscriptionId", subId)).uniqueResult();
     }

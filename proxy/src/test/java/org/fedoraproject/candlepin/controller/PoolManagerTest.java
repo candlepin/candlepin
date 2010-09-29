@@ -126,7 +126,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(TestUtil.createProduct());
-        p.setSubscriptionId(112L);
+        p.setSubscriptionId("112");
         pools.add(p);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
@@ -163,12 +163,12 @@ public class PoolManagerTest {
         List<Pool> pools = Util.newList();
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
-        s.setId(123L);
+        s.setId("123");
         subscriptions.add(s);
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity() + 10, s.getStartDate(),
             Util.tomorrow());
-        p.setId(423L);
+        p.setId("423");
         p.setSubscriptionId(s.getId());
         pools.add(p);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(

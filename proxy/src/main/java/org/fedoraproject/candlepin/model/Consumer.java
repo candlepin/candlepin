@@ -25,13 +25,11 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -47,6 +45,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.annotations.ParamDef;
 
@@ -65,11 +64,11 @@ import org.hibernate.annotations.ParamDef;
 @FilterDefs({
     @FilterDef(
         name = "Consumer_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_id", type = "long")
+        parameters = @ParamDef(name = "owner_id", type = "string")
     ),
     @FilterDef(
         name = "Consumer_CONSUMER_FILTER", 
-        parameters = @ParamDef(name = "consumer_id", type = "long")
+        parameters = @ParamDef(name = "consumer_id", type = "string")
     )
 })
 @Filters({
@@ -81,13 +80,13 @@ import org.hibernate.annotations.ParamDef;
     )
 })
 @Table(name = "cp_consumer")
-@SequenceGenerator(name = "seq_consumer", sequenceName = "seq_consumer", allocationSize = 1)
 public class Consumer extends AbstractHibernateObject 
     implements AccessControlEnforced, Linkable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_consumer")
-    private Long id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
     
     @Column(nullable = false, unique = true)
     private String uuid;
@@ -183,14 +182,14 @@ public class Consumer extends AbstractHibernateObject
     /**
      * {@inheritDoc}
      */
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     /**
      * @param id the db id.
      */
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
