@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.36
+Version: 0.0.37
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Sep 30 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.37-1
+- Setting user license check to be case insensitive (calfonso@redhat.com)
+- Set 'Not After' to 23:59:59 (before next day). (anadathu@redhat.com)
+- Add subscription modified/deleted events to importer. (jesusr@redhat.com)
+- Add subscription deleted, moved subscription modified. (jesusr@redhat.com)
+- 636843: NPE is no longer being thrown on reregister event
+  (ddolguik@redhat.com)
+- Added a spec for sub-pools - unregistering person consumer.
+  (ddolguik@redhat.com)
+- Change deprecated javadoc -> doc. (jesusr@redhat.com)
+- Adding modified event. (jmrodri@gmail.com)
+
 * Thu Sep 23 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.36-1
 - change << HSQLDB to += artifacts(HSQLDB) (jesusr@redhat.com)
 - spec: fix filter certificates by serial number (jbowes@redhat.com)
