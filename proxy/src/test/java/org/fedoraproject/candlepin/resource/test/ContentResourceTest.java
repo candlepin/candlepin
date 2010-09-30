@@ -57,14 +57,14 @@ public class ContentResourceTest {
     @Test(expected = BadRequestException.class)
     public void getContentNull() {
         when(cc.find(anyLong())).thenReturn(null);
-        cr.getContent(10L);
+        cr.getContent("10");
     }
     
     @Test
     public void getContent() {
         Content content = mock(Content.class);
-        when(cc.find(eq(10L))).thenReturn(content);
-        assertEquals(content, cr.getContent(10L));
+        when(cc.find(eq("10"))).thenReturn(content);
+        assertEquals(content, cr.getContent("10"));
     }
     
     @Test
