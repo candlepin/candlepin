@@ -29,7 +29,6 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
-import org.fedoraproject.candlepin.util.Util;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -75,10 +74,7 @@ public class SubscriptionTokenResource {
     @Path("/{subscription_token_id}")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public void deleteSubscriptionToken(
-        @PathParam("subscription_token_id") String subscriptionTokenIdString) {
-        Long subscriptionTokenId = Util.assertLong(subscriptionTokenIdString,
-            i18n.tr("subscription_token_id path parameter must be a number"));
-
+        @PathParam("subscription_token_id") String subscriptionTokenId) {
         SubscriptionToken subscriptionToken = subTokenCurator
             .find(subscriptionTokenId);
 
