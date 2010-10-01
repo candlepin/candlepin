@@ -37,17 +37,17 @@ public class SerialNumberGenerator implements IdentifierGenerator {
     @Override
     public Serializable generate(SessionImplementor arg0, Object arg1)
         throws HibernateException {
-        long id = 0;
+        String id = "";
         try {
             long time = System.currentTimeMillis();
             byte[] ipaddress = Inet4Address.getLocalHost().getAddress();
             Random random = new SecureRandom();
-            id = time * ipaddress[3] * random.nextInt(255);
+            id = id + new Byte(ipaddress[3]).longValue() + time + random.nextInt(255);
         }
         catch (UnknownHostException ex) {
             ex.printStackTrace();
         }
-        return Math.abs(id);
+        return Math.abs(Long.valueOf(id));
     }
 
 }
