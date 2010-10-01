@@ -28,7 +28,6 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.util.Util;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -79,10 +78,7 @@ public class SubscriptionResource {
         subCurator.delete(subscription);
     }
 
-    private Subscription verifyAndFind(String subscriptionIdString) {
-        Long subscriptionId = Util.assertLong(subscriptionIdString,
-            i18n.tr("subscription_id path parameter must be a number"));       
-        
+    private Subscription verifyAndFind(String subscriptionId) {
         Subscription subscription = subCurator.find(subscriptionId);
 
         if (subscription == null) {
