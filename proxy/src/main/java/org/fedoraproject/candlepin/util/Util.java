@@ -16,6 +16,9 @@ package org.fedoraproject.candlepin.util;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.security.SecureRandom;
 import java.security.cert.X509Extension;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,6 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
@@ -235,5 +239,19 @@ public class Util {
         char [] chars = str.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]); 
         return new String(chars);
+    }
+    
+    public static long generateUniqueLong() {
+        String id = "";
+        try {
+            long time = System.currentTimeMillis();
+            byte[] ipaddress = Inet4Address.getLocalHost().getAddress();
+            Random random = new SecureRandom();
+            id = id + new Byte(ipaddress[3]).longValue() + time + random.nextInt(255);
+        }
+        catch (UnknownHostException ex) {
+            ex.printStackTrace();
+        }
+        return Math.abs(Long.valueOf(id));
     }
 }

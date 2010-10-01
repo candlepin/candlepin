@@ -15,10 +15,6 @@
 package org.fedoraproject.candlepin.util;
 
 import java.io.Serializable;
-import java.net.Inet4Address;
-import java.net.UnknownHostException;
-import java.security.SecureRandom;
-import java.util.Random;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
@@ -37,17 +33,7 @@ public class SerialNumberGenerator implements IdentifierGenerator {
     @Override
     public Serializable generate(SessionImplementor arg0, Object arg1)
         throws HibernateException {
-        String id = "";
-        try {
-            long time = System.currentTimeMillis();
-            byte[] ipaddress = Inet4Address.getLocalHost().getAddress();
-            Random random = new SecureRandom();
-            id = id + new Byte(ipaddress[3]).longValue() + time + random.nextInt(255);
-        }
-        catch (UnknownHostException ex) {
-            ex.printStackTrace();
-        }
-        return Math.abs(Long.valueOf(id));
+        return Util.generateUniqueLong();
     }
 
 }
