@@ -55,8 +55,8 @@ describe 'Sub-Pool' do
 
     # TODO:  This magic OID should be refactored...
     order_number = get_extension(cert, '1.3.6.1.4.1.2312.9.4.2')
-
-    order_number.should == @subscription.id.to_s
+    order_number = order_number[2, order_number.size - 2]
+    order_number.should == @subscription.id
   end
 
   it 'prevents unregister as consumer with outstanding entitlements' do
