@@ -478,6 +478,20 @@ public class PoolManager {
             log.debug("Generated entitlementCertificate: #" + generated.getId());
         }
     }
+    
+    @Transactional
+    public void regenerateCertificatesOf(String productId) {
+        List<Pool> poolsForProduct = this.poolCurator.listAvailableEntitlementPools(
+            null, null, productId, false);
+        for (Pool pool : poolsForProduct) {
+            regenerateCertificatesOf(pool.getEntitlements());
+        }
+    }
+
+    public Iterable<Pool> getListOfEntitlementPoolsForProduct(String productId) {
+        return this.poolCurator.listAvailableEntitlementPools(null,
+            null, productId, false);
+    }
 
     // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional

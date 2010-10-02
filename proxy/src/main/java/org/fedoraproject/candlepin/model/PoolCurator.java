@@ -174,6 +174,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return new ArrayList<Pool>();
         }
 
+        // crit.add(Restrictions.or(Restrictions.eq("productId", productId),
+        // Restrictions.in("", results)))
         // Filter for product we want:
         if (productId != null) {
 

@@ -22,6 +22,8 @@ import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlTransient;
 //import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.Parent;
 
 /**
@@ -151,5 +153,30 @@ public class ProductContent extends AbstractHibernateObject implements
         return flexEntitlement;
     }
     
-
+    @Override
+    public int hashCode() {
+        //TODO: Should we include the product here? 
+        return new HashCodeBuilder(3, 23)
+            .append(this.enabled)
+            .append(this.flexEntitlement)
+            .append(this.physicalEntitlement)
+            .append(this.content.hashCode())
+            .toHashCode();
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other instanceof ProductContent) {
+            ProductContent that = (ProductContent) other;
+            return new EqualsBuilder().append(this.enabled, that.enabled)
+                .append(this.flexEntitlement, that.flexEntitlement)
+                .append(this.physicalEntitlement, that.flexEntitlement)
+                .isEquals() && this.content.equals(that.content);
+        }
+        return false;
+    }
+    
 }

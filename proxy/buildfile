@@ -61,7 +61,8 @@ COMMONS = ['commons-beanutils:commons-beanutils:jar:1.7.0',
            'commons-dbcp:commons-dbcp:jar:1.2.1',
            'commons-collections:commons-collections:jar:3.1',
            'commons-io:commons-io:jar:1.3.2',
-           'commons-logging:commons-logging:jar:1.1.1']
+           'commons-logging:commons-logging:jar:1.1.1',
+           'commons-lang:commons-lang:jar:2.5']
 JDOM = 'jdom:jdom:jar:1.0'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']

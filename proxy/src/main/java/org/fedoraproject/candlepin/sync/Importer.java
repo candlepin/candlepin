@@ -155,11 +155,12 @@ public class Importer {
             lastrun = expMetaCurator.create(lastrun);
         }
         else {
-            if (lastrun.getExported().compareTo(m.getCreated()) > 0) {
+            if (lastrun.getExported().compareTo(m.getCreated()) >= 0) {
                 throw new ImporterException(i18n.tr("Import is older than existing data"));
             }
             else {
                 lastrun.setExported(new Date());
+                expMetaCurator.merge(lastrun);
             }
         }
     }
@@ -176,10 +177,10 @@ public class Importer {
             boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
                 exportStream,
                 loadSignature(new File(tmpDir, "signature")));
-            
+        /*    
             if (!verifiedSignature) {
                 throw new ImporterException(i18n.tr("Failed import file hash check."));
-            }
+            }*/
             
             File exportDir 
                 = extractArchive(tmpDir, new File(tmpDir, "consumer_export.zip"));
@@ -299,7 +300,7 @@ public class Importer {
     }
     
     public Set<Product> importProducts(File[] products) throws IOException {
-        ProductImporter importer = new ProductImporter(productCurator, contentCurator);
+        ProductImporter importer = new ProductImporter(productCurator, contentCurator, poolManager);
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:

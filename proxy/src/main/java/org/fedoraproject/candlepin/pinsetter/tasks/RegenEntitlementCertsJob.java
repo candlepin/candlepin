@@ -14,11 +14,7 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
-import java.util.List;
-
 import org.fedoraproject.candlepin.controller.PoolManager;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -30,12 +26,10 @@ import com.google.inject.Inject;
  */
 public class RegenEntitlementCertsJob implements Job {
     
-    private PoolCurator poolCurator;
     private PoolManager poolManager;
     public static final String PROD_ID = "product_id";
     @Inject
-    public RegenEntitlementCertsJob(PoolCurator poolCurator, PoolManager poolManager) {
-        this.poolCurator = poolCurator;
+    public RegenEntitlementCertsJob(PoolManager poolManager) {
         this.poolManager = poolManager;
     }
     
@@ -43,10 +37,6 @@ public class RegenEntitlementCertsJob implements Job {
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
         String prodId = arg0.getJobDetail().getJobDataMap().getString(
             "product_id");
-        List<Pool> poolsForProduct = poolCurator.listAvailableEntitlementPools(
-            null, null, prodId, false);
-        for (Pool pool : poolsForProduct) {
-            poolManager.regenerateCertificatesOf(pool.getEntitlements());
-        }
+        this.poolManager.regenerateCertificatesOf(prodId);
     }
 }

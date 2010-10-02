@@ -25,6 +25,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -105,19 +107,19 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
         if (this == anObject) {
             return true;
         }
-        if (!(anObject instanceof Attribute)) {
-            return false;
+        if (anObject instanceof Attribute) {
+            Attribute that = (Attribute) anObject;
+            return new EqualsBuilder().append(this.name, that.getName())
+                .append(this.value, that.getValue())
+                .isEquals();
         }
-
-        Attribute another = (Attribute) anObject;
-
-        return
-            name.equals(another.getName()) &&
-            value.equals(another.getValue());
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode() * 31 + value.hashCode();
+        return new HashCodeBuilder(31, 73)
+            .append(this.name).append(this.value)
+            .toHashCode();
     }
 }

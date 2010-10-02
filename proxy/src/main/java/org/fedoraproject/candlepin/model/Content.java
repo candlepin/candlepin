@@ -22,6 +22,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 /**
  * ProductContent
  */
@@ -120,6 +123,33 @@ public class Content extends AbstractHibernateObject {
     }
     public void setType(String type) {
         this.type = type;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other instanceof Content) {
+            Content that = (Content) other;
+            return new EqualsBuilder().append(this.contentUrl, that.contentUrl)
+                .append(this.gpgUrl, that.gpgUrl)
+                .append(this.label, that.label)
+                .append(this.type, that.type)
+                .append(this.vendor, that.vendor)
+                .isEquals();
+        }
+        return false;
+    }
+    
+    
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(37, 7)
+            .append(this.contentUrl).append(this.gpgUrl)
+            .append(this.label).append(this.name)
+            .append(this.type).append(this.vendor)
+            .toHashCode();
     }
 
 }

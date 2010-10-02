@@ -317,4 +317,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
          * originally sent down to the client in HATEOAS form.
          */
     }
+
+    
 }

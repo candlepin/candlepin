@@ -16,14 +16,22 @@ package org.fedoraproject.candlepin.sync;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.ContentCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.util.Util;
+
+import com.google.common.collect.Sets;
 
 /**
  * ProductImporter
@@ -32,38 +40,79 @@ public class ProductImporter {
 
     private ProductCurator curator;
     private ContentCurator contentCurator;
+    private PoolManager poolManager;
 
-    public ProductImporter(ProductCurator curator, ContentCurator contentCurator) {
+    public ProductImporter(ProductCurator curator, ContentCurator contentCurator,
+        PoolManager poolManager) {
         this.curator = curator;
         this.contentCurator = contentCurator;
+        this.poolManager = poolManager;
     }
 
-    public Product createObject(ObjectMapper mapper, Reader reader) throws IOException {
-        Product p = mapper.readValue(reader, Product.class);
-        
-        // Make sure the ID's are null, otherwise Hibernate thinks these are detached
+    public Product createObject(ObjectMapper mapper, Reader reader)
+        throws IOException {
+        final Product importedProduct = mapper.readValue(reader, Product.class);
+        // Make sure the ID's are null, otherwise Hibernate thinks these are
+        // detached
         // entities.
-        for (ProductAttribute a : p.getAttributes()) {
+        for (ProductAttribute a : importedProduct.getAttributes()) {
             a.setId(null);
         }
-        
         // TODO: test product content doesn't dangle
-        
-        return p;
+        return importedProduct;
     }
 
     public void store(Set<Product> products) {
-        for (Product p : products) {
-            // Handling the storing/updating of Content here. This is technically a 
-            // disjoint entity, but really only makes sense in the concept of products.
-            // Downside, if multiple products reference the same content, it will be
+        //have to maintain a map because entitlements don't 
+        //override equals/hashcode and only way to maintain unique 
+        //entitlements is to have a key -> value right now.
+        Map<String, Entitlement> toRegenEntitlements = Util.newMap(); 
+        for (Product importedProduct : products) {
+            final Product existingProduct = this.curator.find(importedProduct
+                .getId());
+
+            if (hasProductChanged(existingProduct, importedProduct)) {
+                for (Pool pool : this.poolManager
+                    .getListOfEntitlementPoolsForProduct(importedProduct.getId())) {
+                    for (Entitlement e : pool.getEntitlements()) {
+                        if (!toRegenEntitlements.containsKey(e.getId())) {
+                            toRegenEntitlements.put(e.getId(), e);
+                        }
+                    }
+                }
+            }
+            // Handling the storing/updating of Content here. This is
+            // technically a
+            // disjoint entity, but really only makes sense in the concept of
+            // products.
+            // Downside, if multiple products reference the same content, it
+            // will be
             // updated multiple times during the import.
-            for (ProductContent content : p.getProductContent()) {
+            for (ProductContent content : importedProduct.getProductContent()) {
                 contentCurator.createOrUpdate(content.getContent());
             }
             
-            curator.createOrUpdate(p);
+            
+            curator.createOrUpdate(importedProduct);
         }
+        
+      //regenerate entitlement certificates.
+        this.poolManager.regenerateCertificatesOf(toRegenEntitlements.values()); 
+    }
+    
+    protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
+
+        if (existingProd == null) {
+            return true;
+        }
+        return Sets.difference(existingProd.getProductContent(), 
+                    importedProd.getProductContent()).size() > 0 || 
+                Sets.difference(existingProd.getAttributes(), 
+                        importedProd.getAttributes()).size() > 0 ||
+                !new EqualsBuilder()
+                        .append(existingProd.getName(), importedProd.getName())
+                        .append(existingProd.getMultiplier(), importedProd.getMultiplier())
+                        .isEquals();
     }
 
 }
