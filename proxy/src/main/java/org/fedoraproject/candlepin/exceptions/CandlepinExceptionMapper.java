@@ -20,6 +20,8 @@ import static org.jboss.resteasy.util.MediaTypeHelper.parseHeader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.spi.DefaultOptionsMethodException;
 import org.jboss.resteasy.spi.Failure;
@@ -89,11 +92,36 @@ public class CandlepinExceptionMapper implements
             return (resp != null) ? resp : 
                 getDefaultBuilder(cause, responseMediaType).build();
         }
+        else if (cause instanceof org.jboss.resteasy.spi.BadRequestException ||
+            exception instanceof org.jboss.resteasy.spi.BadRequestException) {
+            bldr = Response.status(Status.BAD_REQUEST).type(
+                responseMediaType);
+            String msg = exception.getMessage();
+            if (StringUtils.isNotEmpty(msg)) {
+                bldr.entity(new ExceptionMessage(extractIllegalValue(msg)));
+            }
+        }
         else {
             bldr = getDefaultBuilder(cause, responseMediaType);
         }
 
         return bldr.build();
+    }
+
+    /**
+     * @param msg
+     * @return
+     */
+    private String extractIllegalValue(String msg) {
+        Matcher paramMatcher = PARAM_REGEX.matcher(msg);
+        Matcher illegalValMatcher = ILLEGAL_VAL_REGEX.matcher(msg);
+        if (paramMatcher.find() && illegalValMatcher.find()) {
+            if ((paramMatcher.groupCount() & illegalValMatcher.groupCount()) == 2) {
+                return i18n.tr("{0} is not a valid value for {1}",
+                    illegalValMatcher.group(1), paramMatcher.group(1));
+            }
+        }
+        return i18n.tr("Bad Request");
     }
 
     private ResponseBuilder getBuilder(CandlepinException exception,
@@ -107,7 +135,11 @@ public class CandlepinExceptionMapper implements
 
         return bldr;
     }
-
+    private static final Pattern PARAM_REGEX = Pattern
+            .compile("(?:javax\\.ws\\.rs\\.\\w+\\(\\\")([\\w\\s]+)(\\\"\\))");
+    private static final Pattern ILLEGAL_VAL_REGEX =
+            Pattern.compile(":?value\\sis\\s'([\\w\\s]+)(:?'\\sfor)");
+    
     private ResponseBuilder getDefaultBuilder(Throwable exception,
         MediaType responseMediaType) {
         Throwable cause = exception;
@@ -125,4 +157,5 @@ public class CandlepinExceptionMapper implements
             .entity(new ExceptionMessage(message)).type(responseMediaType);
         return bldr;
     }
+    
 }
