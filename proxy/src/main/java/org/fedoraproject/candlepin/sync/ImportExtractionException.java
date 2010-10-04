@@ -24,8 +24,8 @@ public class ImportExtractionException extends ImporterException {
     }
 
     /**
-     * @param string
-     * @param e
+     * @param msg exception message
+     * @param e the inner exception
      */
     public ImportExtractionException(String msg, Throwable e) {
         super(msg, e);

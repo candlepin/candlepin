@@ -49,7 +49,7 @@ public class EventSource {
     }
 
     /**
-     * @return
+     * @return new instance of {@link ClientSessionFactory}
      */
     protected ClientSessionFactory createSessionFactory() {
         return HornetQClient.createClientSessionFactory(

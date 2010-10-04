@@ -22,9 +22,6 @@ import org.hibernate.criterion.Restrictions;
 public class ProductCertificateCurator 
     extends AbstractHibernateCurator<ProductCertificate> {
 
-    /**
-     * @param entityType
-     */
     public ProductCertificateCurator() {
         super(ProductCertificate.class);
     }

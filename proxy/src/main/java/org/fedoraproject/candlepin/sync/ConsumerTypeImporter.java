@@ -45,7 +45,7 @@ public class ConsumerTypeImporter {
     }
 
     /**
-     * @param testType
+     * @param consumerTypes Set of different consumer types.
      */
     public void store(Set<ConsumerType> consumerTypes) {
         Set<String> resolved = new HashSet<String>();
