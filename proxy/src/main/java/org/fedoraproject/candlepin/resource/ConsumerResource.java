@@ -286,7 +286,10 @@ public class ConsumerResource {
         Consumer consumer) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
 
+        log.debug("Updating");
+
         if (!toUpdate.factsAreEqual(consumer)) {
+            log.debug("Facts are not equal, updating them");
             Event event = eventFactory.consumerModified(toUpdate, consumer);
 
             // TODO: Just updating the facts for now
