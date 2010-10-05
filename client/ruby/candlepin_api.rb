@@ -32,14 +32,10 @@ class Candlepin
     @lang = lang
 
     if not cert.nil?
-      @identity_certificate = OpenSSL::X509::Certificate.new(cert)
-      @identity_key = OpenSSL::PKey::RSA.new(key)
-      @uuid = @identity_certificate.subject.to_s.scan(/\/CN=([^\/=]+)/)[0][0]
-      create_ssl_client()
+      create_ssl_client(cert, key)
     else
       create_basic_client(username, password)
     end
-    
 
     # Store top level HATEOAS resource links so we know what we can do:
     results = get("/")
@@ -392,6 +388,13 @@ class Candlepin
     end
   end
 
+  def regenerate_identity_certificate(uuid=nil)
+    uuid ||= @uuid
+
+    new_consumer = post("/consumers/#{uuid}")
+    create_ssl_client(new_consumer.idCert.cert, new_consumer.idCert.key)
+  end
+
   def get_status
     return get("/status/")
   end
@@ -463,7 +466,11 @@ class Candlepin
                                        :headers => {:accept_language => @lang})
   end
 
-  def create_ssl_client
+  def create_ssl_client(cert, key)
+    @identity_certificate = OpenSSL::X509::Certificate.new(cert)
+    @identity_key = OpenSSL::PKey::RSA.new(key)
+    @uuid = @identity_certificate.subject.to_s.scan(/\/CN=([^\/=]+)/)[0][0]
+
     @client = RestClient::Resource.new(@base_url,
                                        :ssl_client_cert => @identity_certificate, 
                                        :ssl_client_key => @identity_key,

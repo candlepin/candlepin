@@ -111,4 +111,33 @@ describe 'Consumer Resource' do
     end
 
   end
+
+  it "does not let an owner register with UUID of another owner's consumer" do
+    linux_net = create_owner 'linux_net'
+    greenfield = create_owner 'greenfield_consulting'
+
+    linux_bill = user_client(linux_net, 'bill')
+    green_ralph = user_client(greenfield, 'ralph')
+    
+    system1 = linux_bill.register('system1')
+    
+    lambda {
+      green_ralph.register('system2', :system, system1.uuid)
+    }.should raise_exception(RestClient::BadRequest)
+  end
+
+  it "does not let an owner reregister another owner's consumer" do
+    linux_net = create_owner 'linux_net'
+    greenfield = create_owner 'greenfield_consulting'
+
+    linux_bill = user_client(linux_net, 'bill')
+    green_ralph = user_client(greenfield, 'ralph')
+    
+    system1 = linux_bill.register('system1')
+    
+    lambda {
+      green_ralph.regenerate_identity_certificate(system1.uuid)
+    }.should raise_exception(RestClient::BadRequest)
+  end
+
 end

@@ -15,7 +15,7 @@ class CandlepinCLI < Candlepin
   
   def commands
     # This is a little hacky...
-    cp = Candlepin.new('temp', 'temp')
+    cp = Candlepin.new('admin', 'admin')
     cp.public_methods(false).sort.each do |method|
       yield method if callable_name? method
     end
