@@ -476,17 +476,28 @@ public class ConsumerResource {
             // now:
             // TODO: Convert resource key to user friendly string?
             // See below for more TODOS
+            String msg;
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
-                throw new ForbiddenException(
-                    i18n
-                        .tr(
-                            "This consumer is already subscribed to the product ''{0}''",
-                            productId));
+                msg = i18n.tr(
+                    "This consumer is already subscribed to the product ''{0}''",
+                    productId);
             }
-
-            throw new ForbiddenException(e.getResult().getErrors().get(0)
-                .getResourceKey());
+            else if (error.equals("rulefailed.no.entitlements.available")) {
+                msg = i18n.tr(
+                    "No free entitlements are available for the product ''{0}''",
+                    productId);
+            }
+            else if (error.equals("rulefailed.consumer.type.mismatch")) {
+                msg = i18n.tr(
+                    "Consumers of this type are not allowed to the product ''{0}''",
+                    productId);
+            }
+            else {
+                msg = i18n.tr("Unable to entitle consumer to the product ''{0}'': {1}",
+                    productId, error);
+            }
+            throw new ForbiddenException(msg);
         }
     }
 
@@ -501,24 +512,38 @@ public class ConsumerResource {
         catch (EntitlementRefusedException e) {
             // Could be multiple errors, but we'll just report the first one for
             // now:
-            // TODO: Convert resource key to user friendly string?
             // TODO: multiple checks here for the errors will get ugly, but the
             // returned
             // string is dependent on the caller (ie pool vs product)
+            String msg;
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
-                throw new ForbiddenException(i18n.tr(
+                msg = i18n.tr(
                     "This consumer is already subscribed to the product matching pool " +
-                        "with id ''{0}''", pool.getId().toString()));
+                        "with id ''{0}''", pool.getId().toString());
             }
-            throw new ForbiddenException(e.getResult().getErrors().get(0)
-                .getResourceKey());
+            else if (error.equals("rulefailed.no.entitlements.available")) {
+                msg = i18n.tr(
+                    "No free entitlements are available for the pool with id ''{0}''",
+                    pool.getId().toString());
+            }
+            else if (error.equals("rulefailed.consumer.type.mismatch")) {
+                msg = i18n.tr(
+                    "Consumers of this type are not allowed to subscribe to the pool " +
+                    "with id ''{0}''",
+                    pool.getId().toString());
+            }
+            else {
+                msg = i18n.tr("Unable to entitle consumer to the pool with id ''{0}'': {1}",
+                    pool.getId().toString(), error);
+            }
+            throw new ForbiddenException(msg);
         }
     }
 
     /**
      * Grants entitlements based on a registration token.
-     * 
+     *  
      * @param registrationToken registration token.
      * @param consumer Consumer to bind
      * @return token
