@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -37,10 +36,13 @@ import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.util.X509ExtensionUtil;
-
-import com.google.inject.Inject;
 import org.fedoraproject.candlepin.util.Util;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -54,8 +56,8 @@ public class DefaultEntitlementCertServiceAdapter extends
     private CertificateSerialCurator serialCurator;
     private ProductServiceAdapter productAdapter;
     
-    private static Logger log = Logger
-        .getLogger(DefaultEntitlementCertServiceAdapter.class);
+    private static Logger log = 
+        LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
     
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -82,10 +84,18 @@ public class DefaultEntitlementCertServiceAdapter extends
         throws GeneralSecurityException, IOException {
         
         log.debug("Generating entitlement cert for:");
-        log.debug("   consumer: " + entitlement.getConsumer().getUuid());
-        log.debug("   product: " + product.getId());
-        log.debug("   end date: " + entitlement.getEndDate());
-        
+        log.debug("   consumer: {}", entitlement.getConsumer().getUuid());
+        log.debug("   product: {}" , product.getId());
+        log.debug("entitlement's endDt == subs endDt? {} == {} ?", 
+            entitlement.getEndDate(), sub.getEndDate());
+            
+        Preconditions
+            .checkArgument(
+                entitlement.getEndDate().equals(sub.getEndDate()),
+                "Entitlement #%s 's endDt[%s] must equal Subscription #s 's endDt[%s]",
+                entitlement.getId(), sub.getId(), entitlement.getEndDate(), sub
+                    .getEndDate());
+
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
         CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
         // We need the sequence generated id before we create the EntitlementCertificate,
