@@ -73,7 +73,7 @@ public class SSLAuthTest {
         String dn = "CN=453-44423-235";
 
         mockCert(dn);
-        when(this.consumerCurator.lookupByUuid("453-44423-235")).thenReturn(consumer);
+        when(this.consumerCurator.getConsumer("453-44423-235")).thenReturn(consumer);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 
@@ -85,7 +85,7 @@ public class SSLAuthTest {
     @Test
     public void noUuidOnCert() throws Exception {
         mockCert("OU=something");
-        when(this.consumerCurator.lookupByUuid(anyString())).thenReturn(
+        when(this.consumerCurator.findByUuid(anyString())).thenReturn(
                 new Consumer("machine_name", "test user", null, null));
         assertNull(this.auth.getPrincipal(request));
     }
@@ -98,7 +98,7 @@ public class SSLAuthTest {
     @Test
     public void noValidConsumerEntity() throws Exception {
         mockCert("CN=235-8");
-        when(this.consumerCurator.lookupByUuid("235-8")).thenReturn(null);
+        when(this.consumerCurator.findByUuid("235-8")).thenReturn(null);
         assertNull(this.auth.getPrincipal(request));
     }
 

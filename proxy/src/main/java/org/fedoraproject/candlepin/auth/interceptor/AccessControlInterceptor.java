@@ -50,7 +50,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
             }
             listFilter(invocation);
         }
-        else if (invokedMethodName.equals("find")) {
+        else if (invokedMethodName.startsWith("find")) {
             Object toReturn = invocation.proceed();
             if ((toReturn != null) && isAccessControlled(toReturn.getClass())) {
                 crudAccessControl(toReturn);

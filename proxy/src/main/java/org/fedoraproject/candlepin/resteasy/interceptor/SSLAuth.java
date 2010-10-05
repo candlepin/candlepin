@@ -89,7 +89,7 @@ class SSLAuth {
 
     private ConsumerPrincipal createPrincipal(String consumerUuid) {
         if (consumerUuid != null) {
-            Consumer consumer = this.consumerCurator.lookupByUuid(consumerUuid);
+            Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
 
             if (consumer != null) {
                 return new ConsumerPrincipal(consumer);

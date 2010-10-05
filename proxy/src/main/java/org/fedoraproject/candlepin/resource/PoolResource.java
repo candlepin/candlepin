@@ -110,7 +110,7 @@ public class PoolResource {
             Consumer c = null;
             Owner o = null;
             if (consumerUuid != null) {
-                c = consumerCurator.lookupByUuid(consumerUuid);
+                c = consumerCurator.findByUuid(consumerUuid);
                 if (c == null) {
                     throw new NotFoundException(i18n.tr("consumer: {0}", consumerUuid));
                 }

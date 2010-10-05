@@ -207,7 +207,7 @@ public class ConsumerResource {
 
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
-            Consumer existing = consumerCurator.lookupUsersConsumer(user);
+            Consumer existing = consumerCurator.findByUser(user);
 
             if (existing != null &&
                 existing.getType().isType(ConsumerTypeEnum.PERSON)) {
@@ -633,9 +633,9 @@ public class ConsumerResource {
     }
 
     private Consumer verifyAndLookupConsumer(String consumerUuid) {
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+        
         if (consumer == null) {
-
             throw new NotFoundException(i18n.tr("No such consumer: {0}",
                 consumerUuid));
         }

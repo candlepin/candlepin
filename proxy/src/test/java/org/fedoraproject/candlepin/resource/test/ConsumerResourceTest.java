@@ -166,7 +166,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer))
             .thenReturn(certificates);
-        when(mockedConsumerCurator.lookupByUuid(consumer.getUuid()))
+        when(mockedConsumerCurator.findByUuid(consumer.getUuid()))
             .thenReturn(consumer);
 
         ConsumerResource consumerResource = new ConsumerResource(
@@ -254,7 +254,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
-        assertNotNull(consumerCurator.lookupByUuid(uuid));
+        assertNotNull(consumerCurator.findByUuid(uuid));
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
@@ -295,7 +295,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), null, null, product.getId(),
             1, null, null);
 
-        consumer = consumerCurator.lookupByUuid(consumer.getUuid());
+        consumer = consumerCurator.findByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
 
         pool = poolCurator.find(pool.getId());
@@ -308,7 +308,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             consumer.getUuid(), pool.getId().toString(), null, null, 1, null,
             null);
 
-        consumer = consumerCurator.lookupByUuid(consumer.getUuid());
+        consumer = consumerCurator.findByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
 
         pool = poolCurator.find(pool.getId());
@@ -386,7 +386,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             .unbindBySerial(NON_EXISTENT_CONSUMER, Long.valueOf(1234L));
     }
 
-    @Test
+    @Test(expected = ForbiddenException.class)
     public void testCannotGetAnotherConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, null, 1, null, null);
@@ -403,8 +403,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        assertEquals(0, consumerResource.getEntitlementCertificates(
-            consumer.getUuid(), null).size());
+        consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
 
     @Test
@@ -462,7 +461,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             consumer.getUuid(), null).size());
     }
 
-    @Test
+    @Test(expected = ForbiddenException.class)
     public void testCannotGetAnotherOwnersConsumersCerts() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);
@@ -475,8 +474,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         setupPrincipal(evilOwner, Role.OWNER_ADMIN);
 
-        assertEquals(0, consumerResource.getEntitlementCertificates(
-            consumer.getUuid(), null).size());
+        consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -505,7 +503,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             null).size());
     }
 
-    @Test
+    @Test(expected = ForbiddenException.class)
     public void consumerShouldNotSeeAnotherConsumersEntitlements() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);
@@ -522,11 +520,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        assertEquals(0, consumerResource.listEntitlements(consumer.getUuid(),
-            null).size());
+        consumerResource.listEntitlements(consumer.getUuid(), null);
     }
 
-    @Test
+    @Test(expected = ForbiddenException.class)
     public void ownerShouldNotSeeOtherOwnerEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, null, 1, null, null);
@@ -542,8 +539,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         setupPrincipal(evilOwner, Role.OWNER_ADMIN);
 
-        assertEquals(0, consumerResource.listEntitlements(consumer.getUuid(),
-            null).size());
+        consumerResource.listEntitlements(consumer.getUuid(), null);
     }
 
     @Test
@@ -670,7 +666,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertEquals(e1.getTimestamp(), entry.getPublished());
     }
 
-    @Test
+    @Test(expected = ForbiddenException.class)
     public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
@@ -684,7 +680,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // Should see no results:
         setupPrincipal(owner2, Role.OWNER_ADMIN);
         Feed feed = consumerResource.getConsumerAtomFeed(c.getUuid());
-        assertEquals(0, feed.getEntries().size());
     }
 
     @Test(expected = ForbiddenException.class)
@@ -755,7 +750,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         IdentityCertificate ic = lconsumer.getIdCert();
         assertNotNull(ic);
 
-        when(mockedConsumerCurator.lookupByUuid(lconsumer.getUuid()))
+        when(mockedConsumerCurator.findByUuid(lconsumer.getUuid()))
             .thenReturn(lconsumer);
         when(mockedIdSvc.regenerateIdentityCert(lconsumer))
             .thenReturn(createIdCert());

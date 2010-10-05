@@ -93,7 +93,7 @@ public class EntitlementResource {
     public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_id") String productId) {
         
-        Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
         
         for (Entitlement e : consumer.getEntitlements()) {
@@ -161,7 +161,7 @@ public class EntitlementResource {
 
         if (consumerUuid != null) {
 
-            Consumer consumer = consumerCurator.lookupByUuid(consumerUuid);
+            Consumer consumer = consumerCurator.findByUuid(consumerUuid);
             if (consumer == null) {
                 throw new BadRequestException(
                     i18n.tr("No such consumer: {0}", consumerUuid));

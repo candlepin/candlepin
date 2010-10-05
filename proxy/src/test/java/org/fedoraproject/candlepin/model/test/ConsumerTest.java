@@ -145,7 +145,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testLookupByUuidNonExistent() {
         //Consumer lookedUp = 
-        consumerCurator.lookupByUuid("this is not a uuid!");
+        consumerCurator.findByUuid("this is not a uuid!");
     }
 
     @Test
@@ -153,7 +153,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
         consumerCurator.create(consumer2);
 
-        Consumer lookedUp = consumerCurator.lookupByUuid(consumer2.getUuid());
+        Consumer lookedUp = consumerCurator.findByUuid(consumer2.getUuid());
         assertEquals(lookedUp.getUuid(), consumer2.getUuid());
     }
 
@@ -420,11 +420,11 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(personType);
         
         User user = new User(owner, newUsername, "password");
-        assertNull(consumerCurator.lookupUsersConsumer(user));
+        assertNull(consumerCurator.findByUser(user));
 
         consumer = new Consumer(CONSUMER_NAME, newUsername, owner, personType);
         consumerCurator.create(consumer);
-        assertEquals(consumer, consumerCurator.lookupUsersConsumer(user));
+        assertEquals(consumer, consumerCurator.findByUser(user));
     }
     
     @Test

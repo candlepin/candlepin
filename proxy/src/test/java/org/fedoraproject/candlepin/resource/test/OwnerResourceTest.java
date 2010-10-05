@@ -223,8 +223,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.deleteOwner(owner.getKey(), null);
 
         assertEquals(0, consumerCurator.listByOwner(owner).size());
-        assertNull(consumerCurator.lookupByUuid(c1.getUuid()));
-        assertNull(consumerCurator.lookupByUuid(c2.getUuid()));
+        assertNull(consumerCurator.findByUuid(c1.getUuid()));
+        assertNull(consumerCurator.findByUuid(c2.getUuid()));
         assertEquals(0, poolCurator.listByOwner(owner).size());
         assertEquals(0, entitlementCurator.listByOwner(owner).size());
     }

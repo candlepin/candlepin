@@ -197,14 +197,13 @@ public class PoolResourceTest extends DatabaseTestFixture {
     }
 
 
-    @Test
+    @Test(expected = ForbiddenException.class)
     public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
         setupPrincipal(new ConsumerPrincipal(foreignConsumer));
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null, false);
-        assertEquals(0, pools.size());
+        poolResource.list(null, passConsumer.getUuid(), null, false);
     }
 
     @Test

@@ -104,11 +104,9 @@ describe 'Consumer Resource' do
     consumer1 = consumer_client(user1, random_string("consumer1"))
     consumer2 = consumer_client(user1, random_string("consumer2"))
     
-    begin
+    lambda do
       consumer1.get_consumer(consumer2.uuid)
-    rescue RestClient::Exception => e
-      e.http_code.should == 403
-    end
+    end.should raise_exception(RestClient::Forbidden)
 
   end
 
@@ -137,7 +135,7 @@ describe 'Consumer Resource' do
     
     lambda {
       green_ralph.regenerate_identity_certificate(system1.uuid)
-    }.should raise_exception(RestClient::BadRequest)
+    }.should raise_exception(RestClient::Forbidden)
   end
 
 end

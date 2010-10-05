@@ -60,7 +60,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Consumer whose name matches the given name, null otherwise.
      */
     @Transactional
-    public Consumer lookupByName(String name) {
+    @EnforceAccessControl
+    public Consumer findByName(String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("name", name))
             .uniqueResult();
@@ -73,7 +74,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @param user User
      * @return Consumer for this user if one exists, null otherwise.
      */
-    public Consumer lookupUsersConsumer(User user) {
+    @AllowRoles(roles = {Role.SUPER_ADMIN, Role.OWNER_ADMIN})
+    @Transactional
+    @EnforceAccessControl
+    public Consumer findByUser(User user) {
         ConsumerType person = consumerTypeCurator.lookupByLabel(
             ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
         return (Consumer) currentSession().createCriteria(Consumer.class)
@@ -88,12 +92,21 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Consumer whose uuid matches the given value, or null otherwise.
      */
     @Transactional
-    public Consumer lookupByUuid(String uuid) {
+    @EnforceAccessControl
+    public Consumer findByUuid(String uuid) {
+        return getConsumer(uuid);
+    }
+
+    // NOTE:  This is a giant hack that is for use *only* by SSLAuth in order
+    //        to bypass the authentication.  Do not call it!
+    // TODO:  Come up with a better way to do this!
+    public Consumer getConsumer(String uuid) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("uuid", uuid))
             .uniqueResult();
     }
-    
+
+    @AllowRoles(roles = {Role.SUPER_ADMIN, Role.OWNER_ADMIN})
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
@@ -109,6 +122,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @param type the type to match, or null to ignore
      * @return a list of matching Consumers
      */
+    @AllowRoles(roles = {Role.SUPER_ADMIN, Role.OWNER_ADMIN})
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
