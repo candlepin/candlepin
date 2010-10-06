@@ -295,7 +295,9 @@ class Candlepin
 
   # TODO: Could also fetch from /entitlements, a bit ambiguous:
   def list_entitlements(params={})
-    path = "/consumers/#{@uuid}/entitlements"
+    uuid = params[:uuid] || @uuid
+
+    path = "/consumers/#{uuid}/entitlements"
     path << "?product=#{params[:product_id]}" if params[:product_id]
     results = get(path)
     return results

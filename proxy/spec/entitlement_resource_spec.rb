@@ -57,5 +57,19 @@ describe 'Entitlement Resource' do
     @system.consume_product(@monitoring_prod.id)
     @system.list_certificate_serials.length.should == 1
   end
+
+  it 'does not allow a consumer to view entitlements from a different consumer' do
+    # Given
+    bad_owner = create_owner 'baddie'
+    bad_user = user_client(bad_owner, 'bad_dude')
+    system2 = consumer_client(bad_user, 'wrong_system')
+
+    # When
+    lambda do
+      system2.list_entitlements(:uuid => @system.uuid)
+
+      # Then
+    end.should raise_exception(RestClient::Forbidden)
+  end
  
 end
