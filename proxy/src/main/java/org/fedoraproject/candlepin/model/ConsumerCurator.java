@@ -156,9 +156,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
         existingConsumer.setEntitlements(
                 entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements()));
-        if (factsChanged(filterFacts(updatedConsumer.getFacts()), 
-                existingConsumer.getFacts())) {
-            existingConsumer.setFacts(filterFacts(updatedConsumer.getFacts()));            
+        Map<String, String> newFacts = filterFacts(updatedConsumer.getFacts()); 
+        if (factsChanged(newFacts, existingConsumer.getFacts())) {
+            existingConsumer.setFacts(newFacts);            
         }
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
