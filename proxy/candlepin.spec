@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.37
+Version: 0.0.38
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,24 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Oct 06 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.38-1
+- Fixing up lambda syntax for rspec exceptions (jharris@redhat.com)
+- Altering access control to consumer curator. (jharris@redhat.com)
+- Subscription's end date should not be out of sync with that of entitlement/pool (anadathu@redhat.com)
+- Fixing up ruby libs/tests (jharris@redhat.com)
+- Add in some logging (bkearney@redhat.com)
+- correct javadoc warnings (anadathu@redhat.com)
+- Candlepin now returns 400 after processing a badly formed request (anadathu@redhat.com)
+- Product changes detected during imports and triggers certificate regeneration. (anadathu@redhat.com)
+- spec: fix subpool spec with new id changes (jbowes@redhat.com)
+- fix subscription deletion (jbowes@redhat.com)
+- Fix subscription token deletion (jbowes@redhat.com)
+- Refactored generateUniqueLong to the util class (calfonso@redhat.com)
+- Modified serial number generation to use number concat (calfonso@redhat.com)
+- putting the postgres version back (calfonso@redhat.com)
+- Fix a broken test (calfonso@redhat.com)
+- All entity identifiers now use a uuid string. (calfonso@redhat.com)
+
 * Thu Sep 30 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.37-1
 - Setting user license check to be case insensitive (calfonso@redhat.com)
 - Set 'Not After' to 23:59:59 (before next day). (anadathu@redhat.com)
