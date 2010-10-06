@@ -55,8 +55,6 @@ public class EntitlementResource {
     private I18n i18n;
     private ProductServiceAdapter prodAdapter;
     
-    //private static Logger log = Logger.getLogger(EntitlementResource.class);
-
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
             EntitlementCurator entitlementCurator,
@@ -70,8 +68,6 @@ public class EntitlementResource {
         this.prodAdapter = prodAdapter;
         this.poolManager = poolManager;
     }
-    
-    
 
     @SuppressWarnings("null")
     private void verifyExistence(Object o, String id) {
@@ -107,53 +103,6 @@ public class EntitlementResource {
                 consumerUuid, productId));
     }
     
-//    /**
-//     * Match/List the available entitlements for a given Consumer. Right
-//     * now this returns ALL entitlements because we haven't built any
-//     * filtering logic.
-//     * @param consumerUuid Unique id of Consumer
-//     * @return List<Entitlement> of applicable
-//     */
-//    // TODO: right now returns *all* available entitlement pools
-//    @GET
-//    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//    @Path("/consumer/{consumer_uuid}")
-//    public List<EntitlementPool> listAvailableEntitlements(
-//        @PathParam("consumer_uuid") Long consumerUuid) {
-//
-////        log.debug("consumerCurator: " + consumerCurator.toString());
-////        log.debug("epCurator: " + epCurator.toString());
-//        Consumer consumer = consumerCurator.find(consumerUuid);
-////        log.debug("consumer: " + consumer.toString());
-//        return epCurator.listByConsumer(consumer);
-////        return epCurator.findAll();
-//
-////        Consumer c = consumerCurator.find(consumerId);
-////        List<EntitlementPool> entitlementPools = epCurator.findAll();
-////        List<EntitlementPool> retval = new ArrayList<EntitlementPool>();
-////        EntitlementMatcher matcher = new EntitlementMatcher();
-////        for (EntitlementPool ep : entitlementPools) {
-////            boolean add = false;
-////            System.out.println("max = " + ep.getMaxMembers());
-////            System.out.println("cur = " + ep.getCurrentMembers());
-////            if (ep.getMaxMembers() > ep.getCurrentMembers()) {
-////                add = true;
-////            }
-////            if (matcher.isCompatible(c, ep.getProduct())) {
-////                add = true;
-////            }
-////            if (add) {
-////                retval.add(ep);
-////            }
-////        }
-////        return retval;
-//    }
-
-    
-    // TODO:
-    // EntitlementLib.UnentitleProduct(Consumer, Entitlement) 
-    
-   
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Entitlement> listAllForConsumer(
@@ -207,7 +156,6 @@ public class EntitlementResource {
         throw new NotFoundException(
             i18n.tr("Entitlement with ID '{0}' could not be found", dbid));
     }
-    
     
     @PUT
     @Path("product/{product_id}")
