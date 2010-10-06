@@ -19,6 +19,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
@@ -33,6 +34,7 @@ import com.wideplay.warp.persist.Transactional;
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
+    private static Logger log = Logger.getLogger(AbstractHibernateCurator.class);    
     private final Class<E> entityType;
     private int batchSize = 30;
 
@@ -135,7 +137,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     protected Session currentSession() {
-        return (Session) entityManager.get().getDelegate();
+        Session sess = (Session) entityManager.get().getDelegate();
+        log.debug("Current Session: " + sess.hashCode());
+        return sess;
     }
 
     protected EntityManager getEntityManager() {
