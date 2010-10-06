@@ -75,18 +75,16 @@ describe 'Consumer Resource' do
     owner2 = create_owner random_string('test_owner2')
     user2 = user_client(owner2, random_string("user2"))
 
-    lambda {
+    lambda do
       consumer_client(user2, random_string("consumer1"), 'person',
                       username)
-    }.should raise_exception(RestClient::BadRequest)
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'returns a 404 for a non-existant consumer' do
-    begin
+    lambda do
       @cp.get_consumer('fake-uuid')
-    rescue RestClient::Exception => e
-      e.http_code.should == 404
-    end
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'lets a consumer view their own information' do
@@ -107,7 +105,6 @@ describe 'Consumer Resource' do
     lambda do
       consumer1.get_consumer(consumer2.uuid)
     end.should raise_exception(RestClient::Forbidden)
-
   end
 
   it "does not let an owner register with UUID of another owner's consumer" do
@@ -119,9 +116,9 @@ describe 'Consumer Resource' do
     
     system1 = linux_bill.register('system1')
     
-    lambda {
+    lambda do
       green_ralph.register('system2', :system, system1.uuid)
-    }.should raise_exception(RestClient::BadRequest)
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it "does not let an owner reregister another owner's consumer" do
@@ -133,9 +130,9 @@ describe 'Consumer Resource' do
     
     system1 = linux_bill.register('system1')
     
-    lambda {
+    lambda do
       green_ralph.regenerate_identity_certificate(system1.uuid)
-    }.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::Forbidden)
   end
 
 end
