@@ -24,13 +24,6 @@ Given /^I have a pool of quantity (\d+) for "([^\"]*)" restricted to user "([^\"
   @candlepin.create_pool(p['id'], @test_owner['id'], quantity, {:user_restricted => user})
 end
 
-Given /^I have a pool of quantity (\d+) for "([^\"]*)" with the following attributes:$/ do |quantity, product, table|
-  p = @candlepin.get_product(product.hash.abs)
-  attrs = table.rows_hash.delete_if { |key, val| key == 'Name' }
-
-  @candlepin.create_pool(p['id'], @test_owner['id'], quantity, {:attributes => attrs})
-end
-
 When /^I view all of my pools$/ do
   @fount_pools = @consumer_cp.list_pools(:consumer => @consumer_cp.uuid,
       :listall => true)

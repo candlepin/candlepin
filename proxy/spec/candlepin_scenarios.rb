@@ -114,8 +114,14 @@ module ExportMethods
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
     product2 = create_product()
     @end_date = Date.new(2025, 5, 29)
-    pool1 = @cp.create_pool(product1.id, @owner.id, 2, {:end_date => @end_date})
-    pool2 = @cp.create_pool(product2.id, @owner.id, 4, {:end_date => @end_date})
+
+    sub1 = @cp.create_subscription(@owner.key, product1.id, 2, [], '', nil, @end_date)
+    sub2 = @cp.create_subscription(@owner.key, product2.id, 4, [], '', nil, @end_date)
+    @cp.refresh_pools(@owner.key)
+
+    pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
+    pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
+
     @candlepin_client = consumer_client(owner_client, random_string(),
         "candlepin")
     @flex_entitlement = @candlepin_client.consume_pool(pool1.id)[0]
