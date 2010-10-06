@@ -155,8 +155,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // TODO: Are any of these read-only?
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
         existingConsumer.setEntitlements(
-                entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements())); 
-        existingConsumer.setFacts(filterFacts(updatedConsumer.getFacts()));
+                entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements()));
+        if (factsChanged(filterFacts(updatedConsumer.getFacts()), 
+                existingConsumer.getFacts())) {
+            existingConsumer.setFacts(filterFacts(updatedConsumer.getFacts()));            
+        }
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
         existingConsumer.setParent(updatedConsumer.getParent());
@@ -166,6 +169,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         save(existingConsumer);
         
         return existingConsumer;
+    }
+    
+    private boolean factsChanged(Map<String, String> updatedFacts, 
+            Map<String, String> existingFacts) {
+        return !existingFacts.equals(updatedFacts); 
     }
     
     /**
