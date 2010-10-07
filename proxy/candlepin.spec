@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.39
+Version: 0.0.40
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Oct 07 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.40-1
+- Adding the subscription end date to the logging statement (calfonso@redhat.com)
+- compare ms on entitlement/subscription and not date.equals (anadathu@redhat.com)
+
 * Thu Oct 07 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.39-1
 - Fixing up import/export tests to create subscriptions (jharris@redhat.com)
 - Adding entitlement permission test (jharris@redhat.com)
