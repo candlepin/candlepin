@@ -766,7 +766,7 @@ public class ConsumerResource {
             i18n
                 .tr(
                     "Entitlement Certificate with serial number {0} could not be found.",
-                    serial));
+                    serial.toString())); //prevent serial number formatting.
     }
 
     @GET
