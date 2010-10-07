@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<project name="candlepin" default="why">
+  <property environment="env" />
+  <property name="cp-home" location="." />
+  <property name="script.dir" location="${cp-home}/buildconf/scripts" />
+  <property name="src.main.dir" location="${cp-home}/src/main/java" />
+  <property name="res.main.dir" location="${cp-home}/src/main/resources" />
+  <property name="webapp.main.dir" location="${cp-home}/src/main/webapp" />
+  <property name="src.test.dir" location="${cp-home}/src/test/java" />
+  <property name="res.test.dir" location="${cp-home}/src/test/resources" />
+  <property name="webapp.test.dir" location="${cp-home}/src/test/webapp" />
+  <property name="target.dir" location="${cp-home}/target" />
+  <property name="lib.dir" location="${libdir}" />
+  <property name="pkgname" value="org.fedoraproject.candlepin" />
+
+  <macrodef name="grepfromspec">
+    <attribute name="text" />
+    <attribute name="prop" />
+    <sequential>
+      <exec executable="${script.dir}/antgetvr" outputproperty="@{prop}">
+        <arg value="@{text}" />
+      </exec>
+    </sequential>
+  </macrodef>
+
+  <target name="why">
+    <echo message="This is for building in an rpm environment," />
+    <echo message="don't use otherwise. Please use buildr instead." />
+  </target>
+
+  <target name="setvr">
+    <grepfromspec text="Version:" prop="version" />
+    <grepfromspec text="Release:" prop="release" />
+    <property name="candlepin.war"
+              value="${target.dir}/candlepin-${version}.war" />
+    <property name="api.jar"
+              value="${target.dir}/candlepin-api-${version}.jar" />
+  </target>
+
+  <target name="da_popo">
+    <apply executable="${script.dir}/antmsgfmt"
+           dest="${target.dir}/generated-source">
+      <arg value="--java" />
+      <arg value="-r org.fedoraproject.candlepin.i18n.Messages" />
+      <arg value="-d ${target.dir}/generated-source" />
+      <arg value="-l de" />
+      <fileset dir="${cp-home}/po">
+        <include name="**/*.po" />
+      </fileset>
+      <mapper type="glob" from="*.po" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="init" depends="setvr, da_popo" />
+
+  <target name="compile" depends="init">
+    <mkdir dir="${target.dir}/classes" />
+    <mkdir dir="${target.dir}/resources" />
+    <mkdir dir="${target.dir}/generated-source" />
+    <javac destdir="${target.dir}/classes"
+           optimize="off"
+           debug="on"
+           source="1.6"
+           target="1.6"
+           encoding="utf-8"
+           fork="yes">
+      <src>
+        <path location="${src.main.dir}" />
+        <path location="${res.main.dir}" />
+      </src>
+      <classpath>
+        <fileset dir="${lib.dir}">
+          <include name="**/*.jar" />
+        </fileset>
+      </classpath>
+    </javac>
+    <copy todir="${target.dir}/resources">
+      <fileset dir="${res.main.dir}" />
+      <filterset begintoken="$${" endtoken="}">
+         <filter token="version" value="${version}" />
+         <filter token="release" value="${release}" />
+      </filterset>
+    </copy>
+  </target>
+
+  <target name="package" depends="compile">
+    <jar destfile="${api.jar}">
+      <fileset dir="${target.dir}/classes">
+        <exclude name="**/pinsetter/**" />
+        <include name="**/auth/**"/>
+        <include name="**/config/**"/>
+        <include name="**/service/**"/>
+        <include name="**/model/**"/>
+        <include name="**/pki/**"/>
+        <include name="**/exceptions/**"/>
+        <include name="**/util/**"/>
+      </fileset>
+      <manifest>
+        <attribute name="Implementation-Vendor" value="" />
+        <attribute name="Manifest-Version" value="1.0" />
+        <attribute name="Build-By" value="${env.USER}" />
+        <attribute name="Created-By" value="Buildr" />
+        <attribute name="Implementation-Version" value="" />
+        <attribute name="Implementation-Title" value="The Proxy project" />
+        <attribute name="Build-Jdk" value="" />
+      </manifest>
+    </jar>
+    <war destfile="${candlepin.war}"
+         webxml="${webapp.main.dir}/WEB-INF/web.xml">
+      <fileset dir="${webapp.main.dir}">
+        <exclude name="${webapp.main.dir}/WEB-INF/web.xml" />
+      </fileset>
+      <classes dir="${target.dir}/classes" />
+      <classes dir="${target.dir}/resources">
+        <include name="**/*.properties" />
+        <include name="**/*.js" />
+        <include name="**/*.xml" />
+      </classes>
+      <classes dir="${target.dir}/generated-source" />
+      <lib dir="${lib.dir}">
+        <exclude name="**/emma*.jar" />
+        <exclude name="**/hamcrest*.jar" />
+        <exclude name="**/jmock*.jar" />
+        <exclude name="**/junit*.jar" />
+        <exclude name="**/mockito*.jar" />
+        <exclude name="**/schemaSpy*.jar" />
+      </lib>
+    </war>
+  </target>
+
+  <target name="clean">
+    <delete dir="${target.dir}" quiet="true" />
+  </target>
+</project>

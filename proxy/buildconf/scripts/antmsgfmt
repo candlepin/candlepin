@@ -1,0 +1,16 @@
+#!/bin/sh
+# for some reason calling msgfmt directly from ant
+# causes it to complain that org.fedoraproject.candlepin.i18n.Messages
+# is not a proper java class name. But this hacky little
+# script works just fine.
+
+JAVA=$1
+PKG=$2
+DIR=$3
+LOCALE=$4
+SOURCE=$5
+# this is what we expect, I did it this way so that we can easily
+# switch between /usr/bin/msgfmt and this script
+#
+# msgfmt --java -r org.fedoraproject.candlepin.i18n.Messages -d $DIR -l $LOCALE $SOURCE
+msgfmt $JAVA $PKG $DIR $LOCALE $SOURCE
