@@ -92,7 +92,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         Preconditions
             .checkArgument(
                 entitlement.getEndDate().getTime() == sub.getEndDate().getTime(),
-                "Entitlement #%s 's endDt[%s] must equal Subscription #s 's endDt[%s]",
+                "Entitlement #%s 's endDt[%s] must equal Subscription #%s 's endDt[%s]",
                 entitlement.getId(), sub.getId(), entitlement.getEndDate(), sub
                     .getEndDate());
 
