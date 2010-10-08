@@ -241,6 +241,10 @@ public class ConsumerResource {
             sink.emitConsumerCreated(consumer);
             return consumer;
         }
+        catch (CandlepinException ce) {
+            //If it is one of ours, rethrow it.
+            throw ce;
+        }
         catch (Exception e) {
             log.error("Problem creating consumer:", e);
             throw new BadRequestException(i18n.tr(

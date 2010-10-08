@@ -27,6 +27,8 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -39,6 +41,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private Config config;
+    @Inject private I18n i18n;
+    private static final int NAME_LENGTH = 250;
     //private static Logger log = Logger.getLogger(ConsumerCurator.class);
     
     protected ConsumerCurator() {
@@ -51,9 +55,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer create(Consumer entity) {
         entity.ensureUUID();
         entity.setFacts(filterFacts(entity.getFacts()));
+        validate(entity);
         return super.create(entity);
     }
     
+    protected void validate(Consumer entity) {
+        //#TODO Look at generic validation framework
+        if ((entity.getName() != null) && (entity.getName().length() >= NAME_LENGTH)) {
+            throw new BadRequestException(
+                i18n.tr("Name of the consumer should be shorter than {0} characters",
+                    NAME_LENGTH));
+        }
+    }
+
     /**
      * Lookup consumer by its name
      * @param name consumer name to find
@@ -152,6 +166,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return create(updatedConsumer);
         }
         
+        validate(updatedConsumer);
         // TODO: Are any of these read-only?
         existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
         existingConsumer.setEntitlements(

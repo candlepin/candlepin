@@ -32,14 +32,15 @@ import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -84,6 +85,32 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setOwner(owner);
 
         consumerCurator.create(newConsumer);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testConsumerNameLengthCreate() {
+        String name = "";
+        for (int x = 0; x < 300; x++) {
+            name += "x";
+        }
+        Consumer newConsumer = new Consumer();
+        newConsumer.setName(name);
+        newConsumer.setOwner(owner);
+
+        consumerCurator.create(newConsumer);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testConsumerNameLengthUpdate() {
+        String name = "";
+        for (int x = 0; x < 300; x++) {
+            name += "x";
+        }
+        Consumer newConsumer = new Consumer();
+        newConsumer.setName(name);
+        newConsumer.setOwner(owner);
+
+        consumerCurator.update(newConsumer);
     }
 
     @Test
