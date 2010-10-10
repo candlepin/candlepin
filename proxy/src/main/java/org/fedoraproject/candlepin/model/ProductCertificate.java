@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -40,6 +41,7 @@ public class ProductCertificate extends AbstractCertificate {
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
     private String id;
     
     @XmlTransient

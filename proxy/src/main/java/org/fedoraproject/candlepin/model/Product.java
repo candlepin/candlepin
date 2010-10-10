@@ -49,6 +49,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     // Product ID is stored as a string.
     // This is a subset of the product OID known as the hash.
     @Id
+    @Column(length = 32)
     private String id;
     
     @Column(nullable = false, unique = true)

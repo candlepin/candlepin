@@ -38,6 +38,7 @@ public class SubscriptionToken extends AbstractHibernateObject {
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
     private String id;
     
     @Column(nullable = true, unique = true)

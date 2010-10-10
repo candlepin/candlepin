@@ -39,6 +39,7 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
     protected String id;
 
     @Column(nullable = false)

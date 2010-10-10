@@ -46,6 +46,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
     private String id;
 
     @Column(name = "account", nullable = false, unique = true)

@@ -37,6 +37,7 @@ public class Rules extends AbstractHibernateObject{
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
     private String id;
 
     @Lob
