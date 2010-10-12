@@ -24,35 +24,26 @@ filenames.each do |filename|
   data['products'] = data.fetch('products',[]) + product_data['products']
   data['content'] = data.fetch('content',[]) + product_data['content']
   data['owners'] = data.fetch('owners', []) + product_data['owners']
-  data['users'] = data.fetch('users', []) + product_data['users']
 end
 
 cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
 
-
-owner_id = nil
-owner_key = nil
-
 # create some owners and users
 data["owners"].each do |new_owner|
-  puts "owner: " + new_owner
-  owner = cp.create_owner(new_owner)
-  if owner_id.nil?
-    # This owner will be used to create all the test users:
-    owner_id = owner['id']
-    owner_key = owner['key']
+  owner_name = new_owner['name']
+  users = new_owner['users']
+
+  puts "owner: #{owner_name}"
+  owner = cp.create_owner(owner_name)
+
+  users.each do |user|
+    puts "   user: #{user['username']}"
+    cp.create_user(owner['key'], user['username'], user['password'])
   end
 end
 
 owners = cp.list_owners({:fetch => true})
 owner_key = owners[0]['key']
-
-# add some users
-data["users"].each do |new_user|
-  puts "user: " + new_user["username"] 
-  user = cp.create_user(owner_key, new_user["username"], new_user["password"])
-end
-
 
 # import all the content sets
 puts "importing content set data..."
