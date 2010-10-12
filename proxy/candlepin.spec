@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.40
+Version: 0.0.41
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Oct 12 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.41-1
+- Changing the product import to allow for owner/user hierarchy. (jharris@redhat.com)
+- Making system-uuid generated id's db column length = 32 (calfonso@redhat.com)
+- brew prep - add ant build file and trivial support scripts.  (jesusr@redhat.com)
+- brew prep - script to download artifacts for cp-deps rpm. (jesusr@redhat.com)
+- brew prep - remove unused buildr mod (jesusr@redhat.com)
+- brew prep - remove unused buildfile.jpp (jesusr@redhat.com)
+- brew prep - remove unused Makefile (jesusr@redhat.com)
+- 640967: Added validation for the consumer name. (bkearney@redhat.com)
+- Add logging around the session id (bkearney@redhat.com)
+- Only filter facts once on an update (bkearney@redhat.com)
+- 639320: patch to fix serial number formatting (anadathu@redhat.com)
+
 * Thu Oct 07 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.40-1
 - Adding the subscription end date to the logging statement (calfonso@redhat.com)
 - compare ms on entitlement/subscription and not date.equals (anadathu@redhat.com)
