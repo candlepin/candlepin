@@ -78,7 +78,7 @@ describe 'Consumer Resource' do
     lambda do
       consumer_client(user2, random_string("consumer1"), 'person',
                       username)
-    end.should raise_exception(RestClient::BadRequest)
+    end.should raise_exception(RestClient::Forbidden)
   end
 
   it 'returns a 404 for a non-existant consumer' do
