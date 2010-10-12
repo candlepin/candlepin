@@ -34,7 +34,14 @@ data["owners"].each do |new_owner|
   users = new_owner['users']
 
   puts "owner: #{owner_name}"
-  owner = cp.create_owner(owner_name)
+
+  # Kind of a hack to allow users under
+  # the default 'admin' owner
+  if owner_name == 'admin'
+    owner = { 'key' => 'admin' }
+  else
+    owner = cp.create_owner(owner_name)
+  end
 
   users.each do |user|
     puts "   user: #{user['username']}"
