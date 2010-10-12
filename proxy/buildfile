@@ -349,6 +349,13 @@ Spec::Rake::SpecTask.new do |task|
 
   task.libs << '../client/ruby' 
   task.spec_opts << '-c -f specdoc'
+
+  # Allow specify only="should do something" to run only a specific
+  # test. The text must completely match the contents of your "it" string.
+  only_run = ENV['only']
+  if not only_run.nil?
+    task.spec_opts << "-e '#{only_run}'"
+  end
 end
 task :spec => :deploy_check
 
