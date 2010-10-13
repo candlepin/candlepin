@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.41
+Version: 0.0.42
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Oct 13 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.42-1
+- Update I18N strings. (dgoodwin@redhat.com)
+- Add mysql tables for quartz (jmrodri@gmail.com)
+- Allowing import script to create users under admin (jharris@redhat.com)
+
 * Tue Oct 12 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.41-1
 - Changing the product import to allow for owner/user hierarchy. (jharris@redhat.com)
 - Making system-uuid generated id's db column length = 32 (calfonso@redhat.com)
