@@ -614,15 +614,15 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") String poolIdString,
         @QueryParam("token") String token,
-        @QueryParam("product") String productId,
+        @QueryParam("product") String[] productIds,
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale) {
 
         // Check that only one query param was set:
         if ((poolIdString != null && token != null) ||
-            (poolIdString != null && productId != null) ||
-            (token != null && productId != null)) {
+            (poolIdString != null && productIds != null && productIds.length > 0) ||
+            (token != null && productIds != null && productIds.length > 0)) {
             throw new BadRequestException(i18n
                 .tr("Cannot bind by multiple parameters."));
         }
@@ -637,8 +637,10 @@ public class ConsumerResource {
                     entitlements = bindByToken(token, consumer, quantity,
                         email, emailLocale);
                 }
-                else if (productId != null) {
-                    entitlements = bindByProduct(productId, consumer, quantity);
+                else if (productIds != null && productIds.length > 0) {
+                    for (String productId : productIds) {
+                        entitlements = bindByProduct(productId, consumer, quantity);
+                    }
                 }
                 else {
                     String poolId = Util.assertNotNull(poolIdString, i18n

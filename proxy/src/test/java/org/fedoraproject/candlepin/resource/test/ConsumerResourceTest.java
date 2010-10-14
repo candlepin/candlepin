@@ -292,8 +292,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitle() throws Exception {
-        consumerResource.bind(consumer.getUuid(), null, null, product.getId(),
-            1, null, null);
+        consumerResource.bind(consumer.getUuid(), null, null,
+            new String[] {product.getId()}, 1, null, null);
 
         consumer = consumerCurator.findByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
@@ -322,7 +322,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testBindMultipleParams() throws Exception {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, product.getId(), null, null, null);
+            null, new String[] {product.getId()}, null, null, null);
     }
 
     @Test(expected = NotFoundException.class)
