@@ -51,7 +51,7 @@ public class SubscriptionResource {
     }
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     public List<Subscription> getSubscriptions() {
         List<Subscription> subList = new LinkedList<Subscription>();
         subList = subCurator.listAll();
@@ -60,7 +60,7 @@ public class SubscriptionResource {
 
     @GET
     @Path("/{subscription_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     public Subscription getSubscription(
         @PathParam("subscription_id") String subscriptionId) {
         
@@ -70,7 +70,7 @@ public class SubscriptionResource {
 
     @DELETE
     @Path("/{subscription_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubscription(
         @PathParam("subscription_id") String subscriptionIdString) {
         

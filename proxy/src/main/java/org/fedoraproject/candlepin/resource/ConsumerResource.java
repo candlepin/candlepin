@@ -150,7 +150,7 @@ public class ConsumerResource {
      * @return list of available consumers.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
     @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Consumer> list(@QueryParam("username") String userName,
@@ -173,7 +173,7 @@ public class ConsumerResource {
      * @return the consumer identified by the given uuid.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
@@ -189,8 +189,8 @@ public class ConsumerResource {
      *         are calling this "registerConsumer" in the api discussions
      */
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName)
@@ -282,7 +282,7 @@ public class ConsumerResource {
     }
 
     @PUT
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
@@ -308,7 +308,7 @@ public class ConsumerResource {
      * @param uuid uuid of the consumer to delete.
      */
     @DELETE
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
@@ -389,7 +389,7 @@ public class ConsumerResource {
      */
     @GET
     @Path("{consumer_uuid}/certificates")
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces(MediaType.APPLICATION_JSON)
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
@@ -429,7 +429,7 @@ public class ConsumerResource {
      */
     @GET
     @Path("{consumer_uuid}/certificates/serials")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "serials")
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
@@ -606,8 +606,8 @@ public class ConsumerResource {
      * @return Entitlement.
      */
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<Entitlement> bind(
@@ -672,7 +672,7 @@ public class ConsumerResource {
     }
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<Entitlement> listEntitlements(
@@ -832,7 +832,7 @@ public class ConsumerResource {
     * @return the consumer identified by the given uuid.
     */
     @POST
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Consumer regenerateIdentityCertificates(

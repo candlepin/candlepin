@@ -133,7 +133,7 @@ public class OwnerResource {
      * @return list of Owners
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")    
     public List<Owner> list(@QueryParam("key") String keyFilter) {
 
@@ -158,7 +158,7 @@ public class OwnerResource {
      */
     @GET
     @Path("/{owner_key}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     public Owner getOwner(@PathParam("owner_key") String ownerKey) {
         return findOwner(ownerKey);
     }
@@ -168,7 +168,7 @@ public class OwnerResource {
      * @return the new owner
      */
     @POST
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     public Owner createOwner(Owner owner) {
         Owner toReturn = ownerCurator.create(owner);
      
@@ -187,7 +187,7 @@ public class OwnerResource {
      */
     @DELETE
     @Path("/{owner_key}")    
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     //FIXME No way this is as easy as this :)
     public void deleteOwner(@PathParam("owner_key") String ownerKey, 
             @Context Principal principal) {
@@ -247,7 +247,7 @@ public class OwnerResource {
      * @return the entitlements for the owner of the given id.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Entitlement> ownerEntitlements(
@@ -270,7 +270,7 @@ public class OwnerResource {
      * @return the entitlement pools for the owner of the given id.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Pool> ownerEntitlementPools(
@@ -282,8 +282,8 @@ public class OwnerResource {
     
     // ----- User -----
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/users")
     public User createUser(@PathParam("owner_key") String ownerKey, User user) {
         Owner owner = findOwner(ownerKey);
@@ -293,8 +293,8 @@ public class OwnerResource {
     }
     
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
     public Subscription createSubscription(@PathParam("owner_key") String ownerKey, 
         Subscription subscription) {
@@ -323,8 +323,8 @@ public class OwnerResource {
     }
     
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")    
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
@@ -355,7 +355,7 @@ public class OwnerResource {
      * @return the status of the pending job
      */
     @PUT
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
     public JobDetail refreshEntitlementPools(@PathParam("owner_key") String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {

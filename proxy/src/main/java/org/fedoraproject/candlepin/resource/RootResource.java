@@ -68,7 +68,7 @@ public class RootResource {
     }
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN, Role.SUPER_ADMIN})
     public List<Link> getRootResources() {
         List<Link> links = new LinkedList<Link>();

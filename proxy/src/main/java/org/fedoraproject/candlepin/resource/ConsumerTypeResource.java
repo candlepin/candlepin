@@ -57,7 +57,7 @@ public class ConsumerTypeResource {
      * @return all the consumer types
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({MediaType.APPLICATION_JSON })
     @Wrapped(element = "consumertypes")    
     public List<ConsumerType> list() {
         return consumerTypeCurator.listAll();
@@ -69,7 +69,7 @@ public class ConsumerTypeResource {
      * @return a consumer type
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
     public ConsumerType getConsumerType(@PathParam("id") String id) {
         ConsumerType toReturn = consumerTypeCurator.find(id);
@@ -89,8 +89,8 @@ public class ConsumerTypeResource {
      * @throws BadRequestException When the type is not found
      */
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public ConsumerType create(ConsumerType in) throws BadRequestException {
         try {
             ConsumerType toReturn = consumerTypeCurator.create(in);
@@ -112,8 +112,8 @@ public class ConsumerTypeResource {
      */
     @PUT
     @Path("/{id}")
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public ConsumerType update(ConsumerType in) throws BadRequestException {
         ConsumerType type = consumerTypeCurator.find(in.getId());
 
@@ -131,7 +131,7 @@ public class ConsumerTypeResource {
      */
     @DELETE
     @Path("/{id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces(MediaType.APPLICATION_JSON)
     public void deleteConsumerType(@PathParam("id") String id) {
         ConsumerType type = consumerTypeCurator.find(id);
 
