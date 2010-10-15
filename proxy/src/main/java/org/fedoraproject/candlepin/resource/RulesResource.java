@@ -63,8 +63,7 @@ public class RulesResource {
     @AllowRoles(roles = Role.SUPER_ADMIN)
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON,
-                MediaType.APPLICATION_XML })
+    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
     public String upload(String rulesBuffer) {
 
         if (rulesBuffer == null || "".equals(rulesBuffer)) {
@@ -90,8 +89,7 @@ public class RulesResource {
      * @return a the rules as a string.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, 
-        MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     public String get() {
         try {
             String rules = rulesCurator.getRules().getRules();

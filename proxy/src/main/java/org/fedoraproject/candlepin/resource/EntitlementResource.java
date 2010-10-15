@@ -84,7 +84,7 @@ public class EntitlementResource {
      * @return boolean if entitled or not
      */
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({MediaType.APPLICATION_JSON })
     @Path("consumer/{consumer_uuid}/product/{product_id}")
     public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
             @PathParam("product_id") String productId) {
@@ -104,7 +104,7 @@ public class EntitlementResource {
     }
     
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     public List<Entitlement> listAllForConsumer(
         @QueryParam("consumer") String consumerUuid) {
 
@@ -128,7 +128,7 @@ public class EntitlementResource {
      * @return the entitlement for the given id.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     @Path("{dbid}")
     @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public Entitlement getEntitlement(@PathParam("dbid") String dbid) {

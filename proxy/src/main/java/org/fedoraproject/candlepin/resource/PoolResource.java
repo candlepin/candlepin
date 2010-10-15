@@ -85,7 +85,7 @@ public class PoolResource {
      * @return the list of available entitlement pools.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     @Wrapped(element = "pools")
     @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
     public List<Pool> list(@QueryParam("owner") String ownerId,
@@ -130,7 +130,7 @@ public class PoolResource {
     }
     
     @POST
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     public Pool createPool(Pool pool) {
         // BOOO! We assume that pool.owner is partially constructed
         // (alternatively: we only care about the id field) - take it any way you want.
@@ -162,7 +162,7 @@ public class PoolResource {
      */
     @GET
     @Path("/{pool_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
     public Pool getPool(@PathParam("pool_id") String id) {
         Pool toReturn = poolCurator.find(id);
@@ -177,7 +177,7 @@ public class PoolResource {
 
     @DELETE
     @Path("/{pool_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     public void deletePool(@PathParam("pool_id") String id) {
         Pool toReturn = poolCurator.find(id);
 

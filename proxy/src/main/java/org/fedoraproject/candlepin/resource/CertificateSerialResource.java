@@ -43,7 +43,7 @@ public class CertificateSerialResource {
     }
     
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public List<CertificateSerial> getCertificateSerials() {
         return this.certificateSerialCurator.listAll();
@@ -51,7 +51,7 @@ public class CertificateSerialResource {
     
     @GET
     @Path("/{serial_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public CertificateSerial getCertificateSerial(@PathParam("serial_id") Long serialId) {
         return this.certificateSerialCurator.find(serialId);

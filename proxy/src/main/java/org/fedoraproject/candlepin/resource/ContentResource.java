@@ -54,14 +54,14 @@ public class ContentResource {
     }
     
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     public List<Content> list() {
         return contentCurator.listAll();
         
     }
     
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     @Path("/id/{content_id}")
     public Content getContent(@PathParam("contend_id") String contentId) {
         Content content = contentCurator.find(contentId);
@@ -76,7 +76,7 @@ public class ContentResource {
     }
     
     @POST
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public Content createContent(Content content) {
         Content lookedUp  = contentCurator.find(content.getId());

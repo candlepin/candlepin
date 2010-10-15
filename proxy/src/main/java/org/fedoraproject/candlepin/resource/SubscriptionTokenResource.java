@@ -51,7 +51,7 @@ public class SubscriptionTokenResource {
     }
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     public List<SubscriptionToken> getSubscriptionTokens() {
         List<SubscriptionToken> subTokenList = new LinkedList<SubscriptionToken>();
         subTokenList = subTokenCurator.listAll();
@@ -60,7 +60,7 @@ public class SubscriptionTokenResource {
     }
 
     @POST
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     public SubscriptionToken createSubscriptionToken(
         SubscriptionToken subscriptionToken) {
         log.debug("subscriptionToken" + subscriptionToken);
@@ -72,7 +72,7 @@ public class SubscriptionTokenResource {
 
     @DELETE
     @Path("/{subscription_token_id}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON })
     public void deleteSubscriptionToken(
         @PathParam("subscription_token_id") String subscriptionTokenId) {
         SubscriptionToken subscriptionToken = subTokenCurator
