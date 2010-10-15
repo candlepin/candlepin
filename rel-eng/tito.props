@@ -1,3 +1,7 @@
 [globalconfig]
 default_builder = spacewalk.releng.builder.Builder
 default_tagger = spacewalk.releng.tagger.VersionTagger
+
+[cvs]
+cvsroot = :gserver:cvs.devel.redhat.com:/cvs/dist
+branches = CANDLEPIN-1-RHEL5 CANDLEPIN-1-RHEL6
