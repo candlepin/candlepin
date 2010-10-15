@@ -53,6 +53,7 @@ public class CandlepinExceptionMapper implements
         new LinkedList<MediaType>() {
             {
                 add(MediaType.APPLICATION_JSON_TYPE);
+                add(MediaType.APPLICATION_XML_TYPE);
                 add(MediaType.TEXT_PLAIN_TYPE);
                 add(MediaType.APPLICATION_ATOM_XML_TYPE);
             }
@@ -72,7 +73,7 @@ public class CandlepinExceptionMapper implements
         i18n = injector.getInstance(I18n.class);
 
         String header = request.getHeader(HttpHeaderNames.ACCEPT);
-        MediaType responseMediaType = MediaType.APPLICATION_JSON_TYPE;
+        MediaType responseMediaType = MediaType.APPLICATION_XML_TYPE;
         if (header != null) {
             List<MediaType> headerMediaTypes = parseHeader(header);
 

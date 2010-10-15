@@ -40,7 +40,7 @@ public class EventResource {
     }
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Event> listEvents() {
         List<Event> events = eventCurator.listAll();
         return events;

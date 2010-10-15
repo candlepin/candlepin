@@ -108,7 +108,7 @@ public class CandlepinExceptionMapperTest {
         assertNotNull(r);
         MultivaluedMap<String, Object> mm = r.getMetadata();
         assertNotNull(mm);
-        assertEquals(MediaType.APPLICATION_JSON_TYPE, mm.get("Content-Type").get(0));
+        assertEquals(MediaType.APPLICATION_XML_TYPE, mm.get("Content-Type").get(0));
         verifyMessage(r, rtmsg("null accept header"));
     }
 

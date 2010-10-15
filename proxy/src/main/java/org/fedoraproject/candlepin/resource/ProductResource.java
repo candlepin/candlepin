@@ -72,7 +72,7 @@ public class ProductResource {
      * @return the list of available products.
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public List<Product> list() {
         return prodAdapter.getProducts();
     }
@@ -86,7 +86,7 @@ public class ProductResource {
      */
     @GET
     @Path("/{product_uuid}")    
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Product getProduct(@PathParam("product_uuid") String pid) {
         Product toReturn = prodAdapter.getProductById(pid);
 
@@ -100,7 +100,7 @@ public class ProductResource {
     
     @GET
     @Path("/{product_uuid}/certificate")
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public ProductCertificate getProductCertificate(
         @PathParam("product_uuid") String productId) {
         
@@ -121,14 +121,14 @@ public class ProductResource {
      *         exists
      */
     @POST
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public Product createProduct(Product product) {
         return prodAdapter.createProduct(product);
     }   
     
     @POST
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     @Path("/{product_uuid}/content/{content_id}")
     public Product addContent(@PathParam("product_uuid") String pid,
