@@ -249,8 +249,9 @@ public class PoolManager {
 
     /**
      * @param sub
+     * @return the newly created Pool
      */
-    public void createPoolForSubscription(Subscription sub) {
+    public Pool createPoolForSubscription(Subscription sub) {
         if (log.isDebugEnabled()) {
             log.debug("Creating new pool for new sub: " + sub.getId());
         }
@@ -263,6 +264,8 @@ public class PoolManager {
                 quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber());
         newPool.setSubscriptionId(sub.getId());
         createPool(newPool);
+        
+        return newPool;
     }
 
     public Pool createPool(Pool p) {

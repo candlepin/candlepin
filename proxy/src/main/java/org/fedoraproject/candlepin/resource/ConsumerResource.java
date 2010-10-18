@@ -569,15 +569,14 @@ public class ConsumerResource {
             // Make sure we have created/updated a pool for this subscription:
             Pool pool = poolManager.lookupBySubscriptionId(sub.getId());
             if (pool == null) {
-                poolManager.createPoolForSubscription(sub);
+                pool = poolManager.createPoolForSubscription(sub);
             }
             else {
                 poolManager.updatePoolForSubscription(pool, sub);
             }
 
             Product p = sub.getProduct();
-            entitlementList.add(createEntitlementByProduct(consumer, p.getId(),
-                quantity));
+            entitlementList.add(createEntitlementByPool(consumer, pool, quantity));
         }
         return entitlementList;
     }
