@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.5
+Version: 0.1.6
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.6-1
+- brew prep - add Group to tomcat6 sub package (jesusr@redhat.com)
+
 * Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.5-1
 - brew prep - require 0.0.9, since that's the working one :) (jesusr@redhat.com)
 - brew prep - require candlepin-deps >= 0.0.7 (jesusr@redhat.com)
