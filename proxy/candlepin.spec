@@ -39,6 +39,7 @@ Candlepin web application for tomcat5
 Summary: Candlepin web application for tomcat6
 Requires: tomcat6
 Provides: candlepin-webapp
+Group: Internet/Applications
 
 %description tomcat6
 Candlepin web application for tomcat6
