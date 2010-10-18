@@ -21,6 +21,7 @@ BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: candlepin-deps
+BuildRequires: jakarta-commons-lang >= 0:2.4
 %define __jar_repack %{nil}
 
 %description
