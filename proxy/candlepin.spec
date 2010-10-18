@@ -30,6 +30,7 @@ Candlepin is an open source entitlement management system.
 Summary: Candlepin web application for tomcat5
 Requires: tomcat5 >= 5.5
 Provides: candlepin-webapp
+Group: Internet/Applications
 
 %description tomcat5
 Candlepin web application for tomcat5
@@ -46,6 +47,7 @@ Candlepin web application for tomcat6
 Summary: Candlepin web application for jboss
 Requires: jbossas >= 4.3
 Provides: candlepin-webapp
+Group: Internet/Applications
 
 %description jboss
 Candlepin web application for jboss
