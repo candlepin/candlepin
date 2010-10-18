@@ -81,6 +81,8 @@ public class Subscription extends AbstractHibernateObject {
  
     private String contractNumber;
     
+    private String accountNumber;
+    
     @OneToMany(mappedBy = "subscription")
     private Set<SubscriptionToken> tokens;
     
@@ -227,6 +229,22 @@ public class Subscription extends AbstractHibernateObject {
     public void setContractNumber(String contractNumber) {
         this.contractNumber = contractNumber;
     }
+    
+    /**
+     * set the account number
+     * @param accountNumber
+     */
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    /**
+     * @return the customer's account number
+     */
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
 
     public Set<SubscriptionToken> getTokens() {
         return tokens;

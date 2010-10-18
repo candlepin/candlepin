@@ -98,6 +98,11 @@ public class X509ExtensionUtil {
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
                 false, new DERUTF8String(sub.getContractNumber())));
         }
+        if (sub.getAccountNumber() != null) { 
+            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ACCOUNT_NUMBER_KEY),
+                false, new DERUTF8String(sub.getAccountNumber())));
+        }
 
         return toReturn;
     }

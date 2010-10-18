@@ -50,6 +50,7 @@ public final class OIDUtil {
     public static final String ORDER_SOCKETLIMIT_KEY = "Socket Limit";
     public static final String ORDER_OPTIONCODE_KEY = "Product Option Code";
     public static final String ORDER_WARNING_PERIOD = "Warning Period";
+    public static final String ORDER_ACCOUNT_NUMBER_KEY = "Account Number";
 
     public static final String OP_NAME_KEY = "Name";
     public static final String OP_DESC_KEY = "Variant";
@@ -120,6 +121,7 @@ public final class OIDUtil {
         ORDER_OIDS.put(ORDER_CONTRACT_NUMBER_KEY, "12");
         ORDER_OIDS.put(ORDER_QUANTITY_USED, "13");
         ORDER_OIDS.put(ORDER_WARNING_PERIOD, "14");
+        ORDER_OIDS.put(ORDER_ACCOUNT_NUMBER_KEY, "15");
 
         // load order product oids
         ORDER_PRODUCT_OIDS.put(OP_NAME_KEY, "1");
