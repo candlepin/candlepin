@@ -18,7 +18,9 @@ BuildArch: noarch
 
 Requires: candlepin-webapp
 BuildRequires: java >= 0:1.6.0
-#BuildRequires: rubygem-buildr
+BuildRequires: ant >= 0:1.7.0
+BuildRequires: gettext
+BuildRequires: candlepin-deps
 %define __jar_repack %{nil}
 
 %description
@@ -52,7 +54,7 @@ Candlepin web application for jboss
 %setup -q 
 
 %build
-buildr clean test=no package
+ant -Dlibdir=/usr/share/candlepin/lib/ clean package
 
 %install
 rm -rf $RPM_BUILD_ROOT
