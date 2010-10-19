@@ -146,7 +146,8 @@ public class TestUtil {
         Set<String> productIds, int quantity) {
 
         Pool pool = new Pool(owner, productId, productIds, new Long(quantity),
-            TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30));
+            TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30),
+            "SUB234598S");
         return pool;
     }
     

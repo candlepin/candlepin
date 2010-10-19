@@ -76,7 +76,9 @@ import com.wideplay.warp.persist.WorkManager;
  * Test fixture for test classes requiring access to the database.
  */
 public class DatabaseTestFixture {
-    
+
+    private static final String DEFAULT_CONTRACT = "SUB349923";
+
     protected EntityManagerFactory emf;
     protected Injector injector;
     
@@ -197,7 +199,7 @@ public class DatabaseTestFixture {
     protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
         Date startDate, Date endDate) {
         Pool p = new Pool(owner, product.getId(), new HashSet<String>(), quantity, 
-                startDate, endDate);
+                startDate, endDate, DEFAULT_CONTRACT);
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 
             quantity, startDate, endDate, TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);

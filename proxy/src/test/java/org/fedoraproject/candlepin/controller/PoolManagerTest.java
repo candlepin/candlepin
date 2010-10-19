@@ -167,7 +167,7 @@ public class PoolManagerTest {
         subscriptions.add(s);
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity() + 10, s.getStartDate(),
-            Util.tomorrow());
+            Util.tomorrow(), s.getContractNumber());
         p.setId("423");
         p.setSubscriptionId(s.getId());
         pools.add(p);
@@ -188,7 +188,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate());
+            s.getEndDate(), s.getContractNumber());
         p.setSubscriptionId(s.getId());
         
         s.setProduct(TestUtil.createProduct());
@@ -206,7 +206,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate());
+            s.getEndDate(), s.getContractNumber());
         p.setSubscriptionId(s.getId());
         
         Set<Product> providedProducts = new HashSet<Product>();
@@ -233,7 +233,7 @@ public class PoolManagerTest {
         
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate());
+            s.getEndDate(), s.getContractNumber());
         p.setSubscriptionId(s.getId());
         Set<String> providedProductIds = new HashSet<String>();
         providedProductIds.add(providedProduct.getId());
@@ -255,7 +255,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate());
+            s.getEndDate(), s.getContractNumber());
         p.setSubscriptionId(s.getId());
         this.manager.updatePoolForSubscription(p, s);
         verifyZeroInteractions(mockPoolCurator);
@@ -268,7 +268,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity().longValue() + 10,
-            s.getStartDate(), s.getEndDate());
+            s.getStartDate(), s.getEndDate(), s.getContractNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
         verify(mockPoolCurator, times(1)).merge(any(Pool.class));
@@ -289,7 +289,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity(), s.getStartDate(),
-            Util.tomorrow());
+            Util.tomorrow(), s.getContractNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
@@ -304,7 +304,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<String>(), s.getQuantity().longValue() + 4,
-            s.getStartDate(), Util.tomorrow());
+            s.getStartDate(), Util.tomorrow(), s.getContractNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(manager).regenerateCertificatesOf(anySet());
         verifyAndAssertForAllChanges(s, p, 1);
@@ -327,7 +327,8 @@ public class PoolManagerTest {
         final Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         final Pool p = new Pool(s.getOwner(), s.getProduct().getId(), new HashSet<String>(),
-            s.getQuantity().longValue() + 4, s.getStartDate(), Util.tomorrow());
+            s.getQuantity().longValue() + 4, s.getStartDate(), Util.tomorrow(),
+            s.getContractNumber());
         List<Entitlement> mockedEntitlements = new ArrayList<Entitlement>() {
             private static final long serialVersionUID = 1L;
 

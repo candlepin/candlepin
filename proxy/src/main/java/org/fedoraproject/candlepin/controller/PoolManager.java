@@ -260,7 +260,7 @@ public class PoolManager {
             productIds.add(p.getId());
         }
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), productIds,
-                quantity, sub.getStartDate(), sub.getEndDate());
+                quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber());
         newPool.setSubscriptionId(sub.getId());
         createPool(newPool);
     }
