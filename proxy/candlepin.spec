@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.4
+Version: 0.1.6
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -20,8 +20,7 @@ Requires: candlepin-webapp
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-BuildRequires: candlepin-deps
-BuildRequires: jakarta-commons-lang >= 0:2.4
+BuildRequires: candlepin-deps >= 0:0.0.9
 %define __jar_repack %{nil}
 
 %description
@@ -40,6 +39,7 @@ Candlepin web application for tomcat5
 Summary: Candlepin web application for tomcat6
 Requires: tomcat6
 Provides: candlepin-webapp
+Group: Internet/Applications
 
 %description tomcat6
 Candlepin web application for tomcat6
@@ -115,6 +115,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.6-1
+- brew prep - add Group to tomcat6 sub package (jesusr@redhat.com)
+
+* Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.5-1
+- brew prep - require 0.0.9, since that's the working one :) (jesusr@redhat.com)
+- brew prep - require candlepin-deps >= 0.0.7 (jesusr@redhat.com)
+- brew prep - ugh removing the commons-lang dep (jesusr@redhat.com)
+
 * Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.4-1
 - brew prep - depend on jakarta-commons-lang now (jesusr@redhat.com)
 
