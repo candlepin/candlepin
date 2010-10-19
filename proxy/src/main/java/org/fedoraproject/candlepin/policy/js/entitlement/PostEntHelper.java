@@ -58,7 +58,8 @@ public class PostEntHelper {
         Set<String> productIdCopies = new HashSet<String>();
         productIdCopies.addAll(providedProductIds);
         Pool consumerSpecificPool = new Pool(c.getOwner(), productId, productIdCopies, q,
-            ent.getPool().getStartDate(), ent.getPool().getEndDate());
+            ent.getPool().getStartDate(), ent.getPool().getEndDate(),
+            ent.getPool().getContractNumber());
         consumerSpecificPool.setRestrictedToUsername(c.getUsername());
         consumerSpecificPool.setSourceEntitlement(ent);
         
@@ -67,16 +68,5 @@ public class PostEntHelper {
         
         poolManager.createPool(consumerSpecificPool);
     }
-
-// Disabling this code for now:
-//    /**
-//     * Extend the dates on the entitlement certificate beyond the subscription end date.
-//     * This value will be read when the certificate is generated.
-//     *
-//     * @param numberOfDays Number of days to extend the certificate.
-//     */
-//    public void setFlexExpiryDays(int numberOfDays) {
-//        this.ent.setFlexExpiryDays(numberOfDays);
-//    }
 
 }

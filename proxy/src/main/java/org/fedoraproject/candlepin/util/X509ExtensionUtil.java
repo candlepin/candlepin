@@ -75,6 +75,9 @@ public class X509ExtensionUtil {
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false,
             new DERUTF8String(sub.getId().toString())));
+        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false,
+            new DERUTF8String(sub.getProduct().getId().toString())));
         // TODO: regnum? virtlimit/socketlimit?
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false,
