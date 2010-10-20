@@ -456,30 +456,22 @@ public class ConsumerResource {
      * @param productId Product ID.
      * @return Entitlement object.
      */
-    private List<Entitlement> bindByProduct(String productId,
-        Consumer consumer, Integer quantity) {
-
-        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        entitlementList.add(createEntitlementByProduct(consumer, productId,
-            quantity));
-        return entitlementList;
-    }
-
     // TODO: Bleh, very duplicated methods here:
-    private Entitlement createEntitlementByProduct(Consumer consumer,
-        String productId, Integer quantity) {
-        // Attempt to create an entitlement:
+    private List<Entitlement> bindByProducts(String[] productIds, Consumer consumer,
+        Integer quantity) {
+        // Attempt to create entitlements:
         try {
-            Entitlement e = poolManager.entitleByProduct(consumer, productId,
-                quantity);
-            log.debug("Created entitlement: " + e);
-            return e;
+            List<Entitlement> entitlements = poolManager.entitleByProducts(consumer,
+                productIds, quantity);
+            log.debug("Created entitlements: " + entitlements);
+            return entitlements;
         }
         catch (EntitlementRefusedException e) {
             // Could be multiple errors, but we'll just report the first one for
             // now:
             // TODO: Convert resource key to user friendly string?
             // See below for more TODOS
+            String productId = "XXX FIXME";
             String msg;
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
@@ -637,9 +629,7 @@ public class ConsumerResource {
                         email, emailLocale);
                 }
                 else if (productIds != null && productIds.length > 0) {
-                    for (String productId : productIds) {
-                        entitlements = bindByProduct(productId, consumer, quantity);
-                    }
+                    entitlements = bindByProducts(productIds, consumer, quantity);
                 }
                 else {
                     String poolId = Util.assertNotNull(poolIdString, i18n

@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -301,8 +302,8 @@ public class PoolManager {
      *
      * @param consumer
      *            consumer requesting to be entitled
-     * @param productId
-     *            product to be entitled.
+     * @param productIds
+     *            products to be entitled.
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
@@ -312,21 +313,32 @@ public class PoolManager {
     // will most certainly be stale. beware!
     //
     @Transactional
-    public Entitlement entitleByProduct(Consumer consumer, String productId,
+    public List<Entitlement> entitleByProducts(Consumer consumer, String[] productIds,
         Integer quantity)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
-
-        Pool pool = enforcer.selectBestPool(consumer, productId,
-            poolCurator.listByOwnerAndProduct(owner, productId));
-        if (pool == null) {
-            throw new RuntimeException("No entitlements for product: " +
-                productId);
+        List<Entitlement> entitlements = new LinkedList<Entitlement>();
+        
+        for (String productId : productIds) {
+            Pool pool = enforcer.selectBestPool(consumer, productId,
+                poolCurator.listByOwnerAndProduct(owner, productId));
+            if (pool == null) {
+                throw new RuntimeException("No entitlements for product: " +
+                    productId);
+            }
+            
+            entitlements.add(addEntitlement(consumer, pool, quantity));
         }
-
-        return addEntitlement(consumer, pool, quantity);
+        return entitlements;
     }
 
+    public Entitlement entitleByProduct(Consumer consumer, String productId,
+        Integer quantity)
+        throws EntitlementRefusedException {
+        // There will only be one returned entitlement, anyways
+        return entitleByProducts(consumer, new String[] {productId}, quantity).get(0);
+    }
+    
     /**
      * Request an entitlement by pool..
      *

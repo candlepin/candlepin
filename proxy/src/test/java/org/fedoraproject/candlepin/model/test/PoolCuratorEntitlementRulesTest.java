@@ -117,7 +117,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         assertNotNull(e1);
 
         @SuppressWarnings("unused")
-        Entitlement e2 = anotherEntitler.entitleByProduct(consumer, newProduct.getId(), 
+        Entitlement e2 = anotherEntitler.entitleByProduct(consumer, newProduct.getId(),
             new Integer("1"));
     }
 
