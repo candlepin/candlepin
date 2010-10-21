@@ -320,8 +320,43 @@ public class PoolManager {
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         
         for (String productId : productIds) {
+            ValidationResult failedResult = null;
+            List<Pool> candidatePools = poolCurator.listByOwner(owner);
+            List<Pool> filteredPools = new LinkedList<Pool>();
+            for (Pool pool : candidatePools) {
+                boolean providesProduct = false;
+                //for (String productId : productIds) {
+                if (pool.provides(productId)) {
+                    providesProduct = true;
+                //        break;
+                }
+               // }
+                if (providesProduct) {
+                    PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool,
+                        quantity);
+                    ValidationResult result = preHelper.getResult();
+                    
+                    if (!result.isSuccessful()) {
+                        // Just keep the last one around, if we need it
+                        failedResult = result;
+                        if (log.isDebugEnabled()) {
+                            log.debug(
+                                "Pool filtered from candidates due to rules failure: " +
+                                pool.getId());
+                        }
+                    }
+                    else {
+                        filteredPools.add(pool);
+                    }
+                }
+            }
+
+            if (filteredPools.size() == 0) {
+                throw new EntitlementRefusedException(failedResult);
+            }
+            
             Pool pool = enforcer.selectBestPool(consumer, productId,
-                poolCurator.listByOwnerAndProduct(owner, productId));
+                filteredPools);
             if (pool == null) {
                 throw new RuntimeException("No entitlements for product: " +
                     productId);
@@ -329,6 +364,7 @@ public class PoolManager {
             
             entitlements.add(addEntitlement(consumer, pool, quantity));
         }
+
         return entitlements;
     }
 
@@ -357,15 +393,15 @@ public class PoolManager {
     @Transactional
     public Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException {
-
         return addEntitlement(consumer, pool, quantity);
     }
 
     private Entitlement addEntitlement(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException {
+        /* XXX: running pre rules twice on the entitle by product case */
         PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
         ValidationResult result = preHelper.getResult();
-
+        
         if (!result.isSuccessful()) {
             log.warn("Entitlement not granted: " +
                 result.getErrors().toString());

@@ -15,8 +15,10 @@
 package org.fedoraproject.candlepin.controller;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
@@ -53,6 +55,8 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -61,6 +65,7 @@ import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -387,6 +392,42 @@ public class PoolManagerTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testGrantByProductPicksPoolWithAvailableEntitlements() throws Exception {
+        Product product = TestUtil.createProduct();
+        List<Pool> pools = Util.newList();
+        Pool pool1 = TestUtil.createPool(product);
+        pools.add(pool1);
+        Pool pool2 = TestUtil.createPool(product);
+        pools.add(pool2);
+       
+        PreEntHelper badHelper = mock(PreEntHelper.class);
+        PreEntHelper goodHelper = mock(PreEntHelper.class);
+        
+        ValidationResult badResult = mock(ValidationResult.class);
+        ValidationResult goodResult = mock(ValidationResult.class);
+        
+        when(mockPoolCurator.listByOwner(any(Owner.class))).thenReturn(pools);
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
+            anyInt())).thenReturn(badHelper).thenReturn(goodHelper);
+        
+        when(badHelper.getResult()).thenReturn(badResult);
+        when(goodHelper.getResult()).thenReturn(goodResult);
+
+        when(badResult.isSuccessful()).thenReturn(false);
+        when(goodResult.isSuccessful()).thenReturn(true);
+        
+        when(enforcerMock.selectBestPool(any(Consumer.class), anyString(),
+            any(List.class))).thenReturn(pool1);
+        
+        Entitlement e = manager.entitleByProduct(TestUtil.createConsumer(o),
+            product.getId(), 1);
+        
+        assertNotNull(e);
+
+    }
+    
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
         List<Pool> pools = new LinkedList<Pool>();
         Pool pool1 = TestUtil.createPool(e.getOwner(), p);
