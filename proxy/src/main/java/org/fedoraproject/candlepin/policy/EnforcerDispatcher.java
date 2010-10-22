@@ -67,12 +67,13 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
-    public Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools)
+    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools)
         throws RuleExecutionException {
         if (isCandlepinConsumer(consumer)) {
-            return candlepinEnforcer.selectBestPool(consumer, productId, pools);
+            return candlepinEnforcer.selectBestPools(consumer, productIds, pools);
         }
-        return jsEnforcer.selectBestPool(consumer, productId, pools);
+        return jsEnforcer.selectBestPools(consumer, productIds, pools);
     }
 
 }

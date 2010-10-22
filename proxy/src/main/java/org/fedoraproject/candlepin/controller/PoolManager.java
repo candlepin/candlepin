@@ -355,14 +355,14 @@ public class PoolManager {
                 throw new EntitlementRefusedException(failedResult);
             }
             
-            Pool pool = enforcer.selectBestPool(consumer, productId,
-                filteredPools);
-            if (pool == null) {
+            List<Pool> bestPools = enforcer.selectBestPools(consumer,
+                new String[] {productId}, filteredPools);
+            if (bestPools == null) {
                 throw new RuntimeException("No entitlements for product: " +
                     productId);
             }
             
-            entitlements.add(addEntitlement(consumer, pool, quantity));
+            entitlements.add(addEntitlement(consumer, bestPools.get(0), quantity));
         }
 
         return entitlements;

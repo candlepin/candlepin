@@ -43,12 +43,13 @@ public class CandlepinConsumerTypeEnforcer implements Enforcer {
     }
 
     @Override
-    public Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools) 
+    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools) 
         throws RuleExecutionException {
         
         if (pools.isEmpty()) {
             return null;
         }
-        return pools.get(0);
+        return pools;
     }
 }

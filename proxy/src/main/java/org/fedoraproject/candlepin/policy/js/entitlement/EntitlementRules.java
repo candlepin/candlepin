@@ -222,20 +222,26 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    public Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools) {
+    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools) {
         Invocable inv = (Invocable) jsEngine;
 
-        log.info("Selecting best entitlement pool for product: " + productId);
+        log.info("Selecting best entitlement pool for product: " + productIds);
         List<ReadOnlyPool> readOnlyPools
             = ReadOnlyPool.fromCollection(pools);
 
         // Provide objects for the script:
         jsEngine.put("pools", readOnlyPools);
         
-        Product product = prodAdapter.getProductById(productId);
-        Map<String, String> allAttributes = getFlattenedAttributes(product, null);
-        List<Rule> matchingRules 
-            = rulesForAttributes(allAttributes.keySet(), attributesToRules);
+        List<Product> products = new LinkedList<Product>();
+        Set<Rule> matchingRules = new HashSet<Rule>();
+        for (String productId : productIds) {
+            Product product = prodAdapter.getProductById(productId);
+            products.add(product);
+            Map<String, String> allAttributes = getFlattenedAttributes(product, null);
+            matchingRules.addAll(rulesForAttributes(allAttributes.keySet(),
+                attributesToRules));
+        }
         
         ReadOnlyPool result = null;
         boolean foundMatchingRule = false;
@@ -276,13 +282,15 @@ public class EntitlementRules implements Enforcer {
         
         if (pools.size() > 0 && result == null) {
             throw new RuleExecutionException(
-                "Rule did not select a pool for product: " + productId);
+                "Rule did not select a pool for product: " + productIds);
         }
 
         for (Pool p : pools) {
             if (p.getId().equals(result.getId())) {
                 log.debug("Best pool: " + p);
-                return p;
+                List<Pool> bestPools = new LinkedList<Pool>();
+                bestPools.add(p);
+                return bestPools;
             }
         }
 
@@ -297,13 +305,13 @@ public class EntitlementRules implements Enforcer {
      *            Pools to choose from.
      * @return First pool in the list. (default behavior)
      */
-    private Pool selectBestPoolDefault(List<Pool> pools) {
+    private List<Pool> selectBestPoolDefault(List<Pool> pools) {
         if (pools.size() > 0) {
-            return pools.get(0);
+            return pools;
         }
         return null;
     }
-    
+
     public List<Rule> rulesForAttributes(Set<String> attributes, 
             Map<String, Set<Rule>> rules) {
         

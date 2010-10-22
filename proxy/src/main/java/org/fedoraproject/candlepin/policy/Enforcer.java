@@ -55,20 +55,20 @@ public interface Enforcer {
     PostEntHelper postEntitlement(Consumer c, PostEntHelper postEntHelper, Entitlement ent);
     
     /**
-     * Select the best entitlement pool available for the given product ID.
+     * Select the best entitlement pools available for the given product IDs.
      *
-     * If no pools are available, null will be returned.
+     * If no pools are available for all products, null will be returned.
      *
      * Will throw RuleExecutionException if both pools and a rule exist, but no pool
      * is returned from the rule.
      *
-     * @param productId Product ID
+     * @param productIds Product IDs
      * @param pools List of pools to select from.
-     * @return best pool as determined by the rules.
+     * @return best pools as determined by the rules.
      * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
      * pool is returned.
      */
-    Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools)
+    List<Pool> selectBestPools(Consumer consumer, String[] productIds, List<Pool> pools)
         throws RuleExecutionException;
 
 }

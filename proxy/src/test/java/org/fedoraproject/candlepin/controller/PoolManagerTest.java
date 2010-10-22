@@ -65,7 +65,6 @@ import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -418,8 +417,10 @@ public class PoolManagerTest {
         when(badResult.isSuccessful()).thenReturn(false);
         when(goodResult.isSuccessful()).thenReturn(true);
         
-        when(enforcerMock.selectBestPool(any(Consumer.class), anyString(),
-            any(List.class))).thenReturn(pool1);
+        List<Pool> bestPools = new LinkedList<Pool>();
+        bestPools.add(pool1);
+        when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
+            any(List.class))).thenReturn(bestPools);
         
         Entitlement e = manager.entitleByProduct(TestUtil.createConsumer(o),
             product.getId(), 1);
