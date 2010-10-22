@@ -45,10 +45,8 @@ public final class OIDUtil {
     public static final String ORDER_QUANTITY_KEY = "Quantity";
     public static final String ORDER_STARTDATE_KEY = "Entitlement Start Date";
     public static final String ORDER_ENDDATE_KEY = "Entitlement End Date";
-    public static final String ORDER_SUBTYPE_KEY = "Subtype";
     public static final String ORDER_VIRTLIMIT_KEY = "Virtualization Limit";
     public static final String ORDER_SOCKETLIMIT_KEY = "Socket Limit";
-    public static final String ORDER_OPTIONCODE_KEY = "Product Option Code";
     public static final String ORDER_WARNING_PERIOD = "Warning Period";
     public static final String ORDER_ACCOUNT_NUMBER_KEY = "Account Number";
 
@@ -114,14 +112,12 @@ public final class OIDUtil {
         ORDER_OIDS.put(ORDER_QUANTITY_KEY, "5");
         ORDER_OIDS.put(ORDER_STARTDATE_KEY, "6");
         ORDER_OIDS.put(ORDER_ENDDATE_KEY, "7");
-        ORDER_OIDS.put(ORDER_SUBTYPE_KEY, "8");
-        ORDER_OIDS.put(ORDER_VIRTLIMIT_KEY, "9");
-        ORDER_OIDS.put(ORDER_SOCKETLIMIT_KEY, "10");
-        ORDER_OIDS.put(ORDER_OPTIONCODE_KEY, "11");
-        ORDER_OIDS.put(ORDER_CONTRACT_NUMBER_KEY, "12");
-        ORDER_OIDS.put(ORDER_QUANTITY_USED, "13");
-        ORDER_OIDS.put(ORDER_WARNING_PERIOD, "14");
-        ORDER_OIDS.put(ORDER_ACCOUNT_NUMBER_KEY, "15");
+        ORDER_OIDS.put(ORDER_VIRTLIMIT_KEY, "8");
+        ORDER_OIDS.put(ORDER_SOCKETLIMIT_KEY, "9");
+        ORDER_OIDS.put(ORDER_CONTRACT_NUMBER_KEY, "10");
+        ORDER_OIDS.put(ORDER_QUANTITY_USED, "11");
+        ORDER_OIDS.put(ORDER_WARNING_PERIOD, "12");
+        ORDER_OIDS.put(ORDER_ACCOUNT_NUMBER_KEY, "13");
 
         // load order product oids
         ORDER_PRODUCT_OIDS.put(OP_NAME_KEY, "1");

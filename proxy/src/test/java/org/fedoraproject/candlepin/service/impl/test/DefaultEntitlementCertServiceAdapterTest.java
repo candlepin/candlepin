@@ -224,9 +224,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 encodedContent.put(ext.getOid(), ext);
             }
             
-            return encodedContent.containsKey("1.3.6.1.4.1.2312.9.4.13") &&
+            return encodedContent.containsKey("1.3.6.1.4.1.2312.9.4.11") &&
                 ((DERUTF8String) 
-                    encodedContent.get("1.3.6.1.4.1.2312.9.4.13").getAsn1Encodable())
+                    encodedContent.get("1.3.6.1.4.1.2312.9.4.11").getAsn1Encodable())
                .toString().equals(ENTITLEMENT_QUANTITY);
         }
     }
