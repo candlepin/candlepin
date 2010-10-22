@@ -130,9 +130,13 @@ var Entitlement = {
 	},
 	
 	select_pool_global: function() {
-	    if (pools.size() > 0) {
-		return pools.get(0);
-	    }
+		var selected_pools = [];
+		for (var i = 0; i < pools.size(); i++) {
+			selected_pools.push(pools.get(i));
+		}
+		if (pools.size() > 0) {
+			return selected_pools;
+		}
 	
 	    return null;
 	}

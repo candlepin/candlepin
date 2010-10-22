@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class ReadOnlyProduct {
      * @param products read/write version of products.
      * @return read-only versions of products.
      */
-    public static Set<ReadOnlyProduct> fromProducts(Set<Product> products) {
+    public static Set<ReadOnlyProduct> fromProducts(Collection<Product> products) {
         Set<ReadOnlyProduct> toReturn = new HashSet<ReadOnlyProduct>();
         for (Product toProxy : products) {
             toReturn.add(new ReadOnlyProduct(toProxy));

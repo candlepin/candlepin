@@ -47,6 +47,9 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
+import sun.org.mozilla.javascript.NativeArray;
+import sun.org.mozilla.javascript.NativeJavaObject;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -230,8 +233,6 @@ public class EntitlementRules implements Enforcer {
         List<ReadOnlyPool> readOnlyPools
             = ReadOnlyPool.fromCollection(pools);
 
-        // Provide objects for the script:
-        jsEngine.put("pools", readOnlyPools);
         
         List<Product> products = new LinkedList<Product>();
         Set<Rule> matchingRules = new HashSet<Rule>();
@@ -242,12 +243,18 @@ public class EntitlementRules implements Enforcer {
             matchingRules.addAll(rulesForAttributes(allAttributes.keySet(),
                 attributesToRules));
         }
+
+        Set<ReadOnlyProduct> readOnlyProducts = ReadOnlyProduct.fromProducts(products);
+
+        // Provide objects for the script:
+        jsEngine.put("pools", readOnlyPools);
+        jsEngine.put("products", readOnlyProducts);
         
-        ReadOnlyPool result = null;
+        NativeArray result = null;
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
-                result = (ReadOnlyPool) inv.invokeMethod(entitlementNameSpace, 
+                result = (NativeArray) inv.invokeMethod(entitlementNameSpace, 
                     SELECT_POOL_PREFIX + rule.getRuleName());
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
@@ -264,7 +271,7 @@ public class EntitlementRules implements Enforcer {
         
         if (!foundMatchingRule) {
             try {
-                result = (ReadOnlyPool) inv
+                result = (NativeArray) inv
                     .invokeMethod(entitlementNameSpace, GLOBAL_SELECT_POOL_FUNCTION);
                 log.info("Excuted javascript rule: " +
                     GLOBAL_SELECT_POOL_FUNCTION);
@@ -285,16 +292,24 @@ public class EntitlementRules implements Enforcer {
                 "Rule did not select a pool for product: " + productIds);
         }
 
+        List<Pool> bestPools = new LinkedList<Pool>();
         for (Pool p : pools) {
-            if (p.getId().equals(result.getId())) {
-                log.debug("Best pool: " + p);
-                List<Pool> bestPools = new LinkedList<Pool>();
-                bestPools.add(p);
-                return bestPools;
+            for (int i = 0; i < result.getLength(); i++) {
+                ReadOnlyPool rp =
+                    (ReadOnlyPool) ((NativeJavaObject) result.get(i, null)).unwrap();
+                if (p.getId().equals(rp.getId())) {
+                    log.debug("Best pool: " + p);
+                    bestPools.add(p);
+                }
             }
         }
-
-        return null;
+        
+        if (bestPools.size() > 0) {
+            return bestPools;
+        }
+        else {
+            return null;
+        }
     }
 
     /**

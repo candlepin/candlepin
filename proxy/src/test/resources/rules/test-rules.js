@@ -69,7 +69,7 @@ var Entitlement = {
 				furthest = p;
 			}
 		}
-		return furthest;
+		return new Array(furthest);
 	},
 	
 	select_pool_QUANTITY001: function() {
@@ -81,7 +81,7 @@ var Entitlement = {
 				highestMax = p;
 			}
 		}
-		return highestMax;
+		return new Array(highestMax);
 	},
 	
 	// Bad rule! Just return null instead of picking a pool like it should:
