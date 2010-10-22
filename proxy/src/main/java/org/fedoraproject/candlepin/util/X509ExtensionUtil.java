@@ -70,7 +70,7 @@ public class X509ExtensionUtil {
         if (sub.getProduct().getId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false,
-                new DERUTF8String(sub.getProduct().getId())));
+                new DERUTF8String(sub.getProduct().getName())));
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false,
