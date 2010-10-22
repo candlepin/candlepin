@@ -15,7 +15,9 @@
 package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.EventCurator;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -23,6 +25,7 @@ import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -33,10 +36,12 @@ import javax.ws.rs.core.MediaType;
 public class EventResource {
 
     private EventCurator eventCurator;
+    private I18n i18n;
 
     @Inject
-    public EventResource(EventCurator eventCurator) {
+    public EventResource(EventCurator eventCurator, I18n i18n) {
         this.eventCurator = eventCurator;
+        this.i18n = i18n;
     }
 
     @GET
@@ -45,5 +50,17 @@ public class EventResource {
         List<Event> events = eventCurator.listAll();
         return events;
     }
-
+    
+    @GET
+    @Path("{uuid}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Event getEvent(@PathParam("uuid") String uuid) {
+        Event toReturn = eventCurator.find(uuid);
+        if (toReturn != null) {
+            return toReturn;
+        }
+        
+        throw new NotFoundException(i18n.tr(
+            "Event with ID '{0}' could not be found.", uuid));
+    }
 }

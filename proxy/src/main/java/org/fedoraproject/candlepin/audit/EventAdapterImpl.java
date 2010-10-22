@@ -23,6 +23,7 @@ import javax.ws.rs.core.MediaType;
 import org.jboss.resteasy.plugins.providers.atom.Content;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.jboss.resteasy.plugins.providers.atom.Link;
 import org.jboss.resteasy.plugins.providers.atom.Person;
 
 /**
@@ -31,6 +32,7 @@ import org.jboss.resteasy.plugins.providers.atom.Person;
 public class EventAdapterImpl implements EventAdapter {
     
     public static final String URI_BASE = "http://fedorahosted.org/candlepin/events";
+    
 
     @Override
     public Feed toFeed(List<Event> events) {
@@ -54,12 +56,19 @@ public class EventAdapterImpl implements EventAdapter {
             entry.setPublished(e.getTimestamp());
             entry.setUpdated(e.getTimestamp());
             entry.getAuthors().add(new Person("Red Hat, Inc."));
+            URI eventURI = null;
             try {
-                entry.setId(new URI(URI_BASE + "/" + e.getId()));
+                eventURI = new URI(URI_BASE + "/" + e.getId());
             }
             catch (Exception error) {
                 // ignore, shouldn't happen
             }
+            entry.setId(eventURI);
+            entry.getLinks().add(
+                new Link(
+                    "alternate", 
+                    eventURI,
+                    MediaType.APPLICATION_JSON_TYPE));
 
             Content content = new Content();
             content.setType(MediaType.APPLICATION_XML_TYPE);
