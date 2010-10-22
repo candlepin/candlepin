@@ -14,22 +14,35 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.List;
+
+import javax.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.plugins.providers.atom.Content;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.jboss.resteasy.plugins.providers.atom.Person;
 
 /**
  * EventAdapterImpl
  */
 public class EventAdapterImpl implements EventAdapter {
+    
+    public static final String URI_BASE = "http://fedorahosted.org/candlepin/events";
 
     @Override
     public Feed toFeed(List<Event> events) {
         Feed feed = new Feed();
         feed.setUpdated(new Date());
+        feed.getAuthors().add(new Person("Red Hat, Inc."));
+        try {
+            feed.setId(new URI(URI_BASE));
+        } 
+        catch (Exception e) {
+            // ignore, shouldn't happen
+        }
 
         if (events == null) {
             return feed;
@@ -39,8 +52,17 @@ public class EventAdapterImpl implements EventAdapter {
             Entry entry = new Entry();
             entry.setTitle(e.getTarget().toString() + " " + e.getType().toString());
             entry.setPublished(e.getTimestamp());
+            entry.setUpdated(e.getTimestamp());
+            entry.getAuthors().add(new Person("Red Hat, Inc."));
+            try {
+                entry.setId(new URI(URI_BASE + "/" + e.getId()));
+            }
+            catch (Exception error) {
+                // ignore, shouldn't happen
+            }
 
             Content content = new Content();
+            content.setType(MediaType.APPLICATION_XML_TYPE);
             content.setJAXBObject(e);
             entry.setContent(content);
             feed.getEntries().add(entry);
@@ -53,5 +75,4 @@ public class EventAdapterImpl implements EventAdapter {
 
         return feed;
     }
-
 }

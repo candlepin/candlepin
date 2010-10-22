@@ -49,7 +49,7 @@ import org.hibernate.annotations.ParamDef;
  */
 @Entity
 @Table(name = "cp_event")
-@XmlRootElement
+@XmlRootElement(namespace = "http://fedorahosted.org/candlepin/Event")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @FilterDefs({
     @FilterDef(
