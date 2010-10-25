@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.0.42
+Version: 0.0.43
 Release: 1
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -110,6 +110,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Oct 25 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.43-1
+- 646000: add c3p0 dep and configuration. (jesusr@redhat.com)
+- 646000: remove trailing whitespace (jesusr@redhat.com)
+- Adding the sku namespace (calfonso@redhat.com)
+- Revert "642754: Remove the XML generate annotations from all the resources" (ddolguik@redhat.com)
+- 642754: Remove the XML generate annotations from all the resources (ddolguik@redhat.com)
+
 * Wed Oct 13 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.42-1
 - Update I18N strings. (dgoodwin@redhat.com)
 - Add mysql tables for quartz (jmrodri@gmail.com)
