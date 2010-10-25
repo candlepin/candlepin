@@ -319,50 +319,50 @@ public class PoolManager {
         Owner owner = consumer.getOwner();
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         
-        for (String productId : productIds) {
-            ValidationResult failedResult = null;
-            List<Pool> candidatePools = poolCurator.listByOwner(owner);
-            List<Pool> filteredPools = new LinkedList<Pool>();
-            for (Pool pool : candidatePools) {
-                boolean providesProduct = false;
-                //for (String productId : productIds) {
+        ValidationResult failedResult = null;
+        List<Pool> candidatePools = poolCurator.listByOwner(owner);
+        List<Pool> filteredPools = new LinkedList<Pool>();
+        for (Pool pool : candidatePools) {
+            boolean providesProduct = false;
+            for (String productId : productIds) {
                 if (pool.provides(productId)) {
                     providesProduct = true;
-                //        break;
-                }
-               // }
-                if (providesProduct) {
-                    PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool,
-                        quantity);
-                    ValidationResult result = preHelper.getResult();
-                    
-                    if (!result.isSuccessful()) {
-                        // Just keep the last one around, if we need it
-                        failedResult = result;
-                        if (log.isDebugEnabled()) {
-                            log.debug(
-                                "Pool filtered from candidates due to rules failure: " +
-                                pool.getId());
-                        }
-                    }
-                    else {
-                        filteredPools.add(pool);
-                    }
+                    break;
                 }
             }
+            if (providesProduct) {
+                PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool,
+                    quantity);
+                ValidationResult result = preHelper.getResult();
+                
+                if (!result.isSuccessful()) {
+                    // Just keep the last one around, if we need it
+                    failedResult = result;
+                    if (log.isDebugEnabled()) {
+                        log.debug(
+                            "Pool filtered from candidates due to rules failure: " +
+                            pool.getId());
+                    }
+                }
+                else {
+                    filteredPools.add(pool);
+                }
+            }
+        }
 
-            if (filteredPools.size() == 0) {
-                throw new EntitlementRefusedException(failedResult);
-            }
-            
-            List<Pool> bestPools = enforcer.selectBestPools(consumer,
-                new String[] {productId}, filteredPools);
-            if (bestPools == null) {
-                throw new RuntimeException("No entitlements for product: " +
-                    productId);
-            }
-            
-            entitlements.add(addEntitlement(consumer, bestPools.get(0), quantity));
+        if (filteredPools.size() == 0) {
+            throw new EntitlementRefusedException(failedResult);
+        }
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            productIds, filteredPools);
+        if (bestPools == null) {
+            throw new RuntimeException("No entitlements for products: " +
+                productIds);
+        }
+        
+        for (Pool pool : bestPools) {
+            entitlements.add(addEntitlement(consumer, pool, quantity));
         }
 
         return entitlements;

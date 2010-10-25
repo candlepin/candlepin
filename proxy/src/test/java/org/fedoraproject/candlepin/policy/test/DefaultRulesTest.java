@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
@@ -22,6 +23,8 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 import javax.script.ScriptEngineManager;
@@ -314,6 +317,22 @@ public class DefaultRulesTest {
             = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
+    }
+    
+    @Test
+    public void testFindBestWithSingleProductSinglePoolReturnsProvidedPool() {
+        Product product = new Product(productId, "A test product");
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setId("DEAD-BEEF");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+       
+        List<Pool> pools = new LinkedList();
+        pools.add(pool);
+       
+        List<Pool> bestPools = enforcer.selectBestPools(consumer, new String[] {productId},
+            pools);
+       
+        assertEquals(1, bestPools.size());
     }
 
     private Pool setupUserRestrictedPool() {

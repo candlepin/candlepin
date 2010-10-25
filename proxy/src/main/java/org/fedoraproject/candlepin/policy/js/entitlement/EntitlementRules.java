@@ -248,8 +248,8 @@ public class EntitlementRules implements Enforcer {
 
         // Provide objects for the script:
         jsEngine.put("pools", readOnlyPools);
-        jsEngine.put("products", readOnlyProducts);
-        
+        jsEngine.put("products", readOnlyProducts.toArray());
+
         NativeArray result = null;
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
@@ -297,6 +297,8 @@ public class EntitlementRules implements Enforcer {
             for (int i = 0; i < result.getLength(); i++) {
                 ReadOnlyPool rp =
                     (ReadOnlyPool) ((NativeJavaObject) result.get(i, null)).unwrap();
+                rp.getId();
+                p.getId().equals("foo");
                 if (p.getId().equals(rp.getId())) {
                     log.debug("Best pool: " + p);
                     bestPools.add(p);

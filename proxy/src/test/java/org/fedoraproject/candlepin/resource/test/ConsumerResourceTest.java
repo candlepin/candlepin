@@ -291,18 +291,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testEntitle() throws Exception {
-        consumerResource.bind(consumer.getUuid(), null, null,
-            new String[] {product.getId()}, 1, null, null);
-
-        consumer = consumerCurator.findByUuid(consumer.getUuid());
-        assertEquals(1, consumer.getEntitlements().size());
-
-        pool = poolCurator.find(pool.getId());
-        assertEquals(new Long(1), pool.getConsumed());
-    }
-
-    @Test
     public void testBindByPool() throws Exception {
         List<Entitlement> resultList = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, null, 1, null,
