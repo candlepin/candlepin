@@ -49,7 +49,6 @@ import org.xnap.commons.i18n.I18n;
 
 import sun.org.mozilla.javascript.NativeArray;
 import sun.org.mozilla.javascript.NativeJavaObject;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -248,7 +247,7 @@ public class EntitlementRules implements Enforcer {
 
         // Provide objects for the script:
         jsEngine.put("pools", readOnlyPools);
-        jsEngine.put("products", readOnlyProducts.toArray());
+        jsEngine.put("products", readOnlyProducts);
 
         NativeArray result = null;
         boolean foundMatchingRule = false;

@@ -134,10 +134,9 @@ var Entitlement = {
 		// XXX need to watch out for multientitle products
 		var selected_pools = [];
 		var used_products = [];
-		for (var i = 0; i < pools.size(); i++) {
-			var pool = pools.get(i);
-			for (var j = 0; j < products.length; j++) {
-				var product = products[j];
+		for (pool in Iterator(pools)) {
+			for (product in Iterator(products)) {
+				//var product = products[j];
 				if (product.getId() == pool.getProductId()) {
 					used_products.push(product);
 					selected_pools.push(pool);
