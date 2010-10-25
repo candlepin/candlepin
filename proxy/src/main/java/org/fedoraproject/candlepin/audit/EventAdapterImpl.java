@@ -20,27 +20,39 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.jboss.resteasy.plugins.providers.atom.Content;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.atom.Link;
 import org.jboss.resteasy.plugins.providers.atom.Person;
 
+import com.google.inject.Inject;
+
 /**
  * EventAdapterImpl
  */
 public class EventAdapterImpl implements EventAdapter {
     
-    public static final String URI_BASE = "http://fedorahosted.org/candlepin/events";
+    private static final String URI_BASE = "http://fedorahosted.org";
+    private static final String EVENTS_PATH = "/candlepin/events"; 
+    private static final String URI = URI_BASE + EVENTS_PATH;
     
-
+    private String candlepinURL;
+    
+    @Inject
+    public EventAdapterImpl(Config config) {
+        candlepinURL = config.getString(ConfigProperties.CANDLEPIN_URL) + EVENTS_PATH + "/";
+    }
+    
     @Override
     public Feed toFeed(List<Event> events) {
         Feed feed = new Feed();
         feed.setUpdated(new Date());
         feed.getAuthors().add(new Person("Red Hat, Inc."));
         try {
-            feed.setId(new URI(URI_BASE));
+            feed.setId(new URI(URI));
         } 
         catch (Exception e) {
             // ignore, shouldn't happen
@@ -58,7 +70,7 @@ public class EventAdapterImpl implements EventAdapter {
             entry.getAuthors().add(new Person("Red Hat, Inc."));
             URI eventURI = null;
             try {
-                eventURI = new URI(URI_BASE + "/" + e.getId());
+                eventURI = new URI(candlepinURL + e.getId());
             }
             catch (Exception error) {
                 // ignore, shouldn't happen

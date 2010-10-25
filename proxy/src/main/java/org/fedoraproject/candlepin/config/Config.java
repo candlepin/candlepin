@@ -54,6 +54,11 @@ public class Config {
         this.configuration.putAll(loadProperties());
     }
     
+    protected Config(Map properties) {
+        this.configuration =
+            new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
+    }
+    
     /**
      * Return configuration entry for the given prefix.
      * @param prefix prefix for the entry sought.

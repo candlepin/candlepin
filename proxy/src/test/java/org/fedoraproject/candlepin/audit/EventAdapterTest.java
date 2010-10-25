@@ -20,6 +20,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Test;
@@ -37,7 +39,7 @@ public class EventAdapterTest {
 
     @Test
     public void toFeed() {
-        EventAdapter ea = new EventAdapterImpl();
+        EventAdapter ea = new EventAdapterImpl(new ConfigForTesting());
         List<Event> events = new LinkedList<Event>();
         events.add(mockEvent(Event.Target.CONSUMER, Event.Type.CREATED));
         events.add(mockEvent(Event.Target.ENTITLEMENT, Event.Type.DELETED));
@@ -63,7 +65,7 @@ public class EventAdapterTest {
 
     @Test
     public void nullList() {
-        EventAdapter ea = new EventAdapterImpl();
+        EventAdapter ea = new EventAdapterImpl(new ConfigForTesting());
         Feed f = ea.toFeed(null);
         assertNotNull(f);
         assertNotNull(f.getEntries());
@@ -72,10 +74,16 @@ public class EventAdapterTest {
 
     @Test
     public void emptyList() {
-        EventAdapter ea = new EventAdapterImpl();
+        EventAdapter ea = new EventAdapterImpl(new ConfigForTesting());
         Feed f = ea.toFeed(new LinkedList<Event>());
         assertNotNull(f);
         assertNotNull(f.getEntries());
         assertTrue(f.getEntries().isEmpty());
+    }
+    
+    private class ConfigForTesting extends Config {
+        public ConfigForTesting() {
+            super(ConfigProperties.DEFAULT_PROPERTIES);
+        }
     }
 }

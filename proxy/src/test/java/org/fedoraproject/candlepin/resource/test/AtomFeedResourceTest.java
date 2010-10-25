@@ -26,6 +26,8 @@ import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventAdapterImpl;
 import org.fedoraproject.candlepin.audit.Event.Target;
 import org.fedoraproject.candlepin.audit.Event.Type;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
 
@@ -48,7 +50,7 @@ public class AtomFeedResourceTest {
     @Before
     public void setUp() {
         ec = mock(EventCurator.class);
-        ea = new EventAdapterImpl();
+        ea = new EventAdapterImpl(new ConfigForTesting());
         afr = new AtomFeedResource(ec, ea);
     }
     
@@ -81,5 +83,11 @@ public class AtomFeedResourceTest {
             list.add(e);
         }
         return list;
+    }
+    
+    private class ConfigForTesting extends Config {
+        public ConfigForTesting() {
+            super(ConfigProperties.DEFAULT_PROPERTIES);
+        }
     }
 }

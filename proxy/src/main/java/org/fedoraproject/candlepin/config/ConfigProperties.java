@@ -30,6 +30,8 @@ public class ConfigProperties {
     private ConfigProperties() {
     }
 
+    public static final String CANDLEPIN_URL = "candlepin.url";
+    
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
     public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
@@ -73,6 +75,8 @@ public class ConfigProperties {
         new HashMap<String, String>() {
             private static final long serialVersionUID = 1L;
             {
+                this.put(CANDLEPIN_URL, "https://localhost");
+                
                 this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
                 this.put(CA_CERT_UPSTREAM, 
