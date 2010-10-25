@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.6
+Version: 0.1.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,21 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Oct 25 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.7-1
+- 646000: add c3p0 dep and configuration. (jesusr@redhat.com)
+- 646000: remove trailing whitespace (jesusr@redhat.com)
+- candlepin url is now a configuration parameter (ddolguik@redhat.com)
+- Fixing Order Name in entitlement certs. (jharris@redhat.com)
+- Added link to the event in ATOM feed entries (ddolguik@redhat.com)
+- 645567: Atom feed does not validate (ddolguik@redhat.com)
+- 640463: Update the oids in the order namespace (bkearney@redhat.com)
+- Add a comment to the schemaspy task so I dont have to look it up (bkearney@redhat.com)
+- On bind by token, use the pool matching the sub matching the token (jbowes@redhat.com)
+- Allow for multiple product ids to be sent during bind (jbowes@redhat.com)
+- Adding contract number to pools (jharris@redhat.com)
+- Adding the sku namespace (calfonso@redhat.com)
+- Adding account number to subscription model & cert (jomara@redhat.com)
+
 * Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.6-1
 - brew prep - add Group to tomcat6 sub package (jesusr@redhat.com)
 
