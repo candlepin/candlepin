@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.7
+Version: 0.1.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Oct 25 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.8-1
+- 646000: candlepin requires c3p0 from latest deps rpm (jesusr@redhat.com)
+- Make status and root items unprotected (bkearney@redhat.com)
+
 * Mon Oct 25 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.7-1
 - 646000: add c3p0 dep and configuration. (jesusr@redhat.com)
 - 646000: remove trailing whitespace (jesusr@redhat.com)
