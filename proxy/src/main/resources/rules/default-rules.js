@@ -11,7 +11,7 @@ function consumer_delete_name_space() {
 }
 
 /* Utility functions */
-function contains(a, obj){
+function contains(a, obj) {
 	for (var i = 0; i < a.length; i++) {
 		if (a[i] === obj) {
 			return true;
@@ -19,6 +19,39 @@ function contains(a, obj){
 	}
 	return false;
 }
+
+function containsAll(a, b) {
+	for (x in Iterator(b)) {
+		if (!contains(a, x)) {
+			return false;
+		}
+	}
+	
+	return true;
+}
+	
+function getRelevantProvidedProducts(pool, products) {
+	var provided = [];
+	
+	for (product in Iterator(products)) {
+		if (pool.provides(product.getId())) {
+			provided.push(product);
+		}
+	}
+	
+	return provided;
+}
+
+function providesSameProducts(products, pool) {
+	for each (product in products) {
+		if (!pool.provides(product.getId())) {
+			return false;
+		}
+	}
+	
+	return true;
+}
+
 
 var Entitlement = {
 		
@@ -142,15 +175,18 @@ var Entitlement = {
 	select_pool_global: function() {
 		// Greedy selection for now, in order
 		// XXX need to watch out for multientitle products
+
 		var selected_pools = [];
 		var used_products = [];
+		
 		for (pool in Iterator(pools)) {
 			for (product in Iterator(products)) {
-				if (product.getId() == pool.getProductId()) {
+				if (pool.provides(product.getId())) {
+					var provided_products = getRelevantProvidedProducts(pool, products);
 					if (contains(used_products, product)) {
 						// Check to see if this one is better, so we can replace it.
 						for each (selected_pool in selected_pools) {
-							if (selected_pool.getProductId() == product.getId()) {
+							if (providesSameProducts(provided_products, selected_pool)) {
 								// If two pools are equal, select the pool that expires first
 								if (selected_pool.getEndDate().after(pool.getEndDate())) {
 									selected_pools[selected_pools.indexOf(selected_pool)] = pool;
@@ -159,14 +195,16 @@ var Entitlement = {
 								// Autobind 2 logic goes here
 							}
 						}
-						continue;
+					} else {
+						used_products = used_products.concat(provided_products);
+						selected_pools.push(pool);
+						break;
 					}
-					used_products.push(product);
-					selected_pools.push(pool);
-					break;
 				}
 			}
 		}
+		
+		// We may not have selected pools for all products; that's ok.
 		if (selected_pools.length > 0) {
 			return selected_pools;
 		}

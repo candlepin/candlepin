@@ -90,4 +90,14 @@ public class ReadOnlyPool {
         }
         return toReturn;
     }
+    
+    /**
+     * Check if either the 'main' product id matches the provided id, or if any of the
+     * 'supplementary' product ids match
+     * @param productId the product id to search for
+     * @return true if found, false if not
+     */
+    public boolean provides(String productId) {
+        return entPool.provides(productId);
+    }
 }
