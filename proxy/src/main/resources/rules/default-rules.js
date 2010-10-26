@@ -10,6 +10,16 @@ function consumer_delete_name_space() {
 	return ConsumerDelete;
 }
 
+/* Utility functions */
+function contains(a, obj){
+	for (var i = 0; i < a.length; i++) {
+		if (a[i] === obj) {
+			return true;
+		}
+	}
+	return false;
+}
+
 var Entitlement = {
 		
 	// defines mapping of product attributes to functions
@@ -136,8 +146,21 @@ var Entitlement = {
 		var used_products = [];
 		for (pool in Iterator(pools)) {
 			for (product in Iterator(products)) {
-				//var product = products[j];
 				if (product.getId() == pool.getProductId()) {
+					if (contains(used_products, product)) {
+						// Check to see if this one is better, so we can replace it.
+						for each (selected_pool in selected_pools) {
+							if (selected_pool.getProductId() == product.getId()) {
+								// If two pools are equal, select the pool that expires first
+								if (selected_pool.getEndDate().after(pool.getEndDate())) {
+									selected_pools[selected_pools.indexOf(selected_pool)] = pool;
+									break;
+								}
+								// Autobind 2 logic goes here
+							}
+						}
+						continue;
+					}
 					used_products.push(product);
 					selected_pools.push(pool);
 					break;

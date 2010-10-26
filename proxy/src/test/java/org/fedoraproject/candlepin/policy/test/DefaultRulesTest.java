@@ -334,7 +334,50 @@ public class DefaultRulesTest {
        
         assertEquals(1, bestPools.size());
     }
-
+    
+    @Test
+    public void testFindBestWithSingleProductTwoPoolsReturnsSinglePool() {
+        Product product = new Product(productId, "A test product");
+        Pool pool1 = TestUtil.createPool(owner, product);
+        pool1.setId("DEAD-BEEF");
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF2");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+       
+        List<Pool> bestPools = enforcer.selectBestPools(consumer, new String[] {productId},
+            pools);
+       
+        assertEquals(1, bestPools.size());
+    }
+    
+    @Test
+    public void testFindBestWithSingleProductTwoPoolsReturnsPoolThatExpiresFirst() {
+        Product product = new Product(productId, "A test product");
+        Pool pool1 = TestUtil.createPool(owner, product);
+        pool1.setId("DEAD-BEEF");
+        
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF2");
+        pool2.setEndDate(TestUtil.createDate(2015, 1, 1));
+        
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+       
+        List<Pool> bestPools = enforcer.selectBestPools(consumer, new String[] {productId},
+            pools);
+       
+        assertEquals(1, bestPools.size());
+        
+        assertEquals(pool2, bestPools.get(0));
+    }
+    
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);

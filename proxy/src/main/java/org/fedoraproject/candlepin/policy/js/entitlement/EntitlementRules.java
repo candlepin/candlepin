@@ -288,7 +288,7 @@ public class EntitlementRules implements Enforcer {
         
         if (pools.size() > 0 && result == null) {
             throw new RuleExecutionException(
-                "Rule did not select a pool for product: " + productIds);
+                "Rule did not select a pool for products: " + productIds);
         }
 
         List<Pool> bestPools = new LinkedList<Pool>();
