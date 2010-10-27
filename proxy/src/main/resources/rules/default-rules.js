@@ -52,6 +52,35 @@ function providesSameProducts(products, pool) {
 	return true;
 }
 
+function arrayToString(a) {
+	msg = "[";
+	for each (q in a) {
+		msg += q.getId() + " ";
+	}
+	msg += "]";
+	return msg;
+}
+
+// XXX i don't know what this is really called
+function recursiveCombination(a, n) {
+	if (n == 0) {
+		return [];
+	}
+	
+	var res = [];
+	for each (x in recursiveCombination(a.slice(1), n - 1)) {
+		res.push(x);
+		var z = x.slice(0);
+		z.push(a[0]);
+		res.push(z);
+	}
+	res.push([a[0]]);
+	return res;
+}
+
+function filterOutCombinationsWithDuplicates(combinations) {
+	return combinations;
+}
 
 var Entitlement = {
 		
@@ -176,34 +205,60 @@ var Entitlement = {
 		// Greedy selection for now, in order
 		// XXX need to watch out for multientitle products
 
-		var selected_pools = [];
-		var used_products = [];
-		
+		// pools that have been filtered by expiration date, etc
+		var best_in_class_pools = [];
 		for (pool in Iterator(pools)) {
-			for (product in Iterator(products)) {
-				if (pool.provides(product.getId())) {
-					var provided_products = getRelevantProvidedProducts(pool, products);
-					if (contains(used_products, product)) {
-						// Check to see if this one is better, so we can replace it.
-						for each (selected_pool in selected_pools) {
-							if (providesSameProducts(provided_products, selected_pool)) {
-								// If two pools are equal, select the pool that expires first
-								if (selected_pool.getEndDate().after(pool.getEndDate())) {
-									selected_pools[selected_pools.indexOf(selected_pool)] = pool;
-									break;
-								}
-								// Autobind 2 logic goes here
-							}
-						}
-					} else {
-						used_products = used_products.concat(provided_products);
-						selected_pools.push(pool);
+			var provided_products = getRelevantProvidedProducts(pool, products);
+			// XXX wasteful, should be a hash or something.
+			var replaced = false;
+			for each (best_pool in best_in_class_pools) {
+				if (providesSameProducts(provided_products, best_pool)) {
+					// If two pools are equal, select the pool that expires first
+					if (best_pool.getEndDate().after(pool.getEndDate())) {
+						best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
+						replaced = true;
 						break;
 					}
+					// Autobind 2 logic goes here
 				}
+			}
+			
+			if (!replaced) {
+				best_in_class_pools.push(pool);
 			}
 		}
 		
+		candidate_combos = recursiveCombination(best_in_class_pools, best_in_class_pools.length);
+
+		candidate_combos = filterOutCombinationsWithDuplicates(candidate_combos);
+		
+		// Select the best pool combo. We prefer:
+		// -The combo that provides the most products
+		// -The combo that uses the fewest entitlements
+		
+		var selected_pools = [];
+		var best_provided_count = 0;
+		
+		for each (pool_combo in candidate_combos) {
+			var provided_count = 0;
+			var unique_provided = [];
+			for each (pool in pool_combo) {
+				var provided_products = getRelevantProvidedProducts(pool, products);
+				for each (provided_product in provided_products) {
+					if (!contains(unique_provided, provided_product)) {
+						unique_provided.push(provided_product);
+					}
+				}
+			}
+			
+			if (unique_provided.length < best_provided_count) {
+				continue;
+			} else if (unique_provided.length > best_provided_count || pool_combo.length < selected_pools.length) {
+				selected_pools = pool_combo;
+				best_provided_count = unique_provided.length;
+			}
+		}
+				
 		// We may not have selected pools for all products; that's ok.
 		if (selected_pools.length > 0) {
 			return selected_pools;

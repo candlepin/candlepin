@@ -463,7 +463,7 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.size());
         assertEquals(pool2, bestPools.get(0));
     }
-    /*
+    
     @Test
     public void testFindBestWithTwoProductsThreePoolsReturnsPoolThatProvidesBoth() {
         String productId1 = "ABB";
@@ -498,7 +498,7 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.size());
         assertEquals(pool3, bestPools.get(0));
     }
-    */
+    
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
