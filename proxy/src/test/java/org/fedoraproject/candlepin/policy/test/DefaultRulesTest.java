@@ -41,7 +41,6 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
-import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -497,6 +496,79 @@ public class DefaultRulesTest {
        
         assertEquals(1, bestPools.size());
         assertEquals(pool3, bestPools.get(0));
+    }
+    
+    @Test
+    public void testFindBestWithOverlappingPoolsReturnsOnlyOnePool() {
+        String productId1 = "ABB";
+        String productId2 = "DEE";
+        String productId3 = "CED";
+        
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        Product product3 = new Product(productId3, "A test product");
+        
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        
+        Pool pool2 = TestUtil.createPool(owner, product3);
+        pool2.setId("DEAD-BEEF2");
+
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(productId2);
+        pool1.setProvidedProductIds(providedProductIds);
+        pool2.setProvidedProductIds(providedProductIds);
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[] {productId1, productId2, productId3}, pools);
+       
+        assertEquals(1, bestPools.size());
+        assertEquals(pool2, bestPools.get(0));
+    }
+       
+    @Test
+    public void testFindBestWithOverlappingPoolsReturnsBothWithMultiEntitle() {
+        String productId1 = "ABB";
+        String productId2 = "DEE";
+        String productId3 = "CED";
+        
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        Product product3 = new Product(productId3, "A test product");
+        
+        product2.setAttribute("multi-entitle", "yes");
+        
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        
+        Pool pool2 = TestUtil.createPool(owner, product3);
+        pool2.setId("DEAD-BEEF2");
+
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(productId2);
+        pool1.setProvidedProductIds(providedProductIds);
+        pool2.setProvidedProductIds(providedProductIds);
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[] {productId1, productId2, productId3}, pools);
+       
+        assertEquals(2, bestPools.size());
     }
     
     private Pool setupUserRestrictedPool() {

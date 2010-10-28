@@ -75,6 +75,25 @@ public class ReadOnlyProduct {
         return product.hasAttribute(key);
     }
    
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof ReadOnlyProduct)) {
+            return false;
+        }
+
+        ReadOnlyProduct another = (ReadOnlyProduct) anObject;
+
+        return product.getId().equals(another.getId());
+    }
+    
+    @Override
+    public int hashCode() {
+        return product.getId().hashCode() * 31;
+    }
+    
     /**
      * Return a list of read-only products from the given set of products.
      * @param products read/write version of products.

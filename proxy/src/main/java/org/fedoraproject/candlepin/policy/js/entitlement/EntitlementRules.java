@@ -159,7 +159,7 @@ public class EntitlementRules implements Enforcer {
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("product", new ReadOnlyProduct(product));
-        jsEngine.put("pool", new ReadOnlyPool(pool));
+        jsEngine.put("pool", new ReadOnlyPool(pool, prodAdapter));
         jsEngine.put("pre", preHelper);
         jsEngine.put("attributes", allAttributes);
         jsEngine.put("log", rulesLogger);
@@ -206,7 +206,7 @@ public class EntitlementRules implements Enforcer {
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
         jsEngine.put("product", new ReadOnlyProduct(product));
         jsEngine.put("post", postHelper);
-        jsEngine.put("pool", new ReadOnlyPool(pool));
+        jsEngine.put("pool", new ReadOnlyPool(pool, prodAdapter));
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
         jsEngine.put("attributes", allAttributes);
         jsEngine.put("log", rulesLogger);
@@ -230,7 +230,7 @@ public class EntitlementRules implements Enforcer {
 
         log.info("Selecting best entitlement pool for product: " + productIds);
         List<ReadOnlyPool> readOnlyPools
-            = ReadOnlyPool.fromCollection(pools);
+            = ReadOnlyPool.fromCollection(pools, prodAdapter);
 
         
         List<Product> products = new LinkedList<Product>();

@@ -78,8 +78,34 @@ function recursiveCombination(a, n) {
 	return res;
 }
 
+// Check if the provided list of pools contains any duplicated products
+// We don't need to worry about checking multi-entitle allowed products,
+// as you can use as many of those as you want.
+function hasNoProductOverlap(combination) {
+	var seen_product_ids = [];
+	for each (pool in combination) {
+		for (product in Iterator(pool.products)) {
+			if (!contains(seen_product_ids, product.id)) {
+				seen_product_ids.push(product.id);
+			} else if (product.getAttribute("multi-entitle") != "yes") {
+				return false;
+			}
+		}
+	}
+	
+	return true;
+}
+
 function filterOutCombinationsWithDuplicates(combinations) {
-	return combinations;
+	var filtered = [];
+	
+	for each (combination in combinations) {
+		if (hasNoProductOverlap(combination)) {
+			filtered.push(combination);
+		}
+	}
+	
+	return filtered;
 }
 
 var Entitlement = {
