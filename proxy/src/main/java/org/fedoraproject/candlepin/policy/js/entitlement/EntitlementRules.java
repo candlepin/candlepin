@@ -47,6 +47,8 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
+import sun.org.mozilla.javascript.NativeArray;
+import sun.org.mozilla.javascript.NativeJavaObject;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -157,7 +159,7 @@ public class EntitlementRules implements Enforcer {
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("product", new ReadOnlyProduct(product));
-        jsEngine.put("pool", new ReadOnlyPool(pool));
+        jsEngine.put("pool", new ReadOnlyPool(pool, prodAdapter));
         jsEngine.put("pre", preHelper);
         jsEngine.put("attributes", allAttributes);
         jsEngine.put("log", rulesLogger);
@@ -204,7 +206,7 @@ public class EntitlementRules implements Enforcer {
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
         jsEngine.put("product", new ReadOnlyProduct(product));
         jsEngine.put("post", postHelper);
-        jsEngine.put("pool", new ReadOnlyPool(pool));
+        jsEngine.put("pool", new ReadOnlyPool(pool, prodAdapter));
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
         jsEngine.put("attributes", allAttributes);
         jsEngine.put("log", rulesLogger);
@@ -222,26 +224,36 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    public Pool selectBestPool(Consumer consumer, String productId, List<Pool> pools) {
+    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools) {
         Invocable inv = (Invocable) jsEngine;
 
-        log.info("Selecting best entitlement pool for product: " + productId);
+        log.info("Selecting best entitlement pool for product: " + productIds);
         List<ReadOnlyPool> readOnlyPools
-            = ReadOnlyPool.fromCollection(pools);
+            = ReadOnlyPool.fromCollection(pools, prodAdapter);
+
+        
+        List<Product> products = new LinkedList<Product>();
+        Set<Rule> matchingRules = new HashSet<Rule>();
+        for (String productId : productIds) {
+            Product product = prodAdapter.getProductById(productId);
+            products.add(product);
+            Map<String, String> allAttributes = getFlattenedAttributes(product, null);
+            matchingRules.addAll(rulesForAttributes(allAttributes.keySet(),
+                attributesToRules));
+        }
+
+        Set<ReadOnlyProduct> readOnlyProducts = ReadOnlyProduct.fromProducts(products);
 
         // Provide objects for the script:
         jsEngine.put("pools", readOnlyPools);
-        
-        Product product = prodAdapter.getProductById(productId);
-        Map<String, String> allAttributes = getFlattenedAttributes(product, null);
-        List<Rule> matchingRules 
-            = rulesForAttributes(allAttributes.keySet(), attributesToRules);
-        
-        ReadOnlyPool result = null;
+        jsEngine.put("products", readOnlyProducts);
+
+        NativeArray result = null;
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
-                result = (ReadOnlyPool) inv.invokeMethod(entitlementNameSpace, 
+                result = (NativeArray) inv.invokeMethod(entitlementNameSpace, 
                     SELECT_POOL_PREFIX + rule.getRuleName());
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
@@ -258,7 +270,7 @@ public class EntitlementRules implements Enforcer {
         
         if (!foundMatchingRule) {
             try {
-                result = (ReadOnlyPool) inv
+                result = (NativeArray) inv
                     .invokeMethod(entitlementNameSpace, GLOBAL_SELECT_POOL_FUNCTION);
                 log.info("Excuted javascript rule: " +
                     GLOBAL_SELECT_POOL_FUNCTION);
@@ -276,17 +288,29 @@ public class EntitlementRules implements Enforcer {
         
         if (pools.size() > 0 && result == null) {
             throw new RuleExecutionException(
-                "Rule did not select a pool for product: " + productId);
+                "Rule did not select a pool for products: " + productIds);
         }
 
+        List<Pool> bestPools = new LinkedList<Pool>();
         for (Pool p : pools) {
-            if (p.getId().equals(result.getId())) {
-                log.debug("Best pool: " + p);
-                return p;
+            for (int i = 0; i < result.getLength(); i++) {
+                ReadOnlyPool rp =
+                    (ReadOnlyPool) ((NativeJavaObject) result.get(i, null)).unwrap();
+                rp.getId();
+                p.getId().equals("foo");
+                if (p.getId().equals(rp.getId())) {
+                    log.debug("Best pool: " + p);
+                    bestPools.add(p);
+                }
             }
         }
-
-        return null;
+        
+        if (bestPools.size() > 0) {
+            return bestPools;
+        }
+        else {
+            return null;
+        }
     }
 
     /**
@@ -297,13 +321,13 @@ public class EntitlementRules implements Enforcer {
      *            Pools to choose from.
      * @return First pool in the list. (default behavior)
      */
-    private Pool selectBestPoolDefault(List<Pool> pools) {
+    private List<Pool> selectBestPoolDefault(List<Pool> pools) {
         if (pools.size() > 0) {
-            return pools.get(0);
+            return pools;
         }
         return null;
     }
-    
+
     public List<Rule> rulesForAttributes(Set<String> attributes, 
             Map<String, Set<Rule>> rules) {
         

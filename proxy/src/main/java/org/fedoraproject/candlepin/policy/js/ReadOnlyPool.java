@@ -17,10 +17,12 @@ package org.fedoraproject.candlepin.policy.js;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 /**
  * represents a read-only entitlement pool
@@ -28,13 +30,15 @@ import org.fedoraproject.candlepin.model.Pool;
 public class ReadOnlyPool {
 
     private Pool entPool;
+    private ProductServiceAdapter productAdapter;
 
     /**
      * @param entPool
      *            the read-write version of the EntitlementPool to copy.
      */
-    public ReadOnlyPool(Pool entPool) {
+    public ReadOnlyPool(Pool entPool, ProductServiceAdapter productAdapter) {
         this.entPool = entPool;
+        this.productAdapter = productAdapter;
     }
 
     /**
@@ -82,12 +86,36 @@ public class ReadOnlyPool {
         return entPool.getRestrictedToUsername();
     }
 
-    public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools) {
+    public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools,
+        ProductServiceAdapter productAdapter) {
         List<ReadOnlyPool> toReturn
             = new ArrayList<ReadOnlyPool>(pools.size());
         for (Pool pool : pools) {
-            toReturn.add(new ReadOnlyPool(pool));
+            toReturn.add(new ReadOnlyPool(pool, productAdapter));
         }
         return toReturn;
+    }
+    
+    /**
+     * Check if either the 'main' product id matches the provided id, or if any of the
+     * 'supplementary' product ids match
+     * @param productId the product id to search for
+     * @return true if found, false if not
+     */
+    public boolean provides(String productId) {
+        return entPool.provides(productId);
+    }
+    
+    public Set<ReadOnlyProduct> getProducts() {
+        Set<ReadOnlyProduct> products = new HashSet<ReadOnlyProduct>();
+        
+        products.add(
+            new ReadOnlyProduct(productAdapter.getProductById(entPool.getProductId())));
+        
+        for (String productId : entPool.getProvidedProductIds()) {
+            products.add(new ReadOnlyProduct(productAdapter.getProductById(productId)));
+        }
+        
+        return products;
     }
 }

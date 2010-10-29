@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
@@ -22,7 +23,11 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.script.ScriptEngineManager;
 
@@ -315,7 +320,257 @@ public class DefaultRulesTest {
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
+    
+    @Test
+    public void testFindBestWithSingleProductSinglePoolReturnsProvidedPool() {
+        Product product = new Product(productId, "A test product");
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setId("DEAD-BEEF");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+       
+        List<Pool> bestPools = enforcer.selectBestPools(consumer, new String[] {productId},
+            pools);
+       
+        assertEquals(1, bestPools.size());
+    }
+    
+    @Test
+    public void testFindBestWithSingleProductTwoPoolsReturnsSinglePool() {
+        Product product = new Product(productId, "A test product");
+        Pool pool1 = TestUtil.createPool(owner, product);
+        pool1.setId("DEAD-BEEF");
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF2");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+       
+        List<Pool> bestPools = enforcer.selectBestPools(consumer, new String[] {productId},
+            pools);
+       
+        assertEquals(1, bestPools.size());
+    }
+    
+    @Test
+    public void testFindBestWithSingleProductTwoPoolsReturnsPoolThatExpiresFirst() {
+        Product product = new Product(productId, "A test product");
+        Pool pool1 = TestUtil.createPool(owner, product);
+        pool1.setId("DEAD-BEEF");
+        
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF2");
+        pool2.setEndDate(TestUtil.createDate(2015, 1, 1));
+        
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+       
+        List<Pool> bestPools = enforcer.selectBestPools(consumer, new String[] {productId},
+            pools);
+       
+        assertEquals(1, bestPools.size());
+        
+        assertEquals(pool2, bestPools.get(0));
+    }
+    
+    @Test
+    public void testFindBestWithTwoProductsOnePoolDoesNotFailIfPoolDoesntProvideBoth() {
+        String productId1 = "ABB";
+        String productId2 = "DEE";
+        
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[] {productId1, productId2}, pools);
+        
+        assertEquals(1, bestPools.size());
+        assertEquals(pool1, bestPools.get(0));
+    }
 
+    @Test
+    public void testFindBestWithTwoProductsOnePoolPassesForPoolThatProvidesBoth() {
+        String productId1 = "ABB";
+        String productId2 = "DEE";
+        
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(productId2);
+        pool1.setProvidedProductIds(providedProductIds);
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[] {productId1, productId2}, pools);
+        
+        assertEquals(1, bestPools.size());
+        assertEquals(pool1, bestPools.get(0));
+    }
+
+    @Test
+    public void testFindBestWithTwoProductsTwoPoolsSelectsPoolThatExpiresFirst() {
+        String productId1 = "ABB";
+        String productId2 = "DEE";
+        
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+
+        Pool pool2 = TestUtil.createPool(owner, product1);
+        pool2.setId("DEAD-BEEF2");
+        pool2.setEndDate(TestUtil.createDate(2015, 1, 1));
+        
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(productId2);
+        pool1.setProvidedProductIds(providedProductIds);
+        pool2.setProvidedProductIds(providedProductIds);
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[] {productId1, productId2}, pools);
+        
+        assertEquals(1, bestPools.size());
+        assertEquals(pool2, bestPools.get(0));
+    }
+    
+    @Test
+    public void testFindBestWithTwoProductsThreePoolsReturnsPoolThatProvidesBoth() {
+        String productId1 = "ABB";
+        String productId2 = "DEE";
+        
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        
+        Pool pool2 = TestUtil.createPool(owner, product1);
+        pool2.setId("DEAD-BEEF2");
+
+        Pool pool3 = TestUtil.createPool(owner, product1);
+        pool3.setId("DEAD-BEEF3");
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(productId2);
+        pool3.setProvidedProductIds(providedProductIds);
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[] {productId1, productId2}, pools);
+       
+        assertEquals(1, bestPools.size());
+        assertEquals(pool3, bestPools.get(0));
+    }
+    
+    @Test
+    public void testFindBestWithOverlappingPoolsReturnsOnlyOnePool() {
+        String productId1 = "ABB";
+        String productId2 = "DEE";
+        String productId3 = "CED";
+        
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        Product product3 = new Product(productId3, "A test product");
+        
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        
+        Pool pool2 = TestUtil.createPool(owner, product3);
+        pool2.setId("DEAD-BEEF2");
+
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(productId2);
+        pool1.setProvidedProductIds(providedProductIds);
+        pool2.setProvidedProductIds(providedProductIds);
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[] {productId1, productId2, productId3}, pools);
+       
+        assertEquals(1, bestPools.size());
+        assertEquals(pool2, bestPools.get(0));
+    }
+       
+    @Test
+    public void testFindBestWithOverlappingPoolsReturnsBothWithMultiEntitle() {
+        String productId1 = "ABB";
+        String productId2 = "DEE";
+        String productId3 = "CED";
+        
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        Product product3 = new Product(productId3, "A test product");
+        
+        product2.setAttribute("multi-entitle", "yes");
+        
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        
+        Pool pool2 = TestUtil.createPool(owner, product3);
+        pool2.setId("DEAD-BEEF2");
+
+        Set<String> providedProductIds = new HashSet<String>();
+        providedProductIds.add(productId2);
+        pool1.setProvidedProductIds(providedProductIds);
+        pool2.setProvidedProductIds(providedProductIds);
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
+       
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[] {productId1, productId2, productId3}, pools);
+       
+        assertEquals(2, bestPools.size());
+    }
+    
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);

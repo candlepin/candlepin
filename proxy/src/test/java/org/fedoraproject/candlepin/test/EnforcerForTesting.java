@@ -42,11 +42,11 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
-    public Pool selectBestPool(Consumer consumer, String productId,
+    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools) throws RuleExecutionException {
         if (pools.isEmpty()) {
             return null;
         }
-        return pools.get(0);
+        return pools;
     }
 }
