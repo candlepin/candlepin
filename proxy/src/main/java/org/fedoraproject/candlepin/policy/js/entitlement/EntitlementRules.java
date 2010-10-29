@@ -47,8 +47,6 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
-import sun.org.mozilla.javascript.NativeArray;
-import sun.org.mozilla.javascript.NativeJavaObject;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -77,6 +75,21 @@ public class EntitlementRules implements Enforcer {
         "global";
     private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
+    
+    // Since we can't peek inside the return values from our java code,
+    // do the conversion from a js array to a java array inside rhino's context.
+    private static final String CONVERT_ARRAY_FUNCTION =
+        "function convertArray(type, arr) {\n" +
+        "    if (arr == null) {\n" +
+        "        return null;\n" +
+        "    }\n" +
+        "\n" +
+        "    var jArr = java.lang.reflect.Array.newInstance(type, arr.length);\n" +
+        "    for (var i = 0; i < arr.length; i++) {\n" +
+        "        jArr[i] = arr[i];\n" +
+        "    }\n" +
+        "    return jArr;\n" +
+        "};\n";
 
     @Inject
     public EntitlementRules(DateSource dateSource,
@@ -102,6 +115,8 @@ public class EntitlementRules implements Enforcer {
             attributesToRules = parseAttributeMappings(
                 (String) ((Invocable) this.jsEngine).invokeMethod(
                     entitlementNameSpace, "attribute_mappings"));
+            
+            this.jsEngine.eval(CONVERT_ARRAY_FUNCTION);
         }
         catch (ScriptException ex) {
             throw new RuleParseException(ex);
@@ -249,12 +264,15 @@ public class EntitlementRules implements Enforcer {
         jsEngine.put("pools", readOnlyPools);
         jsEngine.put("products", readOnlyProducts);
 
-        NativeArray result = null;
+        ReadOnlyPool[] result = null;
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
-                result = (NativeArray) inv.invokeMethod(entitlementNameSpace, 
+                Object output = inv.invokeMethod(entitlementNameSpace,
                     SELECT_POOL_PREFIX + rule.getRuleName());
+                result = (ReadOnlyPool[]) inv.invokeFunction("convertArray",
+                    org.fedoraproject.candlepin.policy.js.ReadOnlyPool.class,
+                    output);
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
                     rule.getRuleName());
@@ -270,8 +288,11 @@ public class EntitlementRules implements Enforcer {
         
         if (!foundMatchingRule) {
             try {
-                result = (NativeArray) inv
-                    .invokeMethod(entitlementNameSpace, GLOBAL_SELECT_POOL_FUNCTION);
+                Object output = inv.invokeMethod(entitlementNameSpace,
+                    GLOBAL_SELECT_POOL_FUNCTION);
+                result = (ReadOnlyPool[]) inv.invokeFunction("convertArray",
+                    org.fedoraproject.candlepin.policy.js.ReadOnlyPool.class,
+                    output);
                 log.info("Excuted javascript rule: " +
                     GLOBAL_SELECT_POOL_FUNCTION);
             }
@@ -293,14 +314,13 @@ public class EntitlementRules implements Enforcer {
 
         List<Pool> bestPools = new LinkedList<Pool>();
         for (Pool p : pools) {
-            for (int i = 0; i < result.getLength(); i++) {
-                ReadOnlyPool rp =
-                    (ReadOnlyPool) ((NativeJavaObject) result.get(i, null)).unwrap();
+            for (ReadOnlyPool rp : result) {
                 rp.getId();
                 p.getId().equals("foo");
                 if (p.getId().equals(rp.getId())) {
                     log.debug("Best pool: " + p);
                     bestPools.add(p);
+                    break;
                 }
             }
         }
