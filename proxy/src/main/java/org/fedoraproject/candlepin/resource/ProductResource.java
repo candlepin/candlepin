@@ -87,6 +87,7 @@ public class ProductResource {
     @GET
     @Path("/{product_uuid}")    
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
     public Product getProduct(@PathParam("product_uuid") String pid) {
         Product toReturn = prodAdapter.getProductById(pid);
 
