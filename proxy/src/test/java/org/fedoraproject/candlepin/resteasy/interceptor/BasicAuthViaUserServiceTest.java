@@ -34,19 +34,22 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.google.inject.Injector;
+
 public class BasicAuthViaUserServiceTest {
 
     @Mock private HttpRequest request;
     @Mock private HttpHeaders headers;
     @Mock private UserServiceAdapter userService;
     @Mock private OwnerCurator ownerCurator;
+    @Mock private Injector injector;
 
     private BasicAuth auth;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        this.auth = new BasicAuth(userService, ownerCurator);
+        this.auth = new BasicAuth(userService, ownerCurator, injector);
     }
 
     /**

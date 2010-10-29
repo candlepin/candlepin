@@ -50,6 +50,10 @@ module CandlepinMethods
     Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
   end
 
+  def trusted_consumer_client(uuid)
+    Candlepin.new(nil, nil, nil, nil, "localhost", "8443", nil, uuid)
+  end  
+
   def random_string(prefix=nil)
     prefix ||= ''
     "%s-%s" % [prefix, rand(100000)]

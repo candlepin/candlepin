@@ -63,5 +63,9 @@ public class ConsumerPrincipal extends Principal {
         return "ConsumerPrincipal [ownerId=" + getOwner().getId() +
             ", uuid=" + consumer.getUuid() + ", roles=" + getRoles() + "]";
     }
+    
+    public boolean isConsumer() {
+        return true;
+    }
 
 }

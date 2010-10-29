@@ -141,6 +141,10 @@ public class Config {
         return getBoolean(ConfigProperties.PRETTY_PRINT);
     }
 
+    public boolean useTrustedAuth() {
+        return getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION);
+    }
+
     protected Map<String, String> loadProperties() {
         try {
             return new ConfigurationFileLoader().loadProperties(this.configFile);
@@ -198,7 +202,10 @@ public class Config {
         }
         String value = getString(s).toLowerCase();
         
-        return value.equals("true") || value.equals("on") || value.equals("1");
+        return value.equals("true") || 
+            value.equals("on") || 
+            value.equals("1") || 
+            value.equals("yes");
     }
     
     public int getInt(String s) {

@@ -19,9 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.jboss.resteasy.spi.HttpRequest;
 
@@ -30,17 +28,15 @@ import com.google.inject.Inject;
 /**
  * SSLAuth
  */
-class SSLAuth {
+class SSLAuth extends ConsumerAuth {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
     private static final String UUID_DN_ATTRIBUTE = "CN";
-    
-    private static Logger log = Logger.getLogger(SSLAuth.class);
 
-    private ConsumerCurator consumerCurator;
+    private static Logger log = Logger.getLogger(SSLAuth.class);
 
     @Inject
     SSLAuth(ConsumerCurator consumerCurator) {
-        this.consumerCurator = consumerCurator;
+        super(consumerCurator);
     }
 
     Principal getPrincipal(HttpRequest request) {
@@ -57,19 +53,11 @@ class SSLAuth {
         }
 
         // certs is an array of certificates presented by the client
-        // with the first one in the array being the certificate of the client itself.
+        // with the first one in the array being the certificate of the client
+        // itself.
         X509Certificate identityCert = certs[0];
 
-        ConsumerPrincipal principal = createPrincipal(parseUuid(identityCert));
-        
-        if (log.isDebugEnabled() && principal != null) {
-            log.debug("principal created for owner '" +
-                principal.getOwner().getDisplayName() +
-                "' with consumer '" +
-                principal.consumer().getUuid() + "'");
-        }
-        
-        return principal;
+        return createPrincipal(parseUuid(identityCert));
     }
 
     // Pulls the consumer uuid off of the x509 cert.
@@ -85,18 +73,6 @@ class SSLAuth {
         }
 
         return dnAttributes.get(UUID_DN_ATTRIBUTE);
-    }
-
-    private ConsumerPrincipal createPrincipal(String consumerUuid) {
-        if (consumerUuid != null) {
-            Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
-
-            if (consumer != null) {
-                return new ConsumerPrincipal(consumer);
-            }
-        }
-
-        return null;
     }
 
 }

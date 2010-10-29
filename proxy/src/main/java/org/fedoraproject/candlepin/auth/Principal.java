@@ -47,4 +47,8 @@ public abstract class Principal implements Serializable {
     public Boolean hasRole(Role role) {
         return roles.contains(role);
     }
+
+    public boolean isConsumer() {
+        return false;
+    }
 }

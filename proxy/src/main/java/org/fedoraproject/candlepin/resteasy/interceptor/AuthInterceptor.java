@@ -26,8 +26,6 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.exceptions.CandlepinException;
-import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -55,34 +53,40 @@ public class AuthInterceptor implements PreProcessInterceptor {
 
     private BasicAuth basicAuth;
     private SSLAuth sslAuth;
-    private boolean sslAuthEnabled; 
+    private TrustedConsumerAuth trustedConsumerAuth;
+    private boolean sslAuthEnabled;
     private Injector injector;
     private ConsumerCurator consumerCurator;
-    
+    private Config config;
+
     @Inject
     public AuthInterceptor(Config config, UserServiceAdapter userService,
-        OwnerCurator ownerCurator, ConsumerCurator consumerCurator, Injector injector) {
+        OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
+        Injector injector) {
         super();
-        basicAuth = new BasicAuth(userService, ownerCurator);
+        basicAuth = new BasicAuth(userService, ownerCurator, injector);
         sslAuth = new SSLAuth(consumerCurator);
-        
+        trustedConsumerAuth = new TrustedConsumerAuth(consumerCurator);
+
         sslAuthEnabled = config.sslAuthEnabled();
         this.consumerCurator = consumerCurator;
         this.injector = injector;
+        this.config = config;
     }
 
     @Override
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
+
         I18n i18n = injector.getInstance(I18n.class);
+        Principal principal = null;
+        boolean noAuthAllowed = false;
 
         if (log.isDebugEnabled()) {
             log.debug("Authentication check for " + request.getUri().getPath());
         }
-        
-        Principal principal = null;
 
-        boolean noAuthAllowed = false;
+        // Check to see if authentication is required.
         AllowRoles roles = method.getMethod().getAnnotation(AllowRoles.class);
         if (roles != null) {
             for (Role role : roles.roles()) {
@@ -91,36 +95,35 @@ public class AuthInterceptor implements PreProcessInterceptor {
                 }
             }
         }
+
+        // No authentication is required, give a no auth principal
         if (noAuthAllowed) {
             log.debug("No auth allowed for resource; setting NoAuth principal");
             principal = new NoAuthPrincipal();
         }
-        else {
-            try {
-                principal = basicAuth.getPrincipal(request);
+
+        // Check basic auth for a user.
+        if (principal == null) {
+            principal = basicAuth.getPrincipal(request);
+        }
+
+        // Only use trusted headers if it is configured
+        if (config.useTrustedAuth()) {
+            // look for a trusted user
+            if (principal == null) {
+                // nada
             }
-            catch (CandlepinException e) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Error getting principal " + e);
-                    e.printStackTrace();
-                }
-                throw e;
-            }
-            catch (Exception e) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Error getting principal " + e);
-                    e.printStackTrace();
-                }
-                throw new ServiceUnavailableException(
-                    i18n.tr("Error contacting user service"));
+
+            // look for a trusted consumer
+            if (principal == null) {
+                principal = trustedConsumerAuth.getPrincipal(request);
             }
         }
 
-        boolean isConsumerPrincipal = false;
+        // Finally, look for a consumer certificate
         if (principal == null) {
             if (sslAuthEnabled) {
                 principal = sslAuth.getPrincipal(request);
-                isConsumerPrincipal = true;
             }
             else {
                 log.debug("SSLAuth disabled, setting NoAuth Principal");
@@ -128,15 +131,14 @@ public class AuthInterceptor implements PreProcessInterceptor {
             }
         }
 
-        
         if (principal != null) {
             // Expose the principal for Resteasy to inject via @Context
             ResteasyProviderFactory.pushContext(Principal.class, principal);
 
-            if (isConsumerPrincipal) {
-                // HACK: We need to do this after the principal has been pushed, lest
-                // our security settings start getting upset when we try to update a
-                // consumer without any roles:
+            if (principal.isConsumer()) {
+                // HACK: We need to do this after the principal has been pushed,
+                // lest our security settings start getting upset when we try to
+                // update a consumer without any roles:
                 ConsumerPrincipal p = (ConsumerPrincipal) principal;
                 Consumer c = p.consumer();
                 updateLastCheckin(c);
@@ -144,7 +146,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
 
             return null;
         }
-        
+
         throw new UnauthorizedException(i18n.tr("Invalid username or password"));
     }
 
