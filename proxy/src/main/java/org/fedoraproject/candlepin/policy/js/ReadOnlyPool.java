@@ -106,7 +106,7 @@ public class ReadOnlyPool {
         return entPool.provides(productId);
     }
     
-    public Set<ReadOnlyProduct> getProducts() {
+    public ReadOnlyProduct[] getProducts() {
         Set<ReadOnlyProduct> products = new HashSet<ReadOnlyProduct>();
         
         products.add(
@@ -116,6 +116,6 @@ public class ReadOnlyPool {
             products.add(new ReadOnlyProduct(productAdapter.getProductById(productId)));
         }
         
-        return products;
+        return products.toArray(new ReadOnlyProduct[products.size()]);
     }
 }

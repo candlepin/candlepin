@@ -21,8 +21,8 @@ function contains(a, obj) {
 }
 
 function containsAll(a, b) {
-	for (x in Iterator(b)) {
-		if (!contains(a, x)) {
+	for (var i = 0 ; i < b.length ; i++) {
+		if (!contains(a, b[i])) {
 			return false;
 		}
 	}
@@ -33,7 +33,8 @@ function containsAll(a, b) {
 function getRelevantProvidedProducts(pool, products) {
 	var provided = [];
 	
-	for (product in Iterator(products)) {
+	for (var i = 0 ; i < products.length ; i++) {
+		var product = products[i]
 		if (pool.provides(product.getId())) {
 			provided.push(product);
 		}
@@ -84,7 +85,9 @@ function recursiveCombination(a, n) {
 function hasNoProductOverlap(combination) {
 	var seen_product_ids = [];
 	for each (pool in combination) {
-		for (product in Iterator(pool.products)) {
+		var products = pool.products;
+		for (var i = 0 ; i < products.length ; i++) {
+			var product = products[i];
 			if (!contains(seen_product_ids, product.id)) {
 				seen_product_ids.push(product.id);
 			} else if (product.getAttribute("multi-entitle") != "yes") {
@@ -233,7 +236,8 @@ var Entitlement = {
 
 		// pools that have been filtered by expiration date, etc
 		var best_in_class_pools = [];
-		for (pool in Iterator(pools)) {
+		for (var i = 0 ; i < pools.length ; i++) {
+			var pool = pools[i]
 			var provided_products = getRelevantProvidedProducts(pool, products);
 			// XXX wasteful, should be a hash or something.
 			var replaced = false;

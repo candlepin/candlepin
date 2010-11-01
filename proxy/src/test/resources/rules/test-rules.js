@@ -61,10 +61,7 @@ var Entitlement = {
 	// Select pool for mythical product, based on which has the farthest expiry date:
 	select_pool_LONGEST001: function() {
 		var furthest = null;
-		var iter = pools.iterator();
-		while (iter.hasNext()) {
-			var p = iter.next();
-
+		for each (p in pools) {
 			if ((furthest == null) || (p.getEndDate().after(furthest.getEndDate()))) {
 				furthest = p;
 			}
@@ -74,9 +71,7 @@ var Entitlement = {
 	
 	select_pool_QUANTITY001: function() {
 		var highestMax = null;
-		var iter = pools.iterator();
-		while (iter.hasNext()) {
-			var p = iter.next();
+		for each (p in pools) {
 			if ((highestMax == null) || (p.getMaxMembers() > highestMax.getMaxMembers())) {
 				highestMax = p;
 			}
