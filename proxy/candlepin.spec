@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.8
+Version: 0.1.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,30 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Nov 02 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.9-1
+- Adding gem dependencies for buildr to make gem management a little easier.  (jharris@redhat.com)
+- autobind: Iterator() doesn't work with all rhino versions (jbowes@redhat.com)
+- Add trusted authentication for consumers. In this model, a header is used to
+  pass along the consumer id. If it exits, the call is assumed to be trusted
+  and the consumer principal is created (bkearney@redhat.com)
+- Expose GET /products/id to consumers and owner admins. (dgoodwin@redhat.com)
+- autobind: convert from js array to java array in js (jbowes@redhat.com)
+- autobind: detect and remove pool combos with product overlap (jbowes@redhat.com)
+- autobind: remove unused autobind rspec (jbowes@redhat.com)
+- autobind: check all possible pool combinations (jbowes@redhat.com)
+- autobind: compare dates for pools providing N products, too (jbowes@redhat.com)
+- autobind: compare expiration dates for pool seelection (jbowes@redhat.com)
+- autobind: use iterators over the collections provided to the js (jbowes@redhat.com)
+- checkstyle: turn off illegalimport check (jbowes@redhat.com)
+- autobind: js fully hooked up to returning multiple pools based on multiple
+  products (jbowes@redhat.com)
+- autobind: return an array of pools from select_best (jbowes@redhat.com)
+- autobind: teach the enforcer that it can return multiple pools on selectBest
+  (jbowes@redhat.com)
+- autobind: ensure that the first applicable pool isn't always used for bind by
+  product (jbowes@redhat.com)
+- autobind: send multiple products to the js enforcer (jbowes@redhat.com)
+
 * Mon Oct 25 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.8-1
 - 646000: candlepin requires c3p0 from latest deps rpm (jesusr@redhat.com)
 - Make status and root items unprotected (bkearney@redhat.com)
