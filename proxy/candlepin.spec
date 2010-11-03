@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.9
+Version: 0.1.10
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Nov 03 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.10-1
+- add URL to README (jesusr@redhat.com)
+
 * Tue Nov 02 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.9-1
 - Adding gem dependencies for buildr to make gem management a little easier.  (jharris@redhat.com)
 - autobind: Iterator() doesn't work with all rhino versions (jbowes@redhat.com)
