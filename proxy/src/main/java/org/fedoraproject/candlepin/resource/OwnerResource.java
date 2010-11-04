@@ -340,6 +340,24 @@ public class OwnerResource {
         return subList;
     }
     
+    /**
+     *
+     *
+     * @param ownerKey
+     * @return list of users under that owner name
+     */
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/users")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    public List<User> getUsers(@PathParam("owner_key") String ownerKey) {
+        List<User> userList = new LinkedList<User>();
+        Owner o = findOwner(ownerKey);
+        userList = userService.listByOwner(o);
+
+        return userList;
+    }
     private Owner findOwner(String key) {
         Owner owner = ownerCurator.lookupByKey(key);
         

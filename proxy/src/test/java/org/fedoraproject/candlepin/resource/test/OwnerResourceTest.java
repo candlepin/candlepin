@@ -42,6 +42,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -90,6 +91,40 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             new UserPrincipal("someuser", owner, new LinkedList<Role>()));
         owner = ownerCurator.find(id);
         assertTrue(owner == null);
+    }
+
+    @Test
+    public void testCreateUser() {
+        User user = new User();
+        user.setUsername("someusername");
+        user.setPassword("somepassword");
+
+        String ownerKey = owner.getKey();
+        user = ownerResource.createUser(ownerKey, user);
+    }
+
+    @Test
+    public void testGetUsers() {
+        String ownerName = owner.getKey();
+
+        User user = new User();
+        user.setUsername("someusername");
+        user.setPassword("somepassword");
+
+        String ownerKey = owner.getKey();
+        user = ownerResource.createUser(ownerKey, user);
+
+        User user2 = new User();
+        user2.setUsername("someotherusername");
+        user2.setPassword("someotherpassword");
+
+        String ownerKey2 = owner.getKey();
+        user2 = ownerResource.createUser(ownerKey2, user2);
+
+        List<User> users = ownerResource.getUsers(ownerName);
+
+        assertEquals(users.get(1), user2);
+        assertEquals(users.size(), 2);
     }
 
     @Test
