@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
 
 import com.google.inject.Module;
@@ -32,6 +33,7 @@ import com.google.inject.Module;
 public class CustomizableModules {
     
     public static final String MODULE_CONFIG_PREFIX = "module.config";
+    private static Logger log = Logger.getLogger(CustomizableModules.class);
     
     /**
      * @return returns the set of modules to use.
@@ -54,6 +56,7 @@ public class CustomizableModules {
             Set toReturn = new HashSet();
             
             for (String guiceModuleName : loadedConfiguration.keySet()) {
+                log.info("Found custom module " + guiceModuleName);
                 toReturn.add(Class.forName(
                         loadedConfiguration.get(guiceModuleName)).newInstance());
             }

@@ -84,6 +84,8 @@ GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet',
            'com.wideplay.warp:warp-persist:jar:2.0-20090214',
            'javax.servlet:servlet-api:jar:2.5', 'com.google.collections:google-collections:jar:0.9']
 
+LDAP = 'com.novell.ldap:jldap:jar:4.3'
+
 QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
 HORNETQ = [group('hornetq-core',
                  'hornetq-core-client',
@@ -157,7 +159,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP
+      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP
  
   #
   # testing
