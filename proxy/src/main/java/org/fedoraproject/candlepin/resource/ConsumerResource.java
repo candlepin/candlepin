@@ -203,6 +203,7 @@ public class ConsumerResource {
         if (userName != null) {
             user = userService.findByLogin(userName);
         }
+
         setOwner(user);
 
         // TODO: Refactor out type specific checks?
@@ -567,7 +568,6 @@ public class ConsumerResource {
                 poolManager.updatePoolForSubscription(pool, sub);
             }
 
-            Product p = sub.getProduct();
             entitlementList.add(createEntitlementByPool(consumer, pool, quantity));
         }
         return entitlementList;
