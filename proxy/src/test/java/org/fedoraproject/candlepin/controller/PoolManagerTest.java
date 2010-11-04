@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.spy;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -136,7 +137,8 @@ public class PoolManagerTest {
             subscriptions);
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
-                any(Owner.class), anyString(), anyBoolean())).thenReturn(pools);
+                any(Owner.class), anyString(), anyBoolean(),
+                any(Date.class))).thenReturn(pools);
         this.manager.refreshPools(getOwner());
         verify(this.manager).deletePool(same(p));
     }
@@ -152,7 +154,8 @@ public class PoolManagerTest {
             subscriptions);
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
-                any(Owner.class), anyString(), anyBoolean())).thenReturn(pools);
+                any(Owner.class), anyString(), anyBoolean(),
+                any(Date.class))).thenReturn(pools);
         this.manager.refreshPools(getOwner());
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
@@ -179,7 +182,8 @@ public class PoolManagerTest {
             subscriptions);
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
-                any(Owner.class), anyString(), anyBoolean())).thenReturn(pools);
+                any(Owner.class), anyString(), anyBoolean(),
+                any(Date.class))).thenReturn(pools);
         this.manager.refreshPools(getOwner());
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
         verify(mockPoolCurator, times(1)).merge(any(Pool.class));

@@ -76,7 +76,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByOwner(Owner o) {
-        return listAvailableEntitlementPools(null, o, (String) null, true);
+        return listAvailableEntitlementPools(null, o, (String) null, true, null);
     }
     
     /**
@@ -104,7 +104,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByConsumer(Consumer c) {
-        return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true);
+        return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true, null);
     }
     
     /**
@@ -118,10 +118,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @EnforceAccessControl
     public List<Pool> listByOwnerAndProduct(Owner owner,
             String productId) {  
-        return listAvailableEntitlementPools(null, owner, productId, false);
+        return listAvailableEntitlementPools(null, owner, productId, false, null);
     }
 
-       /**
+    /**
      * List entitlement pools.
      * 
      * Pools will be refreshed from the underlying subscription service.
@@ -133,13 +133,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param o
      * @param productId
      * @param activeOnly
+     * @param activeOn Indicates to return only pools valid on this date.
+     *        Set to null for no date filtering.
      * @return List of entitlement pools.
      */
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, boolean activeOnly) {
+            String productId, boolean activeOnly, Date activeOn) {
 
         if (o == null && c != null) {
             o = c.getOwner();
@@ -163,8 +165,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.eq("owner", o));            
         }
 
-        crit.add(Restrictions.lt("startDate", new Date())); // TODO: is this right?
-        crit.add(Restrictions.gt("endDate", new Date())); // TODO: is this right?
+        if (activeOn != null) {
+            crit.add(Restrictions.lt("startDate", activeOn));
+            crit.add(Restrictions.gt("endDate", activeOn));
+        }
+
         // FIXME: sort by enddate?
         List<Pool> results = crit.list();
         log.debug("active pools for owner: " + results.size());

@@ -241,7 +241,8 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         
         assertEquals(1,
-            poolCurator.listAvailableEntitlementPools(null, owner, null, false).size());
+            poolCurator.listAvailableEntitlementPools(null, owner, null, false,
+                null).size());
     }
     
     @Test
@@ -253,7 +254,8 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         
         assertEquals(0,
-            poolCurator.listAvailableEntitlementPools(null, owner, null, false).size());
+            poolCurator.listAvailableEntitlementPools(null, owner, null, false,
+                null).size());
     }
     
     @Test
@@ -265,7 +267,8 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         
         assertEquals(1,
-            poolCurator.listAvailableEntitlementPools(null, owner, null, false).size());
+            poolCurator.listAvailableEntitlementPools(null, owner, null, false,
+                null).size());
     }
     
     @Test
@@ -277,6 +280,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         
         assertEquals(0,
-            poolCurator.listAvailableEntitlementPools(null, owner, null, false).size());
+            poolCurator.listAvailableEntitlementPools(null, owner, null, false,
+                null).size());
     }
 }

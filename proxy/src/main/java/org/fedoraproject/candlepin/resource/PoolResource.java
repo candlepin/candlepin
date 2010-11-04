@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -70,6 +73,18 @@ public class PoolResource {
         this.poolManager = poolManager;
     }
 
+    private Date parseActiveOnString(String activeOn) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        Date d;
+        try {
+            d = sdf.parse(activeOn);
+        }
+        catch (ParseException e) {
+            throw new BadRequestException("Invalid date, must use format YYYYMMDD");
+        }
+        return d;
+    }
+
     /**
      * Returns the list of available entitlement pools.
      * 
@@ -91,7 +106,8 @@ public class PoolResource {
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
-        @QueryParam("listall") @DefaultValue("false") boolean listAll) {
+        @QueryParam("listall") @DefaultValue("false") boolean listAll,
+        @QueryParam("activeon") String activeOn) {
         
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
@@ -103,30 +119,31 @@ public class PoolResource {
                 i18n.tr("A consumer or owner is needed to filter on product"));
         }
 
-        if ((ownerId == null) && (productId == null) && (consumerUuid == null)) {
-            return poolCurator.listAll();
+        Date activeOnDate = null;
+        if (activeOn != null) {
+            activeOnDate = parseActiveOnString(activeOn);
         }
-        else {
-            Consumer c = null;
-            Owner o = null;
-            if (consumerUuid != null) {
-                c = consumerCurator.findByUuid(consumerUuid);
-                if (c == null) {
-                    throw new NotFoundException(i18n.tr("consumer: {0}", consumerUuid));
-                }
-                if (listAll) {
-                    o = c.getOwner();
-                    c = null;
-                }
-            }        
-            if (ownerId != null) {
-                o = ownerCurator.find(ownerId);
-                if (o == null) {
-                    throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
-                }                
-            }                   
-            return poolCurator.listAvailableEntitlementPools(c, o, productId, true);
+
+        Consumer c = null;
+        Owner o = null;
+        if (consumerUuid != null) {
+            c = consumerCurator.findByUuid(consumerUuid);
+            if (c == null) {
+                throw new NotFoundException(i18n.tr("consumer: {0}", consumerUuid));
+            }
+            if (listAll) {
+                o = c.getOwner();
+                c = null;
+            }
         }
+        if (ownerId != null) {
+            o = ownerCurator.find(ownerId);
+            if (o == null) {
+                throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
+            }
+        }
+        return poolCurator.listAvailableEntitlementPools(c, o, productId, true,
+            activeOnDate);
     }
     
     @POST
