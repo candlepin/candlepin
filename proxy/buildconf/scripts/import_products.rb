@@ -112,10 +112,10 @@ data['products'].each do |product|
               #                                          'endDate' => '2012-07-13'})
               # Create a 5 and a 10 with the slightly similar begin/end dates.
               subscription = cp.create_subscription(owner_key, product_ret['id'], 5, provided_products,
-                                                    contract_number, startDate1, endDate1)
+                                                    contract_number, '12331131231', startDate1, endDate1)
               contract_number += 1
               subscription = cp.create_subscription(owner_key, product_ret['id'], 10, provided_products,
-                                                    contract_number, startDate1, endDate1)
+                                                    contract_number, '12331131231', startDate1, endDate1)
               # go ahead and create a token for each subscription, the token itself is just a random int
               token = cp.create_subscription_token({'token' => rand(10000000000),
                                                    'subscription' => {'id' => subscription['id']}})
@@ -123,7 +123,7 @@ data['products'].each do |product|
 
               # create a future dated model
               subscription = cp.create_subscription(owner_key, product_ret['id'], 15, provided_products,
-                                                    contract_number, startDate2, endDate2)
+                                                    contract_number, '12331131231', startDate2, endDate2)
               contract_number += 1
           end
 

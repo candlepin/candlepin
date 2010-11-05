@@ -119,8 +119,8 @@ module ExportMethods
     product2 = create_product()
     @end_date = Date.new(2025, 5, 29)
 
-    sub1 = @cp.create_subscription(@owner.key, product1.id, 2, [], '', nil, @end_date)
-    sub2 = @cp.create_subscription(@owner.key, product2.id, 4, [], '', nil, @end_date)
+    sub1 = @cp.create_subscription(@owner.key, product1.id, 2, [], '', '12345', nil, @end_date)
+    sub2 = @cp.create_subscription(@owner.key, product2.id, 4, [], '', '12345', nil, @end_date)
     @cp.refresh_pools(@owner.key)
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
