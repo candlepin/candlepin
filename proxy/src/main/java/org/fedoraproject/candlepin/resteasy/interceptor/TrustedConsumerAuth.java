@@ -30,7 +30,7 @@ import com.google.inject.Inject;
  */
 class TrustedConsumerAuth extends ConsumerAuth {
 
-    private static final String HEADER = "cp_consumer";
+    private static final String HEADER = "cp-consumer";
     
     @Inject
     TrustedConsumerAuth(ConsumerCurator consumerCurator) {
