@@ -96,6 +96,10 @@ data['products'].each do |product|
               :attributes => attrs})
           puts "product name: " + name + " version: " + version + " arch: " + \
             arch + " type: " + type
+          startDate1 =  Date.today
+	  endDate1 = startDate1 + 365
+          startDate2 = endDate1 + 1
+          endDate2 = startDate2 + 365
 
           if attrs['type'] == 'MKT':
               # subscription =  cp.create_subscription(owner_key, {'product' => { 'id' => product_ret['id'] }, 
@@ -105,16 +109,16 @@ data['products'].each do |product|
               #                                          'contractNumber' => contract_number,
               #                                          'endDate' => '2012-07-13'})
               subscription = cp.create_subscription(owner_key, product_ret['id'], 10, provided_products,
-                                                    contract_number)
-            # go ahead and create a token for each subscription, the token itself is just a random int
-            token = cp.create_subscription_token({'token' => rand(10000000000), 
+                                                    contract_number, startDate1, endDate1)
+              # go ahead and create a token for each subscription, the token itself is just a random int
+              token = cp.create_subscription_token({'token' => rand(10000000000), 
                                                    'subscription' => {'id' => subscription['id']}})
-            contract_number += 1
+              contract_number += 1
+              # create a renewal
+              subscription = cp.create_subscription(owner_key, product_ret['id'], 10, provided_products,
+                                                    contract_number, startDate2, endDate2) 
+              contract_number += 1
           end
-
- 
-         start =  Date.new
-	  enddate = Date.new + 365
 
           if attrs['type'] != 'MKT':
               product_cert = cp.get_product_cert(product_ret['id'])
