@@ -16,7 +16,7 @@ if not ARGV.empty?
 end
 
 data = {}
-	
+
 filenames.each do |filename|
   puts filename
   product_data_buf = File.read(filename)
@@ -55,7 +55,7 @@ owner_key = owners[0]['key']
 # import all the content sets
 puts "importing content set data..."
 data['content'].each do |content|
-	puts content[0] 
+	puts content[0]
 	cp.create_content(content[0], content[1], content[2], content[3],
 			 content[4], content[5], content[6])
 end
@@ -72,7 +72,7 @@ contract_number = 0
 data['products'].each do |product|
 	  # add arch as an attribute as wel
 
-      
+
           # name, hash, multiplier, version, variant, arch, type, childProducts, attributes
 
           #FIXME: product data import file needs to move to dict's instead of lists
@@ -87,7 +87,7 @@ data['products'].each do |product|
           attrs = product[9]
           product_content = product[10]
 
-      
+
           attrs['version'] = version
           attrs['variant'] = variant
           attrs['arch'] = arch
@@ -97,26 +97,33 @@ data['products'].each do |product|
           puts "product name: " + name + " version: " + version + " arch: " + \
             arch + " type: " + type
           startDate1 =  Date.today
-	  endDate1 = startDate1 + 365
-          startDate2 = endDate1 + 1
+	      endDate1 = startDate1 + 365
+          startDate2 = endDate1 - 10
           endDate2 = startDate2 + 365
+          startDate3 = endDate1 + 1
+          endDate3 = startDate2 + 365
 
           if attrs['type'] == 'MKT':
-              # subscription =  cp.create_subscription(owner_key, {'product' => { 'id' => product_ret['id'] }, 
+              # subscription =  cp.create_subscription(owner_key, {'product' => { 'id' => product_ret['id'] },
               #                                        'providedProducts' => provided_products,
               #                                        'quantity' => 10,
               #                                          'startDate' => '2007-07-13',
               #                                          'contractNumber' => contract_number,
               #                                          'endDate' => '2012-07-13'})
+              # Create a 5 and a 10 with the slightly similar begin/end dates.
+              subscription = cp.create_subscription(owner_key, product_ret['id'], 5, provided_products,
+                                                    contract_number, startDate1, endDate1)
+              contract_number += 1
               subscription = cp.create_subscription(owner_key, product_ret['id'], 10, provided_products,
                                                     contract_number, startDate1, endDate1)
               # go ahead and create a token for each subscription, the token itself is just a random int
-              token = cp.create_subscription_token({'token' => rand(10000000000), 
+              token = cp.create_subscription_token({'token' => rand(10000000000),
                                                    'subscription' => {'id' => subscription['id']}})
               contract_number += 1
-              # create a renewal
-              subscription = cp.create_subscription(owner_key, product_ret['id'], 10, provided_products,
-                                                    contract_number, startDate2, endDate2) 
+
+              # create a future dated model
+              subscription = cp.create_subscription(owner_key, product_ret['id'], 15, provided_products,
+                                                    contract_number, startDate2, endDate2)
               contract_number += 1
           end
 
