@@ -42,6 +42,9 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "cp_owner")
 public class Owner extends AbstractHibernateObject implements Serializable, Linkable {
+
+    @Column(name = "parent_owner", nullable = true)
+    private Owner parentOwner;
     
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -255,6 +258,14 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
          * No-op, here to aid with updating objects which have nested objects that were
          * originally sent down to the client in HATEOAS form.
          */
+    }
+
+    public Owner getParentOwner() {
+        return parentOwner;
+    }
+
+    public void setParentOwner(Owner parentOwner) {
+        this.parentOwner = parentOwner;
     }
 
 }

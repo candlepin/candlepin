@@ -170,6 +170,13 @@ public class OwnerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Owner createOwner(Owner owner) {
+        Owner parent = owner.getParentOwner(); 
+        if (parent != null &&
+            ownerCurator.find(parent.getId()) == null) {
+            throw new BadRequestException(
+                i18n.tr("Cound not create the Owner: {0}. Parent {1} does not exist.",
+                    owner, parent));
+        }
         Owner toReturn = ownerCurator.create(owner);
      
         sink.emitOwnerCreated(owner);

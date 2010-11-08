@@ -34,6 +34,7 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -430,5 +431,32 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         return e1;
     }
     
+    @Test
+    public void ownerWithParentOwnerCanBeCreated() {
+        Owner child = new Owner("name", "name1");
+        child.setParentOwner(this.owner);
+        this.ownerResource.createOwner(child);
+        assertNotNull(ownerCurator.find(child.getId()));
+        assertNotNull(child.getParentOwner());
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void ownerWithInvalidParentCannotBeCreated() {
+        Owner child = new Owner("name", "name1");
+        Owner owner1 = new Owner("name2", "name3");
+        owner1.setId("xyz");
+        child.setParentOwner(owner1);
+        this.ownerResource.createOwner(child);
+        throw new RuntimeException("OwnerResource should have thrown BadRequestException");
+    }
+      
+    @Test(expected = BadRequestException.class)
+    public void ownerWithInvalidParentWhoseIdIsNullCannotBeCreated() {
+        Owner child = new Owner("name", "name1");
+        Owner owner1 = new Owner("name2", "name3");
+        child.setParentOwner(owner1);
+        this.ownerResource.createOwner(child);
+        throw new RuntimeException("OwnerResource should have thrown BadRequestException");
+    }
 }
 

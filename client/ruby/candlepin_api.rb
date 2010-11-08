@@ -97,12 +97,12 @@ class Candlepin
     get("/owners/#{owner}")
   end
 
-  def create_owner(owner_name)
+  def create_owner(owner_name, parent=nil)
     owner = {
       'key' => owner_name,
       'displayName' => owner_name
     }
-
+    owner['parentOwner'] = parent if !parent.nil?
     post('/owners', owner)
   end
 
