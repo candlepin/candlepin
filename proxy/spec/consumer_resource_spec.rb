@@ -135,4 +135,16 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
+  it 'should allow consumer to bind to products supporting multiple architectures' do
+    owner = create_owner random_string('owner')
+    owner_client = user_client(owner, random_string('testowner'))
+    cp_client = consumer_client(owner_client, random_string('consumer123'), :system,
+                                nil, 'cpu.architecture' => 'x86_64')
+    prod = create_product('product', 'product-multiple-arch',
+                          :attribute => { :arch => 'i386, x86_64'})
+    subs = @cp.create_subscription(owner.key, prod.id)
+    pool = @cp.create_pool(prod.id, owner.id, 10, :subscription_id => subs.id)
+    cp_client.consume_pool(pool.id).size.should == 1
+  end
+
 end

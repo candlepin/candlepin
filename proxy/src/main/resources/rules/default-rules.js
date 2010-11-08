@@ -10,10 +10,27 @@ function consumer_delete_name_space() {
 	return ConsumerDelete;
 }
 
+(function(){
+    String.prototype.trim = function(){
+        return this.replace(/^\s*/, "").replace(/\s*$/, "")
+    }
+
+    String.prototype.join = function(iterable){
+        var result = "";
+        var str = this
+        iterable.forEach(function(element){
+                result += element + str
+                return true
+            })
+        return result
+    }
+})();
+
 /* Utility functions */
 function contains(a, obj) {
 	for (var i = 0; i < a.length; i++) {
-		if (a[i] === obj) {
+	   var result = a[i] == obj
+		if (result) {
 			return true;
 		}
 	}
@@ -146,11 +163,18 @@ var Entitlement = {
 	},
 	
 	pre_architecture: function() {
-		if ((product.getAttribute("arch").toUpperCase() != "ALL") &&
-				(!consumer.hasFact("cpu.architecture") ||
-				(product.getAttribute("arch") != consumer.getFact("cpu.architecture")))) {
-			pre.addWarning("rulewarning.architecture.mismatch");
-		}
+	java.lang.System.out.printf("\n\n%s\n\n\n", prodAttrSeparator)
+	   var result = product.getAttribute('arch').toUpperCase().split(prodAttrSeparator)
+	   var str = " ".join(result)
+	   java.lang.System.out.printf("\n\n[%s] : %s\n\n", str, contains(result, 'ALL'))
+	   if(!contains(result, 'ALL') && 
+	       (!consumer.hasFact("cpu.architecture")  ||
+            !contains(result, consumer.getFact('cpu.architecture').toUpperCase())
+            )
+          ){
+	       pre.addWarning("rulewarning.architecture.mismatch");
+	   
+	   }
 	},
 	
 	post_architecture: function() {

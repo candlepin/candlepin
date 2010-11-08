@@ -67,7 +67,7 @@ public class EntitlementRules implements Enforcer {
     private final Map<String, Set<Rule>> attributesToRules;
     
     private Object entitlementNameSpace;
-
+    private static final String PROD_ARCHITECTURE_SEPARATOR = ",";
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
     private static final String SELECT_POOL_PREFIX = "select_pool_";
@@ -177,6 +177,7 @@ public class EntitlementRules implements Enforcer {
         jsEngine.put("pool", new ReadOnlyPool(pool, prodAdapter));
         jsEngine.put("pre", preHelper);
         jsEngine.put("attributes", allAttributes);
+        jsEngine.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         jsEngine.put("log", rulesLogger);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
