@@ -123,7 +123,7 @@ var Entitlement = {
 		}
 	
 		// Create a sub-pool for this user
-		post.createUserRestrictedPool(productId, pool.getProvidedProductIds(),
+		post.createUserRestrictedPool(productId, pool.getProvidedProducts(),
 				attributes.get("user_license"));
 	},
 	

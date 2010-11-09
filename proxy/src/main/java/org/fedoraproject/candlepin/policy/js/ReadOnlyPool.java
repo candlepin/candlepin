@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 /**
@@ -74,8 +75,8 @@ public class ReadOnlyPool {
         return entPool.getAttributeValue(name);
     }
 
-    public Set<String> getProvidedProductIds() {
-        return entPool.getProvidedProductIds();
+    public Set<ProvidedProduct> getProvidedProducts() {
+        return entPool.getProvidedProducts();
     }
     
     public String getProductId() {
@@ -112,8 +113,9 @@ public class ReadOnlyPool {
         products.add(
             new ReadOnlyProduct(productAdapter.getProductById(entPool.getProductId())));
         
-        for (String productId : entPool.getProvidedProductIds()) {
-            products.add(new ReadOnlyProduct(productAdapter.getProductById(productId)));
+        for (ProvidedProduct providedProduct : entPool.getProvidedProducts()) {
+            products.add(new ReadOnlyProduct(
+                productAdapter.getProductById(providedProduct.getProductId())));
         }
         
         return products.toArray(new ReadOnlyProduct[products.size()]);

@@ -25,11 +25,11 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.spy;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -54,6 +54,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
@@ -173,7 +174,7 @@ public class PoolManagerTest {
         s.setId("123");
         subscriptions.add(s);
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
-            new HashSet<String>(), s.getQuantity() + 10, s.getStartDate(),
+            new HashSet<ProvidedProduct>(), s.getQuantity() + 10, s.getStartDate(),
             Util.tomorrow(), s.getContractNumber());
         p.setId("423");
         p.setSubscriptionId(s.getId());
@@ -195,7 +196,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
-            new HashSet<String>(), s.getQuantity(), s.getStartDate(),
+            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
             s.getEndDate(), s.getContractNumber());
         p.setSubscriptionId(s.getId());
         
@@ -213,7 +214,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
-            new HashSet<String>(), s.getQuantity(), s.getStartDate(),
+            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
             s.getEndDate(), s.getContractNumber());
         p.setSubscriptionId(s.getId());
         
@@ -240,13 +241,14 @@ public class PoolManagerTest {
         s.setProvidedProducts(providedProducts);
         
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
-            new HashSet<String>(), s.getQuantity(), s.getStartDate(),
+            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
             s.getEndDate(), s.getContractNumber());
         p.setSubscriptionId(s.getId());
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(providedProduct.getId());
+        Set<ProvidedProduct> provProducts = new HashSet<ProvidedProduct>();
+        ProvidedProduct pp = TestUtil.createProvidedProduct();
+        provProducts.add(pp);
         
-        p.setProvidedProductIds(providedProductIds);
+        p.setProvidedProducts(provProducts);
 
         providedProducts.clear();
         
@@ -262,7 +264,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
-            new HashSet<String>(), s.getQuantity(), s.getStartDate(),
+            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
             s.getEndDate(), s.getContractNumber());
         p.setSubscriptionId(s.getId());
         this.manager.updatePoolForSubscription(p, s);
@@ -275,7 +277,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
-            new HashSet<String>(), s.getQuantity().longValue() + 10,
+            new HashSet<ProvidedProduct>(), s.getQuantity().longValue() + 10,
             s.getStartDate(), s.getEndDate(), s.getContractNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
@@ -296,7 +298,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
-            new HashSet<String>(), s.getQuantity(), s.getStartDate(),
+            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
             Util.tomorrow(), s.getContractNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
@@ -311,7 +313,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
-            new HashSet<String>(), s.getQuantity().longValue() + 4,
+            new HashSet<ProvidedProduct>(), s.getQuantity().longValue() + 4,
             s.getStartDate(), Util.tomorrow(), s.getContractNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(manager).regenerateCertificatesOf(anySet());
@@ -334,7 +336,8 @@ public class PoolManagerTest {
     public void testUpdatePoolForSubscriptionWithBothChangesAndFewEntitlementsToRegen() {
         final Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
-        final Pool p = new Pool(s.getOwner(), s.getProduct().getId(), new HashSet<String>(),
+        final Pool p = new Pool(s.getOwner(), s.getProduct().getId(), 
+            new HashSet<ProvidedProduct>(),
             s.getQuantity().longValue() + 4, s.getStartDate(), Util.tomorrow(),
             s.getContractNumber());
         List<Entitlement> mockedEntitlements = new ArrayList<Entitlement>() {

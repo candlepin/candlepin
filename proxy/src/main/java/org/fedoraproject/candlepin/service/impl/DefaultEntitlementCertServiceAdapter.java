@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
@@ -138,8 +139,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         else {
             // If this pool doesn't have a subscription associated with it, we need to
             // lookup all the Product objects manually:
-            for (String productId : pool.getProvidedProductIds()) {
-                providedProducts.add(productAdapter.getProductById(productId));
+            for (ProvidedProduct providedProduct : pool.getProvidedProducts()) {
+                providedProducts.add(
+                    productAdapter.getProductById(providedProduct.getId()));
             }
         }
         return providedProducts;

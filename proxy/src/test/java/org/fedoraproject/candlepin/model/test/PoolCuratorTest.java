@@ -14,10 +14,11 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.util.HashSet;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -26,6 +27,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -130,29 +132,29 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product parent = TestUtil.createProduct();
         productCurator.create(parent);
         
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(product.getId());
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(product.getId(), "Test Provided Product"));
 
         Pool p = TestUtil.createPool(owner, parent.getId(),
-            providedProductIds, 5);
+            providedProducts, 5);
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
         assertEquals(1, results.size());
     }
     
     @Test
-    public void testPoolProductIds() {
+    public void testPoolProducts() {
         Product another = TestUtil.createProduct();
         productCurator.create(another);
         
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(another.getId());
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(another.getId(), "Test Provided Product"));
         
         Pool pool = TestUtil.createPool(owner, product.getId(),
-            providedProductIds, 5);
+            providedProducts, 5);
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
-        assertTrue(pool.getProvidedProductIds().contains(another.getId()));
+        assertTrue(pool.getProvidedProducts().size() > 0);
     }
 
     // Note:  This simply tests that the multiplier is read and used in pool creation.

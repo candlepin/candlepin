@@ -21,8 +21,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +41,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
@@ -227,18 +228,20 @@ public class PoolManager {
     }
 
     private boolean checkForChangedProducts(Pool existingPool, Subscription sub) {
-        Set<String> poolProductIds = new HashSet<String>();
-        Set<String> subProductIds = new HashSet<String>();
+        Set<String> poolProducts = new HashSet<String>();
+        Set<String> subProducts = new HashSet<String>();
+        poolProducts.add(existingPool.getProductId());
         
-        poolProductIds.add(existingPool.getProductId());
-        poolProductIds.addAll(existingPool.getProvidedProductIds());
-        
-        subProductIds.add(sub.getProduct().getId());
-        for (Product product : sub.getProvidedProducts()) {
-            subProductIds.add(product.getId());
+        for (ProvidedProduct pp : existingPool.getProvidedProducts()) {
+            poolProducts.add(pp.getProductId());
         }
         
-        return !poolProductIds.equals(subProductIds);
+        subProducts.add(sub.getProduct().getId());
+        for (Product product : sub.getProvidedProducts()) {
+            subProducts.add(product.getId());
+        }
+        
+        return !poolProducts.equals(subProducts);
     }
 
 
@@ -257,11 +260,12 @@ public class PoolManager {
             log.debug("Creating new pool for new sub: " + sub.getId());
         }
         Long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
-        Set<String> productIds = new HashSet<String>();
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         for (Product p : sub.getProvidedProducts()) {
-            productIds.add(p.getId());
+            ProvidedProduct providedProduct = new ProvidedProduct(p.getId(), p.getName());
+            providedProducts.add(providedProduct);
         }
-        Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), productIds,
+        Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), providedProducts,
                 quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber());
         newPool.setSubscriptionId(sub.getId());
         createPool(newPool);

@@ -24,7 +24,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -36,7 +35,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -120,9 +118,8 @@ public class Pool extends AbstractHibernateObject
     @Column(nullable = false)
     private String productId;
     
-    @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "cp_pool_products", joinColumns = @JoinColumn(name = "pool_id"))
-    private Set<String> providedProductIds = new HashSet<String>();
+    @OneToMany(mappedBy = "pool", targetEntity = ProvidedProduct.class)
+    private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL, 
@@ -143,7 +140,7 @@ public class Pool extends AbstractHibernateObject
     public Pool() {
     }
 
-    public Pool(Owner ownerIn, String productId, Set<String> providedProductIds, 
+    public Pool(Owner ownerIn, String productId, Set<ProvidedProduct> providedProducts, 
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber) {
         this.productId = productId;
         this.owner = ownerIn;
@@ -155,7 +152,7 @@ public class Pool extends AbstractHibernateObject
         // Always assume none consumed if creating a new pool.
         this.consumed = new Long(0);
 
-        this.providedProductIds = providedProductIds;
+        this.providedProducts = providedProducts;
     }
 
     /** {@inheritDoc} */
@@ -426,7 +423,7 @@ public class Pool extends AbstractHibernateObject
 
     public String toString() {
         return "EntitlementPool [id = " + getId() + ", owner = " + owner.getId() +
-            ", products = " + productId + " - " + getProvidedProductIds() +
+            ", products = " + productId + " - " + getProvidedProducts() +
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
@@ -441,12 +438,12 @@ public class Pool extends AbstractHibernateObject
         return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
 
-    public Set<String> getProvidedProductIds() {
-        return providedProductIds;
+    public Set<ProvidedProduct> getProvidedProducts() {
+        return providedProducts;
     }
 
-    public void setProvidedProductIds(Set<String> providedProductIds) {
-        this.providedProductIds = providedProductIds;
+    public void setProvidedProducts(Set<ProvidedProduct> providedProducts) {
+        this.providedProducts = providedProducts;
     }
 
     /**
@@ -460,8 +457,14 @@ public class Pool extends AbstractHibernateObject
             return true;
         }
         
-        // Check provided products:
-        return this.providedProductIds.contains(productId);
+        if (providedProducts != null) {
+            for (ProvidedProduct p : providedProducts) {
+                if (p.getProductId().equals(productId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

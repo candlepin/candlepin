@@ -14,7 +14,10 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -26,6 +29,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -50,10 +54,10 @@ public class PoolTest extends DatabaseTestFixture {
         owner = new Owner("testowner");
         ownerCurator.create(owner);
         
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(prod2.getId());
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(prod2.getId(), prod2.getName()));
         
-        pool = TestUtil.createPool(owner, prod1.getId(), providedProductIds,
+        pool = TestUtil.createPool(owner, prod1.getId(), providedProducts,
             1000);
         poolCurator.create(pool);
         owner = pool.getOwner();
@@ -143,11 +147,12 @@ public class PoolTest extends DatabaseTestFixture {
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
         
-        Set<String> productIds = new HashSet<String>();
-        productIds.add(childProduct.getId());
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(childProduct.getId(), 
+            childProduct.getName()));
 
         Pool pool = TestUtil.createPool(owner, parentProduct.getId(),
-            productIds, 5);
+            providedProducts, 5);
         poolCurator.create(pool);
         
         
