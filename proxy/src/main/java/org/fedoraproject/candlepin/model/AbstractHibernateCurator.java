@@ -138,7 +138,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     protected Session currentSession() {
         Session sess = (Session) entityManager.get().getDelegate();
-        log.debug("Current Session: " + sess.hashCode());
         return sess;
     }
 

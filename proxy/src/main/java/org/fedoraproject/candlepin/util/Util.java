@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.util;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
@@ -36,6 +37,7 @@ import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.ClosureUtils;
 import org.apache.commons.collections.Transformer;
@@ -239,4 +241,15 @@ public class Util {
         }
         return Math.abs(Long.valueOf(id));
     }
+    
+    public static String toBase64(byte [] data) {
+        try {
+            return new String(Base64.encodeBase64(data), "ASCII");
+        }
+        catch (UnsupportedEncodingException e) {
+            log.warn("Unable to convert binary data to string", e);
+            return new String(data);
+        }
+    }
+    
 }

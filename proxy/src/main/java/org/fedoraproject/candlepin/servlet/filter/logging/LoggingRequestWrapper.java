@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.servlet.filter.logging;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,24 +24,21 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
+import org.apache.commons.io.IOUtils;
+import org.fedoraproject.candlepin.util.Util;
+
 /**
  * LoggingRequestWrapper
  */
 public class LoggingRequestWrapper extends HttpServletRequestWrapper implements BodyLogger {
 
     private final byte [] body;
-
+    
     public LoggingRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
         InputStream inputStream = request.getInputStream();
         if (inputStream != null) {
-            ByteArrayOutputStream byteBuilder = new ByteArrayOutputStream();
-            byte[] buffer = new byte[128];
-            int bytesRead = -1;
-            while ((bytesRead = inputStream.read(buffer)) > 0) {
-                byteBuilder.write(buffer, 0, bytesRead);
-            }
-            body = byteBuilder.toByteArray();
+            body = IOUtils.toByteArray(inputStream);
         }
         else {
             body = new byte[0];
@@ -66,6 +62,6 @@ public class LoggingRequestWrapper extends HttpServletRequestWrapper implements 
     }
 
     public String getBody() {
-        return new String(this.body);
+        return Util.toBase64(body);
     }
 }
