@@ -119,6 +119,7 @@ public class Pool extends AbstractHibernateObject
     private String productId;
     
     @OneToMany(mappedBy = "pool", targetEntity = ProvidedProduct.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")

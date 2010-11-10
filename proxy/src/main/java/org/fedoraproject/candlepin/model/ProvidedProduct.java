@@ -24,6 +24,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.hibernate.annotations.ForeignKey;
@@ -54,7 +55,12 @@ public class ProvidedProduct extends AbstractHibernateObject
     @ManyToOne
     @ForeignKey(name = "fk_pool_provided_product")
     @JoinColumn(nullable = false)
+    @XmlTransient
     private Pool pool;
+    
+    public ProvidedProduct() {
+        
+    }
     
     public ProvidedProduct(String productId, String productName) {
         this.productId = productId;
@@ -112,6 +118,7 @@ public class ProvidedProduct extends AbstractHibernateObject
     /**
      * @return the pool
      */
+    @XmlTransient
     public Pool getPool() {
         return pool;
     }

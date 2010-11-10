@@ -322,7 +322,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (PoolAttribute attr : entity.getAttributes()) {
             attr.setPool(entity);
         }
-
+        
         return super.create(entity);
     }
 }
