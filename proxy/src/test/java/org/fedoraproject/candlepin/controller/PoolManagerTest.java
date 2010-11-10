@@ -175,7 +175,7 @@ public class PoolManagerTest {
         subscriptions.add(s);
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<ProvidedProduct>(), s.getQuantity() + 10, s.getStartDate(),
-            Util.tomorrow(), s.getContractNumber());
+            Util.tomorrow(), s.getContractNumber(), s.getAccountNumber());
         p.setId("423");
         p.setSubscriptionId(s.getId());
         pools.add(p);
@@ -197,7 +197,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate(), s.getContractNumber());
+            s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         p.setSubscriptionId(s.getId());
         
         s.setProduct(TestUtil.createProduct());
@@ -215,7 +215,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate(), s.getContractNumber());
+            s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         p.setSubscriptionId(s.getId());
         
         Set<Product> providedProducts = new HashSet<Product>();
@@ -242,7 +242,7 @@ public class PoolManagerTest {
         
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate(), s.getContractNumber());
+            s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         p.setSubscriptionId(s.getId());
         Set<ProvidedProduct> provProducts = new HashSet<ProvidedProduct>();
         ProvidedProduct pp = TestUtil.createProvidedProduct();
@@ -265,7 +265,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate(), s.getContractNumber());
+            s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         p.setSubscriptionId(s.getId());
         this.manager.updatePoolForSubscription(p, s);
         verifyZeroInteractions(mockPoolCurator);
@@ -278,7 +278,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<ProvidedProduct>(), s.getQuantity().longValue() + 10,
-            s.getStartDate(), s.getEndDate(), s.getContractNumber());
+            s.getStartDate(), s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
         verify(mockPoolCurator, times(1)).merge(any(Pool.class));
@@ -299,7 +299,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
-            Util.tomorrow(), s.getContractNumber());
+            Util.tomorrow(), s.getContractNumber(), s.getAccountNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
@@ -314,7 +314,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
             new HashSet<ProvidedProduct>(), s.getQuantity().longValue() + 4,
-            s.getStartDate(), Util.tomorrow(), s.getContractNumber());
+            s.getStartDate(), Util.tomorrow(), s.getContractNumber(), s.getAccountNumber());
         this.manager.updatePoolForSubscription(p, s);
         verify(manager).regenerateCertificatesOf(anySet());
         verifyAndAssertForAllChanges(s, p, 1);
@@ -339,7 +339,7 @@ public class PoolManagerTest {
         final Pool p = new Pool(s.getOwner(), s.getProduct().getId(), 
             new HashSet<ProvidedProduct>(),
             s.getQuantity().longValue() + 4, s.getStartDate(), Util.tomorrow(),
-            s.getContractNumber());
+            s.getContractNumber(), s.getAccountNumber());
         List<Entitlement> mockedEntitlements = new ArrayList<Entitlement>() {
             private static final long serialVersionUID = 1L;
 

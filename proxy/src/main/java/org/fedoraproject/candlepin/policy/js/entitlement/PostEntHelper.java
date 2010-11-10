@@ -62,7 +62,7 @@ public class PostEntHelper {
         Pool consumerSpecificPool = new Pool(c.getOwner(), productId, 
             providedProductCopies, q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate(),
-            ent.getPool().getContractNumber());
+            ent.getPool().getContractNumber(), ent.getPool().getAccountNumber());
         consumerSpecificPool.setRestrictedToUsername(c.getUsername());
         consumerSpecificPool.setSourceEntitlement(ent);
         

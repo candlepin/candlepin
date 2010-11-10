@@ -262,7 +262,8 @@ public class PoolManager {
         Long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), providedProducts,
-            quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber());
+                quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
+                sub.getAccountNumber());
         if (sub.getProvidedProducts() != null) {
             for (Product p : sub.getProvidedProducts()) {
                 ProvidedProduct providedProduct = new ProvidedProduct(
@@ -271,6 +272,7 @@ public class PoolManager {
                 providedProducts.add(providedProduct);
             }
         }
+
         newPool.setSubscriptionId(sub.getId());
         createPool(newPool);
         return newPool;

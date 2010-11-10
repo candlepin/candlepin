@@ -134,6 +134,7 @@ public class Pool extends AbstractHibernateObject
     private String restrictedToUsername;
 
     private String contractNumber;
+    private String accountNumber;
     
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
@@ -142,13 +143,15 @@ public class Pool extends AbstractHibernateObject
     }
 
     public Pool(Owner ownerIn, String productId, Set<ProvidedProduct> providedProducts, 
-        Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber) {
+        Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
+        String accountNumber) {
         this.productId = productId;
         this.owner = ownerIn;
         this.quantity = quantityIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
         this.contractNumber = contractNumber;
+        this.accountNumber = accountNumber;
     
         // Always assume none consumed if creating a new pool.
         this.consumed = new Long(0);
@@ -277,6 +280,14 @@ public class Pool extends AbstractHibernateObject
         this.contractNumber = contractNumber;
     }
 
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+    
     public void bumpConsumed(int quantity) {
         consumed += quantity;
     }
