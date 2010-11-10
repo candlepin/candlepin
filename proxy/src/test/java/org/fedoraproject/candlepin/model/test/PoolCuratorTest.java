@@ -133,10 +133,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         productCurator.create(parent);
         
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        providedProducts.add(new ProvidedProduct(product.getId(), "Test Provided Product"));
+        ProvidedProduct providedProduct = new ProvidedProduct(
+            product.getId(), "Test Provided Product");
+        providedProducts.add(providedProduct);
 
         Pool p = TestUtil.createPool(owner, parent.getId(),
             providedProducts, 5);
+        providedProduct.setPool(p);
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
         assertEquals(1, results.size());
@@ -148,10 +151,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         productCurator.create(another);
         
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        providedProducts.add(new ProvidedProduct(another.getId(), "Test Provided Product"));
+        ProvidedProduct providedProduct = new ProvidedProduct(
+            another.getId(), "Test Provided Product");
+        providedProducts.add(providedProduct);
         
         Pool pool = TestUtil.createPool(owner, product.getId(),
             providedProducts, 5);
+        providedProduct.setPool(pool);
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
         assertTrue(pool.getProvidedProducts().size() > 0);
@@ -168,7 +174,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
         this.subCurator.create(sub);
         
-        poolManager.createPoolForSubscription(sub);
+        Pool newPool = poolManager.createPoolForSubscription(sub);
         Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
         
         assertEquals(160L, pool.getQuantity().longValue());

@@ -55,10 +55,13 @@ public class PoolTest extends DatabaseTestFixture {
         ownerCurator.create(owner);
         
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        providedProducts.add(new ProvidedProduct(prod2.getId(), prod2.getName()));
+        ProvidedProduct providedProduct = new ProvidedProduct(
+            prod2.getId(), prod2.getName());
+        providedProducts.add(providedProduct);
         
         pool = TestUtil.createPool(owner, prod1.getId(), providedProducts,
             1000);
+        providedProduct.setPool(pool);
         poolCurator.create(pool);
         owner = pool.getOwner();
 
@@ -148,11 +151,13 @@ public class PoolTest extends DatabaseTestFixture {
         productCurator.create(parentProduct);
         
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        providedProducts.add(new ProvidedProduct(childProduct.getId(), 
-            childProduct.getName()));
+        ProvidedProduct providedProduct = new ProvidedProduct(childProduct.getId(), 
+            childProduct.getName());
+        providedProducts.add(providedProduct);
 
         Pool pool = TestUtil.createPool(owner, parentProduct.getId(),
             providedProducts, 5);
+        providedProduct.setPool(pool);
         poolCurator.create(pool);
         
         
