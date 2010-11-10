@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
+import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -57,7 +58,7 @@ public class LoggingRequestWrapperTest {
 
         LoggingRequestWrapper lrw = new LoggingRequestWrapper(request);
         assertNotNull(lrw);
-        assertEquals("this is my body", lrw.getBody());
+        assertEquals(Util.toBase64("this is my body".getBytes()), lrw.getBody());
         assertNotNull(lrw.getInputStream());
         assertEquals("this is my body", readData(lrw.getInputStream()));
         assertEquals("this is my body", readData(lrw.getReader()));
