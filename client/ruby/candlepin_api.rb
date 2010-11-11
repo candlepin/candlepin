@@ -68,7 +68,7 @@ class Candlepin
     return @consumer
   end
 
-  def update_facts(facts, uuid=nil)
+  def f_facts(facts, uuid=nil)
     uuid = @uuid if uuid.nil?
 
     consumer = {
@@ -104,6 +104,10 @@ class Candlepin
     }
     owner['parentOwner'] = parent if !parent.nil?
     post('/owners', owner)
+  end
+  
+  def update_owner(owner_key, owner) 
+    put("/owners/#{owner_key}", owner)
   end
 
   def delete_owner(owner_key)

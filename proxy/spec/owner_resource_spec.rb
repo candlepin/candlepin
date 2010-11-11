@@ -36,4 +36,14 @@ describe 'Owner Resource' do
    
     users.length.should == 2
   end
+
+  it "lets owners be updated" do
+    owner = create_owner random_string("test_owner2")
+    original_key = owner.key
+    owner.key= random_string("test_owner4")
+    
+    @cp.update_owner(original_key, owner)
+    new_owner = @cp.get_owner(owner.key)
+    new_owner.key.should == owner.key
+  end
 end

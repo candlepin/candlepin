@@ -73,6 +73,8 @@ import org.jboss.resteasy.util.GenericType;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.quartz.JobDetail;
@@ -358,6 +360,7 @@ public class OwnerResource {
 
         return userList;
     }
+    
     private Owner findOwner(String key) {
         Owner owner = ownerCurator.lookupByKey(key);
         
@@ -368,7 +371,29 @@ public class OwnerResource {
         
         return owner;
     }
-    
+   
+
+    /**
+     * expose updates for owners
+     * @param key
+     * @param owner
+     */
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}")
+    @Transactional
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public void updateConsumer(@PathParam("owner_key") String key,
+        Owner owner) {
+        Owner toUpdate = findOwner(key);
+        log.debug("Updating");
+        toUpdate.setDisplayName(owner.getDisplayName());
+        toUpdate.setKey(owner.getKey());
+        toUpdate.setParentOwner(owner.getParentOwner());
+        ownerCurator.merge(toUpdate);    
+    }
+
+
     /**
      * 'Tickle' an owner to have all of their entitlement pools synced with their
      * subscriptions.
