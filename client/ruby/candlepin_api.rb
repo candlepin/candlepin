@@ -266,7 +266,9 @@ class Candlepin
 
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
-
+    #if product don't have type attributes, create_product will fail on server
+    #side.
+    attributes['type'] = 'SVC' if attributes['type'].nil?
     product = {
       'name' => name,
       'id' => id,

@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.Validate;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -43,6 +44,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 /**
@@ -147,19 +150,25 @@ public class DefaultEntitlementCertServiceAdapter extends
         return providedProducts;
     }
 
-    public X509Certificate createX509Certificate(Entitlement ent, 
-        Subscription sub, Product product, BigInteger serialNumber, KeyPair keyPair) 
-        throws GeneralSecurityException, IOException {
+    public X509Certificate createX509Certificate(Entitlement ent,
+        Subscription sub, Product product, BigInteger serialNumber,
+        KeyPair keyPair) throws GeneralSecurityException, IOException {
+        boolean productsPresent = false;
         // oiduitl is busted at the moment, so do this manually
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
-        
-        addExtensionsForProduct(extensions, product);
-        Set<Product> providedProducts = getProvidedProducts(ent.getPool(), sub);
+        Set<Product> products = new HashSet<Product>(getProvidedProducts(ent
+            .getPool(), sub));
+        products.add(product);
 
-        for (Product provided : providedProducts) {
-            addExtensionsForProduct(extensions, provided);
+        for (Product prod : Collections2
+            .filter(products, PROD_FILTER_PREDICATE)) {
+            productsPresent = true;
+            extensions.addAll(extensionUtil.productExtensions(prod));
+            extensions.addAll(extensionUtil.contentExtensions(prod));
         }
 
+        Validate.isTrue(productsPresent,
+            "Cannot generate entitlement certificate. No product information available");
         if (sub != null) {
             extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         }
@@ -176,27 +185,18 @@ public class DefaultEntitlementCertServiceAdapter extends
         return x509Cert;
     }
     
-    /**
-     * Recursively add certificate extensions for this product, and all it's children.
-     * @param extensions Certificate extensions.
-     * @param product Product to recurse through.
-     */
-    private void addExtensionsForProduct(Set<X509ExtensionWrapper> extensions, 
-        Product product) {
-        
-        // Add extensions for this product, unless it is a MKT product,
-        // then we just want the childProducts
-        if (product.hasAttribute("type") &&
-            !product.getAttributeValue("type").equals("MKT")) {
-            extensions.addAll(extensionUtil.productExtensions(product));
-            extensions.addAll(extensionUtil.contentExtensions(product));
-        }
-    }
-    
     private String createDN(Entitlement ent) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(ent.getId());
         return sb.toString();
     }
 
+    private static final Predicate<Product>
+    PROD_FILTER_PREDICATE = new Predicate<Product>() {
+        @Override
+        public boolean apply(Product product) {
+            return product != null && product.hasAttribute("type") &&
+                !product.getAttributeValue("type").equals("MKT");
+        }
+    };
 }
