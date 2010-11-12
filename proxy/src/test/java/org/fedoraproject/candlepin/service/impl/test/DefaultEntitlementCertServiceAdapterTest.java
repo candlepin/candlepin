@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.service.impl.test;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anySet;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.verify;
 
@@ -41,6 +43,7 @@ import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -143,17 +146,46 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void certificateGenerationShouldFailWhenNoProductsAreAvailable()
+        throws Exception {
+        Subscription subscription = new Subscription();
+        this.certServiceAdapter.createX509Certificate(TestUtil
+            .createEntitlement(), subscription, null, null, null);
+        throw new RuntimeException(
+            "Certificate generation should fail since no products are present");
+    }
+
+    @Test
+    public void certificateGenerationShouldNotFailWhenProductsAreAvailable()
+        throws Exception {
+        Subscription subscription = TestUtil.createSubscription();
+        subscription.setId("111");
+        Product product = TestUtil.createProduct();
+        product.setAttribute("type", "something");
+        subscription.getProvidedProducts().add(product);
+
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.setQuantity(11);
+        entitlement.setStartDate(new Date());
+        entitlement.setEndDate(new Date());
+        this.certServiceAdapter.createX509Certificate(entitlement,
+            subscription, null, null, null);
+        verify(this.mockedPKI).createX509Certificate(anyString(), anySet(),
+            any(Date.class), any(Date.class), any(KeyPair.class),
+            any(BigInteger.class), anyString());
+
+    }
     
     private boolean isEncodedContentValid(Set<X509ExtensionWrapper> content) {
         Map<String, X509ExtensionWrapper> encodedContent 
             = new HashMap<String, X509ExtensionWrapper>();
 
-        
         for (X509ExtensionWrapper ext : content) {
-            encodedContent.put(
-                ((DERUTF8String) ext.getAsn1Encodable()).getString(), ext);
+            encodedContent.put(((DERUTF8String) ext.getAsn1Encodable())
+                .getString(), ext);
         }
-       
         
         
         return encodedContent.containsKey(CONTENT_LABEL) &&

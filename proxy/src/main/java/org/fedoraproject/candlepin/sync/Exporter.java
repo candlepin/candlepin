@@ -14,24 +14,6 @@
  */
 package org.fedoraproject.candlepin.sync;
 
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCertificate;
-import org.fedoraproject.candlepin.pki.PKIUtility;
-import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -44,6 +26,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+
+import com.google.inject.Inject;
 
 /**
  * Exporter
@@ -304,10 +304,12 @@ public class Exporter {
         Map<String, Product> products = new HashMap<String, Product>();
         for (Entitlement entitlement : consumer.getEntitlements()) {
             
-            for (String productId : entitlement.getPool().getProvidedProductIds()) {
+            for (ProvidedProduct providedProduct : entitlement.getPool().
+                getProvidedProducts()) {
                 // Don't want to call the adapter if not needed, it can be expensive.
-                if (!products.containsKey(productId)) {
-                    products.put(productId, productAdapter.getProductById(productId));
+                if (!products.containsKey(providedProduct.getProductId())) {
+                    products.put(providedProduct.getProductId(), 
+                        productAdapter.getProductById(providedProduct.getProductId()));
                 }
             }
             

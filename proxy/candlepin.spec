@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.11
+Version: 0.1.12
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -20,7 +20,7 @@ Requires: candlepin-webapp
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-BuildRequires: candlepin-deps >= 0:0.0.10
+BuildRequires: candlepin-deps >= 0:0.0.11
 %define __jar_repack %{nil}
 
 %description
@@ -115,6 +115,30 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Nov 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.12-1
+- bump candlepin-deps to 0.0.11, new qpid and ldap (jesusr@redhat.com)
+- fix small bugs with ProvidedProducts. (anadathu@redhat.com)
+- Get the logging tests running again (bkearney@redhat.com)
+- Adding a ProvidedProducts entity for Pools. The provided products now have a
+  name associated with them (calfonso@redhat.com)
+- remove annoying hibernateSessionId logs and improve request logs
+  (anadathu@redhat.com)
+- Use the latest qpidd (bkearney@redhat.com)
+- add rspec test for list_users_by_owner (alikins@redhat.com)
+- Add a getUser method to OwnerResource (alikins@redhat.com)
+- autobind: speed things up by running fewer overlap checks (jbowes@redhat.com)
+- Candlepin allows you create a hierarchy of owners (anadathu@redhat.com)
+- add account number to the load so we can verify it (bkearney@redhat.com)
+- Add a duplicate subscription at the current time for all subscriptions
+  (bkearney@redhat.com)
+- Add future dated subscriptions to the load (bkearney@redhat.com)
+- The header for trusted was incorrect (bkearney@redhat.com)
+- Removing build.yaml because no seems to be able to fix hudson.
+  (jharris@redhat.com)
+- A couple of coverity errors (bkearney@redhat.com)
+- Add explicit date filtering for GET /pools. (dgoodwin@redhat.com)
+- Added basic ldap authentication to the code base (bkearney@redhat.com)
+
 * Wed Nov 03 2010 Devan Goodwin <dgoodwin@redhat.com> 0.1.11-1
 - Update I18N strings. (dgoodwin@redhat.com)
 

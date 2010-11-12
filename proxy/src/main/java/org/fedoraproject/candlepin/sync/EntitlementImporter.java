@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificate;
@@ -67,14 +68,18 @@ public class EntitlementImporter {
         subscription.setStartDate(entitlement.getStartDate());
         subscription.setEndDate(entitlement.getEndDate());
         
+        subscription.setAccountNumber(entitlement.getAccountNumber());
+        subscription.setContractNumber(entitlement.getContractNumber());
+        
         subscription.setQuantity(entitlement.getQuantity().longValue());
         
         subscription.setProduct(findProduct(productsById, entitlement.getProductId()));
         
         Set<Product> products = new HashSet<Product>();
-        for (String productId : entitlement.getPool().getProvidedProductIds()) {
+        for (ProvidedProduct providedProduct : entitlement.getPool().
+            getProvidedProducts()) {
             
-            products.add(findProduct(productsById, productId));
+            products.add(findProduct(productsById, providedProduct.getProductId()));
         }
         subscription.setProvidedProducts(products);
         Set<EntitlementCertificate> certs = entitlement.getCertificates();

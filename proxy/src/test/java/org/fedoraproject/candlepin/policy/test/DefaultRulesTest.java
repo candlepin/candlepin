@@ -17,7 +17,9 @@ package org.fedoraproject.candlepin.policy.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -33,12 +35,13 @@ import javax.script.ScriptEngineManager;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.ProductAttribute;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
@@ -272,7 +275,7 @@ public class DefaultRulesTest {
         PostEntHelper postHelper = mock(PostEntHelper.class);
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(pool.getProductId(), 
-            pool.getProvidedProductIds(), "unlimited");
+            pool.getProvidedProducts(), "unlimited");
     }
 
     @Test
@@ -287,7 +290,7 @@ public class DefaultRulesTest {
         PostEntHelper postHelper = mock(PostEntHelper.class);
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(subProductId,
-            pool.getProvidedProductIds(), "unlimited");
+            pool.getProvidedProducts(), "unlimited");
     }
 
     private Pool setupUserLicensedPool() {
@@ -413,9 +416,9 @@ public class DefaultRulesTest {
         Pool pool1 = TestUtil.createPool(owner, product1);
         pool1.setId("DEAD-BEEF");
 
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(productId2);
-        pool1.setProvidedProductIds(providedProductIds);
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(product2.getId(), product2.getName()));
+        pool1.setProvidedProducts(providedProducts);
         
         when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
         when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
@@ -444,10 +447,10 @@ public class DefaultRulesTest {
         pool2.setId("DEAD-BEEF2");
         pool2.setEndDate(TestUtil.createDate(2015, 1, 1));
         
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(productId2);
-        pool1.setProvidedProductIds(providedProductIds);
-        pool2.setProvidedProductIds(providedProductIds);
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(product2.getId(), product2.getName()));
+        pool1.setProvidedProducts(providedProducts);
+        pool2.setProvidedProducts(providedProducts);
         
         when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
         when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
@@ -479,9 +482,9 @@ public class DefaultRulesTest {
 
         Pool pool3 = TestUtil.createPool(owner, product1);
         pool3.setId("DEAD-BEEF3");
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(productId2);
-        pool3.setProvidedProductIds(providedProductIds);
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(product2.getId(), product2.getName()));
+        pool3.setProvidedProducts(providedProducts);
         
         when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
         when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
@@ -514,10 +517,10 @@ public class DefaultRulesTest {
         Pool pool2 = TestUtil.createPool(owner, product3);
         pool2.setId("DEAD-BEEF2");
 
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(productId2);
-        pool1.setProvidedProductIds(providedProductIds);
-        pool2.setProvidedProductIds(providedProductIds);
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(product2.getId(), product2.getName()));
+        pool1.setProvidedProducts(providedProducts);
+        pool2.setProvidedProducts(providedProducts);
         
         when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
         when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
@@ -552,10 +555,10 @@ public class DefaultRulesTest {
         Pool pool2 = TestUtil.createPool(owner, product3);
         pool2.setId("DEAD-BEEF2");
 
-        Set<String> providedProductIds = new HashSet<String>();
-        providedProductIds.add(productId2);
-        pool1.setProvidedProductIds(providedProductIds);
-        pool2.setProvidedProductIds(providedProductIds);
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(product2.getId(), product2.getName()));
+        pool1.setProvidedProducts(providedProducts);
+        pool2.setProvidedProducts(providedProducts);
         
         when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
         when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);

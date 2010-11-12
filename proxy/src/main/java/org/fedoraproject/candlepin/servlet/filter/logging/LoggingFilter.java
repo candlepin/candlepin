@@ -51,38 +51,58 @@ public class LoggingFilter implements Filter {
                 (HttpServletRequest) request);
             LoggingResponseWrapper lResponse = new LoggingResponseWrapper(
                 (HttpServletResponse) response);
-            if (lRequest.getQueryString() != null) {
-                log.debug(String.format("Request: '%s %s?%s'", lRequest
-                    .getMethod(), lRequest.getRequestURL(), lRequest
-                    .getQueryString()));
-            }
-            else {
-                log.debug(String.format("Request: '%s %s'", lRequest
-                    .getMethod(), lRequest.getRequestURL()));
-            }
-            logBody("Request", lRequest);
-
-            Enumeration<?> headerNames = lRequest.getHeaderNames();
-
-            log.debug("====Headers====");
-            while (headerNames.hasMoreElements()) {
-                String headerName = (String) headerNames.nextElement();
-                log.debug(headerName + ":  " + lRequest.getHeader(headerName));
-            }
-
+            logRequest(lRequest);
             chain.doFilter(lRequest, lResponse);
-
-            log.debug("====Response====");
-            log.debug("Status: " + lResponse.getStatus());
-            log.debug("Content-type: " + lResponse.getContentType());
-
-            logBody("Response", lResponse);
+            logResponse(lResponse);
             lResponse.getWriter().close();
         }
         else {
             chain.doFilter(request, response);
         }
+    }
 
+    /**
+     * @param lRequest
+     */
+    private void logRequest(LoggingRequestWrapper lRequest) {
+        logHeaders(lRequest);
+        logBody("Request", lRequest);
+    }
+
+    /**
+     * @param lResponse
+     */
+    private void logResponse(LoggingResponseWrapper lResponse) {
+        log.debug(
+            new StringBuilder().append("\n====Response====")
+                .append("\n  Status: ").append(lResponse.getStatus())
+                .append("\n  Content-type: ").append(lResponse.getContentType())
+                .append("\n====Response====")
+        );
+        logBody("Response", lResponse);
+    }
+
+    /**
+     * @param lRequest
+     * @param headerNames
+     */
+    private void logHeaders(LoggingRequestWrapper lRequest) {
+        Enumeration<?> headerNames = lRequest.getHeaderNames();
+        StringBuilder builder = 
+            new StringBuilder().append("\nRequest: ")
+                .append(lRequest.getMethod()).append("  ")
+                .append(lRequest.getRequestURL());
+        if (lRequest.getQueryString() != null) {
+            builder.append("?").append(lRequest.getQueryString());
+        }
+        builder.append("\n====Headers====");
+        while (headerNames.hasMoreElements()) {
+            String headerName = (String) headerNames.nextElement();
+            builder.append("\n  ").append(headerName).append(": ")
+                .append(lRequest.getHeader(headerName));
+        }
+        builder.append("\n====Headers====");
+        log.debug(builder);
     }
 
     private void logBody(String type, BodyLogger bodyLogger) {

@@ -116,18 +116,6 @@ function hasNoProductOverlap(combination) {
 	return true;
 }
 
-function filterOutCombinationsWithDuplicates(combinations) {
-	var filtered = [];
-	
-	for each (combination in combinations) {
-		if (hasNoProductOverlap(combination)) {
-			filtered.push(combination);
-		}
-	}
-	
-	return filtered;
-}
-
 var Entitlement = {
 		
 	// defines mapping of product attributes to functions
@@ -152,7 +140,7 @@ var Entitlement = {
 		}
 	
 		// Create a sub-pool for this user
-		post.createUserRestrictedPool(productId, pool.getProvidedProductIds(),
+		post.createUserRestrictedPool(productId, pool.getProvidedProducts(),
 				attributes.get("user_license"));
 	},
 	
@@ -284,8 +272,6 @@ var Entitlement = {
 		
 		candidate_combos = recursiveCombination(best_in_class_pools, best_in_class_pools.length);
 
-		candidate_combos = filterOutCombinationsWithDuplicates(candidate_combos);
-		
 		// Select the best pool combo. We prefer:
 		// -The combo that provides the most products
 		// -The combo that uses the fewest entitlements
@@ -308,8 +294,10 @@ var Entitlement = {
 			if (unique_provided.length < best_provided_count) {
 				continue;
 			} else if (unique_provided.length > best_provided_count || pool_combo.length < selected_pools.length) {
-				selected_pools = pool_combo;
-				best_provided_count = unique_provided.length;
+				if (hasNoProductOverlap(pool_combo)) {
+					selected_pools = pool_combo;
+					best_provided_count = unique_provided.length;
+				}
 			}
 		}
 				

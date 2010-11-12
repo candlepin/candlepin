@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
@@ -44,7 +45,8 @@ public class PostEntHelper {
     * @param productId Label of the product the pool is for.
     * @param quantity Number of entitlements for this pool, also accepts "unlimited".
     */
-    public void createUserRestrictedPool(String productId, Set<String> providedProductIds, 
+    public void createUserRestrictedPool(String productId, 
+        Set<ProvidedProduct> providedProducts, 
         String quantity) {
 
         Long q = null;
@@ -55,11 +57,12 @@ public class PostEntHelper {
             q = Long.parseLong(quantity);
         }
         Consumer c = ent.getConsumer();
-        Set<String> productIdCopies = new HashSet<String>();
-        productIdCopies.addAll(providedProductIds);
-        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, productIdCopies, q,
+        Set<ProvidedProduct> providedProductCopies = new HashSet<ProvidedProduct>();
+        providedProductCopies.addAll(providedProducts);
+        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, 
+            providedProductCopies, q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate(),
-            ent.getPool().getContractNumber());
+            ent.getPool().getContractNumber(), ent.getPool().getAccountNumber());
         consumerSpecificPool.setRestrictedToUsername(c.getUsername());
         consumerSpecificPool.setSourceEntitlement(ent);
         

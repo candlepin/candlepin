@@ -31,7 +31,6 @@ import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
-import org.fedoraproject.candlepin.model.ProductAttributeCurator;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -49,8 +48,10 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttributeCurator;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
@@ -78,6 +79,7 @@ import com.wideplay.warp.persist.WorkManager;
 public class DatabaseTestFixture {
 
     private static final String DEFAULT_CONTRACT = "SUB349923";
+    private static final String DEFAULT_ACCOUNT = "ACC123";
 
     protected EntityManagerFactory emf;
     protected Injector injector;
@@ -198,8 +200,8 @@ public class DatabaseTestFixture {
      */
     protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
         Date startDate, Date endDate) {
-        Pool p = new Pool(owner, product.getId(), new HashSet<String>(), quantity, 
-                startDate, endDate, DEFAULT_CONTRACT);
+        Pool p = new Pool(owner, product.getId(), new HashSet<ProvidedProduct>(), quantity, 
+                startDate, endDate, DEFAULT_CONTRACT, DEFAULT_ACCOUNT);
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 
             quantity, startDate, endDate, TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);

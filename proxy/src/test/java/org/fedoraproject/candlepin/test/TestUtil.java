@@ -36,6 +36,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
 
@@ -98,10 +99,22 @@ public class TestUtil {
         
         return rhel;
     }
+    
+    public static ProvidedProduct createProvidedProduct(String id, String name) {
+        ProvidedProduct p = new ProvidedProduct(id, name);
+        return p;
+    }
+    
     public static Product createProduct() {
         int random =  randomInt();
         return createProduct("test-product-" + random,
             "Test Product " + random);
+    }
+    
+    public static ProvidedProduct createProvidedProduct() {
+        int random =  randomInt();
+        return createProvidedProduct("test-provided-product-" + random,
+            "Test Provided Product " + random);
     }
     
     public static Subscription createSubscription(Product product) {
@@ -138,16 +151,16 @@ public class TestUtil {
     }
 
     public static Pool createPool(Owner owner, Product product, int quantity) {
-        return createPool(owner, product.getId(), new HashSet<String>(),
+        return createPool(owner, product.getId(), new HashSet<ProvidedProduct>(),
             quantity);
     }
     
     public static Pool createPool(Owner owner, String productId,
-        Set<String> productIds, int quantity) {
+        Set<ProvidedProduct> providedProducts, int quantity) {
 
-        Pool pool = new Pool(owner, productId, productIds, new Long(quantity),
+        Pool pool = new Pool(owner, productId, providedProducts, new Long(quantity),
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30),
-            "SUB234598S");
+            "SUB234598S", "ACC123");
         return pool;
     }
     

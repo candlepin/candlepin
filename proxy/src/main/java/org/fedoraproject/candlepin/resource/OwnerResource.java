@@ -73,6 +73,8 @@ import org.jboss.resteasy.util.GenericType;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.quartz.JobDetail;
@@ -170,6 +172,13 @@ public class OwnerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Owner createOwner(Owner owner) {
+        Owner parent = owner.getParentOwner(); 
+        if (parent != null &&
+            ownerCurator.find(parent.getId()) == null) {
+            throw new BadRequestException(
+                i18n.tr("Cound not create the Owner: {0}. Parent {1} does not exist.",
+                    owner, parent));
+        }
         Owner toReturn = ownerCurator.create(owner);
      
         sink.emitOwnerCreated(owner);
@@ -333,6 +342,25 @@ public class OwnerResource {
         return subList;
     }
     
+    /**
+     *
+     *
+     * @param ownerKey
+     * @return list of users under that owner name
+     */
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/users")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    public List<User> getUsers(@PathParam("owner_key") String ownerKey) {
+        List<User> userList = new LinkedList<User>();
+        Owner o = findOwner(ownerKey);
+        userList = userService.listByOwner(o);
+
+        return userList;
+    }
+    
     private Owner findOwner(String key) {
         Owner owner = ownerCurator.lookupByKey(key);
         
@@ -343,7 +371,29 @@ public class OwnerResource {
         
         return owner;
     }
-    
+   
+
+    /**
+     * expose updates for owners
+     * @param key
+     * @param owner
+     */
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}")
+    @Transactional
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public void updateConsumer(@PathParam("owner_key") String key,
+        Owner owner) {
+        Owner toUpdate = findOwner(key);
+        log.debug("Updating");
+        toUpdate.setDisplayName(owner.getDisplayName());
+        toUpdate.setKey(owner.getKey());
+        toUpdate.setParentOwner(owner.getParentOwner());
+        ownerCurator.merge(toUpdate);    
+    }
+
+
     /**
      * 'Tickle' an owner to have all of their entitlement pools synced with their
      * subscriptions.

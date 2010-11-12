@@ -97,13 +97,17 @@ class Candlepin
     get("/owners/#{owner}")
   end
 
-  def create_owner(owner_name)
+  def create_owner(owner_name, parent=nil)
     owner = {
       'key' => owner_name,
       'displayName' => owner_name
     }
-
+    owner['parentOwner'] = parent if !parent.nil?
     post('/owners', owner)
+  end
+  
+  def update_owner(owner_key, owner) 
+    put("/owners/#{owner_key}", owner)
   end
 
   def delete_owner(owner_key)
@@ -262,7 +266,9 @@ class Candlepin
 
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
-
+    #if product don't have type attributes, create_product will fail on server
+    #side.
+    attributes['type'] = 'SVC' if attributes['type'].nil?
     product = {
       'name' => name,
       'id' => id,
@@ -294,6 +300,13 @@ class Candlepin
 
   def consume_token(token)
     post("/consumers/#{@uuid}/entitlements?token=#{token}")
+  end
+
+  def list_users_by_owner(owner_key)
+
+    path = "/owners/#{owner_key}/users"
+    results = get(path)
+    return results
   end
 
   # TODO: Could also fetch from /entitlements, a bit ambiguous:

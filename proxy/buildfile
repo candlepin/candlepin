@@ -96,7 +96,7 @@ HORNETQ = [group('hornetq-core',
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 AMQP  = [group('qpid-common', 'qpid-client',
-             :under => 'org.apache.qpid', :version => '0.7-SNAPSHOT'),
+             :under => 'org.apache.qpid', :version => '0.9-SNAPSHOT'),
          group('mina-core', 'mina-filter-ssl',
              :under => 'org.apache.mina', :version => '1.0.1'),
          'backport-util-concurrent:backport-util-concurrent:jar:2.2',
