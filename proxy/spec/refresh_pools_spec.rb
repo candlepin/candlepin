@@ -32,7 +32,7 @@ describe 'Refresh Pools' do
         
     # Create 6 subscriptions to different products
     6.times do |i|
-      name = "product-#{i}"
+      name = random_string("product-#{i}")
       product = create_product(name, name)
 
       @cp.create_subscription(owner.key, product.id)
