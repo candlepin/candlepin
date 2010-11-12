@@ -68,7 +68,7 @@ class Candlepin
     return @consumer
   end
 
-  def f_facts(facts, uuid=nil)
+  def update_facts(facts, uuid=nil)
     uuid = @uuid if uuid.nil?
 
     consumer = {
