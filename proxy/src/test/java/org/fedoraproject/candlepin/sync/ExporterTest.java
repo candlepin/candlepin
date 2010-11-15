@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.sync;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -25,7 +26,12 @@ import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -37,14 +43,19 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -90,23 +101,89 @@ public class ExporterTest {
     }
 
     @Test
-    public void exportMetadata() throws ExportCreationException, IOException {
-        Date start = new Date();
+    public void exportProducts() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        Consumer consumer = mock(Consumer.class);
+        Entitlement ent = mock(Entitlement.class);
+        ProvidedProduct pp = mock(ProvidedProduct.class);
+        Pool pool = mock(Pool.class);
         Rules mrules = mock(Rules.class);
+
+        Set<ProvidedProduct> ppset = new HashSet<ProvidedProduct>();
+        ppset.add(pp);
+
+        Set<Entitlement> entitlements = new HashSet<Entitlement>();
+        entitlements.add(ent);
+
+        Product prod = new Product("12345", "RHEL Product");
+        prod.setMultiplier(1L);
+        prod.setCreated(new Date());
+        prod.setUpdated(new Date());
+        prod.setHref("http://localhost");
+        prod.setAttributes(Collections.EMPTY_SET);
+
+        Product prod1 = new Product("MKT-prod", "RHEL Product");
+        prod1.setMultiplier(1L);
+        prod1.setCreated(new Date());
+        prod1.setUpdated(new Date());
+        prod1.setHref("http://localhost");
+        prod1.setAttributes(Collections.EMPTY_SET);
+
+        ProductCertificate pcert = new ProductCertificate();
+        pcert.setKey("euh0876puhapodifbvj094");
+        pcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
+        pcert.setCreated(new Date());
+        pcert.setUpdated(new Date());
+
+        when(pp.getProductId()).thenReturn("12345");
+        when(pool.getProvidedProducts()).thenReturn(ppset);
+        when(pool.getProductId()).thenReturn("MKT-prod");
+        when(ent.getPool()).thenReturn(pool);
+        when(mrules.getRules()).thenReturn("foobar");
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
+            "signature".getBytes());
+        when(rc.getRules()).thenReturn(mrules);
+        when(consumer.getEntitlements()).thenReturn(entitlements);
+        when(psa.getProductById("12345")).thenReturn(prod);
+        when(psa.getProductById("MKT-prod")).thenReturn(prod1);
+        when(psa.getProductCertificate(any(Product.class))).thenReturn(pcert);
+
+        // FINALLY test this badboy
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+            pce, ec, ee, pki, config);
+
+        File export = e.getExport(consumer);
+
+        // VERIFY
+        assertNotNull(export);
+        verifyContent(export, "export/products/12345.pem", new VerifyProductCert("12345.pem"));
+        assertFalse(verifyHasEntry(export, "export/products/MKT-prod.pem"));
+        FileUtils.deleteDirectory(export.getParentFile());
+        assertTrue(new File("/tmp/consumer_export.zip").delete());
+        assertTrue(new File("/tmp/12345.pem").delete());
+    }
+
+    @Test
+    public void exportMetadata() throws ExportCreationException, IOException {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        Date start = new Date();
+        Rules mrules = mock(Rules.class);
+        Consumer consumer = mock(Consumer.class);
+
         when(mrules.getRules()).thenReturn("foobar");
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
             "signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
 
+        // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config);
-        Consumer consumer = mock(Consumer.class);
         File export = e.getExport(consumer);
 
+        // VERIFY
         assertNotNull(export);
         assertTrue(export.exists());
-        verifyMetadata(export, start);
+        verifyContent(export, "export/meta.json", new VerifyMetadata(start));
 
         // cleanup the mess
         FileUtils.deleteDirectory(export.getParentFile());
@@ -114,7 +191,62 @@ public class ExporterTest {
         assertTrue(new File("/tmp/meta.json").delete());
     }
 
-    private void verifyMetadata(File export, Date start) {
+    /**
+     * return true if export has a given entry named name.
+     * @param export zip file to inspect
+     * @param name entry
+     * @return
+     */
+    private boolean verifyHasEntry(File export, String name) {
+        ZipInputStream zis = null;
+        boolean found = false;
+
+        try {
+            zis = new ZipInputStream(new FileInputStream(export));
+            ZipEntry entry = null;
+
+            while ((entry = zis.getNextEntry()) != null) {
+                byte[] buf = new byte[1024];
+
+                if (entry.getName().equals("consumer_export.zip")) {
+                    OutputStream os = new FileOutputStream("/tmp/consumer_export.zip");
+
+                    int n;
+                    while ((n = zis.read(buf, 0, 1024)) > -1) {
+                        os.write(buf, 0, n);
+                    }
+                    os.flush();
+                    os.close();
+                    File exportdata = new File("/tmp/consumer_export.zip");
+                    // open up the zip and look for the metadata
+                    verifyHasEntry(exportdata, name);
+                }
+                else if (entry.getName().equals(name)) {
+                    found = true;
+                }
+
+                zis.closeEntry();
+            }
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (zis != null) {
+                try {
+                    zis.close();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return found;
+    }
+
+    private void verifyContent(File export, String name, Verify v) {
         ZipInputStream zis = null;
 
         try {
@@ -134,22 +266,10 @@ public class ExporterTest {
                     os.close();
                     File exportdata = new File("/tmp/consumer_export.zip");
                     // open up the zip and look for the metadata
-                    verifyMetadata(exportdata, start);
+                    verifyContent(exportdata, name, v);
                 }
-                else if (entry.getName().endsWith("meta.json")) {
-                    OutputStream os = new FileOutputStream("/tmp/meta.json");
-                    int n;
-                    while ((n = zis.read(buf, 0, 1024)) > -1) {
-                        os.write(buf, 0, n);
-                    }
-                    os.flush();
-                    os.close();
-                    ObjectMapper om = SyncUtils.getObjectMapper();
-                    Meta m = om.readValue(
-                        new FileInputStream("/tmp/meta.json"), Meta.class);
-                    assertNotNull(m);
-                    assertEquals("0.0.0", m.getVersion());
-                    assertTrue(start.before(m.getCreated()));
+                else if (entry.getName().equals(name)) {
+                    v.verify(zis, buf);
                 }
                 zis.closeEntry();
             }
@@ -171,4 +291,53 @@ public class ExporterTest {
             }
         }
     }
+
+    public interface Verify {
+        void verify(ZipInputStream zis, byte[] buf) throws IOException;
+    }
+
+    public static class VerifyMetadata implements Verify {
+        private Date start;
+
+        public VerifyMetadata(Date start) {
+            this.start = start;
+        }
+
+        public void verify(ZipInputStream zis, byte[] buf) throws IOException {
+            OutputStream os = new FileOutputStream("/tmp/meta.json");
+            int n;
+            while ((n = zis.read(buf, 0, 1024)) > -1) {
+                os.write(buf, 0, n);
+            }
+            os.flush();
+            os.close();
+            ObjectMapper om = SyncUtils.getObjectMapper();
+            Meta m = om.readValue(
+                new FileInputStream("/tmp/meta.json"), Meta.class);
+            assertNotNull(m);
+            assertEquals("0.0.0", m.getVersion());
+            assertTrue(start.before(m.getCreated()));
+        }
+    }
+
+    public static class VerifyProductCert implements Verify {
+        private String filename;
+        public VerifyProductCert(String filename) {
+            this.filename = filename;
+        }
+
+        public void verify(ZipInputStream zis, byte[] buf) throws IOException {
+            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            int n;
+            while ((n = zis.read(buf, 0, 1024)) > -1) {
+                os.write(buf, 0, n);
+            }
+            os.flush();
+            os.close();
+
+            BufferedReader br = new BufferedReader(new FileReader("/tmp/" + filename));
+            assertEquals("hpj-08ha-w4gpoknpon*)&^%#", br.readLine());
+        }
+    }
+
 }
