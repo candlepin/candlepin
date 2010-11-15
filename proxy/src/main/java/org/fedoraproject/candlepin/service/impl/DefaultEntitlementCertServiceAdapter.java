@@ -14,16 +14,6 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import org.apache.commons.lang.Validate;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -40,13 +30,25 @@ import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -195,8 +197,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     PROD_FILTER_PREDICATE = new Predicate<Product>() {
         @Override
         public boolean apply(Product product) {
-            return product != null && product.hasAttribute("type") &&
-                !product.getAttributeValue("type").equals("MKT");
+            return product != null && StringUtils.isNumeric(product.getId());
         }
     };
 }

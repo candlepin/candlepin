@@ -14,21 +14,6 @@
  */
 package org.fedoraproject.candlepin.sync;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -44,6 +29,23 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Exporter
@@ -116,6 +118,7 @@ public class Exporter {
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
+            e.printStackTrace();
             throw new ExportCreationException("Unable to create export archive", e);
         }
     }
@@ -326,9 +329,8 @@ public class Exporter {
             productExporter.export(mapper, writer, product);
             writer.close();
             
-            // MKT products aren't 'real' products; we can't make certs from them.
-            if (product.hasAttribute("type") &&
-                !product.getAttributeValue("type").equals("MKT")) {
+            // Real products have a numeric id.
+            if (StringUtils.isNumeric(product.getId())) {
                 ProductCertificate cert = productAdapter.getProductCertificate(product);
                 // XXX: not all product adapters implement getProductCertificate,
                 // so just skip over this if we get null back
