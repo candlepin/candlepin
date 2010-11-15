@@ -140,7 +140,7 @@ describe 'Consumer Resource' do
     owner_client = user_client(owner, random_string('testowner'))
     cp_client = consumer_client(owner_client, random_string('consumer123'), :system,
                                 nil, 'cpu.architecture' => 'x86_64')
-    prod = create_product('product', 'product-multiple-arch',
+    prod = create_product('product', random_string('product-multiple-arch'),
                           :attribute => { :arch => 'i386, x86_64'})
     subs = @cp.create_subscription(owner.key, prod.id)
     pool = @cp.create_pool(prod.id, owner.id, 10, :subscription_id => subs.id)
