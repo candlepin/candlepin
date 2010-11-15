@@ -90,7 +90,7 @@ public class TestUtil {
     }
 
     public static Product createProduct(String id, String name) {
-        Product rhel = new Product(name, id);
+        Product rhel = new Product(id, name);
         ProductAttribute a1 = new ProductAttribute("a1", "a1");
         rhel.addAttribute(a1);
 
@@ -107,8 +107,7 @@ public class TestUtil {
     
     public static Product createProduct() {
         int random =  randomInt();
-        return createProduct("test-product-" + random,
-            "Test Product " + random);
+        return createProduct(String.valueOf(random), "test-product-" + random);
     }
     
     public static ProvidedProduct createProvidedProduct() {
