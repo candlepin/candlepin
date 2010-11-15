@@ -87,7 +87,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             = new DefaultEntitlementCertServiceAdapter(mockedPKI, 
                 extensionUtil, null, null, serialCurator, productAdapter);
         
-        product = new Product("a_product", "a product", 
+        product = new Product("12345", "a product", 
                               "variant", "version", "arch", 
                               "SVC");
         
