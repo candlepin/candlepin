@@ -37,7 +37,6 @@ import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -167,8 +166,6 @@ public class DefaultEntitlementCertServiceAdapter extends
             extensions.addAll(extensionUtil.contentExtensions(prod));
         }
 
-        // Validate.isTrue(productsPresent,
-        //     "Cannot generate entitlement certificate. No product information available");
         if (sub != null) {
             extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         }
