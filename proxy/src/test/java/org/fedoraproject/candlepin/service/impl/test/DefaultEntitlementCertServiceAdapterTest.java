@@ -16,8 +16,6 @@ package org.fedoraproject.candlepin.service.impl.test;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anySet;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.verify;
 
@@ -43,7 +41,6 @@ import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
