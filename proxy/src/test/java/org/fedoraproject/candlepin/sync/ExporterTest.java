@@ -156,7 +156,8 @@ public class ExporterTest {
 
         // VERIFY
         assertNotNull(export);
-        verifyContent(export, "export/products/12345.pem", new VerifyProductCert("12345.pem"));
+        verifyContent(export, "export/products/12345.pem",
+            new VerifyProductCert("12345.pem"));
         assertFalse(verifyHasEntry(export, "export/products/MKT-prod.pem"));
         FileUtils.deleteDirectory(export.getParentFile());
         assertTrue(new File("/tmp/consumer_export.zip").delete());
