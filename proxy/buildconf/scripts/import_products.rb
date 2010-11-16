@@ -103,7 +103,7 @@ data['products'].each do |product|
           startDate3 = endDate1 + 1
           endDate3 = startDate2 + 365
 
-          if attrs['type'] == 'MKT':
+          if id.to_i.to_s != id:
               # subscription =  cp.create_subscription(owner_key, {'product' => { 'id' => product_ret['id'] },
               #                                        'providedProducts' => provided_products,
               #                                        'quantity' => 10,
@@ -127,7 +127,7 @@ data['products'].each do |product|
               contract_number += 1
           end
 
-          if attrs['type'] != 'MKT':
+          if id.to_i.to_s == id:
               product_cert = cp.get_product_cert(product_ret['id'])
               cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
               cert_file.puts(product_cert['cert'])
