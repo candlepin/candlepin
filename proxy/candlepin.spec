@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.12
+Version: 0.1.13
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,23 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Nov 16 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.13-1
+- 653495: send gpg_key_url with product.create/modified events (jesusr@redhat.com)
+- remove MKT from import_products.rb (jesusr@redhat.com)
+- remove assertion from DefaultEntitlementCertServiceAdapter (anadathu@redhat.com)
+- Adding Gemfile for bundler support (gem management) (jharris@redhat.com)
+- remove duplicate imports and shorten line (jesusr@redhat.com)
+- use numeric ids (jesusr@redhat.com)
+- keep id, name in order. Use numeric ids. (jesusr@redhat.com)
+- remove MKT from code, use productid format. (jesusr@redhat.com)
+- spec: use a random string suffix for multi arch test (jbowes@redhat.com)
+- spec: use a random string suffix for refresh pools test (jbowes@redhat.com)
+- import/export: bring down and import contract and account numbers (jbowes@redhat.com)
+- 641155: candlepin should not generate certs that will be rejected by rhsm (anadathu@redhat.com)
+- Add owner updates (bkearney@redhat.com)
+- Minor fixes to tests for provided pools (calfonso@redhat.com)
+- add support for multiple architectures as attributes of product(s) (anadathu@redhat.com)
+
 * Wed Nov 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.12-1
 - bump candlepin-deps to 0.0.11, new qpid and ldap (jesusr@redhat.com)
 - fix small bugs with ProvidedProducts. (anadathu@redhat.com)
