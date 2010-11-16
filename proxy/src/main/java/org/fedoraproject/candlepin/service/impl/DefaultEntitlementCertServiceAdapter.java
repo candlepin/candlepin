@@ -155,7 +155,6 @@ public class DefaultEntitlementCertServiceAdapter extends
     public X509Certificate createX509Certificate(Entitlement ent,
         Subscription sub, Product product, BigInteger serialNumber,
         KeyPair keyPair) throws GeneralSecurityException, IOException {
-        boolean productsPresent = false;
         // oiduitl is busted at the moment, so do this manually
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
         Set<Product> products = new HashSet<Product>(getProvidedProducts(ent
@@ -164,13 +163,12 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         for (Product prod : Collections2
             .filter(products, PROD_FILTER_PREDICATE)) {
-            productsPresent = true;
             extensions.addAll(extensionUtil.productExtensions(prod));
             extensions.addAll(extensionUtil.contentExtensions(prod));
         }
 
-        Validate.isTrue(productsPresent,
-            "Cannot generate entitlement certificate. No product information available");
+        // Validate.isTrue(productsPresent,
+        //     "Cannot generate entitlement certificate. No product information available");
         if (sub != null) {
             extensions.addAll(extensionUtil.subscriptionExtensions(sub));
         }

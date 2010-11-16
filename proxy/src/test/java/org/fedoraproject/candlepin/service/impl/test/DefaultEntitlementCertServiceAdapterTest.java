@@ -147,37 +147,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(String.class));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void certificateGenerationShouldFailWhenNoProductsAreAvailable()
-        throws Exception {
-        Subscription subscription = new Subscription();
-        this.certServiceAdapter.createX509Certificate(TestUtil
-            .createEntitlement(), subscription, null, null, null);
-        throw new RuntimeException(
-            "Certificate generation should fail since no products are present");
-    }
-
-    @Test
-    public void certificateGenerationShouldNotFailWhenProductsAreAvailable()
-        throws Exception {
-        Subscription subscription = TestUtil.createSubscription();
-        subscription.setId("111");
-        Product product = TestUtil.createProduct();
-        product.setAttribute("type", "something");
-        subscription.getProvidedProducts().add(product);
-
-        Entitlement entitlement = TestUtil.createEntitlement();
-        entitlement.setQuantity(11);
-        entitlement.setStartDate(new Date());
-        entitlement.setEndDate(new Date());
-        this.certServiceAdapter.createX509Certificate(entitlement,
-            subscription, null, null, null);
-        verify(this.mockedPKI).createX509Certificate(anyString(), anySet(),
-            any(Date.class), any(Date.class), any(KeyPair.class),
-            any(BigInteger.class), anyString());
-
-    }
-    
     private boolean isEncodedContentValid(Set<X509ExtensionWrapper> content) {
         Map<String, X509ExtensionWrapper> encodedContent 
             = new HashMap<String, X509ExtensionWrapper>();
