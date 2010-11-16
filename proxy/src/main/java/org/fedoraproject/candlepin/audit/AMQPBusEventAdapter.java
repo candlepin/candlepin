@@ -201,6 +201,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
                     Map<String, String> contentMap = new HashMap<String, String>();
                     contentMap.put("content_set_label", content.getLabel());
                     contentMap.put("content_rel_url", content.getContentUrl());
+                    contentMap.put("gpg_key_url", content.getGpgUrl());
 
                     contentList.add(contentMap);
                 }

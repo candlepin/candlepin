@@ -80,6 +80,7 @@ public class AMQPSubscriptionEventTest {
         Subscription sub = mock(Subscription.class, Mockito.RETURNS_DEEP_STUBS);
 
         when(mapper.readValue("New Subscription", Subscription.class)).thenReturn(sub);
+        when(sub.getId()).thenReturn("8a8b64a32c568ec4012c568ef30a001c");
         when(sub.getOwner().getKey()).thenReturn("test-owner");
         when(sub.getProduct().getId()).thenReturn("test-product-id");
         when(sub.getCertificate().getCert()).thenReturn("test-cert");
@@ -89,7 +90,7 @@ public class AMQPSubscriptionEventTest {
 
         when(sub.getProvidedProducts()).thenReturn(
                 Sets.newHashSet(createProductWithContent(
-                "content1", "http://dummy.com/content")));
+                "content1", "http://dummy.com/content", "/path/to/RPM-GPG-KEY")));
 
         // when
         this.eventAdapter.apply(event);
@@ -106,17 +107,19 @@ public class AMQPSubscriptionEventTest {
         Map<String, String> content = new HashMap<String, String>();
         content.put("content_set_label", "content1");
         content.put("content_rel_url", "http://dummy.com/content");
+        content.put("gpg_key_url", "/path/to/RPM-GPG-KEY");
 
         expectedMap.put("content_sets", Arrays.asList(new Map[] { content }));
 
         verify(mapper).writeValueAsString(argThat(hasEntry("event", expectedMap)));
     }
 
-    private Product createProductWithContent(String label, String url) {
+    private Product createProductWithContent(String label, String url, String gpgurl) {
         Product product = new Product(label, label);
         Content content = new Content();
         content.setLabel(label);
         content.setContentUrl(url);
+        content.setGpgUrl(gpgurl);
         
         product.setContent(Sets.newHashSet(content));
 
