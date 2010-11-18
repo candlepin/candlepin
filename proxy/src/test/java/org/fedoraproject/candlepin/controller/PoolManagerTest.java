@@ -105,7 +105,7 @@ public class PoolManagerTest {
 
     private PoolManager manager;
     private Principal principal;
-
+    
     private Owner o;
     private Pool pool;
     private Product product;
@@ -120,7 +120,7 @@ public class PoolManagerTest {
         this.manager = spy(new PoolManager(mockPoolCurator, mockSubAdapter,
             mockProductAdapter, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, entitlementCurator,
-            consumerCuratorMock, certCuratorMock));
+            consumerCuratorMock, certCuratorMock, mockProvider));
         when(this.mockProvider.get()).thenReturn(this.principal);
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(

@@ -29,8 +29,11 @@ import org.apache.commons.logging.LogFactory;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -72,7 +75,8 @@ public class PoolManager {
     private ConsumerCurator consumerCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
     private EntitlementCertificateCurator entitlementCertificateCurator;
-    
+    private PrincipalProvider principalProvider;
+
     /**
      * @param poolCurator
      * @param subAdapter
@@ -87,7 +91,8 @@ public class PoolManager {
         EventSink sink, EventFactory eventFactory, Config config,
         Enforcer enforcer,
         EntitlementCurator curator1, ConsumerCurator consumerCurator,
-        EntitlementCertificateCurator ecC) {
+        EntitlementCertificateCurator ecC,
+        PrincipalProvider principalProvider) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -100,6 +105,7 @@ public class PoolManager {
         this.enforcer = enforcer;
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
+        this.principalProvider = principalProvider;
     }
 
 
@@ -552,10 +558,32 @@ public class PoolManager {
         return this.poolCurator.listAvailableEntitlementPools(null,
             null, productId, false, null);
     }
-
+    
+    /**
+     * Check if the given entitlement has any pools referencing it as their source 
+     * entitlement, and those pools have outstanding entitlements.
+     * 
+     * This method is used to prevent security violations when unbinding as a consumer,
+     * where other consumers are using those sub-pool entitlements.
+     * 
+     * @param e Entitlement to check.
+     * @return True if there are outstanding sub-pool entitlements.
+     */
+    private boolean hasOutstandingSubPoolEntitlements(Entitlement e) {
+        return this.poolCurator.getNoOfDependentEntitlements(e.getId()) > 0;
+    }
+    
     // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional
     public void revokeEntitlement(Entitlement entitlement) {
+        if ((this.principalProvider.get()instanceof ConsumerPrincipal) && 
+            hasOutstandingSubPoolEntitlements(entitlement)) {
+            throw new ForbiddenException(
+                String.format(
+                    "Cannot unbind due to outstanding sub-pool entitlements in %s", 
+                    entitlement.getId()));
+        }
+        
         if (!entitlement.isFree()) {
             // put this entitlement back in the pool
             Pool.dockConsumed(entitlement);

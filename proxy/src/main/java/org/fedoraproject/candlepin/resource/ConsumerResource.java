@@ -36,11 +36,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
@@ -315,73 +315,25 @@ public class ConsumerResource {
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid, 
         @Context Principal principal) {
-        
         log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
-        
-        verifyConsumerCanBeDeleted(toDelete, principal);
-
+        try {
+            this.poolManager.revokeAllEntitlements(toDelete);
+        }
+        catch (ForbiddenException e) {
+            throw new ForbiddenException(
+                StringUtils.replace(
+                    e.message().getDisplayMessage(),
+                    "unbind", "unregister"), e);
+        }
         consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
-        unbindAll(uuid);
 
         Event event = eventFactory.consumerDeleted(toDelete);
-
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
         sink.sendEvent(event);
     }
     
-    /**
-     * Check that a consumer can be deleted by the given principal.
-     * 
-     * Our security settings may block this in some situations. If
-     * the consumer has entitlements which are linked to sub-pools,
-     * other consumers are currently using those sub pools, *and* this operation is
-     * being performed by a consumer (as opposed to an admin). The exception thrown is 
-     * very cryptic, so we'll try to detect this case and throw a more friendly error.
-     * 
-     * @param consumer
-     * @param principal
-     */
-    private void verifyConsumerCanBeDeleted(Consumer consumer, 
-        Principal principal) {
-        
-        if (!(principal instanceof ConsumerPrincipal)) {
-            // This check is only required if unregistering as a consumer principal.
-            return;
-        }
-        
-        for (Entitlement e : consumer.getEntitlements()) {
-            
-            if (hasOutstandingSubPoolEntitlements(e)) {
-                throw new ForbiddenException(i18n.tr(
-                    "Cannot unregister due to outstanding entitlement: {0}",
-                    e.getId()));
-            }
-        }
-    }
-    
-    /**
-     * Check if the given entitlement has any pools referencing it as their source 
-     * entitlement, and those pools have outstanding entitlements.
-     * 
-     * This method is used to prevent security violations when unbinding as a consumer,
-     * where other consumers are using those sub-pool entitlements.
-     * 
-     * @param e Entitlement to check.
-     * @return True if there are outstanding sub-pool entitlements.
-     */
-    private boolean hasOutstandingSubPoolEntitlements(Entitlement e) {
-        for (Pool p : poolManager.getPoolCurator().listBySourceEntitlement(e)) {
-            if (p.getEntitlements().size() > 0) {
-                return true;
-            }
-        }
-        return false;
-
-    }
-
-
     /**
      * Return the entitlement certificate for the given consumer.
      * 
@@ -728,12 +680,6 @@ public class ConsumerResource {
         verifyAndLookupConsumer(consumerUuid);
 
         Entitlement toDelete = entitlementCurator.find(dbid);
-        if ((principal instanceof ConsumerPrincipal) && 
-            hasOutstandingSubPoolEntitlements(toDelete)) {
-            throw new ForbiddenException(i18n.tr(
-                "Cannot unbind due to outstanding sub-pool entitlements"));
-        }
-        
         if (toDelete != null) {
             poolManager.revokeEntitlement(toDelete);
             return;

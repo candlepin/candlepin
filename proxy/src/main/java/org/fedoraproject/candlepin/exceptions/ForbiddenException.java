@@ -24,4 +24,15 @@ public class ForbiddenException extends CandlepinException {
     public ForbiddenException(String message) {
         super(Status.FORBIDDEN, message);
     }
+
+    /**
+     * @param returnCode
+     * @param message
+     * @param e
+     */
+    public ForbiddenException(String message, Throwable e) {
+        super(Status.FORBIDDEN, message, e);
+    }
+    
+    
 }

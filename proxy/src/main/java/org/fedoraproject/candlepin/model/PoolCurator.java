@@ -27,9 +27,13 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
+import org.hibernate.Filter;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.impl.FilterImpl;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -324,5 +328,26 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         
         return super.create(entity);
+    }
+    
+    public int getNoOfDependentEntitlements(String entitlementId) {
+        String consumerFilterName = "Entitlement_CONSUMER_FILTER";
+        Session session = currentSession();
+        Filter consumerFilter = session.getEnabledFilter(consumerFilterName);
+        session.disableFilter(consumerFilterName);
+        Integer result = (Integer)
+            session.createCriteria(Entitlement.class)
+                .setProjection(Projections.rowCount())
+                .createCriteria("pool")
+                    .createCriteria("sourceEntitlement")
+                        .add(Restrictions.idEq(entitlementId))
+                .list().get(0);
+        //if filter was previously enabled, restore it.
+        if (consumerFilter != null) {
+            FilterImpl filterImpl = (FilterImpl) consumerFilter;
+            Filter filter = session.enableFilter(consumerFilterName);
+            filter.setParameter("consumer_id", filterImpl.getParameter("consumer_id"));
+        }
+        return result;
     }
 }
