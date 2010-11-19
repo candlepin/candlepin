@@ -13,11 +13,11 @@ class Candlepin
   attr_accessor :uuid
   attr_reader :lang
 
-  # Initialize a connection to candlepin. Can use username/password for 
+  # Initialize a connection to candlepin. Can use username/password for
   # basic authentication, or provide an identity certificate and key to
   # connect as a "consumer".
   # TODO probably want to convert this to rails style kv
-  def initialize(username=nil, password=nil, cert=nil, key=nil, 
+  def initialize(username=nil, password=nil, cert=nil, key=nil,
                  host='localhost', port=8443, lang=nil, uuid=nil)
 
     if not username.nil? and not cert.nil?
@@ -105,8 +105,8 @@ class Candlepin
     owner['parentOwner'] = parent if !parent.nil?
     post('/owners', owner)
   end
-  
-  def update_owner(owner_key, owner) 
+
+  def update_owner(owner_key, owner)
     put("/owners/#{owner_key}", owner)
   end
 
@@ -142,7 +142,7 @@ class Candlepin
   def delete_consumer_type(type_id)
     delete("/consumertypes/#{type_id}")
   end
-  
+
   def get_pool(poolid)
     get("/pools/#{poolid}")
   end
@@ -157,7 +157,7 @@ class Candlepin
 
     return results
   end
-  
+
   def create_pool(product_id, owner_id, quantity, params={})
     subscription_id = params[:subscription_id] || nil
     start_date = params[:start_date] || Date.today
@@ -178,13 +178,13 @@ class Candlepin
       'startDate' => start_date,
       'endDate' => end_date,
       'productId' => product_id,
-      'owner' => { 
+      'owner' => {
         'id' => owner_id
       },
       'attributes' => attribute_set,
       'restrictedToUsername' => user_restricted
     }
-    
+
     post('/pools', pool)
   end
 
@@ -197,7 +197,7 @@ class Candlepin
       put("/owners/#{owner_key}/subscriptions")
     end
   end
-  
+
   def async_call(immediate, *args, &blk)
     status = blk.call(args)
     return status if immediate
@@ -209,7 +209,7 @@ class Candlepin
     end
     return status['result']
   end
-      
+
   def export_consumer(dest_dir)
     path = "/consumers/#{@uuid}/export"
     begin
@@ -224,7 +224,7 @@ class Candlepin
   end
 
   def unregister(uuid = nil)
-    uuid = @uuid unless uuid    
+    uuid = @uuid unless uuid
     delete("/consumers/#{uuid}")
   end
 
@@ -235,7 +235,7 @@ class Candlepin
   def list_products
     get("/products")
   end
-  
+
   def create_content(name, id, label, type, vendor,
                      contentUrl, gpgUrl)
     content = {
@@ -261,7 +261,7 @@ class Candlepin
   def add_content_to_product(product_uuid, content_id, enabled=true)
     post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
   end
-    
+
   def create_product(id, name, params={})
 
     multiplier = params[:multiplier] || 1
@@ -286,7 +286,7 @@ class Candlepin
   def get_product_cert(product_id)
     get("/products/#{product_id}/certificate")
   end
-  
+
   # TODO: Should we change these to bind to better match terminology?
   def consume_pool(pool)
     post("/consumers/#{@uuid}/entitlements?pool=#{pool}")
@@ -333,7 +333,7 @@ class Candlepin
     query << "type=#{args[:type]}" if args[:type]
     get(query)
   end
-  
+
   def get_consumer(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}")
@@ -354,7 +354,7 @@ class Candlepin
 
   def create_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
-                          account_number='',start_date=nil, 
+                          account_number='',start_date=nil,
                           end_date=nil)
     start_date ||= Date.today
     end_date ||= start_date + 365
@@ -401,7 +401,7 @@ class Candlepin
   def regenerate_entitlement_certificates
     return put("/consumers/#{@uuid}/certificates")
   end
-  
+
   def regenerate_entitlement_certificates_for_product(product_id, immediate=false)
     return async_call(immediate) do
       put("/entitlements/product/#{product_id}")
@@ -441,10 +441,10 @@ class Candlepin
 
     return JSON.parse(response.body)
   end
-  
+
   #assumes a zip archive atm
   def get_file(uri, dest_dir)
-    response = @client[URI.escape(uri)].get    
+    response = @client[URI.escape(uri)].get
     filename = response.headers[:content_disposition] == nil ? "tmp_#{rand}.zip" : response.headers[:content_disposition].split("filename=")[1]
     filename = File.join(dest_dir, filename)
     File.open(filename, 'w') { |f| f.write(response.body) }
@@ -461,7 +461,7 @@ class Candlepin
     response = @client[URI.escape(uri)].post(data, :content_type => :json, :accept => :json)
     return JSON.parse(response.body)
   end
-  
+
   def post_text(uri, data=nil)
     response = @client[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
     return response.body
@@ -481,7 +481,7 @@ class Candlepin
   private
 
   def create_basic_client(username=nil, password=nil)
-    @client = RestClient::Resource.new(@base_url, 
+    @client = RestClient::Resource.new(@base_url,
                                        :user => username, :password => password,
                                        :headers => {:accept_language => @lang})
   end
@@ -492,7 +492,7 @@ class Candlepin
     @uuid = @identity_certificate.subject.to_s.scan(/\/CN=([^\/=]+)/)[0][0]
 
     @client = RestClient::Resource.new(@base_url,
-                                       :ssl_client_cert => @identity_certificate, 
+                                       :ssl_client_cert => @identity_certificate,
                                        :ssl_client_key => @identity_key,
                                        :headers => {:accept_language => @lang})
   end
@@ -500,11 +500,10 @@ class Candlepin
   def create_trusted_consumer_client(uuid)
     @uuid = uuid
     @client = RestClient::Resource.new(@base_url,
-                                       :headers => {"cp_consumer" => uuid,
+                                       :headers => {"cp-consumer" => uuid,
                                                     :accept_language => @lang}
                                         )
   end
 
 end
-
 
