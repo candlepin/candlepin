@@ -14,6 +14,14 @@
  */
 package org.fedoraproject.candlepin.util;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections.Closure;
+import org.apache.commons.collections.ClosureUtils;
+import org.apache.commons.collections.Transformer;
+import org.apache.log4j.Logger;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.DEROctetString;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -37,19 +45,12 @@ import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.collections.Closure;
-import org.apache.commons.collections.ClosureUtils;
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.DEROctetString;
-
 /**
  * Genuinely random utilities.
  */
 public class Util {
+    
+    private static Logger log = Logger.getLogger(Util.class);
 
     private Util() {
         // default ctor
@@ -202,8 +203,7 @@ public class Util {
             "close() invocation was not successful");
     }
 
-    private static Log log = LogFactory.getLog(Util.class);
-    
+
     public static void closeSafely(Object closable, String msg) {
         closeSafely(closable, "Going to close: " + msg,
             msg + ".close() was not successful!"); 

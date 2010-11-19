@@ -39,7 +39,7 @@ public class ActivationListener implements EventListener {
     private ObjectMapper mapper;
 
     @Inject
-    public ActivationListener(SubscriptionServiceAdapter subService) throws IOException {
+    public ActivationListener(SubscriptionServiceAdapter subService) {
         this.subscriptionService = subService;
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();

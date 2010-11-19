@@ -14,12 +14,6 @@
  */
 package org.fedoraproject.candlepin.auth.interceptor;
 
-import java.util.Arrays;
-
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
@@ -31,12 +25,19 @@ import org.fedoraproject.candlepin.model.AccessControlEnforced;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.apache.log4j.Logger;
+
+import java.util.Arrays;
+
 /**
  * AccessControlInterceptor
  */
 public class AccessControlInterceptor implements MethodInterceptor {
     
-    private Log log = LogFactory.getLog(AccessControlInterceptor.class);
+    private Logger log = Logger.getLogger(AccessControlInterceptor.class);
+
     @Inject private Provider<Principal> principalProvider;
     
     @Override

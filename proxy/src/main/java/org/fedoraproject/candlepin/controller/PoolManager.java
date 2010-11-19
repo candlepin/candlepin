@@ -24,8 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -58,13 +57,16 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
+import org.apache.log4j.Logger;
+
 /**
  * PoolManager
  */
 public class PoolManager {
 
     private PoolCurator poolCurator;
-    private Log log = LogFactory.getLog(PoolManager.class);
+    private Logger log = Logger.getLogger(PoolManager.class);
+
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;
     private EventSink sink;
