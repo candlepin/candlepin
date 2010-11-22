@@ -119,7 +119,7 @@ public class PoolResource {
                 i18n.tr("A consumer or owner is needed to filter on product"));
         }
 
-        Date activeOnDate = null;
+        Date activeOnDate = new Date();
         if (activeOn != null) {
             activeOnDate = parseActiveOnString(activeOn);
         }
