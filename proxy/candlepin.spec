@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.13
+Version: 0.1.14
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Nov 23 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.14-1
+- end of sprint tag (jesusr@redhat.com)
+- 655835: pools are no longer removed after their expiration date (anadathu@redhat.com)
+- don't use commons.logging when everything else uses log4j (jesusr@redhat.com)
+- default logger to INFO (jesusr@redhat.com)
+- 639434: attempts to unregister person consumer should fail when system
+  consumer has a subs. (anadathu@redhat.com)
+
 * Tue Nov 16 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.13-1
 - 653495: send gpg_key_url with product.create/modified events (jesusr@redhat.com)
 - remove MKT from import_products.rb (jesusr@redhat.com)
