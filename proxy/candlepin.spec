@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.14
+Version: 0.1.15
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Nov 23 2010 Devan Goodwin <dgoodwin@redhat.com> 0.1.15-1
+- I18N string update. (dgoodwin@redhat.com)
+
 * Tue Nov 23 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.14-1
 - end of sprint tag (jesusr@redhat.com)
 - 655835: pools are no longer removed after their expiration date (anadathu@redhat.com)
