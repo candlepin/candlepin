@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource;
 
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -143,6 +144,17 @@ public class ProductResource {
         return prodAdapter.createProduct(product);
     }
     
-    
-    
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{product_uuid}")
+    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    public void deleteProduct(@PathParam("product_uuid") String pid) {
+        Product product = prodAdapter.getProductById(pid);
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with UUID '{0}' could not be found", pid));
+        }
+
+        prodAdapter.deleteProduct(product);
+    }
 }

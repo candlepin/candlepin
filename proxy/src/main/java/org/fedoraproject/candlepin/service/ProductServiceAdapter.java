@@ -52,6 +52,12 @@ public interface ProductServiceAdapter {
     Product createProduct(Product product);
     
     /**
+     * deletes specified product
+     * @param product
+     */
+    void deleteProduct(Product product);
+    
+    /**
      * given a list of skus, return a set of sku, name pairs
      * @param skus skus
      * @return hashmap of sku, name pairs

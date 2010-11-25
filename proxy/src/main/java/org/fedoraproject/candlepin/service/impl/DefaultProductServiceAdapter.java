@@ -87,6 +87,11 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         }
         return prodCurator.find(product.getId());
     }
+    
+    @Override
+    public void deleteProduct(Product product) {
+        prodCurator.delete(product);
+    }
 
     @Override
     public HashMap<String, String> getProductNamesByProductId(String[] ids) {
