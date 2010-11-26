@@ -60,14 +60,8 @@ function getRelevantProvidedProducts(pool, products) {
 	return provided;
 }
 
-function providesSameProducts(products, pool) {
-	for each (product in products) {
-		if (!pool.provides(product.getId())) {
-			return false;
-		}
-	}
-	
-	return true;
+function providesSameProducts(products1, products2) {
+	return containsAll(products1, products2) && containsAll(products2, products1);
 }
 
 function arrayToString(a) {
@@ -258,7 +252,8 @@ var Entitlement = {
 			// XXX wasteful, should be a hash or something.
 			var duplicate_found = false;
 			for each (best_pool in best_in_class_pools) {
-				if (providesSameProducts(provided_products, best_pool)) {
+				var best_provided_products = getRelevantProvidedProducts(best_pool, products);
+				if (providesSameProducts(provided_products, best_provided_products)) {
 					// If two pools are equal, select the pool that expires first
 					if (best_pool.getEndDate().after(pool.getEndDate())) {
 						best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
