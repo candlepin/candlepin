@@ -81,16 +81,20 @@ function arrayToString(a) {
 
 // XXX i don't know what this is really called
 function recursiveCombination(a, n) {
-	if (n == 0) {
+	if (a.length == 0) {
 		return [];
 	}
 	
 	var res = [];
-	for each (x in recursiveCombination(a.slice(1), n - 1)) {
-		res.push(x);
-		var z = x.slice(0);
-		z.push(a[0]);
-		res.push(z);
+	for each (x in recursiveCombination(a.slice(1), n)) {
+		if (x.length <= n) {
+			res.push(x);
+		}
+		if (x.length + 1 <= n) {
+			var z = x.slice(0);
+			z.push(a[0]);
+			res.push(z);
+		}
 	}
 	res.push([a[0]]);
 	return res;
@@ -252,26 +256,27 @@ var Entitlement = {
 			var pool = pools[i]
 			var provided_products = getRelevantProvidedProducts(pool, products);
 			// XXX wasteful, should be a hash or something.
-			var replaced = false;
+			var duplicate_found = false;
 			for each (best_pool in best_in_class_pools) {
 				if (providesSameProducts(provided_products, best_pool)) {
 					// If two pools are equal, select the pool that expires first
 					if (best_pool.getEndDate().after(pool.getEndDate())) {
 						best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
-						replaced = true;
-						break;
 					}
 					// Autobind 2 logic goes here
+					duplicate_found = true;
+					break;
 				}
 			}
 			
-			if (!replaced) {
+			if (!duplicate_found) {
 				best_in_class_pools.push(pool);
 			}
 		}
 		
-		candidate_combos = recursiveCombination(best_in_class_pools, best_in_class_pools.length);
-
+		candidate_combos = recursiveCombination(best_in_class_pools, products.length);
+		log.debug("Selecting " + products.length + " products from " + best_in_class_pools.length +
+				" pools in " + candidate_combos.length + " possible combinations");
 		// Select the best pool combo. We prefer:
 		// -The combo that provides the most products
 		// -The combo that uses the fewest entitlements
