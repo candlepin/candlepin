@@ -264,6 +264,7 @@ public class EntitlementRules implements Enforcer {
         // Provide objects for the script:
         jsEngine.put("pools", readOnlyPools.toArray());
         jsEngine.put("products", readOnlyProducts.toArray());
+        jsEngine.put("log", log);
 
         ReadOnlyPool[] result = null;
         boolean foundMatchingRule = false;
