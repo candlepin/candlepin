@@ -36,6 +36,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
@@ -68,9 +69,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String ENTITLEMENT_QUANTITY = "10";
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
-    @Mock private PKIUtility mockedPKI;
-    @Mock private CertificateSerialCurator serialCurator;
-    @Mock private ProductServiceAdapter productAdapter;
+    @Mock
+    private PKIUtility mockedPKI;
+    @Mock
+    private CertificateSerialCurator serialCurator;
+    @Mock
+    private ProductServiceAdapter productAdapter;
     private X509ExtensionUtil extensionUtil;
     private Product product;
     private Subscription subscription;
@@ -79,153 +83,195 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Before
     public void setUp() {
         extensionUtil = new X509ExtensionUtil();
-        
-        certServiceAdapter 
-            = new DefaultEntitlementCertServiceAdapter(mockedPKI, 
-                extensionUtil, null, null, serialCurator, productAdapter);
-        
-        product = new Product("12345", "a product", 
-                              "variant", "version", "arch", 
-                              "SVC");
-        
-        Content content = new Content(CONTENT_NAME, CONTENT_ID,
-                                      CONTENT_LABEL, CONTENT_TYPE,
-                                      CONTENT_VENDOR, CONTENT_URL,
-                                      CONTENT_GPG_URL);
+
+        certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
+            mockedPKI, extensionUtil, null, null, serialCurator, productAdapter);
+
+        product = new Product("12345", "a product", "variant", "version",
+            "arch", "SVC");
+
+        Content content = new Content(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
         content.setType(CONTENT_TYPE);
         content.setLabel(CONTENT_LABEL);
         content.setId(CONTENT_ID);
-        
-        subscription = new Subscription(null, product, new HashSet<Product>(), 
-                1L, new Date(), new Date(), new Date());
+
+        subscription = new Subscription(null, product, new HashSet<Product>(),
+            1L, new Date(), new Date(), new Date());
         subscription.setId("1");
-        
+
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
         entitlement.setConsumer(Mockito.mock(Consumer.class));
         entitlement.setStartDate(subscription.getStartDate());
         entitlement.setEndDate(subscription.getEndDate());
         entitlement.setFlexExpiryDays(60);
-        
+
         product.setContent(Collections.singleton(content));
     }
-    
+
     @Test
     public void testContentExtentionCreation() {
-        // AAAH!  This should be pulled out to its own test class!
-        Set<X509ExtensionWrapper> content = extensionUtil.contentExtensions(product);
+        // AAAH! This should be pulled out to its own test class!
+        Set<X509ExtensionWrapper> content = extensionUtil
+            .contentExtensions(product);
         assertTrue(isEncodedContentValid(content));
     }
 
-
     @Test
-    public void contentExtentionsShouldBeAddedDuringCertificateGeneration() 
+    public void contentExtentionsShouldBeAddedDuringCertificateGeneration()
         throws Exception {
-        
-        certServiceAdapter.createX509Certificate(entitlement, subscription, 
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
             product, new BigInteger("1234"), keyPair());
-        
-        verify(mockedPKI).createX509Certificate(any(String.class), 
-            argThat(new ListContainsContentExtensions()), 
-            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsContentExtensions()), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
-    
+
     @Test
-    public void entitlementQuantityShouldBeAddedDuringCertificateGeneration() 
+    public void entitlementQuantityShouldBeAddedDuringCertificateGeneration()
         throws Exception {
-        
-        certServiceAdapter.createX509Certificate(entitlement, subscription, product, 
-            new BigInteger("1234"), keyPair());
-        
-        verify(mockedPKI).createX509Certificate(any(String.class), 
-            argThat(new ListContainsEntitlementExtensions()), 
-            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair());
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsEntitlementExtensions()), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+    }
+
+    @Test
+    public void managementDisabledByDefault() throws Exception {
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair());
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsProvidesManagement("0")), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+    }
+
+    @Test
+    public void managementEnabledByAttribute() throws Exception {
+
+        ProductAttribute attr = new ProductAttribute("management_enabled", "1");
+        subscription.getProduct().addAttribute(attr);
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair());
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsProvidesManagement("1")), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
     private boolean isEncodedContentValid(Set<X509ExtensionWrapper> content) {
-        Map<String, X509ExtensionWrapper> encodedContent 
-            = new HashMap<String, X509ExtensionWrapper>();
+        Map<String, X509ExtensionWrapper> encodedContent = 
+            new HashMap<String, X509ExtensionWrapper>();
 
         for (X509ExtensionWrapper ext : content) {
-            encodedContent.put(((DERUTF8String) ext.getAsn1Encodable())
-                .getString(), ext);
+            encodedContent.put(
+                ((DERUTF8String) ext.getAsn1Encodable()).getString(), ext);
         }
-        
-        
+
         return encodedContent.containsKey(CONTENT_LABEL) &&
-   //         encodedContent.containsKey(CONTENT_ENABLED) &&
+            // encodedContent.containsKey(CONTENT_ENABLED) &&
             encodedContent.containsKey(CONTENT_GPG_URL) &&
             encodedContent.containsKey(CONTENT_URL) &&
             encodedContent.containsKey(CONTENT_VENDOR) &&
             encodedContent.containsKey(CONTENT_NAME);
     }
-    
+
     private KeyPair keyPair() {
-        return new KeyPair(
-            new PublicKey() {
-                
-                @Override
-                public String getFormat() {
-                    return null;
-                }
-                
-                @Override
-                public byte[] getEncoded() {
-                    return null;
-                }
-                
-                @Override
-                public String getAlgorithm() {
-                    return null;
-                }
-            },
-            
-            new PrivateKey() {
-                
-                @Override
-                public String getFormat() {
-                    return null;
-                }
-                
-                @Override
-                public byte[] getEncoded() {
-                    return null;
-                }
-                
-                @Override
-                public String getAlgorithm() {
-                    return null;
-                }
+        return new KeyPair(new PublicKey() {
+
+            @Override
+            public String getFormat() {
+                return null;
             }
-        );
-    }
+
+            @Override
+            public byte[] getEncoded() {
+                return null;
+            }
+
+            @Override
+            public String getAlgorithm() {
+                return null;
+            }
+        },
+
+            new PrivateKey() {
     
-    class ListContainsContentExtensions 
-        extends ArgumentMatcher<Set<X509ExtensionWrapper>> {
-        
+                @Override
+                public String getFormat() {
+                    return null;
+                }
+    
+                @Override
+                public byte[] getEncoded() {
+                    return null;
+                }
+    
+                @Override
+                public String getAlgorithm() {
+                    return null;
+                }
+            });
+    }
+
+    class ListContainsContentExtensions extends
+        ArgumentMatcher<Set<X509ExtensionWrapper>> {
+
         public boolean matches(Object list) {
             return isEncodedContentValid((Set) list);
         }
     }
-    
-    class ListContainsEntitlementExtensions 
-        extends ArgumentMatcher<Set<X509ExtensionWrapper>> {
-        
-        public boolean matches(Object list) {
-            Map<String, X509ExtensionWrapper> encodedContent 
-                = new HashMap<String, X509ExtensionWrapper>();
 
-        
+    class ListContainsEntitlementExtensions extends
+        ArgumentMatcher<Set<X509ExtensionWrapper>> {
+
+        public boolean matches(Object list) {
+            Map<String, X509ExtensionWrapper> encodedContent = 
+                new HashMap<String, X509ExtensionWrapper>();
+
             for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
                 encodedContent.put(ext.getOid(), ext);
             }
-            
+
             return encodedContent.containsKey("1.3.6.1.4.1.2312.9.4.11") &&
-                ((DERUTF8String) 
-                    encodedContent.get("1.3.6.1.4.1.2312.9.4.11").getAsn1Encodable())
-               .toString().equals(ENTITLEMENT_QUANTITY);
+                ((DERUTF8String) encodedContent.get("1.3.6.1.4.1.2312.9.4.11")
+                    .getAsn1Encodable()).toString()
+                    .equals(ENTITLEMENT_QUANTITY);
+        }
+    }
+
+    class ListContainsProvidesManagement extends
+        ArgumentMatcher<Set<X509ExtensionWrapper>> {
+
+        protected String value = "0";
+
+        public ListContainsProvidesManagement(String value) {
+            this.value = value;
+        }
+
+        public boolean matches(Object list) {
+            Map<String, X509ExtensionWrapper> encodedContent = 
+                new HashMap<String, X509ExtensionWrapper>();
+
+            for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
+                encodedContent.put(ext.getOid(), ext);
+            }
+
+            return encodedContent.containsKey("1.3.6.1.4.1.2312.9.4.14") &&
+                ((DERUTF8String) encodedContent.get("1.3.6.1.4.1.2312.9.4.11")
+                    .getAsn1Encodable()).toString()
+                    .equals(ENTITLEMENT_QUANTITY);
         }
     }
 }

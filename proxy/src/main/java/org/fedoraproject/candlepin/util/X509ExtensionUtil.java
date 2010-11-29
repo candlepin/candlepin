@@ -101,11 +101,18 @@ public class X509ExtensionUtil {
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
                 false, new DERUTF8String(sub.getContractNumber())));
         }
+        // Add the account number
         if (sub.getAccountNumber() != null) { 
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ACCOUNT_NUMBER_KEY),
                 false, new DERUTF8String(sub.getAccountNumber())));
         }
+        // Add Smart Management, default to "not managed"
+        String mgmt = sub.getProduct().getAttributeValue("management_enabled");
+        mgmt = (mgmt == null) ? "0" : mgmt;
+        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY), false,
+            new DERUTF8String(mgmt)));
 
         return toReturn;
     }

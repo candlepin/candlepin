@@ -49,6 +49,7 @@ public final class OIDUtil {
     public static final String ORDER_SOCKETLIMIT_KEY = "Socket Limit";
     public static final String ORDER_WARNING_PERIOD = "Warning Period";
     public static final String ORDER_ACCOUNT_NUMBER_KEY = "Account Number";
+    public static final String ORDER_PROVIDES_MANAGEMENT_KEY = "Provides Management";
 
     public static final String OP_NAME_KEY = "Name";
     public static final String OP_DESC_KEY = "Variant";
@@ -118,6 +119,7 @@ public final class OIDUtil {
         ORDER_OIDS.put(ORDER_QUANTITY_USED, "11");
         ORDER_OIDS.put(ORDER_WARNING_PERIOD, "12");
         ORDER_OIDS.put(ORDER_ACCOUNT_NUMBER_KEY, "13");
+        ORDER_OIDS.put(ORDER_PROVIDES_MANAGEMENT_KEY, "14");
 
         // load order product oids
         ORDER_PRODUCT_OIDS.put(OP_NAME_KEY, "1");
