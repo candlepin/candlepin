@@ -26,7 +26,8 @@ import org.jboss.resteasy.spi.HttpRequest;
 import com.google.inject.Inject;
 
 /**
- * SSLAuth
+ * Pulls the consumer id off off a certificate and creates a principal for that.
+ * Remember, certs are easy.
  */
 class SSLAuth extends ConsumerAuth {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
@@ -39,7 +40,7 @@ class SSLAuth extends ConsumerAuth {
         super(consumerCurator);
     }
 
-    Principal getPrincipal(HttpRequest request) {
+    public Principal getPrincipal(HttpRequest request) {
 
         X509Certificate[] certs = (X509Certificate[]) request
             .getAttribute(CERTIFICATES_ATTR);

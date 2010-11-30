@@ -16,15 +16,17 @@ package org.fedoraproject.candlepin.resteasy.interceptor;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.jboss.resteasy.spi.HttpRequest;
 
 import com.google.inject.Inject;
 
 /**
  * ConsumerAuth
  */
-public class ConsumerAuth {
+public class ConsumerAuth implements AuthProvider {
     
     private static Logger log = Logger.getLogger(ConsumerAuth.class);
     
@@ -35,7 +37,7 @@ public class ConsumerAuth {
         this.consumerCurator = consumerCurator;
     }
         
-    protected ConsumerPrincipal createPrincipal(String consumerUuid) {
+    public ConsumerPrincipal createPrincipal(String consumerUuid) {
         ConsumerPrincipal principal = null;
         
         if (consumerUuid != null) {
@@ -54,6 +56,11 @@ public class ConsumerAuth {
         }
 
         return principal;
+    }
+
+    @Override
+    public Principal getPrincipal(HttpRequest request) {
+        return null;
     }
 
 }

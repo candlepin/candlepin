@@ -38,7 +38,7 @@ import com.google.inject.Injector;
 /**
  * BasicAuth
  */
-class BasicAuth {
+class BasicAuth implements AuthProvider {
 
     private Logger log = Logger.getLogger(BasicAuth.class);
     private UserServiceAdapter userServiceAdapter;
@@ -53,7 +53,7 @@ class BasicAuth {
         this.injector = injector;
     }
 
-    Principal getPrincipal(HttpRequest request) {
+    public Principal getPrincipal(HttpRequest request) {
         I18n i18n = injector.getInstance(I18n.class);
         try {
             List<String> header = request.getHttpHeaders().getRequestHeader(

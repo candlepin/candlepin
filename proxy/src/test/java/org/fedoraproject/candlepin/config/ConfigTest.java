@@ -14,15 +14,25 @@
  */
 package org.fedoraproject.candlepin.config;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.TreeMap;
+
+import org.junit.Test;
+
 /**
- * SSLAuthFilterConfigParser
+ * ConfigTest
  */
-public class SSLAuthFilterConfigParser extends ConfigurationParser {
-
-    public static final String SSLAUTH_FILTER_CONFIG_PREFIX = "sslauth";
-    public static final String ENABLED_CONFIG = "enabled";
-
-    public String getPrefix() {
-        return SSLAUTH_FILTER_CONFIG_PREFIX;
-    }   
+public class ConfigTest {
+    
+    @Test
+    public void testTrimSpaces() {
+        Config config = new Config();
+        TreeMap<String, String> testData = new TreeMap<String, String>();
+        testData.put("good", "good");
+        testData.put("bad", "    bad    ");
+        testData = config.trimSpaces(testData);
+        assertEquals("good", testData.get("good"));
+        assertEquals("bad", testData.get("bad"));        
+    }
 }

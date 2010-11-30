@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resteasy.interceptor;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.ws.rs.WebApplicationException;
@@ -51,30 +52,69 @@ import com.google.inject.Injector;
 public class AuthInterceptor implements PreProcessInterceptor {
     private static Logger log = Logger.getLogger(AuthInterceptor.class);
 
-    private BasicAuth basicAuth;
-    private SSLAuth sslAuth;
-    private TrustedConsumerAuth trustedConsumerAuth;
-    private boolean sslAuthEnabled;
     private Injector injector;
     private ConsumerCurator consumerCurator;
+    private OwnerCurator ownerCurator;
     private Config config;
+    private UserServiceAdapter userService;
+    private AuthProvider[] providers = new AuthProvider[0];
+    private int providerCount = 0;
 
     @Inject
     public AuthInterceptor(Config config, UserServiceAdapter userService,
         OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
         Injector injector) {
         super();
-        basicAuth = new BasicAuth(userService, ownerCurator, injector);
-        sslAuth = new SSLAuth(consumerCurator);
-        trustedConsumerAuth = new TrustedConsumerAuth(consumerCurator);
-
-        sslAuthEnabled = config.sslAuthEnabled();
         this.consumerCurator = consumerCurator;
         this.injector = injector;
         this.config = config;
+        this.userService = userService;
+        this.ownerCurator = ownerCurator;
+        this.setupAuthStrategies();
     }
 
-    @Override
+    /**
+     * Set up the various providers which can be used to authenticate the user
+     */
+    public void setupAuthStrategies() {
+        ArrayList<AuthProvider> providers = new ArrayList<AuthProvider>();
+
+        // use oauth
+        if (config.oAuthEnabled()) {
+            providerCount++;
+            log.debug("OAuth Authentication is enabled.");
+            providers
+                .add(new OAuth(userService, ownerCurator, injector, config));
+        }
+
+        // basic http access
+        if (config.basicAuthEnabled()) {
+            providerCount++;
+            log.debug("Basic Authentication is enabled.");
+            providers.add(new BasicAuth(userService, ownerCurator, injector));
+        }
+        // consumer certificates
+        if (config.sslAuthEnabled()) {
+            providerCount++;
+            log.debug("Certificate Based Authentication is enabled.");
+            providers.add(new SSLAuth(consumerCurator));
+        }
+        // trusted headers
+        if (config.trustedAuthEnabled()) {
+            providerCount++;
+            log.debug("Trusted Authentication is enabled.");
+            providers.add(new TrustedConsumerAuth(consumerCurator));
+        }
+        this.providers = providers.toArray(this.providers);
+    }
+
+    /**
+     * Interrogates the request and sets the principal for the request.
+     * 
+     * @throws WebApplicationException when no auths result in a valid principal
+     * @throws Failure when there is an unkown failure in the code
+     * @return the Server Response
+     */
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
 
@@ -102,32 +142,11 @@ public class AuthInterceptor implements PreProcessInterceptor {
             principal = new NoAuthPrincipal();
         }
 
-        // Check basic auth for a user.
-        if (principal == null) {
-            principal = basicAuth.getPrincipal(request);
-        }
-
-        // Only use trusted headers if it is configured
-        if (config.useTrustedAuth()) {
-            // look for a trusted user
-            if (principal == null) {
-                // nada
-            }
-
-            // look for a trusted consumer
-            if (principal == null) {
-                principal = trustedConsumerAuth.getPrincipal(request);
-            }
-        }
-
-        // Finally, look for a consumer certificate
-        if (principal == null) {
-            if (sslAuthEnabled) {
-                principal = sslAuth.getPrincipal(request);
-            }
-            else {
-                log.debug("SSLAuth disabled, setting NoAuth Principal");
-                principal = new NoAuthPrincipal();
+        // Check all the configured providers
+        for (int x = 0; (x < providerCount) && (principal == null); x++) {
+            principal = providers[x].getPrincipal(request);
+            if (principal != null) {
+                break;
             }
         }
 
