@@ -54,8 +54,13 @@ public class StatusResource {
                 getResourceAsStream("candlepin_info.properties");
             Properties props = new Properties();
             props.load(in);
-            version = props.getProperty("version");
-            release = props.getProperty("release");
+            if (props.containsKey("version")) {
+                version = props.getProperty("version");
+            }
+
+            if (props.containsKey("release")) {
+                release = props.getProperty("release");
+            }
             in.close();
         } 
         catch (Exception e) {
