@@ -1,0 +1,57 @@
+=== Configuring a build system ===
+You may want to use a build system such as [http://koji.fedoraproject.org/koji/
+koji], you can configure {{{tito}}} to
+use submit builds to it.
+
+Add your build system name as a section and define the tags you want to build.
+
+{{{
+[koji]
+autobuild_tags = dist-f13-updates-candidate
+}}}
+
+Now configure any rpm macros you need configured for the specific tags by using
+the tags as the
+section name:
+
+{{{
+[dist-f13-updates-candidate]
+disttag = .fc13
+...
+}}}
+
+
+
+== Releasing with tito ==
+
+Once you are ready to release Candlepin, first thing you need to do is tag the
+build.
+
+{{{
+tito tag
+}}}
+
+Tito will bring up {{{$EDITOR}}} with the auto-generated changelog entries.
+'''Verify'''
+they look sane, feel free to edit them if necessary. Once they're ready, save
+the file.
+
+Tito will then give you the next steps:
+
+{{{
+Tagging new version of candlepin: 0.0.40-1 -> 0.0.41-1
+
+Created tag: candlepin-0.0.41-1
+View: git show HEAD
+Undo: tito tag -u
+Push: git push && git push --tags
+}}}
+
+'''IMPORTANT''': Do not run rebase after tagging a package. If someone
+commits to master before you can push out your tag, you must either use
+{{{git pull}}} (without {{{--rebase}}}) and accept the merge commit
+that will be generated, or throw away your local changes, delete the tag
+locally, and start again. If you do a rebase, your commit ID will change (as it
+has been re-applied on top of the working tree) while your tag now points to a
+non-existent commit. If this happens the tag will not be buildable and package
+will need to be tagged again. (not the end of the world)
