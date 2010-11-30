@@ -34,7 +34,8 @@ public class StatusResourceTest {
 
     @Test
     public void status() throws Exception {
-        PrintStream ps = new PrintStream(new File(this.getClass().getClassLoader().getResource("candlepin_info.properties").toURI()));
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
         StatusResource sr = new StatusResource();
@@ -47,7 +48,8 @@ public class StatusResourceTest {
 
     @Test
     public void unknown() throws Exception {
-        PrintStream ps = new PrintStream(new File(this.getClass().getClassLoader().getResource("candlepin_info.properties").toURI()));
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("foo");
         StatusResource sr = new StatusResource();
         Status s = sr.status();
