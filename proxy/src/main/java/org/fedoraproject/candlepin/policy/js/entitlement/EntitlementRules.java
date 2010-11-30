@@ -41,6 +41,7 @@ import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyEntitlement;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.RuleParseException;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -174,7 +175,7 @@ public class EntitlementRules implements Enforcer {
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("product", new ReadOnlyProduct(product));
-        jsEngine.put("pool", new ReadOnlyPool(pool, prodAdapter));
+        jsEngine.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
         jsEngine.put("pre", preHelper);
         jsEngine.put("attributes", allAttributes);
         jsEngine.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
@@ -222,7 +223,7 @@ public class EntitlementRules implements Enforcer {
         jsEngine.put("consumer", new ReadOnlyConsumer(c));
         jsEngine.put("product", new ReadOnlyProduct(product));
         jsEngine.put("post", postHelper);
-        jsEngine.put("pool", new ReadOnlyPool(pool, prodAdapter));
+        jsEngine.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
         jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
         jsEngine.put("attributes", allAttributes);
         jsEngine.put("log", rulesLogger);
@@ -244,9 +245,10 @@ public class EntitlementRules implements Enforcer {
         List<Pool> pools) {
         Invocable inv = (Invocable) jsEngine;
 
+        ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
+        
         log.info("Selecting best entitlement pool for product: " + productIds);
-        List<ReadOnlyPool> readOnlyPools
-            = ReadOnlyPool.fromCollection(pools, prodAdapter);
+        List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools, productCache);
 
         
         List<Product> products = new LinkedList<Product>();
@@ -260,6 +262,7 @@ public class EntitlementRules implements Enforcer {
         }
 
         Set<ReadOnlyProduct> readOnlyProducts = ReadOnlyProduct.fromProducts(products);
+        productCache.addProducts(readOnlyProducts);
 
         // Provide objects for the script:
         jsEngine.put("pools", readOnlyPools.toArray());

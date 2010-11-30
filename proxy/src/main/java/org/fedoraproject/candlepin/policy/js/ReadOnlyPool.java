@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 /**
  * represents a read-only entitlement pool
@@ -31,15 +30,15 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 public class ReadOnlyPool {
 
     private Pool entPool;
-    private ProductServiceAdapter productAdapter;
+    private ReadOnlyProductCache productCache;
 
     /**
      * @param entPool
      *            the read-write version of the EntitlementPool to copy.
      */
-    public ReadOnlyPool(Pool entPool, ProductServiceAdapter productAdapter) {
+    public ReadOnlyPool(Pool entPool, ReadOnlyProductCache productCache) {
         this.entPool = entPool;
-        this.productAdapter = productAdapter;
+        this.productCache = productCache;
     }
 
     /**
@@ -88,11 +87,11 @@ public class ReadOnlyPool {
     }
 
     public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools,
-        ProductServiceAdapter productAdapter) {
+        ReadOnlyProductCache productCache) {
         List<ReadOnlyPool> toReturn
             = new ArrayList<ReadOnlyPool>(pools.size());
         for (Pool pool : pools) {
-            toReturn.add(new ReadOnlyPool(pool, productAdapter));
+            toReturn.add(new ReadOnlyPool(pool, productCache));
         }
         return toReturn;
     }
@@ -110,12 +109,10 @@ public class ReadOnlyPool {
     public ReadOnlyProduct[] getProducts() {
         Set<ReadOnlyProduct> products = new HashSet<ReadOnlyProduct>();
         
-        products.add(
-            new ReadOnlyProduct(productAdapter.getProductById(entPool.getProductId())));
+        products.add(productCache.getProductById(entPool.getProductId()));
         
         for (ProvidedProduct providedProduct : entPool.getProvidedProducts()) {
-            products.add(new ReadOnlyProduct(
-                productAdapter.getProductById(providedProduct.getProductId())));
+            products.add(productCache.getProductById(providedProduct.getProductId()));
         }
         
         return products.toArray(new ReadOnlyProduct[products.size()]);
