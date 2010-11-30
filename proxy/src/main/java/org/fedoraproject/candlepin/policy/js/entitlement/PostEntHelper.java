@@ -54,7 +54,12 @@ public class PostEntHelper {
             q = new Long(-1);
         }
         else {
-            q = Long.parseLong(quantity);
+            try {
+                q = Long.parseLong(quantity);
+            } 
+            catch (NumberFormatException e) {
+                q = 0L;
+            }
         }
         Consumer c = ent.getConsumer();
         Set<ProvidedProduct> providedProductCopies = new HashSet<ProvidedProduct>();
