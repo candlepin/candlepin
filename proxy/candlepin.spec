@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.15
+Version: 0.1.16
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Nov 30 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.16-1
+- adding unit tests (jesusr@redhat.com)
+- adding test for LDAPUserServiceAdapter (jesusr@redhat.com)
+- autobind: add log to the js context to fix unit tests (jbowes@redhat.com)
+- Add support for a 'management_enabled' attribute on the subscription (bkearney@redhat.com)
+- autobind: when finding similar class pools, compare all relevant products (jbowes@redhat.com)
+- autobind: Ignore pool combos with more pools than requested products (jbowes@redhat.com)
+- added support for deletion of products (ddolguik@redhat.com)
+
 * Tue Nov 23 2010 Devan Goodwin <dgoodwin@redhat.com> 0.1.15-1
 - I18N string update. (dgoodwin@redhat.com)
 
