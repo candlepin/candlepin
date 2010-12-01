@@ -10,22 +10,6 @@ function consumer_delete_name_space() {
 	return ConsumerDelete;
 }
 
-(function(){
-    String.prototype.trim = function(){
-        return this.replace(/^\s*/, "").replace(/\s*$/, "")
-    }
-
-    String.prototype.join = function(iterable){
-        var result = "";
-        var str = this
-        iterable.forEach(function(element){
-                result += element + str
-                return true
-            })
-        return result
-    }
-})();
-
 /* Utility functions */
 function contains(a, obj) {
 	for (var i = 0; i < a.length; i++) {
@@ -149,8 +133,7 @@ var Entitlement = {
 	},
 	
 	pre_architecture: function() {
-	   var result = product.getAttribute('arch').toUpperCase().split(prodAttrSeparator)
-	   var str = " ".join(result)
+	   var result = product.getAttribute('arch').toUpperCase().split(prodAttrSeparator);
 	   if(!contains(result, 'ALL') && 
 	       (!consumer.hasFact("cpu.architecture")  ||
             !contains(result, consumer.getFact('cpu.architecture').toUpperCase())
