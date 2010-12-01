@@ -149,10 +149,8 @@ var Entitlement = {
 	},
 	
 	pre_architecture: function() {
-	java.lang.System.out.printf("\n\n%s\n\n\n", prodAttrSeparator)
 	   var result = product.getAttribute('arch').toUpperCase().split(prodAttrSeparator)
 	   var str = " ".join(result)
-	   java.lang.System.out.printf("\n\n[%s] : %s\n\n", str, contains(result, 'ALL'))
 	   if(!contains(result, 'ALL') && 
 	       (!consumer.hasFact("cpu.architecture")  ||
             !contains(result, consumer.getFact('cpu.architecture').toUpperCase())
