@@ -149,7 +149,16 @@ var Entitlement = {
 	},
 	
 	pre_architecture: function() {
-	 // TODO implement fix for akumar's code
+	   var result = product.getAttribute('arch').toUpperCase().split(prodAttrSeparator)
+	   var str = " ".join(result)
+	   if(!contains(result, 'ALL') && 
+	       (!consumer.hasFact("cpu.architecture")  ||
+            !contains(result, consumer.getFact('cpu.architecture').toUpperCase())
+            )
+          ){
+	       pre.addWarning("rulewarning.architecture.mismatch");
+	   
+	   }
 	},
 	
 	post_architecture: function() {
