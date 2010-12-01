@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.16
+Version: 0.1.17
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Dec 01 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.17-1
+- rules: remove a printf (jbowes@redhat.com)
+- autobind: cache ReadOnlyProducts to reduce product adapter hits (jbowes@redhat.com)
+- fix checkstyle (jesusr@redhat.com)
+- add building instructions (jesusr@redhat.com)
+- fix null in StatusResource (jesusr@redhat.com)
+- increase unit test coverage (jesusr@redhat.com)
+- If no quantity is provided for a derivced product, default to zero (bkearney@redhat.com)
+
 * Tue Nov 30 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.16-1
 - adding unit tests (jesusr@redhat.com)
 - adding test for LDAPUserServiceAdapter (jesusr@redhat.com)
