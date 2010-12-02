@@ -473,6 +473,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.ownerResource.createOwner(child);
         assertNotNull(ownerCurator.find(child.getId()));
         assertNotNull(child.getParentOwner());
+        assertEquals(this.owner.getId(), child.getParentOwner().getId());
     }
     
     @Test(expected = BadRequestException.class)
