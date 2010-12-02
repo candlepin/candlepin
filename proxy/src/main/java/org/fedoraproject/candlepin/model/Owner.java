@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,14 +24,14 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents the owner of entitlements.
@@ -43,7 +45,8 @@ import org.hibernate.annotations.GenericGenerator;
 @Table(name = "cp_owner")
 public class Owner extends AbstractHibernateObject implements Serializable, Linkable {
 
-    @Column(name = "parent_owner", nullable = true)
+    @OneToOne
+    @JoinColumn(name = "parent_owner", nullable = true)
     private Owner parentOwner;
     
     @Id
