@@ -234,7 +234,7 @@ public class Util {
             long time = System.currentTimeMillis();
             byte[] ipaddress = Inet4Address.getLocalHost().getAddress();
             Random random = new SecureRandom();
-            id = id + new Byte(ipaddress[3]).longValue() + time + random.nextInt(255);
+            id = id + (long) ipaddress[3] + time + random.nextInt(255);
         }
         catch (UnknownHostException ex) {
             ex.printStackTrace();
