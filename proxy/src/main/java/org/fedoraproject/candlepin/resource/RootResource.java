@@ -75,7 +75,7 @@ public class RootResource {
         for (Class c : RESOURCE_CLASSES) {
             Path a = (Path) c.getAnnotation(Path.class);
             String href = a.value();
-            String rel = new String(href);
+            String rel = href;
             // Chop off leading "/" for the resource name:
             if (rel.charAt(0) == '/') {
                 rel = rel.substring(1);
