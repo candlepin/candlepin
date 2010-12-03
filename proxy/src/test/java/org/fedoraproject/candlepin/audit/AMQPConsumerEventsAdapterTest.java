@@ -184,15 +184,6 @@ public class AMQPConsumerEventsAdapterTest {
         verifyMap(ent, event);
     }
 
-    /**
-     * @param key
-     * @param id
-     * @return
-     */
-    private Matcher<Map<String, Object>> containsEntry(String key, Long id) {
-        return containsEntry(key, id.toString());
-    }
-
     private Matcher<Map<String, Object>> containsEntry(String key, final String value) {
         return hasEntry(equalTo(key), new BaseMatcher<Object>() {
             public boolean matches(Object arg0) {
