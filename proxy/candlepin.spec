@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.18
+Version: 0.1.19
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Fri Dec 03 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.19-1
+- link Owner to parent by id not a bytearray. (jesusr@redhat.com)
+
 * Wed Dec 01 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.18-1
 - attempt to fix pre_arch rule (jbowes@redhat.com)
 - Revert "Deleting pre-architecture rule which was preventing list or subscribe
