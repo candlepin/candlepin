@@ -53,8 +53,7 @@ public class SubscriptionTokenResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<SubscriptionToken> getSubscriptionTokens() {
-        List<SubscriptionToken> subTokenList = new LinkedList<SubscriptionToken>();
-        subTokenList = subTokenCurator.listAll();
+        List<SubscriptionToken> subTokenList = subTokenCurator.listAll();
         log.debug("sub token list" + subTokenList);
         return subTokenList;
     }
