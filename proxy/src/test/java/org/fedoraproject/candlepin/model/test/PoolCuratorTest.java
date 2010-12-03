@@ -178,6 +178,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
         
         assertEquals(160L, pool.getQuantity().longValue());
+        assertEquals(newPool.getQuantity(), pool.getQuantity());
     }
 
     @Test

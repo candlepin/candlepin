@@ -667,7 +667,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         // Should see no results:
         setupPrincipal(owner2, Role.OWNER_ADMIN);
-        Feed feed = consumerResource.getConsumerAtomFeed(c.getUuid());
+        consumerResource.getConsumerAtomFeed(c.getUuid());
     }
 
     @Test(expected = ForbiddenException.class)

@@ -100,7 +100,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         user.setPassword("somepassword");
 
         String ownerKey = owner.getKey();
-        user = ownerResource.createUser(ownerKey, user);
+        assertNotNull(ownerResource.createUser(ownerKey, user));
     }
 
     @Test
@@ -112,7 +112,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         user.setPassword("somepassword");
 
         String ownerKey = owner.getKey();
-        user = ownerResource.createUser(ownerKey, user);
+        ownerResource.createUser(ownerKey, user);
 
         User user2 = new User();
         user2.setUsername("someotherusername");

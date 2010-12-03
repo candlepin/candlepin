@@ -337,9 +337,7 @@ public class OwnerResource {
     @Path("{owner_key}/subscriptions")    
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
-        List<Subscription> subList = new LinkedList<Subscription>();
-        subList = subscriptionCurator.listByOwner(findOwner(ownerKey));
-        return subList;
+        return subscriptionCurator.listByOwner(findOwner(ownerKey));
     }
     
     /**
@@ -354,11 +352,8 @@ public class OwnerResource {
     @Path("{owner_key}/users")
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public List<User> getUsers(@PathParam("owner_key") String ownerKey) {
-        List<User> userList = new LinkedList<User>();
         Owner o = findOwner(ownerKey);
-        userList = userService.listByOwner(o);
-
-        return userList;
+        return userService.listByOwner(o);
     }
     
     private Owner findOwner(String key) {

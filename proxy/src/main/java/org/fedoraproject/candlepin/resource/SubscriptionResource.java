@@ -53,9 +53,7 @@ public class SubscriptionResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Subscription> getSubscriptions() {
-        List<Subscription> subList = new LinkedList<Subscription>();
-        subList = subCurator.listAll();
-        return subList;
+        return subCurator.listAll();
     }
 
     @GET

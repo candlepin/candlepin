@@ -108,7 +108,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements, 
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool = poolCurator.create(consumerPool);
+        poolCurator.create(consumerPool);
 
         PoolManager anotherEntitler = injector.getInstance(PoolManager.class);
 
@@ -116,8 +116,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
             new Integer("1"));
         assertNotNull(e1);
 
-        @SuppressWarnings("unused")
-        Entitlement e2 = anotherEntitler.entitleByProduct(consumer, newProduct.getId(),
+        anotherEntitler.entitleByProduct(consumer, newProduct.getId(),
             new Integer("1"));
     }
 

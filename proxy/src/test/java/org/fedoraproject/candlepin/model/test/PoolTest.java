@@ -132,7 +132,7 @@ public class PoolTest extends DatabaseTestFixture {
 
         Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements, 
                 TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-        consumerPool = poolCurator.create(consumerPool);
+        poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
         poolManager.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
