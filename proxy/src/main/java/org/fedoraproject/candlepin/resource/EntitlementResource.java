@@ -72,8 +72,7 @@ public class EntitlementResource {
     @SuppressWarnings("null")
     private void verifyExistence(Object o, String id) {
         if (o == null) {
-            throw new RuntimeException(o.getClass().getName() + " with ID: [" + 
-                    id + "] not found");
+            throw new RuntimeException("object with ID: [" + id + "] not found");
         }
     }
 
