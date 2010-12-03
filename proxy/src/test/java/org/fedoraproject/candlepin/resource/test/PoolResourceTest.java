@@ -52,8 +52,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private Consumer failConsumer;
     private Consumer passConsumer;
     private Consumer foreignConsumer;
-    private final int startYear = 2000;
-    private final int endYear = 3000;
+    private final static int START_YEAR = 2000;
+    private final static int END_YEAR = 3000;
     
     @Before
     public void setUp() {
@@ -69,11 +69,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
         
         
         pool1 = createPoolAndSub(owner1, product1, new Long(500),
-             TestUtil.createDate(startYear, 1, 1), TestUtil.createDate(endYear, 1, 1));
+             TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
         pool2 = createPoolAndSub(owner1, product2, new Long(500),
-             TestUtil.createDate(startYear, 1, 1), TestUtil.createDate(endYear, 1, 1));
+             TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
         pool3 = createPoolAndSub(owner2 , product1, new Long(500),
-             TestUtil.createDate(startYear, 1, 1), TestUtil.createDate(endYear, 1, 1));
+             TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
         poolCurator.create(pool1);
         poolCurator.create(pool2);
         poolCurator.create(pool3);
@@ -233,11 +233,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testActiveOnDate() {
-        String activeOn = new Integer(startYear + 1).toString() + "0101";
+        String activeOn = new Integer(START_YEAR + 1).toString() + "0101";
         List<Pool> pools = poolResource.list(null, null, null, false, activeOn);
         assertEquals(3, pools.size());
 
-        activeOn = new Integer(startYear - 1).toString() + "0101";
+        activeOn = new Integer(START_YEAR - 1).toString() + "0101";
         pools = poolResource.list(owner1.getId(), null, null, false, activeOn);
         assertEquals(0, pools.size());
     }
