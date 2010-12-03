@@ -243,7 +243,7 @@ public class EventFactory {
     /**
      * ConsumerWriter
      */
-    private class ConsumerWriter extends BeanPropertyWriter {
+    private static class ConsumerWriter extends BeanPropertyWriter {
         public ConsumerWriter() {
             //ignore other nulls for now - we are not using it internally.
             super("consumerWriter", null, null, null, null, null, false, null);

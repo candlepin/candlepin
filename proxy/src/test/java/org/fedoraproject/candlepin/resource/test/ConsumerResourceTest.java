@@ -755,7 +755,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertFalse(ic.equals(ic1));
     }
     
-    private class ProductCertCreationModule extends AbstractModule {
+    private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
             bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();

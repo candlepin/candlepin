@@ -85,7 +85,7 @@ public class AtomFeedResourceTest {
         return list;
     }
     
-    private class ConfigForTesting extends Config {
+    private static class ConfigForTesting extends Config {
         public ConfigForTesting() {
             super(ConfigProperties.DEFAULT_PROPERTIES);
         }

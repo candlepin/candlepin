@@ -75,7 +75,7 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
         return this.productAdapter.getProductCertificate(product);
     }
     
-    private class ProductCertCreationModule extends AbstractModule {
+    private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
             bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();

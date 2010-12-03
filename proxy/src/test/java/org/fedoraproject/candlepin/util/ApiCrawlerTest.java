@@ -178,7 +178,7 @@ public class ApiCrawlerTest {
         return typeString;
     }
     
-    class RestApiCall {
+    static class RestApiCall {
         private String url;
         private List<Role> allowedRoles;
         private List<String> httpVerbs;

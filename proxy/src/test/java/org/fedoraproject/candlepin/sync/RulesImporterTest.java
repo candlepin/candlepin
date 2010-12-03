@@ -50,7 +50,7 @@ public class RulesImporterTest {
         verify(curator).update(any(Rules.class)); // TODO: can't get custom matcher to work?
     }
     
-    class RulesMatcher extends ArgumentMatcher<Rules> {
+    static class RulesMatcher extends ArgumentMatcher<Rules> {
         private String rule;
 
         public RulesMatcher(String rule) {

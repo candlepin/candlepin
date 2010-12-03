@@ -171,7 +171,7 @@ public class ConfigUserServiceAdapterTest extends DatabaseTestFixture {
         return userService.validateUser(username, password);
     }
 
-    private class UserPasswordConfig extends Config {
+    private static class UserPasswordConfig extends Config {
 
         private Map<String, String> userPasswords;
 

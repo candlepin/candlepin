@@ -233,7 +233,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    class ListContainsEntitlementExtensions extends
+    static class ListContainsEntitlementExtensions extends
         ArgumentMatcher<Set<X509ExtensionWrapper>> {
 
         public boolean matches(Object list) {
@@ -251,7 +251,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    class ListContainsProvidesManagement extends
+    static class ListContainsProvidesManagement extends
         ArgumentMatcher<Set<X509ExtensionWrapper>> {
 
         protected String value = "0";
