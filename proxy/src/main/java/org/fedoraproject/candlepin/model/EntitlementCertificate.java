@@ -132,7 +132,7 @@ public class EntitlementCertificate extends AbstractCertificate
         }
         EntitlementCertificate other = (EntitlementCertificate) obj;
         if (id == other.id) {
-            if (other.getEntitlement().getId() == this.getEntitlement().getId()) {
+            if (other.getEntitlement().getId().equals(this.getEntitlement().getId())) {
                 return true;
             }
         }

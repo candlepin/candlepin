@@ -229,7 +229,7 @@ public class Event implements Persisted, AccessControlEnforced {
      */
     @Override
     public boolean shouldGrantAccessTo(Owner owner) {
-        return this.ownerId == owner.getId();
+        return this.ownerId.equals(owner.getId());
     }
 
     /*
