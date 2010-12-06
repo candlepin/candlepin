@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.DELETE;

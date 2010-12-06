@@ -52,8 +52,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private Consumer failConsumer;
     private Consumer passConsumer;
     private Consumer foreignConsumer;
-    private final static int START_YEAR = 2000;
-    private final static int END_YEAR = 3000;
+    private static final int START_YEAR = 2000;
+    private static final int END_YEAR = 3000;
     
     @Before
     public void setUp() {
