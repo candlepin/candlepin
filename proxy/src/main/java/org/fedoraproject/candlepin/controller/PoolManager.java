@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,10 +22,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
-
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -53,11 +54,10 @@ import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
 
 /**
  * PoolManager
@@ -560,30 +560,12 @@ public class PoolManager {
         return this.poolCurator.listAvailableEntitlementPools(null,
             null, productId, false, null);
     }
-    
-    /**
-     * Check if the given entitlement has any pools referencing it as their source 
-     * entitlement, and those pools have outstanding entitlements.
-     * 
-     * This method is used to prevent security violations when unbinding as a consumer,
-     * where other consumers are using those sub-pool entitlements.
-     * 
-     * @param e Entitlement to check.
-     * @return True if there are outstanding sub-pool entitlements.
-     */
-    private boolean hasOutstandingSubPoolEntitlements(Entitlement e) {
-        return this.poolCurator.getNoOfDependentEntitlements(e.getId()) > 0;
-    }
-    
+
     // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional
     public void revokeEntitlement(Entitlement entitlement) {
-        if ((this.principalProvider.get()instanceof ConsumerPrincipal) && 
-            hasOutstandingSubPoolEntitlements(entitlement)) {
-            throw new ForbiddenException(
-                String.format(
-                    "Cannot unbind due to outstanding sub-pool entitlements in %s", 
-                    entitlement.getId()));
+        if (this.principalProvider.get()instanceof ConsumerPrincipal) {
+            checkForOutstandingSubPoolEntitlements(entitlement.getId());
         }
         
         if (!entitlement.isFree()) {
@@ -606,6 +588,69 @@ public class PoolManager {
         entCertAdapter.revokeEntitlementCertificates(entitlement);
         entitlementCurator.delete(entitlement);
         sink.sendEvent(event);
+    }
+    
+    /**
+     * Check if the given entitlement has any pools referencing it as their source 
+     * entitlement, and those pools have outstanding entitlements.
+     * 
+     * This method is used to prevent security violations when unbinding as a consumer,
+     * where other consumers are using those sub-pool entitlements.
+     * 
+     * @param e Entitlement to check.
+     * @return True if there are outstanding sub-pool entitlements.
+     */
+    private void checkForOutstandingSubPoolEntitlements(String entitlementId) {
+        int size = this.poolCurator.getNoOfDependentEntitlements(entitlementId);
+        if (size > 0) {
+            this.poolCurator.disableConsumerFilter(); //don't need it.
+            StringBuilder builder = 
+                new StringBuilder("\n-Cannot unsubscribe entitlement '")
+                    .append(entitlementId).append("' because:");
+            
+            List<EntitlementCertificate> entCerts = this.poolCurator
+                .retrieveEntCertsOfPoolsWithSourceEntitlement(entitlementId);
+            
+            //form consumer -> [entitlementCertificate, ...] mapping
+            Map<Consumer, List<EntitlementCertificate>> map = Util.newMap();
+            for (Iterator<EntitlementCertificate> iterator = entCerts
+                .iterator(); iterator.hasNext();) {
+                EntitlementCertificate cert = iterator.next();
+                Consumer consumer = cert.getEntitlement().getConsumer();
+                if (!map.containsKey(consumer)) {
+                    map.put(consumer, new ArrayList<EntitlementCertificate>());
+                }
+                map.get(consumer).add(cert);
+            }
+            
+            //create the error message:
+            for (Iterator<Entry<Consumer, List<EntitlementCertificate>>> iterator = map
+                .entrySet().iterator(); iterator.hasNext();) {
+                Entry<Consumer, List<EntitlementCertificate>> entry = iterator
+                    .next();
+                Consumer consumer = entry.getKey();
+                List<EntitlementCertificate> certs = entry.getValue();
+                builder.append("\n  Consumer '").append(consumer.getName())
+                    .append("' with identity '").append(consumer.getUuid())
+                    .append("' has the following entitlements:");
+
+                for (Iterator<EntitlementCertificate> iterator2 = certs
+                    .iterator(); iterator2.hasNext();) {
+                    EntitlementCertificate certificate = iterator2.next();
+                    Entitlement ent = certificate.getEntitlement();
+                    builder.append("\n    Entitlement '").append(ent.getId())
+                        .append("':\n")
+                        .append("     account number: '").append(ent.getAccountNumber())
+                        .append("'\n     serial number: '")
+                        .append(certificate.getSerial().getId())
+                        .append("'");
+                }
+            }
+            builder.append("\n\nThe above entitlements were derived from '")
+                .append(entitlementId)
+                .append("'.\nPlease unsubscribe from the above entitlements first.\n");
+            throw new ForbiddenException(builder.toString());
+        }
     }
 
     @Transactional

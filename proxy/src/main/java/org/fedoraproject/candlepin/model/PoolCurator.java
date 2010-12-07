@@ -28,7 +28,6 @@ import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
-import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -330,24 +329,51 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return super.create(entity);
     }
     
+    private static final String CONSUMER_FILTER = "Entitlement_CONSUMER_FILTER";
+    
     public int getNoOfDependentEntitlements(String entitlementId) {
-        String consumerFilterName = "Entitlement_CONSUMER_FILTER";
-        Session session = currentSession();
-        Filter consumerFilter = session.getEnabledFilter(consumerFilterName);
-        session.disableFilter(consumerFilterName);
+        Filter consumerFilter = disableConsumerFilter();
         Integer result = (Integer)
-            session.createCriteria(Entitlement.class)
+            currentSession().createCriteria(Entitlement.class)
                 .setProjection(Projections.rowCount())
                 .createCriteria("pool")
                     .createCriteria("sourceEntitlement")
                         .add(Restrictions.idEq(entitlementId))
                 .list().get(0);
+        enableIfPrevEnabled(consumerFilter);
+        return result;
+    }
+
+    // TODO: watch out for performance. Should we limit the certificates
+    // retrieved?
+    @SuppressWarnings("unchecked")
+    public List<EntitlementCertificate> retrieveEntCertsOfPoolsWithSourceEntitlement(
+        String entId) {
+        return
+            currentSession().createCriteria(EntitlementCertificate.class)
+            .createCriteria("entitlement")
+                .createCriteria("pool")
+                    .createCriteria("sourceEntitlement").add(Restrictions.idEq(entId))
+            .list();
+    }
+    
+
+    /**
+     * @param session
+     * @param consumerFilter
+     */
+    private void enableIfPrevEnabled(Filter consumerFilter) {
         //if filter was previously enabled, restore it.
         if (consumerFilter != null) {
             FilterImpl filterImpl = (FilterImpl) consumerFilter;
-            Filter filter = session.enableFilter(consumerFilterName);
+            Filter filter = currentSession().enableFilter(CONSUMER_FILTER);
             filter.setParameter("consumer_id", filterImpl.getParameter("consumer_id"));
         }
-        return result;
+    }
+
+    public Filter disableConsumerFilter() {
+        Filter consumerFilter = currentSession().getEnabledFilter(CONSUMER_FILTER);
+        currentSession().disableFilter(CONSUMER_FILTER);
+        return consumerFilter;
     }
 }

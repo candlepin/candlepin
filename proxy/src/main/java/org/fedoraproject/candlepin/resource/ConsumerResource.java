@@ -36,7 +36,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -321,10 +320,13 @@ public class ConsumerResource {
             this.poolManager.revokeAllEntitlements(toDelete);
         }
         catch (ForbiddenException e) {
+            String msg = e.message().getDisplayMessage();
             throw new ForbiddenException(
-                StringUtils.replace(
-                    e.message().getDisplayMessage(),
-                    "unbind", "unregister"), e);
+                new StringBuilder()
+                    .append("Cannot unregister consumer '")
+                    .append(toDelete.getName()).append("' because: ")
+                    .append(msg).toString(), e);
+                
         }
         consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
 
