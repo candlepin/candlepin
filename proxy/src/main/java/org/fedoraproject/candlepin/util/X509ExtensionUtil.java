@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.DERUTF8String;
@@ -40,9 +39,9 @@ public class X509ExtensionUtil {
 
     public X509ExtensionUtil() {
         //Output everything in UTC
-        iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        iso8601DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        this.iso8601DateFormat = Util.getUTCDateFormat();
     }
+
     
     public Set<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
@@ -87,7 +86,8 @@ public class X509ExtensionUtil {
             new DERUTF8String(iso8601DateFormat.format(sub.getStartDate()))));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
-            new DERUTF8String(iso8601DateFormat.format(sub.getEndDate()))));
+            new DERUTF8String(iso8601DateFormat.format(Util.roundToMidnight(sub
+                .getEndDate())))));
         // TODO : use keys
         String warningPeriod = sub.getProduct().getAttributeValue("warning_period");
         if (warningPeriod == null) {

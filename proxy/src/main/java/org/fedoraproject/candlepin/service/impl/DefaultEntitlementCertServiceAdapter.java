@@ -14,6 +14,16 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -30,24 +40,13 @@ import org.fedoraproject.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -93,7 +92,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         log.debug("   product: {}" , product.getId());
         log.debug("entitlement's endDt == subs endDt? {} == {} ?", 
             entitlement.getEndDate(), sub.getEndDate());
-            
         Preconditions
             .checkArgument(
                 entitlement.getEndDate().getTime() == sub.getEndDate().getTime(),
@@ -172,7 +170,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
-
         // TODO: rounding time could give the consumer like extra 1 day atmost.
         // Should we check that?
         X509Certificate x509Cert = this.pki

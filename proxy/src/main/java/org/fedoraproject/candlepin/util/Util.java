@@ -50,6 +50,10 @@ import java.util.UUID;
  */
 public class Util {
     
+    /**
+     * 
+     */
+    public static final String UTC_STR = "UTC";
     private static Logger log = Logger.getLogger(Util.class);
 
     private Util() {
@@ -117,9 +121,11 @@ public class Util {
         calendar.add(Calendar.YEAR, yr);
         return calendar.getTime();
     }
-    public static final TimeZone GMT_TZ  = new SimpleTimeZone(0, "GMT");
+    public static final TimeZone UTC_TZ  = new SimpleTimeZone(0, UTC_STR);
+    
+    
     public static Date roundToMidnight(Date dt) {
-        Calendar cal = Calendar.getInstance(GMT_TZ);
+        Calendar cal = Calendar.getInstance(UTC_TZ);
         cal.setTime(dt);
         cal.set(Calendar.MINUTE, 59);
         cal.set(Calendar.SECOND, 59);
@@ -250,6 +256,13 @@ public class Util {
             log.warn("Unable to convert binary data to string", e);
             return new String(data);
         }
+    }
+
+    public static SimpleDateFormat getUTCDateFormat() {
+        SimpleDateFormat iso8601DateFormat = new SimpleDateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss'Z'");
+        iso8601DateFormat.setTimeZone(TimeZone.getTimeZone(UTC_STR));
+        return iso8601DateFormat;
     }
     
 }
