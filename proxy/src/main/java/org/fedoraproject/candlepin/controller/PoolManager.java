@@ -565,7 +565,7 @@ public class PoolManager {
     @Transactional
     public void revokeEntitlement(Entitlement entitlement) {
         if (this.principalProvider.get()instanceof ConsumerPrincipal) {
-            checkForOutstandingSubPoolEntitlements(entitlement.getId());
+            checkForOutstandingSubPoolEntitlements(entitlement);
         }
         
         if (!entitlement.isFree()) {
@@ -600,7 +600,8 @@ public class PoolManager {
      * @param e Entitlement to check.
      * @return True if there are outstanding sub-pool entitlements.
      */
-    private void checkForOutstandingSubPoolEntitlements(String entitlementId) {
+    private void checkForOutstandingSubPoolEntitlements(Entitlement entitlement) {
+        String entitlementId = entitlement.getId();
         int size = this.poolCurator.getNoOfDependentEntitlements(entitlementId);
         if (size > 0) {
             this.poolCurator.disableConsumerFilter(); //don't need it.
@@ -646,8 +647,8 @@ public class PoolManager {
                         .append("'");
                 }
             }
-            builder.append("\n\nThe above entitlements were derived from '")
-                .append(entitlementId)
+            builder.append("\n\nThe above entitlements were derived from the pool: '")
+                .append(entitlement.getPool().getId())
                 .append("'.\nPlease unsubscribe from the above entitlements first.\n");
             throw new ForbiddenException(builder.toString());
         }
