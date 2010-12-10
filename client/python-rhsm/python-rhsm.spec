@@ -7,6 +7,7 @@ Group: Development/Libraries
 License: GPLv2
 Requires: m2crypto
 Requires: python-simplejson
+Requires: python-iniparse
 BuildArch: noarch
 
 Source0: %{name}-%{version}.tar.gz
@@ -51,6 +52,9 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/rhsm-*.egg-info
 
 %changelog
+* Fri Dec 10 2010 Adrian Likins <alikins@redhat.com> 0.94.1-1
+- require python-iniparse
+
 * Fri Dec 10 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.1-1
 - new package built with tito
 
