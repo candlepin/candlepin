@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.19
+Version: 0.1.20
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,22 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Fri Dec 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.20-1
+- 660713: round the subscription's end date to midnight (anadathu@redhat.com)
+- 658683: replace entitlement's id with the pool id (anadathu@redhat.com)
+- 658683: Improve error message thrown when outstanding sub-pool entitlements
+  exists. (anadathu@redhat.com)
+- fix checkstyle violations (anadathu@redhat.com)
+- findbugs: Primitive value is boxed then unboxed to perform primitive coercion (jesusr@redhat.com)
+- findbugs: should be a static inner class (jesusr@redhat.com)
+- findbugs: unread field: should this field be static? yes (jesusr@redhat.com)
+- findbugs: Dead store to local variable (jesusr@redhat.com)
+- findbugs: Private method is never called (jesusr@redhat.com)
+- findbugs: invokes inefficient new String(String) constructor (jesusr@redhat.com)
+- findbugs: Dead store to local variable (jesusr@redhat.com)
+- findbugs: Comparison of String objects using == (jesusr@redhat.com)
+- findbugs: Null pointer dereference of o (jesusr@redhat.com)
+
 * Fri Dec 03 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.19-1
 - link Owner to parent by id not a bytearray. (jesusr@redhat.com)
 
