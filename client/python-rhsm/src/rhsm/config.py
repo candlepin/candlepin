@@ -15,7 +15,7 @@
 # in this software or its documentation.
 #
 
-import ConfigParser
+from iniparse import SafeConfigParser
 
 
 DEFAULT_CONFIG_DIR = "/etc/rhsm"
@@ -35,10 +35,10 @@ DEFAULTS = {
         'proxy_password': None
         }
 
-class RhsmConfigParser(ConfigParser.SafeConfigParser):
+class RhsmConfigParser(SafeConfigParser):
     def __init__(self, config_file=None, defaults=None):
         self.config_file = config_file
-        ConfigParser.ConfigParser.__init__(self, defaults=defaults)
+        SafeConfigParser.__init__(self, defaults=defaults)
         self.read(self.config_file)
 
     def save(self, config_file=None):
