@@ -1,5 +1,5 @@
 Name: python-rhsm
-Version: 0.94.0
+Version: 0.94.1
 Release: 1%{?dist}
 
 Summary: A Python library to communicate with a Red Hat Unified Entitlement Platform
@@ -51,5 +51,8 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/rhsm/config.py*
 
 %changelog
+* Fri Dec 10 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.1-1
+- new package built with tito
+
 * Fri Dec 10 2010 Devan Goodwin <dgoodwin@redhat.com> 
 - Initial tagging as separate python-rhsm package.
