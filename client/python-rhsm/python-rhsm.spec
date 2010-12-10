@@ -25,7 +25,7 @@ Entitlement Platform. This interface is used for the management of system
 entitlements, certificates, and access to content.
 
 %prep
-%setup -q
+%setup -q -n python-rhsm-%{version}
 
 %build
 %{__python} setup.py build
@@ -43,12 +43,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir %{python_sitelib}/rhsm
 
-%{_datadir}/rhsm/__init__.py*
-
 %files 
 %{python_sitelib}/rhsm/connection.py*
 %{python_sitelib}/rhsm/logutil.py*
 %{python_sitelib}/rhsm/config.py*
+%{python_sitelib}/rhsm/__init__.py*
+%{python_sitelib}/rhsm-*.egg-info
 
 %changelog
 * Fri Dec 10 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.1-1
