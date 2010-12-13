@@ -22,6 +22,9 @@ DEFAULT_CONFIG_DIR = "/etc/rhsm"
 DEFAULT_CONFIG_PATH = "%s/rhsm.conf" % DEFAULT_CONFIG_DIR
 DEFAULT_PROXY_PORT="3128"
 
+# TODO: I don't think these defaults are getting used, code requests section 
+# + property, but these are going in as sectionless defaults and the code still
+# errors on missing section.
 DEFAULTS = {
         'hostname': 'localhost',
         'prefix': '/candlepin',
@@ -44,6 +47,11 @@ class RhsmConfigParser(SafeConfigParser):
     def save(self, config_file=None):
         fo = open(self.config_file, "wb")
         self.write(fo)
+
+    def get(self, section, prop):
+        if not self.has_section(section):
+            self.add_section(section)
+        return SafeConfigParser.get(self, section, prop)
 
 def initConfig(config_file=None):
 

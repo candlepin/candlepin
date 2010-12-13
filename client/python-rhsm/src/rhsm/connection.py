@@ -207,7 +207,8 @@ class UEPConnection:
             proxy_user=config.get('server', 'proxy_user'),
             proxy_password=config.get('server', 'proxy_password'),
             username=None, password=None,
-            cert_file=None, key_file=None):
+            cert_file=None, key_file=None,
+            insecure=None):
         """
         Two ways to authenticate:
             - username/password for HTTP basic authentication. (owner admin role)
@@ -232,10 +233,13 @@ class UEPConnection:
 
         self.ca_cert_dir = config.get('server', 'ca_cert_dir')
         self.ssl_verify_depth = int(config.get('server', 'ssl_verify_depth'))
-        config_insecure = int(config.get('server', 'insecure'))
-        self.insecure = False
-        if config_insecure:
-            self.insecure = True
+
+        self.insecure = insecure
+        if insecure is None:
+            self.insecure = False
+            config_insecure = int(config.get('server', 'insecure'))
+            if config_insecure:
+                self.insecure = True
 
         using_basic_auth = False
         using_id_cert_auth = False
