@@ -84,6 +84,10 @@ GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet',
            'javax.servlet:servlet-api:jar:2.5', 'com.google.collections:google-collections:jar:0.9']
 
 LDAP = 'com.novell.ldap:jldap:jar:4.3'
+OAUTH= [group('oauth',
+              'oauth-provider',
+              :under => 'net.oauth.core',
+              :version => '20100527')]
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:1.7.3'
 HORNETQ = [group('hornetq-core',
@@ -112,6 +116,8 @@ repositories.remote << "http://www.ibiblio.org/maven2/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 repositories.remote << "http://people.apache.org/~ebourg/qpid/maven/"
+repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
+
 #############################################################################
 # PROJECT BUILD
 #############################################################################
@@ -158,7 +164,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP
+      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH
  
   #
   # testing
@@ -232,7 +238,7 @@ define "candlepin" do
 
         # check the main src
         ant.checkstyle :config=>"buildconf/checkstyle.xml",
-                       :classpath=>Buildr.artifacts(CHECKSTYLE, JDOM, RESTEASY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR) do
+                       :classpath=>Buildr.artifacts(CHECKSTYLE, JDOM, RESTEASY, OAUTH).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR) do
 
 
           ant.classpath :path=>_('target/classes')

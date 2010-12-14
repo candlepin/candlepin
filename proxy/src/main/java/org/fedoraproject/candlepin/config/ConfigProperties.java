@@ -43,11 +43,16 @@ public class ConfigProperties {
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
-    public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = 
         "candlepin.entitlement.revoke.order.fifo";
+    
+    // Authentication
+    public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enabled";
+    public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enabled";    
+    public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enabled";
+    public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enabled";    
 
     //AMQP stuff
     public static final String AMQP_INTEGRATION_ENABLED = 
@@ -99,6 +104,9 @@ public class ConfigProperties {
                 this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
                 this.put(CONSUMER_FACTS_MATCHER, ".*");
                 this.put(TRUSTED_AUTHENTICATION, "true");
+                this.put(SSL_AUTHENTICATION, "true");
+                this.put(OAUTH_AUTHENTICATION, "true");
+                this.put(BASIC_AUTHENTICATION, "true");                       
 
                 
                 // Pinsetter

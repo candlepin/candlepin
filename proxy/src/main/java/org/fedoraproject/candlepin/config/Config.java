@@ -16,7 +16,9 @@ package org.fedoraproject.candlepin.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -52,11 +54,25 @@ public class Config {
 
         // override with user-specified values
         this.configuration.putAll(loadProperties());
+        this.configuration = this.trimSpaces(configuration);
     }
     
     protected Config(Map properties) {
         this.configuration =
             new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
+        this.configuration = this.trimSpaces(configuration);
+    }
+
+    /**
+     * Remove all leading and trailing spaces from values in the tree.
+     */
+    protected TreeMap<String, String> trimSpaces(TreeMap<String, String> configs) {
+        Iterator<Entry<String, String>> itor = configs.entrySet().iterator();
+        while (itor.hasNext()) {
+            Entry<String, String> entry = itor.next();
+            configs.put(entry.getKey(), entry.getValue().trim());
+        }
+        return configs;
     }
     
     /**
@@ -121,29 +137,29 @@ public class Config {
     
     /**
      *  to disable SSLAuthFilter add to candlepin.conf:
-     *  sslauth.enabled=no
+     *  candlepin.auth.ssl.enabled=no
      *  
      *  @return if ssl authentication should be enabled
      */
     public boolean sslAuthEnabled() {
-        String enabled = (String) new SSLAuthFilterConfigParser()
-            .parseConfig(configuration)
-            .get(SSLAuthFilterConfigParser.ENABLED_CONFIG);
-
-        if (null != enabled && enabled.equals("no")) {
-            return false;
-        }
-
-        return true;
+        return getBoolean(ConfigProperties.SSL_AUTHENTICATION);
     }
 
     public boolean indentJson() {
         return getBoolean(ConfigProperties.PRETTY_PRINT);
     }
 
-    public boolean useTrustedAuth() {
+    public boolean trustedAuthEnabled() {
         return getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION);
     }
+    
+    public boolean oAuthEnabled() {
+        return getBoolean(ConfigProperties.OAUTH_AUTHENTICATION);
+    }
+    
+    public boolean basicAuthEnabled() {
+        return getBoolean(ConfigProperties.BASIC_AUTHENTICATION);
+    }        
 
     protected Map<String, String> loadProperties() {
         try {

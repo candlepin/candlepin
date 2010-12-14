@@ -23,7 +23,7 @@ import javax.ws.rs.core.Response.Status;
 /**
  * Base class for runtime exceptions thrown by Resources.
  */
-public abstract class CandlepinException extends RuntimeException {
+public class CandlepinException extends RuntimeException {
     private static final long serialVersionUID = -3430329252623764984L;
     private final Status returnCode;
     
