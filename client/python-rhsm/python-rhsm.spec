@@ -30,7 +30,6 @@ entitlements, certificates, and access to content.
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/%{_var}/log/rhsm
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 
 %clean
@@ -38,7 +37,6 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%attr(755,root,root) %dir %{_var}/log/rhsm
 %doc README
 
 %dir %{python_sitelib}/rhsm

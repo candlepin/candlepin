@@ -23,10 +23,10 @@ import simplejson as json
 import base64
 import os
 from M2Crypto import SSL, httpslib
-from logutil import getLogger
+import logging
 from config import initConfig
 
-log = getLogger(__name__)
+log = logging.getLogger(__name__)
 
 config = initConfig()
 
