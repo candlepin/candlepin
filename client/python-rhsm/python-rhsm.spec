@@ -1,5 +1,5 @@
 Name: python-rhsm
-Version: 0.94.1
+Version: 0.94.2
 Release: 1%{?dist}
 
 Summary: A Python library to communicate with a Red Hat Unified Entitlement Platform
@@ -46,6 +46,13 @@ rm -rf %{buildroot}
 %{python_sitelib}/rhsm-*.egg-info
 
 %changelog
+* Tue Dec 14 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.2-1
+- Remove I18N code. (dgoodwin@redhat.com)
+- Spec cleanup. (dgoodwin@redhat.com)
+- Cleaning out unused log parsing functions (jharris@redhat.com)
+- More tolerant with no rhsm.conf in place. (dgoodwin@redhat.com)
+- Switch to python-iniparse. (alikins@redhat.com)
+
 * Fri Dec 10 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.1-1
 - Initial package tagging.
 
