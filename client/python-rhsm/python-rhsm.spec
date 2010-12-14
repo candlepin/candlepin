@@ -38,10 +38,10 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %attr(755,root,root) %dir %{_var}/log/rhsm
+%doc README
 
 %dir %{python_sitelib}/rhsm
 
-%files 
 %{python_sitelib}/rhsm/*
 %{python_sitelib}/rhsm-*.egg-info
 

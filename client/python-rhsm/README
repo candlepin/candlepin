@@ -1,0 +1,7 @@
+python-rhsm is a small Python wrapper for making REST calls to a Red Hat
+Unified Entitlement Platform. For such an example, see the Candlepin project:
+
+http://fedorahosted.org/candlepin
+
+To use, create an rhsm.connection.UEPConnection object and examine the methods
+it provides. The vast majority of what this library offers is on this class.
