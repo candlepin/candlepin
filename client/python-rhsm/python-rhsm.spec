@@ -30,6 +30,7 @@ entitlements, certificates, and access to content.
 
 %install
 rm -rf %{buildroot}
+mkdir -p %{buildroot}/%{_var}/log/rhsm
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 
 %clean
