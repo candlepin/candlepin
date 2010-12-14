@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.20
+Version: 0.1.21
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Dec 14 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.21-1
+- Initial oauth implementation (bkearney@redhat.com)
+
 * Fri Dec 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.20-1
 - 660713: round the subscription's end date to midnight (anadathu@redhat.com)
 - 658683: replace entitlement's id with the pool id (anadathu@redhat.com)
