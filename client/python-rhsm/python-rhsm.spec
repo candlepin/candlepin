@@ -15,8 +15,6 @@ Requires: python-iniparse
 BuildArch: noarch
 
 BuildRequires: python2-devel
-BuildRequires: gettext
-BuildRequires: intltool
 
 
 %description 

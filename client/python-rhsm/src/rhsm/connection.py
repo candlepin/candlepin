@@ -28,9 +28,6 @@ from config import initConfig
 
 log = getLogger(__name__)
 
-import gettext
-_ = gettext.gettext
-
 config = initConfig()
 
 
@@ -40,6 +37,14 @@ class ConnectionException(Exception):
 
 class ConnectionSetupException(ConnectionException):
     pass
+
+
+class BadCertificateException(ConnectionException):
+    """ Thrown when an error parsing a certificate is encountered. """
+
+    def __init__(self, cert_path):
+        """ Pass the full path to the bad certificate. """
+        self.cert_path = cert_path
 
 
 class RestlibException(ConnectionException):
@@ -112,14 +117,8 @@ class Restlib(object):
                     res = context.load_verify_info(cert_path)
 
                     if res == 0:
-                        raise ConnectionSetupException(
-                                _("Bad CA Certificate: %s" % cert_path))
+                        raise BadCertificateException(cert_path)
         except OSError, e:
-            msg = _("Unable to read CA certificates from '%s'." % self.ca_dir)
-            if e.errno == 20:
-                msg = _(" '%s' is a file." % self.ca_dir)
-            elif e.errno == 2:
-                msg = _(" No such directory.")
             raise ConnectionSetupException(e.strerror)
 
 
