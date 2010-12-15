@@ -20,6 +20,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.spi.HttpRequest;
 
@@ -74,6 +76,14 @@ public class RestEasyOAuthMessage extends OAuthMessage{
                 }                
             }
         }
+
+        // we can't call getFormParameters when it's a PUT and not a form.
+        if (request.getHttpMethod().equals("PUT") &&
+            !request.getHttpHeaders().getMediaType().isCompatible(
+                MediaType.valueOf("application/x-www-form-urlencoded"))) {
+            return list;
+        }
+
         for (Map.Entry<String, List<String>> entry : 
                 request.getFormParameters().entrySet()) {
             String name = entry.getKey();
@@ -81,6 +91,7 @@ public class RestEasyOAuthMessage extends OAuthMessage{
                 list.add(new OAuth.Parameter(name, value));
             }
         }
+
         return list;
     }
 }
