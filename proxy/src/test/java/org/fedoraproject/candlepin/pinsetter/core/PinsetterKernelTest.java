@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.CandlepinConfigurationTest.CandlepinConfigurationForTesting;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.quartz.JobExecutionContext;
@@ -44,7 +43,7 @@ public class PinsetterKernelTest {
     @SuppressWarnings("serial")
     @Test
     public void configure() throws InstantiationException {
-        Config config = new CandlepinConfigurationForTesting(
+        Config config = new Config(
             new HashMap<String, String>() {
 
                 {
@@ -90,7 +89,7 @@ public class PinsetterKernelTest {
     @Test
     public void testScheduleJobString() throws InstantiationException,
         PinsetterException, SchedulerException {
-        Config config = new CandlepinConfigurationForTesting(
+        Config config = new Config(
             new HashMap<String, String>() {
 
                 {

@@ -57,9 +57,10 @@ public class Config {
         this.configuration = this.trimSpaces(configuration);
     }
     
-    protected Config(Map properties) {
+    public Config(Map<String, String> properties) {
         this.configuration =
             new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
+        this.configuration.putAll(properties);
         this.configuration = this.trimSpaces(configuration);
     }
 
