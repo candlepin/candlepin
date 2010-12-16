@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.22
+Version: 0.1.23
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Dec 16 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.23-1
+- fix OAuth when using PUT + application/json. (jesusr@redhat.com)
+
 * Tue Dec 14 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.22-1
 - rebuild
 
