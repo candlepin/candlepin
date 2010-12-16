@@ -1,5 +1,5 @@
 Name: python-rhsm
-Version: 0.94.5
+Version: 0.94.6
 Release: 1%{?dist}
 
 Summary: A Python library to communicate with a Red Hat Unified Entitlement Platform
@@ -15,6 +15,7 @@ Requires: python-iniparse
 BuildArch: noarch
 
 BuildRequires: python2-devel
+BuildRequires: python-setuptools
 
 
 %description 
@@ -45,8 +46,10 @@ rm -rf %{buildroot}
 %{python_sitelib}/rhsm-*.egg-info
 
 %changelog
-* Thu Dec 16 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.5-1
+* Thu Dec 16 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.6-1
 - Resolves: #661863
+- Add buildrequires for python-setuptools.
+
 * Thu Dec 16 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.4-1
 - Add python-rhsm tito.props. (dgoodwin@redhat.com)
 
