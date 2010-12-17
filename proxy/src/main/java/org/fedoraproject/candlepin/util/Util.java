@@ -138,12 +138,36 @@ public class Util {
     }
     
     public static String decodeValue(byte[] value) {
+        ASN1InputStream vis = null;
+        ASN1InputStream decoded = null;
         try {
-            return new ASN1InputStream(((DEROctetString) new ASN1InputStream(value)
-                .readObject()).getOctets()).readObject().toString();
+            vis = new ASN1InputStream(value);
+            decoded = new ASN1InputStream(
+                ((DEROctetString) vis.readObject()).getOctets());
+
+            return decoded.readObject().toString();
         }
         catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        finally {
+            if (vis != null) {
+                try {
+                    vis.close();
+                }
+                catch (IOException e) {
+                    log.warn("failed to close ASN1 stream", e);
+                }
+            }
+
+            if (decoded != null) {
+                try {
+                    decoded.close();
+                }
+                catch (IOException e) {
+                    log.warn("failed to close ASN1 stream", e);
+                }
+            }
         }
     }
     

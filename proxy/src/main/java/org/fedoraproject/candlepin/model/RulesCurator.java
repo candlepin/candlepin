@@ -14,21 +14,25 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 
 import com.wideplay.warp.persist.Transactional;
 
+import org.apache.log4j.Logger;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+
 /**
  * RulesCurator
  */
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
+    private static Logger log = Logger.getLogger(RulesCurator.class);
 
     protected RulesCurator() {
         super(Rules.class);
@@ -80,7 +84,8 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     private Rules rulesFromFile(String path) {
         InputStream is = this.getClass().getResourceAsStream(path);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader reader = new BufferedReader(isr);
         StringBuilder builder = new StringBuilder();
         String line = null;
         try {
@@ -90,6 +95,14 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         }
         catch (IOException e) {
             throw new CuratorException(e);
+        }
+        finally {
+            try {
+                reader.close();
+            }
+            catch (IOException e) {
+                log.warn("problem closing reader for " + path, e);
+            }
         }
         return new Rules(builder.toString());
     }

@@ -338,6 +338,7 @@ public class ExporterTest {
 
             BufferedReader br = new BufferedReader(new FileReader("/tmp/" + filename));
             assertEquals("hpj-08ha-w4gpoknpon*)&^%#", br.readLine());
+            br.close();
         }
     }
 

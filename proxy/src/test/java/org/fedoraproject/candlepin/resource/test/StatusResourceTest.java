@@ -40,6 +40,7 @@ public class StatusResourceTest {
         ps.println("release=${release}");
         StatusResource sr = new StatusResource();
         Status s = sr.status();
+        ps.close();
         assertNotNull(s);
         assertEquals("${release}", s.getRelease());
         assertEquals("${version}", s.getVersion());
@@ -53,6 +54,7 @@ public class StatusResourceTest {
         ps.println("foo");
         StatusResource sr = new StatusResource();
         Status s = sr.status();
+        ps.close();
         assertNotNull(s);
         assertEquals("Unknown", s.getRelease());
         assertEquals("Unknown", s.getVersion());
