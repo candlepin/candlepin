@@ -262,7 +262,7 @@ public class EventFactory {
         }
     }
     
-    private class CandlepinSerializerFactory extends CustomSerializerFactory{
+    private static class CandlepinSerializerFactory extends CustomSerializerFactory{
         
         @Override
         protected BeanSerializer processViews(SerializationConfig config,

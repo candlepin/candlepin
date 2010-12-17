@@ -234,7 +234,7 @@ public class ApiCrawlerTest {
             return verbs;
         }
         
-        class ApiParam {
+        private static class ApiParam {
             private String name;
             private String type;
             
