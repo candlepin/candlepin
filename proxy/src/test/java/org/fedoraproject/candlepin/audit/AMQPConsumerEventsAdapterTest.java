@@ -60,8 +60,8 @@ public class AMQPConsumerEventsAdapterTest {
     private ObjectMapper mapper = new ObjectMapper();
     private Principal principal;
     private EventFactory factory;
-    private PKIReader reader;
-    private PKIUtility pkiutil;
+    @Mock private PKIReader reader;
+    @Mock private PKIUtility pkiutil;
 
     @Before
     public void init() {

@@ -56,8 +56,8 @@ public class AMQPBusEventAdapterTest {
 
     private Event.Type type;
     private Event.Target target;
-    private PKIReader reader;
-    private PKIUtility pkiutil;
+    @Mock private PKIReader reader;
+    @Mock private PKIUtility pkiutil;
 
     /**
      * This defines the event targets that we care about creating AMQP events for.
