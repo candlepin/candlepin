@@ -187,14 +187,15 @@ define "candlepin" do
 
   #
   # coverity report generation
-  #  
-  task :coverity do
+  # 
+  desc 'Generate coverity reports (coverity must be installed)'
+  task :coverity => [:compile] do
     mkdir_p compile.target.to_s
     sources = FileList[_("src/main/java/**/*.java")]
     classpath = compile.dependencies.inject("") {|a,c| a << ":#{c}"}
     sh "cov-build --dir=/cov_builds/candlepin_jd/ javac -classpath #{classpath} -d #{compile.target} -verbose -g -target 1.6 #{sources}"
     sh "cov-analyze-java --dir=/cov_builds/candlepin_jd/"
-    sh "cov-commit-defects --dir /cov_builds/candlepin_jd/ --stream candlepin --user admin"
+    sh "cov-commit-defects --dir /cov_builds/candlepin_jd/ --stream candlepin --user admin --host #{`hostname`}"
   end
 
   #
