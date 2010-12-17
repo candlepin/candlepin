@@ -57,7 +57,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolNotYetActive() {
-        Pool pool = createPoolAndSub(owner, product, new Long(100),
+        Pool pool = createPoolAndSub(owner, product, 100L,
                 TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
@@ -70,7 +70,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolExpired() {
-        Pool pool = createPoolAndSub(owner, product, new Long(100),
+        Pool pool = createPoolAndSub(owner, product, 100L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 

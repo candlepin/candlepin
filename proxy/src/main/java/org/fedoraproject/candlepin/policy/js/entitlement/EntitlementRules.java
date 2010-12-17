@@ -495,7 +495,8 @@ public class EntitlementRules implements Enforcer {
     public static class RuleOrderComparator implements Comparator<Rule> {
         @Override
         public int compare(Rule o1, Rule o2) {
-            return new Integer(o2.getOrder()).compareTo(new Integer(o1.getOrder()));
+            return Integer.valueOf(o2.getOrder()).compareTo(
+                Integer.valueOf(o1.getOrder()));
         }
     }
     

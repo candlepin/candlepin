@@ -60,7 +60,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         product = TestUtil.createProduct();
         productCurator.create(product);
         
-        pool = createPoolAndSub(owner, product, new Long(10),
+        pool = createPoolAndSub(owner, product, 10L,
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(pool);
     }
@@ -72,7 +72,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
             consumerCurator.create(c);
             consumerResource.bind(
-                c.getUuid(), null, null, new String[] {product.getId()}, new Integer(1),
+                c.getUuid(), null, null, new String[] {product.getId()}, 1,
                 null, null);
         }
         
@@ -80,7 +80,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
         consumerCurator.create(c);
         consumerResource.bind(
-            c.getUuid(), null, null, new String[] {product.getId()}, new Integer(1), null,
+            c.getUuid(), null, null, new String[] {product.getId()}, 1, null,
             null);
     }
     

@@ -154,7 +154,7 @@ public class Pool extends AbstractHibernateObject
         this.accountNumber = accountNumber;
     
         // Always assume none consumed if creating a new pool.
-        this.consumed = new Long(0);
+        this.consumed = 0L;
 
         this.providedProducts = providedProducts;
     }

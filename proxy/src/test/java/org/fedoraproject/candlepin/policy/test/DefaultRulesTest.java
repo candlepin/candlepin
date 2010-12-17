@@ -92,7 +92,7 @@ public class DefaultRulesTest {
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
 
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
@@ -110,7 +110,7 @@ public class DefaultRulesTest {
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
 
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
@@ -128,7 +128,7 @@ public class DefaultRulesTest {
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
@@ -139,7 +139,7 @@ public class DefaultRulesTest {
         Pool pool = setupTest("arch", "ALL", "arch", "i686");
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -149,7 +149,7 @@ public class DefaultRulesTest {
         Pool pool = setupTest("arch", "x86_64", "cpu.architecture", "i686");
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -162,7 +162,7 @@ public class DefaultRulesTest {
         consumer.setFacts(new HashMap<String, String>());
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -172,7 +172,7 @@ public class DefaultRulesTest {
         Pool pool = setupTest("sockets", "128", "cpu.cpu_socket(s)", "2");
         
         ValidationResult result
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -182,7 +182,7 @@ public class DefaultRulesTest {
         Pool pool = setupTest("sockets", "2", "cpu.cpu_socket(s)", "2");
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -195,7 +195,7 @@ public class DefaultRulesTest {
         consumer.setFacts(new HashMap<String, String>());
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -221,7 +221,7 @@ public class DefaultRulesTest {
         Pool pool = setupTest("sockets", "2", "cpu.cpu_sockets", "4");
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -232,7 +232,7 @@ public class DefaultRulesTest {
         consumer.setType(new ConsumerType(ConsumerTypeEnum.DOMAIN));
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -243,7 +243,7 @@ public class DefaultRulesTest {
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
         
         ValidationResult result
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -261,7 +261,7 @@ public class DefaultRulesTest {
         Pool pool = setupUserLicensedPool();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -308,7 +308,7 @@ public class DefaultRulesTest {
         consumer.setUsername("bob");
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -319,7 +319,7 @@ public class DefaultRulesTest {
         consumer.setUsername("notbob");
         
         ValidationResult result 
-            = enforcer.preEntitlement(consumer, pool, new Integer(1)).getResult();
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
     }

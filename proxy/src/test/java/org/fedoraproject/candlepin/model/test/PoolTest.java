@@ -88,7 +88,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     public void testMultiplePoolsForOwnerProductAllowed() {
         Pool duplicatePool = createPoolAndSub(owner,
-                prod1, new Long(-1), TestUtil.createDate(2009, 11, 30),
+                prod1, -1L, TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         // Just need to see no exception is thrown.
         poolCurator.create(duplicatePool);
@@ -99,15 +99,15 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
         Pool unlimitedPool = createPoolAndSub(owner, newProduct,
-                new Long(-1), TestUtil.createDate(2009, 11, 30),
+                -1L, TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         poolCurator.create(unlimitedPool);
-        assertTrue(unlimitedPool.entitlementsAvailable(new Integer(1)));
+        assertTrue(unlimitedPool.entitlementsAvailable(1));
     }
 
     @Test
     public void createEntitlementShouldIncreaseNumberOfMembers() throws Exception {
-        Long numAvailEntitlements = new Long(1);
+        Long numAvailEntitlements = 1L;
         Product newProduct = TestUtil.createProduct();
 
         productCurator.create(newProduct);
@@ -119,13 +119,13 @@ public class PoolTest extends DatabaseTestFixture {
         poolManager.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
 
         consumerPool = poolCurator.find(consumerPool.getId());
-        assertFalse(consumerPool.entitlementsAvailable(new Integer(1)));
+        assertFalse(consumerPool.entitlementsAvailable(1));
         assertEquals(1, consumerPool.getEntitlements().size());
     }
 
     @Test
     public void createEntitlementShouldUpdateConsumer() throws Exception {
-        Long numAvailEntitlements = new Long(1);
+        Long numAvailEntitlements = 1L;
 
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);

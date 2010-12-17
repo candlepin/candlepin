@@ -156,7 +156,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
         Pool pool = createPoolAndSub(createOwner(), prod,
-            new Long(1000), TestUtil.createDate(2009, 11, 30),
+            1000L, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
 
@@ -250,7 +250,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         // Give those consumers entitlements:
-        poolManager.entitleByPool(c1, pool, new Integer(1));
+        poolManager.entitleByPool(c1, pool, 1);
 
         assertEquals(2, consumerCurator.listByOwner(owner).size());
         assertEquals(1, poolCurator.listByOwner(owner).size());
@@ -422,7 +422,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
         Pool pool = createPoolAndSub(createOwner(), prod,
-            new Long(1000), TestUtil.createDate(2009, 11, 30),
+            1000L, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
         Consumer consumer = createConsumer(owner);

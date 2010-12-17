@@ -202,7 +202,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, 
                 expiryDate(2010, 10, 10)),
-            new Integer(1)).getResult();
+            1).getResult();
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -219,7 +219,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 1, 
                 expiryDate(2010, 10, 10)),
-            new Integer(1)).getResult();
+            1).getResult();
         
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
@@ -236,8 +236,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         ValidationResult result = enforcer.preEntitlement(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
-                expiryDate(2000, 1, 1)),
-            new Integer(1)).getResult();
+                expiryDate(2000, 1, 1)), 1).getResult();
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -256,7 +255,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             TestUtil.createConsumer(), 
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, 
                 expiryDate(2000, 1, 1)),
-            new Integer(1)).getResult();
+            1).getResult();
         
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
@@ -269,16 +268,16 @@ public class EnforcerTest extends DatabaseTestFixture {
         product.setAttribute(LONGEST_EXPIRY_PRODUCT, "");
         productCurator.create(product);
 
-        Pool pool1 = createPoolAndSub(owner, product, new Long(5),
+        Pool pool1 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2050, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, product, new Long(5),
+        Pool pool2 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2051, 02, 26));
-        Pool desired = createPoolAndSub(owner, product, new Long(5),
+        Pool desired = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2060, 02, 26));
-        Pool pool3 = createPoolAndSub(owner, product, new Long(5),
+        Pool pool3 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2055, 02, 26));
         
@@ -299,13 +298,13 @@ public class EnforcerTest extends DatabaseTestFixture {
         product.setAttribute(HIGHEST_QUANTITY_PRODUCT, "");
         productCurator.create(product);
 
-        Pool pool1 = createPoolAndSub(owner, product, new Long(5),
+        Pool pool1 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2050, 02, 26));
-        Pool desired = createPoolAndSub(owner, product, new Long(500),
+        Pool desired = createPoolAndSub(owner, product, 500L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2051, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, product, new Long(5),
+        Pool pool2 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2060, 02, 26));
         
@@ -327,11 +326,11 @@ public class EnforcerTest extends DatabaseTestFixture {
         product.setAttribute(LONGEST_EXPIRY_PRODUCT, "");
         productCurator.create(product);
         
-        Pool pool1 = createPoolAndSub(owner, product, new Long(5),
+        Pool pool1 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-        Pool desired = createPoolAndSub(owner, product, new Long(5),
+        Pool desired = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2051, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, product, new Long(500),
+        Pool pool2 = createPoolAndSub(owner, product, 500L,
             TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2020, 02, 26));
         
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
@@ -361,7 +360,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         
-        Pool pool1 = createPoolAndSub(owner, product, new Long(5), TestUtil
+        Pool pool1 = createPoolAndSub(owner, product, 5L, TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
 
         when(this.productAdapter.getProductById("a-product"))
@@ -376,9 +375,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         Product product = new Product("a-product", "A product for testing");
         productCurator.create(product);
 
-        Pool pool1 = createPoolAndSub(owner, product, new Long(5), TestUtil
+        Pool pool1 = createPoolAndSub(owner, product, 5L, TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, product, new Long(5), TestUtil
+        Pool pool2 = createPoolAndSub(owner, product, 5L, TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2060, 02, 26));
         
         when(this.productAdapter.getProductById("a-product"))
@@ -411,8 +410,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     private Pool entitlementPoolWithMembersAndExpiration(Owner theOwner, Product product,
         final int currentMembers, final int maxMembers, Date expiry) {
         Pool p = createPoolAndSub(theOwner, product, 
-            new Long(maxMembers), new Date(), expiry);
-        p.setConsumed(new Long(currentMembers));
+            Long.valueOf(maxMembers), new Date(), expiry);
+        p.setConsumed(Long.valueOf(currentMembers));
         return p;
     }
 }

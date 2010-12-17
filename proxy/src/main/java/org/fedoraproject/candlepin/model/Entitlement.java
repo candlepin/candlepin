@@ -169,7 +169,7 @@ public class Entitlement extends AbstractHibernateObject
         startDate = startDateIn;
         endDate = endDateIn;
         quantity = quantityIn == null || quantityIn.intValue() < 1 ? 
-            new Integer(1) : quantityIn;
+            1 : quantityIn;
             
         this.accountNumber = pool.getAccountNumber();
         this.contractNumber = pool.getContractNumber();

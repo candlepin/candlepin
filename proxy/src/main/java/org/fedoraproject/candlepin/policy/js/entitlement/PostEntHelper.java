@@ -51,7 +51,7 @@ public class PostEntHelper {
 
         Long q = null;
         if (quantity.equalsIgnoreCase("unlimited")) {
-            q = new Long(-1);
+            q = -1L;
         }
         else {
             try {

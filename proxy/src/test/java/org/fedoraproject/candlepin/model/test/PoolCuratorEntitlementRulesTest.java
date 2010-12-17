@@ -67,7 +67,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         p.addAttribute(new ProductAttribute(CPU_LIMITED_PRODUCT, ""));
         productCurator.create(p);
 
-        Pool pool = createPoolAndSub(owner, p, new Long(100),
+        Pool pool = createPoolAndSub(owner, p, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -79,7 +79,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     @Test
     public void concurrentCreationOfEntitlementsShouldWorkIfUnderMaxMemberLimit()
         throws Exception {
-        Long numAvailEntitlements = new Long(2);
+        Long numAvailEntitlements = 2L;
 
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
@@ -95,13 +95,13 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         anotherEntitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
 
         assertFalse(poolCurator.find(consumerPool.getId())
-                .entitlementsAvailable(new Integer(1)));
+                .entitlementsAvailable(1));
     }
 
     @Test(expected = EntitlementRefusedException.class)
     public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit()
         throws Exception {
-        Long numAvailEntitlements = new Long(1);
+        Long numAvailEntitlements = 1L;
 
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);

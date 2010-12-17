@@ -41,8 +41,8 @@ public class ProductContent extends AbstractHibernateObject implements
     private Content content;
     
     private Boolean enabled;
-    private Long flexEntitlement = new Long(0);
-    private Long physicalEntitlement = new Long(0);
+    private Long flexEntitlement = 0L;
+    private Long physicalEntitlement = 0L;
     
     public ProductContent() {
         

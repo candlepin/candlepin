@@ -171,15 +171,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o,
                 provisioning.getId()).get(0);
 
-        Long provisioningCount = new Long(provisioningPool.getConsumed());
-        assertEquals(new Long(1), provisioningCount);
+        Long provisioningCount = Long.valueOf(provisioningPool.getConsumed());
+        assertEquals(Long.valueOf(1), provisioningCount);
 
         // Now guest requests monitoring, and should get it for "free":
         e = poolManager.entitleByProduct(childVirtSystem, provisioning.getId(),
             new Integer("1"));
         assertNotNull(e);
         assertTrue(e.isFree());
-        assertEquals(new Long(1), provisioningPool.getConsumed());
+        assertEquals(Long.valueOf(1), provisioningPool.getConsumed());
     }
 
     @Ignore // Support for virtualized systems has been changed
@@ -193,8 +193,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o,
                 provisioning.getId()).get(0);
 
-        Long provisioningCount = new Long(provisioningPool.getConsumed());
-        assertEquals(new Long(0), provisioningCount);
+        Long provisioningCount = Long.valueOf(provisioningPool.getConsumed());
+        assertEquals(Long.valueOf(0), provisioningCount);
 
         e = poolManager.entitleByProduct(childVirtSystem, provisioning.getId(),
             new Integer("1"));
@@ -202,14 +202,14 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertFalse(e.isFree());
         // Should have resorted to consuming a physical entitlement, because the guest's
         // parent does not have this.
-        assertEquals(new Long(1), provisioningPool.getConsumed());
+        assertEquals(Long.valueOf(1), provisioningPool.getConsumed());
     }
 
     @Test
     public void testQuantityCheck() throws Exception {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
                 monitoring.getId()).get(0);
-        assertEquals(new Long(5), monitoringPool.getQuantity());
+        assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
             Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId(),
                 new Integer("1"));
@@ -225,7 +225,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         catch (EntitlementRefusedException e) {
             //expected
         }
-        assertEquals(new Long(5), monitoringPool.getConsumed());
+        assertEquals(Long.valueOf(5), monitoringPool.getConsumed());
     }
 
     @Test
@@ -242,14 +242,14 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testConsumeQuantity() throws Exception {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
             monitoring.getId()).get(0);
-        assertEquals(new Long(5), monitoringPool.getQuantity());
+        assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
         Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId(), 3);
         assertNotNull(e);
-        assertEquals(new Long(3), monitoringPool.getConsumed());
+        assertEquals(Long.valueOf(3), monitoringPool.getConsumed());
 
         poolManager.revokeEntitlement(e);
-        assertEquals(new Long(0), monitoringPool.getConsumed());
+        assertEquals(Long.valueOf(0), monitoringPool.getConsumed());
     }
 
     @Test

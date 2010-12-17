@@ -80,7 +80,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     public void testGetSubscription() {
         Subscription s = adapter.getSubscription(s1.getId());
         assertNotNull(s);
-        assertEquals(new Long(100), s.getQuantity());
+        assertEquals(Long.valueOf(100), s.getQuantity());
         
         s = adapter.getSubscription("-15");
         assertNull(s);

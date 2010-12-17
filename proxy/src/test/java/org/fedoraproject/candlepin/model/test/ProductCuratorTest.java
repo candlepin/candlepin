@@ -207,7 +207,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product product = new Product("test", "Test Product");
         product.setMultiplier(4L);
 
-        assertEquals(new Long(4), product.getMultiplier());
+        assertEquals(Long.valueOf(4), product.getMultiplier());
     }
 
     @Test
@@ -215,7 +215,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product product = new Product("test", "Test Product");
         product.setMultiplier(null);
 
-        assertEquals(new Long(1), product.getMultiplier());
+        assertEquals(Long.valueOf(1), product.getMultiplier());
     }
 
     @Test
@@ -223,7 +223,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product product = new Product("test", "Test Product");
         product.setMultiplier(-15L);
 
-        assertEquals(new Long(1), product.getMultiplier());
+        assertEquals(Long.valueOf(1), product.getMultiplier());
     }
 
     private Product createTestProduct() {
@@ -238,7 +238,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         ProductAttribute a3 = new ProductAttribute("a3", "a3");
         p.addAttribute(a3);
 
-        p.setMultiplier(new Long(1));
+        p.setMultiplier(1L);
         return p;
     }
 
