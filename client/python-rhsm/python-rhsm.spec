@@ -1,5 +1,5 @@
 Name: python-rhsm
-Version: 0.94.7
+Version: 0.94.8
 Release: 1%{?dist}
 
 Summary: A Python library to communicate with a Red Hat Unified Entitlement Platform
@@ -46,6 +46,9 @@ rm -rf %{buildroot}
 %{python_sitelib}/rhsm-*.egg-info
 
 %changelog
+* Fri Dec 17 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.8-1
+- Adding GPLv2 license file. (dgoodwin@redhat.com)
+
 * Fri Dec 17 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.7-1
 - Related: #661863
 - Add buildrequires for python-setuptools.
