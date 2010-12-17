@@ -5,6 +5,11 @@ Release: 1%{?dist}
 Summary: A Python library to communicate with a Red Hat Unified Entitlement Platform
 Group: Development/Libraries
 License: GPLv2
+# How to create the source tarball:
+#
+# git clone git://git.fedorahosted.org/git/candlepin.git/
+# cd client/python-rhsm
+# tito build --tag python-rhsm-%{name}-%{version}-%{release} --tgz
 Source0: %{name}-%{version}.tar.gz
 URL: http://fedorahosted.org/candlepin
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
