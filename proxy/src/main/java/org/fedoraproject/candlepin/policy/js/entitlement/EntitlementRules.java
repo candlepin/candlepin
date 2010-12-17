@@ -51,6 +51,8 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 /**
  * Enforces the Javascript Rules definition.
  */
@@ -314,7 +316,7 @@ public class EntitlementRules implements Enforcer {
         
         if (pools.size() > 0 && result == null) {
             throw new RuleExecutionException(
-                "Rule did not select a pool for products: " + productIds);
+              "Rule did not select a pool for products: " + Arrays.toString(productIds));
         }
 
         List<Pool> bestPools = new LinkedList<Pool>();

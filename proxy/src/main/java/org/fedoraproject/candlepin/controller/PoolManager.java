@@ -59,6 +59,8 @@ import org.fedoraproject.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 /**
  * PoolManager
  */
@@ -375,7 +377,7 @@ public class PoolManager {
             productIds, filteredPools);
         if (bestPools == null) {
             throw new RuntimeException("No entitlements for products: " +
-                productIds);
+                Arrays.toString(productIds));
         }
         
         for (Pool pool : bestPools) {
