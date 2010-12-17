@@ -249,7 +249,7 @@ public class EntitlementRules implements Enforcer {
 
         ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
         
-        log.info("Selecting best entitlement pool for product: " + productIds);
+        log.info("Selecting best entitlement pool for product: " + Arrays.toString(productIds));
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools, productCache);
 
         
