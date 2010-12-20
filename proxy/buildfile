@@ -115,8 +115,8 @@ AMQP  = [group('qpid-common', 'qpid-client',
 repositories.remote << "http://www.ibiblio.org/maven2/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
-repositories.remote << "http://people.apache.org/~ebourg/qpid/maven/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
+repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
 
 #############################################################################
 # PROJECT BUILD
