@@ -1,3 +1,9 @@
+# If on Fedora 12 or RHEL 5 or earlier, we need to define these:
+%if ! (0%{?fedora} > 12 || 0%{?rhel} > 5)
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%endif
+
+
 Name: python-rhsm
 Version: 0.94.9
 Release: 1%{?dist}
