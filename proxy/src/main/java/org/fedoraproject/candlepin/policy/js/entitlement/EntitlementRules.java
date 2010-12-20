@@ -249,7 +249,8 @@ public class EntitlementRules implements Enforcer {
 
         ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
         
-        log.info("Selecting best entitlement pool for product: " + Arrays.toString(productIds));
+        log.info("Selecting best entitlement pool for product: " +
+            Arrays.toString(productIds));
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools, productCache);
 
         
@@ -316,7 +317,7 @@ public class EntitlementRules implements Enforcer {
         
         if (pools.size() > 0 && result == null) {
             throw new RuleExecutionException(
-              "Rule did not select a pool for products: " + Arrays.toString(productIds));
+                "Rule did not select a pool for products: " + Arrays.toString(productIds));
         }
 
         List<Pool> bestPools = new LinkedList<Pool>();
