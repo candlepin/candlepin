@@ -74,7 +74,7 @@ public class StatusResource {
      * @return the running status
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
+    @Produces({ MediaType.APPLICATION_JSON})
     @AllowRoles(roles = {Role.NO_AUTH})
     public Status status() {
         Status status = new Status(true, version, release);
