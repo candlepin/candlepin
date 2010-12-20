@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.24
+Version: 0.1.25
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Dec 20 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.25-1
+- checkstyle fix (jesusr@redhat.com)
+- findbugs: Method may fail to close stream (jesusr@redhat.com)
+- findbugs: USELESS_STRING: Invocation of toString on an array (jesusr@redhat.com)
+- findbugs: unwritten field. (jesusr@redhat.com)
+- findbugs: should be a static inner class (jesusr@redhat.com)
+- findbugs: USELESS_STRING: Invocation of toString on an array (jesusr@redhat.com)
+- findbugs: inefficient use of Number constructor, use .valueOf (jesusr@redhat.com)
+- stablize qpid jars by using my repo (jesusr@redhat.com)
+- Updating coverity task in buildfile (jharris@redhat.com)
+
 * Fri Dec 17 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.24-1
 - end of sprint build (jesusr@redhat.com)
 - merge configuration tests (jesusr@redhat.com)
