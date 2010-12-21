@@ -30,8 +30,6 @@ from M2Crypto import X509
 from datetime import datetime as dt
 from datetime import tzinfo, timedelta
 import logging
-import gettext
-_ = gettext.gettext
 
 log = logging.getLogger(__name__)
 
@@ -247,10 +245,10 @@ class RedhatCertificate(Certificate):
     def bogus(self):
         bogus = Certificate.bogus(self)
         if self.serialNumber() < 1:
-            bogus.append(_('Serial Number must be > 0'))
+            bogus.append('Serial number must be > 0')
         cn = self.subject().get('CN')
         if not cn:
-            bogus.append(_('Common Name (%s) not-valid') % cn)
+            bogus.append('Invalid common name: %s' % cn)
         return bogus
 
 
@@ -405,7 +403,7 @@ class EntitlementCertificate(ProductCertificate):
     def bogus(self):
         bogus = ProductCertificate.bogus(self)
         if self.getOrder() is None:
-            bogus.append(_('No order infomation'))
+            bogus.append('No order infomation')
         return bogus
 
     def __str__(self):
@@ -985,18 +983,6 @@ class Bundle(object):
     CERT_PATTERN = re.compile(
         '-----BEGIN CERTIFICATE-----\n.+\n-----END CERTIFICATE-----',
         re.DOTALL)
-
-    @classmethod
-    def split(cls, pem):
-        m = cls.KEY_PATTERN.search(pem)
-        if m is None:
-            raise Exception(_('Key not found.'))
-        key = m.group(0)
-        m = cls.CERT_PATTERN.search(pem)
-        if m is None:
-            raise Exception(_('Certificate not found.'))
-        cert = m.group(0)
-        return (key, cert)
 
     def __init__(self, key=None, cert=None):
         self.key = key
