@@ -5,7 +5,7 @@
 
 
 Name: python-rhsm
-Version: 0.94.9
+Version: 0.94.10
 Release: 1%{?dist}
 
 Summary: A Python library to communicate with a Red Hat Unified Entitlement Platform
@@ -57,6 +57,11 @@ rm -rf %{buildroot}
 %{python_sitelib}/rhsm-*.egg-info
 
 %changelog
+* Tue Dec 21 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.10-1
+- Related: #661863
+- Add certificate parsing library. (dgoodwin@redhat.com)
+- Fix build on F12/RHEL5 and earlier. (dgoodwin@redhat.com)
+
 * Fri Dec 17 2010 jesus m. rodriguez <jesusr@redhat.com> 0.94.9-1
 - add comment on how to generate source tarball (jesusr@redhat.com)
 
