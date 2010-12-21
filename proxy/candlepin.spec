@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.25
+Version: 0.1.26
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Tue Dec 21 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.26-1
+- Break out the string manipulation to find an FTE (bkearney@redhat.com)
+- Only return json for the status (bkearney@redhat.com)
+
 * Mon Dec 20 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.25-1
 - checkstyle fix (jesusr@redhat.com)
 - findbugs: Method may fail to close stream (jesusr@redhat.com)
