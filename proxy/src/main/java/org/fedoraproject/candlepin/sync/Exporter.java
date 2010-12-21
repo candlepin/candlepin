@@ -324,7 +324,9 @@ public class Exporter {
         }
         
         for (Product product : products.values()) {
-            File file = new File(productDir.getCanonicalPath(), product.getId() + ".json");
+            String path = productDir.getCanonicalPath();
+            String productId = product.getId();
+            File file = new File(path, productId + ".json");
             FileWriter writer = new FileWriter(file);
             productExporter.export(mapper, writer, product);
             writer.close();
