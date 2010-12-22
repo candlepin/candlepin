@@ -26,6 +26,13 @@ from M2Crypto import SSL, httpslib
 import logging
 from config import initConfig
 
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+
+h = NullHandler()
+logging.getLogger("rhsm").addHandler(h)
+
 log = logging.getLogger(__name__)
 
 config = initConfig()
