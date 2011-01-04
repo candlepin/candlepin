@@ -10,7 +10,7 @@ describe 'Owner Resource' do
 
   it 'should allow a client to create an owner with parent' do
     owner = create_owner random_string('test_owner')   
-    child_owner = @cp.create_owner(random_string('test_owner'), owner)
+    child_owner = create_owner(random_string('test_owner'), owner)
     child_owner.parentOwner.id.should == owner.id
   end
 

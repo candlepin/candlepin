@@ -12,7 +12,7 @@ shared_examples_for 'Candlepin Scenarios' do
   end
 
   after do
-    @owners.each { |owner| @cp.delete_owner owner.key }
+    @owners.reverse_each { |owner| @cp.delete_owner owner.key }
 
     # TODO:  delete products?
   end
@@ -23,8 +23,8 @@ module CandlepinMethods
   # Wrapper for ruby API so we can track all owners we created and clean them
   # up. Note that this entails cleanup of all objects beneath that owner, so
   # most other objects can be created using the ruby API.
-  def create_owner(owner_name)
-    owner = @cp.create_owner(owner_name)
+  def create_owner(owner_name, parent=nil)
+    owner = @cp.create_owner(owner_name, parent)
     @owners << owner
 
     return owner
