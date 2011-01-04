@@ -133,10 +133,19 @@ var Entitlement = {
 	},
 	
 	pre_architecture: function() {
-	   var result = product.getAttribute('arch').toUpperCase().split(prodAttrSeparator);
-	   if(!contains(result, 'ALL') && 
+	   var supportedArches = product.getAttribute('arch').toUpperCase().split(prodAttrSeparator);
+	   supportedArches = new java.util.HashSet(java.util.Arrays.asList(supportedArches));
+	  
+	   // If X86 is supported, add all variants to this list:
+	   if (supportedArches.contains("X86")) {
+		   supportedArches.add("I386");
+		   supportedArches.add("I586");
+		   supportedArches.add("I686");
+	   }
+	  
+	   if(!supportedArches.contains('ALL') && 
 	       (!consumer.hasFact("cpu.architecture")  ||
-            !contains(result, consumer.getFact('cpu.architecture').toUpperCase())
+            !supportedArches.contains(consumer.getFact('cpu.architecture').toUpperCase())
             )
           ){
 	       pre.addWarning("rulewarning.architecture.mismatch");

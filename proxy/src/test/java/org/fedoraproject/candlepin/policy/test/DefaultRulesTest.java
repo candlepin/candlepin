@@ -136,7 +136,7 @@ public class DefaultRulesTest {
     
     @Test
     public void architectureALLShouldNotGenerateWarnings() {
-        Pool pool = setupTest("arch", "ALL", "arch", "i686");
+        Pool pool = setupArchTest("arch", "ALL", "arch", "i686");
         
         ValidationResult result 
             = enforcer.preEntitlement(consumer, pool, 1).getResult();
@@ -146,7 +146,7 @@ public class DefaultRulesTest {
     
     @Test
     public void architectureMismatchShouldGenerateWarning() {
-        Pool pool = setupTest("arch", "x86_64", "cpu.architecture", "i686");
+        Pool pool = setupArchTest("arch", "x86_64", "cpu.architecture", "i686");
         
         ValidationResult result 
             = enforcer.preEntitlement(consumer, pool, 1).getResult();
@@ -156,7 +156,7 @@ public class DefaultRulesTest {
     
     @Test
     public void missingConsumerArchitectureShouldGenerateWarning() {
-        Pool pool = setupTest("arch", "x86_64", "cpu.architecture", "x86_64");
+        Pool pool = setupArchTest("arch", "x86_64", "cpu.architecture", "x86_64");
         
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<String, String>());
@@ -168,8 +168,44 @@ public class DefaultRulesTest {
     }
     
     @Test
+    public void architectureMatches() {
+        Pool pool = setupArchTest("arch", "x86_64", "cpu.architecture", "x86_64");
+        ValidationResult result 
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+    
+    @Test
+    public void x86ArchitectureProvidesI386() {
+        Pool pool = setupArchTest("arch", "x86", "cpu.architecture", "i386");
+        ValidationResult result 
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+    
+    @Test
+    public void x86ArchitectureProvidesI586() {
+        Pool pool = setupArchTest("arch", "x86", "cpu.architecture", "i586");
+        ValidationResult result 
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+    
+    @Test
+    public void x86ArchitectureProvidesI686() {
+        Pool pool = setupArchTest("arch", "x86", "cpu.architecture", "i686");
+        ValidationResult result 
+            = enforcer.preEntitlement(consumer, pool, 1).getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+    
+    @Test
     public void fewerThanMaximumNumberOfSocketsShouldNotGenerateWarning() {
-        Pool pool = setupTest("sockets", "128", "cpu.cpu_socket(s)", "2");
+        Pool pool = setupArchTest("sockets", "128", "cpu.cpu_socket(s)", "2");
         
         ValidationResult result
             = enforcer.preEntitlement(consumer, pool, 1).getResult();
@@ -179,7 +215,7 @@ public class DefaultRulesTest {
     
     @Test
     public void matchingNumberOfSocketsShouldNotGenerateWarning() {
-        Pool pool = setupTest("sockets", "2", "cpu.cpu_socket(s)", "2");
+        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
         
         ValidationResult result 
             = enforcer.preEntitlement(consumer, pool, 1).getResult();
@@ -189,7 +225,7 @@ public class DefaultRulesTest {
 
     @Test
     public void missingConsumerSocketsShouldGenerateWarning() {
-        Pool pool = setupTest("sockets", "2", "cpu.cpu_socket(s)", "2");
+        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
         
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<String, String>());
@@ -200,7 +236,7 @@ public class DefaultRulesTest {
         assertTrue(result.hasWarnings());
     }
     
-    private Pool setupTest(
+    private Pool setupArchTest(
             final String attributeName, String attributeValue,
             final String factName, final String factValue) {
 
@@ -218,7 +254,7 @@ public class DefaultRulesTest {
     
     @Test
     public void exceedingNumberOfSocketsShouldGenerateWarning() {
-        Pool pool = setupTest("sockets", "2", "cpu.cpu_sockets", "4");
+        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_sockets", "4");
         
         ValidationResult result 
             = enforcer.preEntitlement(consumer, pool, 1).getResult();
