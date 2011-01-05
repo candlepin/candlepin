@@ -166,7 +166,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
             return null;
         }
 
-        throw new UnauthorizedException(i18n.tr("Invalid username or password"));
+        throw new UnauthorizedException(i18n.tr("Invalid Credentials"));
     }
 
     private void updateLastCheckin(Consumer consumer) {
