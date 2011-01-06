@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.service;
 
 import java.util.Date;
 import java.util.List;
+import org.fedoraproject.candlepin.model.Consumer;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -108,4 +109,12 @@ public interface SubscriptionServiceAdapter {
      * @param subscriptionId
      */
     void sendActivationEmail(String subscriptionId);
+
+
+    /**
+     *
+     * @param consumer
+     * @return
+     */
+    boolean canActivateSubscription(Consumer consumer);
 }

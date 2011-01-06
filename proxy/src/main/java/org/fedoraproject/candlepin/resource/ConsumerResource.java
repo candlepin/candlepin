@@ -176,7 +176,14 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
-        return verifyAndLookupConsumer(uuid);
+        Consumer consumer = verifyAndLookupConsumer(uuid);
+
+        if (consumer != null) {
+            // enrich with subscription data
+            consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
+        }
+
+        return consumer;
     }
 
     /**
@@ -222,6 +229,7 @@ public class ConsumerResource {
         consumer.setUsername(user.getUsername());
         consumer.setOwner(user.getOwner());
         consumer.setType(type);
+        consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
 
         if (log.isDebugEnabled()) {
             log.debug("Got consumerTypeLabel of: " + type.getLabel());
@@ -366,7 +374,7 @@ public class ConsumerResource {
         List<EntitlementCertificate> allCerts = entCertService
             .listForConsumer(consumer);
         for (EntitlementCertificate cert : allCerts) {
-            if (serialSet.size() == 0 ||
+            if (serialSet.isEmpty() ||
                 serialSet.contains(cert.getSerial().getId())) {
                 returnCerts.add(cert);
             }

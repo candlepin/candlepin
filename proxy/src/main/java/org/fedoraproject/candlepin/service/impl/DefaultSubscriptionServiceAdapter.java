@@ -22,10 +22,12 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.model.Consumer;
 
 /**
  * default SubscriptionAdapter implementation
@@ -33,15 +35,19 @@ import com.google.inject.Inject;
 public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
     
-    private SubscriptionCurator subCurator;
-    private ProductServiceAdapter prodAdapter;
     private static Logger log = Logger.getLogger(DefaultSubscriptionServiceAdapter.class);
+    private SubscriptionCurator subCurator;
+    private String activationPrefix;
 
     @Inject
     public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator,
-        ProductServiceAdapter prodAdapter) {
+            Config config) {
         this.subCurator = subCurator;
-        this.prodAdapter = prodAdapter;
+
+        this.activationPrefix = config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX);
+        if ("".equals(this.activationPrefix)) {
+            this.activationPrefix = null;
+        }
     }
 
     @Override
@@ -111,5 +117,15 @@ public class DefaultSubscriptionServiceAdapter implements
     @Override
     public void sendActivationEmail(String subscriptionId) {
         // hosted-only
+    }
+
+    @Override
+    public boolean canActivateSubscription(Consumer consumer) {
+        if (this.activationPrefix != null) {
+            return consumer.getName().startsWith(activationPrefix);
+        }
+        else {
+            return false;
+        }
     }
 }

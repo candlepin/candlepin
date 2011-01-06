@@ -47,6 +47,8 @@ public class ConfigProperties {
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = 
         "candlepin.entitlement.revoke.order.fifo";
+    public static final String ACTIVATION_DEBUG_PREFIX = "candlepin.subscription.activation.debug_prefix";
+
     
     // Authentication
     public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enabled";
@@ -87,6 +89,8 @@ public class ConfigProperties {
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
                 this.put(CA_CERT_UPSTREAM, 
                     "/etc/candlepin/certs/candlepin-upstream-ca.crt");
+
+                this.put(ACTIVATION_DEBUG_PREFIX, "");
                 
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
                 this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());

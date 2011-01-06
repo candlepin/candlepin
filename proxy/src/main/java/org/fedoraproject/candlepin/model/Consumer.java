@@ -31,6 +31,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -141,6 +142,9 @@ public class Consumer extends AbstractHibernateObject
     private KeyPair keyPair;
     
     private Date lastCheckin;
+
+    @Transient
+    private boolean canActivate;
 
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
@@ -452,6 +456,14 @@ public class Consumer extends AbstractHibernateObject
 
     public void setLastCheckin(Date lastCheckin) {
         this.lastCheckin = lastCheckin;
+    }
+
+    public boolean isCanActivate() {
+        return canActivate;
+    }
+
+    public void setCanActivate(boolean canActivate) {
+        this.canActivate = canActivate;
     }
 
 }
