@@ -69,7 +69,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         
         return listByCriteria(query);
     }
-
+    
     @Transactional
     public List<Entitlement> listByConsumerAndProduct(Consumer consumer, String productId) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)

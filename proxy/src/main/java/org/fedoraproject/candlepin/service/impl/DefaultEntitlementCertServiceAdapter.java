@@ -170,7 +170,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
-        // TODO: rounding time could give the consumer like extra 1 day atmost.
+        // TODO: rounding time could give the consumer like extra 1 day at most.
         // Should we check that?
         X509Certificate x509Cert = this.pki
             .createX509Certificate(createDN(ent), extensions, ent

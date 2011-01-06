@@ -402,7 +402,7 @@ public class OwnerResource {
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
-    public JobDetail refreshEntitlementPools(@PathParam("owner_key") String ownerKey,
+    public JobDetail refreshPools(@PathParam("owner_key") String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);

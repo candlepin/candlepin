@@ -566,7 +566,7 @@ public class PoolManager {
     // TODO: Does the enforcer have any rules around removing entitlements?
     @Transactional
     public void revokeEntitlement(Entitlement entitlement) {
-        if (this.principalProvider.get()instanceof ConsumerPrincipal) {
+        if (this.principalProvider.get() instanceof ConsumerPrincipal) {
             checkForOutstandingSubPoolEntitlements(entitlement);
         }
         
