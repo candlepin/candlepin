@@ -64,6 +64,11 @@ class RestlibException(ConnectionException):
         return self.msg
 
 
+class NetworkException(ConnectionException):
+
+    def __init__(self, code):
+        self.code = code
+
 class RhsmProxyHTTPSConnection(httpslib.ProxyHTTPSConnection):
     # 2.7 httplib expects to be able to pass a body argument to
     # endheaders, which the m2crypto.httpslib.ProxyHTTPSConnect does
@@ -176,8 +181,7 @@ class Restlib(object):
                 parsed = json.loads(response['content'])
             except Exception, e:
                 log.exception(e)
-                raise RestlibException(response['status'], \
-                    _("Network error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information."))
+                raise NetworkException(response['status'])
 
             raise RestlibException(response['status'],
                     parsed['displayMessage'])
