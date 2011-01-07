@@ -5,7 +5,7 @@
 
 
 Name: python-rhsm
-Version: 0.94.11
+Version: 0.94.12
 Release: 1%{?dist}
 
 Summary: A Python library to communicate with a Red Hat Unified Entitlement Platform
@@ -57,10 +57,11 @@ rm -rf %{buildroot}
 %{python_sitelib}/rhsm-*.egg-info
 
 %changelog
-* Fri Jan 07 2011 Devan Goodwin <dgoodwin@redhat.com> 0.94.11-1
-- References: #668006
+* Fri Jan 07 2011 Devan Goodwin <dgoodwin@redhat.com> 0.94.12-1
+- Related: #668006
 - Remove a missed translation. (dgoodwin@redhat.com)
 - Fix logger warning messages. (dgoodwin@redhat.com)
+
 
 * Tue Dec 21 2010 Devan Goodwin <dgoodwin@redhat.com> 0.94.10-1
 - Related: #661863
