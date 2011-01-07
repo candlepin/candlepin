@@ -86,8 +86,7 @@ public class X509ExtensionUtil {
             new DERUTF8String(iso8601DateFormat.format(sub.getStartDate()))));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
-            new DERUTF8String(iso8601DateFormat.format(Util.roundToMidnight(sub
-                .getEndDate())))));
+            new DERUTF8String(iso8601DateFormat.format(sub.getEndDate()))));
         // TODO : use keys
         String warningPeriod = sub.getProduct().getAttributeValue("warning_period");
         if (warningPeriod == null) {
