@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.26
+Version: 0.1.27
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Fri Jan 07 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.27-1
+- remove rounding to midnight. (jesusr@redhat.com)
+- remove rounding to midnight changes. (jesusr@redhat.com)
+- 660713: add unit test and use local TZ when rounding. (jesusr@redhat.com)
+- fix localization test to match new string (cduryee@redhat.com)
+- Very minor code cleanup. (dgoodwin@redhat.com)
+- Add a translation for the invalid credentials error (bkearney@redhat.com)
+- Change the default error to not reference username/password (bkearney@redhat.com)
+- spec: Fix owner resource parent test. (dgoodwin@redhat.com)
+- spec: Fix pool resource expiry test. (dgoodwin@redhat.com)
+- Support x86 variants in the arch rule. (dgoodwin@redhat.com)
+
 * Tue Dec 21 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.26-1
 - Break out the string manipulation to find an FTE (bkearney@redhat.com)
 - Only return json for the status (bkearney@redhat.com)
