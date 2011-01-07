@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -121,11 +120,9 @@ public class Util {
         calendar.add(Calendar.YEAR, yr);
         return calendar.getTime();
     }
-    public static final TimeZone UTC_TZ  = new SimpleTimeZone(0, UTC_STR);
-    
     
     public static Date roundToMidnight(Date dt) {
-        Calendar cal = Calendar.getInstance(UTC_TZ);
+        Calendar cal = Calendar.getInstance();
         cal.setTime(dt);
         cal.set(Calendar.MINUTE, 59);
         cal.set(Calendar.SECOND, 59);
