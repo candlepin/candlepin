@@ -47,7 +47,7 @@ public class ExpiryDateFunction implements Function<Date, Date> {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime((Date) arg0.clone());
         calendar.add(Calendar.YEAR, yrAddendum);
-        return Util.roundToMidnight(calendar.getTime());
+        return calendar.getTime();
     }
 
 }
