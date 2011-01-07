@@ -19,6 +19,9 @@ import static org.junit.Assert.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.model.Consumer;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Product;
@@ -30,6 +33,7 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     
@@ -135,6 +139,66 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
 
         subIds = adapter.getSubscriptions(owner, childProduct.getId());
         assertEquals(1, subIds.size());
+    }
+
+    @Test
+    public void activationPrefix() {
+        Config config = Mockito.mock(Config.class);
+        Mockito.when(config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX))
+                .thenReturn("mega");
+
+        Consumer consumer = Mockito.mock(Consumer.class);
+        Mockito.when(consumer.getName()).thenReturn("megaman");
+
+        SubscriptionServiceAdapter adapter =
+                new DefaultSubscriptionServiceAdapter(subCurator, config);
+
+        assertTrue(adapter.canActivateSubscription(consumer));
+    }
+
+    @Test
+    public void activationPrefixFailure() {
+        Config config = Mockito.mock(Config.class);
+        Mockito.when(config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX))
+                .thenReturn("mega");
+
+        Consumer consumer = Mockito.mock(Consumer.class);
+        Mockito.when(consumer.getName()).thenReturn("superman");
+
+        SubscriptionServiceAdapter adapter =
+                new DefaultSubscriptionServiceAdapter(subCurator, config);
+
+        assertFalse(adapter.canActivateSubscription(consumer));
+    }
+
+    @Test
+    public void activationPrefixEmpty() {
+        Config config = Mockito.mock(Config.class);
+        Mockito.when(config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX))
+                .thenReturn("");
+
+        Consumer consumer = Mockito.mock(Consumer.class);
+        Mockito.when(consumer.getName()).thenReturn("anything");
+
+        SubscriptionServiceAdapter adapter =
+                new DefaultSubscriptionServiceAdapter(subCurator, config);
+
+        assertFalse(adapter.canActivateSubscription(consumer));
+    }
+
+    @Test
+    public void activationPrefixNull() {
+        Config config = Mockito.mock(Config.class);
+        Mockito.when(config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX))
+                .thenReturn(null);
+
+        Consumer consumer = Mockito.mock(Consumer.class);
+        Mockito.when(consumer.getName()).thenReturn("anything");
+
+        SubscriptionServiceAdapter adapter =
+                new DefaultSubscriptionServiceAdapter(subCurator, config);
+
+        assertFalse(adapter.canActivateSubscription(consumer));
     }
 
 }
