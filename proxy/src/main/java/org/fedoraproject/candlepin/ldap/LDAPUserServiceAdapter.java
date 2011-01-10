@@ -124,7 +124,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             String dn = getDN(username);
             LDAPConnection lc = new LDAPConnection();
             lc.connect(ldapServer, ldapPort);
-            LDAPEntry entry = lc.read(dn);
+            lc.read(dn);
             user = new User(getOwner(username), username, null);
         } 
         catch (LDAPException e) {
