@@ -15,14 +15,10 @@
 package org.fedoraproject.candlepin.model.test;
 
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.hamcrest.collection.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertThat;
 
@@ -50,7 +46,5 @@ public class ContentTest extends DatabaseTestFixture {
         Content lookedUp = contentCurator.find(content.getId());
         assertEquals(content.getContentUrl(), lookedUp.getContentUrl());
         assertThat(lookedUp.getModifiedProductIds(), hasItem("ProductB"));
-        assertTrue(lookedUp.isModifier());
-       
     }
 }

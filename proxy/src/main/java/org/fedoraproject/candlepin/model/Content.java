@@ -140,15 +140,6 @@ public class Content extends AbstractHibernateObject {
         return modifiedProductIds;
     }
     
-    public Boolean isModifier() {
-        if (modifiedProductIds.size() > 0) {
-            return true;
-        } else {
-            return false;
-        }
-        
-    }
-
     public String getType() {
         return type;
     }
