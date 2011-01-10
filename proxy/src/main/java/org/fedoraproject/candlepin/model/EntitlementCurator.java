@@ -72,24 +72,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return listByCriteria(query);
     }
     
-    /**
-     * List all entitlements for the given consumer which provide the given product ID, 
-     * and overlap at least partially with the given start and end dates.
-     * 
-     * i.e. given start date must be within the entitlements start/end dates, or
-     * the given end date must be within the entitlements start/end dates, 
-     * or the given start date must be before the entitlement *and* the given end date
-     * must be after entitlement. (i.e. we are looking for *any* overlap)
-     * 
-     * @param consumer Consumer whose entitlements we're checking.
-     * @param productId Find entitlements providing this productId.
-     * @param startDate Find entitlements 
-     * @param endDate
-     * @return list of entitlements providing the given product
-     */
-    public List<Entitlement> listProviding(Consumer consumer, String productId, 
-        Date startDate, Date endDate) {
-        
+    private Criteria createDateFilteringCriteria(Consumer consumer, Date startDate, 
+        Date endDate) {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
             .add(Restrictions.or(
@@ -105,10 +89,45 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                     // Checks total overlap:
                     Restrictions.and(
                         Restrictions.ge("startDate", startDate),
-                        Restrictions.le("endDate", endDate)))))
-            .createCriteria("pool")
-                .add(Restrictions.eq("productId", productId));
-        return criteria.list();
+                        Restrictions.le("endDate", endDate)))));
+        return criteria;
+    }
+    
+    /**
+     * List all entitlements for the given consumer which provide the given product ID, 
+     * and overlap at least partially with the given start and end dates.
+     * 
+     * i.e. given start date must be within the entitlements start/end dates, or
+     * the given end date must be within the entitlements start/end dates, 
+     * or the given start date must be before the entitlement *and* the given end date
+     * must be after entitlement. (i.e. we are looking for *any* overlap)
+     * 
+     * @param consumer Consumer whose entitlements we're checking.
+     * @param productId Find entitlements providing this productId.
+     * @param startDate Find entitlements 
+     * @param endDate
+     * @return list of entitlements providing the given product
+     */
+    public Set<Entitlement> listProviding(Consumer consumer, String productId, 
+        Date startDate, Date endDate) {
+        
+        // Will re-use this criteria for both queries we need to do:
+        
+        // Find direct matches on the pool's product ID:
+        Criteria parentProductCrit = createDateFilteringCriteria(consumer, startDate, 
+            endDate).createCriteria("pool").add(Restrictions.eq("productId", productId));
+        
+        // Using a set to prevent duplicate matches, if somehow 
+        Set<Entitlement> finalResults = new HashSet<Entitlement>();
+        finalResults.addAll(parentProductCrit.list());
+        
+        Criteria providedCrit = createDateFilteringCriteria(consumer, startDate, 
+            endDate).createCriteria("pool")
+            .createCriteria("providedProducts")
+            .add(Restrictions.eq("productId", productId));
+        finalResults.addAll(providedCrit.list());
+        
+        return finalResults;
     }
     
     @Transactional
