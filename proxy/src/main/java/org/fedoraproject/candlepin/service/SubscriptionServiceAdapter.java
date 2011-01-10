@@ -112,9 +112,20 @@ public interface SubscriptionServiceAdapter {
 
 
     /**
+     * Can this consumer activate a subscription?
      *
      * @param consumer
      * @return
      */
     boolean canActivateSubscription(Consumer consumer);
+
+    /**
+     * Activate a subscription associated with the consumer
+     *
+     * @param consumer the Consumer with the associated subscription
+     * @param email the email address tied to this consumer
+     * @param emailLocale the i18n locale for the email
+     */
+    void activateSubscription(Consumer consumer, String email,
+            String emailLocale);
 }

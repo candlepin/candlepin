@@ -30,6 +30,13 @@ import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.POST;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 /**
  * SubscriptionResource
@@ -38,14 +45,20 @@ import com.google.inject.Inject;
 @Path("/subscriptions")
 public class SubscriptionResource {
     private static Logger log = Logger.getLogger(SubscriptionResource.class);
+
     private SubscriptionCurator subCurator;
+    private SubscriptionServiceAdapter subService;
+    private ConsumerCurator consumerCurator;
 
     private I18n i18n;
 
     @Inject
     public SubscriptionResource(SubscriptionCurator subCurator,
+        SubscriptionServiceAdapter subService, ConsumerCurator consumerCurator,
         I18n i18n) {
         this.subCurator = subCurator;
+        this.subService = subService;
+        this.consumerCurator = consumerCurator;
         this.i18n = i18n;
     }
 
@@ -63,6 +76,31 @@ public class SubscriptionResource {
         
         Subscription subscription = verifyAndFind(subscriptionId);
         return subscription;
+    }
+
+    @POST
+    public void activateSubscription(@QueryParam("consumer_uuid") String consumerUuid,
+        @QueryParam("email") String email,
+        @QueryParam("email_locale") String emailLocale,
+        @Context HttpServletResponse response) {
+
+        if (email == null || emailLocale == null) {
+            throw new BadRequestException(i18n.tr(
+                    "email and email_locale are required for notification"));
+        }
+
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+
+        if (consumer == null) {
+            throw new BadRequestException(i18n.tr("No such consumer: {0}",
+                consumerUuid));
+        }
+
+        this.subService.activateSubscription(consumer, email, emailLocale);
+
+        // setting response status to 202 because subscription does not
+        // exist yet, but is currently being processed
+        response.setStatus(HttpServletResponse.SC_ACCEPTED);
     }
 
     @DELETE

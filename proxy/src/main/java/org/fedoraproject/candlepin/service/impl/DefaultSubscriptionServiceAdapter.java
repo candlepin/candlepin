@@ -128,4 +128,13 @@ public class DefaultSubscriptionServiceAdapter implements
             return false;
         }
     }
+
+    @Override
+    public void activateSubscription(Consumer consumer, String email, 
+        String emailLocale) {
+        
+        throw new UnsupportedOperationException(
+                "Standalone candlepin does not support activation.");
+    }
+
 }
