@@ -200,6 +200,7 @@ public class DatabaseTestFixture {
      */
     protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
         Date startDate, Date endDate) {
+        
         Pool p = new Pool(owner, product.getId(), new HashSet<ProvidedProduct>(), quantity, 
                 startDate, endDate, DEFAULT_CONTRACT, DEFAULT_ACCOUNT);
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 

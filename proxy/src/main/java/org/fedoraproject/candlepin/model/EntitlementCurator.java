@@ -14,12 +14,14 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -68,6 +70,45 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.eq("owner", owner));
         
         return listByCriteria(query);
+    }
+    
+    /**
+     * List all entitlements for the given consumer which provide the given product ID, 
+     * and overlap at least partially with the given start and end dates.
+     * 
+     * i.e. given start date must be within the entitlements start/end dates, or
+     * the given end date must be within the entitlements start/end dates, 
+     * or the given start date must be before the entitlement *and* the given end date
+     * must be after entitlement. (i.e. we are looking for *any* overlap)
+     * 
+     * @param consumer Consumer whose entitlements we're checking.
+     * @param productId Find entitlements providing this productId.
+     * @param startDate Find entitlements 
+     * @param endDate
+     * @return list of entitlements providing the given product
+     */
+    public List<Entitlement> listProviding(Consumer consumer, String productId, 
+        Date startDate, Date endDate) {
+        
+        Criteria criteria = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.or(
+                // Checks start date overlap:
+                Restrictions.and(
+                    Restrictions.le("startDate", startDate),
+                    Restrictions.ge("endDate", startDate)),
+                Restrictions.or(
+                    // Checks end date overlap:
+                    Restrictions.and(
+                        Restrictions.le("startDate", endDate),
+                        Restrictions.ge("endDate", endDate)),
+                    // Checks total overlap:
+                    Restrictions.and(
+                        Restrictions.ge("startDate", startDate),
+                        Restrictions.le("endDate", endDate)))))
+            .createCriteria("pool")
+                .add(Restrictions.eq("productId", productId));
+        return criteria.list();
     }
     
     @Transactional

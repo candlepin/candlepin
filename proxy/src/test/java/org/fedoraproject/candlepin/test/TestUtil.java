@@ -234,6 +234,8 @@ public class TestUtil {
         toReturn.setPool(pool);
         toReturn.setOwner(owner);
         toReturn.setConsumer(consumer);
+        toReturn.setStartDate(pool.getStartDate());
+        toReturn.setEndDate(pool.getEndDate());
         if (cert != null) {
             cert.setEntitlement(toReturn);
             toReturn.getCertificates().add(cert);
