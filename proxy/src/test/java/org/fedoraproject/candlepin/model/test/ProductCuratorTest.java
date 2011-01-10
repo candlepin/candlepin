@@ -14,9 +14,11 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
+import static org.hamcrest.collection.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
@@ -31,6 +33,7 @@ import javax.persistence.PersistenceException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -173,6 +176,20 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertNotNull(prod.getUpdated());
     }
 
+    @Test
+    public void testDependentProducts() {
+        Product prod = new Product("test-label", "test-product-name");
+        HashSet<String> dependentProductIds = new HashSet<String>();
+        dependentProductIds.add("ProductX");
+        prod.setDependentProductIds(dependentProductIds);
+        productCurator.create(prod);
+        
+        Product lookedUp = productCurator.find(prod.getId());
+        assertThat(lookedUp.getDependentProductIds(), hasItem("ProductX"));        
+
+    }    
+    
+    
     /**
      * Test whether the product updation date is updated when merging.
      */
