@@ -47,7 +47,8 @@ public class ConfigProperties {
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = 
         "candlepin.entitlement.revoke.order.fifo";
-    public static final String ACTIVATION_DEBUG_PREFIX = "candlepin.subscription.activation.debug_prefix";
+    public static final String ACTIVATION_DEBUG_PREFIX =
+        "candlepin.subscription.activation.debug_prefix";
 
     
     // Authentication

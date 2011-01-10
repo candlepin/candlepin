@@ -57,23 +57,23 @@ public class SubscriptionResourceTest  {
                 consumerCurator, i18n);
     }
 
-    @Test(expected=BadRequestException.class)
+    @Test(expected = BadRequestException.class)
     public void testInvalidIdOnDelete() throws Exception {
         subResource.deleteSubscription("JarJarBinks");
     }
 
-    @Test(expected=BadRequestException.class)
+    @Test(expected = BadRequestException.class)
     public void activateNoEmail() {
         subResource.activateSubscription("random", null, "en_us", null);
     }
 
-    @Test(expected=BadRequestException.class)
+    @Test(expected = BadRequestException.class)
     public void activateNoEmailLocale() {
         subResource.activateSubscription("random", "random@somthing.com",
                 null, null);
     }
 
-    @Test(expected=BadRequestException.class)
+    @Test(expected = BadRequestException.class)
     public void activateBadConsumer() {
         subResource.activateSubscription("test_consumer", "email@whatever.net",
                 "en_us", null);
