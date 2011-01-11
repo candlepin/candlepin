@@ -16,9 +16,7 @@
 # in this software or its documentation.
 #
 
-#import sys
 import locale
-#import httplib
 import simplejson as json
 import base64
 import os
@@ -83,7 +81,7 @@ class RhsmProxyHTTPSConnection(httpslib.ProxyHTTPSConnection):
             httpslib.HTTPSConnection.endheaders(self)
     #        httpslib.HTTPSConnection.endheaders(self, body)
 
-        
+
 
 class Restlib(object):
     """
@@ -152,14 +150,14 @@ class Restlib(object):
                                             username=self.proxy_user,
                                             password=self.proxy_password,
                                             ssl_context=context)
-            # this connection class wants the full url 
+            # this connection class wants the full url
             handler = "https://%s:%s%s" % (self.host, self.ssl_port, handler)
             log.info("handler: %s" % handler)
         else:
             conn = httpslib.HTTPSConnection(self.host, self.ssl_port, ssl_context=context)
 
         conn.request(request_type, handler,
-                     body=json.dumps(info), 
+                     body=json.dumps(info),
                      headers=self.headers)
 
         response = conn.getresponse()
@@ -230,7 +228,7 @@ class UEPConnection:
         self.host = host
         self.ssl_port = ssl_port
         self.handler = handler
-        
+
         self.proxy_hostname = proxy_hostname
         self.proxy_port = proxy_port
         self.proxy_user = proxy_user
@@ -366,12 +364,12 @@ class UEPConnection:
             method += "&email_locale=%s" % lang
         return self.conn.request_post(method)
 
-    def bindByMachine(self, consumerId, email=None, lang=None):
+    def activateMachine(self, consumerId, email=None, lang=None):
         """
-        Subscribe consumer by machine, information is located in the
+        Activate a subscription by machine, information is located in the
         consumer facts
         """
-        method = "/consumers/%s/entitlements?type=consumer" % consumerId
+        method = "/subscriptions?consumer_uuid=%s" % consumerId
         if email:
             method += "&email=%s" % email
             if not lang:
@@ -441,5 +439,4 @@ class UEPConnection:
     def regenIdCertificate(self, consumerId):
         method = "/consumers/%s" % consumerId
         return self.conn.request_post(method)
-
 
