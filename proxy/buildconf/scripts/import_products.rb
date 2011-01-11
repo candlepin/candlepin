@@ -57,7 +57,7 @@ puts "importing content set data..."
 data['content'].each do |content|
 	puts content[0]
 	cp.create_content(content[0], content[1], content[2], content[3],
-			 content[4], content[5], content[6])
+			 content[4], content[5], content[6], content[7])
 end
 
 
