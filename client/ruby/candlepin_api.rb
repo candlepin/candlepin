@@ -237,7 +237,7 @@ class Candlepin
   end
 
   def create_content(name, id, label, type, vendor,
-                     contentUrl, gpgUrl)
+                     contentUrl, gpgUrl, modifiedProductIds)
     content = {
       'name' => name,
       'id' => id,
@@ -245,7 +245,8 @@ class Candlepin
       'type' => type,
       'vendor' => vendor,
       'contentUrl' => contentUrl,
-      'gpgUrl' => gpgUrl
+      'gpgUrl' => gpgUrl,
+      'modifiedProductIds' => modifiedProductIds
     }
     post("/content", content)
   end
@@ -266,6 +267,7 @@ class Candlepin
 
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
+    dependentProductIds = params[:dependentProductIds] || {}
     #if product don't have type attributes, create_product will fail on server
     #side.
     attributes['type'] = 'SVC' if attributes['type'].nil?
