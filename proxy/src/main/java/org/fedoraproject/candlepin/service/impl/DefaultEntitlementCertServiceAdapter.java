@@ -29,9 +29,11 @@ import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.PKIUtility;
@@ -58,6 +60,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private ProductServiceAdapter productAdapter;
+    private EntitlementCurator entCurator;
     
     private static Logger log = 
         LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
@@ -68,7 +71,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         EntitlementCertificateCurator entCertCurator, 
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
-        ProductServiceAdapter productAdapter) {
+        ProductServiceAdapter productAdapter,
+        EntitlementCurator entCurator) {
         
         this.pki = pki;
         this.extensionUtil = extensionUtil;
@@ -76,6 +80,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
         this.productAdapter = productAdapter;
+        this.entCurator = entCurator;
     }
 
     
@@ -147,6 +152,45 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
         return providedProducts;
     }
+    
+    /**
+     * Scan the product content looking for any which modify some other product. If found
+     * we must check that this consumer has another entitlement granting them access
+     * to that modified product. If they do not, we should filter out this content.
+     * 
+     * @param prod
+     * @param ent
+     * @return ProductContent to include in the certificate.
+     */
+    public Set<ProductContent> filterProductContent(Product prod, Entitlement ent) {
+        Set<ProductContent> filtered = new HashSet<ProductContent>();
+        for (ProductContent pc : prod.getProductContent()) {
+            boolean include = true;
+            if (pc.getContent().getModifiedProductIds().size() > 0) {
+                include = false;
+                Set<String> prodIds = pc.getContent().getModifiedProductIds();
+                // If consumer has an entitlement to just one of the modified products,
+                // we will include this content set:
+                for (String prodId : prodIds) {
+                    Set<Entitlement> entsProviding = entCurator.listProviding(
+                        ent.getConsumer(), prodId, ent.getStartDate(), ent.getEndDate());
+                    if (entsProviding.size() > 0) {
+                        include = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (include) {
+                filtered.add(pc);
+            }
+            else {
+                log.debug("No entitlements found for modified products.");
+                log.debug("Skipping content set: " + pc.getContent());
+            }
+        }
+        return filtered;
+    }
 
     public X509Certificate createX509Certificate(Entitlement ent,
         Subscription sub, Product product, BigInteger serialNumber,
@@ -160,7 +204,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         for (Product prod : Collections2
             .filter(products, PROD_FILTER_PREDICATE)) {
             extensions.addAll(extensionUtil.productExtensions(prod));
-            extensions.addAll(extensionUtil.contentExtensions(prod));
+            extensions.addAll(extensionUtil.contentExtensions(
+                filterProductContent(prod, ent)));
         }
 
         if (sub != null) {

@@ -14,15 +14,16 @@
  */
 package org.fedoraproject.candlepin.service.impl.test;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -75,6 +77,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private CertificateSerialCurator serialCurator;
     @Mock
     private ProductServiceAdapter productAdapter;
+    @Mock
+    private EntitlementCurator entCurator;
     private X509ExtensionUtil extensionUtil;
     private Product product;
     private Subscription subscription;
@@ -85,17 +89,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
         extensionUtil = new X509ExtensionUtil();
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, extensionUtil, null, null, serialCurator, productAdapter);
+            mockedPKI, extensionUtil, null, null, serialCurator, productAdapter, 
+            entCurator);
 
         product = new Product("12345", "a product", "variant", "version",
             "arch", "SVC");
 
-        Content content = new Content(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+        Content content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
-        content.setType(CONTENT_TYPE);
-        content.setLabel(CONTENT_LABEL);
-        content.setId(CONTENT_ID);
-
+        
         subscription = new Subscription(null, product, new HashSet<Product>(),
             1L, new Date(), new Date(), new Date());
         subscription.setId("1");
@@ -109,13 +111,58 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         product.setContent(Collections.singleton(content));
     }
+    
+    private Content createContent(String name, String id, String label, String type, 
+        String vendor, String url, String gpgUrl) {
+        Content content = new Content(name, id, label, type, vendor, url, gpgUrl);
+        return content;
+    }
 
     @Test
     public void testContentExtentionCreation() {
         // AAAH! This should be pulled out to its own test class!
         Set<X509ExtensionWrapper> content = extensionUtil
-            .contentExtensions(product);
+            .contentExtensions(product.getProductContent());
         assertTrue(isEncodedContentValid(content));
+    }
+    
+    @Test
+    public void testFilterProductContent() {
+        Product modProduct = new Product("12345", "a product", "variant", "version",
+            "arch", "SVC");
+        
+        // Use this set for successful providing queries:
+        Set<Entitlement> successResult = new HashSet<Entitlement>();
+        successResult.add(new Entitlement()); // just need something in there
+
+        Content normalContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
+        // Change label to prevent an equals match:
+        Content modContent = createContent(CONTENT_NAME, CONTENT_ID, "differentlabel",
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
+        modContent.setLabel("mod content");
+        Set<String> modifiedProductIds = new HashSet<String>(
+            Arrays.asList(new String [] {"product1", "product2"}));
+        modContent.setModifiedProductIds(modifiedProductIds);
+        
+        modProduct.addContent(normalContent);
+        modProduct.addContent(modContent);
+        
+        // First check that if we have no entitlements providing the modified products,
+        // the content set is filtered out:
+        when(this.entCurator.listProviding(any(Consumer.class), eq("product1"), 
+            any(Date.class), any(Date.class))).thenReturn(new HashSet<Entitlement>());
+        // Mod content should get filtered out because we have no ents providing the
+        // product it modifies:
+        assertEquals(1, certServiceAdapter.filterProductContent(modProduct, 
+            entitlement).size());
+
+        // Now mock that we have an entitlement providing one of the modified products,
+        // and we should see both content sets included in the cert:
+        when(this.entCurator.listProviding(any(Consumer.class), eq("product2"), 
+            any(Date.class), any(Date.class))).thenReturn(successResult);
+        assertEquals(2, certServiceAdapter.filterProductContent(modProduct, 
+            entitlement).size());
     }
 
     @Test
