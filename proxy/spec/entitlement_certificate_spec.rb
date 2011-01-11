@@ -112,4 +112,14 @@ describe 'Entitlement Certificate' do
       sub['startDate'].should == x509.not_before().strftime('%Y-%m-%d').to_date
       sub['endDate'].should == x509.not_after().strftime('%Y-%m-%d').to_date
   end
+
+  it 'contains the support level and support type oid for products with a support level' do
+      prod = create_product()
+      sub = @cp.create_subscription(@owner.key, prod.id, 10)
+      @cp.refresh_pools(@owner.key)
+
+      @system.consume_product(prod.id, 6)
+
+      @system.list_certificates().size.should == 1
+  end
 end

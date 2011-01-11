@@ -836,22 +836,34 @@ class Order:
 
     def getAccountNumber(self):
         return self.ext.get('13')
+    
+    def getProvidesManagement(self):
+        return self.ext.get('14')
+
+    def getSupportLevel(self):
+        return self.ext.get('15')
+
+    def getSupportType(self):
+        return self.ext.get('16')
 
     def __str__(self):
         s = []
         s.append('Order {')
-        s.append('\tName ............ = %s' % self.getName())
-        s.append('\tNumber .......... = %s' % self.getNumber())
-        s.append('\tSKU ............. = %s' % self.getSku())
-        s.append('\tSubscription .... = %s' % self.getSubscription())
-        s.append('\tQuantity ........ = %s' % self.getQuantity())
-        s.append('\tStart (Ent) ..... = %s' % self.getStart())
-        s.append('\tEnd (Ent) ....... = %s' % self.getEnd())
-        s.append('\tVirt Limit ...... = %s' % self.getVirtLimit())
-        s.append('\tSocket Limit .... = %s' % self.getSocketLimit())
-        s.append('\tContract ........ = %s' % self.getContract())
-        s.append('\tWarning Period .. = %s' % self.getWarningPeriod())
-        s.append('\tAccount Number .. = %s' % self.getAccountNumber())
+        s.append('\tName ................. = %s' % self.getName())
+        s.append('\tNumber ............... = %s' % self.getNumber())
+        s.append('\tSKU .................. = %s' % self.getSku())
+        s.append('\tSubscription ......... = %s' % self.getSubscription())
+        s.append('\tQuantity ............. = %s' % self.getQuantity())
+        s.append('\tStart (Ent) .......... = %s' % self.getStart())
+        s.append('\tEnd (Ent) ............ = %s' % self.getEnd())
+        s.append('\tVirt Limit ........... = %s' % self.getVirtLimit())
+        s.append('\tSocket Limit ......... = %s' % self.getSocketLimit())
+        s.append('\tContract ............. = %s' % self.getContract())
+        s.append('\tWarning Period ....... = %s' % self.getWarningPeriod())
+        s.append('\tAccount Number ....... = %s' % self.getAccountNumber())
+        s.append('\tProvides Management .. = %s' % self.getProvidesManagement())
+        s.append('\tSupport Level ........ = %s' % self.getSupportLevel())
+        s.append('\tSupport Type ......... = %s' % self.getSupportType())
         s.append('}')
         return '\n'.join(s)
 

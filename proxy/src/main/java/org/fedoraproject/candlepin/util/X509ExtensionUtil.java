@@ -112,7 +112,20 @@ public class X509ExtensionUtil {
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY), false,
             new DERUTF8String(mgmt)));
-
+        
+        String supportLevel = sub.getProduct().getAttributeValue("support_level");
+        String supportType = sub.getProduct().getAttributeValue("support_type");
+        if (supportLevel != null) {
+            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false,
+                new DERUTF8String(supportLevel)));
+        }
+        if (supportType != null) {
+            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
+                new DERUTF8String(supportType)));
+        }
+        
         return toReturn;
     }
 

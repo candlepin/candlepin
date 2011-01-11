@@ -50,6 +50,8 @@ public final class OIDUtil {
     public static final String ORDER_WARNING_PERIOD = "Warning Period";
     public static final String ORDER_ACCOUNT_NUMBER_KEY = "Account Number";
     public static final String ORDER_PROVIDES_MANAGEMENT_KEY = "Provides Management";
+    public static final String ORDER_SUPPORT_LEVEL = "Support Level";
+    public static final String ORDER_SUPPORT_TYPE = "Support Type";
 
     public static final String OP_NAME_KEY = "Name";
     public static final String OP_DESC_KEY = "Variant";
@@ -120,6 +122,8 @@ public final class OIDUtil {
         ORDER_OIDS.put(ORDER_WARNING_PERIOD, "12");
         ORDER_OIDS.put(ORDER_ACCOUNT_NUMBER_KEY, "13");
         ORDER_OIDS.put(ORDER_PROVIDES_MANAGEMENT_KEY, "14");
+        ORDER_OIDS.put(ORDER_SUPPORT_LEVEL, "15");
+        ORDER_OIDS.put(ORDER_SUPPORT_TYPE, "16");
 
         // load order product oids
         ORDER_PRODUCT_OIDS.put(OP_NAME_KEY, "1");
