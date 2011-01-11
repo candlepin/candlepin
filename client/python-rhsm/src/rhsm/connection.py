@@ -16,9 +16,9 @@
 # in this software or its documentation.
 #
 
-import sys
+#import sys
 import locale
-import httplib
+#import httplib
 import simplejson as json
 import base64
 import os
@@ -359,6 +359,19 @@ class UEPConnection:
         Subscribe consumer to a subscription token
         """
         method = "/consumers/%s/entitlements?token=%s" % (consumerId, regnum)
+        if email:
+            method += "&email=%s" % email
+            if not lang:
+                lang = locale.getdefaultlocale()[0].lower().replace('_', '-')
+            method += "&email_locale=%s" % lang
+        return self.conn.request_post(method)
+
+    def bindByMachine(self, consumerId, email=None, lang=None):
+        """
+        Subscribe consumer by machine, information is located in the
+        consumer facts
+        """
+        method = "/consumers/%s/entitlements?type=consumer" % consumerId
         if email:
             method += "&email=%s" % email
             if not lang:
