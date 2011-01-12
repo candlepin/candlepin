@@ -112,15 +112,15 @@ public class ReadOnlyConsumer {
     /**
      * Return true if this Consumer has any entitlements for the given product
      * label.
-     * @param productId id of the product to lookup.
+     * @param poolId id of the pool
      * @return true if this Consumer has any entitlements for the given product
      * label
      */
     //TODO Is this correct? Do we need to check if the entitlement product provides 
     // the requested product?
-    public boolean hasEntitlement(String productId) {
+    public boolean hasEntitlement(String poolId) {
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProductId().equals(productId)) {
+            if (e.getPool().getId().equals(poolId)) {
                 return true;
             }
         }

@@ -160,6 +160,7 @@ public class TestUtil {
         Pool pool = new Pool(owner, productId, providedProducts, Long.valueOf(quantity),
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30),
             "SUB234598S", "ACC123");
+
         return pool;
     }
     
