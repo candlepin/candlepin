@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.27
+Version: 0.1.28
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Jan 12 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.28-1
+- findbugs: unread assignment (jesusr@redhat.com)
+
 * Fri Jan 07 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.27-1
 - remove rounding to midnight. (jesusr@redhat.com)
 - remove rounding to midnight changes. (jesusr@redhat.com)
