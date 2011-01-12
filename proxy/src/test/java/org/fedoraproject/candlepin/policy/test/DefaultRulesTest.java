@@ -81,10 +81,17 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
     }
     
+    private Pool createPool(Owner owner, Product product) {
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setId("fakeid" + TestUtil.randomInt());
+        return pool;
+    }
+
+
     @Test
     public void testBindForSameProductNotAllowed() {
         Product product = new Product(productId, "A product for testing");
-        Pool pool = TestUtil.createPool(owner, product);
+        Pool pool = createPool(owner, product);
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
@@ -102,7 +109,7 @@ public class DefaultRulesTest {
     public void testBindFromSameProductAllowedWithMultiEntitlementAttribute() {
         Product product = new Product(productId, "A product for testing");
         product.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
-        Pool pool = TestUtil.createPool(owner, product);
+        Pool pool = createPool(owner, product);
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
@@ -121,6 +128,7 @@ public class DefaultRulesTest {
     public void bindFromExhaustedPoolShouldFail() {
         Product product = new Product(productId, "A product for testing");
         Pool pool = TestUtil.createPool(owner, product, 0);
+        pool.setId("fakeid" + TestUtil.randomInt());
 
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(), 1);
         consumer.addEntitlement(e);
@@ -137,6 +145,7 @@ public class DefaultRulesTest {
     @Test
     public void architectureALLShouldNotGenerateWarnings() {
         Pool pool = setupArchTest("arch", "ALL", "arch", "i686");
+        pool.setId("fakeid" + TestUtil.randomInt());
         
         ValidationResult result 
             = enforcer.preEntitlement(consumer, pool, 1).getResult();
@@ -243,6 +252,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A product for testing");
         product.addAttribute(new ProductAttribute(attributeName, attributeValue));
         Pool pool = TestUtil.createPool(owner, product);
+        pool.setId("fakeid" + TestUtil.randomInt());
         
         consumer.setFacts(new HashMap<String, String>() {
             { put(factName, factValue); }
@@ -287,7 +297,7 @@ public class DefaultRulesTest {
     private Pool setupProductWithRequiresConsumerTypeAttribute() {
         Product product = new Product(productId, "A product for testing");
         product.setAttribute("requires_consumer_type", ConsumerTypeEnum.DOMAIN.toString());
-        Pool pool = TestUtil.createPool(owner, product);
+        Pool pool = createPool(owner, product);
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }
@@ -332,7 +342,7 @@ public class DefaultRulesTest {
     private Pool setupUserLicensedPool() {
         Product product = new Product(productId, "A user licensed product");
         product.setAttribute("requires_consumer_type", ConsumerTypeEnum.PERSON.toString());
-        Pool pool = TestUtil.createPool(owner, product);
+        Pool pool = createPool(owner, product);
         pool.setAttribute("user_license", "unlimited");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
@@ -614,6 +624,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
         pool.setRestrictedToUsername("bob");
+        pool.setId("fakeid" + TestUtil.randomInt());
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }

@@ -197,7 +197,7 @@ var Entitlement = {
 	},
 	
 	pre_global: function() {
-		if (consumer.hasEntitlement(product) && product.getAttribute("multi-entitlement") != "yes") {
+		if (consumer.hasEntitlement(pool.getId()) && product.getAttribute("multi-entitlement") != "yes") {
 			pre.addError("rulefailed.consumer.already.has.product");
 		}
 	
