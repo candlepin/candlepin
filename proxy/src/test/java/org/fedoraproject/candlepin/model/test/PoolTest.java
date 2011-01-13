@@ -249,7 +249,6 @@ public class PoolTest extends DatabaseTestFixture {
             "child2", pool));
         pool.addProvidedProduct(new ProvidedProduct("child3",
             "child3", pool));
-        pool.setProvidedProducts(providedProducts);
         poolCurator.merge(pool);
 
         pool = poolCurator.find(pool.getId());
