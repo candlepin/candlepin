@@ -45,4 +45,26 @@ describe 'Refresh Pools' do
     @cp.list_pools({:owner => owner.id}).length.should == 6
   end
 
+  it 'detects changes in provided products' do
+    owner = create_owner random_string
+    product = create_product(random_string, random_string)
+    provided1 = create_product(random_string, random_string)
+    provided2 = create_product(random_string, random_string)
+    provided3 = create_product(random_string, random_string)
+    sub = @cp.create_subscription(owner.key, product.id, 500,
+      [provided1.id, provided2.id])
+    @cp.refresh_pools(owner.key)
+    pools = @cp.list_pools({:owner => owner.id})
+    pools.length.should == 1
+    pools[0].providedProducts.length.should == 2
+
+    # Remove the old provided products and add a new one:
+    sub.providedProducts = [@cp.get_product(provided3.id)]
+    @cp.update_subscription(sub)
+    sub2 = @cp.get_subscription(sub.id)
+    @cp.refresh_pools(owner.key)
+    pools = @cp.list_pools({:owner => owner.id})
+    pools[0].providedProducts.length.should == 1
+  end
+
 end

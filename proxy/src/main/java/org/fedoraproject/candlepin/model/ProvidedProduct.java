@@ -39,7 +39,8 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "cp_pool_products")
 public class ProvidedProduct extends AbstractHibernateObject 
-    implements AccessControlEnforced{
+        implements AccessControlEnforced {
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -67,6 +68,12 @@ public class ProvidedProduct extends AbstractHibernateObject
         this.productName = productName;
     }
     
+    public ProvidedProduct(String productId, String productName, Pool pool) {
+        this.productId = productId;
+        this.productName = productName;
+        this.pool = pool;
+    }
+
     /**
      * @return the productId
      */
