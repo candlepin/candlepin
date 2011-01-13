@@ -221,4 +221,39 @@ public class PoolTest extends DatabaseTestFixture {
         assertFalse(updated.getTime() == pool.getUpdated().getTime());
     }
     
+    @Test
+    public void providedProductCleanup() {
+        Product parentProduct = TestUtil.createProduct("1", "product-1");
+        Product childProduct1 = TestUtil.createProduct("child1", "child1");
+        Product childProduct2 = TestUtil.createProduct("child2", "child2");
+        Product childProduct3 = TestUtil.createProduct("child3", "child3");
+        productCurator.create(childProduct1);
+        productCurator.create(childProduct2);
+        productCurator.create(childProduct3);
+        productCurator.create(parentProduct);
+
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        ProvidedProduct providedProduct = new ProvidedProduct("child1",
+            "child1", pool);
+        providedProducts.add(providedProduct);
+
+        Pool pool = TestUtil.createPool(owner, parentProduct.getId(),
+            providedProducts, 5);
+        poolCurator.create(pool);
+        pool = poolCurator.find(pool.getId());
+        assertEquals(1, pool.getProvidedProducts().size());
+
+        // Clear the set and create a new one:
+        pool.getProvidedProducts().clear();
+        pool.addProvidedProduct(new ProvidedProduct("child2",
+            "child2", pool));
+        pool.addProvidedProduct(new ProvidedProduct("child3",
+            "child3", pool));
+        pool.setProvidedProducts(providedProducts);
+        poolCurator.merge(pool);
+
+        pool = poolCurator.find(pool.getId());
+        assertEquals(2, pool.getProvidedProducts().size());
+    }
+
 }

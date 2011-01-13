@@ -119,7 +119,9 @@ public class Pool extends AbstractHibernateObject
     private String productId;
     
     @OneToMany(mappedBy = "pool", targetEntity = ProvidedProduct.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
@@ -452,6 +454,11 @@ public class Pool extends AbstractHibernateObject
 
     public Set<ProvidedProduct> getProvidedProducts() {
         return providedProducts;
+    }
+
+    public void addProvidedProduct(ProvidedProduct provided) {
+        provided.setPool(this);
+        providedProducts.add(provided);
     }
 
     public void setProvidedProducts(Set<ProvidedProduct> providedProducts) {

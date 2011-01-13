@@ -210,6 +210,32 @@ public class PoolManagerTest {
     }
 
     @Test
+    public void testRefreshPoolWhenProvidedProductsChanges() {
+        Subscription s = TestUtil.createSubscription(getOwner(),
+            TestUtil.createProduct());
+        Product product1 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct();
+        Product product3 = TestUtil.createProduct();
+        s.getProvidedProducts().add(product1);
+        s.getProvidedProducts().add(product2);
+
+        Pool p = new Pool(s.getOwner(), s.getProduct().getId(),
+            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
+            s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
+        p.setSubscriptionId(s.getId());
+        p.getProvidedProducts().add(
+            new ProvidedProduct(product3.getId(), product3.getName(), p));
+
+        this.manager.updatePoolForSubscription(p, s);
+
+        verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
+            eq(true));
+        verify(manager).regenerateCertificatesOf(anySet());
+        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
+        assertEquals(2, p.getProvidedProducts().size());
+    }
+
+    @Test
     public void testRefreshPoolsWithNewProvidedProductsCausesEntitlementRegen() {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());

@@ -221,7 +221,24 @@ public class PoolManager {
             existingPool.setStartDate(sub.getStartDate());
             existingPool.setEndDate(sub.getEndDate());
             List<Entitlement> entitlements = poolCurator
-            .retrieveFreeEntitlementsOfPool(existingPool, true);
+                .retrieveFreeEntitlementsOfPool(existingPool, true);
+
+            if (productsChanged) {
+                log.debug("Merging provided products.");
+                log.debug("   size before = " + existingPool.getProvidedProducts().size());
+
+                existingPool.getProvidedProducts().clear();
+
+                if (sub.getProvidedProducts() != null) {
+                    for (Product p : sub.getProvidedProducts()) {
+                        log.debug("   adding " + p.getName());
+                        ProvidedProduct providedProduct = new ProvidedProduct(
+                            p.getId(), p.getName(), existingPool);
+                        existingPool.addProvidedProduct(providedProduct);
+                    }
+                }
+            }
+
             //when subscription dates change, entitlement dates should change as well
             for (Entitlement entitlement : entitlements) {
                 entitlement.setStartDate(sub.getStartDate());
@@ -233,6 +250,7 @@ public class PoolManager {
         }
         //save changes for the pool
         this.poolCurator.merge(existingPool);
+
         eventFactory.poolChangedTo(e, existingPool);
         sink.sendEvent(e);
     }
