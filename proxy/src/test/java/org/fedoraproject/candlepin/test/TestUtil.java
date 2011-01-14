@@ -150,14 +150,14 @@ public class TestUtil {
     }
 
     public static Pool createPool(Owner owner, Product product, int quantity) {
-        return createPool(owner, product.getId(), new HashSet<ProvidedProduct>(),
-            quantity);
+        return createPool(owner, product, new HashSet<ProvidedProduct>(), quantity);
     }
     
-    public static Pool createPool(Owner owner, String productId,
+    public static Pool createPool(Owner owner, Product product,
         Set<ProvidedProduct> providedProducts, int quantity) {
 
-        Pool pool = new Pool(owner, productId, providedProducts, Long.valueOf(quantity),
+        Pool pool = new Pool(owner, product.getId(), product.getName(), 
+            providedProducts, Long.valueOf(quantity),
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30),
             "SUB234598S", "ACC123");
 

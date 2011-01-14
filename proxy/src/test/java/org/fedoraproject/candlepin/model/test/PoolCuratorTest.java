@@ -137,8 +137,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             product.getId(), "Test Provided Product");
         providedProducts.add(providedProduct);
 
-        Pool p = TestUtil.createPool(owner, parent.getId(),
-            providedProducts, 5);
+        Pool p = TestUtil.createPool(owner, parent, providedProducts, 5);
         providedProduct.setPool(p);
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
@@ -155,8 +154,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             another.getId(), "Test Provided Product");
         providedProducts.add(providedProduct);
         
-        Pool pool = TestUtil.createPool(owner, product.getId(),
-            providedProducts, 5);
+        Pool pool = TestUtil.createPool(owner, product, providedProducts, 5);
         providedProduct.setPool(pool);
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());

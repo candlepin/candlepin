@@ -64,7 +64,7 @@ public class PostEntHelper {
         Consumer c = ent.getConsumer();
         Set<ProvidedProduct> providedProductCopies = new HashSet<ProvidedProduct>();
         providedProductCopies.addAll(providedProducts);
-        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, 
+        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, productId,
             providedProductCopies, q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate(),
             ent.getPool().getContractNumber(), ent.getPool().getAccountNumber());
