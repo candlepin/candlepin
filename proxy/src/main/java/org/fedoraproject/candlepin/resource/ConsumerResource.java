@@ -258,6 +258,7 @@ public class ConsumerResource {
         if (owner == null) {
             owner = userService.getOwner(user.getUsername());
             ownerCurator.create(owner);
+            poolManager.refreshPools(owner);
         }
         
         user.setOwner(owner);
