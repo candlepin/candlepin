@@ -227,6 +227,7 @@ public class PoolManager {
                 log.debug("Merging provided products.");
                 log.debug("   size before = " + existingPool.getProvidedProducts().size());
 
+                existingPool.setProductName(sub.getProduct().getName());
                 existingPool.getProvidedProducts().clear();
 
                 if (sub.getProvidedProducts() != null) {
@@ -269,7 +270,9 @@ public class PoolManager {
             subProducts.add(product.getId());
         }
         
-        return !poolProducts.equals(subProducts);
+        // Also check if the product name has been changed:
+        return !poolProducts.equals(subProducts) || 
+            (existingPool.getProductName() != sub.getProduct().getName());
     }
 
 
@@ -289,7 +292,8 @@ public class PoolManager {
         }
         Long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), providedProducts,
+        Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), 
+            sub.getProduct().getName(), providedProducts,
                 quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
                 sub.getAccountNumber());
         if (sub.getProvidedProducts() != null) {

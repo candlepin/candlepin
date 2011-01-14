@@ -144,10 +144,12 @@ public class Pool extends AbstractHibernateObject
     public Pool() {
     }
 
-    public Pool(Owner ownerIn, String productId, Set<ProvidedProduct> providedProducts, 
+    public Pool(Owner ownerIn, String productId, String productName, 
+        Set<ProvidedProduct> providedProducts, 
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
         String accountNumber) {
         this.productId = productId;
+        this.productName = productName;
         this.owner = ownerIn;
         this.quantity = quantityIn;
         this.startDate = startDateIn;

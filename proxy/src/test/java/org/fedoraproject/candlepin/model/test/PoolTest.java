@@ -59,8 +59,7 @@ public class PoolTest extends DatabaseTestFixture {
             prod2.getId(), prod2.getName());
         providedProducts.add(providedProduct);
         
-        pool = TestUtil.createPool(owner, prod1.getId(), providedProducts,
-            1000);
+        pool = TestUtil.createPool(owner, prod1, providedProducts, 1000);
         providedProduct.setPool(pool);
         poolCurator.create(pool);
         owner = pool.getOwner();
@@ -155,8 +154,7 @@ public class PoolTest extends DatabaseTestFixture {
             childProduct.getName());
         providedProducts.add(providedProduct);
 
-        Pool pool = TestUtil.createPool(owner, parentProduct.getId(),
-            providedProducts, 5);
+        Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
         providedProduct.setPool(pool);
         poolCurator.create(pool);
         
@@ -237,8 +235,7 @@ public class PoolTest extends DatabaseTestFixture {
             "child1", pool);
         providedProducts.add(providedProduct);
 
-        Pool pool = TestUtil.createPool(owner, parentProduct.getId(),
-            providedProducts, 5);
+        Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
         assertEquals(1, pool.getProvidedProducts().size());

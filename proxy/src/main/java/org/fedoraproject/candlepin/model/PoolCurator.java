@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,7 +24,6 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.criterion.DetachedCriteria;
@@ -43,13 +41,11 @@ import com.wideplay.warp.persist.Transactional;
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
-    private ProductServiceAdapter productAdapter;
     private Enforcer enforcer;
 
     @Inject
-    protected PoolCurator(ProductServiceAdapter productAdapter, Enforcer enforcer) {
+    protected PoolCurator(Enforcer enforcer) {
         super(Pool.class);
-        this.productAdapter = productAdapter;
         this.enforcer = enforcer;
     }
     
@@ -58,7 +54,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @EnforceAccessControl
     public Pool find(Serializable id) {
         Pool pool = super.find(id);
-        addProductName(pool);
         return pool;
     }
     
@@ -67,7 +62,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @EnforceAccessControl
     public List<Pool> listAll() {
         List<Pool> pools = super.listAll();
-        addProductNames(pools);
         return pools;
     }
 
@@ -203,8 +197,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = newResults;
         }
         
-        addProductNames(results);
-        
         // If querying for pools available to a specific consumer, we need
         // to do a rules pass to verify the entitlement will be granted.
         // Note that something could change between the time we list a pool as
@@ -238,45 +230,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(Restrictions.eq("restrictedToUsername", username)));
     }
     
-    // set a single name, if its not already there
-    private void addProductName(Pool pool) {
-        if (pool != null) {
-            String productId = pool.getProductId();            
-            if (pool.getProductName() == null) { 
-                HashMap<String, String> names = productAdapter.
-                    getProductNamesByProductId(new String[] 
-                    { productId });
-                if (null != names) { 
-                    pool.setProductName(names.get(productId));
-                }
-            }
-        }
-    }
-    
-    // set a bunch of product names at once
-    private void addProductNames(List<Pool> pools) { 
-        if (pools != null && pools.size() > 0) { 
-            String[] productIds = new String[pools.size()];
-            int i = 0;
-            for (Pool p : pools) {            
-                // enrich with the product name
-                productIds[i] = p.getProductId();
-                i++;
-            }
-            
-            // this will dramatically reduce response time for refreshing pools
-            HashMap<String, String> productNames = this.productAdapter.
-                getProductNamesByProductId(productIds);
-            
-            if (null != productNames) { 
-                // set the product name
-                for (Pool p : pools) { 
-                    p.setProductName(productNames.get(p.getProductId()));
-                } 
-            }
-        }
-    }
-
     @SuppressWarnings("unchecked")
     public List<Entitlement> retrieveFreeEntitlementsOfPool(Pool existingPool,
         boolean lifo) {
