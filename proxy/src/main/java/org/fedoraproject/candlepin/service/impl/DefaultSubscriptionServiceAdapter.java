@@ -27,7 +27,9 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import com.google.inject.Inject;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * default SubscriptionAdapter implementation
@@ -38,11 +40,13 @@ public class DefaultSubscriptionServiceAdapter implements
     private static Logger log = Logger.getLogger(DefaultSubscriptionServiceAdapter.class);
     private SubscriptionCurator subCurator;
     private String activationPrefix;
+    private I18n i18n;
 
     @Inject
     public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator,
-            Config config) {
+            Config config, I18n i18n) {
         this.subCurator = subCurator;
+        this.i18n = i18n;
 
         this.activationPrefix = config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX);
         if ("".equals(this.activationPrefix)) {
@@ -133,8 +137,8 @@ public class DefaultSubscriptionServiceAdapter implements
     public void activateSubscription(Consumer consumer, String email, 
         String emailLocale) {
         
-        throw new UnsupportedOperationException(
-                "Standalone candlepin does not support activation.");
+        throw new ServiceUnavailableException(
+                i18n.tr("Standalone candlepin does not support activation."));
     }
 
 }
