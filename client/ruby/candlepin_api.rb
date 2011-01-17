@@ -263,11 +263,10 @@ class Candlepin
     post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
   end
 
-  def create_product(id, name, params={})
+  def create_product(id, name, params={}, dependentProductIds=[])
 
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
-    dependentProductIds = params[:dependentProductIds] || {}
     #if product don't have type attributes, create_product will fail on server
     #side.
     attributes['type'] = 'SVC' if attributes['type'].nil?
@@ -275,7 +274,8 @@ class Candlepin
       'name' => name,
       'id' => id,
       'multiplier' => multiplier,
-      'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
+      'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}},
+      'dependentProductIds' => dependentProductIds
     }
 
     post("/products", product)
