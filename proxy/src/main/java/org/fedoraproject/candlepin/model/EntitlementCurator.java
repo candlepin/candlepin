@@ -21,10 +21,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
+import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 /**
@@ -32,12 +34,15 @@ import com.wideplay.warp.persist.Transactional;
  */
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = Logger.getLogger(EntitlementCurator.class);
+    private ProductServiceAdapter productAdapter;
     
     /**
      * default ctor
      */
-    public EntitlementCurator() {
+    @Inject
+    public EntitlementCurator(ProductServiceAdapter productAdapter) {
         super(Entitlement.class);
+        this.productAdapter = productAdapter;
     }
     
     // TODO: handles addition of new entitlements only atm!
@@ -72,7 +77,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return listByCriteria(query);
     }
     
-    private Criteria createDateFilteringCriteria(Consumer consumer, Date startDate, 
+    /*
+     * Creates date filtering criteria to for checking if an entitlement has any overlap
+     * with a "modifying" entitlement that has just been granted.
+     */
+    private Criteria createModifiesDateFilteringCriteria(Consumer consumer, Date startDate,
         Date endDate) {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
@@ -114,14 +123,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         // Will re-use this criteria for both queries we need to do:
         
         // Find direct matches on the pool's product ID:
-        Criteria parentProductCrit = createDateFilteringCriteria(consumer, startDate, 
-            endDate).createCriteria("pool").add(Restrictions.eq("productId", productId));
+        Criteria parentProductCrit = createModifiesDateFilteringCriteria(consumer,
+            startDate, endDate).createCriteria("pool").add(
+                Restrictions.eq("productId", productId));
         
         // Using a set to prevent duplicate matches, if somehow 
         Set<Entitlement> finalResults = new HashSet<Entitlement>();
         finalResults.addAll(parentProductCrit.list());
         
-        Criteria providedCrit = createDateFilteringCriteria(consumer, startDate, 
+        Criteria providedCrit = createModifiesDateFilteringCriteria(consumer, startDate,
             endDate).createCriteria("pool")
             .createCriteria("providedProducts")
             .add(Restrictions.eq("productId", productId));
@@ -130,6 +140,65 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return finalResults;
     }
     
+    public List<Entitlement> listModifying(Consumer consumer, String productId,
+        Date startDate, Date endDate) {
+
+        /*
+         * Essentially the opposite of the above query which searches for entitlement
+         * overlap with a "modifying" entitlement being granted. This query is used to
+         * search for modifying entitlements which overlap with a regular entitlement
+         * being granted. As such the logic is basically reversed.
+         *
+         */
+        Criteria criteria = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.or(
+                Restrictions.and(
+                    Restrictions.ge("startDate", startDate),
+                    Restrictions.le("startDate", endDate)),
+                Restrictions.or(
+                    Restrictions.and(
+                        Restrictions.ge("endDate", startDate),
+                        Restrictions.le("endDate", endDate)),
+                    Restrictions.and(
+                        Restrictions.le("startDate", startDate),
+                        Restrictions.ge("endDate", endDate)))));
+        List<Entitlement> finalResults = new LinkedList<Entitlement>();
+        List<Entitlement> entsWithOverlap = criteria.list();
+        for (Entitlement existingEnt : entsWithOverlap) {
+            if (modifies(existingEnt, productId)) {
+                finalResults.add(existingEnt);
+            }
+        }
+
+        return finalResults;
+    }
+
+    /**
+     * Checks if the given pool provides any product with a content set which modifies
+     * the given product ID.
+     *
+     * @param ent Entitlement to check.
+     * @param modifiedProductId Product ID we're looking for a modifier to.
+     * @return true if entitlement modifies the given product
+     */
+    public boolean modifies(Entitlement ent, String modifiedProductId) {
+        Set<String> prodIdsToCheck = new HashSet<String>();
+        prodIdsToCheck.add(ent.getPool().getProductId());
+        for (ProvidedProduct pp : ent.getPool().getProvidedProducts()) {
+            prodIdsToCheck.add(pp.getProductId());
+        }
+
+        for (String prodId : prodIdsToCheck) {
+            Product p = productAdapter.getProductById(prodId);
+            if (p.modifies(modifiedProductId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     @Transactional
     public List<Entitlement> listByConsumerAndProduct(Consumer consumer, String productId) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
