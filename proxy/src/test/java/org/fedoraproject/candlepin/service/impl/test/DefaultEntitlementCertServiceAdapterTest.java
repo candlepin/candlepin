@@ -170,6 +170,43 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(String.class));
     }
 
+    @Test
+    public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
+
+        ProductAttribute attr = new ProductAttribute("support_level", "Premium");
+        subscription.getProduct().addAttribute(attr);
+        attr = new ProductAttribute("support_type", "Level 3");
+        subscription.getProduct().addAttribute(attr);
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair());
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsSupportLevel("Premium")), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsSupportType("Level 3")), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+    }
+    
+    @Test
+    public void supportValuesAbsentOnCertIfNoSupportAttributes() throws Exception {
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair());
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListDoesNotContainSupportLevel()), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListDoesNotContainSupportType()), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+    }
+    
     private boolean isEncodedContentValid(Set<X509ExtensionWrapper> content) {
         Map<String, X509ExtensionWrapper> encodedContent = 
             new HashMap<String, X509ExtensionWrapper>();
@@ -251,27 +288,88 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    static class ListContainsProvidesManagement extends
+    abstract static class OidMatcher extends
         ArgumentMatcher<Set<X509ExtensionWrapper>> {
 
-        protected String value = "0";
-
-        public ListContainsProvidesManagement(String value) {
+        protected String value;
+        protected String oid;
+    
+        public OidMatcher(String value, String oid) {
             this.value = value;
+            this.oid = oid;
         }
-
+    
         public boolean matches(Object list) {
             Map<String, X509ExtensionWrapper> encodedContent = 
                 new HashMap<String, X509ExtensionWrapper>();
-
+    
             for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
                 encodedContent.put(ext.getOid(), ext);
             }
-
-            return encodedContent.containsKey("1.3.6.1.4.1.2312.9.4.14") &&
-                ((DERUTF8String) encodedContent.get("1.3.6.1.4.1.2312.9.4.11")
+    
+            return encodedContent.containsKey(oid) &&
+                ((DERUTF8String) encodedContent.get(oid)
                     .getAsn1Encodable()).toString()
-                    .equals(ENTITLEMENT_QUANTITY);
+                    .equals(value);
+        }
+    }    
+    
+    static class ListContainsProvidesManagement extends
+        OidMatcher {
+
+        public ListContainsProvidesManagement(String value) {
+            super(value, "1.3.6.1.4.1.2312.9.4.14");
         }
     }
+    
+    static class ListContainsSupportLevel extends
+        OidMatcher {
+    
+        public ListContainsSupportLevel(String value) {
+            super(value, "1.3.6.1.4.1.2312.9.4.15");
+        }
+    }
+    static class ListContainsSupportType extends
+        OidMatcher {
+    
+        public ListContainsSupportType(String value) {
+            super(value, "1.3.6.1.4.1.2312.9.4.16");
+        }
+    }
+
+    abstract static class OidAbsentMatcher extends
+        ArgumentMatcher<Set<X509ExtensionWrapper>> {
+    
+        protected String oid;
+    
+        public OidAbsentMatcher(String oid) {
+            this.oid = oid;
+        }
+    
+        public boolean matches(Object list) {
+            Map<String, X509ExtensionWrapper> encodedContent = 
+                new HashMap<String, X509ExtensionWrapper>();
+    
+            for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
+                encodedContent.put(ext.getOid(), ext);
+            }
+    
+            return !encodedContent.containsKey(oid);
+        }
+    }    
+    static class ListDoesNotContainSupportLevel extends
+        OidAbsentMatcher {
+    
+        public ListDoesNotContainSupportLevel() {
+            super("1.3.6.1.4.1.2312.9.4.15");
+        }
+    }
+    static class ListDoesNotContainSupportType extends
+        OidAbsentMatcher {
+    
+        public ListDoesNotContainSupportType() {
+            super("1.3.6.1.4.1.2312.9.4.16");
+        }
+    }
+
 }
