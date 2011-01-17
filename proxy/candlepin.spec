@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.28
+Version: 0.1.29
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Mon Jan 17 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.29-1
+- 646624: refresh pools for owner after owner creation. (jesusr@redhat.com)
+- 665128: Store product name with pools reliably. (dgoodwin@redhat.com)
+- Pool test fix. (dgoodwin@redhat.com)
+- 663455: Fix multi-entitlement blocking rule. (dgoodwin@redhat.com)
+- 665118: Copy provided products when refreshing pools. (dgoodwin@redhat.com)
+
 * Wed Jan 12 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.28-1
 - findbugs: unread assignment (jesusr@redhat.com)
 
