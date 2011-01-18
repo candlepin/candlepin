@@ -589,6 +589,10 @@ public class PoolManager {
             deletePool(p);
         }
 
+        // Find all of the entitlements that modified the original entitlement,
+        // and regenerate those to remove the content sets.
+        this.regenerateCertificatesOf(entitlementCurator.listModifying(entitlement));
+
         Event event = eventFactory.entitlementDeleted(entitlement);
 
         poolCurator.merge(entitlement.getPool());
