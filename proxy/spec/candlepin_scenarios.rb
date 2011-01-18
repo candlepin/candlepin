@@ -40,6 +40,13 @@ module CandlepinMethods
     @cp.create_product(id, name, params)
   end
 
+  def create_content(params={})
+    random_str = random_string('content')
+    modified_products = params[:modified_products] || []
+    @cp.create_content(random_str, random_str, random_str, random_str, 
+      random_str, random_str, random_str, modified_products)
+  end
+
   def user_client(owner, user_name)
     @cp.create_user(owner.key, user_name, 'password')
     Candlepin.new(user_name, 'password')
