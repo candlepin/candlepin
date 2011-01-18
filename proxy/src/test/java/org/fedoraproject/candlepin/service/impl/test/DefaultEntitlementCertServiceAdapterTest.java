@@ -35,6 +35,7 @@ import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -79,6 +80,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Product product;
     private Subscription subscription;
     private Entitlement entitlement;
+    private Pool pool ;
 
     @Before
     public void setUp() {
@@ -100,12 +102,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
             1L, new Date(), new Date(), new Date());
         subscription.setId("1");
 
+        pool = new Pool();
+        pool.setProductId(product.getId());
+        pool.setProductName(product.getName());
+
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
         entitlement.setConsumer(Mockito.mock(Consumer.class));
         entitlement.setStartDate(subscription.getStartDate());
         entitlement.setEndDate(subscription.getEndDate());
         entitlement.setFlexExpiryDays(60);
+        entitlement.setPool(pool);
 
         product.setContent(Collections.singleton(content));
     }

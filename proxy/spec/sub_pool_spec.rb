@@ -7,41 +7,41 @@ describe 'Sub-Pool' do
 
   before(:each) do
     owner = create_owner random_string('test_owner')
-    derived_product = create_product()
-    parent_product = create_product(nil, nil, {:attributes => {
+    @derived_product = create_product()
+    @parent_product = create_product(nil, nil, {:attributes => {
             'user_license' => 'unlimited',
-            'user_license_product' => derived_product.id,
+            'user_license_product' => @derived_product.id,
             'requires_consumer_type' => 'person'
     }})
 
     # Create a subscription
-    @subscription = @cp.create_subscription(owner.key, parent_product.id, 5)
+    @subscription = @cp.create_subscription(owner.key, @parent_product.id, 5)
     @cp.refresh_pools(owner.key)
-    
+
     # Set up user
     @user_client = user_client(owner, 'billy')
 
     # ===== When =====
     # Register his personal consumer
-    @person_client = consumer_client(@user_client, 'billy_consumer', 
+    @person_client = consumer_client(@user_client, 'billy_consumer',
         :person)
 
     # Subscribe to the parent pool
-    @parent_ent = @person_client.consume_product(parent_product.id)[0]
+    @parent_ent = @person_client.consume_product(@parent_product.id)[0]
 
     # Now register a system
     @system = consumer_client(@user_client, 'system1')
 
     # And subscribe to the created sub-pool
-    @system.consume_product derived_product.id
+    @system.consume_product @derived_product.id
   end
-  
+
   it 'should un-entitle system when unregistering person consumer' do
     @system.list_entitlements.size.should == 1
     @cp.unregister(@person_client.uuid)
     @system.list_entitlements.size.should == 0
   end
-  
+
   it 'unregistering system consumer should not result in deletion of the parent pool' do
     @system.unregister(@system.uuid)
     @system = consumer_client(@user_client, 'system2')
@@ -73,6 +73,15 @@ describe 'Sub-Pool' do
     lambda {
       @person_client.unbind_entitlement(@parent_ent['id'])
     }.should raise_exception(RestClient::Forbidden)
+  end
+
+  it 'should use the correct name for the child pools' do
+    entitlement_cert = @system.list_certificates.first
+    cert = OpenSSL::X509::Certificate.new(entitlement_cert.cert)
+
+    # TODO:  This magic OID should be refactored...
+    order_name = get_extension(cert, '1.3.6.1.4.1.2312.9.4.1')
+    order_name.should == @derived_product.name
   end
 
 

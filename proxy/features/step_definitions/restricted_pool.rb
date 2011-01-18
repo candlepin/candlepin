@@ -39,7 +39,7 @@ end
 When /^I create a pool of unlimited license and consumer type person$/ do
   @product = create_product('product1')
   @subscription = create_subscription('product1', 1)
-  @pool = @candlepin.create_pool(@product['id'], @test_owner['id'], 100,
+  @pool = @candlepin.create_pool(@product['id'], @product['name'], @test_owner['id'], 100,
     {:subscription_id => @subscription['id'], 
       :attributes => {
         'user_license' => 'unlimited',

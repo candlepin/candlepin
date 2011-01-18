@@ -16,12 +16,12 @@ end
 Given /^I have a pool of quantity (\d+) for "([^\"]*)"$/ do |quantity, product|
   # TODO: Unecessary server hit here:
   p = @candlepin.get_product(product.hash.abs)
-  @candlepin.create_pool(p['id'], @test_owner['id'], quantity)
+  @candlepin.create_pool(p['id'], p['name'], @test_owner['id'], quantity)
 end
 
 Given /^I have a pool of quantity (\d+) for "([^\"]*)" restricted to user "([^\"]*)"$/ do |quantity, product, user|
   p = @candlepin.get_product(product.hash.abs)
-  @candlepin.create_pool(p['id'], @test_owner['id'], quantity, {:user_restricted => user})
+  @candlepin.create_pool(p['id'], p['name'], @test_owner['id'], quantity, {:user_restricted => user})
 end
 
 When /^I view all of my pools$/ do

@@ -21,7 +21,9 @@ import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
@@ -32,10 +34,12 @@ public class PostEntHelper {
     
     private Entitlement ent;
     private PoolManager poolManager;
+    private ProductServiceAdapter prodAdapter;
     
-    public PostEntHelper(PoolManager poolManager, Entitlement e) {
+    public PostEntHelper(PoolManager poolManager, ProductServiceAdapter prodAdapter, Entitlement e) {
         this.poolManager = poolManager;
         this.ent = e;
+        this.prodAdapter = prodAdapter;
     }
     
     /**
@@ -64,7 +68,9 @@ public class PostEntHelper {
         Consumer c = ent.getConsumer();
         Set<ProvidedProduct> providedProductCopies = new HashSet<ProvidedProduct>();
         providedProductCopies.addAll(providedProducts);
-        Pool consumerSpecificPool = new Pool(c.getOwner(), productId, productId,
+        Product derivedProduct = prodAdapter.getProductById(productId);
+        Pool consumerSpecificPool = new Pool(c.getOwner(), productId,
+            derivedProduct.getName(),
             providedProductCopies, q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate(),
             ent.getPool().getContractNumber(), ent.getPool().getAccountNumber());
