@@ -370,7 +370,12 @@ public class PoolManager {
         }
 
         if (filteredPools.size() == 0) {
-            throw new EntitlementRefusedException(failedResult);
+            // Only throw refused exception if we actually hit the rules:
+            if (failedResult != null) {
+                throw new EntitlementRefusedException(failedResult);
+            }
+            throw new RuntimeException("No entitlements for products: " +
+                Arrays.toString(productIds));
         }
         
         List<Pool> bestPools = enforcer.selectBestPools(consumer,
