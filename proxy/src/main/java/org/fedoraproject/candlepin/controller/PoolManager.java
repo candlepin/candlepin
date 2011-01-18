@@ -462,7 +462,7 @@ public class PoolManager {
             pool.bumpConsumed(quantity);
         }
 
-        PostEntHelper postEntHelper = new PostEntHelper(this, e);
+        PostEntHelper postEntHelper = new PostEntHelper(this, productAdapter, e);
         enforcer.postEntitlement(consumer, postEntHelper, e);
 
         entitlementCurator.create(e);
@@ -702,5 +702,4 @@ public class PoolManager {
         poolCurator.delete(pool);
         sink.sendEvent(event);
     }
-
 }

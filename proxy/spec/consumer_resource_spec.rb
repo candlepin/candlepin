@@ -143,7 +143,7 @@ describe 'Consumer Resource' do
     prod = create_product('product', random_string('product-multiple-arch'),
                           :attribute => { :arch => 'i386, x86_64'})
     subs = @cp.create_subscription(owner.key, prod.id)
-    pool = @cp.create_pool(prod.id, owner.id, 10, :subscription_id => subs.id)
+    pool = @cp.create_pool(prod.id, prod.name, owner.id, 10, :subscription_id => subs.id)
     cp_client.consume_pool(pool.id).size.should == 1
   end
 

@@ -57,7 +57,8 @@ public class X509ExtensionUtil {
         return toReturn;
     }
 
-    public Set<X509ExtensionWrapper> subscriptionExtensions(Subscription sub) {
+    public Set<X509ExtensionWrapper> subscriptionExtensions(Subscription sub,
+        Entitlement ent) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
         // Subscription/order info
         // need the sub product name, not id here
@@ -69,7 +70,7 @@ public class X509ExtensionUtil {
         if (sub.getProduct().getId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false,
-                new DERUTF8String(sub.getProduct().getName())));
+                new DERUTF8String(ent.getPool().getProductName())));
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false,

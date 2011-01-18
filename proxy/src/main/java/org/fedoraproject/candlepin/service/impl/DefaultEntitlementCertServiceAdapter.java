@@ -164,7 +164,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
 
         if (sub != null) {
-            extensions.addAll(extensionUtil.subscriptionExtensions(sub));
+            extensions.addAll(extensionUtil.subscriptionExtensions(sub, ent));
         }
         
         extensions.addAll(extensionUtil.entitlementExtensions(ent));

@@ -10,7 +10,7 @@ describe 'Pool Resource' do
     owner1_client = user_client(owner1, random_string('testuser'))
 
     product = create_product()
-    pool = @cp.create_pool(product.id, owner1.id, 10)
+    pool = @cp.create_pool(product.id, product.name, owner1.id, 10)
 
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
     p = consumer_client.get_pool(pool.id)
@@ -24,7 +24,7 @@ describe 'Pool Resource' do
     owner2_client = user_client(owner2, random_string('testuser'))
 
     product = create_product()
-    pool = @cp.create_pool(product.id, owner2.id, 10)
+    pool = @cp.create_pool(product.id, product.name, owner2.id, 10)
 
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
     lambda {
@@ -39,7 +39,7 @@ describe 'Pool Resource' do
     owner2_client = user_client(owner2, random_string('testuser'))
 
     product = create_product()
-    pool = @cp.create_pool(product.id, owner2.id, 10)
+    pool = @cp.create_pool(product.id, product.name, owner2.id, 10)
 
     lambda {
       owner1_client.get_pool(pool.id)
@@ -50,7 +50,7 @@ describe 'Pool Resource' do
     owner1 = create_owner random_string('test_owner')
     owner1_client = user_client(owner1, random_string('testuser'))
     product = create_product()
-    pool = @cp.create_pool(product.id, owner1.id, 10)
+    pool = @cp.create_pool(product.id, product.name, owner1.id, 10)
     @cp.delete_pool(pool['id'])
     lambda { @cp.get_pool(pool['id']) }.should \
       raise_exception(RestClient::ResourceNotFound)

@@ -158,7 +158,7 @@ class Candlepin
     return results
   end
 
-  def create_pool(product_id, owner_id, quantity, params={})
+  def create_pool(product_id, product_name, owner_id, quantity, params={})
     subscription_id = params[:subscription_id] || nil
     start_date = params[:start_date] || Date.today
     end_date = params[:end_date] || Date.today + 365
@@ -178,6 +178,7 @@ class Candlepin
       'startDate' => start_date,
       'endDate' => end_date,
       'productId' => product_id,
+      'productName' => product_name,
       'owner' => {
         'id' => owner_id
       },
