@@ -95,8 +95,8 @@ public class DefaultEntitlementCertServiceAdapter extends
             .checkArgument(
                 entitlement.getEndDate().getTime() == sub.getEndDate().getTime(),
                 "Entitlement #%s 's endDt[%s] must equal Subscription #%s 's endDt[%s]",
-                entitlement.getId(), sub.getId(), entitlement.getEndDate(), sub
-                    .getEndDate());
+                entitlement.getId(), entitlement.getEndDate(), sub.getId(),
+                sub.getEndDate());
 
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
         CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
