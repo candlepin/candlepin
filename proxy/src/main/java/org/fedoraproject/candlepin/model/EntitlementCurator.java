@@ -140,21 +140,18 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return finalResults;
     }
 
-    public List<Entitlement> listModifying(Entitlement entitlement) {
-        List<Entitlement> modifying = new LinkedList<Entitlement>();
+    public Set<Entitlement> listModifying(Entitlement entitlement) {
+        Set<Entitlement> modifying = new HashSet<Entitlement>();
 
         Consumer consumer = entitlement.getConsumer();
-        String productId = entitlement.getProductId();
         Date startDate = entitlement.getStartDate();
         Date endDate = entitlement.getEndDate();
 
-        modifying.addAll(listModifying(consumer, productId, startDate, endDate));
+        modifying.addAll(listModifying(consumer, entitlement.getProductId(),
+                startDate, endDate));
         
-        Set<Entitlement> providingEntitlements =  this.listProviding(consumer, productId,
-                startDate, endDate);
-        
-        for (Entitlement providingEnt : providingEntitlements) {
-            modifying.addAll(listModifying(consumer, providingEnt.getProductId(),
+        for (ProvidedProduct product : entitlement.getPool().getProvidedProducts()) {
+            modifying.addAll(listModifying(consumer, product.getProductId(),
                     startDate, endDate));
         }
 
