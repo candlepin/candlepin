@@ -736,7 +736,7 @@ public class ConsumerResource {
 
     @PUT
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    @Path("/{consumer_uuid}/certificates/")
+    @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid) {
         Consumer c = verifyAndLookupConsumer(consumerUuid);
