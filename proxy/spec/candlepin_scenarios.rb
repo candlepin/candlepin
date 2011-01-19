@@ -37,13 +37,15 @@ module CandlepinMethods
     # random strings.
     id = "#{rand(100000)}" #id has to be a number. OID encoding fails otherwise
     name ||= random_string('testproduct')
-    @cp.create_product(id, name, params)
+    product = @cp.create_product(id, name, params)
+    @products << product
+    return product
   end
 
   def create_content(params={})
-    random_str = random_string('content')
+    random_str = rand(1000000)
     modified_products = params[:modified_products] || []
-    @cp.create_content(random_str, random_str, random_str, random_str, 
+    @cp.create_content(random_str, random_str, random_str, "yum",
       random_str, random_str, random_str, modified_products)
   end
 

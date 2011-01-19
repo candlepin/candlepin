@@ -135,7 +135,7 @@ data['products'].each do |product|
           end
 
 	  product_content.each do |content|
-		cp.add_content_to_product(product_ret['id'], content[0], content[1])
+		  cp.add_content_to_product(product_ret['id'], content[0], content[1])
 	  end
 end
 
