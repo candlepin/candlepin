@@ -38,7 +38,6 @@ module CandlepinMethods
     id = "#{rand(100000)}" #id has to be a number. OID encoding fails otherwise
     name ||= random_string('testproduct')
     product = @cp.create_product(id, name, params)
-    @products << product
     return product
   end
 
