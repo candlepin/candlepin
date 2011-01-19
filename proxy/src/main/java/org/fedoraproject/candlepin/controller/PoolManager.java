@@ -452,6 +452,10 @@ public class PoolManager {
         consumerCurator.update(consumer);
 
         generateEntitlementCertificate(consumer, pool, e);
+        for (Entitlement regenEnt : entitlementCurator.listModifying(e)) {
+            this.regenerateCertificatesOf(regenEnt);
+        }
+        
         return e;
     }
 

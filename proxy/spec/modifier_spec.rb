@@ -41,7 +41,6 @@ describe 'Modifier Entitlement' do
   end
 
   it 'does not include modifier content sets consumer should not have access to' do
-
     # Bind to the modifier subscription without having an entitlement to
     # the product it modifies:
     ent = @consumer_cp.consume_product(@modifier_product.id)
@@ -53,8 +52,38 @@ describe 'Modifier Entitlement' do
     content_ext.should be_nil
   end
 
-#  it 'is regenerated when consumer receives access to modified product' do
-#  end
+  it 'is regenerated when consumer receives access to modified product' do
+    # Bind to the modifier subscription without having an entitlement to
+    # the product it modifies:
+    ent = @consumer_cp.consume_product(@modifier_product.id)
+
+    # Resulting modifier cert should not contain modifier content set:
+    modifier_cert = OpenSSL::X509::Certificate.new(ent[0]['certificates'][0]['cert'])
+    content_ext = get_extension(modifier_cert, "1.3.6.1.4.1.2312.9.2." +
+      @modifier_content.id + ".1")
+    content_ext.should be_nil
+
+    # Now bind to the product being modified:
+    normal_serial = @consumer_cp.consume_product(@normal_product.id)[0]\
+      ['certificates'][0]['serial']['serial']
+
+    # Old certificate should be gone:
+    certs = @consumer_cp.list_certificates()
+    certs.length.should == 2
+    old_cert = certs.find_index{ |c| c.serial.serial == modifier_cert.serial.to_i}
+    old_cert.should be_nil
+
+    # Should be a new certificate in it's place:
+    new_cert_index = certs.find_index{ |c| c.serial.serial != normal_serial}
+    new_cert_index.should_not be_nil
+
+    # And it should have the modifer content set:
+    new_cert = OpenSSL::X509::Certificate.new(certs[new_cert_index]['cert'])
+    content_ext = get_extension(new_cert, "1.3.6.1.4.1.2312.9.2." +
+      @modifier_content.id + ".1")
+    content_ext.should_not be_nil
+
+  end
 
 #  it 'is regenerated when consumer loses access to modified product' do
 #  end
