@@ -34,10 +34,8 @@ describe 'Modifier Entitlement' do
     ent = @consumer_cp.consume_product(@modifier_product.id)
 
     # Modifier certificate should contain the modifier content:
-    modifier_cert = OpenSSL::X509::Certificate.new(ent[0]['certificates'][0]['cert'])
-    content_ext = get_extension(modifier_cert, "1.3.6.1.4.1.2312.9.2." +
-      @modifier_content.id + ".1")
-    content_ext.should_not be_nil
+    modifier_cert = entitlement_cert(ent)
+    repo_type_on(modifier_cert).should == 'yum'
   end
 
   it 'does not include modifier content sets consumer should not have access to' do
@@ -46,10 +44,8 @@ describe 'Modifier Entitlement' do
     ent = @consumer_cp.consume_product(@modifier_product.id)
 
     # Resulting modifier cert should not contain modifier content set:
-    modifier_cert = OpenSSL::X509::Certificate.new(ent[0]['certificates'][0]['cert'])
-    content_ext = get_extension(modifier_cert, "1.3.6.1.4.1.2312.9.2." +
-      @modifier_content.id + ".1")
-    content_ext.should be_nil
+    modifier_cert = entitlement_cert(ent)
+    repo_type_on(modifier_cert).should be_nil
   end
 
   it 'is regenerated when consumer receives access to modified product' do
@@ -79,18 +75,56 @@ describe 'Modifier Entitlement' do
 
     # And it should have the modifer content set:
     new_cert = OpenSSL::X509::Certificate.new(certs[new_cert_index]['cert'])
-    content_ext = get_extension(new_cert, "1.3.6.1.4.1.2312.9.2." +
-      @modifier_content.id + ".1")
-    content_ext.should_not be_nil
-
+    repo_type_on(new_cert).should == 'yum'
   end
 
-#  it 'is regenerated when consumer loses access to modified product' do
-#  end
+  it 'is regenerated when consumer loses access to modified product' do
+    # Bind to the normal subscription first:
+    normal = @consumer_cp.consume_product(@normal_product.id)
 
-#  it 'is regenerated when modified product subscription disappears' do
+    # Bind to the modifier subscription which modifies it:
+    modifier = @consumer_cp.consume_product(@modifier_product.id)
+
+    # Now unbind from the original subscription
+    @consumer_cp.unbind_entitlement(normal.first['id'])
+
+    # Then refetch the modifier entitlement
+    modifier = [@consumer_cp.get_entitlement(modifier.first['id'])]
+
+    # Resulting modifier cert should not contain modifier content set:
+    modifier_cert = entitlement_cert(modifier)
+    repo_type_on(modifier_cert).should be_nil
+  end
+
+  it 'is regenerated when modified product subscription disappears' do
     # Delete sub and refresh pools.
-#  end
+    # Bind to the normal subscription first:
+    normal = @consumer_cp.consume_product(@normal_product.id)
+
+    # Bind to the modifier subscription which modifies it:
+    modifier = @consumer_cp.consume_product(@modifier_product.id)
+
+    # Now kill the subscription to the @normal_product
+    @cp.delete_subscription(@normal_sub.id)
+    @cp.refresh_pools(@owner.key)
+
+    # Then refetch the modifier entitlement
+    modifier = [@consumer_cp.get_entitlement(modifier.first['id'])]
+
+    # Resulting modifier cert should not contain modifier content set:
+    modifier_cert = entitlement_cert(modifier)
+    repo_type_on(modifier_cert).should be_nil
+  end
+
+  private
+
+  def entitlement_cert(entitlement)
+    OpenSSL::X509::Certificate.new(entitlement.first['certificates'].first['cert'])
+  end
+
+  def repo_type_on(cert)
+    get_extension(cert, "1.3.6.1.4.1.2312.9.2.#{@modifier_content.id}.1")
+  end
 
 end
 
