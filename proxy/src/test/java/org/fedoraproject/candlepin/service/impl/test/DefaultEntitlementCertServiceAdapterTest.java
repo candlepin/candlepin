@@ -80,7 +80,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Product product;
     private Subscription subscription;
     private Entitlement entitlement;
-    private Pool pool ;
+    private Pool pool;
 
     @Before
     public void setUp() {
