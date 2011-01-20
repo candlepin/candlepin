@@ -36,7 +36,8 @@ public class PostEntHelper {
     private PoolManager poolManager;
     private ProductServiceAdapter prodAdapter;
     
-    public PostEntHelper(PoolManager poolManager, ProductServiceAdapter prodAdapter, Entitlement e) {
+    public PostEntHelper(PoolManager poolManager, ProductServiceAdapter prodAdapter,
+        Entitlement e) {
         this.poolManager = poolManager;
         this.ent = e;
         this.prodAdapter = prodAdapter;
