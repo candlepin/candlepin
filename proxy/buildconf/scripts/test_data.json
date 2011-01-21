@@ -28,14 +28,14 @@
             "gpg_url": "/foo/path/gpg/"
         },
         {
-            "name": "content-with-modifier",
+            "name": "awesomeos-modifier",
             "id": 1112,
-            "label": "content-with-modifier-label",
+            "label": "awesomeos-modifier",
             "type": "yum",
             "vendor": "test-vendor",
-            "content_url": "/foo/path",
-            "gpg_url": "/foo/path/gpg/",
-            "modified_products": ["ProductA", "ProductB"]
+            "content_url": "http://example.com/awesomeos-modifier",
+            "gpg_url": "http://example.com/awesomeos-modifier/gpg",
+            "modified_products": ["37060", "27060"]
         },
         {
             "name": "awesomeos",
@@ -199,6 +199,22 @@
                 [1111, true],
                 [0, false],
                 [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Modifier Bits",
+            "id": "37080",
+            "version": "6.1",
+            "content": [
+                [1112, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Modifier",
+            "id": "awesomeos-modifier",
+            "type": "MKT",
+            "provided_products": [
+                "37080"
             ]
         },
         {
