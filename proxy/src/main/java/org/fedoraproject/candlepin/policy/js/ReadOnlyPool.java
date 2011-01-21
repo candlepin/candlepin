@@ -117,4 +117,8 @@ public class ReadOnlyPool {
         
         return products.toArray(new ReadOnlyProduct[products.size()]);
     }
+
+    public ReadOnlyProduct getTopLevelProduct() {
+        return productCache.getProductById(entPool.getProductId());
+    }
 }
