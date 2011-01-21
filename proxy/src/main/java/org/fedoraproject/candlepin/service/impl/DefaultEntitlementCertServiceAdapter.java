@@ -171,7 +171,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
 
         X509Certificate x509Cert = this.pki.createX509Certificate(
-            createDN(ent), extensions, ent.getStartDate(), ent.getEndDate(),
+            createDN(ent), extensions, sub.getStartDate(), ent.getEndDate(),
             keyPair, serialNumber, null);
 
         return x509Cert;
