@@ -268,9 +268,12 @@ public class EntitlementRules implements Enforcer {
         productCache.addProducts(readOnlyProducts);
 
         // Provide objects for the script:
+        jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("pools", readOnlyPools.toArray());
         jsEngine.put("products", readOnlyProducts.toArray());
-        jsEngine.put("log", log);
+        jsEngine.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
+        jsEngine.put("log", rulesLogger);
+
 
         ReadOnlyPool[] result = null;
         boolean foundMatchingRule = false;
