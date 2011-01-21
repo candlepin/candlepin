@@ -114,16 +114,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             startDate, endDate);
         
         // Add some provided products to this pool:
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         ProvidedProduct p1 = new ProvidedProduct(providedProduct1.getId(), 
             providedProduct1.getName());
         ProvidedProduct p2 = new ProvidedProduct(providedProduct2.getId(), 
             providedProduct2.getName());
-        p1.setPool(testPool);
-        p2.setPool(testPool);
-        providedProducts.add(p1);
-        providedProducts.add(p2);
-        testPool.setProvidedProducts(providedProducts);
+        testPool.addProvidedProduct(p1);
+        testPool.addProvidedProduct(p2);
         poolCurator.create(testPool);
         
         EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
@@ -219,12 +215,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             startDate, endDate);
 
         // Add some provided products to this pool which also modify something:
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         ProvidedProduct p1 = new ProvidedProduct(childModifierProd.getId(),
             childModifierProd.getName());
         p1.setPool(testPool);
-        providedProducts.add(p1);
-        testPool.setProvidedProducts(providedProducts);
+        testPool.addProvidedProduct(p1);
         poolCurator.create(testPool);
 
         EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
