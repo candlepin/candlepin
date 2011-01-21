@@ -1,0 +1,460 @@
+{
+    "content": [
+        {
+            "name": "never-enabled-content",
+            "id": 0,
+            "label": "never-enabled-content",
+            "type": "yum",
+            "vendor": "test-vendor",
+            "content_url": "/foo/path/never",
+            "gpg_url": "/foo/path/never/gpg"
+        },
+        {
+            "name": "always-enabled-content",
+            "id": 1,
+            "label": "always-enabled-content",
+            "type": "yum",
+            "vendor": "test-vendor",
+            "content_url": "/foo/path/always",
+            "gpg_url": "/foo/path/always/gpg"
+        },
+        {
+            "name": "content",
+            "id": 1111,
+            "label": "content-label",
+            "type": "yum",
+            "vendor": "test-vendor",
+            "content_url": "/foo/path",
+            "gpg_url": "/foo/path/gpg/"
+        },
+        {
+            "name": "content-with-modifier",
+            "id": 1112,
+            "label": "content-with-modifier-label",
+            "type": "yum",
+            "vendor": "test-vendor",
+            "content_url": "/foo/path",
+            "gpg_url": "/foo/path/gpg/",
+            "modified_products": ["ProductA", "ProductB"]
+        },
+        {
+            "name": "awesomeos",
+            "id": 11113,
+            "label": "awesomeos",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos",
+            "gpg_url": "/path/to/awesomeos/gpg/"
+        }
+    ],
+    "owners": [
+        {
+            "name": "admin",
+            "users": [
+                {
+                    "password": "password",
+                    "username": "testuser1"
+                },
+                {
+                    "password": "password",
+                    "username": "testuser2"
+                }
+            ]
+        },
+        {
+            "name": "snowwhite",
+            "users": [
+                {
+                    "password": "password",
+                    "username": "doc"
+                },
+                {
+                    "password": "password",
+                    "username": "grumpy"
+                },
+                {
+                    "password": "password",
+                    "username": "happy"
+                },
+                {
+                    "password": "password",
+                    "username": "sleepy"
+                },
+                {
+                    "password": "password",
+                    "username": "bashful"
+                },
+                {
+                    "password": "password",
+                    "username": "sneezy"
+                },
+                {
+                    "password": "password",
+                    "username": "dopey"
+                }
+            ]
+        },
+        {
+            "name": "donaldduck",
+            "users" : [
+                {
+                    "password": "password",
+                    "username": "huey"
+                },
+                {
+                    "password": "password",
+                    "username": "duey"
+                },
+                {
+                    "password": "password",
+                    "username": "louie"
+                }
+            ]
+        }
+    ],
+    "products": [
+        {
+            "name": "Clustering Bits",
+            "id": "37065",
+            "attributes": {
+                    "sockets": 2
+            },
+            "content": [
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Load Balancing Bits",
+            "id": "37070",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Shared Storage Bits",
+            "id": "37067",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Large File Support Bits",
+            "id": "37068",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Management Bits",
+            "id": "37069",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Server Bits",
+            "id": "37060",
+            "version": "6.1",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+                [1111, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Workstation Bits",
+            "id": "27060",
+            "version": "6.1",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+
+            },
+            "content": [
+                [1111, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Server Bundled",
+            "id": "awesomeos-server",
+            "type": "MKT",
+            "provided_products": [
+                "37065",
+                "37070",
+                "37067",
+                "37068",
+                "37069",
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30,
+                "management_enabled" : 1
+            }
+        },
+        {
+            "name": "Awesome OS Server Basic",
+            "id": "awesomeos-server-basic",
+            "type": "MKT",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            }
+        },
+        {
+            "name": "Awesome OS Workstation Basic",
+            "id": "awesomeos-workstation-basic",
+            "type": "MKT",
+            "provided_products": [
+                "27060"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            }
+        },
+        {
+            "name": "Awesome OS Developer Bits",
+            "id": "1",
+            "content": [
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Developer Basic",
+            "id": "1144",
+            "type": "SYS",
+            "provided_products": [
+                "1"
+            ]
+        },
+        {
+            "name": "Awesome OS Developer Edition",
+            "id": "AWESOMEOS09XYU34",
+            "type": "MKT",
+            "attributes": {
+                "requires_consumer_type": "person",
+                "user_license": "unlimited",
+                "user_license_product": "1144"
+            }
+        },
+        {
+            "name": "Awesome OS Server Bundled (2 Sockets, Standard Support)",
+            "id": "awesomeos-server-2-socket-std",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "awesomeos-server",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
+                "37069",
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30,
+                "management_enabled" : 1
+            }
+        },
+        {
+            "name": "Awesome OS Server Bundled (2 Sockets, L1-L3, Premium Support)",
+            "id": "awesomeos-server-2-socket-prem",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "awesomeos-server",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
+                "37069",
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30,
+                "management_enabled":1
+            }
+        },
+        {
+            "name": "Awesome OS Server Bundled (4 Sockets, L1-L3, Premium Support)",
+            "id": "awesomeos-server-4-socket-prem",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "awesomeos-server",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
+                "37069",
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 4,
+                "warning_period": 30 ,
+                "management_enabled":1
+            }
+        },
+        {
+            "name": "Awesome OS Server Bundled (2 Sockets, L1-L3, Basic Support)",
+            "id": "awesomeos-server-2-socket-bas",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "awesomeos-server",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
+                "37069",
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30,
+                "management_enabled":1
+            }
+        },
+        {
+            "name": "Awesome OS Premium Architecture Bits",
+            "id": "37062",
+            "version": "6.1",
+            "arch": "ppc64",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for S390X Bits",
+            "id": "100000000000000",
+            "version": "3.11",
+            "arch": "s390x",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for S390X",
+            "id": "awesomeos-s390x",
+            "version": "3.11",
+            "arch": "s390x",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000000"
+            ],
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            }
+        },
+        {
+            "name": "Awesome OS for Premium Architectures",
+            "id": "awesomeos-ppc",
+            "arch": "ppc64",
+            "type": "MKT",
+            "provided_products": [
+                "37062",
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 2
+            }
+        },
+        {
+            "name": "Awesome OS for Premium Architectures (16 Sockets, L1-L3, Standard Support)",
+            "id": "awesomeos-ppc-16-socket-std",
+            "version": "6.1",
+            "arch": "ppc64",
+            "type": "MKT",
+            "provided_products": [
+                "37062",
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
+        {
+            "name": "Multiplier Product Bits",
+            "id": "917571",
+            "content": [
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Multiplier Product Client Pack (50)",
+            "id": "MKT-multiplier-client-50",
+            "multiplier": 50,
+            "type": "MKT",
+            "provided_products": [
+                "917571"
+            ],
+            "attributes": {
+                "requires_consumer_type": "domain",
+                "multi-entitlement": "yes",
+                "warning_period": 30
+            }
+        },
+        {
+            "name": "Management Add-On",
+            "id": "management-100",
+            "multiplier": 100,
+            "type": "MKT",
+            "attributes": {
+                "multi-entitlement": "no",
+                "warning_period": 90,
+                "management_enabled" : 1
+            }
+        }
+    ]
+}

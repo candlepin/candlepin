@@ -238,7 +238,7 @@ class Candlepin
   end
 
   def create_content(name, id, label, type, vendor,
-                     contentUrl, gpgUrl)
+                     contentUrl, gpgUrl, modifiedProductIds)
     content = {
       'name' => name,
       'id' => id,
@@ -246,7 +246,8 @@ class Candlepin
       'type' => type,
       'vendor' => vendor,
       'contentUrl' => contentUrl,
-      'gpgUrl' => gpgUrl
+      'gpgUrl' => gpgUrl,
+      'modifiedProductIds' => modifiedProductIds
     }
     post("/content", content)
   end
@@ -259,11 +260,11 @@ class Candlepin
     get("/content/id/#{content_id}")
   end
 
-  def add_content_to_product(product_uuid, content_id, enabled=true)
-    post("/products/#{product_uuid}/content/#{content_id}?enabled=#{enabled}")
+  def add_content_to_product(product_id, content_id, enabled=true)
+    post("/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
   end
 
-  def create_product(id, name, params={})
+  def create_product(id, name, params={}, dependentProductIds=[])
 
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
@@ -274,7 +275,8 @@ class Candlepin
       'name' => name,
       'id' => id,
       'multiplier' => multiplier,
-      'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}}
+      'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}},
+      'dependentProductIds' => dependentProductIds
     }
 
     post("/products", product)

@@ -392,7 +392,12 @@ public class PoolManager {
         }
 
         if (filteredPools.size() == 0) {
-            throw new EntitlementRefusedException(failedResult);
+            // Only throw refused exception if we actually hit the rules:
+            if (failedResult != null) {
+                throw new EntitlementRefusedException(failedResult);
+            }
+            throw new RuntimeException("No entitlements for products: " +
+                Arrays.toString(productIds));
         }
         
         List<Pool> bestPools = enforcer.selectBestPools(consumer,
@@ -469,6 +474,10 @@ public class PoolManager {
         consumerCurator.update(consumer);
 
         generateEntitlementCertificate(consumer, pool, e);
+        for (Entitlement regenEnt : entitlementCurator.listModifying(e)) {
+            this.regenerateCertificatesOf(regenEnt);
+        }
+        
         return e;
     }
 
@@ -611,6 +620,11 @@ public class PoolManager {
         poolCurator.merge(entitlement.getPool());
         entCertAdapter.revokeEntitlementCertificates(entitlement);
         entitlementCurator.delete(entitlement);
+
+        // Find all of the entitlements that modified the original entitlement,
+        // and regenerate those to remove the content sets.
+        this.regenerateCertificatesOf(entitlementCurator.listModifying(entitlement));
+
         sink.sendEvent(event);
     }
     

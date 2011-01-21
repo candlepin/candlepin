@@ -62,7 +62,7 @@ public class X509ExtensionUtil {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
         // Subscription/order info
         // need the sub product name, not id here
-        // NOTE: order ~= subscriptio
+        // NOTE: order ~= subscription
         // entitlement == entitlement
 
         String subscriptionOid = OIDUtil.REDHAT_OID + "." +
@@ -138,7 +138,6 @@ public class X509ExtensionUtil {
             entitlementOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_USED), false,
             new DERUTF8String(entitlement.getQuantity().toString())));
-
     }
 
     public Set<X509ExtensionWrapper> productExtensions(Product product) {
@@ -159,9 +158,9 @@ public class X509ExtensionUtil {
         return toReturn;
     }
 
-    public Set<X509ExtensionWrapper> contentExtensions(Product product) {
+    public Set<X509ExtensionWrapper> contentExtensions(Set<ProductContent> productContent) {
+        
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
-        Set<ProductContent> productContent = product.getProductContent();
 
         // for (Content con : content) {
         for (ProductContent pc : productContent) {

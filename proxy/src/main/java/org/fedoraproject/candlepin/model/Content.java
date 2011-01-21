@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -24,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.CollectionOfElements;
 
 /**
  * ProductContent
@@ -53,6 +57,10 @@ public class Content extends AbstractHibernateObject {
     
     @Column(nullable = true)
     private String contentUrl;
+    
+    @CollectionOfElements(targetElement = String.class)
+    private Set<String> modifiedProductIds = new HashSet<String>();
+    
     
     // attribute?
     @Column(nullable = true)
@@ -118,6 +126,20 @@ public class Content extends AbstractHibernateObject {
     public void setGpgUrl(String gpgUrl) {
         this.gpgUrl = gpgUrl;
     }
+    /**
+     * @param modifiedProductIds the modifiedProductIds to set
+     */
+    public void setModifiedProductIds(Set<String> modifiedProductIds) {
+        this.modifiedProductIds = modifiedProductIds;
+    }
+
+    /**
+     * @return the modifiedProductIds
+     */
+    public Set<String> getModifiedProductIds() {
+        return modifiedProductIds;
+    }
+    
     public String getType() {
         return type;
     }

@@ -67,6 +67,11 @@ class NetworkException(ConnectionException):
     def __init__(self, code):
         self.code = code
 
+class RemoteServerException(ConnectionException):
+
+    def __init__(self, code):
+        self.code = code
+
 class RhsmProxyHTTPSConnection(httpslib.ProxyHTTPSConnection):
     # 2.7 httplib expects to be able to pass a body argument to
     # endheaders, which the m2crypto.httpslib.ProxyHTTPSConnect does
@@ -179,7 +184,11 @@ class Restlib(object):
                 parsed = json.loads(response['content'])
             except Exception, e:
                 log.exception(e)
-                raise NetworkException(response['status'])
+                if str(response['status']) in ["404", "500", "502", "503", "504"]:
+                    log.error('status code: ' + str(response['status']))
+                    raise RemoteServerException(response['status'])
+                else: 
+                    raise NetworkException(response['status'])
 
             raise RestlibException(response['status'],
                     parsed['displayMessage'])

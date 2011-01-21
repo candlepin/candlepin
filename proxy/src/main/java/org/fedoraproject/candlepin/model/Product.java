@@ -78,6 +78,10 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @ManyToMany(mappedBy = "providedProducts")
     private Set<Subscription> subscriptions = new HashSet<Subscription>();
     
+    @CollectionOfElements(targetElement = String.class)
+    private Set<String> dependentProductIds = new HashSet<String>();
+
+    
     /**
      * Constructor
      * 
@@ -306,6 +310,20 @@ public class Product extends AbstractHibernateObject implements Linkable {
         this.subscriptions = subscriptions;
     }
 
+    /**
+     * @param dependentProductIds the dependentProductIds to set
+     */
+    public void setDependentProductIds(Set<String> dependentProductIds) {
+        this.dependentProductIds = dependentProductIds;
+    }
+
+    /**
+     * @return the dependentProductIds
+     */
+    public Set<String> getDependentProductIds() {
+        return dependentProductIds;
+    }
+
     @Override
     public String getHref() {
         return "/products/" + getId();
@@ -319,5 +337,18 @@ public class Product extends AbstractHibernateObject implements Linkable {
          */
     }
 
+    /**
+     * Returns true if this product has a content set which modifies the given product:
+     * @param productId
+     * @return true if this product modifies the given product ID
+     */
+    public boolean modifies(String productId) {
+        for (ProductContent pc : getProductContent()) {
+            if (pc.getContent().getModifiedProductIds().contains(productId)) {
+                return true;
+            }
+        }
+        return false;
+    }
     
 }

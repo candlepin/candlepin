@@ -64,19 +64,9 @@ function update_keystore
 
 function upload_products
 {
-    if [ -z "$IMPORTDIR" ]; then
-	echo
-	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	echo
-	echo "Please point IMPORTDIR to the location of the product data "
-	echo
-	echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	return
-    fi
-#    $IMPORTDIR/import_product_certs.py $CERTDIR/*.pem > $CERTDIR/deploy.sql
-    if [ "$IMPORTDIR" != "" ]; then
-	`dirname $0`/import_products.rb  $IMPORTDIR/import_products.json
-    fi
+  if [ "$TESTDATA" = "1" ]; then
+	  `dirname $0`/import_products.rb  `dirname $0`/test_data.json
+  fi
 }
 
 function create_var_lib_candlepin
