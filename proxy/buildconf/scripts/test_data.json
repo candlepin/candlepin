@@ -232,7 +232,9 @@
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30,
-                "management_enabled" : 1
+                "management_enabled" : 1,
+                "support_level" : "Premium",
+                "support_type" : "Level 3"
             }
         },
         {
