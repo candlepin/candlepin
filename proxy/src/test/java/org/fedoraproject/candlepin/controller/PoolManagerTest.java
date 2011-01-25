@@ -70,6 +70,8 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * PoolManagerTest
@@ -99,6 +101,8 @@ public class PoolManagerTest {
     private Enforcer enforcerMock;
     @Mock
     private ConsumerCurator consumerCuratorMock;
+    @Mock 
+    private I18n i18nMock; 
 
     @Mock
     private EventFactory eventFactory;
@@ -120,7 +124,8 @@ public class PoolManagerTest {
         this.manager = spy(new PoolManager(mockPoolCurator, mockSubAdapter,
             mockProductAdapter, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, entitlementCurator,
-            consumerCuratorMock, certCuratorMock, mockProvider));
+            consumerCuratorMock, certCuratorMock, mockProvider,
+            i18nMock));
         when(this.mockProvider.get()).thenReturn(this.principal);
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(
