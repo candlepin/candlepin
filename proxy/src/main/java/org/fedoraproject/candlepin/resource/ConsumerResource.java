@@ -353,10 +353,10 @@ public class ConsumerResource {
         catch (ForbiddenException e) {
             String msg = e.message().getDisplayMessage();
             throw new ForbiddenException(
-                new StringBuilder()
-                    .append("Cannot unregister consumer '")
-                    .append(toDelete.getName()).append("' because: ")
-                    .append(msg).toString(), e);
+                i18n.tr("Cannot unregister {0} consumer {1} because: {2}", 
+                    toDelete.getType().getLabel(), 
+                    toDelete.getName(),
+                    msg), e);
                 
         }
         consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);

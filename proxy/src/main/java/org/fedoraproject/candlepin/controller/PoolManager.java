@@ -55,6 +55,7 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -80,6 +81,7 @@ public class PoolManager {
     private EntitlementCertServiceAdapter entCertAdapter;
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private PrincipalProvider principalProvider;
+    private I18n i18n;
 
     /**
      * @param poolCurator
@@ -96,7 +98,8 @@ public class PoolManager {
         Enforcer enforcer,
         EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC,
-        PrincipalProvider principalProvider) {
+        PrincipalProvider principalProvider,
+        I18n i18n) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -110,6 +113,7 @@ public class PoolManager {
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
         this.principalProvider = principalProvider;
+        this.i18n = i18n;
     }
 
 
@@ -643,9 +647,9 @@ public class PoolManager {
         int size = this.poolCurator.getNoOfDependentEntitlements(entitlementId);
         if (size > 0) {
             this.poolCurator.disableConsumerFilter(); //don't need it.
-            StringBuilder builder = 
-                new StringBuilder("\n-Cannot unsubscribe entitlement '")
-                    .append(entitlementId).append("' because:");
+            StringBuilder builder = new StringBuilder("");
+            builder.append(i18n.tr("\n-Cannot unsubscribe entitlement '{0}' because:", 
+                entitlementId));
             
             List<EntitlementCertificate> entCerts = this.poolCurator
                 .retrieveEntCertsOfPoolsWithSourceEntitlement(entitlementId);
@@ -669,25 +673,30 @@ public class PoolManager {
                     .next();
                 Consumer consumer = entry.getKey();
                 List<EntitlementCertificate> certs = entry.getValue();
-                builder.append("\n  Consumer '").append(consumer.getName())
-                    .append("' with identity '").append(consumer.getUuid())
-                    .append("' has the following entitlements:");
+                builder.append(i18n.tr(
+                    "\n  {0} consumer '{1}' with id '{2}' has \the following entitlements:",
+                     consumer.getType().getLabel(),
+                     consumer.getName(),
+                     consumer.getUuid()));
 
                 for (Iterator<EntitlementCertificate> iterator2 = certs
                     .iterator(); iterator2.hasNext();) {
                     EntitlementCertificate certificate = iterator2.next();
                     Entitlement ent = certificate.getEntitlement();
-                    builder.append("\n    Entitlement '").append(ent.getId())
-                        .append("':\n")
-                        .append("     account number: '").append(ent.getAccountNumber())
-                        .append("'\n     serial number: '")
-                        .append(certificate.getSerial().getId())
-                        .append("'");
+                    builder.append(i18n.tr("\n    Entitlement '{0}':", ent.getId()));
+                    builder.append(i18n.tr("\n        account number: '{0}'",
+                        ent.getAccountNumber()));
+                    builder.append(i18n.tr("\n        serial number: '{0}'",
+                        certificate.getSerial().getId()));                    
                 }
             }
-            builder.append("\n\nThe above entitlements were derived from the pool: '")
-                .append(entitlement.getPool().getId())
-                .append("'.\nPlease unsubscribe from the above entitlements first.\n");
+            builder.append(
+                i18n.tr(
+                    "\n\nThe above entitlements were derived from the pool: '{0}'.",
+                     entitlement.getPool().getId()));
+            builder.append(
+                i18n.tr(
+                    "\nPlease unsubscribe from the above entitlements first.\n"));
             throw new ForbiddenException(builder.toString());
         }
     }
