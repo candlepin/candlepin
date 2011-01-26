@@ -46,11 +46,11 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
 end
 
 When /^I register a personal consumer$/ do
-  set_consumer(@current_owner_cp.register(nil, :person))
+  set_consumer(@current_owner_cp.register('test', :person))
 end
 
 Given /^I have registered a personal consumer with uuid "([^\"]*)"$/ do |uuid|
-  set_consumer(@current_owner_cp.register(nil, :person, uuid))
+  set_consumer(@current_owner_cp.register('test', :person, uuid))
 end
 
 Given /^I am a consumer "([^\"]*)" of type "([^\"]*)"$/ do |consumer_name, type|

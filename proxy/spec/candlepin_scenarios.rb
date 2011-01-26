@@ -56,7 +56,7 @@ module CandlepinMethods
 
   def random_string(prefix=nil)
     prefix ||= ''
-    "%s-%s" % [prefix, rand(100000)]
+    "#{prefix}-#{rand(100000)}"
   end
 
   def check_for_hateoas(json)
