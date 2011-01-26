@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.0
+Version: 0.2.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,53 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Jan 26 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.1-1
+- I18N update. (dgoodwin@redhat.com)
+- Add support_* attributes to test data (jbowes@redhat.com)
+- 664847: Enforce architecture when doing autobind (bkearney@redhat.com)
+- Add modifier products to test data. (dgoodwin@redhat.com)
+- Remove hardcoded product IDs from rspec. (dgoodwin@redhat.com)
+- Fix some test failures. (dgoodwin@redhat.com)
+- Refactor import products script and add test data. (dgoodwin@redhat.com)
+- Adding modified scenarios to specs and refactoring a little. (jharris@redhat.com)
+- One more checkstyle (bkearney@redhat.com)
+- checkstyle issues with 92 characters (bkearney@redhat.com)
+- 670344: Names of pools were defaulting to the parent product id (bkearney@redhat.com)
+- Fix rspec fixture issue. (dgoodwin@redhat.com)
+- Regenerate modifier certs on bind to the modified product. (dgoodwin@redhat.com)
+- Add rspec tests for generation of modifier certs. (dgoodwin@redhat.com)
+- Using provided products from pool for listing modifying products. (jharris@redhat.com)
+- remove trailing slash on PUT /consumers/{consumer_uuid}/certificates/ (jesusr@redhat.com)
+- Regenerating modifying entitlement certs on unbind. (jharris@redhat.com)
+- Add modifier rspec test. (dgoodwin@redhat.com)
+- Fix NPE when binding by products and no pools provide them. (dgoodwin@redhat.com)
+- fix log statement to be useful. (jesusr@redhat.com)
+- Fixing subscription unit tests. (jharris@redhat.com)
+- Using the correct exception for activation and adding i18n. (jharris@redhat.com)
+- add support level and support type to the cert (jbowes@redhat.com)
+- Add lookup for entitlements which modify the content of another. (dgoodwin@redhat.com)
+- EUS product import support for modifiers and dependences (cduryee@redhat.com)
+- 646624: refresh pools for owner after owner creation. (jesusr@redhat.com)
+- 665128: Store product name with pools reliably. (dgoodwin@redhat.com)
+- Pool test fix. (dgoodwin@redhat.com)
+- 663455: Fix multi-entitlement blocking rule. (dgoodwin@redhat.com)
+- 665118: Copy provided products when refreshing pools. (dgoodwin@redhat.com)
+- Adding permissions to subscription activation. (jharris@redhat.com)
+- Making checkstyle happy. (jharris@redhat.com)
+- Adding activation by consumer to subscription resource and service.
+  (jharris@redhat.com)
+- Adding unit tests around consumer activation. (jharris@redhat.com)
+- Enriching consumer model with canActivate for OEM activation. (jharris@redhat.com)
+- bump version for post-beta work, next tag 0.2.1 (jesusr@redhat.com)
+- hack-fix for content import (need to add real test data still) (cduryee@redhat.com)
+- allow rest api to be exercised for model obj additions, and fix an annotation
+  typo (cduryee@redhat.com)
+- Filter content sets based on modified products. (dgoodwin@redhat.com)
+- List entitlements providing product part 2. (dgoodwin@redhat.com)
+- eus model obj refactoring fixes (cduryee@redhat.com)
+- Add query to list entitlements providing product. (dgoodwin@redhat.com)
+- eus model obj refactoring (cduryee@redhat.com)
+
 * Wed Jan 12 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.28-1
 - findbugs: unread assignment (jesusr@redhat.com)
 
