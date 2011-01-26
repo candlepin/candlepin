@@ -67,17 +67,21 @@ public class PostEntHelper {
             }
         }
         Consumer c = ent.getConsumer();
-        Set<ProvidedProduct> providedProductCopies = new HashSet<ProvidedProduct>();
-        providedProductCopies.addAll(providedProducts);
+
         Product derivedProduct = prodAdapter.getProductById(productId);
         Pool consumerSpecificPool = new Pool(c.getOwner(), productId,
             derivedProduct.getName(),
-            providedProductCopies, q,
+            new HashSet<ProvidedProduct>(), q,
             ent.getPool().getStartDate(), ent.getPool().getEndDate(),
             ent.getPool().getContractNumber(), ent.getPool().getAccountNumber());
         consumerSpecificPool.setRestrictedToUsername(c.getUsername());
         consumerSpecificPool.setSourceEntitlement(ent);
         
+        for (ProvidedProduct pp : providedProducts) {
+            consumerSpecificPool.addProvidedProduct(
+                new ProvidedProduct(pp.getProductId(), pp.getProductName()));
+        }
+
         // temp - we need a way to specify this on the product
         consumerSpecificPool.setAttribute("requires_consumer_type", "system");
         
