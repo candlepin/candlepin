@@ -84,12 +84,16 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
+import java.util.regex.Pattern;
 
 /**
  * API Gateway for Consumers
  */
 @Path("/consumers")
 public class ConsumerResource {
+    private static final int MAX_CONSUMER_NAME_LENGTH = 250;
+    private static final Pattern CONSUMER_NAME_PATTERN = Pattern.compile("[\\w-\\.]+");
+
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
@@ -203,6 +207,12 @@ public class ConsumerResource {
         throws BadRequestException {
         // API:registerConsumer
 
+        if (!isConsumerNameValid(consumer.getName())) {
+            throw new BadRequestException(i18n.tr(
+                "System name must consist of only alphanumeric characters, " +
+                "periods, dashes and underscores."));
+        }
+
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
         User user = getCurrentUsername(principal);
@@ -258,6 +268,18 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr(
                 "Problem creating consumer {0}", consumer));
         }
+    }
+
+    private boolean isConsumerNameValid(String name) {
+        if (name == null) {
+            return false;
+        }
+
+        if (name.length() > MAX_CONSUMER_NAME_LENGTH) {
+            return false;
+        }
+
+        return CONSUMER_NAME_PATTERN.matcher(name).matches();
     }
 
     private void setOwner(User user) {

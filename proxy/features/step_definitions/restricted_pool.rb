@@ -23,7 +23,7 @@ Given /^I am a user "([^\"]*)"$/ do |arg1|
 end
 
 When /^I create a consumer of type person$/ do
-  @consumer = @client.register(nil, :person)
+  @consumer = @client.register('test', :person)
 end
 
 #Given /^I create a consumer "([^\"]*)" of type system$/ do |consumer_id|

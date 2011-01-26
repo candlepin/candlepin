@@ -85,7 +85,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     private static final String METADATA_VALUE = "jsontestname";
     private static final String METADATA_NAME = "name";
-    private static final String CONSUMER_NAME = "consumer name";
+    private static final String CONSUMER_NAME = "consumer_name";
     private static final String USER_NAME = "testing user";
     private static final String NON_EXISTENT_CONSUMER = "i don't exist";
 
@@ -146,7 +146,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         fullPool.setConsumed(10L);
         poolCurator.create(fullPool);
         eventFactory = injector.getInstance(EventFactory.class);
-
     }
 
     @Test
@@ -282,7 +281,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         // not setting the username here - this should be set by
         // examining the user principal
-        Consumer consumer = new Consumer("random consumer", null, null,
+        Consumer consumer = new Consumer("random-consumer", null, null,
             standardSystemType);
 
         consumer = consumerResource.create(consumer, principal, null);
@@ -760,5 +759,5 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         protected void configure() {
             bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
         }
-    }    
+    }
 }
