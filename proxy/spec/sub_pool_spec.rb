@@ -6,7 +6,7 @@ describe 'Sub-Pool' do
   it_should_behave_like 'Candlepin Scenarios'
 
   before(:each) do
-    owner = create_owner random_string('test_owner')
+    @owner = create_owner random_string('test_owner')
     @derived_product = create_product()
     @parent_product = create_product(nil, nil, {:attributes => {
             'user_license' => 'unlimited',
@@ -14,12 +14,16 @@ describe 'Sub-Pool' do
             'requires_consumer_type' => 'person'
     }})
 
+    @provided_product1 = create_product()
+    @provided_product2 = create_product()
+
     # Create a subscription
-    @subscription = @cp.create_subscription(owner.key, @parent_product.id, 5)
-    @cp.refresh_pools(owner.key)
+    @subscription = @cp.create_subscription(@owner.key, @parent_product.id, 5,
+      [@provided_product1.id, @provided_product2.id])
+    @cp.refresh_pools(@owner.key)
 
     # Set up user
-    @user_client = user_client(owner, 'billy')
+    @user_client = user_client(@owner, 'billy')
 
     # ===== When =====
     # Register his personal consumer
@@ -40,6 +44,12 @@ describe 'Sub-Pool' do
     @system.list_entitlements.size.should == 1
     @cp.unregister(@person_client.uuid)
     @system.list_entitlements.size.should == 0
+  end
+
+  it 'inherits provided products from parent pool' do
+    derived_pool = @system.list_pools({:product => @derived_product.id,
+      :owner => @owner.id})[0]
+    derived_pool['providedProducts'].size.should == 2
   end
 
   it 'unregistering system consumer should not result in deletion of the parent pool' do
