@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.31
+Version: 0.1.32
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Jan 27 2011 Devan Goodwin <dgoodwin@redhat.com> 0.1.32-1
+- 672438: Fix copying of provided products to a derived sub-pool.
+  (dgoodwin@redhat.com)
+- 672233: Limiting consumer names to alphanumeric, dot, dash and underscore.
+  (jharris@redhat.com)
+
 * Wed Jan 26 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.31-1
 - I18N update. (dgoodwin@redhat.com)
 - 670831: use subscription start date for start of certs instead of
