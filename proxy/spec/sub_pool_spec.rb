@@ -40,6 +40,12 @@ describe 'Sub-Pool' do
     @system.consume_product @derived_product.id
   end
 
+  it 'does not allow consumption of more than one person consumer' do
+    lambda do
+        p_ent = @person_client.consume_product(@parent_product.id)[0]
+    end.should raise_exception(RestClient::Forbidden)
+  end
+
   it 'should un-entitle system when unregistering person consumer' do
     @system.list_entitlements.size.should == 1
     @cp.unregister(@person_client.uuid)
