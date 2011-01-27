@@ -8,17 +8,38 @@ describe 'Modifier Entitlement' do
   before(:each) do
     @owner = create_owner(random_string('modifier_spec'))
 
-    # Normal product, will be "modified" by the modifier_product content sets:
-    @normal_product = create_product()
-    @normal_content = create_content()
-    @cp.add_content_to_product(@normal_product.id, @normal_content.id)
-    @normal_sub = @cp.create_subscription(@owner.key, @normal_product.id, 10)
+    # Three provided products, will be bundled in different ways:
+    @provided_product_1 = create_product()
+    @provided_product_2 = create_product()
+    @provided_product_3 = create_product()
 
-    # Setup the modifier product which modifies the above product:
+    # This bundled product contains all three of the provided products our modifier
+    # product will modify:
+    @bundled_product_1 = create_product()
+    @bundled_sub_1 = @cp.create_subscription(@owner.key, @bundled_product_1.id, 10,
+      [@provided_product_1.id, @provided_product_2.id, @provided_product_3.id])
+
+    # This bundled product only contains two of the provided products our modifier
+    # product will modify.
+    @bundled_product_2 = create_product()
+    @bundled_sub_2 = @cp.create_subscription(@owner.key, @bundled_product_2.id, 10,
+      [@provided_product_1.id, @provided_product_2.id])
+
+
+    # Create our modifier provided product, carries three content sets, each
+    # of which modify one of the provided products above:
+    @modifier_provided_product = create_product()
+    @modifier_content_1 = create_content({:modified_products => [@provided_product_1.id]})
+    @cp.add_content_to_product(@modifier_provided_product.id, @modifier_content_1.id)
+    @modifier_content_2 = create_content({:modified_products => [@provided_product_2.id]})
+    @cp.add_content_to_product(@modifier_provided_product.id, @modifier_content_2.id)
+    @modifier_content_3 = create_content({:modified_products => [@provided_product_3.id]})
+    @cp.add_content_to_product(@modifier_provided_product.id, @modifier_content_3.id)
+
+    # Create a bundled modifier product, just contains the modifier provided product:
     @modifier_product = create_product()
-    @modifier_content = create_content({:modified_products => [@normal_product.id]})
-    @cp.add_content_to_product(@modifier_product.id, @modifier_content.id)
-    @modifier_sub = @cp.create_subscription(@owner.key, @modifier_product.id, 10)
+    @modifier_sub = @cp.create_subscription(@owner.key, @modifier_product.id, 10,
+      [@modifier_provided_product.id])
     @cp.refresh_pools(@owner.key)
 
     owner_client = user_client(@owner, random_string('testowner'))
@@ -28,14 +49,31 @@ describe 'Modifier Entitlement' do
   it 'includes modifier content sets' do
 
     # Bind to the normal subscription first:
-    @consumer_cp.consume_product(@normal_product.id)
+    @consumer_cp.consume_product(@bundled_product_1.id)
 
     # Bind to the modifier subscription which modifies it:
     ent = @consumer_cp.consume_product(@modifier_product.id)
 
     # Modifier certificate should contain the modifier content:
     modifier_cert = entitlement_cert(ent)
-    repo_type_on(modifier_cert).should == 'yum'
+    content_repo_type(modifier_cert, @modifier_content_1.id).should == 'yum'
+    content_repo_type(modifier_cert, @modifier_content_2.id).should == 'yum'
+    content_repo_type(modifier_cert, @modifier_content_3.id).should == 'yum'
+  end
+
+  it 'includes selective modifier content sets' do
+
+    # Bind to the normal subscription first:
+    @consumer_cp.consume_product(@bundled_product_2.id)
+
+    # Bind to the modifier subscription which modifies it:
+    ent = @consumer_cp.consume_product(@modifier_product.id)
+
+    # Modifier certificate should contain the modifier content:
+    modifier_cert = entitlement_cert(ent)
+    content_repo_type(modifier_cert, @modifier_content_1.id).should == 'yum'
+    content_repo_type(modifier_cert, @modifier_content_2.id).should == 'yum'
+    content_repo_type(modifier_cert, @modifier_content_3.id).should be_nil
   end
 
   it 'does not include modifier content sets consumer should not have access to' do
@@ -45,7 +83,9 @@ describe 'Modifier Entitlement' do
 
     # Resulting modifier cert should not contain modifier content set:
     modifier_cert = entitlement_cert(ent)
-    repo_type_on(modifier_cert).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_1.id).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_2.id).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_3.id).should be_nil
   end
 
   it 'is regenerated when consumer receives access to modified product' do
@@ -56,11 +96,11 @@ describe 'Modifier Entitlement' do
     # Resulting modifier cert should not contain modifier content set:
     modifier_cert = OpenSSL::X509::Certificate.new(ent[0]['certificates'][0]['cert'])
     content_ext = get_extension(modifier_cert, "1.3.6.1.4.1.2312.9.2." +
-      @modifier_content.id + ".1")
+      @modifier_content_1.id + ".1")
     content_ext.should be_nil
 
     # Now bind to the product being modified:
-    normal_serial = @consumer_cp.consume_product(@normal_product.id)[0]\
+    normal_serial = @consumer_cp.consume_product(@bundled_product_1.id)[0]\
       ['certificates'][0]['serial']['serial']
 
     # Old certificate should be gone:
@@ -75,12 +115,14 @@ describe 'Modifier Entitlement' do
 
     # And it should have the modifer content set:
     new_cert = OpenSSL::X509::Certificate.new(certs[new_cert_index]['cert'])
-    repo_type_on(new_cert).should == 'yum'
+    content_repo_type(new_cert, @modifier_content_1.id).should == 'yum'
+    content_repo_type(new_cert, @modifier_content_2.id).should == 'yum'
+    content_repo_type(new_cert, @modifier_content_3.id).should == 'yum'
   end
 
   it 'is regenerated when consumer loses access to modified product' do
     # Bind to the normal subscription first:
-    normal = @consumer_cp.consume_product(@normal_product.id)
+    normal = @consumer_cp.consume_product(@bundled_product_1.id)
 
     # Bind to the modifier subscription which modifies it:
     modifier = @consumer_cp.consume_product(@modifier_product.id)
@@ -93,19 +135,21 @@ describe 'Modifier Entitlement' do
 
     # Resulting modifier cert should not contain modifier content set:
     modifier_cert = entitlement_cert(modifier)
-    repo_type_on(modifier_cert).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_1.id).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_2.id).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_3.id).should be_nil
   end
 
   it 'is regenerated when modified product subscription disappears' do
     # Delete sub and refresh pools.
     # Bind to the normal subscription first:
-    normal = @consumer_cp.consume_product(@normal_product.id)
+    normal = @consumer_cp.consume_product(@bundled_product_1.id)
 
     # Bind to the modifier subscription which modifies it:
     modifier = @consumer_cp.consume_product(@modifier_product.id)
 
-    # Now kill the subscription to the @normal_product
-    @cp.delete_subscription(@normal_sub.id)
+    # Now kill the subscription to the @bundled_product_1
+    @cp.delete_subscription(@bundled_sub_1.id)
     @cp.refresh_pools(@owner.key)
 
     # Then refetch the modifier entitlement
@@ -113,7 +157,9 @@ describe 'Modifier Entitlement' do
 
     # Resulting modifier cert should not contain modifier content set:
     modifier_cert = entitlement_cert(modifier)
-    repo_type_on(modifier_cert).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_1.id).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_2.id).should be_nil
+    content_repo_type(modifier_cert, @modifier_content_3.id).should be_nil
   end
 
   private
@@ -122,8 +168,8 @@ describe 'Modifier Entitlement' do
     OpenSSL::X509::Certificate.new(entitlement.first['certificates'].first['cert'])
   end
 
-  def repo_type_on(cert)
-    get_extension(cert, "1.3.6.1.4.1.2312.9.2.#{@modifier_content.id}.1")
+  def content_repo_type(cert, content_id)
+    get_extension(cert, "1.3.6.1.4.1.2312.9.2.#{content_id}.1")
   end
 
 end
