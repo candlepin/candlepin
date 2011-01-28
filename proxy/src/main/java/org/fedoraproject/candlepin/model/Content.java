@@ -58,14 +58,16 @@ public class Content extends AbstractHibernateObject {
     @Column(nullable = true)
     private String contentUrl;
     
-    @CollectionOfElements(targetElement = String.class)
-    private Set<String> modifiedProductIds = new HashSet<String>();
-    
-    
     // attribute?
     @Column(nullable = true)
     private String gpgUrl;
     
+    @Column(nullable = true)
+    private Long metadataExpire;
+
+    @CollectionOfElements(targetElement = String.class)
+    private Set<String> modifiedProductIds = new HashSet<String>();
+
     public Content(String name, String id, String label, String type,
                     String vendor, String contentUrl,
                     String gpgUrl) {
@@ -172,6 +174,14 @@ public class Content extends AbstractHibernateObject {
             .append(this.label).append(this.name)
             .append(this.type).append(this.vendor)
             .toHashCode();
+    }
+
+    public Long getMetadataExpire() {
+        return metadataExpire;
+    }
+
+    public void setMetadataExpire(Long metadataExpire) {
+        this.metadataExpire = metadataExpire;
     }
 
 }

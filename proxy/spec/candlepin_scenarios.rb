@@ -45,7 +45,7 @@ module CandlepinMethods
     random_str = rand(1000000)
     modified_products = params[:modified_products] || []
     @cp.create_content(random_str, random_str, random_str, "yum",
-      random_str, random_str, random_str, modified_products)
+      random_str, modified_products, {})
   end
 
   def user_client(owner, user_name)

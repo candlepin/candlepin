@@ -5,6 +5,7 @@ require 'rubygems'
 require 'rest_client'
 require 'json'
 require 'uri'
+require 'pp'
 
 class Candlepin
 
@@ -241,17 +242,23 @@ class Candlepin
   end
 
   def create_content(name, id, label, type, vendor,
-                     contentUrl, gpgUrl, modifiedProductIds)
+      modified_product_ids=[], params={})
+
+    metadata_expire = params[:metadata_expire] || nil
+    content_url = params[:content_url] || ""
+    gpg_url = params[:gpg_url] || ""
+
     content = {
       'name' => name,
       'id' => id,
       'label' => label,
       'type' => type,
       'vendor' => vendor,
-      'contentUrl' => contentUrl,
-      'gpgUrl' => gpgUrl,
-      'modifiedProductIds' => modifiedProductIds
+      'contentUrl' => content_url,
+      'gpgUrl' => gpg_url,
+      'modifiedProductIds' => modified_product_ids
     }
+    content['metadataExpire'] = metadata_expire if not metadata_expire.nil?
     post("/content", content)
   end
 

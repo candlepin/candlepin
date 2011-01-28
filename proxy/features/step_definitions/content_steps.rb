@@ -18,8 +18,8 @@ end
 def create_content(content_name)
   @content = @candlepin.create_content(content_name, content_name.hash.abs,
                                        content_name, 'yum', 'test-vendor',
-                                       '/path/to/test/content/' + content_name,
-                                       'path/to/gpg/' + content_name)
+                                       {:content_url => '/path/to/test/content/' + content_name,
+                                        :gpg_url => 'path/to/gpg/' + content_name})
 end
 
 Then /^I add a content "([^\"]*)" to a product "([^\"]*)"$/ do |content, product|

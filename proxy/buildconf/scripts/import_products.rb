@@ -55,10 +55,19 @@ owner_key = owners[0]['key']
 # import all the content sets
 puts "importing content set data..."
 data['content'].each do |c|
+
 	puts c['name']
+
+  params = {}
   modified_products = c['modified_products'] || []
+  if c.has_key?('metadata_expire')
+    params[:metadata_expire] = c['metadata_expire']
+  end
+  params[:content_url] = c['content_url']
+  params[:gpg_url] = c['gpg_url']
+
 	cp.create_content(c['name'], c['id'], c['label'], c['type'],
-      c['vendor'], c['content_url'], c['gpg_url'], modified_products)
+      c['vendor'], modified_products, params)
 end
 
 

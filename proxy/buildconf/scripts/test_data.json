@@ -7,7 +7,8 @@
             "type": "yum",
             "vendor": "test-vendor",
             "content_url": "/foo/path/never",
-            "gpg_url": "/foo/path/never/gpg"
+            "gpg_url": "/foo/path/never/gpg",
+            "metadata_expire": 600
         },
         {
             "name": "always-enabled-content",
@@ -16,7 +17,8 @@
             "type": "yum",
             "vendor": "test-vendor",
             "content_url": "/foo/path/always",
-            "gpg_url": "/foo/path/always/gpg"
+            "gpg_url": "/foo/path/always/gpg",
+            "metadata_expire": 200
         },
         {
             "name": "content",
@@ -25,7 +27,8 @@
             "type": "yum",
             "vendor": "test-vendor",
             "content_url": "/foo/path",
-            "gpg_url": "/foo/path/gpg/"
+            "gpg_url": "/foo/path/gpg/",
+            "metadata_expire": 0
         },
         {
             "name": "awesomeos-modifier",
@@ -44,7 +47,8 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos",
-            "gpg_url": "/path/to/awesomeos/gpg/"
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "metadata_expire": 3600
         }
     ],
     "owners": [
