@@ -53,6 +53,13 @@ Group: Internet/Applications
 %description jboss
 Candlepin web application for jboss
 
+%package devel
+Summary: Development libraries for candlepin integration
+Group: Development/Libraries
+
+%description devel
+Development libraries for candlepin integration
+
 %prep
 %setup -q 
 
@@ -80,6 +87,10 @@ unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tom
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/
+
+# devel
+install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
+install -m 644 target/%{name}-api-%{version}.jar $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
 
 # /var/lib dir for hornetq state
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
@@ -113,6 +124,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/%{name}
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
+
+%files devel
+%defattr(644,root,root,775)
+%{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
 * Wed Feb 09 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.3-1
