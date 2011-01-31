@@ -91,7 +91,6 @@ import java.util.regex.Pattern;
  */
 @Path("/consumers")
 public class ConsumerResource {
-    private static final int MAX_CONSUMER_NAME_LENGTH = 250;
     private static final Pattern CONSUMER_NAME_PATTERN = Pattern.compile("[\\w-\\.]+");
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
@@ -272,10 +271,6 @@ public class ConsumerResource {
 
     private boolean isConsumerNameValid(String name) {
         if (name == null) {
-            return false;
-        }
-
-        if (name.length() > MAX_CONSUMER_NAME_LENGTH) {
             return false;
         }
 
