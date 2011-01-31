@@ -30,6 +30,7 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -683,7 +684,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
      */
     @Test(expected = NotFoundException.class)
     public void testRegenerateEntitlementCertificatesWithInvalidConsumerId() {
-        this.consumerResource.regenerateEntitlementCertificates("xyz");
+        this.consumerResource.regenerateEntitlementCertificates("xyz", null);
     }
 
     /**
@@ -696,11 +697,35 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, null, null, null, null, null, null, null,
             null, null, mgr, null, null, null);
-        cr.regenerateEntitlementCertificates(this.consumer.getUuid());
+        cr.regenerateEntitlementCertificates(this.consumer.getUuid(), null);
         Mockito.verify(mgr, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(this.consumer));
 
     }
+
+    /**
+     * Test verifies that list of certs changes after regeneration
+     */
+    @Test
+    public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
+        PoolManager mgr = mock(PoolManager.class);
+        ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
+            null, null, this.entitlementCurator, null, null, null, null, null, null,
+            null, null, mgr, null, null, null);
+
+        List<Entitlement> resultList = consumerResource.bind(
+            consumer.getUuid(), pool.getId().toString(), null, null, 1, null,
+            null);
+        Entitlement ent = resultList.get(0);
+        Set<EntitlementCertificate> entCertsBefore = ent.getCertificates();
+
+        cr.regenerateEntitlementCertificates(this.consumer.getUuid(),
+                    ent.getId());
+        Set<EntitlementCertificate> entCertsAfter = ent.getCertificates();
+        assertFalse(entCertsBefore.equals(entCertsAfter));
+
+    }
+
 
     @Test
     public void testInvalidProductId() {

@@ -649,6 +649,16 @@ public class ConsumerResource {
         return consumer;
     }
 
+    private Entitlement verifyAndLookupEntitlement(String entitlementId) {
+        Entitlement entitlement = entitlementCurator.find(entitlementId);
+
+        if (entitlement == null) {
+            throw new NotFoundException(i18n.tr("No such entitlement: {0}",
+                entitlementId));
+        }
+        return entitlement;
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
@@ -762,9 +772,16 @@ public class ConsumerResource {
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
-        @PathParam("consumer_uuid") String consumerUuid) {
-        Consumer c = verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateEntitlementCertificates(c);
+        @PathParam("consumer_uuid") String consumerUuid,
+        @QueryParam("entitlement") String entitlementId) {
+        if (entitlementId != null) {
+            Entitlement e = verifyAndLookupEntitlement(entitlementId);
+            poolManager.regenerateCertificatesOf(e);            
+        }
+        else {
+            Consumer c = verifyAndLookupConsumer(consumerUuid);
+            poolManager.regenerateEntitlementCertificates(c);
+        }
     }
 
     @GET

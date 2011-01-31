@@ -28,9 +28,9 @@ describe 'Entitlement Certificate' do
     @cp.create_subscription(@owner.key, monitoring.id, 10)
     @cp.refresh_pools(@owner.key)
 
-    user = user_client(@owner, random_string('billy'))
+    @user = user_client(@owner, random_string('billy'))
 
-    @system = consumer_client(user, random_string('system1'))
+    @system = consumer_client(@user, random_string('system1'))
     @entitlement = @system.consume_product(monitoring.id)[0]
   end
 
@@ -48,6 +48,19 @@ describe 'Entitlement Certificate' do
     old_ids = old_certs.map { |cert| cert['serial']['id']}
     new_ids = new_certs.map { |cert| cert['serial']['id']}
     (old_ids & new_ids).size.should == 0
+  end
+
+  it 'can regenerate certificate by entitlement id' do
+    @system.list_certificates.length.should == 1
+    old_certs = @system.list_certificates()
+    ents = @system.list_entitlements()
+    
+    @system.regenerate_entitlement_certificates_for_entitlement(ents[0].id)
+    new_certs = @system.list_certificates()
+    old_ids = old_certs.map { |cert| cert['serial']['id']}
+    new_ids = new_certs.map { |cert| cert['serial']['id']}
+    (old_ids & new_ids).size.should == 0
+
   end
 
   it 'can be manually regenerated for a product' do
@@ -111,6 +124,35 @@ describe 'Entitlement Certificate' do
       x509 = OpenSSL::X509::Certificate.new(new_cert['cert'])
       sub['startDate'].should == x509.not_before().strftime('%Y-%m-%d').to_date
       sub['endDate'].should == x509.not_after().strftime('%Y-%m-%d').to_date
+  end
+
+  it "won't let one consumer regenerate another's certificates" do
+    @system.list_certificates.length.should == 1
+
+    begin
+      @system2 = consumer_client(@user, random_string('system1'))
+      @system2.put("/consumers/#{@system.uuid}/certificates")
+    rescue RestClient::Exception => e
+      e.http_code.should == 403
+    else
+      assert(fail, "Excepted exception was not raised")
+    end
+
+  end
+
+  it "won't let one consumer regenerate another's certificate by entitlement" do
+    @system.list_certificates.length.should == 1
+    ents = @system.list_entitlements()
+
+    begin
+      @system2 = consumer_client(@user, random_string('system1'))
+      @system2.regenerate_entitlement_certificates_for_entitlement(ents[0].id)
+    rescue RestClient::Exception => e
+      e.http_code.should == 403
+    else
+      assert(fail, "Excepted exception was not raised")
+    end
+
   end
 
 end

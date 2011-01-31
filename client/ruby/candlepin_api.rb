@@ -422,6 +422,10 @@ class Candlepin
     end
   end
 
+  def regenerate_entitlement_certificates_for_entitlement(entitlement_id)
+    return put("/consumers/#{uuid}/certificates?entitlement=#{entitlement_id}")
+  end
+
   def regenerate_identity_certificate(uuid=nil)
     uuid ||= @uuid
 
