@@ -63,7 +63,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         //#TODO Look at generic validation framework
         if ((entity.getName() != null) && (entity.getName().length() >= NAME_LENGTH)) {
             throw new BadRequestException(
-                i18n.tr("Name of the consumer should be shorter than {0} characters",
+                i18n.tr("Name of the consumer should be shorter than {0} characters.",
                     NAME_LENGTH));
         }
     }

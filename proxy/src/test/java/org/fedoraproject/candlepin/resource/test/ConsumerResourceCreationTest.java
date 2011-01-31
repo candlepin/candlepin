@@ -153,13 +153,4 @@ public class ConsumerResourceCreationTest {
         createConsumer("bar$%camp");
     }
 
-    @Test(expected = BadRequestException.class)
-    public void longerThan250Characters() {
-        String name = "jlpouyqwer9076325h8gasg87h42gh8623g987hasfhajhxcjhv-as979873" +
-            "ajsdfouhg23978hgasjghasg9732thg2937hga9shhnvbiusadf9723th7923723gh7287" +
-            "asv9723g97hasg97h323jhas97dhgfaou3hg837hawkjhgskadjgh9723h59173y573has" +
-            "asdf87h23t973h2tajshvmnmnxcfbvhfdg87rgh276012735asjdfhskuhxjhgw8r7gh8s";
-
-        createConsumer(name);
-    }
 }
