@@ -69,6 +69,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String CONTENT_URL = "contentUrl";
     private static final String CONTENT_VENDOR = "vendor";
     private static final String CONTENT_NAME = "name";
+    private static final Long CONTENT_METADATA_EXPIRE = 3200L;
     private static final String ENTITLEMENT_QUANTITY = "10";
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
@@ -85,6 +86,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Subscription subscription;
     private Entitlement entitlement;
     private Pool pool;
+    private Content content;
 
     @Before
     public void setUp() {
@@ -97,8 +99,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         product = new Product("12345", "a product", "variant", "version",
             "arch", "SVC");
 
-        Content content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+        content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
+        content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
         
         subscription = new Subscription(null, product, new HashSet<Product>(),
             1L, new Date(), new Date(), new Date());
@@ -121,16 +124,22 @@ public class DefaultEntitlementCertServiceAdapterTest {
     
     private Content createContent(String name, String id, String label, String type, 
         String vendor, String url, String gpgUrl) {
-        Content content = new Content(name, id, label, type, vendor, url, gpgUrl);
-        return content;
+        Content c = new Content(name, id, label, type, vendor, url, gpgUrl);
+        return c;
     }
 
     @Test
     public void testContentExtentionCreation() {
         // AAAH! This should be pulled out to its own test class!
-        Set<X509ExtensionWrapper> content = extensionUtil
+        Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent());
-        assertTrue(isEncodedContentValid(content));
+        assertTrue(isEncodedContentValid(contentExtensions));
+
+        // Nullify this, and make sure it's not there.
+        content.setMetadataExpire(null);
+        contentExtensions = extensionUtil
+            .contentExtensions(product.getProductContent());
+        assertFalse(isEncodedContentValid(contentExtensions));
     }
     
     @Test
@@ -261,11 +270,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(String.class));
     }
     
-    private boolean isEncodedContentValid(Set<X509ExtensionWrapper> content) {
+    private boolean isEncodedContentValid(Set<X509ExtensionWrapper> contentExtensions) {
         Map<String, X509ExtensionWrapper> encodedContent = 
             new HashMap<String, X509ExtensionWrapper>();
 
-        for (X509ExtensionWrapper ext : content) {
+        for (X509ExtensionWrapper ext : contentExtensions) {
             encodedContent.put(
                 ((DERUTF8String) ext.getAsn1Encodable()).getString(), ext);
         }
@@ -275,7 +284,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             encodedContent.containsKey(CONTENT_GPG_URL) &&
             encodedContent.containsKey(CONTENT_URL) &&
             encodedContent.containsKey(CONTENT_VENDOR) &&
-            encodedContent.containsKey(CONTENT_NAME);
+            encodedContent.containsKey(CONTENT_NAME) &&
+            encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString());
     }
 
     private KeyPair keyPair() {

@@ -194,10 +194,17 @@ public class X509ExtensionUtil {
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_PHYS_QUANTITY_KEY),
                 false,
                 new DERUTF8String(pc.getPhysicalEntitlement().toString())));
-
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false,
                 new DERUTF8String((pc.getEnabled()) ? "1" : "0")));
+
+            if (pc.getContent().getMetadataExpire() != null) {
+                toReturn.add(new X509ExtensionWrapper(contentOid + "." +
+                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
+                    false, new DERUTF8String(pc.getContent()
+                        .getMetadataExpire().toString())));
+            }
+
 
         }
         return toReturn;
