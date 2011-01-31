@@ -60,7 +60,11 @@ module CandlepinMethods
 
   def trusted_consumer_client(uuid)
     Candlepin.new(nil, nil, nil, nil, "localhost", "8443", nil, uuid)
-  end  
+  end
+
+  def trusted_user_client(username)
+    Candlepin.new(username, nil, nil, nil, "localhost", "8443", nil, nil, true)
+  end
 
   def random_string(prefix=nil)
     prefix ||= ''

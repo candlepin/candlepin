@@ -1,0 +1,50 @@
+/**
+ * Copyright (c) 2009 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
+package org.fedoraproject.candlepin.resteasy.interceptor;
+
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.jboss.resteasy.spi.HttpRequest;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
+/**
+ * This auth form allows for a consumer id to be passed in a clear http header.
+ * This should be used only if the environment is known to be secure
+ */
+class TrustedUserAuth extends UserAuth {
+
+    private static final String HEADER = "cp-user";
+
+    @Inject
+    TrustedUserAuth(UserServiceAdapter userServiceAdaper,
+        OwnerCurator ownerCurator, Injector injector) {
+        super(userServiceAdaper, ownerCurator, injector);
+    }
+
+    public Principal getPrincipal(HttpRequest request) {
+
+        Principal principal = null;
+        String username = getHeader(request, HEADER);
+
+        if (username != null && username.length() > 0) {
+            principal = this.createPrincipal(username);
+        }
+
+        return principal;
+    }
+}

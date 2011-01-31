@@ -43,4 +43,24 @@ describe 'Authorization' do
     lambda {trusted_cp.list_entitlements() }.should \
         raise_exception(RestClient::Request::Unauthorized)
   end
+
+  it 'allows in trused users' do
+    ownerID = random_string('test_owner1')
+    owner1 = create_owner ownerID
+    username = random_string("user1")
+    user1 = user_client(owner1, username)
+    trusted_user_cp = trusted_user_client(username)
+    trusted_user_cp.list_consumers()
+  end
+
+  it 'forbids invalid trused users' do
+    ownerID = random_string('test_owner1')
+    owner1 = create_owner ownerID
+    usernameGood = random_string("user1")
+    usernameBad = random_string("ANAKINSKYWALKER")
+    user1 = user_client(owner1, usernameGood)
+    trusted_user_cp = trusted_user_client(usernameBad)
+    lambda {trusted_user_cp.list_consumers()}.should \
+        raise_exception(RestClient::Request::RequestFailed)
+  end
 end

@@ -15,9 +15,9 @@
 package org.fedoraproject.candlepin.resteasy.interceptor;
 
 import java.io.IOException;
+import com.google.inject.Injector;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -35,48 +35,35 @@ import net.oauth.signature.OAuthSignatureMethod;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.IseException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * Uses two legged OAuth. If it succeeds, then it pulls the username off of a
  * headers and creates a principal based only on the username
  */
-public class OAuth implements AuthProvider {
+public class OAuth extends UserAuth {
 
     protected static final String HEADER = "cp-user";
     protected static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
     protected static final String SIGNATURE_TYPE = "HMAC-SHA1";
 
-    private Logger log = Logger.getLogger(OAuth.class);
-    private UserServiceAdapter userServiceAdapter;
-    private OwnerCurator ownerCurator;
-    private Injector injector;
-    private I18n i18n;
+    private Logger log = Logger.getLogger(OAuth.class);;
     private Config config;
     private Map<String, OAuthAccessor> accessors = new HashMap<String, OAuthAccessor>();
 
     @Inject
     OAuth(UserServiceAdapter userServiceAdapter, OwnerCurator ownerCurator,
         Injector injector, Config config) {
-        this.userServiceAdapter = userServiceAdapter;
-        this.ownerCurator = ownerCurator;
-        this.injector = injector;
+        super(userServiceAdapter, ownerCurator, injector);
         this.config = config;
-        i18n = this.injector.getInstance(I18n.class);
         this.setupAccessors();
         this.setupSigners();
     }
@@ -136,26 +123,6 @@ public class OAuth implements AuthProvider {
     }
 
     /**
-     * Retrieve a header, or the empty string if it is not there.
-     * 
-     * @return the header or a blank string (no nils)
-     */
-    public String getHeader(HttpRequest request, String name) {
-        String headerValue = "";
-        List<String> header = null;
-        for (String key : request.getHttpHeaders().getRequestHeaders().keySet()) {
-            if (key.equalsIgnoreCase(name)) {
-                header = request.getHttpHeaders().getRequestHeader(key);
-                break;
-            }
-        }
-        if (null != header && header.size() > 0) {
-            headerValue = header.get(0);
-        }
-        return headerValue;
-    }
-
-    /**
      * Get an oauth accessor for a given message. An exception is thrown if no
      * accessor is found.
      * 
@@ -177,40 +144,6 @@ public class OAuth implements AuthProvider {
                 e));
         }
 
-    }
-
-    /**
-     * Creates a user principal for a given username
-     */
-    protected Principal createPrincipal(String username) {
-        Owner owner = this.userServiceAdapter.getOwner(username);
-        UserPrincipal principal = null;
-        if (owner == null) {
-            String msg = i18n.tr("No owner found for user {0}", username);
-            throw new BadRequestException(msg);
-        }
-        else {
-            owner = lookupOwner(owner);
-            List<Role> roles = this.userServiceAdapter.getRoles(username);
-            principal = new UserPrincipal(username, owner, roles);
-        }
-        return principal;
-    }
-
-    /**
-     * Ensure that an owner exists in the db, and throw an exception if not
-     * found.
-     */
-    protected Owner lookupOwner(Owner owner) {
-        Owner o = this.ownerCurator.lookupByKey(owner.getKey());
-        if (o == null) {
-            if (owner.getKey() == null) {
-                throw new NotFoundException(
-                    i18n.tr("An owner does not exist for a null org id"));
-            }
-        }
-
-        return o;
     }
 
     /**

@@ -18,7 +18,7 @@ class Candlepin
   # connect as a "consumer".
   # TODO probably want to convert this to rails style kv
   def initialize(username=nil, password=nil, cert=nil, key=nil,
-                 host='localhost', port=8443, lang=nil, uuid=nil)
+                 host='localhost', port=8443, lang=nil, uuid=nil, trusted_user=false)
 
     if not username.nil? and not cert.nil?
       raise "Cannot connect with both username and identity cert"
@@ -34,6 +34,9 @@ class Candlepin
     if not uuid.nil?
       puts(@base_url)
       create_trusted_consumer_client(uuid)
+    elsif trusted_user
+      puts(@base_url)
+      create_trusted_user_client(username)
     elsif not cert.nil?
       create_ssl_client(cert, key)
     else
@@ -504,6 +507,14 @@ class Candlepin
     @uuid = uuid
     @client = RestClient::Resource.new(@base_url,
                                        :headers => {"cp-consumer" => uuid,
+                                                    :accept_language => @lang}
+                                        )
+  end
+
+  def create_trusted_user_client(username)
+    @username = username
+    @client = RestClient::Resource.new(@base_url,
+                                       :headers => {"cp-user" => username,
                                                     :accept_language => @lang}
                                         )
   end

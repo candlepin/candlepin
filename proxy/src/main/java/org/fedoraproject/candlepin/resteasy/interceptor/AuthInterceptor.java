@@ -101,9 +101,11 @@ public class AuthInterceptor implements PreProcessInterceptor {
         }
         // trusted headers
         if (config.trustedAuthEnabled()) {
-            providerCount++;
+            providerCount = providerCount + 2;
             log.debug("Trusted Authentication is enabled.");
             providers.add(new TrustedConsumerAuth(consumerCurator));
+            providers.add(new TrustedUserAuth(userService, ownerCurator,
+                injector));
         }
         this.providers = providers.toArray(this.providers);
     }
