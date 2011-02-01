@@ -14,9 +14,7 @@ require 'candlepin_api'
 class CandlepinCLI < Candlepin
   
   def commands
-    # This is a little hacky...
-    cp = Candlepin.new('admin', 'admin')
-    cp.public_methods(false).sort.each do |method|
+    Candlepin.public_instance_methods(false).sort.each do |method|
       yield method if callable_name? method
     end
   end
