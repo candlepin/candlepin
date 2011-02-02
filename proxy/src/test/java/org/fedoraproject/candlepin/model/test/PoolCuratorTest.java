@@ -200,5 +200,40 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     }
 
+    @Test
+    public void testListByActiveOnIncludesSameStartDay() {
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setStartDate(activeOn);
+        poolCurator.create(pool);
+
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null, false,
+            activeOn).size());
+    }
     
+    @Test
+    public void testListByActiveOnIncludesSameEndDay() {
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setEndDate(activeOn);
+        poolCurator.create(pool);
+
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null, false,
+            activeOn).size());
+    }
+    
+    @Test
+    public void testListByActiveOnInTheMiddle() {
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setStartDate(TestUtil.createDate(2011, 1, 2));
+        pool.setEndDate(TestUtil.createDate(2011, 3, 2));
+        poolCurator.create(pool);
+
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null, false,
+            activeOn).size());
+    }
 }

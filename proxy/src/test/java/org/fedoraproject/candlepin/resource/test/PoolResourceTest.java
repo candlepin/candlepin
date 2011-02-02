@@ -226,18 +226,13 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolResource.list(owner1.getId(), null, null, false, "bc");
     }
 
-    @Test(expected = BadRequestException.class)
-    public void testBadActiveOnDate2() {
-        poolResource.list(owner1.getId(), null, null, false, "800529");
-    }
-
     @Test
     public void testActiveOnDate() {
-        String activeOn = new Integer(START_YEAR + 1).toString() + "0101";
+        String activeOn = new Integer(START_YEAR + 1).toString();
         List<Pool> pools = poolResource.list(null, null, null, false, activeOn);
         assertEquals(3, pools.size());
 
-        activeOn = new Integer(START_YEAR - 1).toString() + "0101";
+        activeOn = new Integer(START_YEAR - 1).toString();
         pools = poolResource.list(owner1.getId(), null, null, false, activeOn);
         assertEquals(0, pools.size());
     }
