@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.32
+Version: 0.1.33
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Feb 02 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.33-1
+- Update spec file to generate candlepin-devel package (jeckersb@redhat.com)
+- 672233: Fixing typo in consumer curator length check and removing from resource. (jharris@redhat.com)
+- 671195: ensure you can't consume a person product more than once. (jesusr@redhat.com)
+- 658683: change the error message for failed unbinds (bkearney@redhat.com)
+
 * Thu Jan 27 2011 Devan Goodwin <dgoodwin@redhat.com> 0.1.32-1
 - 672438: Fix copying of provided products to a derived sub-pool.
   (dgoodwin@redhat.com)
