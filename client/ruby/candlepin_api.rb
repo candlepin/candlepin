@@ -242,11 +242,12 @@ class Candlepin
   end
 
   def create_content(name, id, label, type, vendor,
-      modified_product_ids=[], params={})
+      params={})
 
     metadata_expire = params[:metadata_expire] || nil
     content_url = params[:content_url] || ""
     gpg_url = params[:gpg_url] || ""
+    modified_product_ids = params[:modified_products] || []
 
     content = {
       'name' => name,

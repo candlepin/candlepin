@@ -120,12 +120,15 @@ public class ProductImporterTest {
         importer.store(storeThese);
 
         verify(contentCuratorMock).createOrUpdate(c);
+
+        assertEquals(new Long(1000), c.getMetadataExpire());
     }
 
     // Returns the Content object added
     private void addContentTo(Product p) {
         Content c = new Content("name", "100130", "label", "type",
             "vendor", "url", "gpgurl");
+        c.setMetadataExpire(1000L);
         p.getProductContent().add(new ProductContent(p, c, true));
     }
 

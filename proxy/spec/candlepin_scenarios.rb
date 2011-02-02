@@ -43,9 +43,10 @@ module CandlepinMethods
 
   def create_content(params={})
     random_str = rand(1000000)
-    modified_products = params[:modified_products] || []
+    # Apologies, passing optional params straight through to prevent just pulling
+    # each one out and putting it into a new hash.
     @cp.create_content(random_str, random_str, random_str, "yum",
-      random_str, modified_products, {})
+      random_str, params)
   end
 
   def user_client(owner, user_name)
@@ -129,6 +130,9 @@ module ExportMethods
     product1 = create_product(random_string(), random_string(),
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
     product2 = create_product()
+    content = create_content({:metadata_expire => 6000})
+    @cp.add_content_to_product(product1.id, content.id)
+    @cp.add_content_to_product(product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)
 
     sub1 = @cp.create_subscription(@owner.key, product1.id, 2, [], '', '12345', nil, @end_date)

@@ -65,9 +65,10 @@ data['content'].each do |c|
   end
   params[:content_url] = c['content_url']
   params[:gpg_url] = c['gpg_url']
+  params[:modified_products] = modified_products
 
 	cp.create_content(c['name'], c['id'], c['label'], c['type'],
-      c['vendor'], modified_products, params)
+      c['vendor'], params)
 end
 
 
