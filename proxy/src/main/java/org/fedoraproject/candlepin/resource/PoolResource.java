@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +26,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.DatatypeConverter;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Role;
@@ -74,13 +73,12 @@ public class PoolResource {
     }
 
     private Date parseActiveOnString(String activeOn) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         Date d;
         try {
-            d = sdf.parse(activeOn);
+            d = DatatypeConverter.parseDateTime(activeOn).getTime();
         }
-        catch (ParseException e) {
-            throw new BadRequestException("Invalid date, must use format YYYYMMDD");
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid date, must use ISO 8601 format");
         }
         return d;
     }
@@ -123,7 +121,7 @@ public class PoolResource {
         if (activeOn != null) {
             activeOnDate = parseActiveOnString(activeOn);
         }
-
+        
         Consumer c = null;
         Owner o = null;
         if (consumerUuid != null) {

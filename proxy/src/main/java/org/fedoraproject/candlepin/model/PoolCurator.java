@@ -163,8 +163,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         if (activeOn != null) {
-            crit.add(Restrictions.lt("startDate", activeOn));
-            crit.add(Restrictions.gt("endDate", activeOn));
+            crit.add(Restrictions.le("startDate", activeOn));
+            crit.add(Restrictions.ge("endDate", activeOn));
         }
 
         // FIXME: sort by enddate?
