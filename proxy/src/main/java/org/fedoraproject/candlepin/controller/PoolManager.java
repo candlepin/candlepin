@@ -463,11 +463,6 @@ public class PoolManager {
         consumer.addEntitlement(e);
         pool.getEntitlements().add(e);
 
-        if (preHelper.getGrantFreeEntitlement()) {
-            log.info("Granting free entitlement.");
-            e.setIsFree(Boolean.TRUE);
-        }
-
         PostEntHelper postEntHelper = new PostEntHelper(this, productAdapter, e);
         enforcer.postEntitlement(consumer, postEntHelper, e);
 

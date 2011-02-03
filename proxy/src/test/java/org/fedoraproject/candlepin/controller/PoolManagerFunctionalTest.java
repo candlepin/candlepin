@@ -147,41 +147,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolManager.entitleByProduct(parentSystem, virtHost.getId(), new Integer("1"));
     }
 
-    // NOTE:  Disabled after virt_system was removed as a type
-    //@Test(expected = EntitlementRefusedException.class)
-    public void testVirtEntitleFailsForVirtSystem() throws Exception {
-        parentSystem.setType(systemType);
-        consumerCurator.update(parentSystem);
-        poolManager.entitleByProduct(parentSystem, virtHost.getId(), new Integer("1"));
-    }
-
-    // NOTE:  Disabled after virt_system was removed as a type
-    //@Test
-    public void testVirtSystemGetsWhatParentHasForFree() throws Exception {
-        // Give parent virt host ent:
-        Entitlement e = poolManager.entitleByProduct(parentSystem, virtHost.getId(),
-            new Integer("1"));
-        assertNotNull(e);
-
-        // Give parent provisioning:
-        e = poolManager.entitleByProduct(parentSystem, provisioning.getId(),
-            new Integer("1"));
-        assertNotNull(e);
-
-        Pool provisioningPool = poolCurator.listByOwnerAndProduct(o,
-                provisioning.getId()).get(0);
-
-        Long provisioningCount = Long.valueOf(provisioningPool.getConsumed());
-        assertEquals(Long.valueOf(1), provisioningCount);
-
-        // Now guest requests monitoring, and should get it for "free":
-        e = poolManager.entitleByProduct(childVirtSystem, provisioning.getId(),
-            new Integer("1"));
-        assertNotNull(e);
-        assertTrue(e.isFree());
-        assertEquals(Long.valueOf(1), provisioningPool.getConsumed());
-    }
-
     @Ignore // Support for virtualized systems has been changed
     @Test
     public void testVirtSystemPhysicalEntitlement() throws Exception {
@@ -199,7 +164,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         e = poolManager.entitleByProduct(childVirtSystem, provisioning.getId(),
             new Integer("1"));
         assertNotNull(e);
-        assertFalse(e.isFree());
         // Should have resorted to consuming a physical entitlement, because the guest's
         // parent does not have this.
         assertEquals(Long.valueOf(1), provisioningPool.getConsumed());

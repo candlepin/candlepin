@@ -85,20 +85,7 @@ var Entitlement = {
 	},
 	
 	pre_global: function() {
-	
-		// Support free entitlements for guests, if their parent has virt host or platform,
-		// and is entitled to the product the guest is requesting:
-		if (consumer.getType() == "virt_system" && consumer.getParent() != null) {
-			if ((consumer.getParent().hasEntitlement("virtualization_host") ||
-					consumer.getParent().hasEntitlement("virtualization_host_platform")) &&
-					consumer.getParent().hasEntitlement(product.getId())) {
-				pre.grantFreeEntitlement();
-			}
-	
-		}
-		else {
-			pre.checkQuantity(pool);
-		}
+        pre.checkQuantity(pool);
 	},
 	
 	post_global: function() {

@@ -122,12 +122,7 @@ public class Entitlement extends AbstractHibernateObject
     @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
     private Set<EntitlementCertificate> certificates = 
         new HashSet<EntitlementCertificate>();
-    
-    // Was this entitlement created for free, or did it consume a slot in it's pool:
-    // TODO: Find a better way to represent this, we can't really clean it up properly 
-    // like this.
-    private Boolean isFree = Boolean.FALSE;
-    
+
     private Integer quantity;
 
     private Integer flexExpiryDays = 0;
@@ -254,29 +249,6 @@ public class Entitlement extends AbstractHibernateObject
      */
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
-    }
-
-    /**
-     * @return returns true if the entitlement is free.
-     */
-    @XmlTransient
-    public Boolean isFree() {
-        return getIsFree();
-    }
-    
-    /**
-     * @return true if the entitlement is free.
-     * TODO: why do we have this method?
-     */
-    public Boolean getIsFree() {
-        return isFree;
-    }
-
-    /**
-     * @param isFree true if entitlement should be available.
-     */
-    public void setIsFree(Boolean isFree) {
-        this.isFree = isFree;
     }
 
     public Integer getQuantity() {

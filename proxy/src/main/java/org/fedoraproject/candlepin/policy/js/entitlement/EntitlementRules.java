@@ -38,7 +38,6 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationWarning;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyEntitlement;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
@@ -226,7 +225,6 @@ public class EntitlementRules implements Enforcer {
         jsEngine.put("product", new ReadOnlyProduct(product));
         jsEngine.put("post", postHelper);
         jsEngine.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
-        jsEngine.put("entitlement", new ReadOnlyEntitlement(ent));
         jsEngine.put("attributes", allAttributes);
         jsEngine.put("log", rulesLogger);
 
