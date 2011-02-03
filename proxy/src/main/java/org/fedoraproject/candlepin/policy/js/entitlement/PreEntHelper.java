@@ -25,7 +25,6 @@ import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
  */
 public class PreEntHelper {
     
-    private Boolean grantFreeEntitlement = Boolean.FALSE;
     private ValidationResult result;
     private Integer quantityToConsume;
    
@@ -50,23 +49,6 @@ public class PreEntHelper {
         result.addWarning(resourceKey);
     }
     
-    /**
-     * Called by a rule who wishes to indicate the entitlement is free,
-     * and not counted against the owner's overall consumption. This
-     * translates into a flag on the Entitlement object itself.
-     */
-    public void grantFreeEntitlement() {
-        grantFreeEntitlement = Boolean.TRUE;
-    }
-   
-    /**
-     * Return true if we are to grant free entitlements.
-     * @return true if we are to grant free entitlements.
-     */
-    public Boolean getGrantFreeEntitlement() {
-        return grantFreeEntitlement;
-    }
-   
     /**
      * Return the result of the validation
      * @return the result of the validation

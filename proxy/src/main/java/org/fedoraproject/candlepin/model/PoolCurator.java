@@ -234,7 +234,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Entitlement> retrieveFreeEntitlementsOfPool(Pool existingPool,
         boolean lifo) {
         return criteriaToSelectEntitlementForPool(existingPool)
-            .add(Restrictions.eq("isFree", false))
             .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
             .list();
     }

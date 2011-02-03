@@ -226,18 +226,7 @@ var Entitlement = {
 			pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
 		}
 
-		// Support free entitlements for guests, if their parent has virt host or
-		// platform,
-		// and is entitled to the product the guest is requesting:
-		if (consumer.getType() == "virt_system" && consumer.getParent() != null) {
-			var parent = consumer.getParent();
-			if ((parent.hasEntitlement("virtualization_host") || parent.hasEntitlement("virtualization_host_platform"))
-					&& parent.hasEntitlement(product)) {
-				pre.grantFreeEntitlement();
-			}
-		} else {
-			pre.checkQuantity(pool);
-		}
+        pre.checkQuantity(pool);
 	},
 
 	post_global: function() {
