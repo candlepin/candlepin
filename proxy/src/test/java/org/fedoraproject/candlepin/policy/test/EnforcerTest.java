@@ -32,6 +32,8 @@ import java.util.Set;
 
 import javax.script.ScriptEngineManager;
 
+import org.fedoraproject.candlepin.guice.RulesReaderProvider;
+import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -54,6 +56,8 @@ import org.mockito.MockitoAnnotations;
 public class EnforcerTest extends DatabaseTestFixture {
 
     @Mock private ProductServiceAdapter productAdapter;
+    @Mock private RulesReaderProvider readerProvider;
+    @Mock private ScriptEngineProvider engineProvider;
     private Enforcer enforcer;
     private Owner owner;
     private Consumer consumer;
@@ -77,9 +81,14 @@ public class EnforcerTest extends DatabaseTestFixture {
             = new BufferedReader(new InputStreamReader(
                 getClass().getResourceAsStream("/rules/test-rules.js")));
         
+        when(readerProvider.get()).thenReturn(reader);
+        when(engineProvider.get()).thenReturn(
+            new ScriptEngineManager().getEngineByName("JavaScript"));
+        
+        
         enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            reader, productAdapter,
-            new ScriptEngineManager().getEngineByName("JavaScript"), i18n);
+            readerProvider, productAdapter,
+            engineProvider, i18n);
     }
     
     @Test

@@ -14,10 +14,6 @@
  */
 package org.fedoraproject.candlepin;
 
-import java.io.Reader;
-
-import javax.script.ScriptEngine;
-
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
@@ -111,9 +107,10 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(EntitlementCertServiceAdapter.class).to(
             StubEntitlementCertServiceAdapter.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
-        bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
-        bind(Reader.class).annotatedWith(Names.named("RulesReader"))
-            .toProvider(RulesReaderProvider.class);
+        bind(ScriptEngineProvider.class);
+        bind(RulesReaderProvider.class);
+        //bind(Reader.class).annotatedWith(Names.named("RulesReader"))
+        //    .toProvider(RulesReaderProvider.class);
         bind(I18n.class).toProvider(I18nProvider.class);
 
         bind(JobFactory.class).to(GuiceJobFactory.class);
