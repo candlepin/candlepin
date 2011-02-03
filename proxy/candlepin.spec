@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.1
+Version: 0.2.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,23 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Thu Feb 03 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.2-1
+- Building master (jesusr@redhat.com)
+- Add a small metadata expiry import test. (dgoodwin@redhat.com)
+- Add metadata expire to entitlement certificates. (dgoodwin@redhat.com)
+- Add metadata expire seconds to the Content model. (dgoodwin@redhat.com)
+- 672233: Fixing typo in consumer curator length check and removing from
+  resource. (jharris@redhat.com)
+- Add users to the trust auth logic. They can now be passed in with cp-user
+  (bkearney@redhat.com)
+- remove unused import (jesusr@redhat.com)
+- Expand on modifier test spec. (dgoodwin@redhat.com)
+- 658683: change the error message for failed unbinds (bkearney@redhat.com)
+- 672438: Fix copying of provided products to a derived sub-pool.
+  (dgoodwin@redhat.com)
+- 672233: Limiting consumer names to alphanumeric, dot, dash and underscore
+  (jharris@redhat.com)
+
 * Wed Jan 26 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.1-1
 - I18N update. (dgoodwin@redhat.com)
 - Add support_* attributes to test data (jbowes@redhat.com)
