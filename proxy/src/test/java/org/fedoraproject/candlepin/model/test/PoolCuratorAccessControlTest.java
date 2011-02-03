@@ -14,17 +14,19 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -183,8 +185,6 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
 
         assertEquals(1, poolCurator.listAll().size());
         
-        pool.setConsumed(10L);
-        
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
         setupPrincipal(owner2, Role.OWNER_ADMIN);
@@ -200,7 +200,13 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         
         assertEquals(1, poolCurator.listAll().size());
-        pool.setConsumed(10L);
+        // can also add a single entitlement with a quantity of 10
+        for (int i = 0; i < 10; i++) {
+            Entitlement e = this.createEntitlement(owner, consumer, pool,
+                createEntitlementCertificate("somekey", "somecert"));
+            e.setQuantity(1);
+            pool.getEntitlements().add(e);
+        }
         
         setupPrincipal(owner, Role.OWNER_ADMIN);
         crudInterceptor.enable();

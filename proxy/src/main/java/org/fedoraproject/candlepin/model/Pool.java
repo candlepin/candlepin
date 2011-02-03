@@ -107,9 +107,6 @@ public class Pool extends AbstractHibernateObject
     private Long quantity;
 
     @Column(nullable = false)
-    private Long consumed;
-
-    @Column(nullable = false)
     private Date startDate;
     
     @Column(nullable = false)
@@ -156,10 +153,6 @@ public class Pool extends AbstractHibernateObject
         this.endDate = endDateIn;
         this.contractNumber = contractNumber;
         this.accountNumber = accountNumber;
-    
-        // Always assume none consumed if creating a new pool.
-        this.consumed = 0L;
-
         this.providedProducts = providedProducts;
     }
 
@@ -221,15 +214,18 @@ public class Pool extends AbstractHibernateObject
      * @return quantity currently consumed.
      */
     public Long getConsumed() {
+        long consumed = 0L;
+        for (Entitlement e : getEntitlements()) {
+            consumed += e.getQuantity();
+        }
         return consumed;
     }
 
     /**
      * @param consumed set the activate uses.
-     * TODO: is this really needed?
      */
     public void setConsumed(Long consumed) {
-        this.consumed = consumed;
+        // TODO: needed for json repopulation, need to ignore.
     }
     
     /**
@@ -290,18 +286,6 @@ public class Pool extends AbstractHibernateObject
 
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
-    }
-    
-    public void bumpConsumed(int quantity) {
-        consumed += quantity;
-    }
-
-    public void dockConsumed(int quantity) {
-        consumed -= quantity;
-    }
-    
-    public static void dockConsumed(Entitlement e) {
-        e.getPool().dockConsumed(e.getQuantity());
     }
 
     public Set<PoolAttribute> getAttributes() {
@@ -536,7 +520,7 @@ public class Pool extends AbstractHibernateObject
      */
     @XmlTransient
     public boolean isOverflowing() {
-        return this.consumed > this.quantity;
+        return getConsumed() > this.quantity;
     }
     
     public String getHref() {

@@ -33,6 +33,7 @@ import java.util.Set;
 import javax.script.ScriptEngineManager;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -411,7 +412,13 @@ public class EnforcerTest extends DatabaseTestFixture {
         final int currentMembers, final int maxMembers, Date expiry) {
         Pool p = createPoolAndSub(theOwner, product, 
             Long.valueOf(maxMembers), new Date(), expiry);
-        p.setConsumed(Long.valueOf(currentMembers));
+
+        // alternatively 1 entitlement with quantity of currentMembers
+        for (int i = 0; i < currentMembers; i++) {
+            Entitlement e = mock(Entitlement.class);
+            when(e.getQuantity()).thenReturn(1);
+            p.getEntitlements().add(e);
+        }
         return p;
     }
 }

@@ -557,6 +557,12 @@ public class ConsumerResource {
         Integer quantity) {
         Pool pool = poolManager.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
+
+        if (log.isDebugEnabled() && pool != null) {
+            log.debug("pool: id[" + pool.getId() + "], consumed[" +
+                pool.getConsumed() + "], qty [" + pool.getQuantity() + "]");
+        }
+
         if (pool == null) {
             throw new BadRequestException(i18n.tr(
                 "No such entitlement pool: {0}", poolId));
