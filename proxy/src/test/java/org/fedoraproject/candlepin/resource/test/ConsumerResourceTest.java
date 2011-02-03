@@ -99,7 +99,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private Consumer consumer;
     private Product product;
     private Pool pool;
-    private Pool fullPool;
 
     private ConsumerResource consumerResource;
     private UserPrincipal principal;
@@ -141,10 +140,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             .date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(pool);
 
-        fullPool = createPoolAndSub(owner, product, 10L, TestDateUtil
-            .date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
-        fullPool.setConsumed(10L);
-        poolCurator.create(fullPool);
         eventFactory = injector.getInstance(EventFactory.class);
     }
 

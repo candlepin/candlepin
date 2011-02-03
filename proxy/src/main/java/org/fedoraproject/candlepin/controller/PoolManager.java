@@ -462,9 +462,6 @@ public class PoolManager {
             log.info("Granting free entitlement.");
             e.setIsFree(Boolean.TRUE);
         }
-        else {
-            pool.bumpConsumed(quantity);
-        }
 
         PostEntHelper postEntHelper = new PostEntHelper(this, productAdapter, e);
         enforcer.postEntitlement(consumer, postEntHelper, e);
@@ -594,11 +591,6 @@ public class PoolManager {
     public void revokeEntitlement(Entitlement entitlement) {
         if (this.principalProvider.get() instanceof ConsumerPrincipal) {
             checkForOutstandingSubPoolEntitlements(entitlement);
-        }
-        
-        if (!entitlement.isFree()) {
-            // put this entitlement back in the pool
-            Pool.dockConsumed(entitlement);
         }
 
         Consumer consumer = entitlement.getConsumer();
