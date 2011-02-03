@@ -14,21 +14,19 @@
  */
 package org.fedoraproject.candlepin.policy.js.consumer;
 
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.guice.RulesReaderProvider;
+import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.RuleParseException;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
-import org.apache.log4j.Logger;
-
-import java.io.Reader;
-
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 
 /**
  * ConsumerRules
@@ -37,34 +35,55 @@ public class ConsumerRules {
 
     private Logger log = Logger.getLogger(ConsumerRules.class);
 
+    private ScriptEngineProvider jsEngineProvider;
     private ScriptEngine jsEngine;
     private Object consumerDeleteNameSpace;
+    private RulesReaderProvider rulesReaderProvider;
+    private boolean initialized = false;
+    
 
     @Inject
-    public ConsumerRules(@Named("RulesReader") Reader rulesReader,
-        ScriptEngine jsEngine) {
+    public ConsumerRules(RulesReaderProvider rulesReaderProvider,
+        ScriptEngineProvider jsEngineProvider) {
 
-        this.jsEngine = jsEngine;
+        this.jsEngineProvider = jsEngineProvider;
+        this.rulesReaderProvider = rulesReaderProvider;
 
-        if (jsEngine == null) {
-            throw new RuntimeException("No Javascript engine");
-        }
-
-        try {
-            this.jsEngine.eval(rulesReader);
-            consumerDeleteNameSpace = 
-                ((Invocable) this.jsEngine).invokeFunction("consumer_delete_name_space");
-        }
-        catch (ScriptException ex) {
-            throw new RuleParseException(ex);
-        }
-        catch (NoSuchMethodException ex) {
-            throw new RuleParseException(ex);
+    }
+    
+    /*
+     * The init method allows the expensive creation of the rules engine
+     * to be deferred until it is actually needed. All non constructor
+     * methods must call this before doing any work.
+     */
+    protected synchronized void init() {
+        
+        if (!initialized) {        
+            jsEngine = jsEngineProvider.get();
+            
+            if (jsEngine == null) {
+                throw new RuntimeException("No Javascript engine");
+            }
+            
+            try {
+                this.jsEngine.eval(rulesReaderProvider.get());
+                consumerDeleteNameSpace = 
+                    ((Invocable) this.jsEngine)
+                        .invokeFunction("consumer_delete_name_space");
+            }
+            catch (ScriptException ex) {
+                throw new RuleParseException(ex);
+            }
+            catch (NoSuchMethodException ex) {
+                throw new RuleParseException(ex);
+            }
+            initialized = true;
         }
     }
 
     public ConsumerDeleteHelper onConsumerDelete(
             ConsumerDeleteHelper consumerDeleteHelper, Consumer consumer) {
+        this.init();
         jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
         jsEngine.put("helper", consumerDeleteHelper);
 
@@ -74,6 +93,7 @@ public class ConsumerRules {
     }
 
     protected void invokeRule(Object namespace, String namespaceName, String ruleName) {
+        this.init();
         Invocable inv = (Invocable) jsEngine;
         try {
             inv.invokeMethod(namespace, ruleName);

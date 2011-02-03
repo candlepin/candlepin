@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.policy.js.entitlement;
 
-import java.io.Reader;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -29,6 +28,8 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.guice.RulesReaderProvider;
+import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -48,7 +49,6 @@ import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import edu.emory.mathcs.backport.java.util.Arrays;
 
@@ -64,9 +64,12 @@ public class EntitlementRules implements Enforcer {
 
     private ProductServiceAdapter prodAdapter;
 
+    private ScriptEngineProvider jsEngineProvider;
+    private RulesReaderProvider rulesReaderProvider;
     private ScriptEngine jsEngine;
     private I18n i18n;
-    private final Map<String, Set<Rule>> attributesToRules;
+    private Map<String, Set<Rule>> attributesToRules;
+    private boolean initialized = false;
     
     private Object entitlementNameSpace;
     private static final String PROD_ARCHITECTURE_SEPARATOR = ",";
@@ -95,42 +98,57 @@ public class EntitlementRules implements Enforcer {
 
     @Inject
     public EntitlementRules(DateSource dateSource,
-        @Named("RulesReader") Reader rulesReader,
+        RulesReaderProvider rulesReaderProvider,
         ProductServiceAdapter prodAdapter,
-        ScriptEngine jsEngine, I18n i18n) {
+        ScriptEngineProvider jsEngineProvider, I18n i18n) {
         this.dateSource = dateSource;
 
         this.prodAdapter = prodAdapter;
-        this.jsEngine = jsEngine;
+        this.jsEngineProvider = jsEngineProvider;
         this.i18n = i18n;
+        this.rulesReaderProvider = rulesReaderProvider;
+        this.attributesToRules = null;
+    }
+    
+    /*
+     * The init method allows the expensive creation of the rules engine
+     * to be deferred until it is actually needed. All non constructor
+     * methods must call this before doing any work.
+     */    
+    protected synchronized void init() {
 
-        if (jsEngine == null) {
-            throw new RuntimeException("No Javascript engine");
-        }
-
-        try {
-            this.jsEngine.eval(rulesReader);
-            
-            entitlementNameSpace = 
-                ((Invocable) this.jsEngine).invokeFunction("entitlement_name_space");
-            
-            attributesToRules = parseAttributeMappings(
-                (String) ((Invocable) this.jsEngine).invokeMethod(
-                    entitlementNameSpace, "attribute_mappings"));
-            
-            this.jsEngine.eval(CONVERT_ARRAY_FUNCTION);
-        }
-        catch (ScriptException ex) {
-            throw new RuleParseException(ex);
-        }
-        catch (NoSuchMethodException ex) {
-            throw new RuleParseException(ex);
+        if (!initialized) {
+            this.jsEngine = jsEngineProvider.get();
+            if (jsEngine == null) {
+                throw new RuntimeException("No Javascript engine");
+            }
+    
+            try {
+                this.jsEngine.eval(rulesReaderProvider.get());
+                
+                entitlementNameSpace = 
+                    ((Invocable) this.jsEngine).invokeFunction("entitlement_name_space");
+                
+                attributesToRules = parseAttributeMappings(
+                    (String) ((Invocable) this.jsEngine).invokeMethod(
+                        entitlementNameSpace, "attribute_mappings"));
+                
+                this.jsEngine.eval(CONVERT_ARRAY_FUNCTION);
+            }
+            catch (ScriptException ex) {
+                throw new RuleParseException(ex);
+            }
+            catch (NoSuchMethodException ex) {
+                throw new RuleParseException(ex);
+            }
+            initialized = true;
         }
     }
 
     @Override
     public PreEntHelper preEntitlement(
         Consumer consumer, Pool entitlementPool, Integer quantity) {
+        this.init();
 
         PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool, quantity);
 
@@ -209,6 +227,7 @@ public class EntitlementRules implements Enforcer {
     @Override
     public PostEntHelper postEntitlement(
             Consumer consumer, PostEntHelper postEntHelper, Entitlement ent) {
+        this.init();        
         runPostEntitlement(postEntHelper, ent);
         return postEntHelper;
     }
@@ -243,6 +262,7 @@ public class EntitlementRules implements Enforcer {
 
     public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools) {
+        this.init();
         Invocable inv = (Invocable) jsEngine;
 
         ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
@@ -359,7 +379,7 @@ public class EntitlementRules implements Enforcer {
 
     public List<Rule> rulesForAttributes(Set<String> attributes, 
             Map<String, Set<Rule>> rules) {
-        
+        this.init();
         Set<Rule> possibleMatches = new HashSet<Rule>();
         for (String attribute : attributes) {
             if (rules.containsKey(attribute)) {

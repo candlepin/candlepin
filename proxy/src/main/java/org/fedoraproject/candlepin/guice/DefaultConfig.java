@@ -14,12 +14,6 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import static com.google.inject.name.Names.*;
-
-import java.io.Reader;
-
-import javax.script.ScriptEngine;
-
 import org.fedoraproject.candlepin.config.LoggingConfig;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -46,9 +40,8 @@ class DefaultConfig extends AbstractModule {
         bind(HttpServletDispatcher.class).asEagerSingleton();
         bind(LoggingFilter.class).asEagerSingleton();
         bind(LoggingConfig.class).asEagerSingleton();
-        bind(ScriptEngine.class).toProvider(ScriptEngineProvider.class);
-        bind(Reader.class).annotatedWith(named("RulesReader")).toProvider(
-            RulesReaderProvider.class);
+        bind(ScriptEngineProvider.class);
+        bind(RulesReaderProvider.class);
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
         bind(IdentityCertServiceAdapter.class).to(
