@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.33
+Version: 0.1.34
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Fri Feb 04 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.34-1
+- remove entitlement.isFree. (jesusr@redhat.com)
+- 671195: remove consumed attr to avoid concurrency issue. (jesusr@redhat.com)
+- 674078: Take a full ISO 8601 timestamp for pool search activeOn (jbowes@redhat.com)
+
 * Wed Feb 02 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.33-1
 - Update spec file to generate candlepin-devel package (jeckersb@redhat.com)
 - 672233: Fixing typo in consumer curator length check and removing from resource. (jharris@redhat.com)
