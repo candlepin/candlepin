@@ -621,7 +621,7 @@ public class PoolManager {
         if (size > 0) {
             this.poolCurator.disableConsumerFilter(); //don't need it.
             StringBuilder builder = new StringBuilder("");
-            builder.append(i18n.tr("\n-Cannot unsubscribe entitlement '{0}' because:", 
+            builder.append(i18n.tr("\n-Cannot unsubscribe entitlement ''{0}'' because:", 
                 entitlementId));
             
             List<EntitlementCertificate> entCerts = this.poolCurator
@@ -647,7 +647,8 @@ public class PoolManager {
                 Consumer consumer = entry.getKey();
                 List<EntitlementCertificate> certs = entry.getValue();
                 builder.append(i18n.tr(
-                    "\n  {0} consumer '{1}' with id '{2}' has \the following entitlements:",
+                    "\n  {0} consumer ''{1}'' with id ''{2}'' has " +
+                       "the following entitlements:",
                      consumer.getType().getLabel(),
                      consumer.getName(),
                      consumer.getUuid()));
@@ -656,16 +657,16 @@ public class PoolManager {
                     .iterator(); iterator2.hasNext();) {
                     EntitlementCertificate certificate = iterator2.next();
                     Entitlement ent = certificate.getEntitlement();
-                    builder.append(i18n.tr("\n    Entitlement '{0}':", ent.getId()));
-                    builder.append(i18n.tr("\n        account number: '{0}'",
+                    builder.append(i18n.tr("\n    Entitlement ''{0}'':", ent.getId()));
+                    builder.append(i18n.tr("\n        account number: ''{0}''",
                         ent.getAccountNumber()));
-                    builder.append(i18n.tr("\n        serial number: '{0}'",
+                    builder.append(i18n.tr("\n        serial number: ''{0}''",
                         certificate.getSerial().getId()));                    
                 }
             }
             builder.append(
                 i18n.tr(
-                    "\n\nThe above entitlements were derived from the pool: '{0}'.",
+                    "\n\nThe above entitlements were derived from the pool: ''{0}''.",
                      entitlement.getPool().getId()));
             builder.append(
                 i18n.tr(
