@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
+import org.hibernate.LockMode;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -328,4 +329,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         currentSession().disableFilter(CONSUMER_FILTER);
         return consumerFilter;
     }
+
+    public Pool lockAndLoad(Pool pool) {
+        currentSession().refresh(pool, LockMode.UPGRADE);
+        return pool;
+    }
+
 }

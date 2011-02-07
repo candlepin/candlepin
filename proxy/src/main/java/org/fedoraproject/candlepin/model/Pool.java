@@ -534,4 +534,5 @@ public class Pool extends AbstractHibernateObject
          * originally sent down to the client in HATEOAS form.
          */
     }
+
 }
