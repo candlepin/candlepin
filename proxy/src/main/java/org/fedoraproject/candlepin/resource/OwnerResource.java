@@ -137,6 +137,7 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")    
+    @AllowRoles(roles = {Role.OWNER_ADMIN})    
     public List<Owner> list(@QueryParam("key") String keyFilter) {
 
         // For now, assuming key filter is just one key:
@@ -161,6 +162,7 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowRoles(roles = {Role.OWNER_ADMIN})    
     public Owner getOwner(@PathParam("owner_key") String ownerKey) {
         return findOwner(ownerKey);
     }
