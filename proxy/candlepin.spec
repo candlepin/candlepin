@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.34
+Version: 0.1.35
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Mon Feb 07 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.35-1
+- 675473: i18n of the strings requires double quotes.. not single quotes. (bkearney@redhat.com)
+
 * Fri Feb 04 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.34-1
 - remove entitlement.isFree. (jesusr@redhat.com)
 - 671195: remove consumed attr to avoid concurrency issue. (jesusr@redhat.com)
