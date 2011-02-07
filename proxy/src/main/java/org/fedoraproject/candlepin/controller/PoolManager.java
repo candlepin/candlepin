@@ -448,6 +448,13 @@ public class PoolManager {
 
     private Entitlement addEntitlement(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException {
+
+        // Because there are several paths to this one place where entitlements
+        // are granted, we cannot be positive the caller obtained a lock on the pool
+        // when it was read. As such we're going to reload it with a lock
+        // before starting this process.
+        pool = poolCurator.lockAndLoad(pool);
+
         /* XXX: running pre rules twice on the entitle by product case */
         PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
         ValidationResult result = preHelper.getResult();

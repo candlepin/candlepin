@@ -624,6 +624,7 @@ public class ConsumerResource {
                 }
             }
         }
+
         catch (CandlepinException e) {
             log.debug(e.getMessage());
             throw e;
