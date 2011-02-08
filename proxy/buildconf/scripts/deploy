@@ -137,7 +137,13 @@ eval $STOP
 
 # generate the postgresql DB
 
-buildr clean package test=no
+if [ "$LOGDRIVER" == "logdriver" ]; then
+    echo "using logdriver"
+    buildr -e logdriver clean package test=no
+else
+    echo "using NO logdriver"
+    buildr clean package test=no
+fi
 
 if [ "$GENDB" == "1" ]; then
 	gendb	

@@ -108,6 +108,8 @@ AMQP  = [group('qpid-common', 'qpid-client',
          'commons-configuration:commons-configuration:jar:1.6',
          'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
 
+LOGDRIVER = 'logdriver:logdriver:jar:1.0'
+
 #############################################################################
 # REPOSITORIES
 #
@@ -143,6 +145,7 @@ define "candlepin" do
   # download the stuff we do not have in the repositories
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
   download artifact('com.wideplay.warp:warp-persist:jar:2.0-20090214') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/wideplay/warp/warp-persist/2.0-20090214/warp-persist-2.0-20090214.jar'
+  download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/' if Buildr.environment == 'logdriver'
 
   # Resource Substitution
   resources.filter.using 'version'=>VERSION_NUMBER,
@@ -163,8 +166,9 @@ define "candlepin" do
   # building
   #
   compile.options.target = '1.6'
+  uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
   compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH
+      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, uselog
  
   #
   # testing
@@ -174,7 +178,8 @@ define "candlepin" do
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, generate
+  uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
+  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, generate, uselog
 
   #
   # javadoc projects
