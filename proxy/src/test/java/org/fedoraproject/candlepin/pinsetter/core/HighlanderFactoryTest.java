@@ -56,6 +56,8 @@ public class HighlanderFactoryTest extends DatabaseTestFixture{
             false, null, null, null, null);
         Job j = hf.newJob(tfb);
         assertNotNull(j);
-        assertEquals(TestJob.class, j.getClass());
+        assertEquals(TransactionalPinsetterJob.class, j.getClass());
+        assertEquals(TestJob.class,
+            ((TransactionalPinsetterJob) j).getWrappedJob().getClass());
     }
 }

@@ -30,6 +30,7 @@ class TransactionalPinsetterJob implements Job {
     private WorkManager workManager;
     private Job wrappedJob;
 
+
     TransactionalPinsetterJob(Job wrappedJob, WorkManager workManager) {
         this.wrappedJob = wrappedJob;
         this.workManager = workManager;
@@ -54,4 +55,8 @@ class TransactionalPinsetterJob implements Job {
 
     }
 
+    // For testing
+    Job getWrappedJob() {
+        return wrappedJob;
+    }
 }
