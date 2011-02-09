@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.2
+Version: 0.2.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -115,6 +115,23 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/cache/%{name}
 
 %changelog
+* Wed Feb 09 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.3-1
+- fix highlander unit test (jbowes@redhat.com)
+- 660516: override unitOfWork for pinsetter to bypass caching (jbowes@redhat.com)
+- add ability to use logdriver during development. (jesusr@redhat.com)
+- Modify candlpin so that the rules are not parsed or compiled unless they are
+  used. (bkearney@redhat.com)
+- Turn off the list owners until determine if it can be called
+  (bkearney@redhat.com)
+- 675473: i18n of the strings requires double quotes.. not single quotes.
+  (bkearney@redhat.com)
+- Allow for owner adminda to access getOwner and getOwners
+  (bkearney@redhat.com)
+- remove entitlement.isFree. (jesusr@redhat.com)
+- 671195: remove consumed attr to avoid concurrency issue. (jesusr@redhat.com)
+- 674078: Take a full ISO 8601 timestamp for pool search activeOn
+  (jbowes@redhat.com)
+
 * Thu Feb 03 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.2-1
 - Building master (jesusr@redhat.com)
 - Add a small metadata expiry import test. (dgoodwin@redhat.com)
