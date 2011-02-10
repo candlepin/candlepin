@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.3
+Version: 0.2.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Thu Feb 10 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.4-1
+- Update spec file to generate candlepin-devel package (jeckersb@redhat.com)
+
 * Wed Feb 09 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.3-1
 - fix highlander unit test (jbowes@redhat.com)
 - 660516: override unitOfWork for pinsetter to bypass caching (jbowes@redhat.com)
