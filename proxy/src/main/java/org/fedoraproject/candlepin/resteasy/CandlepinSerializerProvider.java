@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resteasy;
 import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.SerializerFactory;
+import org.codehaus.jackson.map.ser.SerializerCache;
 import org.codehaus.jackson.map.ser.StdSerializerProvider;
 
 /**
@@ -25,6 +26,8 @@ import org.codehaus.jackson.map.ser.StdSerializerProvider;
  */
 public class CandlepinSerializerProvider extends StdSerializerProvider {
     
+    private SerializerCache cachedSerializers = new SerializerCache();
+
     public CandlepinSerializerProvider() {
         super();
     }
@@ -40,7 +43,18 @@ public class CandlepinSerializerProvider extends StdSerializerProvider {
     }
 
     public JsonSerializer<Object> createSerializerSkipCustom(Class<?> valueType) {
+        // Fast lookup from local cache
+        JsonSerializer<Object> ser = cachedSerializers.untypedValueSerializer(valueType);
+        if (ser != null) {
+            return ser;
+        }
+
         CandlepinSerializerFactory csf = (CandlepinSerializerFactory) _serializerFactory;
-        return (JsonSerializer<Object>) csf.createSerializerSkipCustom(valueType, _config);
+        ser = (JsonSerializer<Object>) csf.createSerializerSkipCustom(valueType, _config);
+
+        // Needed to create it, lets add to the cache
+        cachedSerializers.addNonTypedSerializer(valueType, ser);
+
+        return ser;
     }
 }
