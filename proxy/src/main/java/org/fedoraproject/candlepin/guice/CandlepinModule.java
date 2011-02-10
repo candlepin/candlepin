@@ -132,7 +132,7 @@ public class CandlepinModule extends AbstractModule {
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
         bind(PinsetterAsyncInterceptor.class);
-        bind(JsonProvider.class);
+        bind(JsonProvider.class).asEagerSingleton();
         bind(EventSink.class).to(EventSinkImpl.class);
         bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);
