@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.guice;
 
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -32,11 +33,14 @@ import com.google.inject.ProvisionException;
  */
 public class I18nProvider implements Provider<I18n> {
     private I18n i18n;
-    static final String BASENAME =
-        "org.fedoraproject.candlepin.i18n.Messages";
+
+    static final String BASENAME = "org.fedoraproject.candlepin.i18n.Messages";
 
     private static Logger log = Logger.getLogger(I18nProvider.class);
-    
+
+    private static ConcurrentHashMap<Locale, I18n>
+    cache = new ConcurrentHashMap<Locale, I18n>();
+
     @Inject
     public I18nProvider(Injector injector) {
         HttpServletRequest request = null;
@@ -46,32 +50,38 @@ public class I18nProvider implements Provider<I18n> {
             request = injector.getInstance(HttpServletRequest.class);
         }
         catch (ProvisionException e) {
-            // This can happen in pinsetter, or anything else not in an http request.
+            // This can happen in pinsetter, or anything else not in an http
+            // request.
             // just ignore it.
         }
-        
+
         if (request != null) {
             locale = request.getLocale();
         }
-        
+
         locale = (locale == null) ? Locale.US : locale;
-        
+
         log.debug("Getting i18n engine for locale " + locale);
-        
-        i18n = I18nFactory.getI18n(
-            getClass(), 
-            BASENAME,
-            locale,
-            I18nFactory.FALLBACK
-        );
+
+        // If the locale does not exist, xnap is pretty inefficient.
+        // This cache will hold the records more efficiently.
+        // The logic below may leak a couple of items, but it
+        // should clear up.
+        i18n = cache.get(locale);
+        if (i18n == null) {
+            i18n = I18nFactory.getI18n(getClass(), BASENAME, locale,
+                I18nFactory.FALLBACK);
+
+            cache.put(locale, i18n);
+        }
     }
-    
+
     @Override
     public I18n get() {
         return i18n;
     }
-    
-    public String  getTestString() {
+
+    public String getTestString() {
         return i18n.tr("Test");
     }
 }
