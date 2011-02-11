@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.4
+Version: 0.2.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Fri Feb 11 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.5-1
+- add a API method for regenerating entitlement certs by entitlement id
+  (alikins@redhat.com)
+- 671195: Use pessimistic locking on pools during bind. (dgoodwin@redhat.com)
+- Ensure that the serializers are cached to save on the Bean scanning
+  (bkearney@redhat.com)
+- Teach our rspec target to output dots (jbowes@redhat.com)
+
 * Thu Feb 10 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.4-1
 - Update spec file to generate candlepin-devel package (jeckersb@redhat.com)
 
