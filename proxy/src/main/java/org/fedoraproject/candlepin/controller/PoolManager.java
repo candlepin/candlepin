@@ -687,11 +687,11 @@ public class PoolManager {
             }
             builder.append(
                 i18n.tr(
-                    "\n\nThe above entitlements were derived from the pool: ''{0}''.",
+                    "\n\nThese consumed entitlements were derived from subscription pool: ''{0}''.",
                      entitlement.getPool().getId()));
             builder.append(
                 i18n.tr(
-                    "\nPlease unsubscribe from the above entitlements first.\n"));
+                    "\nYou must first unsubscribe these consumers from these entitlements.\n"));
             throw new ForbiddenException(builder.toString());
         }
     }
