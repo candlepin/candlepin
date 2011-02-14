@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.36
+Version: 0.1.37
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Mon Feb 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.37-1
+- 672233: allow &,?,(),{},[] (jesusr@redhat.com)
+
 * Mon Feb 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.36-1
 - 672233: allow @ symbol as a consumer name. (jesusr@redhat.com)
 - fix highlander unit test (jbowes@redhat.com)
