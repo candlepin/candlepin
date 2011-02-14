@@ -18,7 +18,17 @@ package org.fedoraproject.candlepin.model;
  * CuratorException
  */
 public class CuratorException extends RuntimeException {
-    public CuratorException(Exception e) {
+
+    public CuratorException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public CuratorException(String message) {
+        super(message);
+        // TODO Auto-generated constructor stub
+    }
+
+    public CuratorException(Throwable e) {
         super(e);
     }
 }

@@ -25,6 +25,7 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -35,14 +36,16 @@ import com.wideplay.warp.persist.Transactional;
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = Logger.getLogger(EntitlementCurator.class);
     private ProductServiceAdapter productAdapter;
+    private I18n i18n;
     
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(ProductServiceAdapter productAdapter) {
+    public EntitlementCurator(ProductServiceAdapter productAdapter, I18n i18n) {
         super(Entitlement.class);
         this.productAdapter = productAdapter;
+        this.i18n = i18n;
     }
     
     // TODO: handles addition of new entitlements only atm!
@@ -209,8 +212,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         for (String prodId : prodIdsToCheck) {
             Product p = productAdapter.getProductById(prodId);
-            if (p.modifies(modifiedProductId)) {
-                return true;
+            if (null == p) {
+                String msg = i18n.tr("No product found for product id {0}", prodId);
+                log.error("No product found for product id " + prodId);
+                throw new CuratorException(msg);
+            }
+            else {
+                if (p.modifies(modifiedProductId)) {
+                    return true;
+                }
             }
         }
         return false;
