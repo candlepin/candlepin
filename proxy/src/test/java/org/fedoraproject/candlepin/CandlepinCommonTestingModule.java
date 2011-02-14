@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.CandlepinModule;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
@@ -73,6 +73,9 @@ import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.policy.PoolRules;
+import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
@@ -143,7 +146,8 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         // temporary
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);
-        bind(PoolManager.class);
+        bind(PoolRules.class).to(JsPoolRules.class);
+        bind(PoolManager.class).to(CandlepinPoolManager.class);
         
         //flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))

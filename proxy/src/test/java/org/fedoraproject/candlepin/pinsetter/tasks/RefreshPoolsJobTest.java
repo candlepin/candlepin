@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 
@@ -37,7 +37,7 @@ public class RefreshPoolsJobTest {
     @Test
     public void execute() throws Exception {
         // prep
-        PoolManager pm = mock(PoolManager.class);
+        CandlepinPoolManager pm = mock(CandlepinPoolManager.class);
         OwnerCurator oc = mock(OwnerCurator.class);
         Owner owner = mock(Owner.class);
         JobExecutionContext ctx = mock(JobExecutionContext.class);

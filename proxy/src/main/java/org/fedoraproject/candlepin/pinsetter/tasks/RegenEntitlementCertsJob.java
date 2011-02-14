@@ -14,12 +14,12 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * The Class RegenEntitlementCertsJob.

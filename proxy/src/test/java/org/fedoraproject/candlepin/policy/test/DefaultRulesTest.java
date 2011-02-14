@@ -48,7 +48,7 @@ import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
-import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
@@ -339,7 +339,7 @@ public class DefaultRulesTest {
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
             1);
 
-        PostEntHelper postHelper = mock(PostEntHelper.class);
+        PoolHelper postHelper = mock(PoolHelper.class);
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(pool.getProductId(),
             pool.getProvidedProducts(), "unlimited");
@@ -355,7 +355,7 @@ public class DefaultRulesTest {
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
             1);
 
-        PostEntHelper postHelper = mock(PostEntHelper.class);
+        PoolHelper postHelper = mock(PoolHelper.class);
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(subProductId,
             pool.getProvidedProducts(), "unlimited");

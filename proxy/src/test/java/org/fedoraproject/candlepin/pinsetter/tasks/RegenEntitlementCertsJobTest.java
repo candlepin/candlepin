@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -35,7 +35,7 @@ public class RegenEntitlementCertsJobTest {
     @Test
     public void execute() throws Exception {
         // prep
-        PoolManager pm = mock(PoolManager.class);
+        CandlepinPoolManager pm = mock(CandlepinPoolManager.class);
         JobExecutionContext jec = mock(JobExecutionContext.class);
         JobDetail detail = mock(JobDetail.class);
         JobDataMap jdm = mock(JobDataMap.class);

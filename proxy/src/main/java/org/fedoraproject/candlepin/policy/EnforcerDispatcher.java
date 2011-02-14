@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
-import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
-    public PostEntHelper postEntitlement(Consumer consumer, PostEntHelper postEntHelper,
+    public PoolHelper postEntitlement(Consumer consumer, PoolHelper postEntHelper,
         Entitlement ent) {
         if (isCandlepinConsumer(consumer)) {
             return candlepinEnforcer.postEntitlement(consumer, postEntHelper, ent);

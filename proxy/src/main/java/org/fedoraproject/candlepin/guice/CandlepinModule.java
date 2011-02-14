@@ -83,6 +83,10 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
+import org.fedoraproject.candlepin.policy.PoolRules;
 
 /**
  * CandlepinProductionConfiguration
@@ -123,6 +127,8 @@ public class CandlepinModule extends AbstractModule {
         bind(JobResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(EnforcerDispatcher.class);
+        bind(PoolManager.class).to(CandlepinPoolManager.class);
+        bind(PoolRules.class).to(JsPoolRules.class);
         bind(RulesResource.class);
         bind(AdminResource.class);
         bind(StatusResource.class);

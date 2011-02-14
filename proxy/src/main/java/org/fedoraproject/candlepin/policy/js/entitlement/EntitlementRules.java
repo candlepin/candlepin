@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.policy.js.entitlement;
 
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,13 +26,11 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.script.Invocable;
-import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
-import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
@@ -43,7 +43,6 @@ import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.RuleParseException;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
@@ -51,11 +50,12 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 
 import edu.emory.mathcs.backport.java.util.Arrays;
+import org.fedoraproject.candlepin.policy.js.JsRules;
 
 /**
  * Enforces the Javascript Rules definition.
  */
-public class EntitlementRules implements Enforcer {
+public class EntitlementRules extends JsRules implements Enforcer {
 
     private static Logger log = Logger.getLogger(EntitlementRules.class);
     private static Logger rulesLogger =
@@ -63,15 +63,9 @@ public class EntitlementRules implements Enforcer {
     private DateSource dateSource;
 
     private ProductServiceAdapter prodAdapter;
-
-    private ScriptEngineProvider jsEngineProvider;
-    private RulesReaderProvider rulesReaderProvider;
-    private ScriptEngine jsEngine;
     private I18n i18n;
     private Map<String, Set<Rule>> attributesToRules;
-    private boolean initialized = false;
     
-    private Object entitlementNameSpace;
     private static final String PROD_ARCHITECTURE_SEPARATOR = ",";
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
@@ -101,48 +95,20 @@ public class EntitlementRules implements Enforcer {
         RulesReaderProvider rulesReaderProvider,
         ProductServiceAdapter prodAdapter,
         ScriptEngineProvider jsEngineProvider, I18n i18n) {
-        this.dateSource = dateSource;
 
+        super(rulesReaderProvider, jsEngineProvider, "entitlement_name_space");
+        this.dateSource = dateSource;
         this.prodAdapter = prodAdapter;
-        this.jsEngineProvider = jsEngineProvider;
         this.i18n = i18n;
-        this.rulesReaderProvider = rulesReaderProvider;
         this.attributesToRules = null;
     }
-    
-    /*
-     * The init method allows the expensive creation of the rules engine
-     * to be deferred until it is actually needed. All non constructor
-     * methods must call this before doing any work.
-     */    
-    protected synchronized void init() {
 
-        if (!initialized) {
-            this.jsEngine = jsEngineProvider.get();
-            if (jsEngine == null) {
-                throw new RuntimeException("No Javascript engine");
-            }
-    
-            try {
-                this.jsEngine.eval(rulesReaderProvider.get());
-                
-                entitlementNameSpace = 
-                    ((Invocable) this.jsEngine).invokeFunction("entitlement_name_space");
-                
-                attributesToRules = parseAttributeMappings(
-                    (String) ((Invocable) this.jsEngine).invokeMethod(
-                        entitlementNameSpace, "attribute_mappings"));
-                
-                this.jsEngine.eval(CONVERT_ARRAY_FUNCTION);
-            }
-            catch (ScriptException ex) {
-                throw new RuleParseException(ex);
-            }
-            catch (NoSuchMethodException ex) {
-                throw new RuleParseException(ex);
-            }
-            initialized = true;
-        }
+    @Override
+    protected void rulesInit() throws NoSuchMethodException, ScriptException {
+        String mappings = invokeMethod("attribute_mappings");
+        this.attributesToRules = parseAttributeMappings(mappings);
+
+        this.jsEngine.eval(CONVERT_ARRAY_FUNCTION);
     }
 
     @Override
@@ -160,29 +126,6 @@ public class EntitlementRules implements Enforcer {
         }
 
         return preHelper;
-    }
-    
-    /**
-     * Both products and pools can carry attributes, we need to trigger rules for each.
-     * In this map, pool attributes will override product attributes, should the same
-     * key be set for both.
-     *
-     * @param product Product
-     * @param pool Pool can be null.
-     * @return Map of all attribute names and values. Pool attributes have priority.
-     */
-    private Map<String, String> getFlattenedAttributes(Product product, Pool pool) {
-        Map<String, String> allAttributes = new HashMap<String, String>();
-        for (Attribute a : product.getAttributes()) {
-            allAttributes.put(a.getName(), a.getValue());
-        }
-        if (pool != null) {
-            for (Attribute a : pool.getAttributes()) {
-                allAttributes.put(a.getName(), a.getValue());
-            }
-
-        }
-        return allAttributes;
     }
 
     private PreEntHelper runPreEntitlement(Consumer consumer, Pool pool, Integer quantity) {
@@ -205,12 +148,8 @@ public class EntitlementRules implements Enforcer {
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
-        if (matchingRules.isEmpty()) {
-            invokeGlobalPreEntitlementRule();
-        }
-        else {
-            callPreEntitlementRules(matchingRules);
-        }
+        invokeGlobalPreEntitlementRule();
+        callPreEntitlementRules(matchingRules);
 
         if (log.isDebugEnabled()) {
             for (ValidationError error : preHelper.getResult().getErrors()) {
@@ -225,14 +164,15 @@ public class EntitlementRules implements Enforcer {
     }
 
     @Override
-    public PostEntHelper postEntitlement(
-            Consumer consumer, PostEntHelper postEntHelper, Entitlement ent) {
-        this.init();        
+    public PoolHelper postEntitlement(
+            Consumer consumer, PoolHelper postEntHelper, Entitlement ent) {
+        this.init();
+
         runPostEntitlement(postEntHelper, ent);
         return postEntHelper;
     }
 
-    private void runPostEntitlement(PostEntHelper postHelper, Entitlement ent) {
+    private void runPostEntitlement(PoolHelper postHelper, Entitlement ent) {
         Pool pool = ent.getPool();
         Consumer c = ent.getConsumer();
 
@@ -252,12 +192,9 @@ public class EntitlementRules implements Enforcer {
 
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
-        if (matchingRules.isEmpty()) {
-            invokeGlobalPostEntitlementRule();
-        }
-        else {
-            callPostEntitlementRules(matchingRules);
-        }
+
+        invokeGlobalPostEntitlementRule();
+        callPostEntitlementRules(matchingRules);
     }
 
     public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
@@ -297,8 +234,7 @@ public class EntitlementRules implements Enforcer {
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
-                Object output = inv.invokeMethod(entitlementNameSpace,
-                    SELECT_POOL_PREFIX + rule.getRuleName());
+                Object output = invokeMethod(SELECT_POOL_PREFIX + rule.getRuleName());
                 result = (ReadOnlyPool[]) inv.invokeFunction("convertArray",
                     org.fedoraproject.candlepin.policy.js.ReadOnlyPool.class,
                     output);
@@ -317,8 +253,7 @@ public class EntitlementRules implements Enforcer {
         
         if (!foundMatchingRule) {
             try {
-                Object output = inv.invokeMethod(entitlementNameSpace,
-                    GLOBAL_SELECT_POOL_FUNCTION);
+                Object output = invokeMethod(GLOBAL_SELECT_POOL_FUNCTION);
                 result = (ReadOnlyPool[]) inv.invokeFunction("convertArray",
                     org.fedoraproject.candlepin.policy.js.ReadOnlyPool.class,
                     output);
@@ -448,34 +383,14 @@ public class EntitlementRules implements Enforcer {
     }
     
     private void callPreEntitlementRules(List<Rule> matchingRules) {
-        Invocable inv = (Invocable) jsEngine;
         for (Rule rule : matchingRules) {
-            try {
-                inv.invokeMethod(entitlementNameSpace, PRE_PREFIX + rule.getRuleName());
-                log.debug("Ran rule: " + PRE_PREFIX + rule.getRuleName());
-            }
-            catch (NoSuchMethodException e) {
-                invokeGlobalPreEntitlementRule();
-            }
-            catch (ScriptException e) {
-                throw new RuleExecutionException(e);
-            }
+            invokeRule(PRE_PREFIX + rule.getRuleName());
         }
     }
 
     private void callPostEntitlementRules(List<Rule> matchingRules) {
-        Invocable inv = (Invocable) jsEngine;
         for (Rule rule : matchingRules) {
-            try {
-                inv.invokeMethod(entitlementNameSpace, POST_PREFIX + rule.getRuleName());
-                log.debug("Ran rule: " + POST_PREFIX + rule.getRuleName());
-            }
-            catch (NoSuchMethodException e) {
-                invokeGlobalPostEntitlementRule();
-            }
-            catch (ScriptException e) {
-                throw new RuleExecutionException(e);
-            }
+            invokeRule(POST_PREFIX + rule.getRuleName());
         }
     }
 
@@ -483,17 +398,7 @@ public class EntitlementRules implements Enforcer {
         Invocable inv = (Invocable) jsEngine;
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
-        try {
-            inv.invokeMethod(entitlementNameSpace, GLOBAL_PRE_FUNCTION);
-            log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
-        }
-        catch (NoSuchMethodException ex) {
-            // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
-        }
-        catch (ScriptException ex) {
-            throw new RuleExecutionException(ex);
-        }
+        invokeRule(GLOBAL_PRE_FUNCTION);
     }
 
     private void invokeGlobalPostEntitlementRule() {

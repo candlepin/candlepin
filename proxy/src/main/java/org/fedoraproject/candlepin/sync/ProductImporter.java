@@ -21,7 +21,6 @@ import java.util.Set;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
@@ -32,6 +31,7 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.common.collect.Sets;
+import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * ProductImporter

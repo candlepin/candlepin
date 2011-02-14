@@ -86,6 +86,10 @@ public class ReadOnlyPool {
         return entPool.getRestrictedToUsername();
     }
 
+    public Long getQuantity() {
+        return entPool.getQuantity();
+    }
+
     public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools,
         ReadOnlyProductCache productCache) {
         List<ReadOnlyPool> toReturn

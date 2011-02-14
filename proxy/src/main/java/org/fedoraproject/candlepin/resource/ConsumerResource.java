@@ -44,7 +44,6 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
@@ -85,6 +84,7 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 import java.util.regex.Pattern;
+import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * API Gateway for Consumers
@@ -468,6 +468,10 @@ public class ConsumerResource {
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
                 msg = i18n.tr(
                     "Consumers of this type are not allowed to the product ''{0}''",
+                    productId);
+            }
+            else if (error.equals("rulefailed.virt.only")) {
+                msg = i18n.tr("Only virtual systems can consume the product ''{0}''",
                     productId);
             }
             else {

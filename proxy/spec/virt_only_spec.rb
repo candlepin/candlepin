@@ -1,0 +1,57 @@
+require 'candlepin_scenarios'
+
+describe 'Virt Only Pools' do
+  include CandlepinMethods
+  it_should_behave_like 'Candlepin Scenarios'
+
+  before(:each) do
+    @owner = create_owner random_string('virt_owner')
+    @user = user_client(@owner, random_string('virt_user'))
+  end
+
+  it 'should allow virt guests to consume from virt_only pools' do
+    virt_product = new_product true
+    guest = consumer_client(@user, 'virty', :system, nil, {
+      'virt.is_guest' => true
+    })
+
+    entitlement = guest.consume_product(virt_product.id)
+    entitlement.first.quantity.should == 1
+  end
+
+  it 'should allow virt guests to consume from physical pools' do
+    physical_product = new_product false
+    guest = consumer_client(@user, 'virty', :system, nil, {
+      'virt.is_guest' => true
+    })
+
+    entitlement = guest.consume_product(physical_product.id)
+    entitlement.first.quantity.should == 1
+  end
+
+  it 'should deny physical consumers from virt_only pools' do
+    virt_product = new_product true
+    guest = consumer_client(@user, 'metal', :system, nil, {
+      'virt.is_guest' => false
+    })
+
+    lambda do
+      guest.consume_product(virt_product.id)
+    end.should raise_exception(RestClient::Forbidden)
+  end
+
+  private
+
+  def new_product(virt_only)
+    product = create_product(nil, nil, {
+      :attributes => {
+        :virt_only => virt_only 
+      }
+    })
+
+    @cp.create_subscription(@owner.key, product.id, 10)
+    @cp.refresh_pools(@owner.key)
+
+    product
+  end
+end

@@ -12,13 +12,14 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.policy.js.entitlement;
+package org.fedoraproject.candlepin.policy.js.pool;
 
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.controller.PoolManager;
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -30,17 +31,19 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
  * post entitlement javascript functions allowing them to perform a specific set
  * of operations we support.
  */
-public class PostEntHelper {
+public class PoolHelper {
     
-    private Entitlement ent;
     private PoolManager poolManager;
     private ProductServiceAdapter prodAdapter;
+    private Pool parentPool;
+    private Entitlement sourceEntitlement;
     
-    public PostEntHelper(PoolManager poolManager, ProductServiceAdapter prodAdapter,
-        Entitlement e) {
+    public PoolHelper(PoolManager poolManager, ProductServiceAdapter prodAdapter,
+        Pool parentPool, Entitlement sourceEntitlement) {
         this.poolManager = poolManager;
-        this.ent = e;
         this.prodAdapter = prodAdapter;
+        this.parentPool = parentPool;
+        this.sourceEntitlement = sourceEntitlement;
     }
     
     /**
@@ -54,6 +57,30 @@ public class PostEntHelper {
         Set<ProvidedProduct> providedProducts, 
         String quantity) {
 
+        Pool consumerSpecificPool = createPool(productId, providedProducts, quantity);
+        consumerSpecificPool.setRestrictedToUsername(
+                this.sourceEntitlement.getConsumer().getUsername());
+        
+        poolManager.createPool(consumerSpecificPool);
+    }
+
+    public void createPool(String productId, Set<ProvidedProduct> providedProducts,
+            String quantity, Map<String, String> attributes) {
+
+        Pool pool = createPool(productId, providedProducts, quantity);
+
+        // Add in the attributes
+        for (Entry<String, String> entry : attributes.entrySet()) {
+            pool.setAttribute(entry.getKey(), entry.getValue());
+        }
+
+        poolManager.createPool(pool);
+    }
+
+    private Pool createPool(String productId,
+        Set<ProvidedProduct> providedProducts,
+        String quantity) {
+
         Long q = null;
         if (quantity.equalsIgnoreCase("unlimited")) {
             q = -1L;
@@ -61,31 +88,30 @@ public class PostEntHelper {
         else {
             try {
                 q = Long.parseLong(quantity);
-            } 
+            }
             catch (NumberFormatException e) {
                 q = 0L;
             }
         }
-        Consumer c = ent.getConsumer();
 
         Product derivedProduct = prodAdapter.getProductById(productId);
-        Pool consumerSpecificPool = new Pool(c.getOwner(), productId,
+        Pool pool = new Pool(parentPool.getOwner(), productId,
             derivedProduct.getName(),
             new HashSet<ProvidedProduct>(), q,
-            ent.getPool().getStartDate(), ent.getPool().getEndDate(),
-            ent.getPool().getContractNumber(), ent.getPool().getAccountNumber());
-        consumerSpecificPool.setRestrictedToUsername(c.getUsername());
-        consumerSpecificPool.setSourceEntitlement(ent);
-        
+            parentPool.getStartDate(), parentPool.getEndDate(),
+            parentPool.getContractNumber(), parentPool.getAccountNumber());
+
         for (ProvidedProduct pp : providedProducts) {
-            consumerSpecificPool.addProvidedProduct(
+            pool.addProvidedProduct(
                 new ProvidedProduct(pp.getProductId(), pp.getProductName()));
         }
 
+        pool.setSourceEntitlement(sourceEntitlement);
+
         // temp - we need a way to specify this on the product
-        consumerSpecificPool.setAttribute("requires_consumer_type", "system");
-        
-        poolManager.createPool(consumerSpecificPool);
+        pool.setAttribute("requires_consumer_type", "system");
+
+        return pool;
     }
 
 }

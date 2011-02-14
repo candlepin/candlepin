@@ -57,6 +57,7 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
@@ -99,6 +100,8 @@ public class PoolManagerTest {
     @Mock
     private Enforcer enforcerMock;
     @Mock
+    private PoolRules poolRulesMock;
+    @Mock
     private ConsumerCurator consumerCuratorMock;
     @Mock 
     private I18n i18nMock; 
@@ -106,7 +109,7 @@ public class PoolManagerTest {
     @Mock
     private EventFactory eventFactory;
 
-    private PoolManager manager;
+    private CandlepinPoolManager manager;
     private Principal principal;
     
     private Owner o;
@@ -120,9 +123,9 @@ public class PoolManagerTest {
         pool = TestUtil.createPool(o, product);
 
         this.principal = TestUtil.createOwnerPrincipal();
-        this.manager = spy(new PoolManager(mockPoolCurator, mockSubAdapter,
+        this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
             mockProductAdapter, entCertAdapterMock, mockEventSink,
-            eventFactory, mockConfig, enforcerMock, entitlementCurator,
+            eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
             consumerCuratorMock, certCuratorMock, mockProvider,
             i18nMock));
         when(this.mockProvider.get()).thenReturn(this.principal);

@@ -31,7 +31,6 @@ import javax.xml.bind.DatatypeConverter;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -45,6 +44,7 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * API gateway for the EntitlementPool

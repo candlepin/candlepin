@@ -20,7 +20,7 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.entitlement.PostEntHelper;
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 /**
@@ -52,7 +52,7 @@ public interface Enforcer {
      * @param ent The entitlement that was just granted.
      * @return post-entitlement processor
      */
-    PostEntHelper postEntitlement(Consumer c, PostEntHelper postEntHelper, Entitlement ent);
+    PoolHelper postEntitlement(Consumer c, PoolHelper postEntHelper, Entitlement ent);
     
     /**
      * Select the best entitlement pools available for the given product IDs.

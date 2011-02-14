@@ -35,7 +35,7 @@ module CandlepinMethods
   def create_product(id=nil, name=nil, params={})
     # For purposes of testing, you can omit id and name to create with
     # random strings.
-    id = "#{rand(100000)}" #id has to be a number. OID encoding fails otherwise
+    id ||= rand(100000).to_s #id has to be a number. OID encoding fails otherwise
     name ||= random_string('testproduct')
     product = @cp.create_product(id, name, params)
     return product

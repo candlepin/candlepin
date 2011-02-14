@@ -27,7 +27,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -42,6 +41,7 @@ import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.controller.PoolManager;
 
 
 /**

@@ -38,7 +38,7 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -77,6 +77,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.internal.Lists;
+import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * ConsumerResourceTest
@@ -709,7 +710,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
      */
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumer() {
-        PoolManager mgr = mock(PoolManager.class);
+        CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, null, null, null, null, null, null, null,
             null, null, mgr, null, null, null);

@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -46,13 +46,13 @@ public class ProductImporterTest {
     private ProductImporter importer;
     private ProductCurator productCuratorMock;
     private ContentCurator contentCuratorMock;
-    private PoolManager poolManagerMock;
+    private CandlepinPoolManager poolManagerMock;
     @Before
     public void setUp() throws IOException {
         mapper = SyncUtils.getObjectMapper();
         productCuratorMock = mock(ProductCurator.class);
         contentCuratorMock = mock(ContentCurator.class);
-        poolManagerMock = mock(PoolManager.class);
+        poolManagerMock = mock(CandlepinPoolManager.class);
         importer = new ProductImporter(productCuratorMock, contentCuratorMock, poolManagerMock);
         when(poolManagerMock.getListOfEntitlementPoolsForProduct(anyString()))
             .thenReturn(new ArrayList<Pool>());

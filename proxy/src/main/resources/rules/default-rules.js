@@ -11,6 +11,10 @@ function consumer_delete_name_space() {
 	return ConsumerDelete;
 }
 
+function pool_name_space() {
+    return Pool;
+}
+
 /* Utility functions */
 function contains(a, obj) {
 	for (var i = 0; i < a.length; i++) {
@@ -132,17 +136,25 @@ var Entitlement = {
 	// the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
 	// func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
 	attribute_mappings: function() {
-		return "virtualization_host:1:virtualization_host, " +
-				"virtualization_host_platform:1:virtualization_host_platform, " +
-				"architecture:1:arch, " +
-				"sockets:1:sockets, " +
+		return  "architecture:1:arch," +
+			    "sockets:1:sockets," +
 				"requires_consumer_type:1:requires_consumer_type," +
-				"user_license:1:user_license";
+				"user_license:1:user_license," +
+                "virt_only:1:virt_only";
 	},
+
+    pre_virt_only: function() {
+        var virt_pool = 'true'.equals(attributes.get('virt_only'));
+        var guest = 'true'.equals(consumer.getFact('virt.is_guest'));
+
+        if (virt_pool && !guest) {
+           pre.addError("rulefailed.virt.only"); 
+        }
+    },
 
 	post_user_license: function() {
 		// Default to using the same product from the pool.
-		var productId = pool.getProductId()
+		var productId = pool.getProductId();
 
 		// Check if the sub-pool should be for a different product:
 		if (attributes.containsKey("user_license_product")) {
@@ -179,36 +191,6 @@ var Entitlement = {
 	post_sockets: function() {
 	},
 
-	// Checks common for both virt host and virt platform entitlements:
-	virtualization_common: function() {
-
-	// XXX: this check is bad, as we don't do virt based on consumer type anymore
-		// Can only be given to a physical system:
-	//	if (consumer.getType() != "system") {
-	//		pre.addError("rulefailed.virt.ents.only.for.physical.systems");
-	//	}
-
-		// Host must not have any guests currently (could be changed but for simplicities sake):
-	//	if (consumer.hasFact("total_guests") && parseInt(consumer.getFact("total_guests")) > 0) {
-	//		pre.addError("rulefailed.host.already.has.guests");
-	//	}
-	},
-
-	pre_virtualization_host: function() {
-		Entitlement.virtualization_common();
-	},
-
-	post_virtualization_host: function() {
-	},
-
-	pre_virtualization_host_platform: function() {
-		Entitlement.virtualization_common();
-	},
-
-	post_virtualization_host_platform: function() {
-		// unlimited guests;
-	},
-
 	pre_global: function() {
 		if (consumer.hasEntitlement(pool.getId()) && product.getAttribute("multi-entitlement") != "yes") {
 			pre.addError("rulefailed.consumer.already.has.product");
@@ -239,7 +221,7 @@ var Entitlement = {
 		// pools that have been filtered by expiration date, etc
 		var best_in_class_pools = [];
 		for (var i = 0 ; i < pools.length ; i++) {
-            var pool = pools[i]
+            var pool = pools[i];
             if (architectureMatches(pool.getTopLevelProduct(), consumer)) {
                 var provided_products = getRelevantProvidedProducts(pool, products);
                 // XXX wasteful, should be a hash or something.
@@ -310,5 +292,26 @@ var ConsumerDelete = {
 	    	helper.deleteUserRestrictedPools(consumer.getUsername());
 	    }
 	}
+}
+
+var Pool = {
+    global: function() {
+        if (attributes.containsKey("virt_limit")) {
+            var virt_limit = parseInt(attributes.get("virt_limit"));
+
+            if (virt_limit > 0) {
+                var virt_attributes = new java.util.HashMap();
+                virt_attributes.put("virt_only", "true");
+                // Make sure the virt pool does not have a virt_limit,
+                // otherwise this is recurse infinitely
+                virt_attributes.put("virt_limit", "0");
+
+                var virt_quantity = pool.getQuantity() * virt_limit;
+
+                helper.createPool(pool.getProductId(), pool.getProvidedProducts(),
+                    virt_quantity.toString(), virt_attributes);
+            }
+        }
+    }
 }
 

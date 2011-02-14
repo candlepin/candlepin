@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.sync;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
@@ -55,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * Importer
@@ -104,7 +104,7 @@ public class Importer {
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
         RulesCurator rulesCurator, OwnerCurator ownerCurator,
-        ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm, 
+        ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n) {
         this.consumerTypeCurator = consumerTypeCurator;

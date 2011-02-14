@@ -16,12 +16,12 @@ package org.fedoraproject.candlepin.policy.js.consumer;
 
 import java.util.List;
 
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * PostRevocationHelper
@@ -33,9 +33,9 @@ public class ConsumerDeleteHelper {
     private PoolManager poolManager;
 
     @Inject
-    public ConsumerDeleteHelper(PoolManager poolManager) {
+    public ConsumerDeleteHelper(PoolManager poolManager, PoolCurator poolCurator) {
         this.poolManager = poolManager;
-        this.poolCurator = poolManager.getPoolCurator();
+        this.poolCurator = poolCurator;
     }
     
     public void deleteUserRestrictedPools(String username) {

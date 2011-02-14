@@ -29,7 +29,7 @@ import org.fedoraproject.candlepin.TestingInterceptor;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
@@ -109,7 +109,7 @@ public class DatabaseTestFixture {
     protected TestingInterceptor crudInterceptor;
     protected TestingInterceptor securityInterceptor;
     protected EntitlementCertServiceAdapter entitlementCertService;
-    protected PoolManager poolManager;
+    protected CandlepinPoolManager poolManager;
 
     @Before
     public void init() {
@@ -160,7 +160,7 @@ public class DatabaseTestFixture {
         entCertCurator = injector.getInstance(EntitlementCertificateCurator.class);
         certSerialCurator = injector.getInstance(CertificateSerialCurator.class);
         entitlementCertService = injector.getInstance(EntitlementCertServiceAdapter.class);
-        poolManager = injector.getInstance(PoolManager.class);
+        poolManager = injector.getInstance(CandlepinPoolManager.class);
         i18n = injector.getInstance(I18n.class);
         
         crudInterceptor = testingModule.crudInterceptor();
