@@ -250,7 +250,10 @@
             ],
             "attributes": {
                 "sockets": 2,
-                "warning_period": 30
+                "warning_period": 30,
+                "management_enabled" : 0,
+                "support_level" : "None",
+                "support_type" : "Self-Support"                
             }
         },
         {
@@ -262,7 +265,10 @@
             ],
             "attributes": {
                 "sockets": 2,
-                "warning_period": 30
+                "warning_period": 30,
+                "management_enabled" : 0,
+                "support_level" : "Standard",
+                "support_type" : "L1-L3"                       
             }
         },
         {
@@ -308,7 +314,9 @@
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30,
-                "management_enabled" : 1
+                "management_enabled" : 1,
+                "support_level" : "Standard",
+                "support_type" : "L1-L3"                       
             }
         },
         {
@@ -328,7 +336,9 @@
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30,
-                "management_enabled":1
+                "management_enabled" : 1,
+                "support_level" : "Premium",
+                "support_type" : "L1-L3"          
             }
         },
         {
@@ -347,8 +357,10 @@
             ],
             "attributes": {
                 "sockets": 4,
-                "warning_period": 30 ,
-                "management_enabled":1
+                "warning_period": 30,
+                "management_enabled" : 1,
+                "support_level" : "Premium",
+                "support_type" : "L1-L3"          
             }
         },
         {
@@ -368,7 +380,9 @@
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30,
-                "management_enabled":1
+                "management_enabled" : 1,
+                "support_level" : "Basic",
+                "support_type" : "L1-L3"                          
             }
         },
         {
@@ -442,7 +456,10 @@
             ],
             "attributes": {
                 "sockets": 16,
-                "warning_period": 30
+                "warning_period": 30,
+                "management_enabled" : 1,
+                "support_level" : "Standard",
+                "support_type" : "L1-L3"                    
             }
         },
         {
