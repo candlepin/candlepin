@@ -599,18 +599,19 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void userwithEmail() {
-        userCurator.create(new User(owner, "foo@baz.com", "dontcare"));
+        String username = "(foo)@{baz}.[com]&?";
+        userCurator.create(new User(owner, username, "dontcare"));
 
-        UserPrincipal emailuser = new UserPrincipal("foo@baz.com", owner, Lists
+        UserPrincipal emailuser = new UserPrincipal(username, owner, Lists
             .newArrayList(Role.OWNER_ADMIN));
         
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(emailuser.getUsername());
 
-        personal = consumerResource.create(personal, emailuser, "foo@baz.com");
+        personal = consumerResource.create(personal, emailuser, username);
 
         // Not sure if this should be hard-coded to default
-        assertEquals("foo@baz.com", personal.getName());
+        assertEquals(username, personal.getName());
     }
     
     @Test(expected = BadRequestException.class)

@@ -91,7 +91,8 @@ import java.util.regex.Pattern;
  */
 @Path("/consumers")
 public class ConsumerResource {
-    private static final Pattern CONSUMER_NAME_PATTERN = Pattern.compile("[@\\w-\\.]+");
+    private static final Pattern CONSUMER_NAME_PATTERN =
+        Pattern.compile("[@{}()\\[\\]\\?&\\w-\\.]+");
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private ConsumerCurator consumerCurator;
@@ -256,6 +257,7 @@ public class ConsumerResource {
         }
         catch (Exception e) {
             log.error("Problem creating consumer:", e);
+            e.printStackTrace();
             throw new BadRequestException(i18n.tr(
                 "Problem creating consumer {0}", consumer));
         }
