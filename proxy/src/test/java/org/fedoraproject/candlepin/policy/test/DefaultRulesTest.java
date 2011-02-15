@@ -719,6 +719,60 @@ public class DefaultRulesTest {
         assertEquals(2, bestPools.size());
     }
 
+    @Test
+    public void testFindBestWithTwoPoolsPrefersVirt() {
+        String productId1 = "A";
+
+        Product product1 = new Product(productId1, "A test product");
+
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+
+        Pool pool2 = TestUtil.createPool(owner, product1);
+        pool2.setId("DEAD-BEEF2");
+        pool2.setAttribute("virt_only", "true");
+
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+
+        List<Pool> bestPools = enforcer.selectBestPools(consumer, new String[]{
+            productId1 }, pools);
+
+        assertEquals(1, bestPools.size());
+        assertEquals(pool2, bestPools.get(0));
+    }
+    
+    @Test
+    public void testFindBestWithTwoPoolsBothVirtPrefersExpiry() {
+        String productId1 = "A";
+
+        Product product1 = new Product(productId1, "A test product");
+
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        pool1.setAttribute("virt_only", "true");
+
+        Pool pool2 = TestUtil.createPool(owner, product1);
+        pool2.setId("DEAD-BEEF2");
+        pool2.setAttribute("virt_only", "true");
+        pool2.setEndDate(TestUtil.createDate(2099, 12, 14));
+
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+
+        List<Pool> bestPools = enforcer.selectBestPools(consumer, new String[]{
+            productId1 }, pools);
+
+        assertEquals(1, bestPools.size());
+        assertEquals(pool1, bestPools.get(0));
+    }
+    
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);

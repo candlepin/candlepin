@@ -229,13 +229,25 @@ var Entitlement = {
                 for each (best_pool in best_in_class_pools) {
                     var best_provided_products = getRelevantProvidedProducts(best_pool, products);
                     if (providesSameProducts(provided_products, best_provided_products)) {
+                    	duplicate_found = true;
+                    	
+                    	// Prefer a virt_only pool over a regular pool, else fall through to the next rules.
+                    	// At this point virt_only pools will have already been filtered out by the pre rules
+                    	// for non virt machines.
+                    	if (pool.getAttribute("virt_only") == "true" && best_pool.getAttribute("virt_only") != "true") {
+                    		best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
+                            break;
+                    	}
+                    	else if (best_pool.getAttribute("virt_only") == "true" && pool.getAttribute("virt_only") != "true") {
+                    		break;
+                    	}
+                    	
                         // If two pools are equal, select the pool that expires first
                         if (best_pool.getEndDate().after(pool.getEndDate())) {
                             best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
+                            break;
                         }
                         // Autobind 2 logic goes here
-                        duplicate_found = true;
-                        break;
                     }
                 }
 
