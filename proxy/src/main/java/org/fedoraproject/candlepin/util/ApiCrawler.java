@@ -38,24 +38,23 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.Status;
 import org.fedoraproject.candlepin.resource.RootResource;
-import org.junit.Test;
 
 /**
- * ApiCrawler
+ * ApiCrawler - Uses Java Reflection API to crawl the classes in our resources
+ * namespace looking for exposed API calls.
  */
-public class ApiCrawlerTest {
+public class ApiCrawler {
     private List<Class> modelClasses;
-    
-    public ApiCrawlerTest() {
-        
+
+    public ApiCrawler() {
+
         modelClasses = new LinkedList<Class>();
         modelClasses.add(ConsumerType.class);
         modelClasses.add(Status.class);
         modelClasses.add(Rules.class);
     }
-    
-    @Test
-    public void testApiCrawler() {
+
+    public void run() {
         for (Class c : modelClasses) {
             writeSchema(c);
         }
@@ -63,13 +62,13 @@ public class ApiCrawlerTest {
         for (Class c : RootResource.RESOURCE_CLASSES) {
             allApiCalls.addAll(processClass(c));
         }
-        
+
         // Now print the final results:
         for (RestApiCall call : allApiCalls) {
             call.print();
         }
     }
-    
+
     /**
      * @param class1
      */
@@ -98,10 +97,10 @@ public class ApiCrawlerTest {
         }
         return classApiCalls;
     }
-    
+
     private RestApiCall processMethod(String rootPath, Method m) {
         RestApiCall apiCall = new RestApiCall();
-        
+
         Path subPath = m.getAnnotation(Path.class);
         if (subPath != null) {
             if (rootPath.endsWith("/") || subPath.value().startsWith("/")) {
@@ -114,7 +113,7 @@ public class ApiCrawlerTest {
         else {
             apiCall.setUrl(rootPath);
         }
-        
+
         processHttpVerb(m, apiCall);
         processAllowedRoles(m, apiCall);
         processQueryParams(m, apiCall);
@@ -122,7 +121,7 @@ public class ApiCrawlerTest {
         apiCall.setReturnType(getReturnType(m));
         return apiCall;
     }
-    
+
     private void processHttpVerb(Method m, RestApiCall apiCall) {
         GET get = m.getAnnotation(GET.class);
         if (get != null) {
@@ -150,7 +149,7 @@ public class ApiCrawlerTest {
             }
         }
     }
-    
+
     private void processQueryParams(Method m, RestApiCall apiCall) {
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             for (Annotation a : m.getParameterAnnotations()[i]) {
@@ -158,7 +157,7 @@ public class ApiCrawlerTest {
                     String type = m.getParameterTypes()[i].getSimpleName().toLowerCase();
                     apiCall.addQueryParam(((QueryParam) a).value(), type);
                 }
-            
+
             }
         }
     }
@@ -177,41 +176,44 @@ public class ApiCrawlerTest {
         }
         return typeString;
     }
-    
+
+    /**
+     * RestApiCall: Helper object for storing information about an API method.
+     */
     static class RestApiCall {
         private String url;
         private List<Role> allowedRoles;
         private List<String> httpVerbs;
         private List<ApiParam> queryParams;
         private String returnType;
-        
+
         public RestApiCall() {
             allowedRoles = new LinkedList<Role>();
             allowedRoles.add(Role.SUPER_ADMIN); // assumed to always have access
             httpVerbs = new LinkedList<String>();
             queryParams = new LinkedList<ApiParam>();
         }
-        
+
         public void setUrl(String url) {
             this.url = url;
         }
-        
+
         public void addHttpVerb(String verb) {
             this.httpVerbs.add(verb);
         }
-        
+
         public void addRole(Role role) {
             allowedRoles.add(role);
         }
-        
+
         public void addQueryParam(String name, String type) {
             queryParams.add(new ApiParam(name, type));
         }
-        
+
         public void setReturnType(String type) {
             returnType = type;
         }
-        
+
         public void print() {
             System.out.println(getFormattedHttpVerbs() + " " + this.url);
             System.out.print("  Allowed roles:");
@@ -225,7 +227,7 @@ public class ApiCrawlerTest {
             }
             System.out.println("  Returns: " + returnType);
         }
-        
+
         private String getFormattedHttpVerbs() {
             String verbs = "";
             for (String verb : httpVerbs) {
@@ -233,23 +235,28 @@ public class ApiCrawlerTest {
             }
             return verbs;
         }
-        
+
         private static class ApiParam {
             private String name;
             private String type;
-            
+
             public ApiParam(String name, String type) {
                 this.name = name;
                 this.type = type;
             }
-            
+
             public String getName() {
                 return name;
             }
-            
+
             public String getType() {
                 return type;
             }
         }
+    }
+
+    public static void main(String [] args) {
+        ApiCrawler crawler = new ApiCrawler();
+        crawler.run();
     }
 }

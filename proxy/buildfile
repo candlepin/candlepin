@@ -167,8 +167,9 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
-  compile.with COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-      GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, uselog
+  compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
+    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, uselog]
+  compile.with compile_classpath
  
   #
   # testing
@@ -189,6 +190,13 @@ define "candlepin" do
   package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/config','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', 'target/classes/org/fedoraproject/candlepin/exceptions', 'target/classes/org/fedoraproject/candlepin/util', :path=>"org/fedoraproject/candlepin/"  
   package(:war, :id=>"candlepin").libs += artifacts(HSQLDB)
   package(:war, :id=>"candlepin").classes << generate  
+
+  desc 'Crawl the REST API and print a summary.'
+  task :apicrawl do
+    # Join compile classpath with the package jar:
+    cp = [project('candlepin').package(:jar)] | compile_classpath
+    Java.java('org.fedoraproject.candlepin.util.ApiCrawler', {:classpath => cp})
+  end
 
   #
   # coverity report generation
