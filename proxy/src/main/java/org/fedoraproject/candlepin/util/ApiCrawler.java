@@ -221,11 +221,14 @@ public class ApiCrawler {
                 System.out.print(" " + allowed);
             }
             System.out.print("\n");
-            System.out.println("  Query params:");
-            for (ApiParam param : queryParams) {
-                System.out.println("    " + param.getName() + " - " + param.getType());
+            if (queryParams.size() > 0) {
+                System.out.println("  Query params:");
+                for (ApiParam param : queryParams) {
+                    System.out.println("    " + param.getName() + " - " + param.getType());
+                }
             }
             System.out.println("  Returns: " + returnType);
+            System.out.println("\n");
         }
 
         private String getFormattedHttpVerbs() {
