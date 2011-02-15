@@ -446,6 +446,18 @@
             }
         },
         {
+            "name": "Awesome OS with up to 4 virtual guests",
+            "id": "awesomeos-virt-4",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
+                "virt_limit": 4
+            }
+        },
+        {
             "name": "Multiplier Product Bits",
             "id": "917571",
             "content": [

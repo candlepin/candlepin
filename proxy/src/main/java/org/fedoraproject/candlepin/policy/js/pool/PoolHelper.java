@@ -68,6 +68,7 @@ public class PoolHelper {
             String quantity, Map<String, String> attributes) {
 
         Pool pool = createPool(productId, providedProducts, quantity);
+        pool.setSubscriptionId(this.parentPool.getSubscriptionId());
 
         // Add in the attributes
         for (Entry<String, String> entry : attributes.entrySet()) {
