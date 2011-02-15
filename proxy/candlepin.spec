@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.5
+Version: 0.2.6
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,32 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Feb 15 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.6-1
+- Fix buildr deprecation warning. (dgoodwin@redhat.com)
+- Small ApiCrawler output cleanup. (dgoodwin@redhat.com)
+- Add missing resource class. (dgoodwin@redhat.com)
+- Run API Crawler with buildr. (dgoodwin@redhat.com)
+- autobind: prefer virt_only pools over regular (jbowes@redhat.com)
+- Fix up the same data to show a bit better (bkearney@redhat.com)
+- Adding test data for virt_limit and using parent subscription Id for virt
+  pools. (jharris@redhat.com)
+- remove some stray puts in our ruby (jbowes@redhat.com)
+- 672233: allow &,?,(),{},[] (jesusr@redhat.com)
+- Pretty big javascript overhaul. (jharris@redhat.com)
+- 672233: allow @ symbol as a consumer name. (jesusr@redhat.com)
+- Checkstyle cleanup (bkearney@redhat.com)
+- Add a check for the NPE which is being seen by the rhsm-web folks
+  (bkearney@redhat.com)
+- 658683 - additional info would help person consumer to unsubscribe when
+  blocked with "Cannot unbind due to outstanding sub-pool entitlements in ..."
+  (cduryee@redhat.com)
+- Stop showing SQL by default. (dgoodwin@redhat.com)
+- Fix debug logging enabled by default. (dgoodwin@redhat.com)
+- xnap is very inefficient if you do not have the locale. Added static caching
+  to our provider to overcome this. (bkearney@redhat.com)
+- Hard code the i18n basename to save some lookups. Still too much time in the
+  i18n creation (bkearney@redhat.com)
+
 * Fri Feb 11 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.5-1
 - add a API method for regenerating entitlement certs by entitlement id
   (alikins@redhat.com)
