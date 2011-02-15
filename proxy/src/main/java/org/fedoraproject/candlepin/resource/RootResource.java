@@ -53,7 +53,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(CrlResource.class);
         RESOURCE_CLASSES.add(EntitlementResource.class);
         RESOURCE_CLASSES.add(EventResource.class);
-        RESOURCE_CLASSES.add(EventResource.class);
+        RESOURCE_CLASSES.add(JobResource.class);
         RESOURCE_CLASSES.add(OwnerResource.class);
         RESOURCE_CLASSES.add(PoolResource.class);
         RESOURCE_CLASSES.add(ProductResource.class);
