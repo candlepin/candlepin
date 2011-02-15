@@ -156,7 +156,6 @@ module ExportMethods
     # Save current working dir so we can return later:
     @orig_working_dir = Dir.pwd()
 
-    puts "---" + @export_filename
     File.exist?(@export_filename).should == true
     unzip_export_file(@export_filename, @tmp_dir)
     unzip_export_file(File.join(@tmp_dir, "consumer_export.zip"), @tmp_dir)

@@ -33,10 +33,8 @@ class Candlepin
     @lang = lang
 
     if not uuid.nil?
-      puts(@base_url)
       create_trusted_consumer_client(uuid)
     elsif trusted_user
-      puts(@base_url)
       create_trusted_user_client(username)
     elsif not cert.nil?
       create_ssl_client(cert, key)
