@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.1.37
+Version: 0.1.38
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Feb 16 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.38-1
+- xnap is very inefficient if you do not have the locale. Added static caching
+  to our provider to overcome this. (bkearney@redhat.com)
+- Hard code the i18n basename to save some lookups. Still too much time in the
+  i18n creation (bkearney@redhat.com)
+- 671195: Use pessimistic locking on pools during bind. (dgoodwin@redhat.com)
+- Ensure that the serializers are cached to save on the Bean scanning
+  (bkearney@redhat.com)
+- Modify candlpin so that the rules are not parsed or compiled unless they are
+  used. (bkearney@redhat.com)
+
 * Mon Feb 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.1.37-1
 - 672233: allow &,?,(),{},[] (jesusr@redhat.com)
 
