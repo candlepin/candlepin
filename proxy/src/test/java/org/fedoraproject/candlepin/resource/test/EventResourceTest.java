@@ -68,7 +68,7 @@ public class EventResourceTest {
         assertEquals(e, er.getEvent("8aba"));
     }
 
-    @Test(expected=NotFoundException.class)
+    @Test(expected = NotFoundException.class)
     public void notfound() {
         when(ec.find(anyString())).thenReturn(null);
         EventResource er = new EventResource(ec, injector.getInstance(I18n.class));
