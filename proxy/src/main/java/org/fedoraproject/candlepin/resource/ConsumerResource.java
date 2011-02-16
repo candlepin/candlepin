@@ -209,8 +209,7 @@ public class ConsumerResource {
 
         if (!isConsumerNameValid(consumer.getName())) {
             throw new BadRequestException(i18n.tr(
-                "System name must consist of only alphanumeric characters, " +
-                "periods, dashes and underscores."));
+                "System name cannot contain most special characters."));
         }
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
