@@ -145,7 +145,7 @@ define "candlepin" do
   # download the stuff we do not have in the repositories
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
   download artifact('com.wideplay.warp:warp-persist:jar:2.0-20090214') => 'http://jmrodri.fedorapeople.org/ivy/candlepin/com/wideplay/warp/warp-persist/2.0-20090214/warp-persist-2.0-20090214.jar'
-  download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/' if Buildr.environment == 'logdriver'
+  download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if Buildr.environment == 'logdriver'
 
   # Resource Substitution
   resources.filter.using 'version'=>VERSION_NUMBER,
