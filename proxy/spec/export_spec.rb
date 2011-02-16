@@ -84,13 +84,13 @@ describe 'Candlepin Export' do
     exported_entitlement_certs.size.should == available_certs.size
 
     exported_entitlement_certs.each do |file|
-      exported_cert = load_file(File.join(entitlement_certs_dir, file))
+      exported_cert = File.read(File.join(entitlement_certs_dir, file))
       exported_cert[0..26].should == "-----BEGIN CERTIFICATE-----"
     end
   end
 
   it 'exports rules' do
-    Base64.decode64(@cp.list_rules).should == load_file(
+    Base64.decode64(@cp.list_rules).should == File.read(
       File.join(@export_dir, "rules/rules.js"))
   end
 

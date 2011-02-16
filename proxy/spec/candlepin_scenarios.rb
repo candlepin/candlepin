@@ -180,16 +180,7 @@ module ExportMethods
   end
 
   def parse_file(filename)
-    JSON.parse(load_file(filename))
-  end
-
-  def load_file(filename)
-    contents = ''
-    f = File.open(filename, "r")
-    f.each_line do |line|
-      contents += line
-    end
-    return contents
+    JSON.parse(File.read(filename))
   end
 
   def files_in_dir(dir_name)
