@@ -16,8 +16,6 @@ package org.fedoraproject.candlepin.client;
 
 //import static org.junit.Assert.assertNotNull;
 
-import org.fedoraproject.candlepin.model.Owner;
-
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -32,7 +30,8 @@ public class OwnerExportClientTest {
     @Test
     public void exportOwner() {
         RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
-        OwnerExportClient oec = ProxyFactory.create(OwnerExportClient.class, "http://localhost:8443/candlepin/");
+        OwnerExportClient oec = ProxyFactory.create(OwnerExportClient.class,
+            "http://localhost:8443/candlepin/");
         //Owner o = oec.exportOwner("8a8b64a32cc73ee5012cc73f01d40009");
         //assertNotNull(o);
         //System.out.println(o);
