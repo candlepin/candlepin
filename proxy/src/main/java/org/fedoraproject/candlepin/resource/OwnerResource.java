@@ -84,7 +84,6 @@ import org.quartz.JobDetail;
  */
 @Path("/owners")
 public class OwnerResource {
-    //private static Logger log = Logger.getLogger(OwnerResource.class);
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
     private SubscriptionCurator subscriptionCurator;
@@ -420,6 +419,38 @@ public class OwnerResource {
         return RefreshPoolsJob.forOwner(owner);
     }
     
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("import")
+    public JobDetail migrateOwner(@QueryParam("id") String ownerKey,
+                                  @QueryParam("uri") String url) {
+        return null;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/export")
+    public Owner exportOwner(@PathParam("owner_key") String ownerKey) {
+        /*
+         * We will probably need to create exporter objects that use the
+         * ObjectMapper since by default Owner is setup to do shallow
+         * serialization using hrefs for children objects. We will want
+         * the entire object graph.
+         *
+         * What would be awesome if we could specify a serialization
+         * template to get back the fields we want, vs creating DTOs or mucking
+         * with the class annotations.
+         */
+
+        log.debug("Ownerkey = " + ownerKey);
+        Owner o = ownerCurator.lookupByKey(ownerKey);
+        log.debug("owner is null? " + (o == null));
+        if (o != null) {
+            log.debug("Owner: " + o.toString());
+        }
+        return o;
+    }
+
     @PUT
     @Path("/subscriptions")
     public void updateSubscription(Subscription subscription) {

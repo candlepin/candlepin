@@ -24,7 +24,16 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.AnnotationIntrospector;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.junit.Test;
+
+import java.util.Set;
 
 public class OwnerTest extends DatabaseTestFixture {
 
@@ -99,4 +108,42 @@ public class OwnerTest extends DatabaseTestFixture {
         assertEquals(2, lookedUp.getConsumers().size());
     }
 
+    @Test
+    public void objectMapper() {
+        Owner o = createOwner();
+        ConsumerType consumerType = TestUtil.createConsumerType();
+        Consumer c1 = TestUtil.createConsumer(consumerType, o);
+        Consumer c2 = TestUtil.createConsumer(consumerType, o);
+        o.addConsumer(c1);
+        o.addConsumer(c2);
+        Set<Consumer> consumers = o.getConsumers();
+
+        System.out.println(consumers.size());
+        ObjectMapper mapper = new ObjectMapper();
+//        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+//        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+//        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+//
+          mapper.getSerializationConfig().addMixInAnnotations(Consumer.class, MixIn.class);
+//        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
+//        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+//        mapper.getSerializationConfig().set(
+//            SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
+//            false);
+        try {
+            String jsondata = mapper.writeValueAsString(o);
+            System.out.println(jsondata);
+        }
+        catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
+    }
+
+    interface MixIn {
+        @JsonProperty("consumers") Set<Consumer> getConsumers();
+
+    }
 }
