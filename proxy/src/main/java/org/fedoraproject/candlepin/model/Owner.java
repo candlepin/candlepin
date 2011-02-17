@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents the owner of entitlements.
- * 
+ *
  * This is akin to an organization, whereas a User is an individual account within that
  * organization.
  */
@@ -48,7 +48,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     @OneToOne
     @JoinColumn(name = "parent_owner", nullable = true)
     private Owner parentOwner;
-    
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -63,18 +63,18 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
 
     @OneToMany(mappedBy = "owner", targetEntity = Consumer.class)
     private Set<Consumer> consumers;
-    
+
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
-    
+
     /*
      *  The uuid of the consumer in the upstream candlepin that maps to this owner,
      *  for entitlement syncing.
      */
     @Column(name = "upstream_uuid")
     private String upstreamUuid;
-    
+
     /**
      * Default constructor
      */
@@ -82,17 +82,17 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
         consumers = new HashSet<Consumer>();
         pools = new HashSet<Pool>();
     }
-    
+
     /**
      * Constructor with required parameters.
-     * 
+     *
      * @param key Owner's unique identifier
      * @param displayName Owner's name - suitable for UI
      */
     public Owner(String key, String displayName) {
         this.key = key;
         this.displayName = displayName;
-        
+
         consumers = new HashSet<Consumer>();
         pools = new HashSet<Pool>();
     }
@@ -105,7 +105,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     public Owner(String name) {
         this(name, name);
     }
-    
+
     /**
      * @return the id
      */
@@ -171,7 +171,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     public void setPools(Set<Pool> entitlementPools) {
         this.pools = entitlementPools;
     }
-    
+
     /**
      * Add a consumer to this owner
      * @param c consumer for this owner.
@@ -179,7 +179,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     public void addConsumer(Consumer c) {
         c.setOwner(this);
         this.consumers.add(c);
-        
+
     }
 
     /**
@@ -250,11 +250,11 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     public String getUpstreamUuid() {
         return upstreamUuid;
     }
-    
+
     public String getHref() {
         return "/owners/" + getKey();
     }
-    
+
     @Override
     public void setHref(String href) {
         /*

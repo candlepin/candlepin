@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * Represents a product provided by a Pool
@@ -38,7 +39,7 @@ import org.hibernate.annotations.GenericGenerator;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_pool_products")
-public class ProvidedProduct extends AbstractHibernateObject 
+public class ProvidedProduct extends AbstractHibernateObject
         implements AccessControlEnforced {
 
     @Id
@@ -46,28 +47,29 @@ public class ProvidedProduct extends AbstractHibernateObject
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     private String id;
-    
+
     @Column(name = "product_id", nullable = false)
     private String productId;
-    
+
     @Column(name = "product_name")
     private String productName;
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_pool_provided_product")
     @JoinColumn(nullable = false)
     @XmlTransient
+    @Index(name = "cp_providedproduct_pool_fk_idx")
     private Pool pool;
-    
+
     public ProvidedProduct() {
-        
+
     }
-    
+
     public ProvidedProduct(String productId, String productName) {
         this.productId = productId;
         this.productName = productName;
     }
-    
+
     public ProvidedProduct(String productId, String productName, Pool pool) {
         this.productId = productId;
         this.productName = productName;
@@ -88,7 +90,7 @@ public class ProvidedProduct extends AbstractHibernateObject
         this.productId = productId;
     }
 
-    
+
     /**
      * @return the productName
      */
@@ -107,7 +109,7 @@ public class ProvidedProduct extends AbstractHibernateObject
     public boolean shouldGrantAccessTo(Owner owner) {
         return AccessControlValidator.shouldGrantAccess(pool, owner);
     }
-    
+
     /**
      * @return the id
      */

@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * Represents a Subscription
@@ -55,13 +56,14 @@ public class Subscription extends AbstractHibernateObject {
     @ManyToOne
     @ForeignKey(name = "fk_subscription_owner")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_subscription_owner_fk_idx")
     private Owner owner;
 
     @ManyToOne
     @ForeignKey(name = "fk_subscription_product")
     @JoinColumn(nullable = false)
     private Product product;
-    
+
     @ManyToMany(targetEntity = Product.class)
     @ForeignKey(name = "fk_product_id",
             inverseName = "fk_subscription_id")
@@ -78,16 +80,16 @@ public class Subscription extends AbstractHibernateObject {
 
     @Column(nullable = false)
     private Date endDate;
- 
+
     private String contractNumber;
-    
+
     private String accountNumber;
-    
+
     @OneToMany(mappedBy = "subscription")
     private Set<SubscriptionToken> tokens;
-    
+
     private Date modified;
-    
+
     @Column(name = "upstream_pool_id")
     private String upstreamPoolId;
 
@@ -98,7 +100,7 @@ public class Subscription extends AbstractHibernateObject {
     public Subscription() {
     }
 
-    public Subscription(Owner ownerIn, Product productIn, Set<Product> providedProducts, 
+    public Subscription(Owner ownerIn, Product productIn, Set<Product> providedProducts,
             Long maxMembersIn, Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
         this.product = productIn;
@@ -110,7 +112,7 @@ public class Subscription extends AbstractHibernateObject {
 
         this.tokens = new HashSet<SubscriptionToken>();
     }
-    
+
     public String toString() {
         return "Subscription [id = " + getId() + ", product = " + getProduct().getId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
@@ -215,7 +217,7 @@ public class Subscription extends AbstractHibernateObject {
     }
 
     /**
-     * 
+     *
      * @return the subscription's contract number
      */
     public String getContractNumber() {
@@ -229,7 +231,7 @@ public class Subscription extends AbstractHibernateObject {
     public void setContractNumber(String contractNumber) {
         this.contractNumber = contractNumber;
     }
-    
+
     /**
      * set the account number
      * @param accountNumber
@@ -253,7 +255,7 @@ public class Subscription extends AbstractHibernateObject {
     public void setTokens(Set<SubscriptionToken> tokens) {
         this.tokens = tokens;
     }
-    
+
     /**
      * Check if this pool provides the given product ID.
      * @param desiredProductId
@@ -264,7 +266,7 @@ public class Subscription extends AbstractHibernateObject {
         if (this.product.getId().equals(desiredProductId)) {
             return true;
         }
-        
+
         // Check provided products:
         for (Product p : providedProducts) {
             if (p.getId().equals(desiredProductId)) {

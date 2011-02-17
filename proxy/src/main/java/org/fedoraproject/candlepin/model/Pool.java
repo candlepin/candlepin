@@ -41,6 +41,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 import org.hibernate.annotations.ParamDef;
 
 /**
@@ -52,19 +53,19 @@ import org.hibernate.annotations.ParamDef;
 @Entity
 @FilterDefs({
     @FilterDef(
-        name = "Pool_OWNER_FILTER", 
+        name = "Pool_OWNER_FILTER",
         parameters = @ParamDef(name = "owner_id", type = "string")
     ),
     @FilterDef(
-        name = "Pool_CONSUMER_FILTER", 
+        name = "Pool_CONSUMER_FILTER",
         parameters = @ParamDef(name = "consumer_id", type = "string")
     )
 })
 @Filters({
-    @Filter(name = "Pool_OWNER_FILTER", 
+    @Filter(name = "Pool_OWNER_FILTER",
         condition = "id in (select p.id from cp_pool p where p.owner_id = :owner_id)"
     ),
-    @Filter(name = "Pool_CONSUMER_FILTER", 
+    @Filter(name = "Pool_CONSUMER_FILTER",
         condition = "id in (select p.id from cp_pool p " +
             "inner join cp_owner o on p.owner_id = o.id " +
             "inner join cp_consumer c on c.owner_id = o.id and c.id = :consumer_id " +
@@ -72,20 +73,21 @@ import org.hibernate.annotations.ParamDef;
     )
 })
 @Table(name = "cp_pool")
-public class Pool extends AbstractHibernateObject 
+public class Pool extends AbstractHibernateObject
     implements AccessControlEnforced, Linkable {
-    
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     private String id;
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_pool_owner")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_pool_owner_fk_idx")
     private Owner owner;
-    
+
     private Boolean activeSubscription = Boolean.TRUE;
 
     // An identifier for the subscription this pool is associated with. Note that
@@ -101,6 +103,7 @@ public class Pool extends AbstractHibernateObject
     @ManyToOne
     @ForeignKey(name = "fk_pool_source_entitlement")
     @JoinColumn(nullable = true)
+    @Index(name = "cp_pool_entitlement_fk_idx")
     private Entitlement sourceEntitlement;
 
     @Column(nullable = false)
@@ -108,13 +111,13 @@ public class Pool extends AbstractHibernateObject
 
     @Column(nullable = false)
     private Date startDate;
-    
+
     @Column(nullable = false)
     private Date endDate;
-    
+
     @Column(nullable = false)
     private String productId;
-    
+
     @OneToMany(mappedBy = "pool", targetEntity = ProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
@@ -122,27 +125,27 @@ public class Pool extends AbstractHibernateObject
     private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL, 
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
-    
+
     private String restrictedToUsername;
 
     private String contractNumber;
     private String accountNumber;
-    
+
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
 
     public Pool() {
     }
 
-    public Pool(Owner ownerIn, String productId, String productName, 
-        Set<ProvidedProduct> providedProducts, 
+    public Pool(Owner ownerIn, String productId, String productName,
+        Set<ProvidedProduct> providedProducts,
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
         String accountNumber) {
         this.productId = productId;
@@ -227,7 +230,7 @@ public class Pool extends AbstractHibernateObject
     public void setConsumed(Long consumed) {
         // TODO: needed for json repopulation, need to ignore.
     }
-    
+
     /**
      * @return owner of the pool.
      */
@@ -245,7 +248,7 @@ public class Pool extends AbstractHibernateObject
     /**
      * The Marketing/Operations product name for the
      * <code>productId</code>.
-     * 
+     *
      * @return the productName
      */
     public String getProductName() {
@@ -255,7 +258,7 @@ public class Pool extends AbstractHibernateObject
     /**
      * The Marketing/Operations product name for the
      * <code>productId</code>.
-     * 
+     *
      * @param productName the productName to set
      */
     public void setProductName(String productName) {
@@ -273,7 +276,7 @@ public class Pool extends AbstractHibernateObject
 
     /**
      * Set the contract number.
-     * 
+     *
      * @param contractNumber
      */
     public void setContractNumber(String contractNumber) {
@@ -427,12 +430,12 @@ public class Pool extends AbstractHibernateObject
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
-    
+
     @Override
     public boolean shouldGrantAccessTo(Owner owner) {
         return AccessControlValidator.shouldGrantAccess(this, owner);
     }
-    
+
     @Override
     public boolean shouldGrantAccessTo(Consumer consumer) {
         return AccessControlValidator.shouldGrantAccess(this, consumer);
@@ -461,7 +464,7 @@ public class Pool extends AbstractHibernateObject
         if (this.productId.equals(productId)) {
             return true;
         }
-        
+
         if (providedProducts != null) {
             for (ProvidedProduct p : providedProducts) {
                 if (p.getProductId().equals(productId)) {
@@ -474,7 +477,7 @@ public class Pool extends AbstractHibernateObject
 
     /**
      * Return the "top level" product this pool is for.
-     * Note that pools can also provide access to other products. 
+     * Note that pools can also provide access to other products.
      * See getProvidedProductIds().
      * @return Top level product ID.
      */
@@ -485,7 +488,7 @@ public class Pool extends AbstractHibernateObject
     public void setProductId(String productId) {
         this.productId = productId;
     }
-    
+
     /**
      * Gets the entitlements for this instance.
      *
@@ -515,18 +518,18 @@ public class Pool extends AbstractHibernateObject
 
     /**
      * Check whether {@link #consumed} is greater than {@link #quantity}
-     * 
+     *
      * @return true if consumed>quantity else false.
      */
     @XmlTransient
     public boolean isOverflowing() {
         return getConsumed() > this.quantity;
     }
-    
+
     public String getHref() {
         return "/pools/" + getId();
     }
-    
+
     @Override
     public void setHref(String href) {
         /*

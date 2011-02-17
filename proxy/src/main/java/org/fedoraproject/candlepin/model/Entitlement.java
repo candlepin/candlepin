@@ -39,15 +39,16 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 import org.hibernate.annotations.ParamDef;
 
 
 
 /**
- * Entitlements are documents either signed XML or other certificate which 
+ * Entitlements are documents either signed XML or other certificate which
  * control what a particular Consumer can use. There are a number of types
  * of Entitlements:
- * 
+ *
  *  1. Quantity Limited (physical & virtual)
  *  2. Version Limited
  *  3. Hardware Limited (i.e # of sockets, # of cores, etc)
@@ -64,63 +65,66 @@ import org.hibernate.annotations.ParamDef;
 @Entity
 @FilterDefs({
     @FilterDef(
-        name = "Entitlement_OWNER_FILTER", 
+        name = "Entitlement_OWNER_FILTER",
         parameters = @ParamDef(name = "owner_id", type = "string")
     ),
     @FilterDef(
-        name = "Entitlement_CONSUMER_FILTER", 
+        name = "Entitlement_CONSUMER_FILTER",
         parameters = @ParamDef(name = "consumer_id", type = "string")
     )
 })
 @Filters({
-    @Filter(name = "Entitlement_OWNER_FILTER", 
+    @Filter(name = "Entitlement_OWNER_FILTER",
         condition = "owner_id = :owner_id"
     ),
-    @Filter(name = "Entitlement_CONSUMER_FILTER", 
+    @Filter(name = "Entitlement_CONSUMER_FILTER",
         condition = "id in (select e.id from cp_entitlement e " +
-            "inner join cp_consumer_entitlements con_en on e.id = con_en.entitlement_id " + 
+            "inner join cp_consumer_entitlements con_en on e.id = con_en.entitlement_id " +
             "and con_en.consumer_id = :consumer_id)"
     )
 })
 @Table(name = "cp_entitlement")
-public class Entitlement extends AbstractHibernateObject 
+public class Entitlement extends AbstractHibernateObject
     implements AccessControlEnforced, Linkable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     private String id;
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_owner")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_entitlement_owner_fk_idx")
     private Owner owner;
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_consumer_id",
                 inverseName = "fk_entitlement_id")
     @JoinTable(name = "cp_consumer_entitlements",
             joinColumns = @JoinColumn(name = "entitlement_id"),
             inverseJoinColumns = @JoinColumn(name = "consumer_id"))
+    @Index(name = "cp_entitlement_consumer_fk_idx")
     private Consumer consumer;
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_pool_id", inverseName = "fk_entitlement_id")
     @JoinTable(name = "cp_pool_entitlements",
         joinColumns = @JoinColumn(name = "entitlement_id"),
         inverseJoinColumns = @JoinColumn(name = "pool_id"))
+    @Index(name = "cp_entitlement_pool_fk_idx")
     private Pool pool;
 
     private Date startDate;
     private Date endDate;
-    
+
     // Not positive this should be mapped here, not all entitlements will have
     // certificates.
     @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
-    private Set<EntitlementCertificate> certificates = 
+    private Set<EntitlementCertificate> certificates =
         new HashSet<EntitlementCertificate>();
 
     private Integer quantity;
@@ -129,13 +133,13 @@ public class Entitlement extends AbstractHibernateObject
 
     private String accountNumber;
     private String contractNumber;
-    
+
     /**
      * default ctor
      */
     public Entitlement() {
     }
-    
+
     /**
      * @return the id
      */
@@ -163,13 +167,13 @@ public class Entitlement extends AbstractHibernateObject
         consumer = consumerIn;
         startDate = startDateIn;
         endDate = endDateIn;
-        quantity = quantityIn == null || quantityIn.intValue() < 1 ? 
+        quantity = quantityIn == null || quantityIn.intValue() < 1 ?
             1 : quantityIn;
-            
+
         this.accountNumber = pool.getAccountNumber();
         this.contractNumber = pool.getContractNumber();
     }
-    
+
     /**
      * @return the owner
      */
@@ -227,14 +231,14 @@ public class Entitlement extends AbstractHibernateObject
     public Date getEndDate() {
         return endDate;
     }
-    
+
     /**
      * @param endDateIn The endDate to set.
      */
     public void setEndDate(Date endDateIn) {
         endDate = endDateIn;
     }
-    
+
     /**
      * @return return the associated Consumer
      */
@@ -265,15 +269,15 @@ public class Entitlement extends AbstractHibernateObject
 
     public void setCertificates(Set<EntitlementCertificate> certificates) {
         this.certificates = certificates;
-    } 
-    
+    }
+
     public void addCertificate(EntitlementCertificate certificate) {
         certificate.setEntitlement(this);
         certificates.add(certificate);
     }
-        
+
     public String toString() {
-        return "Entitlement[id=" + getId() + ", product=" + getProductId() + 
+        return "Entitlement[id=" + getId() + ", product=" + getProductId() +
             ", consumer= " + (consumer == null ? "null" : consumer.getUuid()) + "]";
     }
 
@@ -294,11 +298,11 @@ public class Entitlement extends AbstractHibernateObject
     public void setFlexExpiryDays(Integer flexExpiryDays) {
         this.flexExpiryDays = flexExpiryDays;
     }
-    
+
     public String getHref() {
         return "/entitlements/" + getId();
     }
-    
+
     @Override
     public void setHref(String href) {
         /*

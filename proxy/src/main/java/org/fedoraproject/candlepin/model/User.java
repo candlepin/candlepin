@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * Represents the user.
@@ -41,7 +42,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "cp_user")
 public class User extends AbstractHibernateObject{
-    
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -51,14 +52,15 @@ public class User extends AbstractHibernateObject{
     @ManyToOne
     @ForeignKey(name = "fk_user_owner_id")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_user_owner_fk_idx")
     private Owner owner;
-    
+
     @Column(nullable = false, unique = true)
     private String username;
 
     // TODO: Hash!
     private String password;
-    
+
     private boolean superAdmin;
 
     public User() {
@@ -67,7 +69,7 @@ public class User extends AbstractHibernateObject{
     public User(Owner owner, String login, String password) {
         this(owner, login, password, false);
     }
-    
+
     public User(Owner owner, String login, String password, boolean superAdmin) {
         this.owner = owner;
         this.username = login;
@@ -126,7 +128,7 @@ public class User extends AbstractHibernateObject{
     public void setOwner(Owner owner) {
         this.owner = owner;
     }
-   
+
     /**
      * @return if the user has the SUPER_ADMIN role
      */

@@ -47,6 +47,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.annotations.ParamDef;
 
@@ -54,7 +55,7 @@ import org.hibernate.annotations.ParamDef;
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
  * system, or anything else we want to track as using the Entitlement.
- * 
+ *
  * Every Consumer has an Owner which may or may not own the Entitlement. The
  * Consumer's attributes or metadata is stored in a ConsumerInfo object which
  * boils down to a series of name/value pairs.
@@ -64,24 +65,24 @@ import org.hibernate.annotations.ParamDef;
 @Entity
 @FilterDefs({
     @FilterDef(
-        name = "Consumer_OWNER_FILTER", 
+        name = "Consumer_OWNER_FILTER",
         parameters = @ParamDef(name = "owner_id", type = "string")
     ),
     @FilterDef(
-        name = "Consumer_CONSUMER_FILTER", 
+        name = "Consumer_CONSUMER_FILTER",
         parameters = @ParamDef(name = "consumer_id", type = "string")
     )
 })
 @Filters({
-    @Filter(name = "Consumer_OWNER_FILTER", 
+    @Filter(name = "Consumer_OWNER_FILTER",
         condition = "owner_id = :owner_id"
     ),
-    @Filter(name = "Consumer_CONSUMER_FILTER", 
+    @Filter(name = "Consumer_CONSUMER_FILTER",
         condition = "id = :consumer_id"
     )
 })
 @Table(name = "cp_consumer")
-public class Consumer extends AbstractHibernateObject 
+public class Consumer extends AbstractHibernateObject
     implements AccessControlEnforced, Linkable {
 
     @Id
@@ -89,20 +90,20 @@ public class Consumer extends AbstractHibernateObject
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     private String id;
-    
+
     @Column(nullable = false, unique = true)
     private String uuid;
 
     @Column(nullable = false)
     private String name;
-    
+
     // Represents the username used to register this consumer
     @Column(nullable = false)
     private String username;
-    
-    /* 
+
+    /*
      * Because this object is used both as a Hibernate object, as well as a DTO to be
-     * serialized and sent to callers, we do some magic with these two cert related 
+     * serialized and sent to callers, we do some magic with these two cert related
      * fields. The idCert is a database certificated that carries bytes, the identity
      * field is a DTO for transmission to the client carrying PEM in plain text, and is
      * not stored in the database.
@@ -110,7 +111,7 @@ public class Consumer extends AbstractHibernateObject
     @OneToOne
     @JoinColumn(name = "consumer_idcert_id")
     private IdentityCertificate idCert;
-    
+
     @ManyToOne
     @JoinColumn(nullable = false)
     @ForeignKey(name = "fk_consumer_consumer_type")
@@ -119,28 +120,30 @@ public class Consumer extends AbstractHibernateObject
     @ManyToOne
     @ForeignKey(name = "fk_consumer_owner")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_consumer_owner_fk_idx")
     private Owner owner;
-    
+
     // Consumers *can* be organized into a hierarchy, could be useful in cases
-    // such as host/guests. 
+    // such as host/guests.
     @ManyToOne(targetEntity = Consumer.class)
     @JoinColumn(name = "parent_consumer_id")
+    @Index(name = "cp_consumer_parent_fk_idx")
     private Consumer parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private Set<Consumer> childConsumers;
-    
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
     private Set<Entitlement> entitlements;
-    
+
     @MapKeyManyToMany(targetEntity = String.class)
     @CollectionOfElements(targetElement = String.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    private Map<String, String> facts;    
-    
+    private Map<String, String> facts;
+
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
-    
+
     private Date lastCheckin;
 
     @Transient
@@ -148,7 +151,7 @@ public class Consumer extends AbstractHibernateObject
 
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
-        
+
         this.name = name;
         this.username = userName;
         this.owner = owner;
@@ -170,7 +173,7 @@ public class Consumer extends AbstractHibernateObject
     public String getUuid() {
         return uuid;
     }
-    
+
     public void ensureUUID() {
         if (uuid == null  || uuid.length() == 0) {
             this.uuid = Util.generateUUID();
@@ -205,7 +208,7 @@ public class Consumer extends AbstractHibernateObject
     public void setIdCert(IdentityCertificate idCert) {
         this.idCert = idCert;
     }
-    
+
     /**
      * @return the name of this consumer.
      */
@@ -219,7 +222,7 @@ public class Consumer extends AbstractHibernateObject
     public void setName(String name) {
         this.name = name;
     }
-    
+
     /**
      * @return the userName
      */
@@ -240,7 +243,7 @@ public class Consumer extends AbstractHibernateObject
     public ConsumerType getType() {
         return type;
     }
-    
+
     /**
      * @param typeIn consumer type
      */
@@ -262,7 +265,7 @@ public class Consumer extends AbstractHibernateObject
     public void setChildConsumers(Set<Consumer> childConsumers) {
         this.childConsumers = childConsumers;
     }
-    
+
     /**
      * @param child child consumer.
      */
@@ -284,7 +287,7 @@ public class Consumer extends AbstractHibernateObject
     public void setParent(Consumer parent) {
         this.parent = parent;
     }
-    
+
     /**
      * @return the owner of this Consumer.
      */
@@ -306,14 +309,14 @@ public class Consumer extends AbstractHibernateObject
             getName() + "]";
     }
 
-    
+
     /**
      * @return all facts about this consumer.
      */
     public Map<String, String> getFacts() {
         return facts;
     }
-    
+
     /**
      * Returns the value of the fact with the given key.
      * @param factKey specific fact to retrieve.
@@ -329,26 +332,26 @@ public class Consumer extends AbstractHibernateObject
     public void setFacts(Map<String, String> factsIn) {
         facts = factsIn;
     }
-    
+
     /**
      * Returns if the <code>other</code> consumer's facts are
      * the same as the facts of this consumer.
-     * 
+     *
      * @param other the Consumer whose facts to compare
      * @return <code>true</code> if the facts are the same, <code>false</code> otherwise
      */
     public boolean factsAreEqual(Consumer other) {
         Map<String, String> myFacts = getFacts();
         Map<String, String> otherFacts = other.getFacts();
-        
+
         if (myFacts.size() != otherFacts.size()) {
             return false;
         }
-        
+
         for (Entry<String, String> entry : myFacts.entrySet()) {
             String myVal = entry.getValue();
             String otherVal = otherFacts.get(entry.getKey());
-            
+
             if (myVal == null) {
                 if (otherVal != null) {
                     return false;
@@ -358,10 +361,10 @@ public class Consumer extends AbstractHibernateObject
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Set a fact
      * @param name to set
@@ -378,7 +381,7 @@ public class Consumer extends AbstractHibernateObject
         return entitlements;
     }
 
-    
+
     /**
      * @param entitlementsIn The entitlements to set.
      */
@@ -389,7 +392,7 @@ public class Consumer extends AbstractHibernateObject
     /**
      * Add an Entitlement to this Consumer
      * @param entitlementIn to add to this consumer
-     * 
+     *
      */
     public void addEntitlement(Entitlement entitlementIn) {
         entitlementIn.setConsumer(this);
@@ -399,7 +402,7 @@ public class Consumer extends AbstractHibernateObject
     public void removeEntitlement(Entitlement entitlement) {
         this.entitlements.remove(entitlement);
     }
-    
+
     @XmlTransient
     public KeyPair getKeyPair() {
         return keyPair;
@@ -417,12 +420,12 @@ public class Consumer extends AbstractHibernateObject
         if (!(anObject instanceof Consumer)) {
             return false;
         }
-        
+
         Consumer another = (Consumer) anObject;
-        
+
         return uuid.equals(another.getUuid());
     }
-    
+
     @Override
     public int hashCode() {
         return uuid.hashCode();
@@ -432,16 +435,16 @@ public class Consumer extends AbstractHibernateObject
     public boolean shouldGrantAccessTo(Owner owner) {
         return AccessControlValidator.shouldGrantAccess(this, owner);
     }
-    
+
     @Override
     public boolean shouldGrantAccessTo(Consumer consumer) {
         return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
-    
+
     public String getHref() {
         return "/consumers/" + getUuid();
     }
-    
+
     @Override
     public void setHref(String href) {
         /*
