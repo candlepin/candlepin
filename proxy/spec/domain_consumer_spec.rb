@@ -6,11 +6,11 @@ describe 'Domain Consumer' do
   it_should_behave_like 'Candlepin Scenarios'
 
   before(:each) do
-    @owner = create_owner 'test_owner'
-    @user = user_client(@owner, 'test_user')
-    @monitoring = create_product('8439203', 'monitoring')
-    @domain_product = create_product('873923', 'domain_product', {
-      :attributes => { :requires_consumer_type => :domain }
+    @owner = create_owner(random_string("test_owner"))
+    @user = user_client(@owner, random_string("test_user"))
+    @monitoring = create_product()
+    @domain_product = create_product(rand(10000).to_s, random_string("test_product"), {
+        :attributes => { :requires_consumer_type => :domain }
     })
 
     @cp.create_subscription(@owner.key, @monitoring.id, 4)
