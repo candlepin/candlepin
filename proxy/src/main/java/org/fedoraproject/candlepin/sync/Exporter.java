@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.fedoraproject.candlepin.policy.js.export.JsExportRules;
 
 /**
  * Exporter
@@ -70,8 +71,7 @@ public class Exporter {
     private EntitlementCurator entitlementCurator;
     private PKIUtility pki;
     private Config config;
-
-
+    private JsExportRules exportRules;
     
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
@@ -80,7 +80,7 @@ public class Exporter {
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter, 
-        PKIUtility pki, Config config) {
+        PKIUtility pki, Config config, JsExportRules exportRules) {
         
         mapper = SyncUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
@@ -98,6 +98,7 @@ public class Exporter {
         this.entExporter = entExporter;
         this.pki = pki;
         this.config = config;
+        this.exportRules = exportRules;
     }
 
     public File getExport(Consumer consumer) throws ExportCreationException {
@@ -118,7 +119,6 @@ public class Exporter {
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
-            e.printStackTrace();
             throw new ExportCreationException("Unable to create export archive", e);
         }
     }
@@ -269,6 +269,15 @@ public class Exporter {
         entCertDir.mkdir();
 
         for (EntitlementCertificate cert : entCertAdapter.listForConsumer(consumer)) {
+            if (!this.exportRules.canExport(cert.getEntitlement())) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Skipping export of entitlement cert with product:  " +
+                            cert.getEntitlement().getProductId());
+                }
+                
+                continue;
+            }
+
             log.debug("Exporting entitlement certificate: " + cert.getSerial());
             File file = new File(entCertDir.getCanonicalPath(), cert.getSerial().getId() +
                 ".pem");
@@ -283,6 +292,15 @@ public class Exporter {
         entCertDir.mkdir();
 
         for (Entitlement ent : entitlementCurator.listByConsumer(consumer)) {
+            if (!this.exportRules.canExport(ent)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Skipping export of entitlement with product:  " +
+                            ent.getProductId());
+                }
+
+                continue;
+            }
+
             if (log.isDebugEnabled()) {
                 log.debug("Exporting entitlement for product" + ent.getProductId());
             }

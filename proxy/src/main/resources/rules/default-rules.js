@@ -15,6 +15,10 @@ function pool_name_space() {
     return Pool;
 }
 
+function export_name_space() {
+    return Export;
+}
+
 /* Utility functions */
 function contains(a, obj) {
 	for (var i = 0; i < a.length; i++) {
@@ -327,3 +331,9 @@ var Pool = {
     }
 }
 
+var Export = {
+    can_export_entitlement: function() {
+        return !attributes.containsKey('virt_only') ||
+            !'true'.equals(attributes.get('virt_only'));
+    }
+}

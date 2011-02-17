@@ -130,6 +130,9 @@ module ExportMethods
     product1 = create_product(random_string(), random_string(),
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
     product2 = create_product()
+    virt_product = create_product(random_string('virt_product'), 
+                                  random_string('virt_product'),
+                                  {:attributes => {:virt_only => true}})
     content = create_content({:metadata_expire => 6000})
     @cp.add_content_to_product(product1.id, content.id)
     @cp.add_content_to_product(product2.id, content.id)
@@ -137,15 +140,18 @@ module ExportMethods
 
     sub1 = @cp.create_subscription(@owner.key, product1.id, 2, [], '', '12345', nil, @end_date)
     sub2 = @cp.create_subscription(@owner.key, product2.id, 4, [], '', '12345', nil, @end_date)
+    sub3 = @cp.create_subscription(@owner.key, virt_product.id, 10, [], '', '12345', nil, @end_date)
     @cp.refresh_pools(@owner.key)
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
+    pool3 = @cp.list_pools(:owner => @owner.id, :product => virt_product.id)[0]
 
     @candlepin_client = consumer_client(owner_client, random_string(),
         "candlepin")
     @flex_entitlement = @candlepin_client.consume_pool(pool1.id)[0]
     @candlepin_client.consume_pool(pool2.id)
+    @candlepin_client.consume_pool(pool3.id)
 
     # Make a temporary directory where we can safely extract our archive:
     @tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
@@ -180,7 +186,7 @@ module ExportMethods
   end
 
   def parse_file(filename)
-    JSON.parse(File.read(filename))
+    JSON.parse File.read(filename)
   end
 
   def files_in_dir(dir_name)

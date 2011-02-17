@@ -1,5 +1,6 @@
 require 'candlepin_scenarios'
 require 'tmpdir'
+require 'openssl'
 
 describe 'Candlepin Export' do
 
@@ -29,7 +30,7 @@ describe 'Candlepin Export' do
 
     exported_consumer_types.each do |file|
       consumer_type = parse_file(File.join(consumer_types_dir, file))
-      available_consumer_types[consumer_type['label']].should_not == nil
+      available_consumer_types[consumer_type['label']].should_not be_nil
     end
   end
 
@@ -38,22 +39,36 @@ describe 'Candlepin Export' do
     exported_consumer['uuid'].should == @candlepin_client.uuid
   end
 
-  it 'exports entitlements' do
+  it 'exports only physical entitlements' do
     entitlements_dir = File.join(@export_dir, 'entitlements')
 
-    available_entitlements ||= {}
+    available_entitlements = {}
     @candlepin_client.list_entitlements.each do |ent|
-      pool = @cp.get_pool(ent['pool']['id'])
+      pool = @cp.get_pool ent.pool.id
       available_entitlements[pool.productId] = ent
     end
-    exported_entitlements = files_in_dir(entitlements_dir)
 
-    exported_entitlements.size.should == available_entitlements.size
+    # We are expecting the virt_only entitlement to not be exported
+    exported_entitlements = files_in_dir(entitlements_dir)
+    exported_entitlements.should have(2).things
 
     exported_entitlements.each do |file|
       exported_entitlement = parse_file(File.join(entitlements_dir, file))
-      available_entitlements[exported_entitlement.pool.productId].should_not == nil
+      available_entitlements[exported_entitlement.pool.productId].should_not be_nil
     end
+  end
+
+  it 'should not export any virt product entitlements' do
+    Dir["#{@export_dir}/entitlements/*.json"].find_all do |ent|
+      JSON.parse(File.read(ent)).pool['productName'].include? 'virt_product'
+    end.should be_empty
+  end
+
+  it 'should not export virt product entitlement certificates' do
+     Dir["#{@export_dir}/entitlement_certificates/*.pem"].find_all do |ent|
+      cert = OpenSSL::X509::Certificate.new(File.read(ent))
+      get_extension(cert, '1.3.6.1.4.1.2312.9.4.1').include? 'virt_product'
+    end.should be_empty
   end
 
   it 'does not trigger flex expiry rules' do
@@ -81,7 +96,8 @@ describe 'Candlepin Export' do
       available_certs[c['serial']] = c
     end
 
-    exported_entitlement_certs.size.should == available_certs.size
+    # Only 2 of the 3 should be there, as one cert is for a virt product
+    exported_entitlement_certs.size.should == 2
 
     exported_entitlement_certs.each do |file|
       exported_cert = File.read(File.join(entitlement_certs_dir, file))

@@ -58,6 +58,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.fedoraproject.candlepin.policy.js.export.JsExportRules;
 
 
 /**
@@ -80,6 +81,7 @@ public class ExporterTest {
     private EntitlementExporter ee;
     private PKIUtility pki;
     private CandlepinCommonTestConfig config;
+    private JsExportRules exportRules;
 
     @Before
     public void setUp() {
@@ -98,6 +100,9 @@ public class ExporterTest {
         ee = new EntitlementExporter();
         pki = mock(PKIUtility.class);
         config = new CandlepinCommonTestConfig();
+        exportRules = mock(JsExportRules.class);
+
+        when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
 
     @Test
@@ -150,7 +155,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config);
+            pce, ec, ee, pki, config, exportRules);
 
         File export = e.getExport(consumer);
 
@@ -178,7 +183,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config);
+            pce, ec, ee, pki, config, exportRules);
         File export = e.getExport(consumer);
 
         // VERIFY
