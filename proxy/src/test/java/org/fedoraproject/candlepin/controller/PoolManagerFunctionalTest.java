@@ -29,6 +29,8 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.Owner;
@@ -56,6 +58,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.persistence.EntityNotFoundException;
 
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
@@ -240,6 +244,48 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolManager.regenerateEntitlementCertificates(childVirtSystem);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
         Mockito.verifyZeroInteractions(this.eventSink);
+    }
+    
+    @Test
+    public void testEntitleByProductsWithModifierAndModifiee()
+        throws EntitlementRefusedException {
+        Product modifier = new Product("modifier", "modifier");
+
+        Set<String> modified = new HashSet<String>();
+        modified.add(PRODUCT_VIRT_HOST);
+        Content content = new Content("modifier-content", "modifier-content",
+            "modifer-content", "yum", "us", "here", "here");
+        content.setModifiedProductIds(modified);
+        modifier.addContent(content);
+        
+        contentCurator.create(content);
+        productAdapter.createProduct(modifier);
+        
+        subCurator.create(new Subscription(o, modifier, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        
+        poolManager.refreshPools(o);
+        
+        
+        // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
+        // where entitling first to the modifier then to the modifiee causes the modifier's
+        // entitlement cert to get regenerated, but since it's all in the same http call,
+        // this ends up causing a hibernate failure (the old cert is asked to be deleted,
+        // but it hasn't been saved yet). Since getting the pool ordering right is tricky
+        // inside an entitleByProducts call, we do it in two singular calls here.  
+        poolManager.entitleByProduct(this.parentSystem,
+            "modifier", 1);
+        
+        try {
+            poolManager.entitleByProduct(this.parentSystem,
+                PRODUCT_VIRT_HOST, 1);
+        }
+        catch (EntityNotFoundException e) {
+            throw e;
+//            fail("Hibernate failed to properly save entitlement certs!");
+        }
+                
+        // If we get here, no exception was raised, so we're happy!
     }
 
     /**

@@ -102,7 +102,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public void delete(E entity) {
         E toDelete = find(entity.getId());
         currentSession().delete(toDelete);
-        flush();
     }
     
     public void bulkDelete(List<E> entities) {
