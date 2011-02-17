@@ -34,6 +34,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 import org.hibernate.annotations.ParamDef;
 
 /**
@@ -79,6 +80,7 @@ public class EntitlementCertificate extends AbstractCertificate
     @ManyToOne
     @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_cert_entitlement_fk_idx")
     private Entitlement entitlement;
 
     public CertificateSerial getSerial() {

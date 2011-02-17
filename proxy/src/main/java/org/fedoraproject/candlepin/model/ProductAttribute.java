@@ -29,6 +29,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * See Attributes interface for documentation.
@@ -53,6 +54,7 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     @ManyToOne
     @ForeignKey(name = "fk_product_id")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_prodattribute_prod_fk_idx")    
     private Product product;
 
     public ProductAttribute() {
