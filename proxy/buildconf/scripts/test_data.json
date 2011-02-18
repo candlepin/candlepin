@@ -49,6 +49,28 @@
             "content_url": "/path/to/awesomeos",
             "gpg_url": "/path/to/awesomeos/gpg/",
             "metadata_expire": 3600
+        },
+        {
+            "name": "awesomeos-server-scalable-fs",
+            "id": 3700,
+            "label": "awesomeos-server-scalable-fs",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos-server-scalable-fs",
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "metadata_expire": 3600,
+            "modified_products": ["37060"]
+        },
+        {
+            "name": "awesomeos-workstation-scalable-fs",
+            "id": 3701,
+            "label": "awesomeos-workstation-scalable-fs",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos-workstation-scalable-fs",
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "metadata_expire": 3600,
+            "modified_products": ["27060"]
         }
     ],
     "owners": [
@@ -219,6 +241,22 @@
             "type": "MKT",
             "provided_products": [
                 "37080"
+            ]
+        },
+        {
+            "name": "Awesome OS Scalable Filesystem Bits",
+            "id": "37090",
+            "content": [
+              [3700, true],
+              [3701, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Scalable Filesystem",
+            "id": "awesomeos-scalable-fs",
+            "type": "MKT",
+            "provided_products": [
+                "37090"
             ]
         },
         {
