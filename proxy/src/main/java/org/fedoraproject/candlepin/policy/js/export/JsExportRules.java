@@ -15,17 +15,18 @@
 package org.fedoraproject.candlepin.policy.js.export;
 
 import com.google.inject.Inject;
+
+import java.util.HashMap;
 import java.util.Map;
-import javax.script.ScriptException;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
-import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.mozilla.javascript.RhinoException;
 
 /**
  *
@@ -37,9 +38,8 @@ public class JsExportRules extends JsRules {
 
     @Inject
     public JsExportRules(RulesReaderProvider rulesReaderProvider,
-        ScriptEngineProvider jsEngineProvider,
         ProductServiceAdapter productAdapter) {
-        super(rulesReaderProvider, jsEngineProvider, "export_name_space");
+        super(rulesReaderProvider, "export_name_space");
 
         this.productAdapter = productAdapter;
     }
@@ -51,22 +51,24 @@ public class JsExportRules extends JsRules {
         Product product = this.productAdapter.getProductById(pool.getProductId());
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
 
-        jsEngine.put("entitlement", entitlement);
-        jsEngine.put("product", product);
-        jsEngine.put("attributes", allAttributes);
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("entitlement", entitlement);
+        args.put("product", product);
+        args.put("attributes", allAttributes);
 
         // just default to true if there are any errors
         Boolean canExport = true;
         try {
-            canExport = this.invokeMethod("can_export_entitlement");
+            canExport = this.invokeMethod("can_export_entitlement", args);
         }
         catch (NoSuchMethodException e) {
             log.warn("No method found: can_export_entitlement");
         }
-        catch (ScriptException e) {
+        catch (RhinoException e) {
             throw new RuleExecutionException(e);
         }
 
         return canExport;
     }
+
 }

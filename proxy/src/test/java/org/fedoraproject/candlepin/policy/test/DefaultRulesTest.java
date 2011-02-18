@@ -32,10 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import javax.script.ScriptEngineManager;
-
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
-import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -64,7 +61,6 @@ import org.xnap.commons.i18n.I18nFactory;
 public class DefaultRulesTest {
     private Enforcer enforcer;
     @Mock private RulesReaderProvider readerProvider;
-    @Mock private ScriptEngineProvider engineProvider;
     @Mock
     private ProductServiceAdapter prodAdapter;
     private Owner owner;
@@ -81,12 +77,9 @@ public class DefaultRulesTest {
             url.openStream());
 
         when(readerProvider.get()).thenReturn(inputStreamReader);
-        when(engineProvider.get()).thenReturn(
-            new ScriptEngineManager().getEngineByName("JavaScript"));
       
         enforcer = new EntitlementRules(new DateSourceImpl(),
             readerProvider, prodAdapter,
-            engineProvider,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
 
         owner = new Owner();

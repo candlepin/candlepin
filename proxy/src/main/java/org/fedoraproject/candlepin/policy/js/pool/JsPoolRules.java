@@ -16,10 +16,11 @@ package org.fedoraproject.candlepin.policy.js.pool;
 
 import org.fedoraproject.candlepin.policy.PoolRules;
 import com.google.inject.Inject;
+
+import java.util.HashMap;
 import java.util.Map;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
-import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.js.JsRules;
@@ -38,9 +39,8 @@ public class JsPoolRules extends JsRules implements PoolRules {
 
     @Inject
     public JsPoolRules(RulesReaderProvider rulesReaderProvider,
-        ScriptEngineProvider jsEngineProvider, PoolManager poolManager,
-        ProductServiceAdapter productAdapter) {
-        super(rulesReaderProvider, jsEngineProvider, "pool_name_space");
+        PoolManager poolManager, ProductServiceAdapter productAdapter) {
+        super(rulesReaderProvider, "pool_name_space");
 
         this.poolManager = poolManager;
         this.productAdapter = productAdapter;
@@ -54,14 +54,15 @@ public class JsPoolRules extends JsRules implements PoolRules {
         ReadOnlyProductCache cache = new ReadOnlyProductCache(productAdapter);
 
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
-
-        jsEngine.put("pool", new ReadOnlyPool(pool, cache));
-        jsEngine.put("product", new ReadOnlyProduct(product));
-        jsEngine.put("helper", new PoolHelper(this.poolManager,
+        
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("pool", new ReadOnlyPool(pool, cache));
+        args.put("product", new ReadOnlyProduct(product));
+        args.put("helper", new PoolHelper(this.poolManager,
                 this.productAdapter, pool, null));
-        jsEngine.put("attributes", allAttributes);
+        args.put("attributes", allAttributes);
 
-        invokeRule("global");
+        invokeRule("global", args);
     }
 
 }

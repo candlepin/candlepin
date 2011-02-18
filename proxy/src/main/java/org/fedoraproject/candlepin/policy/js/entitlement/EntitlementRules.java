@@ -25,12 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.script.Invocable;
-import javax.script.ScriptException;
-
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
-import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
@@ -51,6 +47,7 @@ import com.google.inject.Inject;
 
 import edu.emory.mathcs.backport.java.util.Arrays;
 import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.mozilla.javascript.RhinoException;
 
 /**
  * Enforces the Javascript Rules definition.
@@ -75,28 +72,14 @@ public class EntitlementRules extends JsRules implements Enforcer {
     private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
     
-    // Since we can't peek inside the return values from our java code,
-    // do the conversion from a js array to a java array inside rhino's context.
-    private static final String CONVERT_ARRAY_FUNCTION =
-        "function convertArray(type, arr) {\n" +
-        "    if (arr == null) {\n" +
-        "        return null;\n" +
-        "    }\n" +
-        "\n" +
-        "    var jArr = java.lang.reflect.Array.newInstance(type, arr.length);\n" +
-        "    for (var i = 0; i < arr.length; i++) {\n" +
-        "        jArr[i] = arr[i];\n" +
-        "    }\n" +
-        "    return jArr;\n" +
-        "};\n";
 
     @Inject
     public EntitlementRules(DateSource dateSource,
         RulesReaderProvider rulesReaderProvider,
         ProductServiceAdapter prodAdapter,
-        ScriptEngineProvider jsEngineProvider, I18n i18n) {
+        I18n i18n) {
 
-        super(rulesReaderProvider, jsEngineProvider, "entitlement_name_space");
+        super(rulesReaderProvider, "entitlement_name_space");
         this.dateSource = dateSource;
         this.prodAdapter = prodAdapter;
         this.i18n = i18n;
@@ -104,11 +87,9 @@ public class EntitlementRules extends JsRules implements Enforcer {
     }
 
     @Override
-    protected void rulesInit() throws NoSuchMethodException, ScriptException {
+    protected void rulesInit() throws NoSuchMethodException, RhinoException {
         String mappings = invokeMethod("attribute_mappings");
         this.attributesToRules = parseAttributeMappings(mappings);
-
-        this.jsEngine.eval(CONVERT_ARRAY_FUNCTION);
     }
 
     @Override
@@ -135,21 +116,23 @@ public class EntitlementRules extends JsRules implements Enforcer {
         String topLevelProductId = pool.getProductId();
         Product product = prodAdapter.getProductById(topLevelProductId);
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
-        jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("product", new ReadOnlyProduct(product));
-        jsEngine.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
-        jsEngine.put("pre", preHelper);
-        jsEngine.put("attributes", allAttributes);
-        jsEngine.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
-        jsEngine.put("log", rulesLogger);
+        
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", new ReadOnlyConsumer(consumer));
+        args.put("product", new ReadOnlyProduct(product));
+        args.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
+        args.put("pre", preHelper);
+        args.put("attributes", allAttributes);
+        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
+        args.put("log", rulesLogger);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + topLevelProductId);
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
-        invokeGlobalPreEntitlementRule();
-        callPreEntitlementRules(matchingRules);
+        invokeGlobalPreEntitlementRule(args);
+        callPreEntitlementRules(matchingRules, args);
 
         if (log.isDebugEnabled()) {
             for (ValidationError error : preHelper.getResult().getErrors()) {
@@ -180,12 +163,14 @@ public class EntitlementRules extends JsRules implements Enforcer {
         String topLevelProductId = pool.getProductId();
         Product product = prodAdapter.getProductById(topLevelProductId);
         Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
-        jsEngine.put("consumer", new ReadOnlyConsumer(c));
-        jsEngine.put("product", new ReadOnlyProduct(product));
-        jsEngine.put("post", postHelper);
-        jsEngine.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
-        jsEngine.put("attributes", allAttributes);
-        jsEngine.put("log", rulesLogger);
+        
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", new ReadOnlyConsumer(c));
+        args.put("product", new ReadOnlyProduct(product));
+        args.put("post", postHelper);
+        args.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
+        args.put("attributes", allAttributes);
+        args.put("log", rulesLogger);
 
         log.debug("Running post-entitlement rules for: " + c.getUuid() +
             " product: " + topLevelProductId);
@@ -193,14 +178,13 @@ public class EntitlementRules extends JsRules implements Enforcer {
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
 
-        invokeGlobalPostEntitlementRule();
+        invokeGlobalPostEntitlementRule(args);
         callPostEntitlementRules(matchingRules);
     }
 
     public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools) {
         this.init();
-        Invocable inv = (Invocable) jsEngine;
 
         ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
         
@@ -221,23 +205,21 @@ public class EntitlementRules extends JsRules implements Enforcer {
 
         Set<ReadOnlyProduct> readOnlyProducts = ReadOnlyProduct.fromProducts(products);
         productCache.addProducts(readOnlyProducts);
-
+        
         // Provide objects for the script:
-        jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("pools", readOnlyPools.toArray());
-        jsEngine.put("products", readOnlyProducts.toArray());
-        jsEngine.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
-        jsEngine.put("log", rulesLogger);
-
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", new ReadOnlyConsumer(consumer));
+        args.put("pools", readOnlyPools.toArray());
+        args.put("products", readOnlyProducts.toArray());
+        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
+        args.put("log", rulesLogger);
 
         ReadOnlyPool[] result = null;
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
-                Object output = invokeMethod(SELECT_POOL_PREFIX + rule.getRuleName());
-                result = (ReadOnlyPool[]) inv.invokeFunction("convertArray",
-                    org.fedoraproject.candlepin.policy.js.ReadOnlyPool.class,
-                    output);
+                Object output = invokeMethod(SELECT_POOL_PREFIX + rule.getRuleName(), args);
+                result = convertArray(output);
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
                     rule.getRuleName());
@@ -246,17 +228,15 @@ public class EntitlementRules extends JsRules implements Enforcer {
             catch (NoSuchMethodException e) {
                 // continue on to the next rule in the list.
             }
-            catch (ScriptException e) {
+            catch (RhinoException e) {
                 throw new RuleExecutionException(e);
             }
         }
         
         if (!foundMatchingRule) {
             try {
-                Object output = invokeMethod(GLOBAL_SELECT_POOL_FUNCTION);
-                result = (ReadOnlyPool[]) inv.invokeFunction("convertArray",
-                    org.fedoraproject.candlepin.policy.js.ReadOnlyPool.class,
-                    output);
+                Object output = invokeMethod(GLOBAL_SELECT_POOL_FUNCTION, args);
+                result = convertArray(output);
                 log.info("Excuted javascript rule: " +
                     GLOBAL_SELECT_POOL_FUNCTION);
             }
@@ -266,7 +246,7 @@ public class EntitlementRules extends JsRules implements Enforcer {
                 log.warn("Resorting to default pool selection behavior.");
                 return selectBestPoolDefault(pools);
             }
-            catch (ScriptException ex) {
+            catch (RhinoException ex) {
                 throw new RuleExecutionException(ex);
             }
         }
@@ -382,9 +362,10 @@ public class EntitlementRules extends JsRules implements Enforcer {
         }
     }
     
-    private void callPreEntitlementRules(List<Rule> matchingRules) {
+    private void callPreEntitlementRules(List<Rule> matchingRules,
+        Map<String, Object> args) {
         for (Rule rule : matchingRules) {
-            invokeRule(PRE_PREFIX + rule.getRuleName());
+            invokeRule(PRE_PREFIX + rule.getRuleName(), args);
         }
     }
 
@@ -394,26 +375,24 @@ public class EntitlementRules extends JsRules implements Enforcer {
         }
     }
 
-    private void invokeGlobalPreEntitlementRule() {
-        Invocable inv = (Invocable) jsEngine;
+    private void invokeGlobalPreEntitlementRule(Map<String, Object> args) {
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
-        invokeRule(GLOBAL_PRE_FUNCTION);
+        invokeRule(GLOBAL_PRE_FUNCTION, args);
     }
 
-    private void invokeGlobalPostEntitlementRule() {
-        Invocable inv = (Invocable) jsEngine;
+    private void invokeGlobalPostEntitlementRule(Map<String, Object> args) {
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
         try {
-            inv.invokeFunction(GLOBAL_POST_FUNCTION);
+            invokeMethod(GLOBAL_POST_FUNCTION, args);
             log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
         }
         catch (NoSuchMethodException ex) {
             // This is fine, I hope...
             log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
         }
-        catch (ScriptException ex) {
+        catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
         }
     }

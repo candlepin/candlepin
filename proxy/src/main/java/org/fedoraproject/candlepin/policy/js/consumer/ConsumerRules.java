@@ -14,9 +14,11 @@
  */
 package org.fedoraproject.candlepin.policy.js.consumer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.inject.Inject;
 import org.fedoraproject.candlepin.guice.RulesReaderProvider;
-import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
@@ -27,19 +29,19 @@ import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
 public class ConsumerRules extends JsRules {
 
     @Inject
-    public ConsumerRules(RulesReaderProvider rulesReaderProvider,
-        ScriptEngineProvider jsEngineProvider) {
-        super(rulesReaderProvider, jsEngineProvider, "consumer_delete_name_space");
+    public ConsumerRules(RulesReaderProvider rulesReaderProvider) {
+        super(rulesReaderProvider, "consumer_delete_name_space");
 
     }
 
     public ConsumerDeleteHelper onConsumerDelete(
             ConsumerDeleteHelper consumerDeleteHelper, Consumer consumer) {
         this.init();
-        jsEngine.put("consumer", new ReadOnlyConsumer(consumer));
-        jsEngine.put("helper", consumerDeleteHelper);
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", new ReadOnlyConsumer(consumer));
+        args.put("helper", consumerDeleteHelper);
 
-        invokeRule("global");
+        invokeRule("global", args);
         
         return consumerDeleteHelper;
     }
