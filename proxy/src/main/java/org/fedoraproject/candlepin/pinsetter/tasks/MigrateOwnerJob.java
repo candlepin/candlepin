@@ -32,5 +32,4 @@ public class MigrateOwnerJob implements Job {
     public static JobDetail migrateOwner(String key, String uri) {
         return null;
     }
-
 }
