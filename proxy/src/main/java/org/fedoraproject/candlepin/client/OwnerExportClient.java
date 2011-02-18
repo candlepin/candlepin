@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.client;
 
-import org.fedoraproject.candlepin.model.Owner;
+//import org.fedoraproject.candlepin.model.Owner;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -25,10 +25,11 @@ import javax.ws.rs.core.MediaType;
 /**
  * OwnerExportClient
  */
+@Path("/owners")
 public interface OwnerExportClient {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/export")
-    Owner exportOwner(@PathParam("owner_key") String ownerKey);
+    String exportOwner(@PathParam("owner_key") String ownerKey);
 }
