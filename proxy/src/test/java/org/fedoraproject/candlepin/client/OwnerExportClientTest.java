@@ -16,13 +16,16 @@ package org.fedoraproject.candlepin.client;
 
 import static org.junit.Assert.assertNotNull;
 
-//import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.resteasy.JsonProvider;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.jboss.resteasy.client.ClientExecutor;
+import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClientExecutor;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
@@ -43,13 +46,20 @@ public class OwnerExportClientTest {
         //httpclient.getParams().setAuthenticationPreemptive(true);
 
         ClientExecutor clientExecutor = new ApacheHttpClientExecutor(httpclient);
-        RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
+        ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
+        JsonProvider jsonprovider = new JsonProvider(new Config());
+        rpf.addMessageBodyReader(jsonprovider);
+        rpf.addMessageBodyWriter(jsonprovider);
+        RegisterBuiltin.register(rpf);
         OwnerExportClient oec = ProxyFactory.create(OwnerExportClient.class,
             "http://localhost:8080/candlepin/", clientExecutor);
         System.out.println("1");
-        String o = oec.exportOwner("admin");
+        ClientResponse<Owner> o = oec.exportOwner("admin");
         System.out.println("2");
         assertNotNull(o);
-        System.out.println(o);
+        System.out.println(o.getStatus());
+        Owner owner = o.getEntity();
+        assertNotNull(owner);
+        System.out.println(owner);
     }
 }
