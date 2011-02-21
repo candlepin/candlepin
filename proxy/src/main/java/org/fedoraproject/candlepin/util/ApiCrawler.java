@@ -43,7 +43,7 @@ import org.fedoraproject.candlepin.resource.RootResource;
 public class ApiCrawler {
     private ObjectMapper mapper = new ObjectMapper();
     private List<Class> httpClasses;
-    private final static String API_FILE = "target/candlepin_api.json";
+    private static final String API_FILE = "target/candlepin_api.json";
 
     public ApiCrawler() {
         httpClasses = new LinkedList<Class>();
