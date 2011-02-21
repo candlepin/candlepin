@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.util;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -30,13 +32,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.schema.JsonSchema;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.Rules;
-import org.fedoraproject.candlepin.model.Status;
 import org.fedoraproject.candlepin.resource.RootResource;
 
 /**
@@ -44,46 +41,27 @@ import org.fedoraproject.candlepin.resource.RootResource;
  * namespace looking for exposed API calls.
  */
 public class ApiCrawler {
-    private List<Class> modelClasses;
+    private ObjectMapper mapper = new ObjectMapper();
+    private List<Class> httpClasses;
+    private final static String API_FILE = "target/candlepin_api.json";
 
     public ApiCrawler() {
-
-        modelClasses = new LinkedList<Class>();
-        modelClasses.add(ConsumerType.class);
-        modelClasses.add(Status.class);
-        modelClasses.add(Rules.class);
+        httpClasses = new LinkedList<Class>();
+        httpClasses.add(GET.class);
+        httpClasses.add(POST.class);
+        httpClasses.add(PUT.class);
+        httpClasses.add(DELETE.class);
     }
 
-    public void run() {
-        for (Class c : modelClasses) {
-            writeSchema(c);
-        }
+    public void run() throws IOException {
         List<RestApiCall> allApiCalls = new LinkedList<RestApiCall>();
         for (Class c : RootResource.RESOURCE_CLASSES) {
             allApiCalls.addAll(processClass(c));
         }
 
-        // Now print the final results:
-        for (RestApiCall call : allApiCalls) {
-            call.print();
-        }
-    }
-
-    /**
-     * @param class1
-     */
-    private void writeSchema(Class clazz) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-            JsonSchema schema = mapper.generateJsonSchema(clazz);
-            System.out.println(clazz.getSimpleName().toLowerCase());
-            System.out.println(mapper.writeValueAsString(schema));
-            System.out.println("\n");
-        }
-        catch (Exception e) {
-            System.out.println("Unable to create json schema for " + clazz.toString());
-        }
+        FileWriter jsonFile = new FileWriter(API_FILE);
+        mapper.writeValue(jsonFile, allApiCalls);
+        jsonFile.close();
     }
 
     private List<RestApiCall> processClass(Class c) {
@@ -123,21 +101,10 @@ public class ApiCrawler {
     }
 
     private void processHttpVerb(Method m, RestApiCall apiCall) {
-        GET get = m.getAnnotation(GET.class);
-        if (get != null) {
-            apiCall.addHttpVerb("GET");
-        }
-        PUT put = m.getAnnotation(PUT.class);
-        if (put != null) {
-            apiCall.addHttpVerb("PUT");
-        }
-        POST post = m.getAnnotation(POST.class);
-        if (post != null) {
-            apiCall.addHttpVerb("POST");
-        }
-        DELETE delete = m.getAnnotation(DELETE.class);
-        if (delete != null) {
-            apiCall.addHttpVerb("DELETE");
+        for (Class httpClass : httpClasses) {
+            if (m.getAnnotation(httpClass) != null) {
+                apiCall.addHttpVerb(httpClass.getSimpleName());
+            }
         }
     }
 
@@ -214,29 +181,24 @@ public class ApiCrawler {
             returnType = type;
         }
 
-        public void print() {
-            System.out.println(getFormattedHttpVerbs() + " " + this.url);
-            System.out.print("  Allowed roles:");
-            for (Role allowed : allowedRoles) {
-                System.out.print(" " + allowed);
-            }
-            System.out.print("\n");
-            if (queryParams.size() > 0) {
-                System.out.println("  Query params:");
-                for (ApiParam param : queryParams) {
-                    System.out.println("    " + param.getName() + " - " + param.getType());
-                }
-            }
-            System.out.println("  Returns: " + returnType);
-            System.out.println("\n");
+        public List<Role> getAllowedRoles() {
+            return allowedRoles;
         }
 
-        private String getFormattedHttpVerbs() {
-            String verbs = "";
-            for (String verb : httpVerbs) {
-                verbs = verbs + " " + verb;
-            }
-            return verbs;
+        public List<String> getHttpVerbs() {
+            return httpVerbs;
+        }
+
+        public List<ApiParam> getQueryParams() {
+            return queryParams;
+        }
+
+        public String getReturnType() {
+            return returnType;
+        }
+
+        public String getUrl() {
+            return url;
         }
 
         private static class ApiParam {
@@ -258,7 +220,7 @@ public class ApiCrawler {
         }
     }
 
-    public static void main(String [] args) {
+    public static void main(String [] args) throws Exception {
         ApiCrawler crawler = new ApiCrawler();
         crawler.run();
     }

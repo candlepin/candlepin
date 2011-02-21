@@ -193,6 +193,8 @@ define "candlepin" do
 
   desc 'Crawl the REST API and print a summary.'
   task :apicrawl do
+    options.test = 'no'
+
     # Join compile classpath with the package jar:
     cp = [project('candlepin').package(:jar)] | compile_classpath
     Java::Commands.java('org.fedoraproject.candlepin.util.ApiCrawler', {:classpath => cp})
