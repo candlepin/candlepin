@@ -44,6 +44,8 @@ import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -78,8 +80,9 @@ public class DefaultRulesTest {
 
         when(readerProvider.get()).thenReturn(inputStreamReader);
       
+        JsRules jsRules = new JsRulesProvider(readerProvider).get();
         enforcer = new EntitlementRules(new DateSourceImpl(),
-            readerProvider, prodAdapter,
+            jsRules, prodAdapter,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
 
         owner = new Owner();

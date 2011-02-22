@@ -75,6 +75,8 @@ import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.policy.PoolRules;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
@@ -120,6 +122,9 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(JobListener.class).to(PinsetterJobListener.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
 
+        bind(JsRulesProvider.class).asEagerSingleton();
+        bind(JsRules.class).toProvider(JsRulesProvider.class);
+        
         bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         bind(EventSink.class).to(EventSinkForTesting.class);

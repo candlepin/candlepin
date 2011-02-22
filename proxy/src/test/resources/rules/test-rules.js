@@ -10,6 +10,10 @@ function pool_name_space() {
     return Pool;
 }
 
+function export_name_space() {
+	return Export;
+}
+
 var Entitlement = {
 	// defines mapping of product attributes to functions
 	// the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
@@ -104,4 +108,9 @@ var ConsumerDelete = {
 var Pool = {
     global: function() {
     }
+}
+
+var Export = {
+	global: function() {
+	}
 }

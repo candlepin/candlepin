@@ -85,6 +85,8 @@ import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 import org.fedoraproject.candlepin.policy.PoolRules;
 
@@ -134,6 +136,8 @@ public class CandlepinModule extends AbstractModule {
         bind(StatusResource.class);
         bind(CandlepinExceptionMapper.class);   
         bind(Principal.class).toProvider(PrincipalProvider.class);
+        bind(JsRulesProvider.class).asEagerSingleton();
+        bind(JsRules.class).toProvider(JsRulesProvider.class);
 
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);

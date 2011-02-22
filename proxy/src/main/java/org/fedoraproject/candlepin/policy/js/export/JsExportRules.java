@@ -19,7 +19,6 @@ import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -31,25 +30,23 @@ import org.mozilla.javascript.RhinoException;
 /**
  *
  */
-public class JsExportRules extends JsRules {
+public class JsExportRules {
     private Logger log = Logger.getLogger(JsExportRules.class);
 
+    private JsRules jsRules;
     private ProductServiceAdapter productAdapter;
 
     @Inject
-    public JsExportRules(RulesReaderProvider rulesReaderProvider,
-        ProductServiceAdapter productAdapter) {
-        super(rulesReaderProvider, "export_name_space");
-
+    public JsExportRules(JsRules jsRules, ProductServiceAdapter productAdapter) {
+        this.jsRules = jsRules;
         this.productAdapter = productAdapter;
+        jsRules.init("export_name_space");
     }
 
     public boolean canExport(Entitlement entitlement) {
-        this.init();
-
         Pool pool = entitlement.getPool();
         Product product = this.productAdapter.getProductById(pool.getProductId());
-        Map<String, String> allAttributes = getFlattenedAttributes(product, pool);
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("entitlement", entitlement);
@@ -59,7 +56,7 @@ public class JsExportRules extends JsRules {
         // just default to true if there are any errors
         Boolean canExport = true;
         try {
-            canExport = this.invokeMethod("can_export_entitlement", args);
+            canExport = jsRules.invokeMethod("can_export_entitlement", args);
         }
         catch (NoSuchMethodException e) {
             log.warn("No method found: can_export_entitlement");

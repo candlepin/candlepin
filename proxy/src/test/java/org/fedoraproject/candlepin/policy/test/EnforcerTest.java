@@ -38,6 +38,8 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -79,8 +81,10 @@ public class EnforcerTest extends DatabaseTestFixture {
         
         when(readerProvider.get()).thenReturn(reader);        
         
+        JsRules jsRules = new JsRulesProvider(readerProvider).get();
+        
         enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            readerProvider, productAdapter, i18n);
+            jsRules, productAdapter, i18n);
     }
     
     @Test
