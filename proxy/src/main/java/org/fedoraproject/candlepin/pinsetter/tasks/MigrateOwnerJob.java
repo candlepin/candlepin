@@ -14,22 +14,97 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
+import org.fedoraproject.candlepin.client.CandlepinConnection;
+import org.fedoraproject.candlepin.client.OwnerClient;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.log4j.Logger;
+import org.hibernate.tool.hbm2x.StringUtils;
+import org.jboss.resteasy.client.ClientResponse;
 import org.quartz.Job;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import javax.ws.rs.core.Response.Status;
 
 /**
  * MigrateOwnerJob
  */
 public class MigrateOwnerJob implements Job {
+    private static Logger log = Logger.getLogger(MigrateOwnerJob.class);
 
+    private OwnerCurator ownerCurator;
+    private CandlepinConnection conn;
+    
+    @Inject
+    public MigrateOwnerJob(OwnerCurator oc, CandlepinConnection connection) {
+        ownerCurator = oc;
+        conn = connection;
+    }
+    
     @Override
-    public void execute(JobExecutionContext context)
+    public void execute(JobExecutionContext ctx)
         throws JobExecutionException {
+        String key = ctx.getMergedJobDataMap().getString("owner_key");
+        String uri = ctx.getMergedJobDataMap().getString("uri");
+        
+        validateInput(key, uri);
+        
+        log.info("Migrating owner [" + key +
+            "] to candlepin instance running on [" + uri + "]");
+        
+        Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+        OwnerClient client = conn.connect(creds, uri);
+        ClientResponse<Owner> resp = client.exportOwner(key);
+        
+        if (resp.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+            throw new NotFoundException("Can't find owner [" + key + "]");
+        }
+        
+        Owner owner = resp.getEntity();
+        
+        // totally won't work cuz of the id not being null and
+        // will probably piss off hibernate :(
+        ownerCurator.create(owner);
     }
 
     public static JobDetail migrateOwner(String key, String uri) {
-        return null;
+        validateInput(key, uri);
+
+        JobDetail detail = new JobDetail("migrate_owner_" + Util.generateUUID(),
+            MigrateOwnerJob.class);
+        JobDataMap map = new JobDataMap();
+        map.put("owner_key", key);
+        map.put("uri", uri);
+        
+        detail.setJobDataMap(map);
+        return detail;
+    }
+    
+    private static void validateInput(String key, String uri) {
+        if (StringUtils.isEmpty(key)) {
+            throw new BadRequestException("Invalid owner key");
+        }
+        
+        try {
+            new URL(uri);
+        }
+        catch (MalformedURLException e) {
+            throw new BadRequestException("Invalid URL [" + uri + "]", e);
+        }
+
     }
 }

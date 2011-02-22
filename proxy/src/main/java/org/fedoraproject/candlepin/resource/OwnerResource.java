@@ -76,6 +76,7 @@ import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.pinsetter.tasks.MigrateOwnerJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.quartz.JobDetail;
 
@@ -418,13 +419,18 @@ public class OwnerResource {
 
         return RefreshPoolsJob.forOwner(owner);
     }
-    
+
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("import")
     public JobDetail migrateOwner(@QueryParam("id") String ownerKey,
                                   @QueryParam("uri") String url) {
-        return null;
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+        return MigrateOwnerJob.migrateOwner(ownerKey, url);
     }
 
     @GET
@@ -447,6 +453,10 @@ public class OwnerResource {
         log.debug("owner is null? " + (o == null));
         if (o != null) {
             log.debug("Owner: " + o.toString());
+        }
+        if (o == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
         }
         return o;
     }

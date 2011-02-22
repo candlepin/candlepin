@@ -14,52 +14,47 @@
  */
 package org.fedoraproject.candlepin.client;
 
-import static org.junit.Assert.assertNotNull;
-
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.resteasy.JsonProvider;
+
+import com.google.inject.Inject;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.jboss.resteasy.client.ClientExecutor;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClientExecutor;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-//import org.junit.Test;
-
 
 /**
- * OwnerExportClientTest
+ * CandlepinConnection sets up the remote connection to another Candlepin
+ * instance. It takes in the stand Config object to configure the JsonProvider
+ * then takes in some Credentials to login via the connect method.
  */
-public class OwnerClientTest {
+public class CandlepinConnection {
 
-    //@Test
-    public void exportOwner() {
-        Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-        HttpClient httpclient = new HttpClient();
-        httpclient.getState().setCredentials(AuthScope.ANY, creds);
-        //httpclient.getParams().setAuthenticationPreemptive(true);
-
-        ClientExecutor clientExecutor = new ApacheHttpClientExecutor(httpclient);
+    @Inject
+    public CandlepinConnection(Config config) {
         ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
-        JsonProvider jsonprovider = new JsonProvider(new Config());
+        JsonProvider jsonprovider = new JsonProvider(config);
         rpf.addMessageBodyReader(jsonprovider);
         rpf.addMessageBodyWriter(jsonprovider);
         RegisterBuiltin.register(rpf);
-        OwnerClient oec = ProxyFactory.create(OwnerClient.class,
-            "http://localhost:8080/candlepin/", clientExecutor);
-        System.out.println("1");
-        ClientResponse<Owner> o = oec.exportOwner("admin");
-        System.out.println("2");
-        assertNotNull(o);
-        System.out.println(o.getStatus());
-        Owner owner = o.getEntity();
-        assertNotNull(owner);
-        System.out.println(owner);
+    }
+
+    /**
+     * Connects to another Candlepin instance located at the given uri.
+     * @param creds authentication credentials for the given uri.
+     * @param uri the Candlepin instance to connect to
+     * @return OwnerClient proxy used to interact with Candlepin via REST API.
+     */
+    public OwnerClient connect(Credentials creds, String uri) {
+        HttpClient httpclient = new HttpClient();
+        httpclient.getState().setCredentials(AuthScope.ANY, creds);
+        ClientExecutor clientExecutor = new ApacheHttpClientExecutor(httpclient);
+        return ProxyFactory.create(OwnerClient.class, uri, 
+            clientExecutor);
     }
 }
