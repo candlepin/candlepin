@@ -28,7 +28,7 @@ import javax.ws.rs.core.MediaType;
  * OwnerExportClient
  */
 @Path("/owners")
-public interface OwnerExportClient {
+public interface OwnerClient {
 
     @GET
     @Path("{owner_key}/export")

@@ -36,7 +36,7 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 /**
  * OwnerExportClientTest
  */
-public class OwnerExportClientTest {
+public class OwnerClientTest {
 
     //@Test
     public void exportOwner() {
@@ -51,7 +51,7 @@ public class OwnerExportClientTest {
         rpf.addMessageBodyReader(jsonprovider);
         rpf.addMessageBodyWriter(jsonprovider);
         RegisterBuiltin.register(rpf);
-        OwnerExportClient oec = ProxyFactory.create(OwnerExportClient.class,
+        OwnerClient oec = ProxyFactory.create(OwnerClient.class,
             "http://localhost:8080/candlepin/", clientExecutor);
         System.out.println("1");
         ClientResponse<Owner> o = oec.exportOwner("admin");
