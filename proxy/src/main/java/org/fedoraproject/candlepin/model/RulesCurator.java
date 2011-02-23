@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.model;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.hibernate.Criteria;
 
 import com.wideplay.warp.persist.Transactional;
 
@@ -32,9 +31,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
 import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 
 /**
  * RulesCurator
