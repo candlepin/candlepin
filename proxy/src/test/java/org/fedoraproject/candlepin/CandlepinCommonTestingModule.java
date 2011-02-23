@@ -27,7 +27,6 @@ import org.fedoraproject.candlepin.guice.CandlepinModule;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
-import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
@@ -113,9 +112,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
             StubEntitlementCertServiceAdapter.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
         bind(ScriptEngineProvider.class);
-        bind(RulesReaderProvider.class);
-        //bind(Reader.class).annotatedWith(Names.named("RulesReader"))
-        //    .toProvider(RulesReaderProvider.class);
         bind(I18n.class).toProvider(I18nProvider.class);
 
         bind(JobFactory.class).to(GuiceJobFactory.class);

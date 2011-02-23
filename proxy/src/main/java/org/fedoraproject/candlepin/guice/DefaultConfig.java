@@ -41,7 +41,6 @@ class DefaultConfig extends AbstractModule {
         bind(LoggingFilter.class).asEagerSingleton();
         bind(LoggingConfig.class).asEagerSingleton();
         bind(ScriptEngineProvider.class);
-        bind(RulesReaderProvider.class);
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
         bind(IdentityCertServiceAdapter.class).to(
