@@ -457,6 +457,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         this.entitlementCurator.create(e1);
         this.poolCurator.merge(e1.getPool());
+        this.poolCurator.refresh(pool);
         try {
             e1.setCreated(dateFormat.parse(date));
             this.entitlementCurator.merge(e1);
