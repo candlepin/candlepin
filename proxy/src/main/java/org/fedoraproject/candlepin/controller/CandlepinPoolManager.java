@@ -155,27 +155,34 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Map all  pools for this owner/product that have a
         // subscription ID associated with them.
-        Map<String, Pool> subToPoolMap = new HashMap<String, Pool>();
+        Map<String, List<Pool>> subToPoolMap = new HashMap<String, List<Pool>>();
         for (Pool p : pools) {
             if (p.getSubscriptionId() != null) {
-                subToPoolMap.put(p.getSubscriptionId(), p);
+                if (!subToPoolMap.containsKey(p.getSubscriptionId())) {
+                    subToPoolMap.put(p.getSubscriptionId(), new LinkedList<Pool>());
+                }
+                subToPoolMap.get(p.getSubscriptionId()).add(p);
             }
         }
+
         for (Subscription sub : subs) {
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
                 this.createPoolForSubscription(sub);
                 subToPoolMap.remove(sub.getId());
             }
             else {
-                Pool existingPool = subToPoolMap.get(sub.getId());
-                updatePoolForSubscription(existingPool, sub);
-                subToPoolMap.remove(sub.getId());
+                for (Pool existingPool : subToPoolMap.get(sub.getId())) {
+                    updatePoolForSubscription(existingPool, sub);
+                    subToPoolMap.remove(sub.getId());
+                }
             }
         }
 
         // delete pools whose subscription disappeared:
-        for (Entry<String, Pool> entry : subToPoolMap.entrySet()) {
-            deletePool(entry.getValue());
+        for (Entry<String, List<Pool>> entry : subToPoolMap.entrySet()) {
+            for (Pool p : entry.getValue()) {
+                deletePool(p);
+            }
         }
     }
 
@@ -284,7 +291,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
 
-    private boolean poolExistsForSubscription(Map<String, Pool> subToPoolMap,
+    private boolean poolExistsForSubscription(Map<String, List<Pool>> subToPoolMap,
             String id) {
         return subToPoolMap.containsKey(id);
     }
