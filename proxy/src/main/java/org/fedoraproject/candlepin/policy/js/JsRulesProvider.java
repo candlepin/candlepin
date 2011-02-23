@@ -14,10 +14,12 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-import java.io.IOException;
+import java.util.Date;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.guice.RulesReaderProvider;
+import org.fedoraproject.candlepin.model.RulesCurator;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Script;
@@ -36,10 +38,13 @@ import com.google.inject.Provider;
 public class JsRulesProvider implements Provider<JsRules> {
     private Logger log = Logger.getLogger(JsRulesProvider.class);
 
-    private RulesReaderProvider rulesReaderProvider;
+    private RulesCurator rulesCurator;
     
     private Script script;
     private Scriptable scope;
+    private Date updated;
+    // Use this lock to access script, scope and updated
+    private ReadWriteLock scriptLock = new ReentrantReadWriteLock();
 
     /**
      * DynamicScopeContextFactory - replace the standard rhino context factory with one that
@@ -62,30 +67,48 @@ public class JsRulesProvider implements Provider<JsRules> {
     }
     
     @Inject
-    public JsRulesProvider(RulesReaderProvider rulesReaderProvider) {
-        this.rulesReaderProvider = rulesReaderProvider;
+    public JsRulesProvider(RulesCurator rulesCurator) {
+        this.rulesCurator = rulesCurator;
 
-        /*
-         * These are the expensive operations (initStandardObjects and compileReader/exec).
-         *  We do them once here, and define this provider as a singleton, so it's only
-         *  done at provider creation or whenever rules are refreshed.
-         */
+        log.debug("Compiling rules for initial load");
+        this.updated = new Date(0L);
+        compileRules(rulesCurator);
+    }
+
+    /**
+     * These are the expensive operations (initStandardObjects and compileReader/exec).
+     *  We do them once here, and define this provider as a singleton, so it's only
+     *  done at provider creation or whenever rules are refreshed.
+     *  
+     * @param rulesCurator
+     */
+    private void compileRules(RulesCurator rulesCurator) {
+        scriptLock.writeLock().lock();
+        
+        // Check to see if we need to recompile. we do this inside the write lock just to
+        // avoid race conditions where we might double compile
+        Date newUpdated = rulesCurator.getUpdated();
+        if (newUpdated.equals(this.updated)) {
+            scriptLock.writeLock().unlock();
+            return;
+        }
+        
+        log.debug("Recompiling rules with timestamp: " + newUpdated);
+        
         Context context = Context.enter();
         context.setOptimizationLevel(9);
         scope = context.initStandardObjects(null, true);
         try {
-            script = context.compileReader(rulesReaderProvider.get(), "rules", 1, null);
+            script = context.compileString(rulesCurator.getRules().getRules(), "rules", 1,
+                null);
             script.exec(context, scope);
             ((ScriptableObject) scope).sealObject();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            this.updated = newUpdated;
         }
         finally {
             Context.exit();
+            scriptLock.writeLock().unlock();
         }
-
     }
     
     public JsRules get() {
@@ -93,11 +116,20 @@ public class JsRulesProvider implements Provider<JsRules> {
          * Create a new thread/request local javascript scope for the JsRules,
          * based on the preinitialized global one (which contains our js rules).
          */
-        Context context = Context.enter();
-        Scriptable rulesScope = context.newObject(scope);
-        rulesScope.setPrototype(scope);
-        rulesScope.setParentScope(null);
-        Context.exit();    
+        // try and recompile (if needed) first
+        compileRules(this.rulesCurator);
+        Scriptable rulesScope;
+        scriptLock.readLock().lock();
+        try {
+            Context context = Context.enter();
+            rulesScope = context.newObject(scope);
+            rulesScope.setPrototype(scope);
+            rulesScope.setParentScope(null);
+            Context.exit();
+        }
+        finally {
+            scriptLock.readLock().unlock();
+        }
         
         return new JsRules(rulesScope);
     }

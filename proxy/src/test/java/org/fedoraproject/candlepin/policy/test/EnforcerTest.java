@@ -36,6 +36,8 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Rules;
+import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JsRules;
@@ -55,7 +57,7 @@ import org.mockito.MockitoAnnotations;
 public class EnforcerTest extends DatabaseTestFixture {
 
     @Mock private ProductServiceAdapter productAdapter;
-    @Mock private RulesReaderProvider readerProvider;
+    @Mock private RulesCurator rulesCurator;
     private Enforcer enforcer;
     private Owner owner;
     private Consumer consumer;
@@ -65,7 +67,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
     @Before
-    public void createEnforcer() {
+    public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
         
         owner = createOwner();
@@ -75,13 +77,22 @@ public class EnforcerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
 
-        Reader reader 
+        BufferedReader reader 
             = new BufferedReader(new InputStreamReader(
                 getClass().getResourceAsStream("/rules/test-rules.js")));
+        StringBuilder builder = new StringBuilder();
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line + "\n");
+        }
+        reader.close();
+
+        Rules rules = mock(Rules.class);
+        when(rules.getRules()).thenReturn(builder.toString());
+        when(rulesCurator.getRules()).thenReturn(rules);
+        when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
         
-        when(readerProvider.get()).thenReturn(reader);        
-        
-        JsRules jsRules = new JsRulesProvider(readerProvider).get();
+        JsRules jsRules = new JsRulesProvider(rulesCurator).get();
         
         enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
             jsRules, productAdapter, i18n);

@@ -16,9 +16,11 @@ package org.fedoraproject.candlepin.model;
 
 import java.io.Serializable;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -41,6 +43,7 @@ public class Rules extends AbstractHibernateObject{
     private String id;
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "rules_blob")
     private String rules;
     

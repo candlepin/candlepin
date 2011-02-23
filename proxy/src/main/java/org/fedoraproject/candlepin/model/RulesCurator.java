@@ -17,16 +17,24 @@ package org.fedoraproject.candlepin.model;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.hibernate.Criteria;
 
 import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Date;
 import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 /**
  * RulesCurator
@@ -65,6 +73,29 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
             return rulesFromFile(getDefaultRulesFile());
         }
         return existingRuleSet.get(0);
+    }
+    
+    /**
+     * Get the last updated timestamp for the rules (either from disk or db),
+     * without reading in the full rules file.
+     * 
+     * @return the last updated timestamp for the rules
+     */
+    public Date getUpdated() {
+        List<Rules> dbRules = listAll();
+        if (dbRules.size() > 0) {
+            return dbRules.get(0).getUpdated();
+        }
+        
+        URL rulesUrl = this.getClass().getResource(getDefaultRulesFile());
+        File rulesFile;
+        try {
+            rulesFile = new File(rulesUrl.toURI());
+        }
+        catch (URISyntaxException e) {
+            throw new CuratorException(e);
+        }
+        return new Date(rulesFile.lastModified());
     }
     
     @AllowRoles(roles = Role.SUPER_ADMIN)

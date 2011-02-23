@@ -21,6 +21,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -36,12 +38,15 @@ import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.CuratorException;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.model.Rules;
+import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JsRules;
@@ -49,6 +54,7 @@ import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 import org.junit.Before;
@@ -62,7 +68,7 @@ import org.xnap.commons.i18n.I18nFactory;
  */
 public class DefaultRulesTest {
     private Enforcer enforcer;
-    @Mock private RulesReaderProvider readerProvider;
+    @Mock private RulesCurator rulesCurator;
     @Mock
     private ProductServiceAdapter prodAdapter;
     private Owner owner;
@@ -78,9 +84,20 @@ public class DefaultRulesTest {
         InputStreamReader inputStreamReader = new InputStreamReader(
             url.openStream());
 
-        when(readerProvider.get()).thenReturn(inputStreamReader);
+        BufferedReader reader = new BufferedReader(inputStreamReader);
+        StringBuilder builder = new StringBuilder();
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line + "\n");
+        }
+        reader.close();
+
+        Rules rules = mock(Rules.class);
+        when(rules.getRules()).thenReturn(builder.toString());
+        when(rulesCurator.getRules()).thenReturn(rules);
+        when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
       
-        JsRules jsRules = new JsRulesProvider(readerProvider).get();
+        JsRules jsRules = new JsRulesProvider(rulesCurator).get();
         enforcer = new EntitlementRules(new DateSourceImpl(),
             jsRules, prodAdapter,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
