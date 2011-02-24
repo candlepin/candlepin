@@ -110,7 +110,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
             DefaultSubscriptionServiceAdapter.class);
         bind(EntitlementCertServiceAdapter.class).to(
             StubEntitlementCertServiceAdapter.class);
-        bind(RulesCurator.class).to(TestRulesCurator.class);
         bind(ScriptEngineProvider.class);
         bind(I18n.class).toProvider(I18nProvider.class);
 

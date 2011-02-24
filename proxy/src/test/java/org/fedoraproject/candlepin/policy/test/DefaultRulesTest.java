@@ -701,7 +701,7 @@ public class DefaultRulesTest {
         Product product2 = new Product(productId2, "A test product");
         Product product3 = new Product(productId3, "A test product");
 
-        product2.setAttribute("multi-entitle", "yes");
+        product2.setAttribute("multi-entitlement", "yes");
 
         Pool pool1 = TestUtil.createPool(owner, product1);
         pool1.setId("DEAD-BEEF");
