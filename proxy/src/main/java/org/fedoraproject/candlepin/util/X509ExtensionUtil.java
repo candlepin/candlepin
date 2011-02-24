@@ -158,12 +158,20 @@ public class X509ExtensionUtil {
         return toReturn;
     }
 
-    public Set<X509ExtensionWrapper> contentExtensions(Set<ProductContent> productContent) {
-        
+    public Set<X509ExtensionWrapper> contentExtensions(Set<ProductContent> productContent,
+        String contentPrefix) {
+
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         // for (Content con : content) {
         for (ProductContent pc : productContent) {
+
+            // augment the content path with the prefix if it is passed in
+            String contentPath = pc.getContent().getContentUrl();
+            if (contentPrefix != null) {
+                contentPath = contentPrefix + contentPath;
+            }
+
             String contentOid = OIDUtil.REDHAT_OID +
                 "." +
                 OIDUtil.TOPLEVEL_NAMESPACES
@@ -183,7 +191,7 @@ public class X509ExtensionUtil {
                 false, new DERUTF8String(pc.getContent().getVendor())));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_DOWNLOAD_URL_KEY),
-                false, new DERUTF8String(pc.getContent().getContentUrl())));
+                false, new DERUTF8String(contentPath)));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY), false,
                 new DERUTF8String(pc.getContent().getGpgUrl())));
