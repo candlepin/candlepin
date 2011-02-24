@@ -7,8 +7,8 @@ require 'date'
 require 'json'
 require 'pp'
 
-SMALL_SUB_QUANTITY = 5
-LARGE_SUB_QUANTITY = 10
+SMALL_SUB_QUANTITY = 100
+LARGE_SUB_QUANTITY = 200
 
 filenames=["test_products.json"]
 if not ARGV.empty?
