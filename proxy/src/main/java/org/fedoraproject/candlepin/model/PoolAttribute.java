@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * See Attributes interface for documentation.
@@ -51,6 +52,7 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     @ManyToOne
     @ForeignKey(name = "fk_pool_id", inverseName = "fk_pool_attribute_id")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_poolattribute_pool_fk_idx")
     private Pool pool;
     
     public PoolAttribute() {

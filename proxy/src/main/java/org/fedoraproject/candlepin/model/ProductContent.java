@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.Index;
 import org.hibernate.annotations.Parent;
 
 /**
@@ -38,6 +39,7 @@ public class ProductContent extends AbstractHibernateObject implements
     
     @ManyToOne
     @JoinColumn(name = "content_id", nullable = false, updatable = false)   
+    @Index(name = "cp_prodcont_cont_fk_idx")    
     private Content content;
     
     private Boolean enabled;

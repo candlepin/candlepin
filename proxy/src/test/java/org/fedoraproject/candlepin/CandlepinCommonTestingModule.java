@@ -27,7 +27,6 @@ import org.fedoraproject.candlepin.guice.CandlepinModule;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
-import org.fedoraproject.candlepin.guice.RulesReaderProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
@@ -75,6 +74,8 @@ import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.policy.PoolRules;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
@@ -111,15 +112,15 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
             StubEntitlementCertServiceAdapter.class);
         bind(RulesCurator.class).to(TestRulesCurator.class);
         bind(ScriptEngineProvider.class);
-        bind(RulesReaderProvider.class);
-        //bind(Reader.class).annotatedWith(Names.named("RulesReader"))
-        //    .toProvider(RulesReaderProvider.class);
         bind(I18n.class).toProvider(I18nProvider.class);
 
         bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
 
+        bind(JsRulesProvider.class).asEagerSingleton();
+        bind(JsRules.class).toProvider(JsRulesProvider.class);
+        
         bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         bind(EventSink.class).to(EventSinkForTesting.class);

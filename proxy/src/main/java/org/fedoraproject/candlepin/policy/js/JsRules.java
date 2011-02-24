@@ -16,85 +16,98 @@ package org.fedoraproject.candlepin.policy.js;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.guice.RulesReaderProvider;
-import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.RhinoException;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.Undefined;
+import org.mozilla.javascript.Wrapper;
 
 /**
- *
+ * JsRules - javascript runner 
  */
-public abstract class JsRules {
+public class JsRules {
     private Logger log = Logger.getLogger(JsRules.class);
 
-    private ScriptEngineProvider jsEngineProvider;
-    private RulesReaderProvider rulesReaderProvider;
-    protected ScriptEngine jsEngine;
-    protected Object rulesNameSpace;
+    private Object rulesNameSpace;
     private String namespace;
+    private Scriptable scope;
 
     private boolean initialized = false;
-
-    public JsRules(RulesReaderProvider rulesReaderProvider,
-        ScriptEngineProvider jsEngineProvider, String namespace) {
-        this.jsEngineProvider = jsEngineProvider;
-        this.rulesReaderProvider = rulesReaderProvider;
-        this.namespace = namespace;
+    
+    public JsRules(Scriptable scope) {
+        this.scope = scope;
     }
 
-    /*
-     * The init method allows the expensive creation of the rules engine
-     * to be deferred until it is actually needed. All non constructor
-     * methods must call this before doing any work.
+    /**
+     * initialize the javascript rules for the provided namespace. you must run this
+     * before trying to run a javascript rule or method.
+     * 
+     * @param namespace the javascript rules namespace containing the rules type you want
      */
-    protected final synchronized void init() {
-
+    public void init(String namespace) {
+        this.namespace = namespace;
+        
         if (!initialized) {
-            this.jsEngine = this.jsEngineProvider.get();
 
-            if (this.jsEngine == null) {
-                throw new RuntimeException("No Javascript engine");
-            }
-
+            Context context = Context.enter();
             try {
-                this.jsEngine.eval(rulesReaderProvider.get());
-                this.rulesNameSpace =
-                    ((Invocable) this.jsEngine)
-                        .invokeFunction(this.namespace);
-
+                Object func = ScriptableObject.getProperty(scope, namespace);
+                this.rulesNameSpace = unwrapReturnValue(((Function) func).call(context,
+                    scope, scope, Context.emptyArgs));
+                
                 this.initialized = true;
-                this.rulesInit();
             }
-            catch (ScriptException ex) {
+            catch (RhinoException ex) {
                 this.initialized = false;
                 throw new RuleParseException(ex);
             }
-            catch (NoSuchMethodException ex) {
-                this.initialized = false;
-                throw new RuleParseException(ex);
+            finally {
+                Context.exit();
             }
         }
     }
 
-    /**
-     * This is for subclasses to perform whatever initialization they need.
-     */
-    protected void rulesInit() throws NoSuchMethodException, ScriptException { }
+    Object unwrapReturnValue(Object result) {
+        if (result instanceof Wrapper) {
+            result = ((Wrapper) result).unwrap();
+        }
 
-    protected <T> T invokeMethod(String method) throws NoSuchMethodException,
-            ScriptException {
-        this.init();
-        Invocable inv = (Invocable) jsEngine;
-        
-        return (T) inv.invokeMethod(this.rulesNameSpace, method);
+        return result instanceof Undefined ? null : result;
     }
 
-    protected void invokeRule(String ruleName) {
+    @SuppressWarnings("unchecked")
+    public <T> T invokeMethod(String method) throws NoSuchMethodException,
+            RhinoException {
+        Scriptable localScope = Context.toObject(this.rulesNameSpace, scope);
+        Object func = ScriptableObject.getProperty(localScope, method);
+        if (!(func instanceof Function)) {
+            throw new NoSuchMethodException("no such javascript method: " + method); 
+        }
+        Context context = Context.enter();
+        try {
+            return (T) unwrapReturnValue(((Function) func).call(context, scope, localScope,
+                Context.emptyArgs));
+        }
+        finally {
+            Context.exit();
+        }
+    }
+
+    public <T> T invokeMethod(String method, Map<String, Object> args)
+        throws NoSuchMethodException, RhinoException {
+        for (String key : args.keySet()) {
+            scope.put(key, scope, args.get(key));
+        }
+        return invokeMethod(method);
+    }
+
+    public void invokeRule(String ruleName) {
         log.debug("Running rule: " + ruleName + " in namespace: " + namespace);
 
         try {
@@ -103,11 +116,18 @@ public abstract class JsRules {
         catch (NoSuchMethodException ex) {
             log.warn("No rule found: " + ruleName + " in namespace: " + namespace);
         }
-        catch (ScriptException ex) {
+        catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
         }
     }
-
+    
+    public void invokeRule(String ruleName, Map<String, Object> args) {
+        for (String key : args.keySet()) {
+            scope.put(key, scope, args.get(key));
+        }
+        invokeRule(ruleName);
+    }
+        
     /**
      * Both products and pools can carry attributes, we need to trigger rules for each.
      * In this map, pool attributes will override product attributes, should the same
@@ -117,7 +137,7 @@ public abstract class JsRules {
      * @param pool Pool can be null.
      * @return Map of all attribute names and values. Pool attributes have priority.
      */
-    protected Map<String, String> getFlattenedAttributes(Product product, Pool pool) {
+    public Map<String, String> getFlattenedAttributes(Product product, Pool pool) {
         Map<String, String> allAttributes = new HashMap<String, String>();
         for (Attribute a : product.getAttributes()) {
             allAttributes.put(a.getName(), a.getValue());
@@ -129,5 +149,9 @@ public abstract class JsRules {
 
         }
         return allAttributes;
+    }
+    
+    public ReadOnlyPool[] convertArray(Object output) {
+        return (ReadOnlyPool[]) Context.jsToJava(output, ReadOnlyPool[].class);
     }
 }

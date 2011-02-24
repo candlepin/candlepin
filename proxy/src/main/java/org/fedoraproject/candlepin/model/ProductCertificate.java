@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * ProductCertificate
@@ -52,6 +53,7 @@ public class ProductCertificate extends AbstractCertificate {
     @ManyToOne
     @ForeignKey(name = "fk_cert_product")
     @JoinColumn(nullable = false)
+    @Index(name = "cp_prodcert_prod_fk_idx")    
     private Product product;
 
     /**

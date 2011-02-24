@@ -108,6 +108,8 @@ AMQP  = [group('qpid-common', 'qpid-client',
          'commons-configuration:commons-configuration:jar:1.6',
          'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
 
+RHINO = 'rhino:js:jar:1.7R2'
+
 LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 
 #############################################################################
@@ -168,7 +170,7 @@ define "candlepin" do
   compile.options.target = '1.6'
   uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
   compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, uselog]
+    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO, uselog]
   compile.with compile_classpath
  
   #
@@ -180,7 +182,7 @@ define "candlepin" do
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
   uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, generate, uselog
+  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, generate, uselog
 
   #
   # javadoc projects

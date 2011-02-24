@@ -7,6 +7,9 @@ require 'date'
 require 'json'
 require 'pp'
 
+SMALL_SUB_QUANTITY = 5
+LARGE_SUB_QUANTITY = 10
+
 filenames=["test_products.json"]
 if not ARGV.empty?
   filenames.clear
@@ -113,13 +116,13 @@ data['products'].each do |product|
           # and create subscriptions for it:
           if id.to_i.to_s != id:
 
-              # Create a 5 and a 10 with the slightly similar begin/end dates.
+              # Create a SMALL and a LARGE with the slightly similar begin/end dates.
               subscription = cp.create_subscription(owner_key,
-                  product_ret['id'], 5, provided_products,
+                  product_ret['id'], SMALL_SUB_QUANTITY, provided_products,
                   contract_number, '12331131231', startDate1, endDate1)
               contract_number += 1
               subscription = cp.create_subscription(owner_key,
-                  product_ret['id'], 10, provided_products,
+                  product_ret['id'], LARGE_SUB_QUANTITY, provided_products,
                   contract_number, '12331131231', startDate1, endDate1)
 
               # Create a random int token for each subscription:
