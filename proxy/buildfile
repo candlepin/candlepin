@@ -169,10 +169,10 @@ define "candlepin" do
   # building
   #
   compile.options.target = '1.6'
-  uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
   compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO, uselog]
+    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO]
   compile.with compile_classpath
+  compile.with LOGDRIVER if Buildr.environment == 'logdriver'
  
   #
   # testing
@@ -182,8 +182,8 @@ define "candlepin" do
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, generate, uselog
+  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, generate
+  test.with LOGDRIVER if Buildr.environment == 'logdriver'
 
   #
   # javadoc projects
