@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.6
+Version: 0.2.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,35 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Thu Feb 24 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.7-1
+- bump candlepin-deps to 0.0.13 to include rhino (jesusr@redhat.com)
+- Improve the error messages returned for OAuth errors (bkearney@redhat.com)
+- Use a function to calculate the Pool quantity on the fetch. (bkearney@redhat.com)
+- More entitlementz (bkearney@redhat.com)
+- Checkstyle cleanup (jbowes@redhat.com)
+- Remove unused RulesReaderProvider (jbowes@redhat.com)
+- Recompile the rules when a new version is detected (jbowes@redhat.com)
+- Pull out the quantity to an easily changeable constant (bkearney@redhat.com)
+- Couple more indexes (bkearney@redhat.com)
+- precompile and share our javascript rules across threads (jbowes@redhat.com)
+- Use rhino instead of the java scripting api (jbowes@redhat.com)
+- checkstyle: static final instead of final static (jesusr@redhat.com)
+- Making apicrawler spit out a json file. (jharris@redhat.com)
+- I18N update. (dgoodwin@redhat.com)
+- Add add-on product to test data. (dgoodwin@redhat.com)
+- Remove unneeded import (jbowes@redhat.com)
+- Not exporting virt_only entitlements or entitlement certs.  (jharris@redhat.com)
+- 676870: Fix entitling modifier and modifiee in the same call (jbowes@redhat.com)
+- Make domain consumer spec use more randomness (jbowes@redhat.com)
+- Add a couple of indexes based on what I think are common usge patterns (bkearney@redhat.com)
+- Porting multiplier cuke features to rspec. (jharris@redhat.com)
+- tech debt: checkstyle whitespace fix (jesusr@redhat.com)
+- Small refactoring to use File.read (jharris@redhat.com)
+- Porting domain consumer cuke test to rspec. (jharris@redhat.com)
+- tech debt: adding unit tests (jmrodri@gmail.com)
+- need full url to logdriver when using download. (jesusr@redhat.com)
+- 677405: change error message to be more generic. (jesusr@redhat.com)
+
 * Tue Feb 15 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.6-1
 - Fix buildr deprecation warning. (dgoodwin@redhat.com)
 - Small ApiCrawler output cleanup. (dgoodwin@redhat.com)
