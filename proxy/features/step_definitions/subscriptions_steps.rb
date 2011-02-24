@@ -40,12 +40,6 @@ Given /^test owner has a subscription for "([^\"]*)" with quantity (\d+) and tok
   # NOTE: do not refresh pools here, we just want a subscription created.
 end
 
-When /^I delete the subscription for product "([^\"]*)"$/ do |product|
-  subscription_id = @subscriptions[product]['id']
-  
-  @candlepin.delete_subscription(subscription_id)
-end
-
 Then /^I have (\d+) subscriptions$/ do |subscription_size|
     subscriptions = @current_owner_cp.list_subscriptions(@test_owner['key'])
     subscriptions.length.should == subscription_size.to_i
@@ -60,50 +54,3 @@ def create_subscription(product, quantity)
 
   @subscriptions[product] = created
 end
-
-When /^test owner changes the "([^\"]*)" of the subscription by (-{0,1}\d+) days$/ do |field, d|
-  subscription = @current_owner_cp.list_subscriptions(@test_owner['key'])[0]
-  subscription[field] = subscription[field].to_date + d.to_i
-  @candlepin.update_subscription(subscription)
-end
-
-When /^he refreshes the pools$/ do
-  @old_certs = @consumer_cp.list_certificates()
-  @candlepin.refresh_pools(@test_owner['key'])
-end
-
-When /^test owner changes the quantity of the subscription by (-{0,1}\d+)$/ do |q|
- subscription = @current_owner_cp.list_subscriptions(@test_owner['key'])[0]
- subscription['quantity'] = subscription['quantity'].to_i + q.to_i
- @candlepin.update_subscription(subscription)
-end
-
-Then /^the properties "([^\"]*)" of entitlement and certificates should equal subscriptions$/ do |properties|
-  # Only admins can list subs for now, unlike with pools.
-  subs = @candlepin.list_subscriptions(@test_owner['key'])[0]
-  entitlements = @consumer_cp.list_entitlements
-  certs = {}
-  
-  entitlements.each do |ent|
-    ent['certificates'].each do |cert|
-      ssl_cert = OpenSSL::X509::Certificate.new(cert['cert'])
-      certs[cert['serial']['id']] = {
-        'startDate' => ssl_cert.not_before().strftime('%Y-%m-%d'),
-        'endDate'   => ssl_cert.not_after().strftime('%Y-%m-%d')
-      }
-    end
-  end
-
-  properties.split(",").each do |field|
-    field.strip!
-
-    entitlements.each do |ent|
-      subs[field].to_date.should == ent[field].to_date
-
-      ent['certificates'].each do |cert|
-        subs[field].to_date.should == certs[cert['serial']['id']][field].to_date if ['endDate', 'startDate'].include? field
-      end
-    end
-  end
-end
-
