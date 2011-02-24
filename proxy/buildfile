@@ -9,6 +9,7 @@ COPYRIGHT = ""
 require 'buildr/java/emma'
 require 'net/http'
 require 'spec/rake/spectask'
+require 'json'
 
 #############################################################################
 # DEPENDENCIES
@@ -168,10 +169,10 @@ define "candlepin" do
   # building
   #
   compile.options.target = '1.6'
-  uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
   compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO, uselog]
+    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO]
   compile.with compile_classpath
+  compile.with LOGDRIVER if Buildr.environment == 'logdriver'
  
   #
   # testing
@@ -181,8 +182,8 @@ define "candlepin" do
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  uselog = (Buildr.environment == 'logdriver' ? LOGDRIVER : '')
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, generate, uselog
+  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, generate
+  test.with LOGDRIVER if Buildr.environment == 'logdriver'
 
   #
   # javadoc projects
@@ -194,12 +195,49 @@ define "candlepin" do
   package(:war, :id=>"candlepin").classes << generate  
 
   desc 'Crawl the REST API and print a summary.'
-  task :apicrawl do
+  task :apicrawl  do
     options.test = 'no'
 
     # Join compile classpath with the package jar:
     cp = [project('candlepin').package(:jar)] | compile_classpath
     Java::Commands.java('org.fedoraproject.candlepin.util.ApiCrawler', {:classpath => cp})
+
+    classes = artifacts(cp).collect do |a|
+      task(a.to_s).invoke
+      File.expand_path a.to_s
+    end
+
+    # Just run the doclet on the *Resource files
+    sources = project('candlepin').compile.sources.collect do |dir|
+      Dir["#{dir}/**/*Resource.java"]
+    end.flatten
+
+    # Add in the options as the last arg
+    sources << {:name => 'Candlepin API',
+                :classpath => classes,
+                :doclet => 'org.fedoraproject.candlepin.util.ApiDoclet',
+                :docletpath => ['target/classes', classes].flatten.join(File::PATH_SEPARATOR),
+                :output => 'target'}
+
+    Java::Commands.javadoc(*sources) 
+
+    api = JSON.parse(File.read('target/candlepin_api.json'))
+    comments = JSON.parse(File.read('target/candlepin_comments.json'))
+
+    combined = Hash[api.collect { |a| [a['method'], a] }]
+    comments.each do |c|
+      if combined.has_key? c['method']
+        combined[c['method']].merge!(c)
+      else
+        combined[c['method']] = c
+      end
+    end
+
+    File.open('target/candlepin_methods.json', 'w') { |f| JSON.dump(combined.values, f) }
+
+    # Cleanup
+    rm 'target/candlepin_api.json'
+    rm 'target/candlepin_comments.json'
   end
 
   #

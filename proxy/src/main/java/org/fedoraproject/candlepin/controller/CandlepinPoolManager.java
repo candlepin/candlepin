@@ -488,6 +488,7 @@ public class CandlepinPoolManager implements PoolManager {
             this.regenerateCertificatesOf(regenEnt);
         }
         
+        this.poolCurator.refresh(pool);
         return e;
     }
 
@@ -625,6 +626,7 @@ public class CandlepinPoolManager implements PoolManager {
         poolCurator.merge(entitlement.getPool());
         entCertAdapter.revokeEntitlementCertificates(entitlement);
         entitlementCurator.delete(entitlement);
+        poolCurator.refresh(entitlement.getPool());
 
         // Find all of the entitlements that modified the original entitlement,
         // and regenerate those to remove the content sets.

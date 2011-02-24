@@ -96,6 +96,11 @@ public class PoolResource {
      * @param listAll
      *            use with consumerUuid to list all pools for the consumer's owner 
      * @return the list of available entitlement pools.
+     *
+     * @httpcode 200 if the request succeeded
+     * @httpcode 400 if both consumer and owner are given, or if a product id is
+     *               specified without a consumer or owner
+     * @httpcode 404 if a specified consumer or owner is not found
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -143,9 +148,25 @@ public class PoolResource {
         return poolCurator.listAvailableEntitlementPools(c, o, productId, true,
             activeOnDate);
     }
-    
+
+    /**
+     * Creates a new pool - NOTE:  This method should probably be removed!
+     *
+     * The preferred method of creating pools is to first create a subscription,
+     * and then refresh pools for the owner.
+     *
+     * @deprecated in favor of using the subscription resource
+     *
+     * @param pool the pool to create
+     * @return the newly created pool
+     *
+     * @httpcode 200 if the pool was created successfully
+     * @httpcode 404 if the posted pool's owner is not found
+     * @httpcode 400 if there is an error while creating the pool
+     */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     public Pool createPool(Pool pool) {
         // BOOO! We assume that pool.owner is partially constructed
         // (alternatively: we only care about the id field) - take it any way you want.
@@ -161,6 +182,8 @@ public class PoolResource {
         
         Pool toReturn = poolManager.createPool(pool);
         if (toReturn != null) {
+            // TODO:  This should probably return a 201 CREATED instead!
+
             return toReturn;
         }
 
@@ -174,6 +197,9 @@ public class PoolResource {
      * @param id
      *            the id of the pool
      * @return the pool identified by the id
+     *
+     * @httpcode 200 if the request succeeded
+     * @httpcode 404 if the pool with the specified id is not found
      */
     @GET
     @Path("/{pool_id}")
@@ -190,6 +216,15 @@ public class PoolResource {
             i18n.tr("Entitlement Pool with ID '{0}' could not be found", id));
     }
 
+    /**
+     * Delete the pool with the given id
+     *
+     * @param id the id of the pool to delete
+     *
+     * @httpcode 200 if the pool was deleted successfully 
+     * @httpcode 404 if the pool with the given id is not found
+     * @httpdcode 403 if the pool is backed by a subscription
+     */
     @DELETE
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -208,5 +243,7 @@ public class PoolResource {
         }
         
         poolManager.deletePool(toReturn);
+
+        // TODO:  This should be returning a 204 as there is no content to return
     }
 }

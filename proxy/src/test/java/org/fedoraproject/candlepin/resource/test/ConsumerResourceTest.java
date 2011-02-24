@@ -77,7 +77,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.internal.Lists;
-import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * ConsumerResourceTest
@@ -109,10 +108,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     private UserCurator userCurator;
     private User someuser;
-    
+
     @Override
     protected Module getGuiceOverrideModule() {
-        return new ProductCertCreationModule(); 
+        return new ProductCertCreationModule();
     }
 
     @Before
@@ -130,16 +129,16 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         userCurator = injector.getInstance(UserCurator.class);
         someuser = userCurator.create(new User(owner, USER_NAME, "dontcare"));
 
-        principal = new UserPrincipal(USER_NAME, owner, Lists
-            .newArrayList(Role.OWNER_ADMIN));
+        principal = new UserPrincipal(USER_NAME, owner,
+            Lists.newArrayList(Role.OWNER_ADMIN));
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
         product = TestUtil.createProduct();
         productCurator.create(product);
 
-        pool = createPoolAndSub(owner, product, 10L, TestDateUtil
-            .date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+        pool = createPoolAndSub(owner, product, 10L,
+            TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(pool);
 
         eventFactory = injector.getInstance(EventFactory.class);
@@ -162,8 +161,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer))
             .thenReturn(certificates);
-        when(mockedConsumerCurator.findByUuid(consumer.getUuid()))
-            .thenReturn(consumer);
+        when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
+            consumer);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, null, null,
@@ -180,7 +179,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         List<CertificateSerialDto> serials) {
         assertEquals(3, serials.size());
         assertTrue(serials.get(0).getSerial() > 0);
-        
+
     }
 
     private List<EntitlementCertificate> createEntitlementCertificates() {
@@ -214,8 +213,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         String serialsToFilter = serial1.toString() + "," + serial2.toString();
 
-        certificates = consumerResource.getEntitlementCertificates(consumer
-            .getUuid(), serialsToFilter);
+        certificates = consumerResource.getEntitlementCertificates(
+            consumer.getUuid(), serialsToFilter);
         assertEquals(2, certificates.size());
         assertEquals(serial1, certificates.get(0).getSerial().getId());
         assertEquals(serial2, certificates.get(1).getSerial().getId());
@@ -226,7 +225,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
             standardSystemType);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
-        Consumer submitted = consumerResource.create(toSubmit,
+        Consumer submitted = consumerResource.create(
+            toSubmit,
             new UserPrincipal(someuser.getUsername(), owner, Collections
                 .singletonList(Role.OWNER_ADMIN)), null);
 
@@ -306,13 +306,13 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testBindMultipleParams() throws Exception {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, new String[] {product.getId()}, null, null, null);
+            null, new String[]{ product.getId() }, null, null, null);
     }
 
     @Test(expected = NotFoundException.class)
     public void testBindByPoolBadConsumerUuid() throws Exception {
-        consumerResource.bind("notarealuuid", pool.getId(), null,
-            null, null, null, null);
+        consumerResource.bind("notarealuuid", pool.getId(), null, null, null,
+            null, null);
     }
 
     @Test
@@ -322,7 +322,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.setUuid("1023131");
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted = consumerResource.create(toSubmit,
+        Consumer submitted = consumerResource.create(
+            toSubmit,
             new UserPrincipal(someuser.getUsername(), owner, Collections
                 .singletonList(Role.OWNER_ADMIN)), null);
 
@@ -337,8 +338,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerType type = new ConsumerType(standardSystemType.getLabel());
         assertNull(type.getId());
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
-        submitted = consumerResource.create(nulltypeid, new UserPrincipal(
-            someuser.getUsername(), owner, Collections
+        submitted = consumerResource.create(
+            nulltypeid,
+            new UserPrincipal(someuser.getUsername(), owner, Collections
                 .singletonList(Role.OWNER_ADMIN)), null);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
@@ -355,19 +357,20 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0)
             .getSerial().getId());
-        assertEquals(0, consumerResource.listEntitlements(consumer.getUuid(),
-            null).size());
+        assertEquals(0,
+            consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
     public void unbindByInvalidSerialShouldFail() {
-        consumerResource.unbindBySerial(consumer.getUuid(), Long.valueOf(1234L));
+        consumerResource
+            .unbindBySerial(consumer.getUuid(), Long.valueOf(1234L));
     }
 
     @Test(expected = NotFoundException.class)
     public void unbindBySerialWithInvalidUuidShouldFail() {
-        consumerResource
-            .unbindBySerial(NON_EXISTENT_CONSUMER, Long.valueOf(1234L));
+        consumerResource.unbindBySerial(NON_EXISTENT_CONSUMER,
+            Long.valueOf(1234L));
     }
 
     @Test(expected = ForbiddenException.class)
@@ -401,8 +404,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(consumer));
 
-        assertEquals(3, consumerResource.getEntitlementCertificates(
-            consumer.getUuid(), null).size());
+        assertEquals(
+            3,
+            consumerResource.getEntitlementCertificates(consumer.getUuid(),
+                null).size());
     }
 
     @Test(expected = ForbiddenException.class)
@@ -441,8 +446,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         setupPrincipal(owner, Role.OWNER_ADMIN);
 
-        assertEquals(0, consumerResource.getEntitlementCertificates(
-            consumer.getUuid(), null).size());
+        assertEquals(
+            0,
+            consumerResource.getEntitlementCertificates(consumer.getUuid(),
+                null).size());
     }
 
     @Test(expected = ForbiddenException.class)
@@ -483,8 +490,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        assertEquals(3, consumerResource.listEntitlements(consumer.getUuid(),
-            null).size());
+        assertEquals(3,
+            consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }
 
     @Test(expected = ForbiddenException.class)
@@ -539,8 +546,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         setupPrincipal(owner, Role.OWNER_ADMIN);
 
-        assertEquals(3, consumerResource.listEntitlements(consumer.getUuid(),
-            null).size());
+        assertEquals(3,
+            consumerResource.listEntitlements(consumer.getUuid(), null).size());
     }
 
     @Test
@@ -577,8 +584,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         subCurator.create(sub);
         subTokenCurator.create(token);
         poolManager.refreshPools(owner);
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod
-            .getId());
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
+            prod.getId());
         assertEquals(1, pools.size());
 
         List<Entitlement> ents = consumerResource.bind(consumer.getUuid(),
@@ -604,9 +611,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         String username = "(foo)@{baz}.[com]&?";
         userCurator.create(new User(owner, username, "dontcare"));
 
-        UserPrincipal emailuser = new UserPrincipal(username, owner, Lists
-            .newArrayList(Role.OWNER_ADMIN));
-        
+        UserPrincipal emailuser = new UserPrincipal(username, owner,
+            Lists.newArrayList(Role.OWNER_ADMIN));
+
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(emailuser.getUsername());
 
@@ -615,7 +622,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // Not sure if this should be hard-coded to default
         assertEquals(username, personal.getName());
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void onlyOnePersonalConsumer() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
@@ -713,8 +720,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificateWithValidConsumer() {
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
-            null, null, null, null, null, null, null, null, null,
-            null, null, mgr, null, null, null);
+            null, null, null, null, null, null, null, null, null, null, null,
+            mgr, null, null, null);
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(), null);
         Mockito.verify(mgr, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(this.consumer));
@@ -726,10 +733,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
      */
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
-        PoolManager mgr = mock(PoolManager.class);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
-            null, null, this.entitlementCurator, null, null, null, null, null, null,
-            null, null, mgr, null, null, null);
+            null, null, this.entitlementCurator, null, null, null, null, null,
+            null, null, null, this.poolManager, null, null, null);
 
         List<Entitlement> resultList = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, null, 1, null,
@@ -738,12 +744,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Set<EntitlementCertificate> entCertsBefore = ent.getCertificates();
 
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(),
-                    ent.getId());
+            ent.getId());
         Set<EntitlementCertificate> entCertsAfter = ent.getCertificates();
+
         assertFalse(entCertsBefore.equals(entCertsAfter));
 
     }
-
 
     @Test
     public void testInvalidProductId() {
@@ -757,11 +763,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         }
         fail("No Exception was thrown");
     }
-    
+
     @Test
-    public void testRegenerateIdCerts()
-        throws GeneralSecurityException, IOException {
-        
+    public void testRegenerateIdCerts() throws GeneralSecurityException,
+        IOException {
+
         // using lconsumer simply to avoid hiding consumer. This should
         // get renamed once we refactor this test suite.
         IdentityCertServiceAdapter mockedIdSvc = Mockito
@@ -775,14 +781,14 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         IdentityCertificate ic = lconsumer.getIdCert();
         assertNotNull(ic);
 
-        when(mockedConsumerCurator.findByUuid(lconsumer.getUuid()))
-            .thenReturn(lconsumer);
-        when(mockedIdSvc.regenerateIdentityCert(lconsumer))
-            .thenReturn(createIdCert());
+        when(mockedConsumerCurator.findByUuid(lconsumer.getUuid())).thenReturn(
+            lconsumer);
+        when(mockedIdSvc.regenerateIdentityCert(lconsumer)).thenReturn(
+            createIdCert());
 
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator,
-            null, null, null, null, mockedIdSvc, null, null,
-            sink, factory, null, null, null, null, null, null, null);
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+            null, null, null, mockedIdSvc, null, null, sink, factory, null,
+            null, null, null, null, null, null);
 
         Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid());
 
@@ -791,11 +797,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         assertNotNull(ic1);
         assertFalse(ic.equals(ic1));
     }
-    
+
     private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
+            bind(PKIReader.class).to(CandlepinPKIReader.class)
+                .asEagerSingleton();
         }
     }
 }

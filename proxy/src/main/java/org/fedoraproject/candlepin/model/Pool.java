@@ -40,6 +40,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.ParamDef;
@@ -138,6 +139,11 @@ public class Pool extends AbstractHibernateObject
     private String contractNumber;
     private String accountNumber;
 
+    @Formula("(select sum(ent.quantity) from cp_entitlement ent, " +
+             "cp_pool_entitlements cpe " +
+             "where ent.id = cpe.entitlement_id and cpe.pool_id = id)")
+    private Long consumed;
+
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
 
@@ -217,11 +223,7 @@ public class Pool extends AbstractHibernateObject
      * @return quantity currently consumed.
      */
     public Long getConsumed() {
-        long consumed = 0L;
-        for (Entitlement e : getEntitlements()) {
-            consumed += e.getQuantity();
-        }
-        return consumed;
+        return consumed == null ? 0 : consumed;
     }
 
     /**
