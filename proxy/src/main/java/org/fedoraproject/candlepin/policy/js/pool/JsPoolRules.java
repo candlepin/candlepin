@@ -14,14 +14,18 @@
  */
 package org.fedoraproject.candlepin.policy.js.pool;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.policy.PoolRules;
 import com.google.inject.Inject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
@@ -32,6 +36,8 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
  *
  */
 public class JsPoolRules implements PoolRules {
+
+    private static Logger log = Logger.getLogger(JsPoolRules.class);
 
     private JsRules jsRules;
     private PoolManager poolManager;
@@ -61,6 +67,22 @@ public class JsPoolRules implements PoolRules {
         args.put("attributes", allAttributes);
 
         jsRules.invokeRule("global", args);
+    }
+
+    @Override
+    public List<Pool> createPool(Subscription sub) {
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("sub", sub);
+        List<Pool> poolsCreated = null;
+        try {
+            poolsCreated = jsRules.invokeMethod("createPools", args);
+        }
+        catch (NoSuchMethodException e) {
+            log.error("Unable to find javascript method: createPools");
+            log.error(e);
+            throw new IseException("Unable to create pool.");
+        }
+        return poolsCreated;
     }
 
 }

@@ -48,6 +48,7 @@ import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
@@ -167,7 +168,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Subscription sub : subs) {
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                this.createPoolForSubscription(sub);
+                this.createPoolsForSubscription(sub);
                 subToPoolMap.remove(sub.getId());
             }
             else {
@@ -301,28 +302,17 @@ public class CandlepinPoolManager implements PoolManager {
      * @param sub
      * @return the newly created Pool
      */
-    public Pool createPoolForSubscription(Subscription sub) {
+    public List<Pool> createPoolsForSubscription(Subscription sub) {
         if (log.isDebugEnabled()) {
             log.debug("Creating new pool for new sub: " + sub.getId());
         }
-        Long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(), 
-            sub.getProduct().getName(), providedProducts,
-                quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
-                sub.getAccountNumber());
-        if (sub.getProvidedProducts() != null) {
-            for (Product p : sub.getProvidedProducts()) {
-                ProvidedProduct providedProduct = new ProvidedProduct(
-                    p.getId(), p.getName());
-                providedProduct.setPool(newPool);
-                providedProducts.add(providedProduct);
-            }
+
+        List<Pool> pools = poolRules.createPool(sub);
+        for (Pool pool : pools) {
+            createPool(pool);
         }
 
-        newPool.setSubscriptionId(sub.getId());
-        createPool(newPool);
-        return newPool;
+        return pools;
     }
 
     public Pool createPool(Pool p) {

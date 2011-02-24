@@ -21,7 +21,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
@@ -68,7 +67,6 @@ import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
@@ -164,6 +162,13 @@ public class PoolManagerTest {
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), anyBoolean(),
                 any(Date.class))).thenReturn(pools);
+
+        List<Pool> newPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(s.getProduct());
+        p.setSubscriptionId(s.getId());
+        newPools.add(p);
+        when(poolRulesMock.createPool(s)).thenReturn(newPools);
+
         this.manager.refreshPools(getOwner());
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
@@ -411,23 +416,15 @@ public class PoolManagerTest {
     public void testCreatePoolForSubscription() {
         final Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
-        this.manager.createPoolForSubscription(s);
-        verify(this.mockPoolCurator, times(1)).create(
-            argThat(new ArgumentMatcher<Pool>() {
-                @Override
-                public boolean matches(Object arg0) {
-                    Pool pool = (Pool) arg0;
-                    // is it right to check reference?
-                    // equals not implemented for most of the objects below.
-                    return pool.getOwner() == s.getOwner() &&
-                        pool.getProductId() == s.getProduct().getId() &&
-                        pool.getStartDate() == s.getStartDate() &&
-                        pool.getEndDate() == s.getEndDate() &&
-                        pool.getSubscriptionId() == s.getId() &&
-                        pool.getQuantity().equals(
-                            s.getQuantity() * s.getProduct().getMultiplier());
-                }
-            }));
+
+        List<Pool> newPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(s.getProduct());
+        p.setSubscriptionId(s.getId());
+        newPools.add(p);
+        when(poolRulesMock.createPool(s)).thenReturn(newPools);
+
+        this.manager.createPoolsForSubscription(s);
+        verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
     @Test

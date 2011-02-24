@@ -14,7 +14,10 @@
  */
 package org.fedoraproject.candlepin.policy;
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Subscription;
 
 /**
  *
@@ -22,4 +25,6 @@ import org.fedoraproject.candlepin.model.Pool;
 public interface PoolRules {
 
     void onCreatePool(Pool pool);
+
+    List<Pool> createPool(Subscription sub);
 }

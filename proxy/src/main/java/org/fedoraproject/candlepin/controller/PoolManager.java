@@ -33,7 +33,7 @@ public interface PoolManager {
      * @param sub
      * @return the newly created Pool
      */
-    Pool createPoolForSubscription(Subscription sub);
+    List<Pool> createPoolsForSubscription(Subscription sub);
 
     /**
      * Cleanup entitlements and safely delete the given pool.

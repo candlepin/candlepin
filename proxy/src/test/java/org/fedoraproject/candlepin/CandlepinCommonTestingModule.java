@@ -30,8 +30,6 @@ import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
-import org.fedoraproject.candlepin.model.RulesCurator;
-import org.fedoraproject.candlepin.model.test.TestRulesCurator;
 import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;

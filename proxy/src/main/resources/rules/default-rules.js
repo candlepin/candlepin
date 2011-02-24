@@ -98,7 +98,7 @@ function hasNoProductOverlap(combination) {
 			var product = products[i];
 			if (!contains(seen_product_ids, product.id)) {
 				seen_product_ids.push(product.id);
-			} else if (product.getAttribute("multi-entitle") != "yes") {
+			} else if (product.getAttribute("multi-entitlement") != "yes") {
 				return false;
 			}
 		}
@@ -328,6 +328,28 @@ var Pool = {
                     virt_quantity.toString(), virt_attributes);
             }
         }
+    },
+
+    createPools: function () {
+	var pools = new java.util.LinkedList();
+	var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
+        var providedProducts = new java.util.HashSet();
+        var newPool = new org.fedoraproject.candlepin.model.Pool(sub.getOwner(), sub.getProduct().getId(),
+            sub.getProduct().getName(), providedProducts,
+                quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
+                sub.getAccountNumber());
+        if (sub.getProvidedProducts() != null) {
+            for each (var p in sub.getProvidedProducts().toArray()) {
+                var providedProduct = new org.fedoraproject.candlepin.model.
+			ProvidedProduct(p.getId(), p.getName());
+                providedProduct.setPool(newPool);
+                providedProducts.add(providedProduct);
+            }
+        }
+        newPool.setSubscriptionId(sub.getId());
+        pools.add(newPool);
+
+	return pools;
     }
 }
 
