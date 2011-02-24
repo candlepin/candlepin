@@ -97,6 +97,10 @@ public class ApiCrawler {
         processQueryParams(m, apiCall);
 
         apiCall.setReturnType(getReturnType(m));
+
+        // for matching up with documentation
+        apiCall.setMethod(getQualifiedName(m));
+
         return apiCall;
     }
 
@@ -144,10 +148,15 @@ public class ApiCrawler {
         return typeString;
     }
 
+    private static String getQualifiedName(Method method) {
+        return method.getDeclaringClass().getName() + "." + method.getName();
+    }
+
     /**
      * RestApiCall: Helper object for storing information about an API method.
      */
     static class RestApiCall {
+        private String method;
         private String url;
         private List<Role> allowedRoles;
         private List<String> httpVerbs;
@@ -159,6 +168,10 @@ public class ApiCrawler {
             allowedRoles.add(Role.SUPER_ADMIN); // assumed to always have access
             httpVerbs = new LinkedList<String>();
             queryParams = new LinkedList<ApiParam>();
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
         }
 
         public void setUrl(String url) {
@@ -199,6 +212,10 @@ public class ApiCrawler {
 
         public String getUrl() {
             return url;
+        }
+
+        public String getMethod() {
+            return method;
         }
 
         private static class ApiParam {
