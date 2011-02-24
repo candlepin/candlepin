@@ -155,6 +155,8 @@ public class PoolResource {
      * The preferred method of creating pools is to first create a subscription,
      * and then refresh pools for the owner.
      *
+     * @deprecated in favor of using the subscription resource
+     *
      * @param pool the pool to create
      * @return the newly created pool
      *

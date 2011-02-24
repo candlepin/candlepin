@@ -1,3 +1,17 @@
+/**
+ * Copyright (c) 2009 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
 package org.fedoraproject.candlepin.util;
 
 import com.sun.javadoc.ClassDoc;
@@ -17,37 +31,40 @@ import org.codehaus.jackson.map.ObjectMapper;
  *
  */
 public class ApiDoclet {
-    private final static String RETURN_CODE_TAG = "httpcode";
+    private static final String RETURN_CODE_TAG = "httpcode";
 
     private static String outputDir;
     private static ObjectMapper mapper = new ObjectMapper();
+
+    private ApiDoclet() {
+        // keep checkstyle happy
+    }
 
     /**
      * Set -d flag to indicate the output dir.
      *
      * @param options
      * @param reporter
-     * @return
+     * @return if the options are valid
      */
-    public static boolean validOptions(String options[][],
-				       DocErrorReporter reporter) {
+    public static boolean validOptions(String[][] options, DocErrorReporter reporter) {
         for (int i = 0; i < options.length; i++) {
             String[] opt = options[i];
             if (opt[0].equals("-d")) {
                 outputDir = opt[1];
 
                 return true;
-	    }
-	}
+            }
+        }
 
-	return false;
+        return false;
     }
 
     public static int optionLength(String option) {
         // allow the semistandard -d flag for output dir,
         // mainly because buildr assumes it is there.
-        if(option.equals("-d")) {
-	    return 2;
+        if (option.equals("-d")) {
+            return 2;
         }
 
         return 0;
@@ -57,7 +74,7 @@ public class ApiDoclet {
      * Entry point for the doclet.
      *
      * @param root
-     * @return
+     * @return if the run was successful
      */
     public static boolean start(RootDoc root) {
         try {
@@ -92,6 +109,10 @@ public class ApiDoclet {
         }
     }
 
+    /**
+     * Represents RESTful method documentation, including a method description
+     * and a description of possible return codes.
+     */
     static class RestMethod {
         private String method;
         private String description;
@@ -121,6 +142,10 @@ public class ApiDoclet {
         }
     }
 
+    /**
+     * A pairing of an HTTP return code with a description of the conditions
+     * on which it is returned.
+     */
     static class HttpStatusCode {
         private int statusCode;
         private String description;
