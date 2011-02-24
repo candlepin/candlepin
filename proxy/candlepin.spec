@@ -20,7 +20,7 @@ Requires: candlepin-webapp
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-BuildRequires: candlepin-deps >= 0:0.0.11
+BuildRequires: candlepin-deps >= 0:0.0.13
 %define __jar_repack %{nil}
 
 %description
