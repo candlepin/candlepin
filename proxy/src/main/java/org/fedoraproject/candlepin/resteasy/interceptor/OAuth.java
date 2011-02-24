@@ -106,13 +106,13 @@ public class OAuth extends UserAuth {
             log.debug("OAuth Problem", e);
             Response.Status returnCode = Response.Status.fromStatusCode(e
                 .getHttpStatusCode());
-            String message = i18n.tr("Oauth problem encountered. Internal message is: {0}",
+            String message = i18n.tr("OAuth problem encountered. Internal message is: {0}",
                 e.getMessage());
             throw new CandlepinException(returnCode, message);
         }
         catch (OAuthException e) {
             log.debug("OAuth Error", e);
-            String message = i18n.tr("Oauth error encountered. Internal message is: {0}",
+            String message = i18n.tr("OAuth error encountered. Internal message is: {0}",
                 e.getMessage());
             throw new BadRequestException(message);
         }
