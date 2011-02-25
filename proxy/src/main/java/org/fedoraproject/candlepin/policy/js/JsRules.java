@@ -99,12 +99,13 @@ public class JsRules {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T invokeMethod(String method, Map<String, Object> args)
         throws NoSuchMethodException, RhinoException {
         for (String key : args.keySet()) {
             scope.put(key, scope, args.get(key));
         }
-        return invokeMethod(method);
+        return (T) invokeMethod(method);
     }
 
     public void invokeRule(String ruleName) {
