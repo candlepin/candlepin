@@ -24,7 +24,5 @@ import org.fedoraproject.candlepin.model.Subscription;
  */
 public interface PoolRules {
 
-    void onCreatePool(Pool pool);
-
     List<Pool> createPool(Subscription sub);
 }

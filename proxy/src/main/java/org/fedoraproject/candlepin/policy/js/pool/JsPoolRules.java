@@ -24,12 +24,8 @@ import java.util.Map;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.js.JsRules;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 /**
@@ -53,26 +49,12 @@ public class JsPoolRules implements PoolRules {
     }
 
     @Override
-    public void onCreatePool(Pool pool) {
-        Product product = this.productAdapter.getProductById(pool.getProductId());
-        ReadOnlyProductCache cache = new ReadOnlyProductCache(productAdapter);
-
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
-        
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("pool", new ReadOnlyPool(pool, cache));
-        args.put("product", new ReadOnlyProduct(product));
-        args.put("helper", new PoolHelper(this.poolManager,
-                this.productAdapter, pool, null));
-        args.put("attributes", allAttributes);
-
-        jsRules.invokeRule("global", args);
-    }
-
-    @Override
     public List<Pool> createPool(Subscription sub) {
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("sub", sub);
+        args.put("attributes", jsRules.getFlattenedAttributes(sub.getProduct(), null));
+        args.put("helper", new PoolHelper(this.poolManager,
+            this.productAdapter, null));
         List<Pool> poolsCreated = null;
         try {
             poolsCreated = jsRules.invokeMethod("createPools", args);

@@ -48,7 +48,6 @@ import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
-import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
@@ -324,8 +323,6 @@ public class CandlepinPoolManager implements PoolManager {
             sink.emitPoolCreated(created);
         }
 
-        this.poolRules.onCreatePool(p);
-
         return created;
     }
 
@@ -474,8 +471,8 @@ public class CandlepinPoolManager implements PoolManager {
         consumer.addEntitlement(e);
         pool.getEntitlements().add(e);
 
-        PoolHelper postEntHelper = new PoolHelper(this, productAdapter, pool, e);
-        enforcer.postEntitlement(consumer, postEntHelper, e);
+        PoolHelper poolHelper = new PoolHelper(this, productAdapter, e);
+        enforcer.postEntitlement(consumer, poolHelper, e);
 
         entitlementCurator.create(e);
         consumerCurator.update(consumer);

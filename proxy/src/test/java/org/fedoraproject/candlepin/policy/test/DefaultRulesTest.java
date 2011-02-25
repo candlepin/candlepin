@@ -352,7 +352,7 @@ public class DefaultRulesTest {
         PoolHelper postHelper = mock(PoolHelper.class);
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(pool.getProductId(),
-            pool.getProvidedProducts(), "unlimited");
+            pool, "unlimited");
     }
 
     @Test
@@ -368,7 +368,7 @@ public class DefaultRulesTest {
         PoolHelper postHelper = mock(PoolHelper.class);
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(subProductId,
-            pool.getProvidedProducts(), "unlimited");
+            pool, "unlimited");
     }
 
     private Pool setupUserLicensedPool() {

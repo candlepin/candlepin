@@ -166,7 +166,7 @@ var Entitlement = {
 		}
 
 		// Create a sub-pool for this user
-		post.createUserRestrictedPool(productId, pool.getProvidedProducts(),
+		post.createUserRestrictedPool(productId, pool,
 				attributes.get("user_license"));
 	},
 
@@ -311,24 +311,6 @@ var ConsumerDelete = {
 }
 
 var Pool = {
-    global: function() {
-        if (attributes.containsKey("virt_limit")) {
-            var virt_limit = parseInt(attributes.get("virt_limit"));
-
-            if (virt_limit > 0) {
-                var virt_attributes = new java.util.HashMap();
-                virt_attributes.put("virt_only", "true");
-                // Make sure the virt pool does not have a virt_limit,
-                // otherwise this is recurse infinitely
-                virt_attributes.put("virt_limit", "0");
-
-                var virt_quantity = pool.getQuantity() * virt_limit;
-
-                helper.createPool(pool.getProductId(), pool.getProvidedProducts(),
-                    virt_quantity.toString(), virt_attributes);
-            }
-        }
-    },
 
     createPools: function () {
 	var pools = new java.util.LinkedList();
@@ -349,8 +331,27 @@ var Pool = {
         newPool.setSubscriptionId(sub.getId());
         pools.add(newPool);
 
+        // Check if we need to create a virt-only pool for this subscription:
+        if (attributes.containsKey("virt_limit")) {
+            var virt_limit = parseInt(attributes.get("virt_limit"));
+
+            if (virt_limit > 0) {
+                var virt_attributes = new java.util.HashMap();
+                virt_attributes.put("virt_only", "true");
+                // Make sure the virt pool does not have a virt_limit,
+                // otherwise this is recurse infinitely
+                virt_attributes.put("virt_limit", "0");
+
+                var virt_quantity = sub.getQuantity() * virt_limit;
+
+                pools.add(helper.createPool(sub, sub.getProduct().getId(),
+				virt_quantity.toString(), virt_attributes));
+            }
+        }
+
 	return pools;
     }
+
 }
 
 var Export = {

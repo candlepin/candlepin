@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.policy.js.pool;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,9 +22,11 @@ import java.util.Set;
 
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 /**
@@ -35,14 +38,12 @@ public class PoolHelper {
     
     private PoolManager poolManager;
     private ProductServiceAdapter prodAdapter;
-    private Pool parentPool;
     private Entitlement sourceEntitlement;
     
     public PoolHelper(PoolManager poolManager, ProductServiceAdapter prodAdapter,
-        Pool parentPool, Entitlement sourceEntitlement) {
+        Entitlement sourceEntitlement) {
         this.poolManager = poolManager;
         this.prodAdapter = prodAdapter;
-        this.parentPool = parentPool;
         this.sourceEntitlement = sourceEntitlement;
     }
     
@@ -53,34 +54,54 @@ public class PoolHelper {
     * @param productId Label of the product the pool is for.
     * @param quantity Number of entitlements for this pool, also accepts "unlimited".
     */
-    public void createUserRestrictedPool(String productId, 
-        Set<ProvidedProduct> providedProducts, 
+    public void createUserRestrictedPool(String productId, Pool pool,
         String quantity) {
 
-        Pool consumerSpecificPool = createPool(productId, providedProducts, quantity);
+        Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
+            pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
+            pool.getAccountNumber(), pool.getProvidedProducts());
+
         consumerSpecificPool.setRestrictedToUsername(
                 this.sourceEntitlement.getConsumer().getUsername());
         
         poolManager.createPool(consumerSpecificPool);
     }
 
-    public void createPool(String productId, Set<ProvidedProduct> providedProducts,
+    /**
+     * Copies the provided products from a subscription to a pool.
+     *
+     * @param source subscription
+     * @param destination pool
+     */
+    public void copyProvidedProducts(Subscription source, Pool destination) {
+        for (Product providedProduct : source.getProvidedProducts()) {
+            destination.addProvidedProduct(new ProvidedProduct(providedProduct.getId(),
+                providedProduct.getName()));
+        }
+
+    }
+
+    public Pool createPool(Subscription sub, String productId,
             String quantity, Map<String, String> attributes) {
 
-        Pool pool = createPool(productId, providedProducts, quantity);
-        pool.setSubscriptionId(this.parentPool.getSubscriptionId());
+        Pool pool = createPool(productId, sub.getOwner(), quantity, sub.getStartDate(),
+            sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
+            new HashSet<ProvidedProduct>());
+        pool.setSubscriptionId(sub.getId());
+
+        copyProvidedProducts(sub, pool);
 
         // Add in the attributes
         for (Entry<String, String> entry : attributes.entrySet()) {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
-        poolManager.createPool(pool);
+        return pool;
     }
 
-    private Pool createPool(String productId,
-        Set<ProvidedProduct> providedProducts,
-        String quantity) {
+    private Pool createPool(String productId, Owner owner, String quantity, Date startDate,
+        Date endDate, String contractNumber, String accountNumber,
+        Set<ProvidedProduct> providedProducts) {
 
         Long q = null;
         if (quantity.equalsIgnoreCase("unlimited")) {
@@ -96,12 +117,13 @@ public class PoolHelper {
         }
 
         Product derivedProduct = prodAdapter.getProductById(productId);
-        Pool pool = new Pool(parentPool.getOwner(), productId,
+        Pool pool = new Pool(owner, productId,
             derivedProduct.getName(),
             new HashSet<ProvidedProduct>(), q,
-            parentPool.getStartDate(), parentPool.getEndDate(),
-            parentPool.getContractNumber(), parentPool.getAccountNumber());
+            startDate, endDate,
+            contractNumber, accountNumber);
 
+        // Must be sure to copy the provided products, not try to re-use them directly:
         for (ProvidedProduct pp : providedProducts) {
             pool.addProvidedProduct(
                 new ProvidedProduct(pp.getProductId(), pp.getProductName()));
