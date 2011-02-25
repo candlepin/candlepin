@@ -427,12 +427,15 @@ public class EnforcerTest extends DatabaseTestFixture {
         Pool p = createPoolAndSub(theOwner, product, 
             Long.valueOf(maxMembers), new Date(), expiry);
 
-        // alternatively 1 entitlement with quantity of currentMembers
         for (int i = 0; i < currentMembers; i++) {
-            Entitlement e = mock(Entitlement.class);
-            when(e.getQuantity()).thenReturn(1);
+            Consumer c = createConsumer(theOwner);
+            Entitlement e = createEntitlement(theOwner, c, p, null);
+            e.setQuantity(1);
+            entitlementCurator.create(e);
             p.getEntitlements().add(e);
+            poolCurator.merge(p);
         }
+        poolCurator.refresh(p);
         return p;
     }
 }

@@ -332,6 +332,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public Pool lockAndLoad(Pool pool) {
         currentSession().refresh(pool, LockMode.UPGRADE);
+        getEntityManager().refresh(pool);
         return pool;
     }
 
