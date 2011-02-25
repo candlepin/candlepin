@@ -43,6 +43,8 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.ParamDef;
 
 /**
@@ -132,6 +134,7 @@ public class Pool extends AbstractHibernateObject
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
+    @LazyCollection(LazyCollectionOption.EXTRA)
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
 
     private String restrictedToUsername;
