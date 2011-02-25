@@ -139,9 +139,8 @@ public class Pool extends AbstractHibernateObject
     private String contractNumber;
     private String accountNumber;
 
-    @Formula("(select sum(ent.quantity) from cp_entitlement ent, " +
-             "cp_pool_entitlements cpe " +
-             "where ent.id = cpe.entitlement_id and cpe.pool_id = id)")
+    @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
+             "where ent.pool_id = id)")
     private Long consumed;
 
     // TODO: May not still be needed, iirc a temporary hack for client.

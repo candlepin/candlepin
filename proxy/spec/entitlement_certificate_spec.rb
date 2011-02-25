@@ -44,6 +44,8 @@ describe 'Entitlement Certificate' do
     @system.regenerate_entitlement_certificates()
     
     new_certs = @system.list_certificates()
+    puts old_certs.size
+    puts new_certs.size
     old_certs.size.should == new_certs.size
     old_ids = old_certs.map { |cert| cert['serial']['id']}
     new_ids = new_certs.map { |cert| cert['serial']['id']}
