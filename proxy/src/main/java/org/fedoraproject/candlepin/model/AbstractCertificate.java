@@ -36,7 +36,8 @@ public abstract class AbstractCertificate extends AbstractHibernateObject {
     public void setKeyAsBytes(byte[] key) {
         this.key = key;
     }
-
+    
+    @XmlTransient
     public byte[] getKeyAsBytes() {
         return key;
     }
@@ -53,7 +54,8 @@ public abstract class AbstractCertificate extends AbstractHibernateObject {
     public void setCertAsBytes(byte[] cert) {
         this.cert = cert;
     }
-
+    
+    @XmlTransient
     public byte[] getCertAsBytes() {
         return cert;
     }

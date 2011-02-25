@@ -200,7 +200,7 @@ public class Consumer extends AbstractHibernateObject
     public void setId(String id) {
         this.id = id;
     }
-
+    
     public IdentityCertificate getIdCert() {
         return idCert;
     }
