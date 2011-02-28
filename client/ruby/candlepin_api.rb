@@ -112,8 +112,11 @@ class Candlepin
     put("/owners/#{owner_key}", owner)
   end
 
-  def delete_owner(owner_key)
-    delete("/owners/#{owner_key}")
+  def delete_owner(owner_key, revoke=true)
+    uri = "/owners/#{owner_key}"
+    uri << '?revoke=false' unless revoke
+
+    delete uri
   end
 
   def create_user(owner_key, login, password)

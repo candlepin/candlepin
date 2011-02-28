@@ -30,6 +30,11 @@ module CandlepinMethods
     return owner
   end
 
+  def delete_owner(owner, revoke=true)
+    @cp.delete_owner(owner.key, revoke)
+    @owners.delete owner
+  end
+
   # Wrapper for the ruby API's create product. Products do not get cleaned
   # up when an owner is deleted so we will need to track them.
   def create_product(id=nil, name=nil, params={})

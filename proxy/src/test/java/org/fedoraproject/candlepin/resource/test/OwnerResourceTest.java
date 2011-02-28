@@ -87,7 +87,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
         ownerResource.deleteOwner(
-            owner.getKey(), 
+            owner.getKey(),
+            true,
             new UserPrincipal("someuser", owner, new LinkedList<Role>()));
         owner = ownerCurator.find(id);
         assertTrue(owner == null);
@@ -256,7 +257,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listByOwner(owner).size());
         assertEquals(1, entitlementCurator.listByOwner(owner).size());
 
-        ownerResource.deleteOwner(owner.getKey(), null);
+        ownerResource.deleteOwner(owner.getKey(), true, null);
 
         assertEquals(0, consumerCurator.listByOwner(owner).size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
@@ -332,7 +333,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
         
-        ownerResource.deleteOwner(owner.getKey(), principal);
+        ownerResource.deleteOwner(owner.getKey(), true, principal);
     }
     
     private Event createConsumerCreatedEvent(Owner o) {
