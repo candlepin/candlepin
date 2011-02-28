@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import org.fedoraproject.candlepin.client.CandlepinConnection;
 import org.fedoraproject.candlepin.client.OwnerClient;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
@@ -48,11 +50,15 @@ public class MigrateOwnerJob implements Job {
 
     private OwnerCurator ownerCurator;
     private CandlepinConnection conn;
+    private Config config;
     
     @Inject
-    public MigrateOwnerJob(OwnerCurator oc, CandlepinConnection connection) {
+    public MigrateOwnerJob(OwnerCurator oc, CandlepinConnection connection,
+        Config conf) {
+
         ownerCurator = oc;
         conn = connection;
+        config = conf;
     }
     
     @Override
@@ -66,7 +72,9 @@ public class MigrateOwnerJob implements Job {
         log.info("Migrating owner [" + key +
             "] to candlepin instance running on [" + uri + "]");
         
-        Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+        Credentials creds = new UsernamePasswordCredentials(
+            config.getString(ConfigProperties.SHARD_USERNAME),
+            config.getString(ConfigProperties.SHARD_PASSWORD));
         OwnerClient client = conn.connect(creds, uri);
         ClientResponse<Owner> resp = client.exportOwner(key);
         

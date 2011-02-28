@@ -25,6 +25,8 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.client.CandlepinConnection;
 import org.fedoraproject.candlepin.client.OwnerClient;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
@@ -42,6 +44,8 @@ import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.spi.TriggerFiredBundle;
 
+import java.util.HashMap;
+
 
 /**
  * MigrateOwnerJobTest
@@ -51,12 +55,15 @@ public class MigrateOwnerJobTest {
     private OwnerCurator ownerCurator;
     private CandlepinConnection conn;
     private MigrateOwnerJob moj;
+    private Config config;
+
     
     @Before
     public void init() {
+        config = new ConfigForTesting();
         ownerCurator = mock(OwnerCurator.class);
         conn = mock(CandlepinConnection.class);
-        moj = new MigrateOwnerJob(ownerCurator, conn);
+        moj = new MigrateOwnerJob(ownerCurator, conn, config);
     }
     
     @Test
@@ -137,6 +144,7 @@ public class MigrateOwnerJobTest {
     }
     
     @Test(expected = NotFoundException.class)
+    @SuppressWarnings("unchecked")
     public void executeNonExistentOwner() throws JobExecutionException {
         OwnerClient client = mock(OwnerClient.class);
         when(conn.connect(any(Credentials.class),
@@ -150,5 +158,17 @@ public class MigrateOwnerJobTest {
         map.put("uri", "http://foo.example.com/candlepin");
 
         moj.execute(buildContext(map));
+    }
+    
+    private static class ConfigForTesting extends Config {
+        public ConfigForTesting() {
+            super(new HashMap<String, String>() {
+                private static final long serialVersionUID = 1L;
+                {
+                    this.put(ConfigProperties.SHARD_USERNAME, "admin");
+                    this.put(ConfigProperties.SHARD_PASSWORD, "admin");
+                }
+            });
+        }
     }
 }

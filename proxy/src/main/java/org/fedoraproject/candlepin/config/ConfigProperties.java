@@ -79,6 +79,9 @@ public class ConfigProperties {
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER =
         "candlepin.consumer.facts.match_regex";
+    
+    public static final String SHARD_USERNAME = "candlepin.shard.username";
+    public static final String SHARD_PASSWORD = "candlepin.shard.password";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
