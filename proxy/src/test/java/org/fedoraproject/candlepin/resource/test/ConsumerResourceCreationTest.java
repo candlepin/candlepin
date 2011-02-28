@@ -135,6 +135,16 @@ public class ConsumerResourceCreationTest {
         Assert.assertNotNull(createConsumer("test-system.resource.net"));
     }
 
+    @Test
+    public void containsUserServiceChars() {
+        Assert.assertNotNull(createConsumer("{bob}'s_b!g_#boi.`?uestlove!x"));
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void startsWithPound() {
+        createConsumer("#pound");
+    }
+    
     @Test(expected = BadRequestException.class)
     public void emptyConsumerName() {
         createConsumer("");
