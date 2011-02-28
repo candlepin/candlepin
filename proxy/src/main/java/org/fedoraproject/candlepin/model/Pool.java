@@ -40,8 +40,11 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.ParamDef;
 
 /**
@@ -131,12 +134,17 @@ public class Pool extends AbstractHibernateObject
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
+    @LazyCollection(LazyCollectionOption.EXTRA)
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
 
     private String restrictedToUsername;
 
     private String contractNumber;
     private String accountNumber;
+
+    @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
+             "where ent.pool_id = id)")
+    private Long consumed;
 
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
@@ -217,18 +225,16 @@ public class Pool extends AbstractHibernateObject
      * @return quantity currently consumed.
      */
     public Long getConsumed() {
-        long consumed = 0L;
-        for (Entitlement e : getEntitlements()) {
-            consumed += e.getQuantity();
-        }
-        return consumed;
+        return consumed == null ? 0 : consumed;
     }
 
     /**
      * @param consumed set the activate uses.
      */
     public void setConsumed(Long consumed) {
-        // TODO: needed for json repopulation, need to ignore.
+        // Even tho this is calculated at DB fetch time, we allow
+        // setting it for changes in a single txn
+        this.consumed = consumed;
     }
 
     /**

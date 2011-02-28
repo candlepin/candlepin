@@ -57,10 +57,8 @@ import org.hibernate.annotations.ParamDef;
 })
 @Filters({
     @Filter(name = "EntitlementCertificate_CONSUMER_FILTER", 
-        condition = "id in (select c.id from cp_ent_certificate c " +
-            "inner join cp_entitlement e on c.entitlement_id = e.id " +
-            "inner join cp_consumer_entitlements con_en on e.id = con_en.entitlement_id " + 
-                "and con_en.consumer_id = :consumer_id)"),
+        condition = "entitlement_id in (select e.id " +
+            "from cp_entitlement e where e.consumer_id = :consumer_id)"),
     @Filter(name = "Consumer_CONSUMER_FILTER", 
         condition = "id in (select c.id from cp_ent_certificate c " +
             "inner join cp_entitlement e on c.entitlement_id = e.id " +

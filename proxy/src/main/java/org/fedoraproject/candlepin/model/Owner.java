@@ -34,16 +34,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Represents the owner of entitlements.
- *
- * This is akin to an organization, whereas a User is an individual account within that
- * organization.
+ * Represents the owner of entitlements. This is akin to an organization,
+ * whereas a User is an individual account within that organization.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_owner")
-public class Owner extends AbstractHibernateObject implements Serializable, Linkable {
+public class Owner extends AbstractHibernateObject implements Serializable,
+    Linkable {
 
     @OneToOne
     @JoinColumn(name = "parent_owner", nullable = true)
@@ -61,6 +60,9 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     @Column(nullable = false)
     private String displayName;
 
+    @Column(nullable = true)
+    private String contentPrefix;
+
     @OneToMany(mappedBy = "owner", targetEntity = Consumer.class)
     private Set<Consumer> consumers;
 
@@ -69,8 +71,8 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     private Set<Pool> pools;
 
     /*
-     *  The uuid of the consumer in the upstream candlepin that maps to this owner,
-     *  for entitlement syncing.
+     * The uuid of the consumer in the upstream candlepin that maps to this
+     * owner, for entitlement syncing.
      */
     @Column(name = "upstream_uuid")
     private String upstreamUuid;
@@ -85,7 +87,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
 
     /**
      * Constructor with required parameters.
-     *
+     * 
      * @param key Owner's unique identifier
      * @param displayName Owner's name - suitable for UI
      */
@@ -144,6 +146,20 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     }
 
     /**
+     * @return the content prefix
+     */
+    public String getContentPrefix() {
+        return this.contentPrefix;
+    }
+
+    /**
+     * @param contentPrefix the prefix to set
+     */
+    public void setContentPrefix(String contentPrefix) {
+        this.contentPrefix = contentPrefix;
+    }
+
+    /**
      * @return the consumers
      */
     @XmlTransient
@@ -165,6 +181,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     public Set<Pool> getPools() {
         return pools;
     }
+
     /**
      * @param entitlementPools the entitlementPools to set
      */
@@ -174,6 +191,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
 
     /**
      * Add a consumer to this owner
+     * 
      * @param c consumer for this owner.
      */
     public void addConsumer(Consumer c) {
@@ -184,11 +202,12 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
 
     /**
      * add owner to the pool, and reference to the pool.
+     * 
      * @param pool EntitlementPool for this owner.
      */
     public void addEntitlementPool(Pool pool) {
         pool.setOwner(this);
-        if (this.pools ==  null) {
+        if (this.pools == null) {
             this.pools = new HashSet<Pool>();
         }
         this.pools.add(pool);
@@ -199,8 +218,7 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
      */
     @Override
     public String toString() {
-        return "Owner [name = " + getDisplayName() +
-            ", key = " + getKey() +
+        return "Owner [name = " + getDisplayName() + ", key = " + getKey() +
             ", id = " + getId() + "]";
     }
 
@@ -214,14 +232,20 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
             return false;
         }
         final Owner other = (Owner) obj;
-        if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
+        if (this.id != other.id &&
+            (this.id == null || !this.id.equals(other.id))) {
             return false;
         }
-        if ((this.key == null) ? (other.key != null) : !this.key.equals(other.key)) {
+        if ((this.key == null) ? (other.key != null) : !this.key
+            .equals(other.key)) {
             return false;
         }
         if ((this.displayName == null) ? (other.displayName != null) :
             !this.displayName.equals(other.displayName)) {
+            return false;
+        }
+        if ((this.contentPrefix == null) ? (other.contentPrefix != null) :
+            !this.contentPrefix.equals(other.contentPrefix)) {
             return false;
         }
         return true;
@@ -233,7 +257,10 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
         int hash = 3;
         hash = 89 * hash + (this.id != null ? this.id.hashCode() : 0);
         hash = 89 * hash + (this.key != null ? this.key.hashCode() : 0);
-        hash = 89 * hash + (this.displayName != null ? this.displayName.hashCode() : 0);
+        hash = 89 * hash +
+            (this.displayName != null ? this.displayName.hashCode() : 0);
+        hash = 89 * hash +
+            (this.contentPrefix != null ? this.contentPrefix.hashCode() : 0);
         return hash;
     }
 
@@ -258,8 +285,8 @@ public class Owner extends AbstractHibernateObject implements Serializable, Link
     @Override
     public void setHref(String href) {
         /*
-         * No-op, here to aid with updating objects which have nested objects that were
-         * originally sent down to the client in HATEOAS form.
+         * No-op, here to aid with updating objects which have nested objects
+         * that were originally sent down to the client in HATEOAS form.
          */
     }
 

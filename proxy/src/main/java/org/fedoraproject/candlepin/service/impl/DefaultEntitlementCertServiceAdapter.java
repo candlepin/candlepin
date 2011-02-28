@@ -205,7 +205,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             .filter(products, PROD_FILTER_PREDICATE)) {
             extensions.addAll(extensionUtil.productExtensions(prod));
             extensions.addAll(extensionUtil.contentExtensions(
-                filterProductContent(prod, ent)));
+                filterProductContent(prod, ent), ent.getOwner().getContentPrefix()));
         }
 
         if (sub != null) {

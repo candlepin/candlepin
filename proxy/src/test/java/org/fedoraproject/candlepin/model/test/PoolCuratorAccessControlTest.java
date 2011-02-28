@@ -212,6 +212,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         crudInterceptor.enable();
         
         poolCurator.merge(pool);
+        poolCurator.refresh(pool);
         
         Pool retirevedPool = poolCurator.find(pool.getId());
         assertEquals(Long.valueOf(10), retirevedPool.getConsumed());

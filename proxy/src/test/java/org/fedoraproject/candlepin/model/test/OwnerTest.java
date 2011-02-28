@@ -36,7 +36,9 @@ public class OwnerTest extends DatabaseTestFixture {
     @Test
     public void testCreate() throws Exception {
         String ownerName = "Example-Corporation";
+        String prefix = "PhredPrefix";
         Owner o = new Owner(ownerName);
+        o.setContentPrefix(prefix);
         ownerCurator.create(o);
 
         Owner result = (Owner) entityManager().createQuery(
@@ -46,6 +48,7 @@ public class OwnerTest extends DatabaseTestFixture {
         assertNotNull(result);
         assertEquals(ownerName, result.getKey());
         assertEquals(ownerName, result.getDisplayName());
+        assertEquals(prefix, result.getContentPrefix());
         assertNotNull(result.getId());
         assertEquals(o.getId(), result.getId());
     }

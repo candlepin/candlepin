@@ -24,7 +24,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -78,9 +77,7 @@ import org.hibernate.annotations.ParamDef;
         condition = "owner_id = :owner_id"
     ),
     @Filter(name = "Entitlement_CONSUMER_FILTER",
-        condition = "id in (select e.id from cp_entitlement e " +
-            "inner join cp_consumer_entitlements con_en on e.id = con_en.entitlement_id " +
-            "and con_en.consumer_id = :consumer_id)"
+        condition = "consumer_id = :consumer_id"
     )
 })
 @Table(name = "cp_entitlement")
@@ -102,19 +99,14 @@ public class Entitlement extends AbstractHibernateObject
     private Owner owner;
 
     @ManyToOne
-    @ForeignKey(name = "fk_consumer_id",
-                inverseName = "fk_entitlement_id")
-    @JoinTable(name = "cp_consumer_entitlements",
-            joinColumns = @JoinColumn(name = "entitlement_id"),
-            inverseJoinColumns = @JoinColumn(name = "consumer_id"))
+    @ForeignKey(name = "fk_entitlement_owner")
+    @JoinColumn(nullable = true)
     @Index(name = "cp_entitlement_consumer_fk_idx")
     private Consumer consumer;
 
     @ManyToOne
-    @ForeignKey(name = "fk_pool_id", inverseName = "fk_entitlement_id")
-    @JoinTable(name = "cp_pool_entitlements",
-        joinColumns = @JoinColumn(name = "entitlement_id"),
-        inverseJoinColumns = @JoinColumn(name = "pool_id"))
+    @ForeignKey(name = "fk_entitlement_pool")
+    @JoinColumn(nullable = true)
     @Index(name = "cp_entitlement_pool_fk_idx")
     private Pool pool;
 

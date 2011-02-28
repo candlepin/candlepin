@@ -487,7 +487,10 @@ public class CandlepinPoolManager implements PoolManager {
         for (Entitlement regenEnt : entitlementCurator.listModifying(e)) {
             this.regenerateCertificatesOf(regenEnt);
         }
-        
+
+        // The quantity is calculated at fetch time. We update it here
+        // To reflect what we just added to the db.
+        pool.setConsumed(pool.getConsumed() + quantity);
         return e;
     }
 
@@ -622,9 +625,14 @@ public class CandlepinPoolManager implements PoolManager {
 
         Event event = eventFactory.entitlementDeleted(entitlement);
 
-        poolCurator.merge(entitlement.getPool());
+        Pool pool = entitlement.getPool();
+        poolCurator.merge(pool);
         entCertAdapter.revokeEntitlementCertificates(entitlement);
         entitlementCurator.delete(entitlement);
+
+        // The quantity is calculated at fetch time. We update it here
+        // To reflect what we just removed from the db.
+        pool.setConsumed(pool.getConsumed() - entitlement.getQuantity());
 
         // Find all of the entitlements that modified the original entitlement,
         // and regenerate those to remove the content sets.
