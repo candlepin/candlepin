@@ -608,8 +608,9 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     // TODO: Does the enforcer have any rules around removing entitlements?
+    @Override
     @Transactional
-    public void revokeEntitlement(Entitlement entitlement) {
+    public void removeEntitlement(Entitlement entitlement) {
         if (this.principalProvider.get() instanceof ConsumerPrincipal) {
             checkForOutstandingSubPoolEntitlements(entitlement);
         }
@@ -627,7 +628,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         Pool pool = entitlement.getPool();
         poolCurator.merge(pool);
-        entCertAdapter.revokeEntitlementCertificates(entitlement);
         entitlementCurator.delete(entitlement);
 
         // The quantity is calculated at fetch time. We update it here
@@ -639,6 +639,13 @@ public class CandlepinPoolManager implements PoolManager {
         this.regenerateCertificatesOf(entitlementCurator.listModifying(entitlement));
 
         sink.sendEvent(event);
+    }
+
+    @Override
+    @Transactional
+    public void revokeEntitlement(Entitlement entitlement) {
+        entCertAdapter.revokeEntitlementCertificates(entitlement);
+        removeEntitlement(entitlement);
     }
     
     /**
@@ -713,10 +720,19 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
+    @Override
     @Transactional
     public void revokeAllEntitlements(Consumer consumer) {
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
             revokeEntitlement(e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeAllEntitlements(Consumer consumer) {
+        for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
+            removeEntitlement(e);
         }
     }
 

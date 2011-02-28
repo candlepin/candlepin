@@ -7,8 +7,8 @@ describe 'Certificate Revocation List' do
   
   before do
     @owner = create_owner random_string('test_owner')
-    @virt_prod = create_product(name='virt')
-    @monitoring_prod = create_product(name='monitoring')
+    @virt_prod = create_product random_string('virt')
+    @monitoring_prod = create_product random_string('monitoring')
 
     #entitle owner for the virt and monitoring products.
     @cp.create_subscription(@owner.key, @monitoring_prod.id, 6)
@@ -20,7 +20,7 @@ describe 'Certificate Revocation List' do
     user = user_client(@owner, 'billy')
     @system = consumer_client(user, 'system6')
   end 
-  
+
   it 'contains the serial of entitlement(s) revoked' do
       #consume an entitlement, revoke it and check that CRL contains the new serial.
       @system.consume_product(@monitoring_prod.id)
@@ -32,7 +32,7 @@ describe 'Certificate Revocation List' do
   
   it 'does not contain the serial of a valid entitlement(s)' do
       @system.consume_product(@virt_prod.id)
-      revoked_serials.size.should == 0
+      revoked_serials.should be_empty
   end 
   
   it 'contains the serials of revoked entitlement(s) and not the unrevoked ones' do
@@ -49,6 +49,19 @@ describe 'Certificate Revocation List' do
       serial = filter_serial(@virt_prod)
       @system.unbind_entitlement(mp_entitlement[0].id)
       revoked_serials.should_not include(serial)
+  end
+
+  it 'should not contain entitlements from an owner deleted with revoke=false' do
+    @system.consume_product @monitoring_prod.id
+    @system.consume_product @virt_prod.id
+
+    serials = [filter_serial(@monitoring_prod),
+               filter_serial(@virt_prod)]
+
+    # Delete owner without revoking certs
+    delete_owner(@owner, false)
+
+    revoked_serials.should_not include(serials)
   end
   
   def filter_serial(product, consumer=@system)

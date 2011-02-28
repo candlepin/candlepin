@@ -199,25 +199,32 @@ public class OwnerResource {
     @Path("/{owner_key}")    
     @Produces(MediaType.APPLICATION_JSON)
     //FIXME No way this is as easy as this :)
-    public void deleteOwner(@PathParam("owner_key") String ownerKey, 
+    public void deleteOwner(@PathParam("owner_key") String ownerKey,
+            @QueryParam("revoke") @DefaultValue("true") boolean revoke,
             @Context Principal principal) {
         Owner owner = findOwner(ownerKey);
         Event e = eventFactory.ownerDeleted(owner);
 
-        cleanupAndDelete(owner);
+        cleanupAndDelete(owner, revoke);
         
         sink.sendEvent(e);
     }    
 
-    private void cleanupAndDelete(Owner owner) {
+    private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: " + owner);
         for (User u : userService.listByOwner(owner)) {
             userService.deleteUser(u);
         }
         for (Consumer c : consumerCurator.listByOwner(owner)) {
             log.info("Deleting consumer: " + c);
-            
-            poolManager.revokeAllEntitlements(c);
+
+            if (revokeCerts) {
+                poolManager.revokeAllEntitlements(c);
+            }
+            else {
+                // otherwise just remove them without touching the CRL
+                poolManager.removeAllEntitlements(c);
+            }
             
             // need to check if this has been removed due to a 
             // parent being deleted

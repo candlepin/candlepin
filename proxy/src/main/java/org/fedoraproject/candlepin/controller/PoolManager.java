@@ -110,7 +110,11 @@ public interface PoolManager {
 
     void revokeAllEntitlements(Consumer consumer);
 
+    void removeAllEntitlements(Consumer consumer);
+
     void revokeEntitlement(Entitlement entitlement);
+
+    void removeEntitlement(Entitlement entitlement);
 
 
     /**

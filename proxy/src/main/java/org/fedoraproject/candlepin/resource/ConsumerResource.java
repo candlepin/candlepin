@@ -92,7 +92,7 @@ import org.fedoraproject.candlepin.controller.PoolManager;
 @Path("/consumers")
 public class ConsumerResource {
     private static final Pattern CONSUMER_NAME_PATTERN =
-        Pattern.compile("[@{}()\\[\\]\\?&\\w-\\.]+");
+        Pattern.compile("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private ConsumerCurator consumerCurator;
@@ -206,10 +206,16 @@ public class ConsumerResource {
         @QueryParam("username") String userName)
         throws BadRequestException {
         // API:registerConsumer
-
+        
         if (!isConsumerNameValid(consumer.getName())) {
             throw new BadRequestException(i18n.tr(
                 "System name cannot contain most special characters."));
+        }
+        
+        if (consumer.getName().indexOf('#') == 0) {
+            //this is a bouncycastle restriction
+            throw new BadRequestException(i18n.tr(
+                "System name cannot contain begin with # sign"));
         }
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
