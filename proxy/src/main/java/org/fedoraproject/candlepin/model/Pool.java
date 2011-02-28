@@ -290,6 +290,10 @@ public class Pool extends AbstractHibernateObject
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
     }
+    
+    public boolean hasAttribute(String key) {
+        return getAttribute(key) != null;
+    }
 
     public Set<PoolAttribute> getAttributes() {
         if (attributes == null) {

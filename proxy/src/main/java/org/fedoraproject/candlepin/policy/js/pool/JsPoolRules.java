@@ -49,7 +49,7 @@ public class JsPoolRules implements PoolRules {
     }
 
     @Override
-    public List<Pool> createPool(Subscription sub) {
+    public List<Pool> createPools(Subscription sub) {
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("sub", sub);
         args.put("attributes", jsRules.getFlattenedAttributes(sub.getProduct(), null));
@@ -62,9 +62,29 @@ public class JsPoolRules implements PoolRules {
         catch (NoSuchMethodException e) {
             log.error("Unable to find javascript method: createPools");
             log.error(e);
-            throw new IseException("Unable to create pool.");
+            throw new IseException("Unable to create pools.");
         }
         return poolsCreated;
+    }
+
+    @Override
+    public List<UpdatedPool> updatePools(Subscription sub, List<Pool> existingPools) {
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("sub", sub);
+        args.put("pools", existingPools);
+        args.put("attributes", jsRules.getFlattenedAttributes(sub.getProduct(), null));
+        args.put("helper", new PoolHelper(this.poolManager,
+            this.productAdapter, null));
+        List<UpdatedPool> poolsUpdated = null;
+        try {
+            poolsUpdated = jsRules.invokeMethod("updatePools", args);
+        }
+        catch (NoSuchMethodException e) {
+            log.error("Unable to find javascript method: updatePools");
+            log.error(e);
+            throw new IseException("Unable to update pools.");
+        }
+        return poolsUpdated;
     }
 
 }

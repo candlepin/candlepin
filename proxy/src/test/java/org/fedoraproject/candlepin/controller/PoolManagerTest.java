@@ -167,7 +167,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSubscriptionId(s.getId());
         newPools.add(p);
-        when(poolRulesMock.createPool(s)).thenReturn(newPools);
+        when(poolRulesMock.createPools(s)).thenReturn(newPools);
 
         this.manager.refreshPools(getOwner());
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
@@ -421,7 +421,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSubscriptionId(s.getId());
         newPools.add(p);
-        when(poolRulesMock.createPool(s)).thenReturn(newPools);
+        when(poolRulesMock.createPools(s)).thenReturn(newPools);
 
         this.manager.createPoolsForSubscription(s);
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));

@@ -114,11 +114,22 @@ public interface PoolManager {
 
 
     /**
-     * Update pool for subscription. - This method only checks for change in
-     * quantity and dates of a subscription. Currently any quantity changes
-     * in pool are not handled.
-     * @param existingPool the existing pool
-     * @param sub the sub
+     * Update the given list of pools for a subscription. 
+     * 
+     * This method checks for change in quantity, dates, and products. 
+     * 
+     * @param existingPools the existing pools referencing this subscription
+     * @param sub the subscription
+     */
+    void updatePoolsForSubscription(List<Pool> existingPools, Subscription sub);
+
+    /**
+     * Update the given pool for a subscription. 
+     * 
+     * This method checks for change in quantity, dates, and products. 
+     * 
+     * @param existingPool an existing pool referencing this subscription
+     * @param sub the subscription
      */
     void updatePoolForSubscription(Pool existingPool, Subscription sub);
 

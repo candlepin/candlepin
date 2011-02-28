@@ -312,9 +312,12 @@ var ConsumerDelete = {
 
 var Pool = {
 
+	/*
+	 * Creates all appropriate pools for a subscription.
+	 */
     createPools: function () {
-	var pools = new java.util.LinkedList();
-	var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
+		var pools = new java.util.LinkedList();
+		var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         var providedProducts = new java.util.HashSet();
         var newPool = new org.fedoraproject.candlepin.model.Pool(sub.getOwner(), sub.getProduct().getId(),
             sub.getProduct().getName(), providedProducts,
@@ -323,7 +326,7 @@ var Pool = {
         if (sub.getProvidedProducts() != null) {
             for each (var p in sub.getProvidedProducts().toArray()) {
                 var providedProduct = new org.fedoraproject.candlepin.model.
-			ProvidedProduct(p.getId(), p.getName());
+                	ProvidedProduct(p.getId(), p.getName());
                 providedProduct.setPool(newPool);
                 providedProducts.add(providedProduct);
             }
@@ -349,8 +352,67 @@ var Pool = {
             }
         }
 
-	return pools;
-    }
+        return pools;
+    },
+
+	/*
+	 * Updates the existing pools for a subscription.
+	 */
+	updatePools: function () {
+	    	
+		var poolsUpdated = new java.util.LinkedList();
+		for each (var existingPool in pools.toArray()) {
+            var datesChanged = (!sub.getStartDate().equals(
+                existingPool.getStartDate())) ||
+                	(!sub.getEndDate().equals(existingPool.getEndDate()));
+            
+            // Expected quantity is normally the subscription's quantity, but for
+            // virt only pools we expect it to be sub quantity * virt_limit:
+            var expectedQuantity = sub.getQuantity();
+            if (existingPool.hasAttribute("virt_only")) {
+            	if (existingPool.getAttributeValue("virt_only").equals("true")) {
+	            	// Assuming there mere be a virt limit attribute set:
+	            	var virtLimit = parseInt(attributes.get("virt_limit"));
+	            	expectedQuantity = sub.getQuantity() * virtLimit;
+            	}
+            }
+            
+            var quantityChanged = !expectedQuantity.equals(existingPool.getQuantity());
+            var productsChanged = helper.checkForChangedProducts(existingPool, sub);
+            
+            if (!(quantityChanged || datesChanged || productsChanged)) {
+                //TODO: Should we check whether pool is overflowing here?
+            	continue;
+            }
+            
+            if (quantityChanged) {
+                existingPool.setQuantity(expectedQuantity);
+            }
+            
+            if (datesChanged) {
+                existingPool.setStartDate(sub.getStartDate());
+                existingPool.setEndDate(sub.getEndDate());
+            }
+            
+            if (productsChanged) {
+                existingPool.setProductName(sub.getProduct().getName());
+                existingPool.getProvidedProducts().clear();
+
+                if (sub.getProvidedProducts() != null) {
+                    for each (var p in sub.getProvidedProducts().toArray()) {
+                        var providedProduct = new org.fedoraproject.candlepin.model.
+                        	ProvidedProduct(p.getId(), p.getName());
+                        providedProduct.setPool(existingPool);
+                        providedProducts.add(providedProduct);
+                    }
+                }
+            }
+            
+            poolsUpdated.add(new org.fedoraproject.candlepin.policy.js.pool.UpdatedPool(
+            		existingPool, datesChanged, quantityChanged, productsChanged));
+		}
+		return poolsUpdated;
+	}
 
 }
 

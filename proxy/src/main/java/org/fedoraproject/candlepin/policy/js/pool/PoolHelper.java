@@ -136,5 +136,24 @@ public class PoolHelper {
 
         return pool;
     }
-
+    
+    public boolean checkForChangedProducts(Pool existingPool, Subscription sub) {
+        Set<String> poolProducts = new HashSet<String>();
+        Set<String> subProducts = new HashSet<String>();
+        poolProducts.add(existingPool.getProductId());
+        
+        for (ProvidedProduct pp : existingPool.getProvidedProducts()) {
+            poolProducts.add(pp.getProductId());
+        }
+        
+        subProducts.add(sub.getProduct().getId());
+        for (Product product : sub.getProvidedProducts()) {
+            subProducts.add(product.getId());
+        }
+        
+        // Also check if the product name has been changed:
+        return !poolProducts.equals(subProducts) || 
+            (existingPool.getProductName() != sub.getProduct().getName());
+    }
+    
 }

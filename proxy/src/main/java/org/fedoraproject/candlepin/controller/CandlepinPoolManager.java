@@ -17,12 +17,10 @@ package org.fedoraproject.candlepin.controller;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
@@ -44,12 +42,12 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+import org.fedoraproject.candlepin.policy.js.pool.UpdatedPool;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -171,10 +169,8 @@ public class CandlepinPoolManager implements PoolManager {
                 subToPoolMap.remove(sub.getId());
             }
             else {
-                for (Pool existingPool : subToPoolMap.get(sub.getId())) {
-                    updatePoolForSubscription(existingPool, sub);
-                    subToPoolMap.remove(sub.getId());
-                }
+                updatePoolsForSubscription(subToPoolMap.get(sub.getId()), sub);
+                subToPoolMap.remove(sub.getId());
             }
         }
 
@@ -208,86 +204,64 @@ public class CandlepinPoolManager implements PoolManager {
      * Update pool for subscription. - This method only checks for change in
      * quantity and dates of a subscription. Currently any quantity changes
      * in pool are not handled.
-     * @param existingPool the existing pool
+     * @param existingPools the existing pools
      * @param sub the sub
      */
+    public void updatePoolsForSubscription(List<Pool> existingPools,
+        Subscription sub) {
+
+        /*
+         * Rules need to determine which pools have changed, but the Java must send 
+         * out the events. Create an event for each pool that could change, even if 
+         * we won't use them all.
+         */
+        Map<String, Event> poolEvents = new HashMap<String, Event>();
+        for (Pool existing : existingPools) {
+            Event e = eventFactory.poolChangedFrom(existing);
+            poolEvents.put(existing.getId(), e);
+        }
+        
+        
+        // Hand off to Javascript to determine which pools need updating:
+        List<UpdatedPool> updatedPools = poolRules.updatePools(sub, existingPools);
+        
+        
+        for (UpdatedPool updatedPool : updatedPools) {
+    
+            Pool existingPool = updatedPool.getPool();
+            
+            //quantity has changed. delete any excess entitlements from pool
+            if (updatedPool.getQuantityChanged()) {
+                this.deleteExcessEntitlements(existingPool);
+            }
+    
+            //dates changed. regenerate all entitlement certificates
+            if (updatedPool.getDatesChanged() || updatedPool.getProductsChanged()) {
+                List<Entitlement> entitlements = poolCurator
+                    .retrieveFreeEntitlementsOfPool(existingPool, true);
+    
+                //when subscription dates change, entitlement dates should change as well
+                for (Entitlement entitlement : entitlements) {
+                    entitlement.setStartDate(sub.getStartDate());
+                    entitlement.setEndDate(sub.getEndDate());
+                  //TODO: perhaps optimize it to use hibernate query?
+                    this.entitlementCurator.merge(entitlement);
+                }
+                regenerateCertificatesOf(entitlements);
+            }
+            //save changes for the pool
+            this.poolCurator.merge(existingPool);
+            
+            eventFactory.poolChangedTo(poolEvents.get(existingPool.getId()), existingPool);
+            sink.sendEvent(poolEvents.get(existingPool.getId()));
+        }
+    }
+    
     public void updatePoolForSubscription(Pool existingPool,
         Subscription sub) {
-        boolean datesChanged = (!sub.getStartDate().equals(
-            existingPool.getStartDate())) ||
-            (!sub.getEndDate().equals(existingPool.getEndDate()));
-        boolean quantityChanged = !sub.getQuantity().equals(existingPool.getQuantity());
-        boolean productsChanged = checkForChangedProducts(existingPool, sub);
-
-        if (!(quantityChanged || datesChanged || productsChanged)) {
-            //TODO: Should we check whether pool is overflowing here?
-            return; //no changes, just return.
-        }
-
-        Event e = eventFactory.poolChangedFrom(existingPool);
-        //quantity has changed. delete any excess entitlements from pool
-        if (quantityChanged) {
-            existingPool.setQuantity(sub.getQuantity());
-            this.deleteExcessEntitlements(existingPool);
-        }
-
-        //dates changed. regenerate all entitlement certificates
-        if (datesChanged || productsChanged) {
-            existingPool.setStartDate(sub.getStartDate());
-            existingPool.setEndDate(sub.getEndDate());
-            List<Entitlement> entitlements = poolCurator
-                .retrieveFreeEntitlementsOfPool(existingPool, true);
-
-            if (productsChanged) {
-                log.debug("Merging provided products.");
-                log.debug("   size before = " + existingPool.getProvidedProducts().size());
-
-                existingPool.setProductName(sub.getProduct().getName());
-                existingPool.getProvidedProducts().clear();
-
-                if (sub.getProvidedProducts() != null) {
-                    for (Product p : sub.getProvidedProducts()) {
-                        log.debug("   adding " + p.getName());
-                        ProvidedProduct providedProduct = new ProvidedProduct(
-                            p.getId(), p.getName(), existingPool);
-                        existingPool.addProvidedProduct(providedProduct);
-                    }
-                }
-            }
-
-            //when subscription dates change, entitlement dates should change as well
-            for (Entitlement entitlement : entitlements) {
-                entitlement.setStartDate(sub.getStartDate());
-                entitlement.setEndDate(sub.getEndDate());
-              //TODO: perhaps optimize it to use hibernate query?
-                this.entitlementCurator.merge(entitlement);
-            }
-            regenerateCertificatesOf(entitlements);
-        }
-        //save changes for the pool
-        this.poolCurator.merge(existingPool);
-
-        eventFactory.poolChangedTo(e, existingPool);
-        sink.sendEvent(e);
-    }
-
-    private boolean checkForChangedProducts(Pool existingPool, Subscription sub) {
-        Set<String> poolProducts = new HashSet<String>();
-        Set<String> subProducts = new HashSet<String>();
-        poolProducts.add(existingPool.getProductId());
-        
-        for (ProvidedProduct pp : existingPool.getProvidedProducts()) {
-            poolProducts.add(pp.getProductId());
-        }
-        
-        subProducts.add(sub.getProduct().getId());
-        for (Product product : sub.getProvidedProducts()) {
-            subProducts.add(product.getId());
-        }
-        
-        // Also check if the product name has been changed:
-        return !poolProducts.equals(subProducts) || 
-            (existingPool.getProductName() != sub.getProduct().getName());
+        List<Pool> tempList = new LinkedList<Pool>();
+        tempList.add(existingPool);
+        updatePoolsForSubscription(tempList, sub);
     }
 
 
@@ -306,7 +280,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.debug("Creating new pool for new sub: " + sub.getId());
         }
 
-        List<Pool> pools = poolRules.createPool(sub);
+        List<Pool> pools = poolRules.createPools(sub);
         for (Pool pool : pools) {
             createPool(pool);
         }
