@@ -59,7 +59,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
-import org.fedoraproject.candlepin.policy.js.pool.UpdatedPool;
+import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -185,8 +185,8 @@ public class PoolManagerTest {
         
         s.setProduct(TestUtil.createProduct());
 
-        List<UpdatedPool> updatedPools = new LinkedList<UpdatedPool>();
-        updatedPools.add(new UpdatedPool(p, false, false, true));
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, false, false, true));
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
             .thenReturn(updatedPools);
 
@@ -243,8 +243,8 @@ public class PoolManagerTest {
         providedProducts.add(TestUtil.createProduct());
         s.setProvidedProducts(providedProducts);
         
-        List<UpdatedPool> updatedPools = new LinkedList<UpdatedPool>();
-        updatedPools.add(new UpdatedPool(p, false, false, true));
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, false, false, true));
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
             .thenReturn(updatedPools);
 
@@ -264,7 +264,7 @@ public class PoolManagerTest {
             s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         p.setSubscriptionId(s.getId());
 
-        List<UpdatedPool> updatedPools = new LinkedList<UpdatedPool>();
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
             .thenReturn(updatedPools);
         
@@ -281,8 +281,8 @@ public class PoolManagerTest {
             new HashSet<ProvidedProduct>(), s.getQuantity().longValue() + 10,
             s.getStartDate(), s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         
-        List<UpdatedPool> updatedPools = new LinkedList<UpdatedPool>();
-        updatedPools.add(new UpdatedPool(p, false, true, false));
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, false, true, false));
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
             .thenReturn(updatedPools);
         
@@ -323,8 +323,8 @@ public class PoolManagerTest {
             new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
             Util.tomorrow(), s.getContractNumber(), s.getAccountNumber());
         
-        List<UpdatedPool> updatedPools = new LinkedList<UpdatedPool>();
-        updatedPools.add(new UpdatedPool(p, true, false, false));
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, true, false, false));
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
             .thenReturn(updatedPools);
         
@@ -344,8 +344,8 @@ public class PoolManagerTest {
             new HashSet<ProvidedProduct>(), s.getQuantity(),
             s.getStartDate(), s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         
-        List<UpdatedPool> updatedPools = new LinkedList<UpdatedPool>();
-        updatedPools.add(new UpdatedPool(p, true, true, false));
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, true, true, false));
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
             .thenReturn(updatedPools);
         
@@ -388,8 +388,8 @@ public class PoolManagerTest {
         when(this.mockPoolCurator.retrieveFreeEntitlementsOfPool(any(Pool.class),
             anyBoolean())).thenReturn(mockedEntitlements);
         
-        List<UpdatedPool> updatedPools = new LinkedList<UpdatedPool>();
-        updatedPools.add(new UpdatedPool(p, true, true, false));
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, true, true, false));
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
             .thenReturn(updatedPools);
         

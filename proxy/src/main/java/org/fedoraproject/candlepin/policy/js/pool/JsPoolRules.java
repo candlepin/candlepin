@@ -68,7 +68,7 @@ public class JsPoolRules implements PoolRules {
     }
 
     @Override
-    public List<UpdatedPool> updatePools(Subscription sub, List<Pool> existingPools) {
+    public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("sub", sub);
         args.put("pools", existingPools);
@@ -76,7 +76,7 @@ public class JsPoolRules implements PoolRules {
         args.put("log", log);
         args.put("helper", new PoolHelper(this.poolManager,
             this.productAdapter, null));
-        List<UpdatedPool> poolsUpdated = null;
+        List<PoolUpdate> poolsUpdated = null;
         try {
             poolsUpdated = jsRules.invokeMethod("updatePools", args);
         }

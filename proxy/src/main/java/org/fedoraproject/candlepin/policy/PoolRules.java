@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.policy.js.pool.UpdatedPool;
+import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 
 /**
  *
@@ -26,5 +26,5 @@ import org.fedoraproject.candlepin.policy.js.pool.UpdatedPool;
 public interface PoolRules {
 
     List<Pool> createPools(Subscription sub);
-    List<UpdatedPool> updatePools(Subscription sub, List<Pool> existingPools);
+    List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools);
 }

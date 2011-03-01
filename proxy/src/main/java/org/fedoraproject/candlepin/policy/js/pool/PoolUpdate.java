@@ -17,17 +17,17 @@ package org.fedoraproject.candlepin.policy.js.pool;
 import org.fedoraproject.candlepin.model.Pool;
 
 /**
- * UpdatedPool: Simple DTO object for passing information about what was updated
+ * PoolUpdate: Simple DTO object for passing information about what was updated
  * on a pool from the javascript back up to the application.
  */
-public class UpdatedPool {
+public class PoolUpdate {
     
     private Pool pool;
     private Boolean datesChanged;
     private Boolean quantityChanged;
     private Boolean productsChanged;
 
-    public UpdatedPool(Pool pool, Boolean datesChanged, Boolean quantityChanged, 
+    public PoolUpdate(Pool pool, Boolean datesChanged, Boolean quantityChanged, 
         Boolean productsChanged) {
         this.pool = pool;
         this.datesChanged = datesChanged;

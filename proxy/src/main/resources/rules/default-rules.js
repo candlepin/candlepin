@@ -411,7 +411,7 @@ var Pool = {
                 }
             }
             
-            poolsUpdated.add(new org.fedoraproject.candlepin.policy.js.pool.UpdatedPool(
+            poolsUpdated.add(new org.fedoraproject.candlepin.policy.js.pool.PoolUpdate(
             		existingPool, datesChanged, quantityChanged, productsChanged));
 		}
 		return poolsUpdated;

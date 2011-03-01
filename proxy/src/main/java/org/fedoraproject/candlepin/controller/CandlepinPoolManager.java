@@ -47,7 +47,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
-import org.fedoraproject.candlepin.policy.js.pool.UpdatedPool;
+import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -223,10 +223,10 @@ public class CandlepinPoolManager implements PoolManager {
         
         
         // Hand off to Javascript to determine which pools need updating:
-        List<UpdatedPool> updatedPools = poolRules.updatePools(sub, existingPools);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(sub, existingPools);
         
         
-        for (UpdatedPool updatedPool : updatedPools) {
+        for (PoolUpdate updatedPool : updatedPools) {
     
             Pool existingPool = updatedPool.getPool();
             
