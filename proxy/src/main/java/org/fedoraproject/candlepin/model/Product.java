@@ -79,6 +79,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     private Set<Subscription> subscriptions = new HashSet<Subscription>();
     
     @CollectionOfElements(targetElement = String.class)
+    @JoinTable(name = "cp_product_dependent_products")
     private Set<String> dependentProductIds = new HashSet<String>();
 
     
