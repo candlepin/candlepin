@@ -21,8 +21,12 @@ import org.apache.commons.collections.Transformer;
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
+import org.fedoraproject.candlepin.model.CuratorException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.Inet4Address;
@@ -285,5 +289,31 @@ public class Util {
         iso8601DateFormat.setTimeZone(TimeZone.getTimeZone(UTC_STR));
         return iso8601DateFormat;
     }
+    
+    public static String readFile(InputStream is) {
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader reader = new BufferedReader(isr);
+        StringBuilder builder = new StringBuilder();
+        String line = null;
+        try {
+            while ((line = reader.readLine()) != null) {
+                builder.append(line + "\n");
+            }
+        }
+        catch (IOException e) {
+            throw new CuratorException(e);
+        }
+        finally {
+            try {
+                reader.close();
+            }
+            catch (IOException e) {
+                log.warn("problem closing BufferedReader", e);
+            }
+        }
+        return builder.toString();
+    }
+    
+
     
 }
