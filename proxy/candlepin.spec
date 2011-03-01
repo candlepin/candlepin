@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.8
+Version: 0.2.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Mar 01 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.9-1
+- Fix OwnerInfo to account for entitlement quantity (jbowes@redhat.com)
+
 * Tue Mar 01 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.8-1
 - Make consumer entitlement loading lazy, and hide from json (jbowes@redhat.com)
 - Add an OwnerInfo object (jbowes@redhat.com)
