@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -56,6 +57,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         consumer = TestUtil.createConsumer(owner);
         consumer.setFact("cpu_cores", "4");
+        consumer.setType(new ConsumerType("system"));
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
     }
@@ -64,13 +66,14 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     public void testLookupRuleFiltering() {
 
         Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
-        p.addAttribute(new ProductAttribute(CPU_LIMITED_PRODUCT, ""));
+        p.addAttribute(new ProductAttribute("sockets", "2"));
         productCurator.create(p);
 
         Pool pool = createPoolAndSub(owner, p, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
+        consumer.setFact("cpu.sockets", "4");
         List<Pool> results =
             poolCurator.listByConsumer(consumer);
         assertEquals(0, results.size());
@@ -82,6 +85,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         Long numAvailEntitlements = 2L;
 
         Product newProduct = TestUtil.createProduct();
+        newProduct.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
         productCurator.create(newProduct);
 
         Pool consumerPool = createPoolAndSub(owner, newProduct, 

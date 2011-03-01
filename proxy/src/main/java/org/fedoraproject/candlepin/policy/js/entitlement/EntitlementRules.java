@@ -177,7 +177,7 @@ public class EntitlementRules implements Enforcer {
         args.put("consumer", new ReadOnlyConsumer(c));
         args.put("product", new ReadOnlyProduct(product));
         args.put("post", postHelper);
-        args.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
+        args.put("pool", pool);
         args.put("attributes", allAttributes);
         args.put("log", rulesLogger);
 

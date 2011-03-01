@@ -90,6 +90,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             PRODUCT_VIRT_HOST_PLATFORM);
         virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST);
         monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING);
+        monitoring.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
+
         provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);
 
         virtHost.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST, ""));

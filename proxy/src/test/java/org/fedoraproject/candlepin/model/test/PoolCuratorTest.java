@@ -172,7 +172,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
         this.subCurator.create(sub);
         
-        Pool newPool = poolManager.createPoolForSubscription(sub);
+        Pool newPool = poolManager.createPoolsForSubscription(sub).get(0);
         Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
         
         assertEquals(160L, pool.getQuantity().longValue());

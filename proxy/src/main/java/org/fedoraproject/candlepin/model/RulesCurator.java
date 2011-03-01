@@ -17,16 +17,14 @@ package org.fedoraproject.candlepin.model;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.util.Util;
 
 import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
@@ -111,27 +109,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     private Rules rulesFromFile(String path) {
         InputStream is = this.getClass().getResourceAsStream(path);
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader reader = new BufferedReader(isr);
-        StringBuilder builder = new StringBuilder();
-        String line = null;
-        try {
-            while ((line = reader.readLine()) != null) {
-                builder.append(line + "\n");
-            }
-        }
-        catch (IOException e) {
-            throw new CuratorException(e);
-        }
-        finally {
-            try {
-                reader.close();
-            }
-            catch (IOException e) {
-                log.warn("problem closing reader for " + path, e);
-            }
-        }
-        return new Rules(builder.toString());
+        return new Rules(Util.readFile(is));
     }
     
     protected String getDefaultRulesFile() {

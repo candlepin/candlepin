@@ -60,9 +60,9 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     public ProductAttribute() {
     }
     
-    public ProductAttribute(String name, String quantity) {
+    public ProductAttribute(String name, String val) {
         this.name = name;
-        this.value = quantity;
+        this.value = val;
     }
 
     public String toString() {

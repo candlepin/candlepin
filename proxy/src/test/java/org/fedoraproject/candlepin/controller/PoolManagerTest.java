@@ -21,7 +21,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
@@ -60,6 +59,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -68,7 +68,6 @@ import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
@@ -164,38 +163,15 @@ public class PoolManagerTest {
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), anyBoolean(),
                 any(Date.class))).thenReturn(pools);
+
+        List<Pool> newPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(s.getProduct());
+        p.setSubscriptionId(s.getId());
+        newPools.add(p);
+        when(poolRulesMock.createPools(s)).thenReturn(newPools);
+
         this.manager.refreshPools(getOwner());
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
-    }
-
-    /**
-     * This test case passes existing pool & subscription with changed values.
-     * Thus updatePoolForSubscription needs to be called.
-     */
-    @Test
-    public void refreshPoolsUpdatingPoolsForSubscriptionsWithIncreaseInQuantity() {
-        List<Subscription> subscriptions = Util.newList();
-        List<Pool> pools = Util.newList();
-        Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
-        s.setId("123");
-        subscriptions.add(s);
-        Pool p = new Pool(s.getOwner(), s.getProduct().getId(), s.getProduct().getName(),
-            new HashSet<ProvidedProduct>(), s.getQuantity() + 10, s.getStartDate(),
-            Util.tomorrow(), s.getContractNumber(), s.getAccountNumber());
-        p.setId("423");
-        p.setSubscriptionId(s.getId());
-        pools.add(p);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
-        when(
-            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
-                any(Owner.class), anyString(), anyBoolean(),
-                any(Date.class))).thenReturn(pools);
-        this.manager.refreshPools(getOwner());
-        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
-        verify(mockPoolCurator, times(1)).merge(any(Pool.class));
-
     }
 
     @Test
@@ -208,38 +184,18 @@ public class PoolManagerTest {
         p.setSubscriptionId(s.getId());
         
         s.setProduct(TestUtil.createProduct());
+
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, false, false, true));
+        when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
+            .thenReturn(updatedPools);
+
         
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
         verify(manager).regenerateCertificatesOf(anySet());
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
-    }
-
-    @Test
-    public void testRefreshPoolWhenProvidedProductsChanges() {
-        Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
-        Product product1 = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
-        Product product3 = TestUtil.createProduct();
-        s.getProvidedProducts().add(product1);
-        s.getProvidedProducts().add(product2);
-
-        Pool p = new Pool(s.getOwner(), s.getProduct().getId(), s.getProduct().getName(),
-            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
-        p.setSubscriptionId(s.getId());
-        p.getProvidedProducts().add(
-            new ProvidedProduct(product3.getId(), product3.getName(), p));
-
-        this.manager.updatePoolForSubscription(p, s);
-
-        verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
-            eq(true));
-        verify(manager).regenerateCertificatesOf(anySet());
-        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
-        assertEquals(2, p.getProvidedProducts().size());
     }
 
     @Test
@@ -255,6 +211,11 @@ public class PoolManagerTest {
         providedProducts.add(TestUtil.createProduct());
         s.setProvidedProducts(providedProducts);
         
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, false, false, true));
+        when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
+            .thenReturn(updatedPools);
+
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
@@ -262,36 +223,6 @@ public class PoolManagerTest {
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
     }
 
-    @Test
-    public void testRefreshPoolsWithRemovedProvidedProductsCausesEntitlementRegen() {
-        Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
-
-        Product providedProduct = TestUtil.createProduct();
-        
-        Set<Product> providedProducts = new HashSet<Product>();
-        providedProducts.add(providedProduct);
-        s.setProvidedProducts(providedProducts);
-        
-        Pool p = new Pool(s.getOwner(), s.getProduct().getId(), s.getProduct().getName(),
-            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
-        p.setSubscriptionId(s.getId());
-        Set<ProvidedProduct> provProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct pp = TestUtil.createProvidedProduct();
-        provProducts.add(pp);
-        
-        p.setProvidedProducts(provProducts);
-
-        providedProducts.clear();
-        
-        this.manager.updatePoolForSubscription(p, s);
-        verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
-            eq(true));
-        verify(manager).regenerateCertificatesOf(anySet());
-        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
-    }
-    
     @Test
     public void testUpdatePoolForSubscriptionWithNoChanges() {
         Subscription s = TestUtil.createSubscription(getOwner(),
@@ -300,6 +231,11 @@ public class PoolManagerTest {
             new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
             s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
         p.setSubscriptionId(s.getId());
+
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
+            .thenReturn(updatedPools);
+        
         this.manager.updatePoolForSubscription(p, s);
         verifyZeroInteractions(mockPoolCurator);
         verifyZeroInteractions(mockProvider);
@@ -312,26 +248,15 @@ public class PoolManagerTest {
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(), s.getProduct().getName(),
             new HashSet<ProvidedProduct>(), s.getQuantity().longValue() + 10,
             s.getStartDate(), s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
+        
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, false, true, false));
+        when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
+            .thenReturn(updatedPools);
+        
         this.manager.updatePoolForSubscription(p, s);
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
         verify(mockPoolCurator, times(1)).merge(any(Pool.class));
-        assertEquals(s.getQuantity(), p.getQuantity());
-    }
-
-    @Test
-    public void testUpdatePoolForSubscriptionWithProductNameChange() {
-        String newProductName = "New Product";
-        Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
-        s.getProduct().setName(newProductName);
-        Pool p = new Pool(s.getOwner(), s.getProduct().getId(), "old product name",
-            new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
-            s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
-        p.setSubscriptionId(s.getId());
-        this.manager.updatePoolForSubscription(p, s);
-        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
-        verify(mockPoolCurator, times(1)).merge(any(Pool.class));
-        assertEquals(newProductName, p.getProductName());
     }
 
     /**
@@ -349,6 +274,12 @@ public class PoolManagerTest {
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(), s.getProduct().getName(),
             new HashSet<ProvidedProduct>(), s.getQuantity(), s.getStartDate(),
             Util.tomorrow(), s.getContractNumber(), s.getAccountNumber());
+        
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, true, false, false));
+        when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
+            .thenReturn(updatedPools);
+        
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
@@ -358,12 +289,18 @@ public class PoolManagerTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testUpdatePoolForSubscriptionWithBothChanges() {
+    public void testUpdatePoolForSubscriptionWithDateAndQuantityChanges() {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         Pool p = new Pool(s.getOwner(), s.getProduct().getId(), s.getProduct().getName(),
-            new HashSet<ProvidedProduct>(), s.getQuantity().longValue() + 4,
-            s.getStartDate(), Util.tomorrow(), s.getContractNumber(), s.getAccountNumber());
+            new HashSet<ProvidedProduct>(), s.getQuantity(),
+            s.getStartDate(), s.getEndDate(), s.getContractNumber(), s.getAccountNumber());
+        
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, true, true, false));
+        when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
+            .thenReturn(updatedPools);
+        
         this.manager.updatePoolForSubscription(p, s);
         verify(manager).regenerateCertificatesOf(anySet());
         verifyAndAssertForAllChanges(s, p, 1);
@@ -387,7 +324,7 @@ public class PoolManagerTest {
             TestUtil.createProduct());
         final Pool p = new Pool(s.getOwner(), s.getProduct().getId(), 
             s.getProduct().getName(), new HashSet<ProvidedProduct>(),
-            s.getQuantity().longValue() + 4, s.getStartDate(), Util.tomorrow(),
+            s.getQuantity().longValue(), s.getStartDate(), s.getEndDate(),
             s.getContractNumber(), s.getAccountNumber());
         List<Entitlement> mockedEntitlements = new ArrayList<Entitlement>() {
             private static final long serialVersionUID = 1L;
@@ -402,6 +339,12 @@ public class PoolManagerTest {
         };
         when(this.mockPoolCurator.retrieveFreeEntitlementsOfPool(any(Pool.class),
             anyBoolean())).thenReturn(mockedEntitlements);
+        
+        List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
+        updatedPools.add(new PoolUpdate(p, true, true, false));
+        when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
+            .thenReturn(updatedPools);
+        
         this.manager.updatePoolForSubscription(p, s);
         verify(manager, times(1)).regenerateCertificatesOf(any(Iterable.class));
         verifyAndAssertForAllChanges(s, p, 5);
@@ -411,23 +354,15 @@ public class PoolManagerTest {
     public void testCreatePoolForSubscription() {
         final Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
-        this.manager.createPoolForSubscription(s);
-        verify(this.mockPoolCurator, times(1)).create(
-            argThat(new ArgumentMatcher<Pool>() {
-                @Override
-                public boolean matches(Object arg0) {
-                    Pool pool = (Pool) arg0;
-                    // is it right to check reference?
-                    // equals not implemented for most of the objects below.
-                    return pool.getOwner() == s.getOwner() &&
-                        pool.getProductId() == s.getProduct().getId() &&
-                        pool.getStartDate() == s.getStartDate() &&
-                        pool.getEndDate() == s.getEndDate() &&
-                        pool.getSubscriptionId() == s.getId() &&
-                        pool.getQuantity().equals(
-                            s.getQuantity() * s.getProduct().getMultiplier());
-                }
-            }));
+
+        List<Pool> newPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(s.getProduct());
+        p.setSubscriptionId(s.getId());
+        newPools.add(p);
+        when(poolRulesMock.createPools(s)).thenReturn(newPools);
+
+        this.manager.createPoolsForSubscription(s);
+        verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
     @Test

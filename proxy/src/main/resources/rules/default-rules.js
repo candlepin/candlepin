@@ -98,7 +98,7 @@ function hasNoProductOverlap(combination) {
 			var product = products[i];
 			if (!contains(seen_product_ids, product.id)) {
 				seen_product_ids.push(product.id);
-			} else if (product.getAttribute("multi-entitle") != "yes") {
+			} else if (product.getAttribute("multi-entitlement") != "yes") {
 				return false;
 			}
 		}
@@ -166,7 +166,7 @@ var Entitlement = {
 		}
 
 		// Create a sub-pool for this user
-		post.createUserRestrictedPool(productId, pool.getProvidedProducts(),
+		post.createUserRestrictedPool(productId, pool,
 				attributes.get("user_license"));
 	},
 
@@ -311,7 +311,30 @@ var ConsumerDelete = {
 }
 
 var Pool = {
-    global: function() {
+
+	/*
+	 * Creates all appropriate pools for a subscription.
+	 */
+    createPools: function () {
+		var pools = new java.util.LinkedList();
+		var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
+        var providedProducts = new java.util.HashSet();
+        var newPool = new org.fedoraproject.candlepin.model.Pool(sub.getOwner(), sub.getProduct().getId(),
+            sub.getProduct().getName(), providedProducts,
+                quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
+                sub.getAccountNumber());
+        if (sub.getProvidedProducts() != null) {
+            for each (var p in sub.getProvidedProducts().toArray()) {
+                var providedProduct = new org.fedoraproject.candlepin.model.
+                	ProvidedProduct(p.getId(), p.getName());
+                providedProduct.setPool(newPool);
+                providedProducts.add(providedProduct);
+            }
+        }
+        newPool.setSubscriptionId(sub.getId());
+        pools.add(newPool);
+
+        // Check if we need to create a virt-only pool for this subscription:
         if (attributes.containsKey("virt_limit")) {
             var virt_limit = parseInt(attributes.get("virt_limit"));
 
@@ -322,13 +345,78 @@ var Pool = {
                 // otherwise this is recurse infinitely
                 virt_attributes.put("virt_limit", "0");
 
-                var virt_quantity = pool.getQuantity() * virt_limit;
+                var virt_quantity = sub.getQuantity() * virt_limit;
 
-                helper.createPool(pool.getProductId(), pool.getProvidedProducts(),
-                    virt_quantity.toString(), virt_attributes);
+                pools.add(helper.createPool(sub, sub.getProduct().getId(),
+				virt_quantity.toString(), virt_attributes));
             }
         }
-    }
+
+        return pools;
+    },
+
+	/*
+	 * Updates the existing pools for a subscription.
+	 */
+	updatePools: function () {
+	    	
+		var poolsUpdated = new java.util.LinkedList();
+		for each (var existingPool in pools.toArray()) {
+			log.info("Updating pool: " + existingPool.getId());
+            var datesChanged = (!sub.getStartDate().equals(
+                existingPool.getStartDate())) ||
+                	(!sub.getEndDate().equals(existingPool.getEndDate()));
+            
+            // Expected quantity is normally the subscription's quantity, but for
+            // virt only pools we expect it to be sub quantity * virt_limit:
+            var expectedQuantity = sub.getQuantity();
+            if (existingPool.hasAttribute("virt_only") && 
+            		existingPool.getAttributeValue("virt_only").equals("true")) {
+        		// Assuming there mere be a virt limit attribute set:
+            	var virtLimit = parseInt(attributes.get("virt_limit"));
+            	expectedQuantity = sub.getQuantity() * virtLimit;
+            }
+            
+            var quantityChanged = !(expectedQuantity == existingPool.getQuantity());
+            var productsChanged = helper.checkForChangedProducts(existingPool, sub);
+            
+            if (!(quantityChanged || datesChanged || productsChanged)) {
+                //TODO: Should we check whether pool is overflowing here?
+            	log.info("   No updates required.");
+            	continue;
+            }
+            
+            if (quantityChanged) {
+            	log.info("   Quantity changed to: " + expectedQuantity);
+                existingPool.setQuantity(expectedQuantity);
+            }
+            
+            if (datesChanged) {
+            	log.info("   Subscription dates changed.");
+                existingPool.setStartDate(sub.getStartDate());
+                existingPool.setEndDate(sub.getEndDate());
+            }
+            
+            if (productsChanged) {
+            	log.info("   Subscription products changed.");
+                existingPool.setProductName(sub.getProduct().getName());
+                existingPool.getProvidedProducts().clear();
+
+                if (sub.getProvidedProducts() != null) {
+                    for each (var p in sub.getProvidedProducts().toArray()) {
+                        var providedProduct = new org.fedoraproject.candlepin.model.
+                        	ProvidedProduct(p.getId(), p.getName());
+                        existingPool.addProvidedProduct(providedProduct);
+                    }
+                }
+            }
+            
+            poolsUpdated.add(new org.fedoraproject.candlepin.policy.js.pool.PoolUpdate(
+            		existingPool, datesChanged, quantityChanged, productsChanged));
+		}
+		return poolsUpdated;
+	}
+
 }
 
 var Export = {
