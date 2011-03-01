@@ -73,6 +73,7 @@ public class JsPoolRules implements PoolRules {
         args.put("sub", sub);
         args.put("pools", existingPools);
         args.put("attributes", jsRules.getFlattenedAttributes(sub.getProduct(), null));
+        args.put("log", log);
         args.put("helper", new PoolHelper(this.poolManager,
             this.productAdapter, null));
         List<UpdatedPool> poolsUpdated = null;
