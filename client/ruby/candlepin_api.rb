@@ -99,6 +99,11 @@ class Candlepin
     get("/owners/#{owner}")
   end
 
+  # expects an owner key
+  def get_owner_info(owner)
+    get("/owners/#{owner}/info")
+  end
+
   def create_owner(owner_name, parent=nil)
     owner = {
       'key' => owner_name,

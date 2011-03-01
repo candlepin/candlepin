@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -133,7 +134,7 @@ public class Consumer extends AbstractHibernateObject
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private Set<Consumer> childConsumers;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
     @MapKeyManyToMany(targetEntity = String.class)
@@ -377,6 +378,7 @@ public class Consumer extends AbstractHibernateObject
     /**
      * @return Returns the entitlements.
      */
+    @XmlTransient
     public Set<Entitlement> getEntitlements() {
         return entitlements;
     }

@@ -52,6 +52,8 @@ import org.fedoraproject.candlepin.model.ExporterMetadata;
 import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerInfo;
+import org.fedoraproject.candlepin.model.OwnerInfoCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -86,6 +88,7 @@ import org.quartz.JobDetail;
 @Path("/owners")
 public class OwnerResource {
     private OwnerCurator ownerCurator;
+    private OwnerInfoCurator ownerInfoCurator;
     private PoolCurator poolCurator;
     private SubscriptionCurator subscriptionCurator;
     private SubscriptionTokenCurator subscriptionTokenCurator;
@@ -111,9 +114,11 @@ public class OwnerResource {
         ConsumerCurator consumerCurator, I18n i18n,
         UserServiceAdapter userService, EventSink sink,
         EventFactory eventFactory, EventCurator eventCurator, Importer importer,
-        PoolManager poolManager, ExporterMetadataCurator exportCurator) {
+        PoolManager poolManager, ExporterMetadataCurator exportCurator,
+        OwnerInfoCurator ownerInfoCurator) {
 
         this.ownerCurator = ownerCurator;
+        this.ownerInfoCurator = ownerInfoCurator;
         this.productCurator = productCurator;
         this.poolCurator = poolCurator;
         this.subscriptionCurator = subscriptionCurator;
@@ -164,6 +169,21 @@ public class OwnerResource {
     @AllowRoles(roles = {Role.OWNER_ADMIN})    
     public Owner getOwner(@PathParam("owner_key") String ownerKey) {
         return findOwner(ownerKey);
+    }
+
+    /**
+     * Return the owner's info identified by the given ID.
+     * 
+     * @param ownerKey Owner ID.
+     * @return the info of the owner identified by the given id.
+     */
+    @GET
+    @Path("/{owner_key}/info")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowRoles(roles = {Role.OWNER_ADMIN})    
+    public OwnerInfo getOwnerInfo(@PathParam("owner_key") String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+        return ownerInfoCurator.lookupByOwner(owner);
     }
 
     /**

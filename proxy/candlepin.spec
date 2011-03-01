@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.7
+Version: 0.2.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,35 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Mar 01 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.9-1
+- Fix OwnerInfo to account for entitlement quantity (jbowes@redhat.com)
+
+* Tue Mar 01 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.8-1
+- Make consumer entitlement loading lazy, and hide from json (jbowes@redhat.com)
+- Add an OwnerInfo object (jbowes@redhat.com)
+- Adding owner delete flag to not update the CRL. (jharris@redhat.com)
+- allow characters for consumer name that user service allows (sans leading \#) (cduryee@redhat.com)
+- Merge branch 'perf' (bkearney@redhat.com)
+- Porting unbind to rspec. (jharris@redhat.com)
+- Make the collection of entitlements on the pool lazy (bkearney@redhat.com)
+- Remove the unnecessary join tables (bkearney@redhat.com)
+- Don't serialize the cert/key as bytes stuff (jbowes@redhat.com)
+- Calculate the quantity based on a formula as opposed to iterating over the
+  collection of entitlements. (bkearney@redhat.com)
+- workaround old javac bug wrt generics (jbowes@redhat.com)
+- Add a contentPrefix to an owner, and use that in generation of the content
+  certificates. (bkearney@redhat.com)
+- Add concurrency test script. (dgoodwin@redhat.com)
+- Convert subscription_token from cuke to spec (jbowes@redhat.com)
+- Delete subscriptions cuke test (already in spec) (jbowes@redhat.com)
+- Revert "Use a function to calculate the Pool quantity on the fetch." (bkearney@redhat.com)
+- sefler likes small numbers of entitlements (bkearney@redhat.com)
+- fix logdriver changes which caused eclipse task to add '.' to src path. (jesusr@redhat.com)
+- Checkstyle. (jharris@redhat.com)
+- Generating API json. (jharris@redhat.com)
+- narrow cipher list to only include FIPS compliant ciphers (cduryee@redhat.com)
+- Mis spelled OAuth (bkearney@redhat.com)
+
 * Thu Feb 24 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.7-1
 - bump candlepin-deps to 0.0.13 to include rhino (jesusr@redhat.com)
 - Improve the error messages returned for OAuth errors (bkearney@redhat.com)
