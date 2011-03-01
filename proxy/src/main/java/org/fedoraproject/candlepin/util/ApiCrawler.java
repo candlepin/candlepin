@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,18 +28,25 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.JsonMappingException;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.schema.JsonSchema;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.resource.RootResource;
+import org.fedoraproject.candlepin.resteasy.JsonProvider;
 
 /**
  * ApiCrawler - Uses Java Reflection API to crawl the classes in our resources
  * namespace looking for exposed API calls.
  */
 public class ApiCrawler {
-    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new JsonProvider(new Config())
+            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
     private List<Class> httpClasses;
     private static final String API_FILE = "target/candlepin_api.json";
 
@@ -96,7 +101,12 @@ public class ApiCrawler {
         processAllowedRoles(m, apiCall);
         processQueryParams(m, apiCall);
 
-        apiCall.setReturnType(getReturnType(m));
+        try {
+            apiCall.setReturnType(getReturnType(m).getSchemaNode());
+        }
+        catch (JsonMappingException e) {
+            apiCall.setReturnType(null);
+        }
 
         // for matching up with documentation
         apiCall.setMethod(getQualifiedName(m));
@@ -133,19 +143,8 @@ public class ApiCrawler {
         }
     }
 
-    private static String getReturnType(Method method) {
-        Type returnType = method.getGenericReturnType();
-        String typeString = method.getReturnType().getSimpleName().toLowerCase();
-        if (returnType instanceof ParameterizedType) {
-            ParameterizedType type = (ParameterizedType) returnType;
-            Type[] typeArguments = type.getActualTypeArguments();
-            typeString += " of";
-            for (Type typeArgument : typeArguments) {
-                Class typeArgClass = (Class) typeArgument;
-                typeString += " " + typeArgClass.getSimpleName().toLowerCase();
-            }
-        }
-        return typeString;
+    private JsonSchema getReturnType(Method method) throws JsonMappingException {
+        return mapper.generateJsonSchema(method.getReturnType());
     }
 
     private static String getQualifiedName(Method method) {
@@ -161,7 +160,7 @@ public class ApiCrawler {
         private List<Role> allowedRoles;
         private List<String> httpVerbs;
         private List<ApiParam> queryParams;
-        private String returnType;
+        private JsonNode returnType;
 
         public RestApiCall() {
             allowedRoles = new LinkedList<Role>();
@@ -190,8 +189,12 @@ public class ApiCrawler {
             queryParams.add(new ApiParam(name, type));
         }
 
-        public void setReturnType(String type) {
+        public void setReturnType(JsonNode type) {
             returnType = type;
+        }
+
+        public JsonNode getReturnType() {
+            return returnType;
         }
 
         public List<Role> getAllowedRoles() {
@@ -204,10 +207,6 @@ public class ApiCrawler {
 
         public List<ApiParam> getQueryParams() {
             return queryParams;
-        }
-
-        public String getReturnType() {
-            return returnType;
         }
 
         public String getUrl() {
