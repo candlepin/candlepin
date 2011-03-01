@@ -44,13 +44,13 @@ public class I18nProviderTest {
     public void verifyEnglishTestString() {
         when(request.getLocale()).thenReturn(Locale.US);
         I18nProvider provider = new I18nProvider(injector);
-        assertEquals("Test", provider.getTestString());
+        assertEquals("Bad Request", provider.getTestString());
     }
     
     @Test 
     public void verifyGermanTestString() {
-        when(request.getLocale()).thenReturn(Locale.GERMAN);
+        when(request.getLocale()).thenReturn(new Locale("de", "DE"));
         I18nProvider provider = new I18nProvider(injector);
-        assertEquals("Untersuchung", provider.getTestString());
+        assertEquals("Fehlerhafte Anfrage", provider.getTestString());
     }    
 }

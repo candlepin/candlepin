@@ -82,6 +82,6 @@ public class I18nProvider implements Provider<I18n> {
     }
 
     public String getTestString() {
-        return i18n.tr("Test");
+        return i18n.tr("Bad Request");
     }
 }
