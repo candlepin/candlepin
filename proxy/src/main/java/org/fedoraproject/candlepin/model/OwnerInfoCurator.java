@@ -50,11 +50,16 @@ public class OwnerInfoCurator {
             c.setProjection(Projections.rowCount());
             int consumers = (Integer) c.uniqueResult();
             
-            c = currentSession().createCriteria(Entitlement.class).createCriteria(
-                "consumer").add(Restrictions.eq("owner", owner)).add(Restrictions.eq(
-                    "type", type));
-            c.setProjection(Projections.rowCount());
-            int entitlements = (Integer) c.uniqueResult();
+            c = currentSession().createCriteria(Entitlement.class).setProjection(
+                Projections.sum("quantity")).createCriteria("consumer").
+                add(Restrictions.eq("owner", owner)).add(Restrictions.eq("type", type));
+
+            // If there's no rows summed, quantity returns null.
+            Object result = c.uniqueResult();
+            int entitlements = 0;
+            if (result != null) {
+                entitlements = (Integer) result;
+            }
             
             info.addTypeTotal(type, consumers, entitlements);
         }
