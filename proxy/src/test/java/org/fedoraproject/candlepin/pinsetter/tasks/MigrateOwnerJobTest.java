@@ -105,7 +105,7 @@ public class MigrateOwnerJobTest {
         
         return new JobExecutionContext(s, bundle, null);
     }
-    
+
     @Test
     @SuppressWarnings("unchecked")
     public void execute() throws JobExecutionException {
@@ -114,6 +114,7 @@ public class MigrateOwnerJobTest {
             any(String.class))).thenReturn(client);
         ClientResponse<Owner> resp = mock(ClientResponse.class);
         when(client.exportOwner(eq("admin"))).thenReturn(resp);
+        when(resp.getStatus()).thenReturn(200);
         JobDataMap map = new JobDataMap();
         map.put("owner_key", "admin");
         map.put("uri", "http://foo.example.com/candlepin");

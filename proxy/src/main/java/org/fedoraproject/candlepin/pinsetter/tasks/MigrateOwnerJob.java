@@ -41,6 +41,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.WebApplicationException;
 
 /**
  * MigrateOwnerJob
@@ -60,17 +61,41 @@ public class MigrateOwnerJob implements Job {
         conn = connection;
         config = conf;
     }
-    
+
+    private String buildUri(String uri) {
+        if (uri == null || "".equals(uri.trim())) {
+            return "";
+        }
+        
+        String[] parts = uri.split("://");
+        if (parts.length > 1) {
+            String[] paths = parts[1].split("/");
+            StringBuffer buf = new StringBuffer(parts[0]);
+            buf.append("://");
+            buf.append(paths[0]);
+            buf.append("/candlepin");
+            uri = buf.toString();
+        }
+        else {
+            StringBuffer buf = new StringBuffer("http://");
+            buf.append(parts[0]);
+            buf.append("/candlepin");
+            uri = buf.toString();
+        }
+        
+        return uri;
+    }
+
     @Override
     public void execute(JobExecutionContext ctx)
         throws JobExecutionException {
         String key = ctx.getMergedJobDataMap().getString("owner_key");
-        String uri = ctx.getMergedJobDataMap().getString("uri");
-        
+        String uri = buildUri(ctx.getMergedJobDataMap().getString("uri"));
+
         validateInput(key, uri);
         
         log.info("Migrating owner [" + key +
-            "] to candlepin instance running on [" + uri + "]");
+            "] from candlepin instance running on [" + uri + "]");
         
         Credentials creds = new UsernamePasswordCredentials(
             config.getString(ConfigProperties.SHARD_USERNAME),
@@ -78,15 +103,24 @@ public class MigrateOwnerJob implements Job {
         OwnerClient client = conn.connect(creds, uri);
         ClientResponse<Owner> resp = client.exportOwner(key);
         
+        log.info("call returned - status: ["+ resp.getStatus() +
+            "] reason [" + resp.getResponseStatus() + "]");
+
+        // TODO: do we want specific errors or just a general one
         if (resp.getStatus() == Status.NOT_FOUND.getStatusCode()) {
             throw new NotFoundException("Can't find owner [" + key + "]");
         }
-        
-        Owner owner = resp.getEntity();
-        
-        // totally won't work cuz of the id not being null and
-        // will probably piss off hibernate :(
-        ownerCurator.create(owner);
+
+        if (resp.getStatus() == Status.OK.getStatusCode()) {
+            Owner owner = resp.getEntity();
+            
+            // totally won't work cuz of the id not being null and
+            // will probably piss off hibernate :(
+            ownerCurator.merge(owner);
+        }
+        else {
+            throw new WebApplicationException(resp);
+        }
     }
 
     public static JobDetail migrateOwner(String key, String uri) {
