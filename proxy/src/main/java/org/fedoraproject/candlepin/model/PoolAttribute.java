@@ -58,9 +58,9 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     public PoolAttribute() {
     }
 
-    public PoolAttribute(String name, String quantity) {
+    public PoolAttribute(String name, String val) {
         this.name = name;
-        this.value = quantity;
+        this.value = val;
     }
 
     @XmlTransient

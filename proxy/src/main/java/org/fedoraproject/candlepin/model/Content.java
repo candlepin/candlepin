@@ -20,6 +20,7 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -66,6 +67,7 @@ public class Content extends AbstractHibernateObject {
     private Long metadataExpire;
 
     @CollectionOfElements(targetElement = String.class)
+    @JoinTable(name = "cp_content_modified_products")
     private Set<String> modifiedProductIds = new HashSet<String>();
 
     public Content(String name, String id, String label, String type,

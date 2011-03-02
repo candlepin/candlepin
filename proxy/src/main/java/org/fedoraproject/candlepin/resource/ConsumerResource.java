@@ -553,7 +553,10 @@ public class ConsumerResource {
             // Make sure we have created/updated a pool for this subscription:
             Pool pool = poolManager.lookupBySubscriptionId(sub.getId());
             if (pool == null) {
-                pool = poolManager.createPoolForSubscription(sub);
+                // WARNING: Assumption here that a bind by token subscription
+                // will only link up to one pool, or at least that we'll try to bind
+                // to the *first* one it created:
+                pool = poolManager.createPoolsForSubscription(sub).get(0);
             }
             else {
                 poolManager.updatePoolForSubscription(pool, sub);

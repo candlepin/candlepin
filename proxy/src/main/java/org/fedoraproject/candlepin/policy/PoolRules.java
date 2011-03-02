@@ -14,12 +14,17 @@
  */
 package org.fedoraproject.candlepin.policy;
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 
 /**
  *
  */
 public interface PoolRules {
 
-    void onCreatePool(Pool pool);
+    List<Pool> createPools(Subscription sub);
+    List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools);
 }

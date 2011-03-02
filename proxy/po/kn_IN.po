@@ -1,0 +1,463 @@
+# Language kn-IN translations for l package.
+# Copyright (C) 2011 THE l'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the l package.
+#
+# Automatically generated, 2011.
+# Shankar Prasad <svenkate@redhat.com>, 2011.
+msgid ""
+msgstr ""
+"Project-Id-Version: l 10n\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-02-18 16:10-0400\n"
+"PO-Revision-Date: 2011-02-24 16:48+0530\n"
+"Last-Translator: Shankar Prasad <svenkate@redhat.com>\n"
+"Language-Team: kn_IN <kde-i18n-doc@kde.org>\n"
+"Language: kn-IN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.1\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:652
+#, java-format
+msgid ""
+"\n"
+"-Cannot unsubscribe entitlement ''{0}'' because:"
+msgstr ""
+"\n"
+"-''{0}'' ಎಂಬ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ನಿಂದ ಚಂದಾದಾರಿಕೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗಿಲ್ಲ ಏಕೆಂದರೆ:"
+
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:678
+#, java-format
+msgid ""
+"\n"
+"  {0} consumer ''{1}'' with id ''{2}'' has the following entitlements:"
+msgstr ""
+"\n"
+"  {0} ಎಂಬ ''{2}''ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕ ''{1}'' ಈ ಕೆಳಗಿನ "
+"ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳನ್ನು ಹೊಂದಿದ್ದಾರೆ:"
+
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:688
+#, java-format
+msgid ""
+"\n"
+"    Entitlement ''{0}'':"
+msgstr ""
+"\n"
+"    ಎಂಟೈಟಲ್ಮೆಂಟ್ ''{0}'':"
+
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:689
+#, java-format
+msgid ""
+"\n"
+"        account number: ''{0}''"
+msgstr ""
+"\n"
+"        ಖಾತೆಯ ಸಂಖ್ಯೆ: ''{0}''"
+
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:691
+#, java-format
+msgid ""
+"\n"
+"        serial number: ''{0}''"
+msgstr ""
+"\n"
+"        ಅನುಕ್ರಮ ಸಂಖ್ಯೆ: ''{0}''"
+
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:697
+#, java-format
+msgid ""
+"\n"
+"\n"
+"These consumed entitlements were derived from subscription pool: ''{0}''."
+msgstr ""
+"\n"
+"\n"
+"ಬಳಕೆಯಾದ ಈ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳನ್ನು ಚಂದಾದಾರಿಕೆ ಪೂಲ್‌ನಿಂದ ಪಡೆಯಲಾಗಿದೆ: ''{0}''."
+
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:702
+msgid ""
+"\n"
+"You must first unsubscribe these consumers from these entitlements.\n"
+msgstr ""
+"\n"
+"ನೀವು ಈ ಗ್ರಾಹಕರನ್ನು ಈ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳ ಚಂದಾದಾರಿಕೆಯಿಂದ ರದ್ದುಗೊಳಿಸಬೇಕು.\n"
+
+#: src/main/java/org/fedoraproject/candlepin/model/ConsumerCurator.java:66
+#, java-format
+msgid "Name of the consumer should be shorter than {0} characters."
+msgstr "ಗ್ರಾಹಕರ ಹೆಸರು {0} ಅಕ್ಷರಗಳಿಗಿಂತ ಚಿಕ್ಕದಾಗಿರಬೇಕು."
+
+#: src/main/java/org/fedoraproject/candlepin/model/EntitlementCurator.java:216
+#, java-format
+msgid "No product found for product id {0}"
+msgstr "{0} ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಯಾವುದೆ ಉತ್ಪನ್ನವಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/exceptions/CandlepinExceptionMapper.java:119
+#, java-format
+msgid "{0} is not a valid value for {1}"
+msgstr "{0} ಎನ್ನುವುದು {1} ನ ಒಂದು ಮಾನ್ಯವಾದ ಮೌಲ್ಯ"
+
+#: src/main/java/org/fedoraproject/candlepin/exceptions/CandlepinExceptionMapper.java:123
+msgid "Bad Request"
+msgstr "ತಪ್ಪು ಮನವಿ"
+
+#: src/main/java/org/fedoraproject/candlepin/exceptions/CandlepinExceptionMapper.java:153
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr "{1}.{2}:{3} ನಲ್ಲಿ ಚಾಲನಾ ಸಮಯದ ದೋಷ {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:101
+#, java-format
+msgid "Consumer: {0} has no entitlement for product {1}"
+msgstr ""
+"ಗ್ರಾಹಕ: {0} ಎನ್ನುವವರು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಅನ್ನು "
+"ಹೊಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:115
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:651
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:98
+#, java-format
+msgid "No such consumer: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಗ್ರಾಹಕರಿಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:139
+#: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:156
+msgid "Entitlement with ID '{0}' could not be found"
+msgstr "'{0}' ಎಂಬ ಐಡಿಯ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಕಂಡುಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:212
+msgid "System name cannot contain most special characters."
+msgstr "ವ್ಯವಸ್ಥೆಯ ಹೆಸರು ಅತಿ ವಿಶೇಷವಾದ ಅಕ್ಷರಗಳನ್ನು ಹೊಂದಿರುವಂತಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:232
+#, java-format
+msgid "User {0} has already registered a personal consumer"
+msgstr "{0} ಎಂಬ ಬಳಕೆದಾರರು ಒಂದು ಖಾಸಗಿ ಗ್ರಾಹಕನನ್ನು ನೋಂದಾಯಿಸಿದ್ದಾರೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:269
+#, java-format
+msgid "Problem creating consumer {0}"
+msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನನ್ನು ರಚಿಸುವಾಗ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:297
+#, java-format
+msgid "No such consumer type: {0}"
+msgstr "ಆ ಬಗೆಯ ಯಾವುದೆ ಗ್ರಾಹಕರಿಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:352
+#, java-format
+msgid "Cannot unregister {0} consumer {1} because: {2}"
+msgstr "{1} ಎಂಬ ಗ್ರಾಹಕನ {0} ನೋಂದಣಿಯನ್ನು ರದ್ದು ಮಾಡಲಾಗಲಿಲ್ಲ ಏಕೆಂದರೆ: {2}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:461
+#, java-format
+msgid "This consumer is already subscribed to the product ''{0}''"
+msgstr "ಗ್ರಾಹಕರು ಈಗಾಗಲೆ ''{0}'' ಎಂಬ ಉತ್ಪನ್ನಕೆ ಚಂದಾದಾರರಾಗಿದ್ದಾರೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:466
+#, java-format
+msgid "No free entitlements are available for the product ''{0}''"
+msgstr "''{0}'' ಎಂಬ ಉತ್ಪನ್ನಕ್ಕೆ ಯಾವುದೆ ಉಚಿತ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳು ಲಭ್ಯವಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:471
+#, java-format
+msgid "Consumers of this type are not allowed to the product ''{0}''"
+msgstr "ಈ ಬಗೆಯ ಗ್ರಾಹಕರಿಗೆ ''{0}'' ಉತ್ಪನ್ನಕ್ಕೆ ಅನುಮತಿ ಇರುವುದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:475
+#, java-format
+msgid "Only virtual systems can consume the product ''{0}''"
+msgstr ""
+"''{0}'' ಎಂಬ  ಉತ್ಪನ್ನವನ್ನು ಕೇವಲ ವರ್ಚುವಲ್ ವ್ಯವಸ್ಥೆಗಳು ಮಾತ್ರ ಬಳಸಲು "
+"ಸಾಧ್ಯವಿರುತ್ತದೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:479
+#, java-format
+msgid "Unable to entitle consumer to the product ''{0}'': {1}"
+msgstr "ಗ್ರಾಹಕನನ್ನು ''{0}'' ಎಂಬ ಉತ್ಪನ್ನಕ್ಕೆ ಅರ್ಹತೆ ನೀಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {1}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:504
+#, java-format
+msgid ""
+"This consumer is already subscribed to the product matching pool with id "
+"''{0}''"
+msgstr ""
+"ಗ್ರಾಹಕರು ಈಗಾಗಲೆ ''{0}'' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಉತ್ಪನ್ನಕ್ಕೆ ತಾಳೆಯಾಗುವ "
+"ಪೂಲ್‌ಗೆ ಚಂದಾದಾರರಾಗಿದ್ದಾರೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:509
+#, java-format
+msgid "No free entitlements are available for the pool with id ''{0}''"
+msgstr ""
+"''{0}'' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಪೂಲ್‌ಗಾಗಿ ಯಾವುದೆ ಉಚಿತ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳು "
+"ಲಭ್ಯವಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:514
+#, java-format
+msgid ""
+"Consumers of this type are not allowed to subscribe to the pool with id "
+"''{0}''"
+msgstr ""
+"ಈ ಬಗೆಯ ಗ್ರಾಹಕರಿಗೆ ''{0}'' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಪೂಲ್‌ಗೆ ಚಂದಾದಾರರಾಗಲು "
+"ಅನುಮತಿ ಇರುವುದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:519
+#, java-format
+msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
+msgstr ""
+"ಗ್ರಾಹಕನನ್ನು ''{0}'' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಪೂಲ್‌ಗೆ ಅರ್ಹತೆ ನೀಡಲು "
+"ಸಾಧ್ಯವಾಗಿಲ್ಲ: {1}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:540
+#, java-format
+msgid "No such token: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಟೋಕನ್‌ ಇಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:573
+#, java-format
+msgid "No such entitlement pool: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ  ಎಂಟೈಟಲ್ಮೆಂಟ್ ಪೂಲ್ ಇಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:609
+msgid "Cannot bind by multiple parameters."
+msgstr "ಬಹು ನಿಯತಾಂಕದೊಂದಿಗೆ ಬೈಂಡ್ ಮಾಡಲಾಗಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:627
+msgid "Pool ID must be provided"
+msgstr "ಪೂಲ್ ಐಡಿಯನ್ನು ಒದಗಿಸಬೇಕು"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:661
+#, java-format
+msgid "No such entitlement: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಇಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:679
+#, java-format
+msgid "No such product: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಉತ್ಪನ್ನ ಇಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:705
+msgid "Consumer with ID "
+msgstr "ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:739
+msgid "Entitlement with ID '{0}' could not be found."
+msgstr "'{0}' ಎಂಬ ಐಡಿಯ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಕಂಡುಬಂದಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:759
+#, java-format
+msgid "Entitlement Certificate with serial number {0} could not be found."
+msgstr ""
+"{0} ಎಂಬ ಅನುಕ್ರಮ ಸಂಖ್ಯೆಯನ್ನು ಹೊಂದಿರುವ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಪ್ರಮಾಣಪತ್ರವು "
+"ಕಂಡುಬಂದಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:804
+#, java-format
+msgid "Consumer {0} cannot be exported, as it's of wrong consumer type."
+msgstr ""
+"{0} ಎಂಬ ಗ್ರಾಹಕನನ್ನು ರಫ್ತು ಮಾಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ, ಏಕೆಂದರೆ ಗ್ರಾಹಕರ ಬಗೆ "
+"ಸರಿಯಾಗಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:818
+msgid "Unable to create export archive"
+msgstr "ರಫ್ತು ಆರ್ಕೈವ್ ಅನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:848
+#, java-format
+msgid "Problem regenerating id cert for consumer {0}"
+msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನಿಗಾಗಿ id cert ಅನ್ನು ಉತ್ಪಾದಿಸುವಲ್ಲಿ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionTokenResource.java:81
+#, java-format
+msgid "SubscriptionToken with id {0} could not be found"
+msgstr "{0} ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಚಂದಾದಾರಿಕೆ ಟೋಕನ್ ಕಂಡುಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:180
+#, java-format
+msgid "Cound not create the Owner: {0}. Parent {1} does not exist."
+msgstr "ಮಾಲಿಕನನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {0}. ಮೂಲ {1} ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:192
+#, java-format
+msgid "Cound not create the Owner: {0}"
+msgstr "ಮಾಲಿಕನನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:365
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:416
+#, java-format
+msgid "owner with key: {0} was not found."
+msgstr "ಕೀಲಿ : {0}ಅನ್ನು ಹೊಂದಿರುವ ಮಾಲಿಕ ಕಂಡು ಬಂದಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:431
+#, java-format
+msgid "subscription with id: {0} not found."
+msgstr "id: {0} ಅನ್ನು ಹೊಂದಿರುವ ಚಂದಾದಾರಿಕೆ ಕಂಡು ಬಂದಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:452
+msgid "Error reading export archive"
+msgstr "ರಫ್ತು ಆರ್ಕೈವ್ ಅನ್ನು ಓದುವಲ್ಲಿ ದೋಷ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:455
+msgid "Bad data in export archive"
+msgstr "ರಫ್ತು ಆರ್ಕೈವ್‌ನಲ್ಲಿ ತಪ್ಪು ಮಾಹಿತಿ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ProductResource.java:100
+#: src/main/java/org/fedoraproject/candlepin/resource/ProductResource.java:113
+#: src/main/java/org/fedoraproject/candlepin/resource/ProductResource.java:155
+msgid "Product with UUID '{0}' could not be found"
+msgstr "'{0}' ಎಂಬ UUID ಅನ್ನು ಹೊಂದಿದ ಉತ್ಪನ್ನವು ಕಂಡು ಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerTypeResource.java:82
+msgid "ConsumerType with id '"
+msgstr "ಈ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕರ ಬಗೆ '"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerTypeResource.java:102
+#, java-format
+msgid "Problem creating consumertype: {0}"
+msgstr "ಗ್ರಾಹಕರ ಬಗೆಯನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerTypeResource.java:122
+#, java-format
+msgid "Consumer Type with label {0} could not be found"
+msgstr "{0} ಎಂಬ ಲೇಬಲ್‌ನ ಗ್ರಾಹಕರ ಬಗೆಯು ಕಂಡು ಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerTypeResource.java:140
+#, java-format
+msgid "Consumer Type with id {0} could not be found"
+msgstr "{0} ಎಂಬ ಐಡಿಯ ಗ್ರಾಹಕರ ಬಗೆಯು ಕಂಡು ಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/EventResource.java:64
+msgid "Event with ID '{0}' could not be found."
+msgstr "'{0}' ಎಂಬ ಐಡಿಯ ಯಾವುದೆ ಕಾರ್ಯಕ್ರಮ (ಇವೆಂಟ್) ಕಂಡುಬಂದಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:92
+msgid "email and email_locale are required for notification"
+msgstr "ಸೂಚನೆಗಾಗಿ ಇಮೈಲ್ ಹಾಗು email_locale ನ ಅಗತ್ಯವಿರುತ್ತದೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:124
+#, java-format
+msgid "Subscription with id {0} could not be found"
+msgstr "{0} ಎಂಬ ಐಡಿ ಅನ್ನು ಹೊಂದಿರುವ ಚಂದಾದಾರಿಕೆ ಕಂಡು ಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:113
+msgid "Cannot filter on both owner and consumer"
+msgstr "ಮಾಲಿಕ ಹಾಗು ಗ್ರಾಹಕ ಎರಡನ್ನೂ ಫಿಲ್ಟರ್ ಮಾಡಲಾಗುವುದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:117
+msgid "A consumer or owner is needed to filter on product"
+msgstr "ಉತ್ಪನ್ನದ ಮೇಲೆ ಫಿಲ್ಟರ್ ಮಾಡಲು ಗ್ರಾಹಕ ಅಥವ ಮಾಲಿಕನ ಅಗತ್ಯವಿರುತ್ತದೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:130
+#, java-format
+msgid "consumer: {0}"
+msgstr "ಗ್ರಾಹಕ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:140
+#, java-format
+msgid "owner: {0}"
+msgstr "ಮಾಲಿಕ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:156
+msgid "Owner with UUID '{0}' could not be found"
+msgstr "'{0}' ಎಂಬ UUID ಅನ್ನು ಹೊಂದಿದ ಮಾಲಿಕನು ಕಂಡು ಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:168
+#, java-format
+msgid "Cound not create the Pool: {0}"
+msgstr "ಪೂಲ್ ಅನ್ನಯ ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {0}"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:190
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:201
+msgid "Entitlement Pool with ID '{0}' could not be found"
+msgstr "'{0}' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿದ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಪೂಲ್‌ ಕಂಡುಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:207
+msgid "Cannot directly delete a pool backed by a subscription"
+msgstr ""
+"ಒಂದು ಚಂದಾದಾರಿಕೆಯ ಹಿನ್ನಲೆಯಲ್ಲಿ ಹೊಂದಿರುವ ಒಂದು ಪೂಲ್ ಅನ್ನು ನೇರವಾಗಿ ಅಳಿಸಲು "
+"ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ContentResource.java:71
+#, java-format
+msgid "Content with id {0} could not be found"
+msgstr "{0} ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ವಿಷಯವು ಕಂಡುಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/RulesResource.java:81
+msgid "Error decoding the rules. The text should be base 64 encoded"
+msgstr ""
+"ನಿಯಮಗಳನ್ನು ಡೀಕೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ ಉಂಟಾಗಿದೆ. ಪಠ್ಯವು ಬೇಸ್ 64 ಎನ್‌ಕೋಡ್ "
+"ಮಾಡಿರಬೇಕು"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/RulesResource.java:103
+msgid "couldn't read rules file"
+msgstr "ನಿಯಮಗಳ ಕಡತವನ್ನು ಓದಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/sync/Importer.java:138
+msgid "Wrong metadata type"
+msgstr "ತಪ್ಪು ಮೆಟಾಡೇಟದ ಬಗೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/sync/Importer.java:147
+msgid "Invalid owner"
+msgstr "ಅಮಾನ್ಯವಾದ ಮಾಲಿಕ"
+
+#: src/main/java/org/fedoraproject/candlepin/sync/Importer.java:159
+msgid "Import is older than existing data"
+msgstr "ಆಮದು ಮಾಡಲಾಗಿದ್ದು ಈಗಿರುವ ಮಾಹಿತಿಗಿಂತ ಹಳೆಯದಾಗಿದೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/guice/I18nProvider.java:85
+msgid "Test"
+msgstr "ಪರೀಕ್ಷೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/policy/js/entitlement/EntitlementRules.java:123
+#, java-format
+msgid "Entitlements for {0} expired on: {1}"
+msgstr ""
+"{0} ಗಾಗಿನ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳ ವಾಯಿದೆಯು ಈ ದಿನಾಂಕದಂದು ಕೊನೆಗೊಳ್ಳುತ್ತವೆ: {1}"
+
+#: src/main/java/org/fedoraproject/candlepin/policy/js/entitlement/EntitlementRules.java:366
+msgid "'{0}' Should contain name, priority and at least one attribute"
+msgstr ""
+"'{0}' ಎನ್ನುವುದು ಹೆಸರು, ಆದ್ಯತೆ ಹಾಗು ಕನಿಷ್ಟ ಒಂದಾದರೂ ಗುಣವಿಶೇಷವನ್ನು "
+"ಹೊಂದಿರಬೇಕು"
+
+#: src/main/java/org/fedoraproject/candlepin/policy/js/entitlement/EntitlementRules.java:381
+msgid "second parameter should be the priority number."
+msgstr "ಎರಡನೆ ನಿಯತಾಂಕವು ಆದ್ಯತೆ ಸಂಖ್ಯೆಯಾಗಿರಬೇಕು."
+
+#: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
+msgid "Standalone candlepin does not support activation."
+msgstr "ಸಕ್ರಿಯಗೊಳಿಕೆಯನ್ನು ಒಂಟಿಯಾಗಿ candlepin ಬೆಂಬಲಿಸುವುದಿಲ್ಲ."
+
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/BasicAuth.java:107
+msgid "Error contacting user service"
+msgstr "ಬಳಕೆದಾರ ಸೇವೆಯನ್ನು ಸಂಪರ್ಕಿಸುವಲ್ಲಿ ದೋಷ ಉಂಟಾಗಿದೆ"
+
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/AuthInterceptor.java:171
+msgid "Invalid Credentials"
+msgstr "ಅಮಾನ್ಯವಾದ ಪರಿಚಯಪತ್ರ"
+
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:93
+msgid "No username provided for oauth request"
+msgstr "oauth ಮನವಿಗಾಗಿ ಯಾವುದೆ ಬಳಕೆದಾರನನ್ನು ಒದಗಿಸಲಾಗಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:137
+#, java-format
+msgid "No oauth consumer found for key {0}"
+msgstr "{0} ಎಂಬ ಕೀಲಿಗೆ ಯಾವುದೆ oauth ಗ್ರಾಹಕ ಕಂಡು ಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:143
+msgid "Error getting oauth consumer Key"
+msgstr "oauth ಗ್ರಾಹಕ ಕೀಲಿಯನ್ನು ಪಡೆಯುವಲ್ಲಿ ದೋಷ"
+
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/UserAuth.java:81
+#, java-format
+msgid "No owner found for user {0}"
+msgstr "{0} ಎಂಬ ಬಳಕೆದಾರನಿಗಾಗಿ ಯಾವುದೆ ಮಾಲಿಕ ಕಂಡುಬಂದಿಲ್ಲ"
+
+#: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/UserAuth.java:101
+msgid "An owner does not exist for a null org id"
+msgstr "ಶೂನ್ಯ org id ಗಾಗಿ ಒಬ್ಬ ಮಾಲಿಕ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ"
+
+
