@@ -215,7 +215,7 @@ public class ConsumerResource {
         if (consumer.getName().indexOf('#') == 0) {
             //this is a bouncycastle restriction
             throw new BadRequestException(i18n.tr(
-                "System name cannot contain begin with # sign"));
+                "System name cannot begin with # character"));
         }
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
