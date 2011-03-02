@@ -20,8 +20,17 @@ describe 'Subscription Resource' do
       @cp.list_subscriptions(@owner.key).size.should == 3
   end
 
-  it 'should allow owners to delete their subscriptions' do
+  it 'should allow admins to delete subscriptions' do
       subs = @cp.create_subscription(@owner.key, @monitoring_product.id, 5)
+      @cp.refresh_pools(@owner.key)
+
+      # Add a subscription token to make sure this gets cleaned up too:
+      token = {
+          'token' => random_string('test_token'),
+          'subscription' => {:id => subs['id']}
+      }
+      token = @cp.create_subscription_token(token)
+
       @cp.delete_subscription(subs.id)
       @cp.list_subscriptions(@owner.key).size.should == 0
   end

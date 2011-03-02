@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -85,6 +86,7 @@ public class Subscription extends AbstractHibernateObject {
 
     private String accountNumber;
 
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
     @OneToMany(mappedBy = "subscription")
     private Set<SubscriptionToken> tokens;
 
