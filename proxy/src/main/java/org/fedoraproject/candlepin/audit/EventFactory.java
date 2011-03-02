@@ -151,6 +151,20 @@ public class EventFactory {
         return e;
     }
     
+    public Event ownerDeleted(Owner owner) {
+        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principalProvider.get(),
+            owner.getId(), null, owner.getId(), entityToJson(owner), null);
+        return e;
+    }
+
+    public Event ownerMigrated(Owner owner) {
+        String ownerJson = entityToJson(owner);
+        Event e = new Event(Event.Type.MODIFIED, Event.Target.OWNER, principalProvider.get(),
+            owner.getId(), null, owner.getId(), ownerJson, ownerJson);
+
+        return e;
+    }
+
     public Event poolCreated(Pool newPool) {
         String newEntityJson = entityToJson(newPool);
         Owner o = newPool.getOwner();
@@ -178,11 +192,6 @@ public class EventFactory {
         return e;
     }
 
-    public Event ownerDeleted(Owner owner) {
-        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principalProvider.get(),
-            owner.getId(), null, owner.getId(), entityToJson(owner), null);
-        return e;
-    }
     
     public Event exportCreated(Consumer consumer) {
         Principal principal = principalProvider.get();

@@ -95,6 +95,11 @@ public class EventSinkImpl implements EventSink {
         Event e = eventFactory.ownerCreated(newOwner);
         sendEvent(e);
     }
+
+    public void emitOwnerMigrated(Owner owner) {
+        Event e = eventFactory.ownerMigrated(owner);
+        sendEvent(e);
+    }
     
     public void emitPoolCreated(Pool newPool) {
         Event e = eventFactory.poolCreated(newPool);
