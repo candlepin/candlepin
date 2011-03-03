@@ -406,7 +406,7 @@ public class OwnerResource {
     @Path("{owner_key}")
     @Transactional
     @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public void updateConsumer(@PathParam("owner_key") String key,
+    public void updateOwner(@PathParam("owner_key") String key,
         Owner owner) {
         Owner toUpdate = findOwner(key);
         log.debug("Updating");
