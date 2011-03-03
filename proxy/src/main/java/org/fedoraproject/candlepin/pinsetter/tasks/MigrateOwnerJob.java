@@ -103,8 +103,8 @@ public class MigrateOwnerJob implements Job {
         OwnerClient client = conn.connect(creds, uri);
         ClientResponse<Owner> resp = client.exportOwner(key);
         
-        log.info("call returned - status: ["+ resp.getStatus() +
-            "] reason [" + resp.getResponseStatus() + "]");
+        log.info("call returned - status: [" + resp.getStatus() + "] reason [" +
+            resp.getResponseStatus() + "]");
 
         // TODO: do we want specific errors or just a general one
         if (resp.getStatus() == Status.NOT_FOUND.getStatusCode()) {

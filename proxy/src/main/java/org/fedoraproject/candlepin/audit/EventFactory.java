@@ -52,15 +52,17 @@ public class EventFactory {
     @Inject
     public EventFactory(PrincipalProvider principalProvider) {
         this.principalProvider = principalProvider;
-        
+
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary,
+            secondary);
         mapper = new ObjectMapper();
         mapper.setSerializerFactory(new CandlepinSerializerFactory());
         mapper.getSerializationConfig().setAnnotationIntrospector(pair);
         mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
-        this.entitlementWriter = mapper.viewWriter(Event.Target.ENTITLEMENT.getClass());
+        this.entitlementWriter = mapper.viewWriter(Event.Target.ENTITLEMENT
+            .getClass());
     }
 
     public Event consumerCreated(Consumer newConsumer) {
@@ -95,9 +97,9 @@ public class EventFactory {
     public Event consumerDeleted(Consumer oldConsumer) {
         String oldEntityJson = entityToJson(oldConsumer);
 
-        Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER, 
-            principalProvider.get(), oldConsumer.getOwner().getId(), oldConsumer.getId(),
-            oldConsumer.getId(), oldEntityJson, null);
+        Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER,
+            principalProvider.get(), oldConsumer.getOwner().getId(),
+            oldConsumer.getId(), oldConsumer.getId(), oldEntityJson, null);
         return e;
     }
 
@@ -152,15 +154,17 @@ public class EventFactory {
     }
     
     public Event ownerDeleted(Owner owner) {
-        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER, principalProvider.get(),
-            owner.getId(), null, owner.getId(), entityToJson(owner), null);
+        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER,
+            principalProvider.get(), owner.getId(), null, owner.getId(),
+            entityToJson(owner), null);
         return e;
     }
 
     public Event ownerMigrated(Owner owner) {
         String ownerJson = entityToJson(owner);
-        Event e = new Event(Event.Type.MODIFIED, Event.Target.OWNER, principalProvider.get(),
-            owner.getId(), null, owner.getId(), ownerJson, ownerJson);
+        Event e = new Event(Event.Type.MODIFIED, Event.Target.OWNER,
+            principalProvider.get(), owner.getId(), null, owner.getId(),
+            ownerJson, ownerJson);
 
         return e;
     }
@@ -168,15 +172,17 @@ public class EventFactory {
     public Event poolCreated(Pool newPool) {
         String newEntityJson = entityToJson(newPool);
         Owner o = newPool.getOwner();
-        Event e = new Event(Event.Type.CREATED, Event.Target.POOL, 
-            principalProvider.get(), o.getId(), null, newPool.getId(), null, newEntityJson);
+        Event e = new Event(Event.Type.CREATED, Event.Target.POOL,
+            principalProvider.get(), o.getId(), null, newPool.getId(), null,
+            newEntityJson);
         return e;
     }
     
     public Event poolChangedFrom(Pool before) {
         Owner o = before.getOwner();
-        Event e = new Event(Event.Type.MODIFIED, Event.Target.POOL, principalProvider.get(),
-            o.getId(), null, before.getId(), entityToJson(before), null);
+        Event e = new Event(Event.Type.MODIFIED, Event.Target.POOL,
+            principalProvider.get(), o.getId(), null, before.getId(),
+            entityToJson(before), null);
         return e;
     }
     
@@ -188,7 +194,8 @@ public class EventFactory {
         String oldJson = entityToJson(pool);
         Owner o = pool.getOwner();
         Event e = new Event(Event.Type.DELETED, Event.Target.POOL,
-            principalProvider.get(), o.getId(), null, pool.getId(), oldJson, null);
+            principalProvider.get(), o.getId(), null, pool.getId(),
+            oldJson, null);
         return e;
     }
 
@@ -196,8 +203,8 @@ public class EventFactory {
     public Event exportCreated(Consumer consumer) {
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.CREATED, Event.Target.EXPORT, principal, 
-            principal.getOwner().getId(), consumer.getId(), consumer.getId(), null,
-            entityToJson(consumer));
+            principal.getOwner().getId(), consumer.getId(), consumer.getId(),
+            null, entityToJson(consumer));
         return e;
     }
     
@@ -222,14 +229,16 @@ public class EventFactory {
         String news = entityToJson(newSub);
         Principal principal = principalProvider.get();
         return new Event(Event.Type.MODIFIED, Event.Target.SUBSCRIPTION,
-            principal, principal.getOwner().getId(), null, newSub.getId(), olds, news);
+            principal, principal.getOwner().getId(), null, newSub.getId(),
+            olds, news);
     }
 
     public Event subscriptionDeleted(Subscription todelete) {
         String oldJson = entityToJson(todelete);
         Owner o = todelete.getOwner();
         Event e = new Event(Event.Type.DELETED, Event.Target.SUBSCRIPTION,
-            principalProvider.get(), o.getId(), null, todelete.getId(), oldJson, null);
+            principalProvider.get(), o.getId(), null, todelete.getId(),
+            oldJson, null);
         return e;
     }
 
@@ -237,8 +246,8 @@ public class EventFactory {
         String newEntityJson = "";
         // TODO: Throw an auditing exception here
     
-        // Drop data on consumer we do not want serialized, Jackson doesn't seem to
-        // care about XmlTransient annotations when used here:
+        // Drop data on consumer we do not want serialized, Jackson doesn't
+        // seem to care about XmlTransient annotations when used here:
     
         try {
             newEntityJson = mapper.writeValueAsString(entity);
@@ -249,19 +258,21 @@ public class EventFactory {
         }
         return newEntityJson;
     }
+
     /**
      * ConsumerWriter
      */
     private static class ConsumerWriter extends BeanPropertyWriter {
         public ConsumerWriter() {
-            //ignore other nulls for now - we are not using it internally.
+            // ignore other nulls for now - we are not using it internally.
             super("consumerWriter", null, null, null, null, null, false, null);
         }
-        
+
         @Override
         public void serializeAsField(Object bean, JsonGenerator jgen,
             SerializerProvider prov) throws Exception {
-            if (prov.getSerializationView().equals(Event.Target.ENTITLEMENT.getClass())) {
+            if (prov.getSerializationView().equals(
+                Event.Target.ENTITLEMENT.getClass())) {
                 Consumer consumer = ((Entitlement) bean).getConsumer();
                 jgen.writeObjectFieldStart("consumer");
                 jgen.writeStringField("uuid", consumer.getUuid());
@@ -271,14 +282,15 @@ public class EventFactory {
         }
     }
     
-    private static class CandlepinSerializerFactory extends CustomSerializerFactory{
-        
+    private static class CandlepinSerializerFactory extends
+        CustomSerializerFactory {
+
         @Override
         protected BeanSerializer processViews(SerializationConfig config,
             BasicBeanDescription beanDesc, BeanSerializer ser,
             List<BeanPropertyWriter> props) {
             ser = super.processViews(config, beanDesc, ser, props);
-            //serialize consumer for entitlement objects.
+            // serialize consumer for entitlement objects.
             if (beanDesc.getBeanClass() == Entitlement.class) {
                 BeanPropertyWriter[] writers = props
                     .toArray(new BeanPropertyWriter[props.size() + 1]);
