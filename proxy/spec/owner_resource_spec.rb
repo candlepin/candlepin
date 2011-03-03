@@ -47,16 +47,4 @@ describe 'Owner Resource' do
     new_owner.key.should == owner.key
   end
 
-  it 'emits an event when migrated' do
-    owner = create_owner random_string('migrating_owner')
-    @cp.migrate_owner(owner.key, 'https://localhost:8443/candlepin/')
-
-    # TODO:  Fix me!
-
-    #@cp.list_events.find do |e|
-    #  e['entityId'] == owner.id && 
-    #  e['type'] == 'MODIFIED' &&
-    #  e['target'] == 'OWNER'
-    #end.should_not be_nil
-  end
 end
