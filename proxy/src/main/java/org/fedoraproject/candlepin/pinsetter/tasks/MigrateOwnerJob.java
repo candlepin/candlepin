@@ -113,10 +113,8 @@ public class MigrateOwnerJob implements Job {
 
         if (resp.getStatus() == Status.OK.getStatusCode()) {
             Owner owner = resp.getEntity();
-            
-            // totally won't work cuz of the id not being null and
-            // will probably piss off hibernate :(
-            ownerCurator.merge(owner);
+
+            ownerCurator.importOwner(owner);
         }
         else {
             throw new WebApplicationException(resp);

@@ -134,6 +134,10 @@ public class ConfigProperties {
                 this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
                 this.put(IDENTITY_CERT_YEAR_ADDENDUM, "1");
                 this.put(SHARD_WEBAPP, "candlepin");
+
+                // defaults
+                this.put(SHARD_USERNAME, "admin");
+                this.put(SHARD_PASSWORD, "admin");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";

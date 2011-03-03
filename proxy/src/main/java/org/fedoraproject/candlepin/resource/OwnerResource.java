@@ -452,17 +452,9 @@ public class OwnerResource {
     @Path("import")
     public JobDetail migrateOwner(@QueryParam("id") String ownerKey,
                                   @QueryParam("uri") String url) {
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
-        if (owner == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", ownerKey));
-        }
-
         if (log.isDebugEnabled()) {
             log.debug("launch migrate owner - owner [" + ownerKey + "], uri [" + url + "]");
         }
-
-        sink.emitOwnerMigrated(owner);
 
         return MigrateOwnerJob.migrateOwner(ownerKey, url);
     }
@@ -492,6 +484,9 @@ public class OwnerResource {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));
         }
+
+        sink.emitOwnerMigrated(o);
+
         return o;
     }
 

@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.hibernate.criterion.Restrictions;
 
 import com.wideplay.warp.persist.Transactional;
+import org.hibernate.ReplicationMode;
 
 /**
  * OwnerCurator
@@ -27,6 +28,14 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     
     protected OwnerCurator() {
         super(Owner.class);
+    }
+
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Transactional
+    public Owner importOwner(Owner owner) {
+        this.currentSession().replicate(owner, ReplicationMode.EXCEPTION);
+
+        return owner;
     }
     
     @AllowRoles(roles = Role.SUPER_ADMIN)
