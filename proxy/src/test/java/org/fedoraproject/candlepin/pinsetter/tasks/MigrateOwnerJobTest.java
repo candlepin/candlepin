@@ -123,7 +123,7 @@ public class MigrateOwnerJobTest {
 
         verify(conn).connect(any(Credentials.class),
             eq("http://foo.example.com/candlepin"));
-        verify(ownerCurator, atLeastOnce()).merge(any(Owner.class));
+        verify(ownerCurator, atLeastOnce()).importOwner(any(Owner.class));
     }
     
     @Test(expected = Exception.class)
