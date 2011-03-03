@@ -140,6 +140,10 @@ public class MigrateOwnerJob implements Job {
         if (StringUtils.isEmpty(key)) {
             throw new BadRequestException("Invalid owner key");
         }
+
+        if (StringUtils.isEmpty(uri)) {
+            throw new BadRequestException("Invalid URL [" + uri + "]");
+        }
         
         try {
             new URL(uri);

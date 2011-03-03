@@ -123,7 +123,7 @@ public class MigrateOwnerJobTest {
 
         verify(conn).connect(any(Credentials.class),
             eq("http://foo.example.com/candlepin"));
-        verify(ownerCurator, atLeastOnce()).create(any(Owner.class));
+        verify(ownerCurator, atLeastOnce()).merge(any(Owner.class));
     }
     
     @Test(expected = Exception.class)
@@ -139,7 +139,7 @@ public class MigrateOwnerJobTest {
     public void executeBadValues() throws JobExecutionException {
         JobDataMap map = new JobDataMap();
         map.put("owner_key", "admin");
-        map.put("uri", "this.is.not.a.url");
+        map.put("uri", "");
 
         moj.execute(buildContext(map));
     }
@@ -168,6 +168,7 @@ public class MigrateOwnerJobTest {
                 {
                     this.put(ConfigProperties.SHARD_USERNAME, "admin");
                     this.put(ConfigProperties.SHARD_PASSWORD, "admin");
+                    this.put(ConfigProperties.SHARD_WEBAPP, "candlepin");
                 }
             });
         }
