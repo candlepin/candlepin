@@ -74,7 +74,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByOwner(Owner o) {
-        return listAvailableEntitlementPools(null, o, (String) null, true, null);
+        return listAvailableEntitlementPools(null, o, (String) null, null, true, false);
     }
     
     /**
@@ -102,7 +102,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByConsumer(Consumer c) {
-        return listAvailableEntitlementPools(c, c.getOwner(), (String) null, true, null);
+        return listAvailableEntitlementPools(c, c.getOwner(), (String) null, null,
+            true, false);
     }
     
     /**
@@ -116,7 +117,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @EnforceAccessControl
     public List<Pool> listByOwnerAndProduct(Owner owner,
             String productId) {  
-        return listAvailableEntitlementPools(null, owner, productId, false, null);
+        return listAvailableEntitlementPools(null, owner, productId, null, false, false);
     }
 
     /**
@@ -130,16 +131,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param c
      * @param o
      * @param productId
-     * @param activeOnly
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
+     * @param activeOnly
+     * @param includeWarnings When filtering by consumer, include pools that triggered
+     *        a rule warning. (errors will still be excluded)
      * @return List of entitlement pools.
      */
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, boolean activeOnly, Date activeOn) {
+            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings) {
 
         if (o == null && c != null) {
             o = c.getOwner();
@@ -205,10 +208,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // request still could fail.
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
+            log.debug("Filtering pools for consumer");
             for (Pool p : results) {
                 PreEntHelper helper = enforcer.preEntitlement(c, p, 1);
                 if (helper.getResult().isSuccessful() && 
-                        !helper.getResult().hasWarnings()) {
+                        (!helper.getResult().hasWarnings() || includeWarnings)) {
                     newResults.add(p);
                 }
                 else {

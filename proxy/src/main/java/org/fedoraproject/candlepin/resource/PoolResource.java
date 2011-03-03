@@ -94,7 +94,11 @@ public class PoolResource {
      *            optional parameter to limit the search by consumer,
      *            and only for applicable pools      
      * @param listAll
-     *            use with consumerUuid to list all pools for the consumer's owner 
+     *            Use with consumerUuid to list all pools available to the consumer. This
+     *            will include pools which would otherwise be omitted due to a rules
+     *            warning. (i.e. not recommended) Pools that trigger an error however will
+     *            still be omitted. (no entitlements available, consumer type mismatch,
+     *            etc)
      * @return the list of available entitlement pools.
      *
      * @httpcode 200 if the request succeeded
@@ -136,7 +140,6 @@ public class PoolResource {
             }
             if (listAll) {
                 o = c.getOwner();
-                c = null;
             }
         }
         if (ownerId != null) {
@@ -145,8 +148,8 @@ public class PoolResource {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }
         }
-        return poolCurator.listAvailableEntitlementPools(c, o, productId, true,
-            activeOnDate);
+        return poolCurator.listAvailableEntitlementPools(c, o, productId, activeOnDate,
+            true, listAll);
     }
 
     /**
