@@ -298,6 +298,22 @@ public class OwnerResource {
 
         return toReturn;
     }
+
+    /**
+     * Return the consumers for the owner of the given id.
+     * @param ownerKey id of the owner whose consumers are sought.
+     * @return the consumers for the owner of the given id.
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/consumers")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    public List<Consumer> ownerConsumers(
+        @PathParam("owner_key") String ownerKey) {
+
+        Owner owner = findOwner(ownerKey);
+        return new LinkedList<Consumer>(owner.getConsumers());
+    }
     
     /**
      * Return the entitlement pools for the owner of the given id.
