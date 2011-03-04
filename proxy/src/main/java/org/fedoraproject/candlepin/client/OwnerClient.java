@@ -20,6 +20,8 @@ import org.fedoraproject.candlepin.model.Pool;
 
 import org.jboss.resteasy.client.ClientResponse;
 
+import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -40,11 +42,11 @@ public interface OwnerClient {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    ClientResponse<Pool> exportPools(@PathParam("owner_key") String ownerKey);
+    ClientResponse<List<Pool>> exportPools(@PathParam("owner_key") String ownerKey);
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    ClientResponse<Entitlement> exportEntitlements(@PathParam("owner_key") String ownerKey);
+    ClientResponse<List<Entitlement>> exportEntitlements(@PathParam("owner_key") String ownerKey);
 
 }
