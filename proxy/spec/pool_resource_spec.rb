@@ -75,4 +75,49 @@ describe 'Pool Resource' do
     @cp.refresh_pools(owner.key)
     (@cp.list_pools :owner => owner.id).size.should == 0
   end
+
+  it 'should not list pools with errors for a consumer if listall is used' do
+    owner = create_owner random_string('test_owner')
+    admin_cp = user_client(owner, random_string('testuser'))
+
+    product = create_product()
+    # Pool with just one entitlement available:
+    @cp.create_subscription(owner.key, product.id, 1)
+    @cp.refresh_pools(owner.key)
+    pool = admin_cp.list_pools({:owner => owner.id})[0]
+
+    consumer1_cp = consumer_client(admin_cp, random_string('testsystem'))
+    consumer2_cp = consumer_client(admin_cp, random_string('testsystem'))
+
+    # Consume that one entitlement:
+    consumer1_cp.consume_pool(pool.id).size.should == 1
+
+    pools = consumer2_cp.list_pools({:consumer => consumer2_cp.uuid,
+      :listall => true})
+
+    # Pool should be omitted if we query for a consumer and use listall:
+    pools.size.should == 0
+  end
+
+  it 'should list pools with warnings for a consumer if listall is used' do
+    owner = create_owner random_string('test_owner')
+    admin_cp = user_client(owner, random_string('testuser'))
+
+    # Create a product for an arch our consumer will not match:
+    product = create_product(nil, nil, {:attributes => {:arch => "X86"}})
+
+    # Pool with just one entitlement available:
+    @cp.create_subscription(owner.key, product.id, 1)
+    @cp.refresh_pools(owner.key)
+    pool = admin_cp.list_pools({:owner => owner.id})[0]
+
+    consumer1_cp = consumer_client(admin_cp, random_string('testsystem'),
+      :system, nil, {"cpu.architecture" => "X86_64"})
+
+    pools = consumer1_cp.list_pools({:consumer => consumer1_cp.uuid,
+      :listall => true})
+
+    # Should see the pool despite rules warning because we used listall:
+    pools.size.should == 1
+  end
 end

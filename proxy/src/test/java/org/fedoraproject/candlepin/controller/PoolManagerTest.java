@@ -144,8 +144,8 @@ public class PoolManagerTest {
             subscriptions);
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
-                any(Owner.class), anyString(), anyBoolean(),
-                any(Date.class))).thenReturn(pools);
+                any(Owner.class), anyString(), any(Date.class),
+                anyBoolean(), anyBoolean())).thenReturn(pools);
         this.manager.refreshPools(getOwner());
         verify(this.manager).deletePool(same(p));
     }
@@ -161,8 +161,8 @@ public class PoolManagerTest {
             subscriptions);
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
-                any(Owner.class), anyString(), anyBoolean(),
-                any(Date.class))).thenReturn(pools);
+                any(Owner.class), anyString(), any(Date.class),
+                anyBoolean(), anyBoolean())).thenReturn(pools);
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());

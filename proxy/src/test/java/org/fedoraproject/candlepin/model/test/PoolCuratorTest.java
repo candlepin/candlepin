@@ -63,7 +63,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         List<Pool> results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, true, TestUtil.createDate(20450, 3, 2));
+                (String) null, TestUtil.createDate(20450, 3, 2), true, false);
         assertEquals(0, results.size());
 
     }
@@ -76,13 +76,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         List<Pool> results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, true, TestUtil.createDate(2005, 3, 3));
+                (String) null, TestUtil.createDate(2005, 3, 3), true, false);
         assertEquals(0, results.size());
 
         // If we specify no date filtering, the expired pool should be returned:
         results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, true, null);
+                (String) null, null, true, false);
         assertEquals(1, results.size());
     }
 
@@ -208,8 +208,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setStartDate(activeOn);
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null, false,
-            activeOn).size());
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
+            activeOn, false, false).size());
     }
     
     @Test
@@ -220,8 +220,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setEndDate(activeOn);
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null, false,
-            activeOn).size());
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
+            activeOn, false, false).size());
     }
     
     @Test
@@ -233,7 +233,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setEndDate(TestUtil.createDate(2011, 3, 2));
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null, false,
-            activeOn).size());
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
+            activeOn, false, false).size());
     }
 }

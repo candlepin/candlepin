@@ -160,7 +160,7 @@ public class PoolTest extends DatabaseTestFixture {
         
         
         List<Pool> results = poolCurator.listAvailableEntitlementPools(null, owner, 
-            childProduct.getId(), false, null);
+            childProduct.getId(), null, false, false);
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
     }

@@ -63,7 +63,41 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupRuleFiltering() {
+    public void testListAllForConsumerConsumerIncludesWarnings() {
+        Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
+        p.addAttribute(new ProductAttribute("sockets", "2"));
+        productCurator.create(p);
+
+        Pool pool = createPoolAndSub(owner, p, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        consumer.setFact("cpu.sockets", "4");
+        List<Pool> results =
+            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
+                null, null, true, true);
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    public void testListAllForConsumerExcludesErrors() {
+        Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
+        productCurator.create(p);
+
+        // Creating a pool with no entitlements available, which will trigger
+        // a rules error:
+        Pool pool = createPoolAndSub(owner, p, 0L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        List<Pool> results =
+            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
+                null, null, true, true);
+        assertEquals(0, results.size());
+    }
+
+    @Test
+    public void testListForConsumerExcludesWarnings() {
 
         Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
         p.addAttribute(new ProductAttribute("sockets", "2"));
