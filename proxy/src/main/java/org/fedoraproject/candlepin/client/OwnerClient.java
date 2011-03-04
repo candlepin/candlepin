@@ -42,11 +42,13 @@ public interface OwnerClient {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    ClientResponse<List<Pool>> exportPools(@PathParam("owner_key") String ownerKey);
+    ClientResponse<List<Pool>> exportPools(
+        @PathParam("owner_key") String ownerKey);
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    ClientResponse<List<Entitlement>> exportEntitlements(@PathParam("owner_key") String ownerKey);
+    ClientResponse<List<Entitlement>> exportEntitlements(
+        @PathParam("owner_key") String ownerKey);
 
 }

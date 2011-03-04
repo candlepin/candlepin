@@ -21,8 +21,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
+import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
@@ -268,6 +271,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .createCriteria("certificates")
                 .add(Restrictions.eq("serial.id", serial))
             .uniqueResult();
+    }
+
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Transactional
+    public Entitlement importEntitlement(Entitlement ent) {
+        this.currentSession().replicate(ent, ReplicationMode.EXCEPTION);
+
+        return ent;
     }
     
 }

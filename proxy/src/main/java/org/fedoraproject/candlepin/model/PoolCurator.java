@@ -21,12 +21,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
+import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -269,6 +272,22 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public Pool lookupBySubscriptionId(String subId) {
         return (Pool) currentSession().createCriteria(Pool.class)
         .add(Restrictions.eq("subscriptionId", subId)).uniqueResult();
+    }
+
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Transactional
+    public Pool importPool(Pool pool) {
+        for (ProvidedProduct pp : pool.getProvidedProducts()) {
+            pp.setPool(pool);
+        }
+
+        for (PoolAttribute pa : pool.getAttributes()) {
+            pa.setPool(pool);
+        }
+
+        this.currentSession().replicate(pool, ReplicationMode.EXCEPTION);
+
+        return pool;
     }
 
     @Transactional

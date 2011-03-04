@@ -20,14 +20,14 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -54,16 +54,20 @@ public class MigrateOwnerJob implements Job {
     private static Logger log = Logger.getLogger(MigrateOwnerJob.class);
 
     private OwnerCurator ownerCurator;
+    private PoolCurator poolCurator;
+    private EntitlementCurator entCurator;
     private CandlepinConnection conn;
     private Config config;
     
     @Inject
     public MigrateOwnerJob(OwnerCurator oc, CandlepinConnection connection,
-        Config conf) {
+        Config conf, PoolCurator pc, EntitlementCurator ec) {
 
         ownerCurator = oc;
         conn = connection;
         config = conf;
+        poolCurator = pc;
+        entCurator = ec;
     }
 
     private static String buildUri(String uri) {
@@ -124,6 +128,23 @@ public class MigrateOwnerJob implements Job {
             throw new WebApplicationException(rsp);
         }
 
+        log.info("Migrating pools for owner [" + key +
+            "] from candlepin instance running on [" + uri + "]");
+        exportPools(key, client);
+    }
+
+    private void exportPools(String ownerkey, OwnerClient client) {
+        ClientResponse<List<Pool>> rsp = client.exportPools(ownerkey);
+        if (rsp.getStatus() == Status.OK.getStatusCode()) {
+            List<Pool> pools = rsp.getEntity();
+
+            for (Pool pool : pools) {
+                poolCurator.importPool(pool);
+            }
+        }
+        else {
+            throw new WebApplicationException(rsp);
+        }
     }
 
     public static JobDetail migrateOwner(String key, String uri) {
