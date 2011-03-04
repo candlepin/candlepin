@@ -66,7 +66,7 @@ public class MigrateOwnerJob implements Job {
         config = conf;
     }
 
-    private String buildUri(String uri) {
+    private static String buildUri(String uri) {
         if (uri == null || "".equals(uri.trim())) {
             return "";
         }
@@ -86,7 +86,7 @@ public class MigrateOwnerJob implements Job {
             buf.append("/candlepin");
             uri = buf.toString();
         }
-        
+       
         return uri;
     }
 
@@ -123,17 +123,11 @@ public class MigrateOwnerJob implements Job {
         else {
             throw new WebApplicationException(rsp);
         }
-    }
 
-    private void exportConsumers(Owner owner, OwnerClient client) {
-        ClientResponse<List<Consumer>> rsp = client.listConsumers(owner.getKey());
-        log.info("call returned - status: [" + rsp.getStatus() + "] reason [" +
-            rsp.getResponseStatus() + "]");
-        List<Consumer> consumers = rsp.getEntity();
-        log.debug(consumers.toString());
     }
 
     public static JobDetail migrateOwner(String key, String uri) {
+        uri = buildUri(uri);
         validateInput(key, uri);
 
         JobDetail detail = new JobDetail("migrate_owner_" + Util.generateUUID(),
