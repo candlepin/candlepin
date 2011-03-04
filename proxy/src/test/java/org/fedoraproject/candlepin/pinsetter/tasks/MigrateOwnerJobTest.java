@@ -88,8 +88,8 @@ public class MigrateOwnerJobTest {
     }
     
     @Test(expected = BadRequestException.class)
-    public void inavlidUrlFormat() {
-        moj.migrateOwner("admin", "foo");
+    public void invalidUrlFormat() {
+        moj.migrateOwner("admin", "");
     }
     
     // used by execute tests
