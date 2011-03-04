@@ -30,7 +30,10 @@ import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 
 import org.apache.commons.httpclient.Credentials;
 import org.jboss.resteasy.client.ClientResponse;
@@ -44,7 +47,9 @@ import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.spi.TriggerFiredBundle;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 
 /**
@@ -56,6 +61,8 @@ public class MigrateOwnerJobTest {
     private CandlepinConnection conn;
     private MigrateOwnerJob moj;
     private Config config;
+    private PoolCurator poolCurator;
+    private EntitlementCurator entCurator;
 
     
     @Before
@@ -63,7 +70,10 @@ public class MigrateOwnerJobTest {
         config = new ConfigForTesting();
         ownerCurator = mock(OwnerCurator.class);
         conn = mock(CandlepinConnection.class);
-        moj = new MigrateOwnerJob(ownerCurator, conn, config);
+        poolCurator = mock(PoolCurator.class);
+        entCurator = mock(EntitlementCurator.class);
+        moj = new MigrateOwnerJob(ownerCurator, conn, config, poolCurator,
+            entCurator);
     }
     
     @Test
@@ -113,8 +123,14 @@ public class MigrateOwnerJobTest {
         when(conn.connect(any(Credentials.class),
             any(String.class))).thenReturn(client);
         ClientResponse<Owner> resp = mock(ClientResponse.class);
+        List<Pool> pools = new ArrayList<Pool>();
+        pools.add(mock(Pool.class));
+        ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
         when(client.exportOwner(eq("admin"))).thenReturn(resp);
+        when(client.exportPools(eq("admin"))).thenReturn(prsp);
         when(resp.getStatus()).thenReturn(200);
+        when(prsp.getStatus()).thenReturn(200);
+        when(prsp.getEntity()).thenReturn(pools);
         JobDataMap map = new JobDataMap();
         map.put("owner_key", "admin");
         map.put("uri", "http://foo.example.com/candlepin");
@@ -124,6 +140,7 @@ public class MigrateOwnerJobTest {
         verify(conn).connect(any(Credentials.class),
             eq("http://foo.example.com/candlepin"));
         verify(ownerCurator, atLeastOnce()).importOwner(any(Owner.class));
+        verify(poolCurator, atLeastOnce()).importPool(any(Pool.class));
     }
     
     @Test(expected = Exception.class)
