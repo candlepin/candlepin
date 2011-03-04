@@ -198,17 +198,20 @@ public class EntitlementRules implements Enforcer {
         log.info("Selecting best entitlement pool for product: " +
             Arrays.toString(productIds));
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools, productCache);
-
         
         List<Product> products = new LinkedList<Product>();
         Set<Rule> matchingRules = new HashSet<Rule>();
         for (String productId : productIds) {
             Product product = prodAdapter.getProductById(productId);
-            products.add(product);
-            Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product,
-                null);
-            matchingRules.addAll(rulesForAttributes(allAttributes.keySet(),
-                attributesToRules));
+
+            if (product != null) {
+                products.add(product);
+            
+                Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product,
+                    null);
+                matchingRules.addAll(rulesForAttributes(allAttributes.keySet(),
+                    attributesToRules));
+            }
         }
 
         Set<ReadOnlyProduct> readOnlyProducts = ReadOnlyProduct.fromProducts(products);
