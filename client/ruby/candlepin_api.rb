@@ -251,6 +251,7 @@ class Candlepin
       params={})
 
     metadata_expire = params[:metadata_expire] || nil
+    required_tags = params[:required_tags] || nil
     content_url = params[:content_url] || ""
     gpg_url = params[:gpg_url] || ""
     modified_product_ids = params[:modified_products] || []
@@ -266,6 +267,7 @@ class Candlepin
       'modifiedProductIds' => modified_product_ids
     }
     content['metadataExpire'] = metadata_expire if not metadata_expire.nil?
+    content['requiredTags'] = required_tags if not required_tags.nil?
     post("/content", content)
   end
 

@@ -138,7 +138,8 @@ module ExportMethods
     virt_product = create_product(random_string('virt_product'), 
                                   random_string('virt_product'),
                                   {:attributes => {:virt_only => true}})
-    content = create_content({:metadata_expire => 6000})
+    content = create_content({:metadata_expire => 6000,
+      :required_tags => "TAG1,TAG2"})
     @cp.add_content_to_product(product1.id, content.id)
     @cp.add_content_to_product(product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)

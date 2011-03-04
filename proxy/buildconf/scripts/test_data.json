@@ -21,6 +21,16 @@
             "metadata_expire": 200
         },
         {
+            "name": "tagged-content",
+            "id": 2,
+            "label": "tagged-content",
+            "type": "yum",
+            "vendor": "test-vendor",
+            "content_url": "/foo/path/always",
+            "gpg_url": "/foo/path/always/gpg",
+            "required_tags": "TAG1,TAG2"
+        },
+        {
             "name": "content",
             "id": 1111,
             "label": "content-label",
@@ -209,7 +219,8 @@
             "content": [
                 [1111, true],
                 [0, false],
-                [1, true]
+                [1, true],
+                [2, true]
             ]
         },
         {
