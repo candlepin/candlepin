@@ -20,11 +20,14 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
+
+import edu.emory.mathcs.backport.java.util.Arrays;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -39,9 +42,10 @@ import org.quartz.JobExecutionException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * MigrateOwnerJob
@@ -101,24 +105,32 @@ public class MigrateOwnerJob implements Job {
             config.getString(ConfigProperties.SHARD_USERNAME),
             config.getString(ConfigProperties.SHARD_PASSWORD));
         OwnerClient client = conn.connect(creds, uri);
-        ClientResponse<Owner> resp = client.exportOwner(key);
+        ClientResponse<Owner> rsp = client.exportOwner(key);
         
-        log.info("call returned - status: [" + resp.getStatus() + "] reason [" +
-            resp.getResponseStatus() + "]");
+        log.info("call returned - status: [" + rsp.getStatus() + "] reason [" +
+            rsp.getResponseStatus() + "]");
 
         // TODO: do we want specific errors or just a general one
-        if (resp.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+        if (rsp.getStatus() == Status.NOT_FOUND.getStatusCode()) {
             throw new NotFoundException("Can't find owner [" + key + "]");
         }
 
-        if (resp.getStatus() == Status.OK.getStatusCode()) {
-            Owner owner = resp.getEntity();
+        if (rsp.getStatus() == Status.OK.getStatusCode()) {
+            Owner owner = rsp.getEntity();
 
             ownerCurator.importOwner(owner);
         }
         else {
-            throw new WebApplicationException(resp);
+            throw new WebApplicationException(rsp);
         }
+    }
+
+    private void exportConsumers(Owner owner, OwnerClient client) {
+        ClientResponse<List<Consumer>> rsp = client.listConsumers(owner.getKey());
+        log.info("call returned - status: [" + rsp.getStatus() + "] reason [" +
+            rsp.getResponseStatus() + "]");
+        List<Consumer> consumers = rsp.getEntity();
+        log.debug(consumers.toString());
     }
 
     public static JobDetail migrateOwner(String key, String uri) {
