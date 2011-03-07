@@ -89,7 +89,6 @@ public class EntitlementCertificate extends AbstractCertificate
         this.serial = serialNumber;
     }
 
-    @XmlTransient
     public String getId() {
         return id;
     }
