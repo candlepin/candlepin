@@ -124,26 +124,33 @@ public class MigrateOwnerJobTest {
         when(conn.connect(any(Credentials.class),
             any(String.class))).thenReturn(client);
         ClientResponse<Owner> resp = mock(ClientResponse.class);
+        ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
+        ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
+        
         List<Pool> pools = new ArrayList<Pool>();
         pools.add(mock(Pool.class));
         List<Entitlement> ents = new ArrayList<Entitlement>();
         ents.add(mock(Entitlement.class));
-        ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
-        ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
+
         when(client.exportOwner(eq("admin"))).thenReturn(resp);
         when(client.exportPools(eq("admin"))).thenReturn(prsp);
         when(client.exportEntitlements(eq("admin"))).thenReturn(ersp);
+        
         when(resp.getStatus()).thenReturn(200);
         when(prsp.getStatus()).thenReturn(200);
         when(ersp.getStatus()).thenReturn(200);
+        
         when(prsp.getEntity()).thenReturn(pools);
         when(ersp.getEntity()).thenReturn(ents);
+        
         JobDataMap map = new JobDataMap();
         map.put("owner_key", "admin");
         map.put("uri", "http://foo.example.com/candlepin");
 
+        // test it :)
         moj.execute(buildContext(map));
 
+        // verify everything was called
         verify(conn).connect(any(Credentials.class),
             eq("http://foo.example.com/candlepin"));
         verify(ownerCurator, atLeastOnce()).importOwner(any(Owner.class));
