@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.client;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Consumer;
 
 import org.jboss.resteasy.client.ClientResponse;
 
@@ -51,4 +52,8 @@ public interface OwnerClient {
     ClientResponse<List<Entitlement>> exportEntitlements(
         @PathParam("owner_key") String ownerKey);
 
+    @GET
+    @Path("{owner_key}/consumers")
+    @Produces(MediaType.APPLICATION_JSON)
+    ClientResponse<List<Consumer>> exportOwnerConsumers(@PathParam("owner_key") String ownerKey);
 }

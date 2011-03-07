@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.hibernate.Criteria;
+import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Restrictions;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.xnap.commons.i18n.I18n;
@@ -67,7 +68,34 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     NAME_LENGTH));
         }
     }
+    
+    /**
+     * @param consumer
+     */
+    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Transactional
+    public Consumer importConsumer(Consumer consumer) {
+        for (Entitlement entitlement : consumer.getEntitlements()) {
+            entitlement.setConsumer(consumer);
+        }
+        
+        consumer.setParent(consumer.getParent());
+        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
+        consumer.setType(consumerType);
+        
+        IdentityCertificate idCert = consumer.getIdCert();
+        this.currentSession().replicate(idCert.getSerial(), ReplicationMode.EXCEPTION);
+        this.currentSession().replicate(idCert, ReplicationMode.EXCEPTION);
+        
+        //        for (Consumer childConsumer : consumer.getChildConsumers()) {
+//            consumer.setChildConsumers(childConsumers)
+//        }
+        
+        this.currentSession().replicate(consumer, ReplicationMode.EXCEPTION);
 
+        return consumer;
+    }
+    
     /**
      * Lookup consumer by its name
      * @param name consumer name to find
@@ -216,5 +244,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             toReturn.add(update(toUpdate));
         }
         return toReturn;
-    }    
+    }
+
 }

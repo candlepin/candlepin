@@ -124,8 +124,8 @@ class Candlepin
     delete uri
   end
 
-  def migrate_owner(owner_key, uri)
-    return async_call(false) do
+  def migrate_owner(owner_key, uri, immediate=false)
+    return async_call(immediate) do
       put("owners/import?id=#{owner_key}&uri=#{uri}")
     end
   end

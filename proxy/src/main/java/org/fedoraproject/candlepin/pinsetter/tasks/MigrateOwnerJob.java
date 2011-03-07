@@ -20,12 +20,18 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.IdentityCertificate;
+import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -48,6 +54,7 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
+import java.security.KeyPair;
 /**
  * MigrateOwnerJob
  */
@@ -57,18 +64,25 @@ public class MigrateOwnerJob implements Job {
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
     private EntitlementCurator entCurator;
+    private ConsumerCurator consumerCurator;
+    private KeyPairCurator keypairCurator;
+    private IdentityCertificateCurator idCertCurator;
     private CandlepinConnection conn;
     private Config config;
     
     @Inject
     public MigrateOwnerJob(OwnerCurator oc, CandlepinConnection connection,
-        Config conf, PoolCurator pc, EntitlementCurator ec) {
+        Config conf, PoolCurator pc, EntitlementCurator ec, ConsumerCurator cc,
+        KeyPairCurator kpc, IdentityCertificateCurator icc) {
 
         ownerCurator = oc;
+        consumerCurator = cc;
         conn = connection;
         config = conf;
         poolCurator = pc;
         entCurator = ec;
+        keypairCurator = kpc;
+        idCertCurator  = icc;
     }
 
     private static String buildUri(String uri) {
@@ -132,17 +146,13 @@ public class MigrateOwnerJob implements Job {
             throw new NotFoundException("Can't find owner [" + key + "]");
         }
 
-        if (rsp.getStatus() != Status.OK.getStatusCode()) {
-            throw new WebApplicationException(rsp);
-        }
-
         Owner owner = rsp.getEntity();
         ownerCurator.importOwner(owner);
+        
     }
 
     private void exportPools(String key, OwnerClient client) {
         ClientResponse<List<Pool>> rsp = client.exportPools(key);
-        
         if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
         }
@@ -153,6 +163,26 @@ public class MigrateOwnerJob implements Job {
             poolCurator.importPool(pool);
         }
     }
+     
+    private void exportConsumers(String ownerkey, OwnerClient client) {
+        // track down consumers for the owner
+        ClientResponse<List <Consumer>> consumerResp = client.exportOwnerConsumers(ownerkey);
+        for (Consumer consumer : consumerResp.getEntity()) {
+            log.info("importing consumer: " + consumer.toString());
+            KeyPair keypair = keypairCurator.getConsumerKeyPair(consumer);
+            
+            log.info("consumer.id: " + consumer.getId());
+            log.info("consumer.entitlements:  " + consumer.getEntitlements().toString());
+            log.info("consumer.childConsumers: " + consumer.getChildConsumers().toString());
+            log.info("consumer.facts: " + consumer.getFacts().toString());
+            log.info("consumer.parent: " + consumer.getParent());
+            log.info("consumer.keyPair: " + consumer.getKeyPair());
+            log.info("consumer.idcert: " + consumer.getIdCert());
+             
+            consumerCurator.importConsumer(consumer);
+        }
+    }
+        
     
     private void exportEntitlements(String key, OwnerClient client) {
         ClientResponse<List<Entitlement>> rsp = client.exportEntitlements(key);
@@ -171,6 +201,7 @@ public class MigrateOwnerJob implements Job {
         }        
     }
 
+ 
     public static JobDetail migrateOwner(String key, String uri) {
         uri = buildUri(uri);
         validateInput(key, uri);
