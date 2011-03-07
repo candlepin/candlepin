@@ -206,6 +206,7 @@ public class X509ExtensionUtil {
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false,
                 new DERUTF8String((pc.getEnabled()) ? "1" : "0")));
 
+            // Include metadata expiry if specified on the content:
             if (pc.getContent().getMetadataExpire() != null) {
                 toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
@@ -213,6 +214,13 @@ public class X509ExtensionUtil {
                         .getMetadataExpire().toString())));
             }
 
+            // Include required tags if specified on the content set:
+            String requiredTags = pc.getContent().getRequiredTags();
+            if ((requiredTags != null) && !requiredTags.equals("")) {
+                toReturn.add(new X509ExtensionWrapper(contentOid + "." +
+                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_REQUIRED_TAGS),
+                    false, new DERUTF8String(requiredTags)));
+            }
 
         }
         return toReturn;

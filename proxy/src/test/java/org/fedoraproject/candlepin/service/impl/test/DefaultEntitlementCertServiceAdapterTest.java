@@ -72,6 +72,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String CONTENT_NAME = "name";
     private static final Long CONTENT_METADATA_EXPIRE = 3200L;
     private static final String ENTITLEMENT_QUANTITY = "10";
+    private static final String REQUIRED_TAGS = "TAG1,TAG2";
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
     @Mock
@@ -104,6 +105,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
+        content.setRequiredTags(REQUIRED_TAGS);
 
         subscription = new Subscription(null, product, new HashSet<Product>(),
             1L, new Date(), new Date(), new Date());
@@ -135,18 +137,47 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testContentExtentionCreation() {
-        // AAAH! This should be pulled out to its own test class!
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null);
-        assertTrue(isEncodedContentValid(contentExtensions));
+        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
+            contentExtensions);
+        assertTrue(isEncodedContentValid(encodedContent));
+        assertTrue(encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString()));
 
         // Nullify this, and make sure it's not there.
         content.setMetadataExpire(null);
         contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), "");
-        assertFalse(isEncodedContentValid(contentExtensions));
+        encodedContent = getEncodedContent(contentExtensions);
+        assertTrue(isEncodedContentValid(encodedContent));
+        assertFalse(encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString()));
     }
 
+    @Test
+    public void testContentRequiredTagsExtention() {
+        Set<X509ExtensionWrapper> contentExtensions = extensionUtil
+            .contentExtensions(product.getProductContent(), null);
+        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
+            contentExtensions);
+        assertTrue(isEncodedContentValid(encodedContent));
+        assertTrue(encodedContent.containsKey(REQUIRED_TAGS.toString()));
+
+        // Nullify this, and make sure it's not there.
+        content.setRequiredTags(null);
+        contentExtensions = extensionUtil.contentExtensions(
+            product.getProductContent(), "");
+        encodedContent = getEncodedContent(contentExtensions);
+        assertTrue(isEncodedContentValid(encodedContent));
+        assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
+
+        // Empty string, and make sure it's not there.
+        content.setRequiredTags("");
+        contentExtensions = extensionUtil.contentExtensions(
+            product.getProductContent(), "");
+        encodedContent = getEncodedContent(contentExtensions);
+        assertTrue(isEncodedContentValid(encodedContent));
+        assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
+    }
     @Test
     public void testPrefixesShouldBeUsed() throws Exception {
         owner.setContentPrefix("/somePrefix/");
@@ -326,7 +357,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(String.class));
     }
 
-    private boolean isEncodedContentValid(
+    private Map<String, X509ExtensionWrapper> getEncodedContent(
         Set<X509ExtensionWrapper> contentExtensions) {
         Map<String, X509ExtensionWrapper> encodedContent = 
             new HashMap<String, X509ExtensionWrapper>();
@@ -335,15 +366,27 @@ public class DefaultEntitlementCertServiceAdapterTest {
             encodedContent.put(
                 ((DERUTF8String) ext.getAsn1Encodable()).getString(), ext);
         }
+        return encodedContent;
+    }
+
+    private boolean isEncodedContentValid(Set<X509ExtensionWrapper> contentExtensions) {
+        Map<String, X509ExtensionWrapper> encodedContent =
+            getEncodedContent(contentExtensions);
+
+        return isEncodedContentValid(encodedContent);
+    }
+
+    private boolean isEncodedContentValid(Map<String,
+            X509ExtensionWrapper> encodedContent) {
 
         return encodedContent.containsKey(CONTENT_LABEL) &&
             // encodedContent.containsKey(CONTENT_ENABLED) &&
             encodedContent.containsKey(CONTENT_GPG_URL) &&
             encodedContent.containsKey(CONTENT_URL) &&
             encodedContent.containsKey(CONTENT_VENDOR) &&
-            encodedContent.containsKey(CONTENT_NAME) &&
-            encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString());
+            encodedContent.containsKey(CONTENT_NAME);
     }
+
 
     private KeyPair keyPair() {
         return new KeyPair(new PublicKey() {

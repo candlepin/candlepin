@@ -59,6 +59,9 @@ public class Content extends AbstractHibernateObject {
     @Column(nullable = true)
     private String contentUrl;
     
+    @Column(nullable = true)
+    private String requiredTags;
+
     // attribute?
     @Column(nullable = true)
     private String gpgUrl;
@@ -184,6 +187,20 @@ public class Content extends AbstractHibernateObject {
 
     public void setMetadataExpire(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
+    }
+
+    /**
+     * @return Comma separated list of tags this content set requires to be enabled.
+     */
+    public String getRequiredTags() {
+        return requiredTags;
+    }
+
+    /**
+     * @param requiredTags Comma separated list of tags this content set requires.
+     */
+    public void setRequiredTags(String requiredTags) {
+        this.requiredTags = requiredTags;
     }
 
 }

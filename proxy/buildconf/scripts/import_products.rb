@@ -66,6 +66,9 @@ data['content'].each do |c|
   if c.has_key?('metadata_expire')
     params[:metadata_expire] = c['metadata_expire']
   end
+  if c.has_key?('required_tags')
+    params[:required_tags] = c['required_tags']
+  end
   params[:content_url] = c['content_url']
   params[:gpg_url] = c['gpg_url']
   params[:modified_products] = modified_products

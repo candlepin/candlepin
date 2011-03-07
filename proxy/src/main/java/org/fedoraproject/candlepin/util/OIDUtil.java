@@ -68,6 +68,7 @@ public final class OIDUtil {
     public static final String CF_GPG_URL_KEY = "GPG Key URL";
     public static final String CF_ENABLED = "Enabled";
     public static final String CF_METADATA_EXPIRE = "Metadata Expire";
+    public static final String CF_REQUIRED_TAGS = "Required Tags";
 
     public static final String ROLE_NAME_KEY = "Name";
     public static final String ROLE_LABEL_KEY = "Label";
@@ -147,6 +148,7 @@ public final class OIDUtil {
         CHANNEL_FAMILY_OIDS.put(CF_GPG_URL_KEY, "7");
         CHANNEL_FAMILY_OIDS.put(CF_ENABLED, "8");
         CHANNEL_FAMILY_OIDS.put(CF_METADATA_EXPIRE, "9");
+        CHANNEL_FAMILY_OIDS.put(CF_REQUIRED_TAGS, "10");
 
         // server entitlement namespaces
         // this could come from the RHN DB, but we will wait until we actually
