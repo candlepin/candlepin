@@ -102,14 +102,26 @@ public class MigrateOwnerJob implements Job {
         String uri = buildUri(ctx.getMergedJobDataMap().getString("uri"));
 
         validateInput(key, uri);
-        
-        log.info("Migrating owner [" + key +
-            "] from candlepin instance running on [" + uri + "]");
-        
+
         Credentials creds = new UsernamePasswordCredentials(
             config.getString(ConfigProperties.SHARD_USERNAME),
             config.getString(ConfigProperties.SHARD_PASSWORD));
         OwnerClient client = conn.connect(creds, uri);
+
+        log.info("Migrating owner [" + key +
+            "] from candlepin instance running on [" + uri + "]");       
+        exportOwner(key, client);
+
+        log.info("Migrating pools for owner [" + key +
+            "] from candlepin instance running on [" + uri + "]");
+        exportPools(key, client);
+        
+        log.info("Migrating entitlements for owner [" + key +
+            "] from candlepin instance running on [" + uri + "]");
+        exportEntitlements(key, client);
+    }
+    
+    private void exportOwner(String key, OwnerClient client) {
         ClientResponse<Owner> rsp = client.exportOwner(key);
         
         log.info("call returned - status: [" + rsp.getStatus() + "] reason [" +
@@ -120,54 +132,43 @@ public class MigrateOwnerJob implements Job {
             throw new NotFoundException("Can't find owner [" + key + "]");
         }
 
-        if (rsp.getStatus() == Status.OK.getStatusCode()) {
-            Owner owner = rsp.getEntity();
-
-            ownerCurator.importOwner(owner);
-        }
-        else {
+        if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
         }
 
-        log.info("Migrating pools for owner [" + key +
-            "] from candlepin instance running on [" + uri + "]");
-        exportPools(key, client);
-        
-        log.info("Migrating entitlements for owner [" + key +
-            "] from candlepin instance running on [" + uri + "]");
-        exportEntitlements(key, client);
+        Owner owner = rsp.getEntity();
+        ownerCurator.importOwner(owner);
     }
 
     private void exportPools(String key, OwnerClient client) {
         ClientResponse<List<Pool>> rsp = client.exportPools(key);
-        if (rsp.getStatus() == Status.OK.getStatusCode()) {
-            List<Pool> pools = rsp.getEntity();
-
-            for (Pool pool : pools) {
-                poolCurator.importPool(pool);
-            }
-        }
-        else {
+        
+        if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
+        }
+        
+        List<Pool> pools = rsp.getEntity();
+
+        for (Pool pool : pools) {
+            poolCurator.importPool(pool);
         }
     }
     
     private void exportEntitlements(String key, OwnerClient client) {
         ClientResponse<List<Entitlement>> rsp = client.exportEntitlements(key);
-        if (rsp.getStatus() == Status.OK.getStatusCode()) {
-            Owner owner = ownerCurator.lookupByKey(key);
-            List<Entitlement> ents = rsp.getEntity();
-
-            for (Entitlement ent : ents) {
-                // re-associate to the owner
-                ent.setOwner(owner);
-                entCurator.importEntitlement(ent);
-            }
-        }
-        else {
+        
+        if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
         }
         
+        Owner owner = ownerCurator.lookupByKey(key);
+        List<Entitlement> ents = rsp.getEntity();
+
+        for (Entitlement ent : ents) {
+            // re-associate to the owner
+            ent.setOwner(owner);
+            entCurator.importEntitlement(ent);
+        }        
     }
 
     public static JobDetail migrateOwner(String key, String uri) {
