@@ -29,11 +29,12 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 
 import org.apache.commons.httpclient.Credentials;
 import org.jboss.resteasy.client.ClientResponse;
@@ -125,12 +126,18 @@ public class MigrateOwnerJobTest {
         ClientResponse<Owner> resp = mock(ClientResponse.class);
         List<Pool> pools = new ArrayList<Pool>();
         pools.add(mock(Pool.class));
+        List<Entitlement> ents = new ArrayList<Entitlement>();
+        ents.add(mock(Entitlement.class));
         ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
+        ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
         when(client.exportOwner(eq("admin"))).thenReturn(resp);
         when(client.exportPools(eq("admin"))).thenReturn(prsp);
+        when(client.exportEntitlements(eq("admin"))).thenReturn(ersp);
         when(resp.getStatus()).thenReturn(200);
         when(prsp.getStatus()).thenReturn(200);
+        when(ersp.getStatus()).thenReturn(200);
         when(prsp.getEntity()).thenReturn(pools);
+        when(ersp.getEntity()).thenReturn(ents);
         JobDataMap map = new JobDataMap();
         map.put("owner_key", "admin");
         map.put("uri", "http://foo.example.com/candlepin");
@@ -141,6 +148,7 @@ public class MigrateOwnerJobTest {
             eq("http://foo.example.com/candlepin"));
         verify(ownerCurator, atLeastOnce()).importOwner(any(Owner.class));
         verify(poolCurator, atLeastOnce()).importPool(any(Pool.class));
+        verify(entCurator, atLeastOnce()).importEntitlement(any(Entitlement.class));
     }
     
     @Test(expected = Exception.class)

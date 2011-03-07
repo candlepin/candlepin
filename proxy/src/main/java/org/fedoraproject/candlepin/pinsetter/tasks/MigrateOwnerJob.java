@@ -20,11 +20,12 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -131,10 +132,14 @@ public class MigrateOwnerJob implements Job {
         log.info("Migrating pools for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
         exportPools(key, client);
+        
+        log.info("Migrating entitlements for owner [" + key +
+            "] from candlepin instance running on [" + uri + "]");
+        exportEntitlements(key, client);
     }
 
-    private void exportPools(String ownerkey, OwnerClient client) {
-        ClientResponse<List<Pool>> rsp = client.exportPools(ownerkey);
+    private void exportPools(String key, OwnerClient client) {
+        ClientResponse<List<Pool>> rsp = client.exportPools(key);
         if (rsp.getStatus() == Status.OK.getStatusCode()) {
             List<Pool> pools = rsp.getEntity();
 
@@ -145,6 +150,24 @@ public class MigrateOwnerJob implements Job {
         else {
             throw new WebApplicationException(rsp);
         }
+    }
+    
+    private void exportEntitlements(String key, OwnerClient client) {
+        ClientResponse<List<Entitlement>> rsp = client.exportEntitlements(key);
+        if (rsp.getStatus() == Status.OK.getStatusCode()) {
+            Owner owner = ownerCurator.lookupByKey(key);
+            List<Entitlement> ents = rsp.getEntity();
+
+            for (Entitlement ent : ents) {
+                // re-associate to the owner
+                ent.setOwner(owner);
+                entCurator.importEntitlement(ent);
+            }
+        }
+        else {
+            throw new WebApplicationException(rsp);
+        }
+        
     }
 
     public static JobDetail migrateOwner(String key, String uri) {
