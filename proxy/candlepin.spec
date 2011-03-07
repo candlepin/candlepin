@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.9
+Version: 0.2.10
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,32 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Mon Mar 07 2011 Devan Goodwin <dgoodwin@redhat.com> 0.2.10-1
+- Add content tags support to Ruby APİ. (dgoodwin@redhat.com)
+- Add model support for content tags and apply to ent certs.
+  (dgoodwin@redhat.com)
+- 679472:  Add null check for autosubscribing to non-existant product.
+  (jharris@redhat.com)
+- 681287: Exclude pools with a rule when listing for a consumer.
+  (dgoodwin@redhat.com)
+- Move the locales to be language, not language plus country
+  (bkearney@redhat.com)
+- Fix localization spec for new I18N string. (dgoodwin@redhat.com)
+- Cascade through tokens associated with a subscription. (dgoodwin@redhat.com)
+- fix grammar in error msg (cduryee@redhat.com)
+- Adding return value schema generation to api crawler. (jharris@redhat.com)
+- Use underscores in table names per jomara. (cduryee@redhat.com)
+- Add test suite for JsPoolRules. (dgoodwin@redhat.com)
+- Add in the translated po files. (bkearney@redhat.com)
+- Rename pool update DTO class. (dgoodwin@redhat.com)
+- Begin pushing logic for updating pools to Javascript. (dgoodwin@redhat.com)
+- Refactor creation of virt-only pools. (dgoodwin@redhat.com)
+- Push pool creation responsibility to JS rule. (dgoodwin@redhat.com)
+- Stop using separate rules in testing, fix multi-entitlement bug.
+  (dgoodwin@redhat.com)
+- Re-enable logging. (dgoodwin@redhat.com)
+- Allow for more than one pool mapping to a subscription. (dgoodwin@redhat.com)
+
 * Tue Mar 01 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.9-1
 - Fix OwnerInfo to account for entitlement quantity (jbowes@redhat.com)
 
