@@ -53,6 +53,12 @@ describe 'Virt Limit Products' do
     virt_pool.quantity.should == -1
   end
 
+  it 'should allow a consumer with no "virt.is_guest attribute to list pools' do
+    person = consumer_client(@user, 'dude', :person)
+
+    person.list_pools(:consumer => person.uuid, :product => @product.id).should be_empty
+  end
+
   it 'should update virtual pool quantity' do
     # Update subscription quantity:
     @sub.quantity = 20

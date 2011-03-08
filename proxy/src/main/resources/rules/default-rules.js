@@ -149,7 +149,11 @@ var Entitlement = {
 
     pre_virt_only: function() {
         var virt_pool = 'true'.equals(attributes.get('virt_only'));
-        var guest = 'true'.equals(consumer.getFact('virt.is_guest'));
+        var guest = false;
+        
+        if (consumer.hasFact('virt.is_guest')) {
+            guest = 'true'.equals(consumer.getFact('virt.is_guest'));
+        }
 
         if (virt_pool && !guest) {
            pre.addError("rulefailed.virt.only"); 
