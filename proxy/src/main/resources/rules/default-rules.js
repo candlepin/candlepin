@@ -336,19 +336,25 @@ var Pool = {
 
         // Check if we need to create a virt-only pool for this subscription:
         if (attributes.containsKey("virt_limit")) {
-            var virt_limit = parseInt(attributes.get("virt_limit"));
+            var virt_limit = attributes.get("virt_limit");
+            var virt_attributes = new java.util.HashMap();
+            virt_attributes.put("virt_only", "true");
+            // Make sure the virt pool does not have a virt_limit,
+            // otherwise this is recurse infinitely
+            virt_attributes.put("virt_limit", "0");
 
-            if (virt_limit > 0) {
-                var virt_attributes = new java.util.HashMap();
-                virt_attributes.put("virt_only", "true");
-                // Make sure the virt pool does not have a virt_limit,
-                // otherwise this is recurse infinitely
-                virt_attributes.put("virt_limit", "0");
-
-                var virt_quantity = sub.getQuantity() * virt_limit;
-
+            if ('unlimited'.equals(virt_limit)) {
                 pools.add(helper.createPool(sub, sub.getProduct().getId(),
-				virt_quantity.toString(), virt_attributes));
+				'unlimited', virt_attributes));
+            } else {
+                var virt_limit_quantity = parseInt(virt_limit);
+
+                if (virt_limit_quantity > 0) { 
+                    var virt_quantity = sub.getQuantity() * virt_limit_quantity;
+
+                    pools.add(helper.createPool(sub, sub.getProduct().getId(),
+				    virt_quantity.toString(), virt_attributes));
+                }
             }
         }
 
