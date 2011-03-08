@@ -25,7 +25,6 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
@@ -47,7 +46,6 @@ import org.quartz.JobExecutionException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.KeyPair;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
@@ -62,14 +60,12 @@ public class MigrateOwnerJob implements Job {
     private PoolCurator poolCurator;
     private EntitlementCurator entCurator;
     private ConsumerCurator consumerCurator;
-    private KeyPairCurator keypairCurator;
     private CandlepinConnection conn;
     private Config config;
     
     @Inject
     public MigrateOwnerJob(OwnerCurator oc, CandlepinConnection connection,
-        Config conf, PoolCurator pc, EntitlementCurator ec, ConsumerCurator cc,
-        KeyPairCurator kpc) {
+        Config conf, PoolCurator pc, EntitlementCurator ec, ConsumerCurator cc) {
 
         ownerCurator = oc;
         consumerCurator = cc;
@@ -77,7 +73,6 @@ public class MigrateOwnerJob implements Job {
         config = conf;
         poolCurator = pc;
         entCurator = ec;
-        keypairCurator = kpc;
     }
 
     private static String buildUri(String uri) {
@@ -200,7 +195,6 @@ public class MigrateOwnerJob implements Job {
             client.exportOwnerConsumers(ownerkey);
         for (Consumer consumer : consumerResp.getEntity()) {
             log.info("importing consumer: " + consumer.toString());
-            KeyPair keypair = keypairCurator.getConsumerKeyPair(consumer);
             
             log.info("consumer.id: " + consumer.getId());
             log.info("consumer.entitlements:  " +

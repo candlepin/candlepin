@@ -34,8 +34,6 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
-import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
@@ -70,7 +68,6 @@ public class MigrateOwnerJobTest {
     private Config config;
     private PoolCurator poolCurator;
     private EntitlementCurator entCurator;
-    private KeyPairCurator keyPairCurator;
     
     @Before
     public void init() {
@@ -80,9 +77,8 @@ public class MigrateOwnerJobTest {
         conn = mock(CandlepinConnection.class);
         poolCurator = mock(PoolCurator.class);
         entCurator = mock(EntitlementCurator.class);
-        keyPairCurator = mock(KeyPairCurator.class);
         moj = new MigrateOwnerJob(ownerCurator, conn, config, poolCurator,
-            entCurator, consumerCurator, keyPairCurator);
+            entCurator, consumerCurator);
     }
     
     @Test
