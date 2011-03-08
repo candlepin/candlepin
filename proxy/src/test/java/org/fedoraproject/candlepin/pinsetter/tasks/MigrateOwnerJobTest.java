@@ -149,11 +149,11 @@ public class MigrateOwnerJobTest {
  
         ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
         ClientResponse<List<Consumer>> crsp = mock(ClientResponse.class); 
-	ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
+        ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
 
         when(client.exportOwner(eq("admin"))).thenReturn(resp);
         when(client.exportPools(eq("admin"))).thenReturn(prsp);
-	when(client.exportEntitlements(eq("admin"))).thenReturn(ersp);
+        when(client.exportEntitlements(eq("admin"))).thenReturn(ersp);
         when(client.exportOwnerConsumers(eq("admin"))).thenReturn(crsp);
         when(resp.getStatus()).thenReturn(200);
         when(prsp.getStatus()).thenReturn(200);
