@@ -35,7 +35,8 @@ public class CandlepinConnectionTest {
     public void connect() {
         CandlepinConnection conn = new CandlepinConnection(new Config());
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-        OwnerClient client = conn.connect(creds, "http://localhost:8080/candlepin/");
+        OwnerClient client = conn.connect(OwnerClient.class, creds,
+            "http://localhost:8080/candlepin/");
         ClientResponse<Owner> resp = client.exportOwner("admin");
         
         assertNotNull(resp);
@@ -49,7 +50,8 @@ public class CandlepinConnectionTest {
     public void doesnotexist() {
         CandlepinConnection conn = new CandlepinConnection(new Config());
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-        OwnerClient client = conn.connect(creds, "http://localhost:8080/candlepin/");
+        OwnerClient client = conn.connect(OwnerClient.class, creds,
+            "http://localhost:8080/candlepin/");
         ClientResponse<Owner> resp = client.exportOwner("doesnotexist");
         
         assertNotNull(resp);

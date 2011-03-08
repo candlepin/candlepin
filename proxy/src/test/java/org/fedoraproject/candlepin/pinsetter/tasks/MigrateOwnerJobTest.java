@@ -24,24 +24,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.client.CandlepinConnection;
+import org.fedoraproject.candlepin.client.ConsumerClient;
 import org.fedoraproject.candlepin.client.OwnerClient;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.IdentityCertificate;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
+import org.fedoraproject.candlepin.model.KeyPairCurator;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.KeyPairCurator;
-import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
 
 import org.apache.commons.httpclient.Credentials;
 import org.jboss.resteasy.client.ClientResponse;
@@ -134,18 +132,26 @@ public class MigrateOwnerJobTest {
     @SuppressWarnings("unchecked")
     public void execute() throws JobExecutionException {
         OwnerClient client = mock(OwnerClient.class);
-        when(conn.connect(any(Credentials.class),
+        ConsumerClient conclient = mock(ConsumerClient.class);
+        when(conn.connect(eq(OwnerClient.class), any(Credentials.class),
             any(String.class))).thenReturn(client);
+        when(conn.connect(eq(ConsumerClient.class), any(Credentials.class),
+            any(String.class))).thenReturn(conclient);
+        
         ClientResponse<Owner> resp = mock(ClientResponse.class);
         
         List<Pool> pools = new ArrayList<Pool>();
         pools.add(mock(Pool.class));
         
         List<Consumer> consumers = new ArrayList<Consumer>();
-        consumers.add(mock(Consumer.class));
+        Consumer consumer = mock(Consumer.class);
+        when(consumer.getUuid()).thenReturn("357ec012");
+        consumers.add(consumer);
 
         List<Entitlement> ents = new ArrayList<Entitlement>();
-        ents.add(mock(Entitlement.class));
+        Entitlement ent = mock(Entitlement.class);
+        when(ent.getId()).thenReturn("ff8080812e9");
+        ents.add(ent);
  
         ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
         ClientResponse<List<Consumer>> crsp = mock(ClientResponse.class); 
@@ -155,27 +161,35 @@ public class MigrateOwnerJobTest {
         when(client.exportPools(eq("admin"))).thenReturn(prsp);
         when(client.exportEntitlements(eq("admin"))).thenReturn(ersp);
         when(client.exportOwnerConsumers(eq("admin"))).thenReturn(crsp);
+        when(conclient.exportEntitlements(eq("357ec012"),
+            any(String.class))).thenReturn(ersp);
         when(resp.getStatus()).thenReturn(200);
         when(prsp.getStatus()).thenReturn(200);
         when(ersp.getStatus()).thenReturn(200);
         
         when(prsp.getEntity()).thenReturn(pools);
         when(crsp.getEntity()).thenReturn(consumers);
-        when(ersp.getEntity()).thenReturn(ents);
+        when(ersp.getEntity()).thenReturn(ents).thenReturn(ents);
         JobDataMap map = new JobDataMap();
         map.put("owner_key", "admin");
         map.put("uri", "http://foo.example.com/candlepin");
 
+        Owner owner = mock(Owner.class);
+        when(ownerCurator.lookupByKey(eq("admin"))).thenReturn(owner);
+        when(consumerCurator.listByOwner(any(Owner.class))).thenReturn(consumers);
+        when(entCurator.find(eq("ff8080812e9"))).thenReturn(ent);
+        
         // test it :)
         moj.execute(buildContext(map));
 
         // verify everything was called
-        verify(conn).connect(any(Credentials.class),
+        verify(conn).connect(eq(OwnerClient.class), any(Credentials.class),
             eq("http://foo.example.com/candlepin"));
         verify(ownerCurator, atLeastOnce()).importOwner(any(Owner.class));
         verify(poolCurator, atLeastOnce()).importPool(any(Pool.class));
         verify(consumerCurator, atLeastOnce()).importConsumer(any(Consumer.class));
         verify(entCurator, atLeastOnce()).importEntitlement(any(Entitlement.class));
+        verify(entCurator, atLeastOnce()).merge(any(Entitlement.class));
     }
     
     @Test(expected = Exception.class)
@@ -200,7 +214,7 @@ public class MigrateOwnerJobTest {
     @SuppressWarnings("unchecked")
     public void executeNonExistentOwner() throws JobExecutionException {
         OwnerClient client = mock(OwnerClient.class);
-        when(conn.connect(any(Credentials.class),
+        when(conn.connect(eq(OwnerClient.class), any(Credentials.class),
             any(String.class))).thenReturn(client);
         ClientResponse<Owner> resp = mock(ClientResponse.class);
         when(client.exportOwner(eq("doesnotexist"))).thenReturn(resp);

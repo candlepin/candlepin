@@ -48,13 +48,13 @@ public class CandlepinConnection {
      * Connects to another Candlepin instance located at the given uri.
      * @param creds authentication credentials for the given uri.
      * @param uri the Candlepin instance to connect to
-     * @return OwnerClient proxy used to interact with Candlepin via REST API.
+     * @return Client proxy used to interact with Candlepin via REST API.
      */
-    public OwnerClient connect(Credentials creds, String uri) {
+    public <T> T connect(Class<T> clazz, Credentials creds, String uri) {
         HttpClient httpclient = new HttpClient();
         httpclient.getState().setCredentials(AuthScope.ANY, creds);
         ClientExecutor clientExecutor = new ApacheHttpClientExecutor(httpclient);
-        return ProxyFactory.create(OwnerClient.class, uri, 
+        return ProxyFactory.create(clazz, uri, 
             clientExecutor);
     }
 }

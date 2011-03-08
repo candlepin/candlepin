@@ -69,9 +69,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
     }
     
-    /**
-     * @param consumer
-     */
     @AllowRoles(roles = Role.SUPER_ADMIN)
     @Transactional
     public Consumer importConsumer(Consumer consumer) {
@@ -80,7 +77,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         
         consumer.setParent(consumer.getParent());
-        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
+        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(
+            consumer.getType().getLabel());
         consumer.setType(consumerType);
         
         IdentityCertificate idCert = consumer.getIdCert();
@@ -196,7 +194,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         
         validate(updatedConsumer);
         // TODO: Are any of these read-only?
-        existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer.getChildConsumers()));
+        existingConsumer.setChildConsumers(
+            bulkUpdate(updatedConsumer.getChildConsumers()));
         existingConsumer.setEntitlements(
                 entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements()));
         Map<String, String> newFacts = filterFacts(updatedConsumer.getFacts()); 

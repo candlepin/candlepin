@@ -15,23 +15,22 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import org.fedoraproject.candlepin.client.CandlepinConnection;
+import org.fedoraproject.candlepin.client.ConsumerClient;
 import org.fedoraproject.candlepin.client.OwnerClient;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.IdentityCertificate;
-import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
+import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -49,12 +48,11 @@ import org.quartz.JobExecutionException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyPair;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
-
-import java.security.KeyPair;
 /**
  * MigrateOwnerJob
  */
@@ -120,7 +118,7 @@ public class MigrateOwnerJob implements Job {
         Credentials creds = new UsernamePasswordCredentials(
             config.getString(ConfigProperties.SHARD_USERNAME),
             config.getString(ConfigProperties.SHARD_PASSWORD));
-        OwnerClient client = conn.connect(creds, uri);
+        OwnerClient client = conn.connect(OwnerClient.class, creds, uri);
 
         log.info("Migrating owner [" + key +
             "] from candlepin instance running on [" + uri + "]");       
@@ -137,6 +135,37 @@ public class MigrateOwnerJob implements Job {
         log.info("Migrating consumers for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
         exportConsumers(key, client);
+        
+        ConsumerClient cclient = conn.connect(ConsumerClient.class, creds, uri);
+        log.info("Associating consumers to their entitlements for owner [" +
+            key + "]");
+        associateConsumersToEntitlements(key, cclient);
+    }
+    
+    private void associateConsumersToEntitlements(String key, ConsumerClient client) {
+        Owner owner = ownerCurator.lookupByKey(key);
+        log.debug("owner [" + owner.getDisplayName() + "] has [" +
+            owner.getConsumers().size() + "] consumers");
+        
+        List<Consumer> consumers = consumerCurator.listByOwner(owner);
+        for (Consumer c : consumers) {
+            
+            if (log.isDebugEnabled()) {
+                log.debug("Processing consumer [" + c.getUuid() + "]");
+            }
+
+            ClientResponse<List<Entitlement>> rsp =
+                client.exportEntitlements(c.getUuid(), null);
+            if (rsp.getStatus() != Status.OK.getStatusCode()) {
+                throw new WebApplicationException(rsp);
+            }
+            
+            for (Entitlement e : rsp.getEntity()) {
+                Entitlement realent = entCurator.find(e.getId());
+                realent.setConsumer(c);
+                entCurator.merge(realent);
+            }
+        }
     }
     
     private void exportOwner(String key, OwnerClient client) {
@@ -170,14 +199,17 @@ public class MigrateOwnerJob implements Job {
      
     private void exportConsumers(String ownerkey, OwnerClient client) {
         // track down consumers for the owner
-        ClientResponse<List <Consumer>> consumerResp = client.exportOwnerConsumers(ownerkey);
+        ClientResponse<List<Consumer>> consumerResp =
+            client.exportOwnerConsumers(ownerkey);
         for (Consumer consumer : consumerResp.getEntity()) {
             log.info("importing consumer: " + consumer.toString());
             KeyPair keypair = keypairCurator.getConsumerKeyPair(consumer);
             
             log.info("consumer.id: " + consumer.getId());
-            log.info("consumer.entitlements:  " + consumer.getEntitlements().toString());
-            log.info("consumer.childConsumers: " + consumer.getChildConsumers().toString());
+            log.info("consumer.entitlements:  " +
+                consumer.getEntitlements().toString());
+            log.info("consumer.childConsumers: " +
+                consumer.getChildConsumers().toString());
             log.info("consumer.facts: " + consumer.getFacts().toString());
             log.info("consumer.parent: " + consumer.getParent());
             log.info("consumer.keyPair: " + consumer.getKeyPair());
