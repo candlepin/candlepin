@@ -14,20 +14,24 @@
  */
 package org.fedoraproject.candlepin.client;
 
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.Consumer;
 
 import org.jboss.resteasy.client.ClientResponse;
 
 import java.util.List;
 
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * OwnerExportClient
@@ -57,4 +61,10 @@ public interface OwnerClient {
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Consumer>> exportOwnerConsumers(
         @PathParam("owner_key") String ownerKey);
+    
+    @DELETE
+    @Path("/{owner_key}")    
+    @Produces(MediaType.APPLICATION_JSON)
+    Response deleteOwner(@PathParam("owner_key") String ownerKey,
+        @QueryParam("revoke") @DefaultValue("true") boolean revoke);
 }

@@ -55,6 +55,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.ws.rs.core.Response;
+
 
 /**
  * MigrateOwnerJobTest
@@ -84,27 +86,28 @@ public class MigrateOwnerJobTest {
     @Test
     public void testMigrateOwner() {
         JobDetail jd = moj.migrateOwner("admin",
-            "http://foo.example.com/candlepin");
+            "http://foo.example.com/candlepin", false);
         assertNotNull(jd);
         assertNotNull(jd.getJobDataMap());
         assertEquals("admin", jd.getJobDataMap().get("owner_key"));
         assertEquals("http://foo.example.com/candlepin",
             jd.getJobDataMap().get("uri"));
+        assertEquals(false, jd.getJobDataMap().get("delete"));
     }
     
     @Test(expected = Exception.class)
     public void nullOwner() {
-        moj.migrateOwner(null, "http://foo.example.com/candlepin");
+        moj.migrateOwner(null, "http://foo.example.com/candlepin", false);
     }
     
     @Test(expected = BadRequestException.class)
     public void nullUrl() {
-        moj.migrateOwner("admin", null);
+        moj.migrateOwner("admin", null, false);
     }
     
     @Test(expected = BadRequestException.class)
     public void invalidUrlFormat() {
-        moj.migrateOwner("admin", "");
+        moj.migrateOwner("admin", "", false);
     }
     
     // used by execute tests
@@ -124,10 +127,10 @@ public class MigrateOwnerJobTest {
     @Test
     @SuppressWarnings("unchecked")
     public void execute() throws JobExecutionException {
-        OwnerClient client = mock(OwnerClient.class);
+        OwnerClient oclient = mock(OwnerClient.class);
         ConsumerClient conclient = mock(ConsumerClient.class);
         when(conn.connect(eq(OwnerClient.class), any(Credentials.class),
-            any(String.class))).thenReturn(client);
+            any(String.class))).thenReturn(oclient);
         when(conn.connect(eq(ConsumerClient.class), any(Credentials.class),
             any(String.class))).thenReturn(conclient);
         
@@ -149,16 +152,19 @@ public class MigrateOwnerJobTest {
         ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
         ClientResponse<List<Consumer>> crsp = mock(ClientResponse.class); 
         ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
+        Response drsp = mock(Response.class);
 
-        when(client.exportOwner(eq("admin"))).thenReturn(resp);
-        when(client.exportPools(eq("admin"))).thenReturn(prsp);
-        when(client.exportEntitlements(eq("admin"))).thenReturn(ersp);
-        when(client.exportOwnerConsumers(eq("admin"))).thenReturn(crsp);
+        when(oclient.exportOwner(eq("admin"))).thenReturn(resp);
+        when(oclient.exportPools(eq("admin"))).thenReturn(prsp);
+        when(oclient.exportEntitlements(eq("admin"))).thenReturn(ersp);
+        when(oclient.exportOwnerConsumers(eq("admin"))).thenReturn(crsp);
+        when(oclient.deleteOwner(eq("admin"), eq(false))).thenReturn(drsp);
         when(conclient.exportEntitlements(eq("357ec012"),
             any(String.class))).thenReturn(ersp);
         when(resp.getStatus()).thenReturn(200);
         when(prsp.getStatus()).thenReturn(200);
         when(ersp.getStatus()).thenReturn(200);
+        when(drsp.getStatus()).thenReturn(204); // typical response from delete
         
         when(prsp.getEntity()).thenReturn(pools);
         when(crsp.getEntity()).thenReturn(consumers);
@@ -166,6 +172,7 @@ public class MigrateOwnerJobTest {
         JobDataMap map = new JobDataMap();
         map.put("owner_key", "admin");
         map.put("uri", "http://foo.example.com/candlepin");
+        map.put("delete", true);
 
         Owner owner = mock(Owner.class);
         when(ownerCurator.lookupByKey(eq("admin"))).thenReturn(owner);
@@ -183,6 +190,7 @@ public class MigrateOwnerJobTest {
         verify(consumerCurator, atLeastOnce()).importConsumer(any(Consumer.class));
         verify(entCurator, atLeastOnce()).importEntitlement(any(Entitlement.class));
         verify(entCurator, atLeastOnce()).merge(any(Entitlement.class));
+        verify(oclient, atLeastOnce()).deleteOwner(eq("admin"), eq(false));
     }
     
     @Test(expected = Exception.class)

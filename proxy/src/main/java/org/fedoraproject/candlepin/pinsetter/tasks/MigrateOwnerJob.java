@@ -49,6 +49,7 @@ import java.net.URL;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 /**
  * MigrateOwnerJob
@@ -104,34 +105,58 @@ public class MigrateOwnerJob implements Job {
         throws JobExecutionException {
         String key = ctx.getMergedJobDataMap().getString("owner_key");
         String uri = buildUri(ctx.getMergedJobDataMap().getString("uri"));
+        boolean delete = ctx.getMergedJobDataMap().getBoolean("delete");
 
         validateInput(key, uri);
 
         Credentials creds = new UsernamePasswordCredentials(
             config.getString(ConfigProperties.SHARD_USERNAME),
             config.getString(ConfigProperties.SHARD_PASSWORD));
-        OwnerClient client = conn.connect(OwnerClient.class, creds, uri);
+        OwnerClient oclient = conn.connect(OwnerClient.class, creds, uri);
 
         log.info("Migrating owner [" + key +
             "] from candlepin instance running on [" + uri + "]");       
-        exportOwner(key, client);
+        exportOwner(key, oclient);
 
         log.info("Migrating pools for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
-        exportPools(key, client);
+        exportPools(key, oclient);
         
         log.info("Migrating entitlements for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
-        exportEntitlements(key, client);
+        exportEntitlements(key, oclient);
 
         log.info("Migrating consumers for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
-        exportConsumers(key, client);
+        exportConsumers(key, oclient);
         
         ConsumerClient cclient = conn.connect(ConsumerClient.class, creds, uri);
         log.info("Associating consumers to their entitlements for owner [" +
             key + "]");
         associateConsumersToEntitlements(key, cclient);
+        
+        if (delete) {
+            log.info("Removing owner [" + key +
+                "] from candlepin instance running on [" + uri + "]");
+            cleanupOwner(key, oclient);
+        }
+        else {
+            log.info("delete flag was false, owner [" + key +
+                "] will not be deleted from candlepin instance running on [" +
+                uri + "]");
+        }
+        
+        log.info("FINISHED - migration of owner [" + key +
+            "] from candlepin instance running on [" + uri + "]");
+    }
+    
+    private void cleanupOwner(String key, OwnerClient client) {
+        Response rsp = client.deleteOwner(key, false);
+        if (rsp.getStatus() != Status.OK.getStatusCode() &&
+            rsp.getStatus() != Status.ACCEPTED.getStatusCode() &&
+            rsp.getStatus() != Status.NO_CONTENT.getStatusCode()) {
+            throw new WebApplicationException(rsp);
+        }
     }
     
     private void associateConsumersToEntitlements(String key, ConsumerClient client) {
@@ -229,7 +254,7 @@ public class MigrateOwnerJob implements Job {
     }
 
  
-    public static JobDetail migrateOwner(String key, String uri) {
+    public static JobDetail migrateOwner(String key, String uri, boolean delete) {
         uri = buildUri(uri);
         validateInput(key, uri);
 
@@ -238,6 +263,7 @@ public class MigrateOwnerJob implements Job {
         JobDataMap map = new JobDataMap();
         map.put("owner_key", key);
         map.put("uri", uri);
+        map.put("delete", delete);
         
         detail.setJobDataMap(map);
         return detail;

@@ -467,12 +467,15 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("import")
     public JobDetail migrateOwner(@QueryParam("id") String ownerKey,
-                                  @QueryParam("uri") String url) {
+        @QueryParam("uri") String url,
+        @QueryParam("delete") @DefaultValue("true") boolean delete) {
+        
         if (log.isDebugEnabled()) {
-            log.debug("launch migrate owner - owner [" + ownerKey + "], uri [" + url + "]");
+            log.debug("launch migrate owner - owner [" + ownerKey +
+                "], uri [" + url + "]");
         }
 
-        return MigrateOwnerJob.migrateOwner(ownerKey, url);
+        return MigrateOwnerJob.migrateOwner(ownerKey, url, delete);
     }
 
     @GET
