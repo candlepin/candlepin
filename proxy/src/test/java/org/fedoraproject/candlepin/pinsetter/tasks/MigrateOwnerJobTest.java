@@ -71,8 +71,6 @@ public class MigrateOwnerJobTest {
     private PoolCurator poolCurator;
     private EntitlementCurator entCurator;
     private KeyPairCurator keyPairCurator;
-    private IdentityCertificateCurator idCertCurator;
-
     
     @Before
     public void init() {
@@ -83,9 +81,8 @@ public class MigrateOwnerJobTest {
         poolCurator = mock(PoolCurator.class);
         entCurator = mock(EntitlementCurator.class);
         keyPairCurator = mock(KeyPairCurator.class);
-        idCertCurator = mock(IdentityCertificateCurator.class);
         moj = new MigrateOwnerJob(ownerCurator, conn, config, poolCurator,
-            entCurator, consumerCurator, keyPairCurator, idCertCurator);
+            entCurator, consumerCurator, keyPairCurator);
     }
     
     @Test

@@ -25,7 +25,6 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.IdentityCertificateCurator;
 import org.fedoraproject.candlepin.model.KeyPairCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -64,14 +63,13 @@ public class MigrateOwnerJob implements Job {
     private EntitlementCurator entCurator;
     private ConsumerCurator consumerCurator;
     private KeyPairCurator keypairCurator;
-    private IdentityCertificateCurator idCertCurator;
     private CandlepinConnection conn;
     private Config config;
     
     @Inject
     public MigrateOwnerJob(OwnerCurator oc, CandlepinConnection connection,
         Config conf, PoolCurator pc, EntitlementCurator ec, ConsumerCurator cc,
-        KeyPairCurator kpc, IdentityCertificateCurator icc) {
+        KeyPairCurator kpc) {
 
         ownerCurator = oc;
         consumerCurator = cc;
@@ -80,7 +78,6 @@ public class MigrateOwnerJob implements Job {
         poolCurator = pc;
         entCurator = ec;
         keypairCurator = kpc;
-        idCertCurator  = icc;
     }
 
     private static String buildUri(String uri) {
