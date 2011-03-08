@@ -155,6 +155,12 @@ public class X509ExtensionUtil {
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false,
             new DERUTF8String(product.getName())));
 
+        // XXX include version, arch, and provides here (after defined in attributes)
+        
+        // dummy provides i used for testing
+        //toReturn.add(new X509ExtensionWrapper(productOid + "." +
+        //    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_PROVIDES_KEY), false,
+        //    new DERUTF8String("TAG1,TAG2,TAG3")));
         return toReturn;
     }
 

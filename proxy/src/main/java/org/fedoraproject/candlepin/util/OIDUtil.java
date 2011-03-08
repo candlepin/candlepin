@@ -54,9 +54,9 @@ public final class OIDUtil {
     public static final String ORDER_SUPPORT_TYPE = "Support Type";
 
     public static final String OP_NAME_KEY = "Name";
-    public static final String OP_DESC_KEY = "Variant";
-    public static final String OP_ARCH_KEY = "Architecture";
     public static final String OP_VERSION_KEY = "Version";
+    public static final String OP_ARCH_KEY = "Architecture";
+    public static final String OP_PROVIDES_KEY = "Provides";
 
     public static final String CF_NAME_KEY = "Name";
     public static final String CF_LABEL_KEY = "Label";
@@ -129,9 +129,9 @@ public final class OIDUtil {
 
         // load order product oids
         ORDER_PRODUCT_OIDS.put(OP_NAME_KEY, "1");
-        ORDER_PRODUCT_OIDS.put(OP_DESC_KEY, "2");
+        ORDER_PRODUCT_OIDS.put(OP_VERSION_KEY, "2");
         ORDER_PRODUCT_OIDS.put(OP_ARCH_KEY, "3");
-        ORDER_PRODUCT_OIDS.put(OP_VERSION_KEY, "4");
+        ORDER_PRODUCT_OIDS.put(OP_PROVIDES_KEY, "4");
 
         // role entitlement oids
         ROLE_ENTITLEMENT_OIDS.put(ROLE_NAME_KEY, "1");
