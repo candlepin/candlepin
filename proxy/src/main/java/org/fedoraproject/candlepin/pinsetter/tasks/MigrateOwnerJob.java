@@ -133,6 +133,10 @@ public class MigrateOwnerJob implements Job {
         log.info("Migrating entitlements for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
         exportEntitlements(key, client);
+
+        log.info("Migrating consumers for owner [" + key +
+            "] from candlepin instance running on [" + uri + "]");
+        exportConsumers(key, client);
     }
     
     private void exportOwner(String key, OwnerClient client) {
