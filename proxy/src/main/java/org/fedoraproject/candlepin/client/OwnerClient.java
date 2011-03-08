@@ -55,5 +55,6 @@ public interface OwnerClient {
     @GET
     @Path("{owner_key}/consumers")
     @Produces(MediaType.APPLICATION_JSON)
-    ClientResponse<List<Consumer>> exportOwnerConsumers(@PathParam("owner_key") String ownerKey);
+    ClientResponse<List<Consumer>> exportOwnerConsumers(
+        @PathParam("owner_key") String ownerKey);
 }
