@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.10
+Version: 0.2.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Mar 08 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.11-1
+- Fixing virt_limit when no virt.is_guest fact exists. (jharris@redhat.com)
+- Adding virt_limit 'unlimited' support (jharris@redhat.com)
+- Update OID for latest product changes (provides). (jbowes@redhat.com)
+
 * Mon Mar 07 2011 Devan Goodwin <dgoodwin@redhat.com> 0.2.10-1
 - Add content tags support to Ruby APİ. (dgoodwin@redhat.com)
 - Add model support for content tags and apply to ent certs.
