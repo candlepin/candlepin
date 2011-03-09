@@ -248,6 +248,8 @@ define "candlepin" do
     mkdir_p compile.target.to_s
     sources = FileList[_("src/main/java/**/*.java")]
     classpath = compile.dependencies.inject("") {|a,c| a << ":#{c}"}
+    classpath << ":#{Java.tools_jar}"
+
     sh "cov-build --dir=/cov_builds/candlepin_jd/ javac -classpath #{classpath} -d #{compile.target} -verbose -g -target 1.6 #{sources}"
     sh "cov-analyze-java --dir=/cov_builds/candlepin_jd/"
     sh "cov-commit-defects --dir /cov_builds/candlepin_jd/ --stream candlepin --user admin --host #{`hostname`}"
