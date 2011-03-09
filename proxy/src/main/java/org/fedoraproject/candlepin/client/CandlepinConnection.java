@@ -46,6 +46,7 @@ public class CandlepinConnection {
 
     /**
      * Connects to another Candlepin instance located at the given uri.
+     * @param clazz the client class to create.
      * @param creds authentication credentials for the given uri.
      * @param uri the Candlepin instance to connect to
      * @return Client proxy used to interact with Candlepin via REST API.
