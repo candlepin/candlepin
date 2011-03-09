@@ -51,8 +51,14 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 /**
- * MigrateOwnerJob
+ * MigrateOwnerJob is an async job that will extract the owner and its data
+ * from another Candlepin instance. The job is passed an owner key identifying
+ * the owner to be migrated, an uri pointing to the Candlepin instance where
+ * the owner to be migrated currently exists, and finally an optional delete
+ * flag that indicates whether the original owner should be deleted once
+ * migration has occurred.
  */
 public class MigrateOwnerJob implements Job {
     private static Logger log = Logger.getLogger(MigrateOwnerJob.class);
@@ -64,9 +70,19 @@ public class MigrateOwnerJob implements Job {
     private CandlepinConnection conn;
     private Config config;
     
+    /**
+     * Constructs the job with the connection, configuration, and necessary
+     * object curators required to persist the objects.
+     * @param connection Represents connection to another Candlepin.
+     * @param conf Candlepin configuration.
+     * @param oc database layer for Owner
+     * @param pc database layer for Pool
+     * @param ec database layer for Entitlement
+     * @param cc database layer for Consumer
+     */
     @Inject
-    public MigrateOwnerJob(OwnerCurator oc, CandlepinConnection connection,
-        Config conf, PoolCurator pc, EntitlementCurator ec, ConsumerCurator cc) {
+    public MigrateOwnerJob(CandlepinConnection connection, Config conf,
+        OwnerCurator oc, PoolCurator pc, EntitlementCurator ec, ConsumerCurator cc) {
 
         ownerCurator = oc;
         consumerCurator = cc;
@@ -150,6 +166,13 @@ public class MigrateOwnerJob implements Job {
             "] from candlepin instance running on [" + uri + "]");
     }
     
+    /**
+     * deletes the owner from the <strong>other</strong> Candlepin instance. 
+     * @param key owner key to be deleted.
+     * @param client Candlepin client.
+     * @throws WebApplicationException if the other Candlepin instance returns
+     * other than OK, ACCEPTED, or NO_CONTENT.
+     */
     private void cleanupOwner(String key, OwnerClient client) {
         Response rsp = client.deleteOwner(key, false);
         if (rsp.getStatus() != Status.OK.getStatusCode() &&
@@ -158,8 +181,18 @@ public class MigrateOwnerJob implements Job {
             throw new WebApplicationException(rsp);
         }
     }
-    
-    private void associateConsumersToEntitlements(String key, ConsumerClient client) {
+
+    /**
+     * associates the migrated entitlements to the migrated consumers since
+     * the api does not return the associations.
+     * @param key owner key to be deleted.
+     * @param client Candlepin client.
+     * @throws WebApplicationException if the other Candlepin instance returns
+     * other than OK.
+     */
+    private void associateConsumersToEntitlements(String key,
+        ConsumerClient client) {
+
         Owner owner = ownerCurator.lookupByKey(key);
         log.debug("owner [" + owner.getDisplayName() + "] has [" +
             owner.getConsumers().size() + "] consumers");
@@ -185,13 +218,19 @@ public class MigrateOwnerJob implements Job {
         }
     }
     
+    /**
+     * Replicates the Owner from the Candlepin pointed to by the client.
+     * @param key owner key who should be migrated.
+     * @param client Candlepin client.
+     * @throws NotFoundException if the other Candlepin instance returns
+     * NOT_FOUND.
+     */
     private void replicateOwner(String key, OwnerClient client) {
         ClientResponse<Owner> rsp = client.replicateOwner(key);
         
         log.info("call returned - status: [" + rsp.getStatus() + "] reason [" +
             rsp.getResponseStatus() + "]");
 
-        // TODO: do we want specific errors or just a general one
         if (rsp.getStatus() == Status.NOT_FOUND.getStatusCode()) {
             throw new NotFoundException("Can't find owner [" + key + "]");
         }
@@ -201,6 +240,13 @@ public class MigrateOwnerJob implements Job {
         
     }
 
+    /**
+     * Replicates the owner's pools from the Candlepin pointed to by the client.
+     * @param key owner key whose pools should be migrated.
+     * @param client Candlepin client.
+     * @throws WebApplicationException if the other Candlepin instance returns
+     * other than OK.
+     */
     private void replicatePools(String key, OwnerClient client) {
         ClientResponse<List<Pool>> rsp = client.replicatePools(key);
         if (rsp.getStatus() != Status.OK.getStatusCode()) {
@@ -213,12 +259,24 @@ public class MigrateOwnerJob implements Job {
             poolCurator.replicate(pool);
         }
     }
-     
-    private void replicateConsumers(String ownerkey, OwnerClient client) {
+
+    /**
+     * Replicates the owner's consumers from the Candlepin pointed to by the
+     * client.
+     * @param key owner key whose consumers should be migrated.
+     * @param client Candlepin client.
+     * @throws WebApplicationException if the other Candlepin instance returns
+     * other than OK.
+     */
+    private void replicateConsumers(String key, OwnerClient client) {
         // track down consumers for the owner
-        ClientResponse<List<Consumer>> consumerResp =
-            client.replicateOwnerConsumers(ownerkey);
-        for (Consumer consumer : consumerResp.getEntity()) {
+        ClientResponse<List<Consumer>> rsp = client.replicateConsumers(key);
+        
+        if (rsp.getStatus() != Status.OK.getStatusCode()) {
+            throw new WebApplicationException(rsp);
+        }
+        
+        for (Consumer consumer : rsp.getEntity()) {
             log.info("importing consumer: " + consumer.toString());
             
             log.info("consumer.id: " + consumer.getId());
@@ -234,8 +292,15 @@ public class MigrateOwnerJob implements Job {
             consumerCurator.replicate(consumer);
         }
     }
-        
-    
+
+    /**
+     * Replicates the owner's entitlements from the Candlepin pointed to by the
+     * client.
+     * @param key owner key whose entitlements should be migrated.
+     * @param client Candlepin client.
+     * @throws WebApplicationException if the other Candlepin instance returns
+     * other than OK.
+     */
     private void replicateEntitlements(String key, OwnerClient client) {
         ClientResponse<List<Entitlement>> rsp = client.replicateEntitlements(key);
         
@@ -253,7 +318,16 @@ public class MigrateOwnerJob implements Job {
         }        
     }
 
- 
+    /**
+     * Creates the JobDetail for this MigrateOwnerJob class. The JobDetail will
+     * get passed in through the execute method via the JobExecutionContext. 
+     * @param key owner key who should be migrated.
+     * @param uri URI of the Candlepin instance where owner will be pulled.
+     * @param delete true if owner should be deleted from the Candlepin
+     * instance pointed by the uri.
+     * @return JobDetail containing the information needed by the asynchronous
+     * job to handle the migration of the given owner (key).
+     */
     public static JobDetail migrateOwner(String key, String uri, boolean delete) {
         uri = buildUri(uri);
         validateInput(key, uri);

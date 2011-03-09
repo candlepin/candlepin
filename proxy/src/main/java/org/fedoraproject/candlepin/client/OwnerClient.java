@@ -59,7 +59,7 @@ public interface OwnerClient {
     @GET
     @Path("{owner_key}/consumers")
     @Produces(MediaType.APPLICATION_JSON)
-    ClientResponse<List<Consumer>> replicateOwnerConsumers(
+    ClientResponse<List<Consumer>> replicateConsumers(
         @PathParam("owner_key") String ownerKey);
     
     @DELETE

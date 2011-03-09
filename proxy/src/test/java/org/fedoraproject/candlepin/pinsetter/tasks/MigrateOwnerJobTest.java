@@ -79,7 +79,7 @@ public class MigrateOwnerJobTest {
         conn = mock(CandlepinConnection.class);
         poolCurator = mock(PoolCurator.class);
         entCurator = mock(EntitlementCurator.class);
-        moj = new MigrateOwnerJob(ownerCurator, conn, config, poolCurator,
+        moj = new MigrateOwnerJob(conn, config, ownerCurator, poolCurator,
             entCurator, consumerCurator);
     }
     
@@ -157,7 +157,7 @@ public class MigrateOwnerJobTest {
         when(oclient.replicateOwner(eq("admin"))).thenReturn(resp);
         when(oclient.replicatePools(eq("admin"))).thenReturn(prsp);
         when(oclient.replicateEntitlements(eq("admin"))).thenReturn(ersp);
-        when(oclient.replicateOwnerConsumers(eq("admin"))).thenReturn(crsp);
+        when(oclient.replicateConsumers(eq("admin"))).thenReturn(crsp);
         when(oclient.deleteOwner(eq("admin"), eq(false))).thenReturn(drsp);
         when(conclient.replicateEntitlements(eq("357ec012"),
             any(String.class))).thenReturn(ersp);
