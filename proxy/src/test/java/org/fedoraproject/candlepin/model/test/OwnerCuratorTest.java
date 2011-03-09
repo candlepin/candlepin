@@ -30,7 +30,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner = new Owner("testing");
         owner.setId("testing-primary-key");
 
-        this.ownerCurator.importOwner(owner);
+        this.ownerCurator.replicate(owner);
 
         Assert.assertEquals("testing",
                 this.ownerCurator.find("testing-primary-key").getKey());
@@ -44,6 +44,6 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner newOwner = new Owner("someoneElse");
         newOwner.setId(owner.getId());
 
-        this.ownerCurator.importOwner(newOwner);
+        this.ownerCurator.replicate(newOwner);
     }
 }

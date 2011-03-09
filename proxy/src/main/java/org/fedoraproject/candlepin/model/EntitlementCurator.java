@@ -275,7 +275,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     @AllowRoles(roles = Role.SUPER_ADMIN)
     @Transactional
-    public Entitlement importEntitlement(Entitlement ent) {
+    public Entitlement replicate(Entitlement ent) {
         for (EntitlementCertificate ec : ent.getCertificates()) {
             ec.setEntitlement(ent);
             CertificateSerial cs = ec.getSerial();

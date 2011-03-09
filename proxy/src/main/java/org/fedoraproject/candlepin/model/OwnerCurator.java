@@ -32,7 +32,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     @AllowRoles(roles = Role.SUPER_ADMIN)
     @Transactional
-    public Owner importOwner(Owner owner) {
+    public Owner replicate(Owner owner) {
         this.currentSession().replicate(owner, ReplicationMode.EXCEPTION);
 
         return owner;

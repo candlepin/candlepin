@@ -465,7 +465,7 @@ public class OwnerResource {
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("import")
+    @Path("migrate")
     public JobDetail migrateOwner(@QueryParam("id") String ownerKey,
         @QueryParam("uri") String url,
         @QueryParam("delete") @DefaultValue("true") boolean delete) {
@@ -480,8 +480,8 @@ public class OwnerResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/export")
-    public Owner exportOwner(@PathParam("owner_key") String ownerKey) {
+    @Path("{owner_key}/replicate")
+    public Owner replicateOwner(@PathParam("owner_key") String ownerKey) {
         /*
          * We will probably need to create exporter objects that use the
          * ObjectMapper since by default Owner is setup to do shallow

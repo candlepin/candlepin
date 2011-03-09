@@ -40,26 +40,26 @@ import javax.ws.rs.core.Response;
 public interface OwnerClient {
 
     @GET
-    @Path("{owner_key}/export")
+    @Path("{owner_key}/replicate")
     @Produces(MediaType.APPLICATION_JSON)
-    ClientResponse<Owner> exportOwner(@PathParam("owner_key") String ownerKey);
+    ClientResponse<Owner> replicateOwner(@PathParam("owner_key") String ownerKey);
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    ClientResponse<List<Pool>> exportPools(
+    ClientResponse<List<Pool>> replicatePools(
         @PathParam("owner_key") String ownerKey);
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    ClientResponse<List<Entitlement>> exportEntitlements(
+    ClientResponse<List<Entitlement>> replicateEntitlements(
         @PathParam("owner_key") String ownerKey);
 
     @GET
     @Path("{owner_key}/consumers")
     @Produces(MediaType.APPLICATION_JSON)
-    ClientResponse<List<Consumer>> exportOwnerConsumers(
+    ClientResponse<List<Consumer>> replicateOwnerConsumers(
         @PathParam("owner_key") String ownerKey);
     
     @DELETE

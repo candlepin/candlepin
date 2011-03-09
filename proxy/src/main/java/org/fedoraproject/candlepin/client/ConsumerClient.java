@@ -36,7 +36,7 @@ public interface ConsumerClient {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    ClientResponse<List<Entitlement>> exportEntitlements(
+    ClientResponse<List<Entitlement>> replicateEntitlements(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("product") String productId);
 }

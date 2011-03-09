@@ -116,19 +116,19 @@ public class MigrateOwnerJob implements Job {
 
         log.info("Migrating owner [" + key +
             "] from candlepin instance running on [" + uri + "]");       
-        exportOwner(key, oclient);
+        replicateOwner(key, oclient);
 
         log.info("Migrating pools for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
-        exportPools(key, oclient);
+        replicatePools(key, oclient);
         
         log.info("Migrating entitlements for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
-        exportEntitlements(key, oclient);
+        replicateEntitlements(key, oclient);
 
         log.info("Migrating consumers for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
-        exportConsumers(key, oclient);
+        replicateConsumers(key, oclient);
         
         ConsumerClient cclient = conn.connect(ConsumerClient.class, creds, uri);
         log.info("Associating consumers to their entitlements for owner [" +
@@ -172,7 +172,7 @@ public class MigrateOwnerJob implements Job {
             }
 
             ClientResponse<List<Entitlement>> rsp =
-                client.exportEntitlements(c.getUuid(), null);
+                client.replicateEntitlements(c.getUuid(), null);
             if (rsp.getStatus() != Status.OK.getStatusCode()) {
                 throw new WebApplicationException(rsp);
             }
@@ -185,8 +185,8 @@ public class MigrateOwnerJob implements Job {
         }
     }
     
-    private void exportOwner(String key, OwnerClient client) {
-        ClientResponse<Owner> rsp = client.exportOwner(key);
+    private void replicateOwner(String key, OwnerClient client) {
+        ClientResponse<Owner> rsp = client.replicateOwner(key);
         
         log.info("call returned - status: [" + rsp.getStatus() + "] reason [" +
             rsp.getResponseStatus() + "]");
@@ -197,12 +197,12 @@ public class MigrateOwnerJob implements Job {
         }
 
         Owner owner = rsp.getEntity();
-        ownerCurator.importOwner(owner);
+        ownerCurator.replicate(owner);
         
     }
 
-    private void exportPools(String key, OwnerClient client) {
-        ClientResponse<List<Pool>> rsp = client.exportPools(key);
+    private void replicatePools(String key, OwnerClient client) {
+        ClientResponse<List<Pool>> rsp = client.replicatePools(key);
         if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
         }
@@ -210,14 +210,14 @@ public class MigrateOwnerJob implements Job {
         List<Pool> pools = rsp.getEntity();
 
         for (Pool pool : pools) {
-            poolCurator.importPool(pool);
+            poolCurator.replicate(pool);
         }
     }
      
-    private void exportConsumers(String ownerkey, OwnerClient client) {
+    private void replicateConsumers(String ownerkey, OwnerClient client) {
         // track down consumers for the owner
         ClientResponse<List<Consumer>> consumerResp =
-            client.exportOwnerConsumers(ownerkey);
+            client.replicateOwnerConsumers(ownerkey);
         for (Consumer consumer : consumerResp.getEntity()) {
             log.info("importing consumer: " + consumer.toString());
             
@@ -231,13 +231,13 @@ public class MigrateOwnerJob implements Job {
             log.info("consumer.keyPair: " + consumer.getKeyPair());
             log.info("consumer.idcert: " + consumer.getIdCert());
              
-            consumerCurator.importConsumer(consumer);
+            consumerCurator.replicate(consumer);
         }
     }
         
     
-    private void exportEntitlements(String key, OwnerClient client) {
-        ClientResponse<List<Entitlement>> rsp = client.exportEntitlements(key);
+    private void replicateEntitlements(String key, OwnerClient client) {
+        ClientResponse<List<Entitlement>> rsp = client.replicateEntitlements(key);
         
         if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
@@ -249,7 +249,7 @@ public class MigrateOwnerJob implements Job {
         for (Entitlement ent : ents) {
             // re-associate to the owner
             ent.setOwner(owner);
-            entCurator.importEntitlement(ent);
+            entCurator.replicate(ent);
         }        
     }
 

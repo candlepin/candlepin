@@ -154,12 +154,12 @@ public class MigrateOwnerJobTest {
         ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
         Response drsp = mock(Response.class);
 
-        when(oclient.exportOwner(eq("admin"))).thenReturn(resp);
-        when(oclient.exportPools(eq("admin"))).thenReturn(prsp);
-        when(oclient.exportEntitlements(eq("admin"))).thenReturn(ersp);
-        when(oclient.exportOwnerConsumers(eq("admin"))).thenReturn(crsp);
+        when(oclient.replicateOwner(eq("admin"))).thenReturn(resp);
+        when(oclient.replicatePools(eq("admin"))).thenReturn(prsp);
+        when(oclient.replicateEntitlements(eq("admin"))).thenReturn(ersp);
+        when(oclient.replicateOwnerConsumers(eq("admin"))).thenReturn(crsp);
         when(oclient.deleteOwner(eq("admin"), eq(false))).thenReturn(drsp);
-        when(conclient.exportEntitlements(eq("357ec012"),
+        when(conclient.replicateEntitlements(eq("357ec012"),
             any(String.class))).thenReturn(ersp);
         when(resp.getStatus()).thenReturn(200);
         when(prsp.getStatus()).thenReturn(200);
@@ -185,10 +185,10 @@ public class MigrateOwnerJobTest {
         // verify everything was called
         verify(conn).connect(eq(OwnerClient.class), any(Credentials.class),
             eq("http://foo.example.com/candlepin"));
-        verify(ownerCurator, atLeastOnce()).importOwner(any(Owner.class));
-        verify(poolCurator, atLeastOnce()).importPool(any(Pool.class));
-        verify(consumerCurator, atLeastOnce()).importConsumer(any(Consumer.class));
-        verify(entCurator, atLeastOnce()).importEntitlement(any(Entitlement.class));
+        verify(ownerCurator, atLeastOnce()).replicate(any(Owner.class));
+        verify(poolCurator, atLeastOnce()).replicate(any(Pool.class));
+        verify(consumerCurator, atLeastOnce()).replicate(any(Consumer.class));
+        verify(entCurator, atLeastOnce()).replicate(any(Entitlement.class));
         verify(entCurator, atLeastOnce()).merge(any(Entitlement.class));
         verify(oclient, atLeastOnce()).deleteOwner(eq("admin"), eq(false));
     }
@@ -218,7 +218,7 @@ public class MigrateOwnerJobTest {
         when(conn.connect(eq(OwnerClient.class), any(Credentials.class),
             any(String.class))).thenReturn(client);
         ClientResponse<Owner> resp = mock(ClientResponse.class);
-        when(client.exportOwner(eq("doesnotexist"))).thenReturn(resp);
+        when(client.replicateOwner(eq("doesnotexist"))).thenReturn(resp);
         when(resp.getStatus()).thenReturn(404);
 
         JobDataMap map = new JobDataMap();

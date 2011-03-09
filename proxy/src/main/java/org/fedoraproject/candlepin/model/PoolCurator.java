@@ -276,7 +276,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @AllowRoles(roles = Role.SUPER_ADMIN)
     @Transactional
-    public Pool importPool(Pool pool) {
+    public Pool replicate(Pool pool) {
         for (ProvidedProduct pp : pool.getProvidedProducts()) {
             pp.setPool(pool);
         }

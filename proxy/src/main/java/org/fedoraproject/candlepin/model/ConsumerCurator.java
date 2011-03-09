@@ -71,7 +71,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     
     @AllowRoles(roles = Role.SUPER_ADMIN)
     @Transactional
-    public Consumer importConsumer(Consumer consumer) {
+    public Consumer replicate(Consumer consumer) {
         for (Entitlement entitlement : consumer.getEntitlements()) {
             entitlement.setConsumer(consumer);
         }
