@@ -28,7 +28,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
- * ConsumerClient
+ * ConsumerClient represents a Candlepin client for the ConsumerResource.
+ * It is a subset of the api, just enough to handle migration.
  */
 @Path("/consumers")
 public interface ConsumerClient {

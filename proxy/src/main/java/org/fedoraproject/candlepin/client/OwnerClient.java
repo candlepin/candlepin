@@ -34,7 +34,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * OwnerExportClient
+ * OwnerClient represents a Candlepin client for the OwnerResource.
+ * It is a subset of the api, just enough to handle migration.
  */
 @Path("/owners")
 public interface OwnerClient {
