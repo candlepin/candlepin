@@ -14,6 +14,18 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.client.CandlepinConnection;
 import org.fedoraproject.candlepin.client.ConsumerClient;
 import org.fedoraproject.candlepin.client.OwnerClient;
@@ -30,12 +42,6 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.util.Util;
-
-import com.google.inject.Inject;
-
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.log4j.Logger;
 import org.hibernate.tool.hbm2x.StringUtils;
 import org.jboss.resteasy.client.ClientResponse;
 import org.quartz.Job;
@@ -44,14 +50,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
+import com.google.inject.Inject;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 /**
  * MigrateOwnerJob is an async job that will extract the owner and its data
  * from another Candlepin instance. The job is passed an owner key identifying
@@ -69,7 +69,8 @@ public class MigrateOwnerJob implements Job {
     private ConsumerCurator consumerCurator;
     private CandlepinConnection conn;
     private Config config;
-    
+    private HashMap<String, String> entMap = new HashMap<String, String>();
+
     /**
      * Constructs the job with the connection, configuration, and necessary
      * object curators required to persist the objects.
@@ -133,6 +134,7 @@ public class MigrateOwnerJob implements Job {
         log.info("Migrating owner [" + key +
             "] from candlepin instance running on [" + uri + "]");       
         replicateOwner(key, oclient);
+
 
         log.info("Migrating pools for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
@@ -256,7 +258,12 @@ public class MigrateOwnerJob implements Job {
         List<Pool> pools = rsp.getEntity();
 
         for (Pool pool : pools) {
+            Entitlement ent = pool.getSourceEntitlement();
             poolCurator.replicate(pool);
+            if (ent != null) {
+                log.info("pool.id"+ pool.getId() + " sourceEntitlement " + ent.getId());
+                entMap.put(ent.getId(), pool.getId());
+            }
         }
     }
 
@@ -312,9 +319,16 @@ public class MigrateOwnerJob implements Job {
         List<Entitlement> ents = rsp.getEntity();
 
         for (Entitlement ent : ents) {
-            // re-associate to the owner
             ent.setOwner(owner);
+
             entCurator.replicate(ent);
+            if (entMap.containsKey(ent.getId())){
+                log.info("entitlement with source pool " + poolCurator.find(entMap.get(ent.getId())) );
+
+                Pool entPool = poolCurator.find(entMap.get(ent.getId()));
+                entPool.setSourceEntitlement(entCurator.find(ent.getId()));
+                poolCurator.merge(entPool);
+            }
         }        
     }
 

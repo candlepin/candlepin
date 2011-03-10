@@ -285,6 +285,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             pa.setPool(pool);
         }
 
+        pool.setSourceEntitlement(null);
+
         this.currentSession().replicate(pool, ReplicationMode.EXCEPTION);
 
         return pool;
