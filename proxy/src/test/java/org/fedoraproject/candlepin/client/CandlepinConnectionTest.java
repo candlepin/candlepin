@@ -23,6 +23,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.jboss.resteasy.client.ClientResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -31,7 +32,7 @@ import org.junit.Test;
  */
 public class CandlepinConnectionTest {
 
-    @Test
+    @Ignore("needs a mock server to connect with") @Test
     public void connect() {
         CandlepinConnection conn = new CandlepinConnection(new Config());
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
@@ -46,7 +47,7 @@ public class CandlepinConnectionTest {
         System.out.println(o);
     }
     
-    @Test
+    @Ignore("needs a mock server to connect with") @Test
     public void doesnotexist() {
         CandlepinConnection conn = new CandlepinConnection(new Config());
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
