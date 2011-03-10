@@ -147,4 +147,25 @@ describe 'Consumer Resource' do
     cp_client.consume_pool(pool.id).size.should == 1
   end
 
+  it 'should allow a consumer to specify their own UUID' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('billy'))
+
+    consumer = user.register('machine1', :system, 'custom-uuid')
+    consumer.uuid.should == 'custom-uuid'
+  end
+
+  it 'should not allow the same UUID to be registered twice' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('willy'))
+
+    # Register the UUID initially
+    user.register('machine1', :system, 'ALF')
+
+    # Second registration should be denied
+    lambda do
+      user.register('machine2', :system, 'ALF')
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
 end
