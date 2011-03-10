@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.11
+Version: 0.2.12
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,46 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Thu Mar 10 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.12-1
+- set status code for response object (jesusr@redhat.com)
+- Handle pools with source entitlement id's (alikins@redhat.com)
+- document the client interfaces (jesusr@redhat.com)
+- rename export to replicate since that's really what it's doing. (jesusr@redhat.com)
+- add delete owner to migration flow. (jesusr@redhat.com)
+- remove unused keyPairCurator (jesusr@redhat.com)
+- remove unused IdentityCertCurator from MigrateOwnerJob. (jesusr@redhat.com)
+- associate consumers to their entitlements. (jesusr@redhat.com)
+- fix formatting (jesusr@redhat.com)
+- new client (jesusr@redhat.com)
+- export consumers (jesusr@redhat.com)
+- remove tabs! they're evil (jesusr@redhat.com)
+- add support for migrating consumers (alikins@redhat.com)
+- organize items as exportXXX methods to be a bit more clear. (jesusr@redhat.com)
+- reorg execute() test method. (jesusr@redhat.com)
+- migrate entitlements and entitlement certificates (jesusr@redhat.com)
+- remote @XmlTransient from getId so we can serialize it (jesusr@redhat.com)
+- test export pools (jesusr@redhat.com)
+- export pools, prep for export entitlements. (jesusr@redhat.com)
+- export Pool and Entitlements as Lists (jesusr@redhat.com)
+- adding exportPools and exportEntitlements (jesusr@redhat.com)
+- fix test (jesusr@redhat.com)
+- make buildUri static and call from execute method. (jesusr@redhat.com)
+- add get consumers for owner (jesusr@redhat.com)
+- Cleaning out broken spec. (jharris@redhat.com)
+- Fixing migrate owner unit test. (jharris@redhat.com)
+- Several fixes: (jharris@redhat.com)
+- validate url (jesusr@redhat.com)
+- add missing eventOwnerMigrated method (jesusr@redhat.com)
+- Adding owner migration event. (jharris@redhat.com)
+- build up the uri properly (jesusr@redhat.com)
+- debug logging to ensure we capture the inputs properly (jesusr@redhat.com)
+- add config entry for webapp defaults to candlepin (jesusr@redhat.com)
+- adding sharding to configuration (jesusr@redhat.com)
+- added MigrateOwnerJob and CandlepinConnection. (jesusr@redhat.com)
+- export client returns ClientResponse now (jesusr@redhat.com)
+- resteasy client (jesusr@redhat.com)
+- initial migrate owner job (jesusr@redhat.com)
+
 * Tue Mar 08 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.11-1
 - Fixing virt_limit when no virt.is_guest fact exists. (jharris@redhat.com)
 - Adding virt_limit 'unlimited' support (jharris@redhat.com)
