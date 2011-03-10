@@ -153,7 +153,7 @@ public class PoolHelper {
         
         // Also check if the product name has been changed:
         return !poolProducts.equals(subProducts) || 
-            (existingPool.getProductName() != sub.getProduct().getName());
+            !existingPool.getProductName().equals(sub.getProduct().getName());
     }
     
 }
