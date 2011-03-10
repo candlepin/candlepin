@@ -35,6 +35,10 @@ public class EventSinkForTesting implements EventSink {
     }
 
     @Override
+    public void emitOwnerMigrated(Owner newOwner) {
+    }
+
+    @Override
     public void sendEvent(Event event) {
     }
 

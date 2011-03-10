@@ -80,7 +80,6 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
         return name;
     }
 
-    @XmlTransient
     public String getId() {
         return this.id;
     }

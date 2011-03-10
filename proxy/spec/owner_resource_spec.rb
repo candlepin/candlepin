@@ -46,4 +46,32 @@ describe 'Owner Resource' do
     new_owner = @cp.get_owner(owner.key)
     new_owner.key.should == owner.key
   end
+
+  it 'migrating existing users' do
+    owner = create_owner random_string("migrating_owner2")
+    #owner_key = random_string("migrating_owner2")
+    status = @cp.migrate_owner(owner.key, 'http://localhost:8080/candlepin/', false)
+ 
+	
+    pp(status)
+#    status.state.should == 'CREATED'
+
+    new_owner = @cp.get_owner(owner.key)
+    new_owner.key.should == owner.key
+    # URI returned is valid - use post to clean up
+#    @cp.post(status.statusPath).state.should_not be_nil
+   
+  end
+
+  it 'emits an event when migrated' do
+    owner_key = random_string('migrating_owner')
+
+    @cp.migrate_owner(owner_key, 'https://localhost:8443/candlepin/')
+
+    @cp.list_events.find do |e|
+      e['entityId'] == owner.id && 
+      e['type'] == 'MODIFIED' &&
+      e['target'] == 'OWNER'
+    end.should_not be_nil
+  end
 end

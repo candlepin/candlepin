@@ -99,7 +99,7 @@ public class Entitlement extends AbstractHibernateObject
     private Owner owner;
 
     @ManyToOne
-    @ForeignKey(name = "fk_entitlement_owner")
+    @ForeignKey(name = "fk_entitlement_consumer")
     @JoinColumn(nullable = true)
     @Index(name = "cp_entitlement_consumer_fk_idx")
     private Consumer consumer;

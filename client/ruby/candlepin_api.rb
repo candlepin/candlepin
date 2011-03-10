@@ -124,6 +124,12 @@ class Candlepin
     delete uri
   end
 
+  def migrate_owner(owner_key, uri, immediate=false)
+    return async_call(immediate) do
+      put("owners/migrate?id=#{owner_key}&uri=#{uri}")
+    end
+  end
+
   def create_user(owner_key, login, password)
     user = {
       'username' => login,
@@ -456,6 +462,10 @@ class Candlepin
   def list_consumer_events(consumer_id=nil)
     consumer_id ||= @uuid
     get_text("/consumers/#{consumer_id}/atom")
+  end
+
+  def list_events
+    get '/events'
   end
 
   def get_crl

@@ -78,6 +78,7 @@ import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.pinsetter.tasks.MigrateOwnerJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.quartz.JobDetail;
 
@@ -86,7 +87,6 @@ import org.quartz.JobDetail;
  */
 @Path("/owners")
 public class OwnerResource {
-    //private static Logger log = Logger.getLogger(OwnerResource.class);
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private PoolCurator poolCurator;
@@ -298,6 +298,22 @@ public class OwnerResource {
 
         return toReturn;
     }
+
+    /**
+     * Return the consumers for the owner of the given id.
+     * @param ownerKey id of the owner whose consumers are sought.
+     * @return the consumers for the owner of the given id.
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/consumers")
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    public List<Consumer> ownerConsumers(
+        @PathParam("owner_key") String ownerKey) {
+
+        Owner owner = findOwner(ownerKey);
+        return new LinkedList<Consumer>(owner.getConsumers());
+    }
     
     /**
      * Return the entitlement pools for the owner of the given id.
@@ -446,7 +462,53 @@ public class OwnerResource {
 
         return RefreshPoolsJob.forOwner(owner);
     }
-    
+
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("migrate")
+    public JobDetail migrateOwner(@QueryParam("id") String ownerKey,
+        @QueryParam("uri") String url,
+        @QueryParam("delete") @DefaultValue("true") boolean delete) {
+        
+        if (log.isDebugEnabled()) {
+            log.debug("launch migrate owner - owner [" + ownerKey +
+                "], uri [" + url + "]");
+        }
+
+        return MigrateOwnerJob.migrateOwner(ownerKey, url, delete);
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/replicate")
+    public Owner replicateOwner(@PathParam("owner_key") String ownerKey) {
+        /*
+         * We will probably need to create exporter objects that use the
+         * ObjectMapper since by default Owner is setup to do shallow
+         * serialization using hrefs for children objects. We will want
+         * the entire object graph.
+         *
+         * What would be awesome if we could specify a serialization
+         * template to get back the fields we want, vs creating DTOs or mucking
+         * with the class annotations.
+         */
+
+        log.debug("Ownerkey = " + ownerKey);
+        Owner o = ownerCurator.lookupByKey(ownerKey);
+        log.debug("owner is null? " + (o == null));
+        if (o != null) {
+            log.debug("Owner: " + o.toString());
+        }
+        if (o == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+
+        sink.emitOwnerMigrated(o);
+
+        return o;
+    }
+
     @PUT
     @Path("/subscriptions")
     public void updateSubscription(Subscription subscription) {

@@ -79,6 +79,10 @@ public class ConfigProperties {
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER =
         "candlepin.consumer.facts.match_regex";
+    
+    public static final String SHARD_USERNAME = "candlepin.shard.username";
+    public static final String SHARD_PASSWORD = "candlepin.shard.password";
+    public static final String SHARD_WEBAPP = "candlepin.shard.webapp";
 
     public static final Map<String, String> DEFAULT_PROPERTIES = 
         new HashMap<String, String>() {
@@ -129,6 +133,11 @@ public class ConfigProperties {
                 this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/truststore");
                 this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
                 this.put(IDENTITY_CERT_YEAR_ADDENDUM, "1");
+                this.put(SHARD_WEBAPP, "candlepin");
+
+                // defaults
+                this.put(SHARD_USERNAME, "admin");
+                this.put(SHARD_PASSWORD, "admin");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
