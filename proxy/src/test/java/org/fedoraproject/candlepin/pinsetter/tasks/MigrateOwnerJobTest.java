@@ -163,6 +163,7 @@ public class MigrateOwnerJobTest {
             any(String.class))).thenReturn(ersp);
         when(resp.getStatus()).thenReturn(200);
         when(prsp.getStatus()).thenReturn(200);
+        when(crsp.getStatus()).thenReturn(200);
         when(ersp.getStatus()).thenReturn(200);
         when(drsp.getStatus()).thenReturn(204); // typical response from delete
         
