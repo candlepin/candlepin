@@ -493,12 +493,7 @@ public class OwnerResource {
          * with the class annotations.
          */
 
-        log.debug("Ownerkey = " + ownerKey);
         Owner o = ownerCurator.lookupByKey(ownerKey);
-        log.debug("owner is null? " + (o == null));
-        if (o != null) {
-            log.debug("Owner: " + o.toString());
-        }
         if (o == null) {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));
