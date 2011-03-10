@@ -51,7 +51,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 /**
  * MigrateOwnerJob is an async job that will extract the owner and its data
  * from another Candlepin instance. The job is passed an owner key identifying
@@ -261,7 +260,7 @@ public class MigrateOwnerJob implements Job {
             Entitlement ent = pool.getSourceEntitlement();
             poolCurator.replicate(pool);
             if (ent != null) {
-                log.info("pool.id"+ pool.getId() + " sourceEntitlement " + ent.getId());
+                log.info("pool.id" + pool.getId() + " sourceEntitlement " + ent.getId());
                 entMap.put(ent.getId(), pool.getId());
             }
         }
@@ -322,8 +321,9 @@ public class MigrateOwnerJob implements Job {
             ent.setOwner(owner);
 
             entCurator.replicate(ent);
-            if (entMap.containsKey(ent.getId())){
-                log.info("entitlement with source pool " + poolCurator.find(entMap.get(ent.getId())) );
+            if (entMap.containsKey(ent.getId())) {
+                log.info("entitlement with source pool " +
+                    poolCurator.find(entMap.get(ent.getId())));
 
                 Pool entPool = poolCurator.find(entMap.get(ent.getId()));
                 entPool.setSourceEntitlement(entCurator.find(ent.getId()));
