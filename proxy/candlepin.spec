@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.12
+Version: 0.2.13
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Fri Mar 11 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.13-1
+- sharding: make migrations a resource. (jesusr@redhat.com)
+- Use GET /owners/ instead of replicate (jesusr@redhat.com)
+- separate the @Ignore to make it easier to renable the test.
+  (jesusr@redhat.com)
+- 683914: Missing various locales from the translations (bkearney@redhat.com)
+- ignore test for now (jesusr@redhat.com)
+- use .equals for string comparison in poolHelper (jbowes@redhat.com)
+
 * Thu Mar 10 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.12-1
 - set status code for response object (jesusr@redhat.com)
 - Handle pools with source entitlement id's (alikins@redhat.com)
