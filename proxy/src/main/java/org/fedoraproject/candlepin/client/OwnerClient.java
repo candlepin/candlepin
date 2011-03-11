@@ -41,7 +41,7 @@ import javax.ws.rs.core.Response;
 public interface OwnerClient {
 
     @GET
-    @Path("{owner_key}/replicate")
+    @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<Owner> replicateOwner(@PathParam("owner_key") String ownerKey);
 

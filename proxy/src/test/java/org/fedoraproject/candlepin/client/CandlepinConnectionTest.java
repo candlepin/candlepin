@@ -32,7 +32,8 @@ import org.junit.Test;
  */
 public class CandlepinConnectionTest {
 
-    @Ignore("needs a mock server to connect with") @Test
+    @Ignore("needs mock connection to test with")
+    @Test
     public void connect() {
         CandlepinConnection conn = new CandlepinConnection(new Config());
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
@@ -47,7 +48,8 @@ public class CandlepinConnectionTest {
         System.out.println(o);
     }
     
-    @Ignore("needs a mock server to connect with") @Test
+    @Ignore("needs mock connection to test with")
+    @Test
     public void doesnotexist() {
         CandlepinConnection conn = new CandlepinConnection(new Config());
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
