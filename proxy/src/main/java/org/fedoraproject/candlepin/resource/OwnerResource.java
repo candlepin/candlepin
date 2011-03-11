@@ -78,7 +78,6 @@ import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 import org.fedoraproject.candlepin.controller.PoolManager;
-import org.fedoraproject.candlepin.pinsetter.tasks.MigrateOwnerJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.quartz.JobDetail;
 
@@ -461,21 +460,6 @@ public class OwnerResource {
         }
 
         return RefreshPoolsJob.forOwner(owner);
-    }
-
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("migrate")
-    public JobDetail migrateOwner(@QueryParam("id") String ownerKey,
-        @QueryParam("uri") String url,
-        @QueryParam("delete") @DefaultValue("true") boolean delete) {
-        
-        if (log.isDebugEnabled()) {
-            log.debug("launch migrate owner - owner [" + ownerKey +
-                "], uri [" + url + "]");
-        }
-
-        return MigrateOwnerJob.migrateOwner(ownerKey, url, delete);
     }
 
     @PUT

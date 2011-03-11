@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import java.util.Properties;
-
 import org.fedoraproject.candlepin.audit.AMQPBusEventAdapter;
 import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -26,7 +24,9 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
@@ -41,6 +41,10 @@ import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
 import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EnforcerDispatcher;
+import org.fedoraproject.candlepin.policy.PoolRules;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
+import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
 import org.fedoraproject.candlepin.resource.CertificateSerialResource;
@@ -51,6 +55,7 @@ import org.fedoraproject.candlepin.resource.CrlResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.EventResource;
 import org.fedoraproject.candlepin.resource.JobResource;
+import org.fedoraproject.candlepin.resource.MigrationResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
@@ -72,9 +77,6 @@ import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 import org.fedoraproject.candlepin.util.ExpiryDateFunction;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -83,12 +85,12 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
-import org.fedoraproject.candlepin.controller.PoolManager;
-import org.fedoraproject.candlepin.policy.js.JsRules;
-import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
-import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
-import org.fedoraproject.candlepin.policy.PoolRules;
+
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Properties;
 
 /**
  * CandlepinProductionConfiguration
@@ -122,6 +124,7 @@ public class CandlepinModule extends AbstractModule {
         bind(OwnerResource.class);
         bind(RootResource.class);
         bind(ProductResource.class);
+        bind(MigrationResource.class);
         bind(SubscriptionResource.class);
         bind(SubscriptionTokenResource.class);
         bind(CertificateSerialResource.class);

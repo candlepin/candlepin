@@ -14,18 +14,7 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.client.CandlepinConnection;
 import org.fedoraproject.candlepin.client.ConsumerClient;
 import org.fedoraproject.candlepin.client.OwnerClient;
@@ -42,6 +31,12 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.log4j.Logger;
 import org.hibernate.tool.hbm2x.StringUtils;
 import org.jboss.resteasy.client.ClientResponse;
 import org.quartz.Job;
@@ -50,7 +45,14 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import com.google.inject.Inject;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 /**
  * MigrateOwnerJob is an async job that will extract the owner and its data
  * from another Candlepin instance. The job is passed an owner key identifying
@@ -69,6 +71,8 @@ public class MigrateOwnerJob implements Job {
     private CandlepinConnection conn;
     private Config config;
     private HashMap<String, String> entMap = new HashMap<String, String>();
+    private EventSink sink;
+
 
     /**
      * Constructs the job with the connection, configuration, and necessary
@@ -82,7 +86,8 @@ public class MigrateOwnerJob implements Job {
      */
     @Inject
     public MigrateOwnerJob(CandlepinConnection connection, Config conf,
-        OwnerCurator oc, PoolCurator pc, EntitlementCurator ec, ConsumerCurator cc) {
+        OwnerCurator oc, PoolCurator pc, EntitlementCurator ec,
+        ConsumerCurator cc, EventSink es) {
 
         ownerCurator = oc;
         consumerCurator = cc;
@@ -90,6 +95,7 @@ public class MigrateOwnerJob implements Job {
         config = conf;
         poolCurator = pc;
         entCurator = ec;
+        sink = es;
     }
 
     private static String buildUri(String uri) {
@@ -217,6 +223,8 @@ public class MigrateOwnerJob implements Job {
                 entCurator.merge(realent);
             }
         }
+        
+        sink.emitOwnerMigrated(owner);
     }
     
     /**
