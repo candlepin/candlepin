@@ -379,7 +379,7 @@ var Pool = {
             
             // Expected quantity is normally the subscription's quantity, but for
             // virt only pools we expect it to be sub quantity * virt_limit:
-            var expectedQuantity = sub.getQuantity();
+            var expectedQuantity = sub.getQuantity() * sub.getProduct().getMultiplier();
             if (existingPool.hasAttribute("virt_only") && 
             		existingPool.getAttributeValue("virt_only").equals("true")) {
         		// Assuming there mere be a virt limit attribute set:

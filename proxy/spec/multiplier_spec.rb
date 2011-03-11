@@ -41,4 +41,20 @@ describe 'Multiplier Products' do
     pools.should have(1).things
     pools.first.quantity.should == 18
   end
+
+  it 'should have the correct quantity after a refresh' do
+    product = create_product('875875844', 'Product - 100 Pack', :multiplier => 100)
+    @cp.create_subscription(@owner.key, product.id, 5)
+
+    # This creates the initial pool
+    @cp.refresh_pools @owner.key
+
+    # Now we refresh again to update the pool
+    @cp.refresh_pools @owner.key
+
+    pools = @user.list_pools
+
+    pools.should have(1).things
+    pools.first.quantity.should == 500
+  end
 end
