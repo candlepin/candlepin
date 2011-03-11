@@ -398,7 +398,7 @@ msgstr "ଯାଞ୍ଚ କରନ୍ତୁ"
 #: src/main/java/org/fedoraproject/candlepin/policy/js/entitlement/EntitlementRules.java:123
 #, java-format
 msgid "Entitlements for {0} expired on: {1}"
-msgstr "୨"
+msgstr "{0} ପାଇଁ ଅଧିକାରମାନଙ୍କର ସମୟ: {1} ରେ ସମାପ୍ତ ହେବ"
 
 #: src/main/java/org/fedoraproject/candlepin/policy/js/entitlement/EntitlementRules.java:366
 msgid "'{0}' Should contain name, priority and at least one attribute"
