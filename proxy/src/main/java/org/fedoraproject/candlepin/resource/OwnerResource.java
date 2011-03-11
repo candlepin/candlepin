@@ -478,32 +478,6 @@ public class OwnerResource {
         return MigrateOwnerJob.migrateOwner(ownerKey, url, delete);
     }
 
-//    @GET
-//    @Produces(MediaType.APPLICATION_JSON)
-//    @Path("{owner_key}/replicate")
-//    public Owner replicateOwner(@PathParam("owner_key") String ownerKey) {
-//        /*
-//         * We will probably need to create exporter objects that use the
-//         * ObjectMapper since by default Owner is setup to do shallow
-//         * serialization using hrefs for children objects. We will want
-//         * the entire object graph.
-//         *
-//         * What would be awesome if we could specify a serialization
-//         * template to get back the fields we want, vs creating DTOs or mucking
-//         * with the class annotations.
-//         */
-//
-//        Owner o = ownerCurator.lookupByKey(ownerKey);
-//        if (o == null) {
-//            throw new NotFoundException(i18n.tr(
-//                "owner with key: {0} was not found.", ownerKey));
-//        }
-//
-//        sink.emitOwnerMigrated(o);
-//
-//        return o;
-//    }
-
     @PUT
     @Path("/subscriptions")
     public void updateSubscription(Subscription subscription) {
