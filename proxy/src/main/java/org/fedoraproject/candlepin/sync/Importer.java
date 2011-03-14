@@ -55,6 +55,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.exceptions.ConflictException;
 
 /**
  * Importer
@@ -156,7 +157,7 @@ public class Importer {
         }
         else {
             if (lastrun.getExported().compareTo(m.getCreated()) >= 0) {
-                throw new ImporterException(i18n.tr("Import is older than existing data"));
+                throw new ConflictException(i18n.tr("Import is older than existing data"));
             }
             else {
                 lastrun.setExported(new Date());

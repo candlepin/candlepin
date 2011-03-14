@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Locale;
+import org.fedoraproject.candlepin.exceptions.ConflictException;
 
 
 /**
@@ -93,11 +94,10 @@ public class ImporterTest {
         verify(emc).create(any(ExporterMetadata.class));
     }
 
-    @Test(expected = ImporterException.class)
-    public void expectException() throws Exception {
+    @Test(expected = ConflictException.class)
+    public void oldImport() throws Exception {
         // create actual first
         File actualmeta = createFile("/tmp/meta.json");
-        File f = createFile("/tmp/meta");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         ExporterMetadata em = new ExporterMetadata();
         em.setCreated(getDateAfterDays(1));
@@ -107,9 +107,6 @@ public class ImporterTest {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
-
-        assertTrue(f.delete());
-        assertTrue(actualmeta.delete());
     }
 
     @Test(expected = ImporterException.class)
