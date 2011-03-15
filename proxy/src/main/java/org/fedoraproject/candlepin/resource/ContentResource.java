@@ -42,14 +42,8 @@ public class ContentResource {
     private ContentCurator contentCurator;
     private I18n i18n;
 
-    /**
-     * default ctor
-     * 
-     *            Product Adapter used to interact with multiple services.
-     */
     @Inject
-    public ContentResource(ContentCurator contentCurator, 
-                           I18n i18n) {
+    public ContentResource(ContentCurator contentCurator, I18n i18n) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
     }
@@ -58,7 +52,6 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Content> list() {
         return contentCurator.listAll();
-        
     }
     
     @GET
@@ -73,7 +66,6 @@ public class ContentResource {
         }
         
         return content;
-        
     }
     
     @POST
@@ -95,6 +87,4 @@ public class ContentResource {
         Content nuke = getContent(cid);
         contentCurator.delete(nuke);
     }
-    
-    
 }
