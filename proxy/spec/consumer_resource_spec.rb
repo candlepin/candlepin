@@ -168,4 +168,20 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
+  it 'should allow a consumer to unregister and free up the pool' do
+    owner = create_owner('zowner')
+    user = user_client(owner, 'cukebuster')
+    # performs the register for us
+    consumer = consumer_client(user, 'machine1')
+    product = create_product()
+    @cp.create_subscription(owner.key, product.id, 2)
+    @cp.refresh_pools(owner.key)
+    pool = consumer.list_pools(:consumer => consumer.uuid)[0]
+    pool.consumed.should == 0
+    consumer.consume_pool(pool.id)
+    @cp.get_pool(pool.id).consumed.should == 1
+    consumer.unregister(consumer.uuid)
+    @cp.get_pool(pool.id).consumed.should == 0
+  end
+
 end
