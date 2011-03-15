@@ -56,7 +56,7 @@ public class ContentResource {
     
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/id/{content_id}")
+    @Path("/{content_id}")
     public Content getContent(@PathParam("content_id") String contentId) {
         Content content = contentCurator.find(contentId);
         

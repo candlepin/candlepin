@@ -282,7 +282,7 @@ class Candlepin
   end
 
   def get_content(content_id)
-    get("/content/id/#{content_id}")
+    get("/content/#{content_id}")
   end
 
   def add_content_to_product(product_id, content_id, enabled=true)
