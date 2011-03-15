@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource;
 
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -84,6 +85,15 @@ public class ContentResource {
             return lookedUp;
         }
         return contentCurator.create(content);
+    }
+
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @Path("/{content_id}")
+    public void remove(@PathParam("content_id") String cid) {
+        Content nuke = getContent(cid);
+        contentCurator.delete(nuke);
     }
     
     
