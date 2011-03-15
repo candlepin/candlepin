@@ -34,7 +34,7 @@ public class CandlepinException extends RuntimeException {
     }
     
     public CandlepinException(Status returnCode, String message, Throwable e) {
-        super(e);
+        super(message, e);
         this.returnCode = returnCode;
         this.message = new ExceptionMessage(message);
     }

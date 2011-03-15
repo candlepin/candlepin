@@ -78,6 +78,9 @@ import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.exceptions.CandlepinException;
+import org.fedoraproject.candlepin.model.ImportRecord;
+import org.fedoraproject.candlepin.model.ImportRecordCurator;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.quartz.JobDetail;
 
@@ -101,6 +104,7 @@ public class OwnerResource {
     private ProductCurator productCurator;
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
+    private ImportRecordCurator importRecordCurator;
     private PoolManager poolManager;
     private static final int FEED_LIMIT = 1000;
     
@@ -114,7 +118,7 @@ public class OwnerResource {
         UserServiceAdapter userService, EventSink sink,
         EventFactory eventFactory, EventCurator eventCurator, Importer importer,
         PoolManager poolManager, ExporterMetadataCurator exportCurator,
-        OwnerInfoCurator ownerInfoCurator) {
+        OwnerInfoCurator ownerInfoCurator, ImportRecordCurator importRecordCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -130,6 +134,7 @@ public class OwnerResource {
         this.eventCurator = eventCurator;
         this.importer = importer;
         this.exportCurator = exportCurator;
+        this.importRecordCurator = importRecordCurator;
         this.poolManager = poolManager;
     }
 
@@ -271,6 +276,11 @@ public class OwnerResource {
             log.info("Deleting export metadata: " + m);
             exportCurator.delete(m);
         }
+        for (ImportRecord record : importRecordCurator.findRecords(owner)) {
+            log.info("Deleting import record:  " + record);
+            importRecordCurator.delete(record);
+        }
+
         log.info("Deleting owner: " + owner);
         ownerCurator.delete(owner);
     }
@@ -476,7 +486,7 @@ public class OwnerResource {
     }
 
     @POST
-    @Path("{owner_key}/import")
+    @Path("{owner_key}/imports")
     @AllowRoles(roles = Role.SUPER_ADMIN)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public void importData(@PathParam("owner_key") String ownerKey, MultipartInput input) {
@@ -489,16 +499,51 @@ public class OwnerResource {
             importer.loadExport(owner, archive);
             
             sink.emitImportCreated(owner);
+            recordImportSuccess(owner);
         }
         catch (IOException e) {
+            recordImportFailure(owner, e);
             throw new IseException(i18n.tr("Error reading export archive"), e);
         }
         catch (SyncDataFormatException e) {
+            recordImportFailure(owner, e);
             throw new BadRequestException(i18n.tr("Bad data in export archive"), e);
         }
         // These come back with internationalized messages, so we can transfer:
         catch (ImporterException e) {
+            recordImportFailure(owner, e);
             throw new IseException(e.getMessage(), e);
         }
+        // Grab candlepin exceptions to record the error and then rethrow
+        // to pass on the http return code
+        catch (CandlepinException e) {
+            recordImportFailure(owner, e);
+            throw e;
+        }
     }
+
+    private void recordImportSuccess(Owner owner) {
+        ImportRecord record = new ImportRecord(owner);
+        record.recordStatus(ImportRecord.Status.SUCCESS,
+            i18n.tr("{0} file imported successfully.", owner.getKey()));
+
+        this.importRecordCurator.create(record);
+    }
+
+    private void recordImportFailure(Owner owner, Throwable error) {
+        ImportRecord record = new ImportRecord(owner);
+        record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
+
+        this.importRecordCurator.create(record);
+    }
+
+    @GET
+    @Path("{owner_key}/imports")
+    @AllowRoles(roles = { Role.SUPER_ADMIN, Role.OWNER_ADMIN})
+    public List<ImportRecord> getImports(@PathParam("owner_key") String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+
+        return this.importRecordCurator.findRecords(owner);
+    }
+
 }

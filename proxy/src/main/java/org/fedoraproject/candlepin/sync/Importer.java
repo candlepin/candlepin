@@ -245,7 +245,6 @@ public class Importer {
         else {
             log.warn("No products found to import, skipping product and entitlement import.");
         }
-
         
         poolManager.refreshPools(owner);
     }

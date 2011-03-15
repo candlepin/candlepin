@@ -468,6 +468,14 @@ class Candlepin
     get '/events'
   end
 
+  def list_imports(owner_key)
+    get "/owners/#{owner_key}/imports"
+  end
+
+  def import(owner_key, filename)
+    post_file "/owners/#{owner_key}/imports", File.new(filename)
+  end
+
   def get_crl
     OpenSSL::X509::CRL.new(get_text('/crl'))
   end
@@ -496,6 +504,11 @@ class Candlepin
     data = data.to_json if not data.nil?
     response = @client[URI.escape(uri)].post(data, :content_type => :json, :accept => :json)
     return JSON.parse(response.body)
+  end
+
+  def post_file(uri, file=nil)
+    response = @client[URI.escape(uri)].post(:import => file, :accept => :json)
+    return JSON.parse(response.body) unless response.body.empty?
   end
 
   def post_text(uri, data=nil)
