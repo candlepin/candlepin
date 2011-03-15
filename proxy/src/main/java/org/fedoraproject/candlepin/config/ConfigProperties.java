@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
+import org.fedoraproject.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
 import org.hibernate.tool.hbm2x.StringUtils;
 
@@ -73,7 +74,8 @@ public class ConfigProperties {
     
     private static final String[] DEFAULT_TASK_LIST = new String[] {
         CertificateRevocationListTask.class.getName(),
-        JobCleaner.class.getName()
+        JobCleaner.class.getName(),
+        ImportRecordJob.class.getName()
     };
     
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
