@@ -18,6 +18,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -83,5 +84,23 @@ public class ContentResourceTest {
         cr.createContent(content);
         verify(cc, atLeastOnce()).create(content);
 
+    }
+
+    @Test
+    public void deleteContent() {
+        Content content = mock(Content.class);
+        when(content.getId()).thenReturn("10");
+        when(cc.find(eq("10"))).thenReturn(content);
+        cr.remove("10");
+        verify(cc, atLeastOnce()).delete(eq(content));
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void deleteContentNull() {
+        Content content = mock(Content.class);
+        when(content.getId()).thenReturn("10");
+        when(cc.find(eq("10"))).thenReturn(null);
+        cr.remove("10");
+        verify(cc, never()).delete(eq(content));
     }
 }
