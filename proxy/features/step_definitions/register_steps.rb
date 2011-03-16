@@ -45,10 +45,6 @@ When /I register a consumer "([^\"]*)" with uuid "([^\"]*)"$/ do |consumer_name,
   set_consumer(@current_owner_cp.register(consumer_name, :system, uuid))
 end
 
-When /^I register a personal consumer$/ do
-  set_consumer(@current_owner_cp.register('test', :person))
-end
-
 Given /^I have registered a personal consumer with uuid "([^\"]*)"$/ do |uuid|
   set_consumer(@current_owner_cp.register('test', :person, uuid))
 end
@@ -77,17 +73,6 @@ Then /^registering another consumer with uuid "([^\"]*)" causes a bad request$/ 
 
 end
 
-Then /^I should not be able to register a new personal consumer$/ do
-  begin
-    When "I register a personal consumer"
-  rescue RestClient::Exception => e
-    e.http_code.should == 400   # I think this is the wrong error code
-  else
-    assert(fail, "Excepted exception was not raised")
-  end
-
-end
-
 Then /^searching for a consumer with uuid "([^\"]*)" causes a not found$/ do |uuid|
 
     lambda {@candlepin.get_consumer(uuid)}.should raise_error
@@ -101,30 +86,4 @@ end
 
 When /I revoke all my entitlements/ do
     @consumer_cp.revoke_all_entitlements
-end
-
-Then /^my consumer should have an identity certificate$/ do
-    @consumer['idCert']['cert'][0, 3].should eql('---')
-    @consumer['idCert']['key'][0, 3].should eql('---')
-end
-
-Then /the "([^\"]*)" on my identity certificate's subject is my consumer's UUID/ do |subject_property|
-    uuid = @consumer['uuid']
-    subject_value(@x509_cert, subject_property).should == uuid
-end
-
-Then /the consumers name in the certificate is "([^\"]*)"$/ do |consumer_name|
-    altName = @cert_extensions["subjectAltName"]
-    altName.gsub!("DirName:/CN=", "")
-    altName.should == consumer_name
-end
-
-Then /the "([^\"]*)" on my identity certificate's subject is "([^\"]*)"$/ do |subject_property, expected|
-    subject_value(@x509_cert, subject_property).should == expected
-end
-
-# Grabs the value of a key=value pair in the identity cert's subject
-def subject_value(x509_cert, key)
-    subject = x509_cert.subject
-    subject.to_s.scan(/\/#{key}=([^\/=]+)/)[0][0]
 end
