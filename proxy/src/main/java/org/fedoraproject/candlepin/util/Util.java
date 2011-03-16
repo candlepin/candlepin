@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.util;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.ClosureUtils;
-import org.apache.commons.collections.Transformer;
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
@@ -40,7 +39,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -212,44 +210,19 @@ public class Util {
         return str.equals(str1);
     }
 
-    public static int safeHashCode(Object object, int hash) {
-        return object == null ? hash : object.hashCode();
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> Set<T> transform(Set<?> set,
-        Transformer t) {
-        Set<T> result = Util.newSet();
-        for (Iterator iterator = set.iterator(); iterator.hasNext();) {
-            result.add((T) t.transform(iterator.next()));
-        }
-        return result;
-    }
-
     private static Closure closeInvoker = 
         ClosureUtils.invokerClosure("close");
-    
-    public static void closeSafely(Object closable) {
-        closeSafely(closable, "Closing...",
-            "close() invocation was not successful");
-    }
-
 
     public static void closeSafely(Object closable, String msg) {
-        closeSafely(closable, "Going to close: " + msg,
-            msg + ".close() was not successful!"); 
-    }
-    
-    public static void closeSafely(Object closable, String infoMsg, String failMsg) {
         if (closable == null) {
             return;
         }
         try {
-            log.info(infoMsg);
+            log.info("Going to close: " + msg);
             closeInvoker.execute(closable);
         }
         catch (Exception e) {
-            log.warn(failMsg, e);
+            log.warn( msg + ".close() was not successful!", e);
         }
     }
     
