@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.controller;
 
 import static org.apache.commons.collections.CollectionUtils.containsAny;
 import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
-import static org.fedoraproject.candlepin.util.Util.transform;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -25,10 +24,15 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.reset;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+
+import org.apache.commons.collections.Transformer;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -37,17 +41,12 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -55,6 +54,7 @@ import org.mockito.Mockito;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -308,6 +308,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertFalse(containsAny(
             transform(oldsIds, invokerTransformer("getCert")),
             transform(newIds, invokerTransformer("getCert"))));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Set<T> transform(Set<?> set, Transformer t) {
+        Set<T> result = Util.newSet();
+        for (Iterator iterator = set.iterator(); iterator.hasNext();) {
+            result.add((T) t.transform(iterator.next()));
+        }
+        return result;
     }
 
     private Set<EntitlementCertificate> collectEntitlementCertIds(
