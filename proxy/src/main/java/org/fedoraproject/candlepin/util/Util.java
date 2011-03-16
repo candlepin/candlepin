@@ -222,10 +222,10 @@ public class Util {
             closeInvoker.execute(closable);
         }
         catch (Exception e) {
-            log.warn( msg + ".close() was not successful!", e);
+            log.warn(msg + ".close() was not successful!", e);
         }
     }
-    
+
     public static String capitalize(String str) {
         char [] chars = str.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]); 
