@@ -66,7 +66,7 @@ public class CrlGeneratorTest {
     
     private CrlGenerator generator;
 
-    private static KeyPair generateKP() {
+    public static KeyPair generateKP() {
         KeyPairGenerator kpg;
         try {
             kpg = KeyPairGenerator.getInstance("RSA");
