@@ -20,12 +20,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
-
-import org.apache.commons.io.FileUtils;
-import org.bouncycastle.util.encoders.Base64;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -73,7 +72,7 @@ public class CertificateRevocationListTaskTest {
         when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn(
             "/tmp/biteme.crl");
         X509CRL crl = mock(X509CRL.class);
-        when(crl.getEncoded()).thenReturn(Base64.encode("encoded".getBytes()));
+        when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
         when(generator.updateCRL(any(X509CRL.class))).thenReturn(crl);
         task.execute(null);
         File f = new File("/tmp/biteme.crl");
@@ -91,7 +90,7 @@ public class CertificateRevocationListTaskTest {
             when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn(
                 f.getAbsolutePath());
             X509CRL crl = mock(X509CRL.class);
-            when(crl.getEncoded()).thenReturn(Base64.encode("encoded".getBytes()));
+            when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
             when(generator.updateCRL(any(X509CRL.class))).thenReturn(crl);
 
             task.execute(null);
@@ -135,8 +134,8 @@ public class CertificateRevocationListTaskTest {
             when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn(
                 f.getAbsolutePath());
 
-            when(crl.getEncoded()).thenReturn(Base64.encode("encoded".getBytes()))
-                .thenReturn(Base64.encode("added".getBytes()));
+            when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()))
+                .thenReturn(Base64.encodeBase64("added".getBytes()));
             when(generator.updateCRL(any(X509CRL.class))).thenReturn(crl);
 
             task.execute(null);
