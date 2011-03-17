@@ -394,9 +394,9 @@ public class UtilTest {
         assertEquals("Abcde", Util.capitalize("Abcde"));
     }
 
-    @Ignore("not unique, fix") @Test
+    @Test
     public void uniquelong() {
-        long[] unique = new long[1000];
+        long[] unique = new long[10000];
         for (int i = 0; i < unique.length; i++) {
             unique[i] = Util.generateUniqueLong();
         }
