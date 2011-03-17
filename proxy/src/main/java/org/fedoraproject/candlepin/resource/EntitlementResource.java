@@ -69,7 +69,6 @@ public class EntitlementResource {
         this.poolManager = poolManager;
     }
 
-    @SuppressWarnings("null")
     private void verifyExistence(Object o, String id) {
         if (o == null) {
             throw new RuntimeException("object with ID: [" + id + "] not found");

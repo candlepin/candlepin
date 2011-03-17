@@ -115,7 +115,6 @@ public class AccessControlInterceptor implements MethodInterceptor {
         }
     }
     
-    @SuppressWarnings("unchecked")
     private void enableConsumerFilter(Principal currentUser, Object target, Role role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         ConsumerPrincipal user = (ConsumerPrincipal) currentUser;
@@ -124,7 +123,6 @@ public class AccessControlInterceptor implements MethodInterceptor {
         curator.enableFilter(filterName, "consumer_id", user.consumer().getId());
     }
 
-    @SuppressWarnings("unchecked")
     private void enableOwnerFilter(Principal currentUser, Object target, Role role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         UserPrincipal user = (UserPrincipal) currentUser;

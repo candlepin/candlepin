@@ -71,7 +71,6 @@ public class PropertyUtilTest {
     }
     
     @Test
-    @SuppressWarnings("unchecked")
     public void testStaticPropertyNull() {
         try {
             PropertyUtil.getStaticPropertyAsString((Class) null, "FOO");

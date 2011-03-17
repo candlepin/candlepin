@@ -184,13 +184,6 @@ public class DefaultIdentityCertServiceAdapterTest {
 
     }
 
-    private Consumer mockConsumer() {
-        Consumer c = mock(Consumer.class);
-        when(c.getId()).thenReturn("42");
-        when(c.getUuid()).thenReturn(Util.generateUUID());
-        return c;
-    }
-
     @Test
     public void testRegenerate() throws GeneralSecurityException, IOException {
         Consumer consumer = mock(Consumer.class);

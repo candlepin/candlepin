@@ -248,7 +248,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return filtered;
     }
     
-    @SuppressWarnings("unchecked")
     @Transactional
     public void delete(Entitlement entity) {
         Entitlement toDelete = find(entity.getId());

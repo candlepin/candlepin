@@ -65,7 +65,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String CONTENT_LABEL = "label";
     private static final String CONTENT_ID = "1234";
     private static final String CONTENT_TYPE = "yum";
-    private static final String CONTENT_ENABLED = "enabled";
     private static final String CONTENT_GPG_URL = "gpgUrl";
     private static final String CONTENT_URL = "contentUrl";
     private static final String CONTENT_VENDOR = "vendor";

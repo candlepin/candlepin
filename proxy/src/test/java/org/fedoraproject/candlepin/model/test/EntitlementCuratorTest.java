@@ -255,7 +255,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listModifyingStartDateOverlap() {
-        Entitlement ent = setupListModifyingEntitlement();
+        setupListModifyingEntitlement();
         List<Entitlement> results = entitlementCurator.listModifying(consumer,
                 parentProduct.getId(), pastDate, overlappingDate);
         assertEquals(1, results.size());
@@ -263,7 +263,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listModifyingEndDateOverlap() {
-        Entitlement ent = setupListModifyingEntitlement();
+        setupListModifyingEntitlement();
         List<Entitlement> results = entitlementCurator.listModifying(consumer,
                 parentProduct.getId(), overlappingDate, futureDate);
         assertEquals(1, results.size());
@@ -271,7 +271,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listModifyingTotalOverlap() {
-        Entitlement ent = setupListModifyingEntitlement();
+        setupListModifyingEntitlement();
         List<Entitlement> results = entitlementCurator.listModifying(consumer,
                 parentProduct.getId(), overlappingDate, overlappingDate);
         assertEquals(1, results.size());
