@@ -33,9 +33,9 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import com.google.inject.Inject;
 
 /**
- * A root resource, responsible for returning client a struct of links to the various
- * resources Candlepin exposes. This list will be filtered based on the permissions of the
- * caller.
+ * A root resource, responsible for returning client a struct of links to the
+ * various resources Candlepin exposes. This list will be filtered based on the
+ * permissions of the caller.
  */
 @Path("/")
 public class RootResource {
