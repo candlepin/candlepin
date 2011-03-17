@@ -53,15 +53,15 @@ public class PinsetterContextListenerTest {
     
     @Test
     public void destroyedError() throws PinsetterException {
-        listener.contextDestroyed();
         doThrow(pe).when(kernel).shutdown();
+        listener.contextDestroyed();
         verify(pe, atLeastOnce()).printStackTrace();
     }
     
     @Test
     public void initError() throws PinsetterException {
-        listener.contextInitialized();
         doThrow(pe).when(kernel).startup();
+        listener.contextInitialized();
         verify(pe, atLeastOnce()).printStackTrace();
     }
 
