@@ -88,7 +88,7 @@ public class MigrateOwnerJobTest {
     
     @Test
     public void testMigrateOwner() {
-        JobDetail jd = moj.migrateOwner("admin",
+        JobDetail jd = MigrateOwnerJob.migrateOwner("admin",
             "http://foo.example.com/candlepin", false);
         assertNotNull(jd);
         assertNotNull(jd.getJobDataMap());
@@ -100,17 +100,18 @@ public class MigrateOwnerJobTest {
     
     @Test(expected = Exception.class)
     public void nullOwner() {
-        moj.migrateOwner(null, "http://foo.example.com/candlepin", false);
+        MigrateOwnerJob.migrateOwner(null, "http://foo.example.com/candlepin",
+            false);
     }
     
     @Test(expected = BadRequestException.class)
     public void nullUrl() {
-        moj.migrateOwner("admin", null, false);
+        MigrateOwnerJob.migrateOwner("admin", null, false);
     }
     
     @Test(expected = BadRequestException.class)
     public void invalidUrlFormat() {
-        moj.migrateOwner("admin", "", false);
+        MigrateOwnerJob.migrateOwner("admin", "", false);
     }
     
     // used by execute tests
