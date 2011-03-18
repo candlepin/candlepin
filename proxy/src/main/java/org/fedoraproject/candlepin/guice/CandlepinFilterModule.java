@@ -14,11 +14,13 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import org.fedoraproject.candlepin.servlet.filter.VersionFilter;
 import org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter;
-import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import com.google.inject.servlet.ServletModule;
 import com.wideplay.warp.persist.PersistenceFilter;
+
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 /**
  * Candlepin-specific {@link ServletModule} that configures servlet filters.
@@ -29,6 +31,7 @@ public class CandlepinFilterModule extends ServletModule {
     protected void configureServlets() {
         filter("/*").through(PersistenceFilter.class);
         filter("/*").through(LoggingFilter.class);
+        filter("/*").through(VersionFilter.class);
 
         serve("/*").with(HttpServletDispatcher.class);
     }
