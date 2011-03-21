@@ -14,20 +14,23 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import static org.fedoraproject.candlepin.util.Util.getValue;
 import static org.fedoraproject.candlepin.util.Util.newList;
 import static org.fedoraproject.candlepin.util.Util.newMap;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.cert.X509CRL;
 import java.security.cert.X509CRLEntry;
 import java.security.cert.X509Certificate;
+import java.security.cert.X509Extension;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.X509Extensions;
@@ -227,6 +230,43 @@ public class CrlGenerator {
         return revokedEntries;
     }
 
+    public static String decodeValue(byte[] value) {
+        ASN1InputStream vis = null;
+        ASN1InputStream decoded = null;
+        try {
+            vis = new ASN1InputStream(value);
+            decoded = new ASN1InputStream(
+                ((DEROctetString) vis.readObject()).getOctets());
+
+            return decoded.readObject().toString();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            if (vis != null) {
+                try {
+                    vis.close();
+                }
+                catch (IOException e) {
+                    log.warn("failed to close ASN1 stream", e);
+                }
+            }
+
+            if (decoded != null) {
+                try {
+                    decoded.close();
+                }
+                catch (IOException e) {
+                    log.warn("failed to close ASN1 stream", e);
+                }
+            }
+        }
+    }
+    
+    public static String getValue(X509Extension cert, String extension) {
+        return decodeValue(cert.getExtensionValue(extension));
+    }
 
     /**
      * Gets the cRL number.

@@ -31,10 +31,6 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
-import org.bouncycastle.asn1.x509.CRLNumber;
-import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.x509.X509V2CRLGenerator;
-import org.fedoraproject.candlepin.controller.CrlGeneratorTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -45,8 +41,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigInteger;
-import java.security.KeyPair;
-import java.security.cert.X509CRL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -55,9 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.UUID;
-
-import javax.security.auth.x500.X500Principal;
 
 /**
  * Test Class for the Util class
@@ -240,43 +231,6 @@ public class UtilTest {
     public void bigint() {
         assertEquals(BigInteger.valueOf(10L), Util.toBigInt(10L));
         assertEquals(BigInteger.valueOf(-10L), Util.toBigInt(-10L));
-    }
-
-    @Test
-    public void decodeValue() throws Exception {
-        // there's gotta be a way to reduce to a set of mocks
-        KeyPair kp = CrlGeneratorTest.generateKP();
-        X509V2CRLGenerator g = new X509V2CRLGenerator();
-        g.setIssuerDN(new X500Principal("CN=test, UID=" + UUID.randomUUID()));
-        g.setThisUpdate(new Date());
-        g.setNextUpdate(Util.tomorrow());
-        g.setSignatureAlgorithm("SHA1withRSA");
-        g.addExtension(X509Extensions.CRLNumber, false,
-            new CRLNumber(BigInteger.TEN));
-
-        X509CRL x509crl = g.generate(kp.getPrivate());
-
-        assertEquals("10", Util.decodeValue(x509crl.getExtensionValue(
-            X509Extensions.CRLNumber.getId())));
-    }
-
-    @Test
-    public void getValue() throws Exception {
-        // there's gotta be a way to reduce to a set of mocks
-
-        KeyPair kp = CrlGeneratorTest.generateKP();
-        X509V2CRLGenerator g = new X509V2CRLGenerator();
-        g.setIssuerDN(new X500Principal("CN=test, UID=" + UUID.randomUUID()));
-        g.setThisUpdate(new Date());
-        g.setNextUpdate(Util.tomorrow());
-        g.setSignatureAlgorithm("SHA1withRSA");
-        g.addExtension(X509Extensions.CRLNumber, false,
-            new CRLNumber(BigInteger.TEN));
-
-        X509CRL x509crl = g.generate(kp.getPrivate());
-
-        assertEquals("10", Util.getValue(x509crl,
-            X509Extensions.CRLNumber.getId()));
     }
 
     @Test

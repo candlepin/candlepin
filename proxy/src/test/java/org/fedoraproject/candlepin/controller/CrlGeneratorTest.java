@@ -245,6 +245,42 @@ public class CrlGeneratorTest {
         }
     }
         
+    @Test
+    public void decodeValue() throws Exception {
+        // there's gotta be a way to reduce to a set of mocks
+        KeyPair kp = CrlGeneratorTest.generateKP();
+        X509V2CRLGenerator g = new X509V2CRLGenerator();
+        g.setIssuerDN(new X500Principal("CN=test, UID=" + UUID.randomUUID()));
+        g.setThisUpdate(new Date());
+        g.setNextUpdate(Util.tomorrow());
+        g.setSignatureAlgorithm("SHA1withRSA");
+        g.addExtension(X509Extensions.CRLNumber, false,
+            new CRLNumber(BigInteger.TEN));
+
+        X509CRL x509crl = g.generate(kp.getPrivate());
+
+        assertEquals("10", CrlGenerator.decodeValue(x509crl.getExtensionValue(
+            X509Extensions.CRLNumber.getId())));
+    }
+
+    @Test
+    public void getValue() throws Exception {
+        // there's gotta be a way to reduce to a set of mocks
+
+        KeyPair kp = CrlGeneratorTest.generateKP();
+        X509V2CRLGenerator g = new X509V2CRLGenerator();
+        g.setIssuerDN(new X500Principal("CN=test, UID=" + UUID.randomUUID()));
+        g.setThisUpdate(new Date());
+        g.setNextUpdate(Util.tomorrow());
+        g.setSignatureAlgorithm("SHA1withRSA");
+        g.addExtension(X509Extensions.CRLNumber, false,
+            new CRLNumber(BigInteger.TEN));
+
+        X509CRL x509crl = g.generate(kp.getPrivate());
+
+        assertEquals("10", CrlGenerator.getValue(x509crl,
+            X509Extensions.CRLNumber.getId()));
+    }
     
     @SuppressWarnings("serial")
     private List<CertificateSerial> getStubCSList() {
