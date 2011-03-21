@@ -3,8 +3,8 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
     version="1.0">
 
-     <!--  default persistence uses an in-memory hsqldb. -->
-     <persistence-unit name="default" transaction-type="RESOURCE_LOCAL">
+    <!--  default persistence uses an in-memory hsqldb. -->
+    <persistence-unit name="default" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
