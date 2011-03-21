@@ -355,7 +355,7 @@ task :eclipse do
   puts "Fixing eclipse .classpath"
   text = File.read(".classpath")
   tmp = File.new("tmp", "w")
-  tmp.write(text.gsub(/output="target\/resources"/, ""))
+  text = text.gsub(/output="target\/resources"/, "")
   tmp.write(text.gsub(/<\/classpath>/, "  <classpathentry path=\"#{Java.tools_jar}\" kind=\"lib\"\/>"))
   tmp.write("</classpath>")
   tmp.close()
