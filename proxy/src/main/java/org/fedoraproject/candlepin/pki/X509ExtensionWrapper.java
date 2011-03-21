@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.pki;
 
 import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.DERUTF8String;
 
 /**
  * X509ExtensionWrapper
@@ -25,10 +26,10 @@ public class X509ExtensionWrapper {
     private ASN1Encodable asn1Encodable;
 
     public X509ExtensionWrapper(String oid, boolean critical,
-        ASN1Encodable asn1Encodable) {
+        String value) {
         this.oid = oid;
         this.critical = critical;
-        this.asn1Encodable = asn1Encodable;
+        this.asn1Encodable = new DERUTF8String(value);
     }
 
     public String getOid() {
