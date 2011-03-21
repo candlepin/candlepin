@@ -6,6 +6,7 @@ require 'rest_client'
 require 'json'
 require 'uri'
 require 'pp'
+require 'oauth'
 
 class Candlepin
 
@@ -19,7 +20,8 @@ class Candlepin
   # connect as a "consumer".
   # TODO probably want to convert this to rails style kv
   def initialize(username=nil, password=nil, cert=nil, key=nil,
-                 host='localhost', port=8443, lang=nil, uuid=nil, trusted_user=false)
+                 host='localhost', port=8443, lang=nil, uuid=nil,
+                 trusted_user=false)
 
     if not username.nil? and not cert.nil?
       raise "Cannot connect with both username and identity cert"
@@ -481,14 +483,15 @@ class Candlepin
   end
 
   def get(uri, accept_header = :json)
-    response = @client[URI.escape(uri)].get :accept => accept_header
-
+    response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get \
+      :accept => accept_header
     return JSON.parse(response.body)
   end
 
-  #assumes a zip archive atm
+  # Assumes a zip archive currently. Returns filename (random#.zip) of the
+  # temp file created.
   def get_file(uri, dest_dir)
-    response = @client[URI.escape(uri)].get
+    response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get
     filename = response.headers[:content_disposition] == nil ? "tmp_#{rand}.zip" : response.headers[:content_disposition].split("filename=")[1]
     filename = File.join(dest_dir, filename)
     File.open(filename, 'w') { |f| f.write(response.body) }
@@ -496,13 +499,14 @@ class Candlepin
   end
 
   def get_text(uri)
-    response = @client[URI.escape(uri)].get :content_type => 'text/plain'
+    response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get :content_type => 'text/plain'
     return (response.body)
   end
 
   def post(uri, data=nil)
     data = data.to_json if not data.nil?
-    response = @client[URI.escape(uri)].post(data, :content_type => :json, :accept => :json)
+    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(
+      data, :content_type => :json, :accept => :json)
     return JSON.parse(response.body)
   end
 
@@ -512,19 +516,27 @@ class Candlepin
   end
 
   def post_text(uri, data=nil)
-    response = @client[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
+    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
     return response.body
   end
 
   def put(uri, data=nil)
     data = data.to_json if not data.nil?
-    response = @client[uri].put(data, :content_type => :json, :accept => :json)
+    response = get_client(uri, Net::HTTP::Put, :put)[uri].put(
+      data, :content_type => :json, :accept => :json)
 
     return JSON.parse(response.body) unless response.body.empty?
   end
 
   def delete(uri)
-    @client[URI.escape(uri)].delete
+    get_client(uri, Net::HTTP::Delete, :delete)[URI.escape(uri)].delete
+  end
+
+  protected
+
+  # Overridden by sub-classes that need to do more advanced things:
+  def get_client(uri, http_type, method)
+    return @client
   end
 
   private
@@ -564,3 +576,47 @@ class Candlepin
 
 end
 
+class OauthCandlepinApi < Candlepin
+
+  def initialize(username, oauth_consumer_key, oauth_consumer_secret, params={})
+
+    @oauth_consumer_key = oauth_consumer_key
+    @oauth_consumer_secret = oauth_consumer_secret
+
+    host = params[:host] || 'localhost'
+    port = params[:port] || 8443
+    lang = params[:lang] || nil
+    super(username, nil, nil, nil, host, port, lang, nil, false)
+  end
+
+  protected
+
+  # OAuth implementation of this method creates a new REST resource for
+  # each request to do the signing and add appropriate headers.
+  def get_client(uri, http_type, method)
+    final_url = @base_url + URI.escape(uri)
+    params = {
+      :site => @base_url,
+      :http_method => method,
+      :request_token_path => "",
+      :authorize_path => "",
+      :access_token_path => ""}
+    #params[:ca_file] = self.ca_cert_file unless self.ca_cert_file.nil?
+
+    consumer = OAuth::Consumer.new(@oauth_consumer_key,
+      @oauth_consumer_secret, params)
+    request = http_type.new(final_url)
+    consumer.sign!(request)
+    headers = {
+      'Authorization' => request['Authorization'],
+      'accept_language' => @lang,
+      'cp-user' => 'admin'
+    }
+
+    # Creating a new client for every request:
+    client = RestClient::Resource.new(@base_url,
+      :headers => headers)
+    return client
+  end
+
+end
