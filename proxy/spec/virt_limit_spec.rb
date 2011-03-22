@@ -53,6 +53,31 @@ describe 'Virt Limit Products' do
     virt_pool.quantity.should == -1
   end
 
+  it 'should update an unlimited virtual pool when virt_limit is unlimited' do
+    unlimited = create_product(nil, nil, :attributes => {:virt_limit => 'unlimited'})
+    sub = @cp.create_subscription(@owner.key, unlimited.id, 20)
+    @cp.refresh_pools(@owner.key)
+
+    # Add in this second refresh to follow the update path
+    result = @cp.refresh_pools(@owner.key)
+    result.should include('Pools refreshed')
+  end
+
+  it 'should create unlimited virtual pool when virt_limit is unlimited and muliplier is set' do
+    unlimited = create_product(nil, nil, 
+                               :attributes => {:virt_limit => 'unlimited'},
+                               :multiplier => 10)
+    sub = @cp.create_subscription(@owner.key, unlimited.id, 10)
+    @cp.refresh_pools(@owner.key)
+
+    virt_pool= @user.list_pools(:owner => @owner.id, :product => unlimited.id).find do |pool|
+      is_virt? pool
+    end
+
+    # TODO:  Check for the unlimited flag
+    virt_pool.quantity.should == -1
+  end
+
   it 'should allow a consumer with no "virt.is_guest attribute to list pools' do
     person = consumer_client(@user, 'dude', :person)
 
