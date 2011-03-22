@@ -139,8 +139,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(EnforceAccessControl.class), crudInterceptor);
         bind(CertificateRevocationListTask.class);
-        bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
-            .toInstance("SHA1withRSA");
         // temporary
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);

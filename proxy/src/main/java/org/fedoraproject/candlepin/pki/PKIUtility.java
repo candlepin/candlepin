@@ -40,6 +40,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
@@ -49,6 +50,8 @@ import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
+import org.bouncycastle.asn1.x509.CRLNumber;
+import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
@@ -57,9 +60,11 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMWriter;
+import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
+import org.fedoraproject.candlepin.util.Util;
 
 /**
  * PKIUtility
@@ -144,6 +149,38 @@ public class PKIUtility {
 
         // Generate the certificate
         return certGen.generate(reader.getCaKey());
+    }
+    
+    /**
+     * Generate crl.
+     * 
+     * @param entries the entries
+     * @return the x509 crl
+     */
+    public X509CRL createX509CRL(List<X509CRLEntryWrapper> entries, BigInteger crlNumber) {
+        
+        try {
+            X509Certificate caCert = reader.getCACert();
+            X509V2CRLGenerator generator = new X509V2CRLGenerator();
+            generator.setIssuerDN(caCert.getIssuerX500Principal());
+            generator.setThisUpdate(new Date());
+            generator.setNextUpdate(Util.tomorrow());
+            generator.setSignatureAlgorithm(SIGNATURE_ALGO);
+            //add all the crl entries.
+            for (X509CRLEntryWrapper entry : entries) {
+                generator.addCRLEntry(entry.getSerialNumber(), entry.getRevocationDate(),
+                    CRLReason.privilegeWithdrawn);
+            }
+            log.info("Completed adding CRL numbers to the certificate.");
+            generator.addExtension(X509Extensions.AuthorityKeyIdentifier,
+                false, new AuthorityKeyIdentifierStructure(caCert));
+            generator.addExtension(X509Extensions.CRLNumber, false,
+                new CRLNumber(crlNumber));
+            return generator.generate(reader.getCaKey());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
     
     public KeyPair decodeKeys(byte[] privKeyBits, byte[] pubKeyBits)

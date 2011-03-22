@@ -152,8 +152,6 @@ public class CandlepinModule extends AbstractModule {
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
         bind(JobCleaner.class);
-        bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
-            .toInstance("SHA1withRSA");
                     
         bind(Exporter.class).asEagerSingleton();
         bind(MetaExporter.class);
