@@ -42,6 +42,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.Set;
 
+import javax.security.auth.x500.X500Principal;
+
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
@@ -50,7 +52,6 @@ import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
@@ -95,7 +96,7 @@ public class PKIUtility {
         certGen.setNotBefore(startDate);
         certGen.setNotAfter(endDate);
 
-        X509Principal subjectPrincipal = new X509Principal(dn);
+        X500Principal subjectPrincipal = new X500Principal(dn);
         certGen.setSubjectDN(subjectPrincipal);
         certGen.setPublicKey(clientKeyPair.getPublic());
         certGen.setSignatureAlgorithm(SIGNATURE_ALGO);
