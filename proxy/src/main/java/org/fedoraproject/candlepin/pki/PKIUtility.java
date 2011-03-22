@@ -44,6 +44,9 @@ import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.apache.log4j.Logger;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
@@ -62,6 +65,7 @@ import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
  * PKIUtility
  */
 public class PKIUtility {
+    private static Logger log = Logger.getLogger(PKIUtility.class);
     
     public static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
     public static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
@@ -240,6 +244,40 @@ public class PKIUtility {
         int nread = 0; 
         while ((nread = input.read(dataBytes)) != -1) {
             signature.update(dataBytes, 0, nread);
+        }
+    }
+
+    public static String decodeDERValue(byte[] value) {
+        ASN1InputStream vis = null;
+        ASN1InputStream decoded = null;
+        try {
+            vis = new ASN1InputStream(value);
+            decoded = new ASN1InputStream(
+                ((DEROctetString) vis.readObject()).getOctets());
+    
+            return decoded.readObject().toString();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            if (vis != null) {
+                try {
+                    vis.close();
+                }
+                catch (IOException e) {
+                    log.warn("failed to close ASN1 stream", e);
+                }
+            }
+    
+            if (decoded != null) {
+                try {
+                    decoded.close();
+                }
+                catch (IOException e) {
+                    log.warn("failed to close ASN1 stream", e);
+                }
+            }
         }
     }
 }

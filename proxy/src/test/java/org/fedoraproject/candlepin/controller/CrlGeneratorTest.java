@@ -45,6 +45,7 @@ import org.fedoraproject.candlepin.controller.CrlGenerator.SimpleCRLEntry;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
@@ -259,7 +260,7 @@ public class CrlGeneratorTest {
 
         X509CRL x509crl = g.generate(kp.getPrivate());
 
-        assertEquals("10", CrlGenerator.decodeValue(x509crl.getExtensionValue(
+        assertEquals("10", PKIUtility.decodeDERValue(x509crl.getExtensionValue(
             X509Extensions.CRLNumber.getId())));
     }
 
@@ -278,8 +279,8 @@ public class CrlGeneratorTest {
 
         X509CRL x509crl = g.generate(kp.getPrivate());
 
-        assertEquals("10", CrlGenerator.getValue(x509crl,
-            X509Extensions.CRLNumber.getId()));
+        assertEquals("10", PKIUtility.decodeDERValue(x509crl.getExtensionValue(
+            X509Extensions.CRLNumber.getId())));
     }
     
     @SuppressWarnings("serial")
