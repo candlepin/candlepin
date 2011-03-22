@@ -344,7 +344,7 @@ var Pool = {
             var virt_attributes = new java.util.HashMap();
             virt_attributes.put("virt_only", "true");
             // Make sure the virt pool does not have a virt_limit,
-            // otherwise this is recurse infinitely
+            // otherwise this will recurse infinitely
             virt_attributes.put("virt_limit", "0");
 
             if ('unlimited'.equals(virt_limit)) {
@@ -383,8 +383,15 @@ var Pool = {
             if (existingPool.hasAttribute("virt_only") && 
             		existingPool.getAttributeValue("virt_only").equals("true")) {
         		// Assuming there mere be a virt limit attribute set:
-            	var virtLimit = parseInt(attributes.get("virt_limit"));
-            	expectedQuantity = sub.getQuantity() * virtLimit;
+                var virt_limit = attributes.get("virt_limit");
+
+                if ('unlimited'.equals(virt_limit)) {
+                    // Bad to hardcode this conversion here
+                    // TODO:  Figure out a better way translate this value!
+                    expectedQuantity = -1;
+                } else {
+            	    expectedQuantity = sub.getQuantity() * parseInt(virt_limit);
+                }
             }
             
             var quantityChanged = !(expectedQuantity == existingPool.getQuantity());
