@@ -176,41 +176,6 @@ class Candlepin
     return results
   end
 
-  def create_pool(product_id, product_name, owner_id, quantity, params={})
-    subscription_id = params[:subscription_id] || nil
-    start_date = params[:start_date] || Date.today
-    end_date = params[:end_date] || Date.today + 365
-    user_restricted = params[:user_restricted] || nil
-    attributes = params[:attributes] || {}
-
-    attribute_set = []
-    attributes.each_pair do |name, value|
-      attribute_set << { 'name' => name, 'value' => value }
-    end
-
-    pool = {
-      'activeSubscription' => true,
-      'subscriptionId' => subscription_id,
-      'quantity' => quantity,
-      'consumed' => 0,
-      'startDate' => start_date,
-      'endDate' => end_date,
-      'productId' => product_id,
-      'productName' => product_name,
-      'owner' => {
-        'id' => owner_id
-      },
-      'attributes' => attribute_set,
-      'restrictedToUsername' => user_restricted
-    }
-
-    post('/pools', pool)
-  end
-
-  def delete_pool(pool_id)
-    delete("/pools/#{pool_id}")
-  end
-
   def refresh_pools(owner_key, immediate=false)
     return async_call(immediate) do
       put("/owners/#{owner_key}/subscriptions")
