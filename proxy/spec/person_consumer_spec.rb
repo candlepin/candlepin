@@ -7,9 +7,6 @@ describe 'Person Consumer' do
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
-    @monitoring = create_product()
-    @cp.create_subscription(@owner.key, @monitoring.id, 4)
-    @cp.refresh_pools @owner.key
   end
 
   it 'can be created by a user' do

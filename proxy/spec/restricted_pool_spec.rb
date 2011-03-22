@@ -34,7 +34,6 @@ describe 'Products with "user-license" attributes' do
     sys2.list_entitlements.should be_empty
   end
 
-
   it 'should create a sub-pool when the parent pool is consumed' do
     consumer = consumer_client(@user, 'jay-consumer', :person)
     consumer.consume_product @tooling.id
@@ -44,6 +43,15 @@ describe 'Products with "user-license" attributes' do
     sys1.list_pools.find do |pool|
       pool.productId == @editor.id
     end.should_not be_empty
+  end
+
+  it 'should create a sub-pool that is restricted to the user\'s consumers' do
+    consumer_client(@user, 'jay-consumer', :person).consume_product @tooling.id
+
+    user = user_client(@owner, 'another-guy')
+    system = consumer_client(user, 'different-box')
+
+    system.list_pools(:consumer => system.uuid).should be_empty
   end
 
   it 'should have a certificate for an entitlement from the sub-pool' do
@@ -65,10 +73,7 @@ describe 'Products with "user-license" attributes' do
 
     @user.unregister(consumer.uuid)
 
-    # No pools available after unregistering
-    sys1.list_pools.find do |pool|
-      pool.productId == @editor.id  
-    end.should be_nil
+    sys1.list_pools(:consumer => sys1.uuid).should be_empty
   end
 
 end
