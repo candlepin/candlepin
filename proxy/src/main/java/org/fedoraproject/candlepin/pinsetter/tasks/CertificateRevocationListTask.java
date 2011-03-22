@@ -19,12 +19,12 @@ import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.bouncycastle.openssl.PEMWriter;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -36,7 +36,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -48,12 +47,11 @@ import java.util.UUID;
  */
 public class CertificateRevocationListTask implements Job {
     
-    /** The Constant DEFAULT_SCHEDULE. */
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
     
-    /** The config. */
     private Config config;
     private CrlGenerator crlGenerator;
+    private PKIUtility pkiUtility;
     
     private static Logger log = Logger.getLogger(CertificateRevocationListTask.class);
 
@@ -64,9 +62,11 @@ public class CertificateRevocationListTask implements Job {
      * @param conf the conf
      */
     @Inject
-    public CertificateRevocationListTask(CrlGenerator crlGenerator, Config conf) {
+    public CertificateRevocationListTask(CrlGenerator crlGenerator, Config conf,
+        PKIUtility pkiUtility) {
         this.crlGenerator = crlGenerator;
         this.config = conf;
+        this.pkiUtility = pkiUtility;
     }
 
     @Override
@@ -109,10 +109,7 @@ public class CertificateRevocationListTask implements Job {
                 .generateCRL(in);
         }
         x509crl = this.crlGenerator.updateCRL(x509crl);
-        PEMWriter writer = new PEMWriter(new OutputStreamWriter(out));
-        writer.writeObject(x509crl);
-        writer.flush();
-        writer.close();
+        out.write(pkiUtility.getPemEncoded(x509crl));
     }
 
     private void updateCRL(File file, String principal)

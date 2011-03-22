@@ -34,6 +34,7 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -160,35 +161,34 @@ public class PKIUtility {
         return generator.generateKeyPair();
     }
     
+    private byte[] getPemEncoded(Object obj) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+        PEMWriter writer = new PEMWriter(oswriter);
+        writer.writeObject(obj);
+        writer.close();
+        return byteArrayOutputStream.toByteArray();
+    }
+    
     /**
      * Take an X509Certificate object and return a byte[] of the certificate,
      * PEM encoded
      * @param cert
      * @return PEM-encoded bytes of the certificate
-     * @throws GeneralSecurityException if there is a security issue
      * @throws IOException if there is i/o problem
      */
-    public byte[] getPemEncoded(X509Certificate cert) throws 
-        GeneralSecurityException, IOException {
-        
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
-        PEMWriter w =  new PEMWriter(oswriter);
-        w.writeObject(cert);
-        w.close();
-        byte[] pemEncoded = byteArrayOutputStream.toByteArray();
-        return pemEncoded;
+    public byte[] getPemEncoded(X509Certificate cert) throws IOException {
+        return getPemEncoded((Object) cert);
     }
         
     public byte[] getPemEncoded(Key key) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
-        PEMWriter writer = new PEMWriter(oswriter);
-        writer.writeObject(key);
-        writer.close();
-        return byteArrayOutputStream.toByteArray();
+        return getPemEncoded((Object) key);
     }
-    
+
+    public byte[] getPemEncoded(X509CRL crl) throws IOException {
+        return getPemEncoded((Object) crl);
+    }
+
     public static X509Certificate createCert(byte[] certData) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X509");
