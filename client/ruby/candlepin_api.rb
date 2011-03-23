@@ -283,8 +283,11 @@ class Candlepin
   end
 
   # TODO: Should we change these to bind to better match terminology?
-  def consume_pool(pool)
-    post("/consumers/#{@uuid}/entitlements?pool=#{pool}")
+  def consume_pool(pool, quantity=nil)
+    path = "/consumers/#{@uuid}/entitlements?pool=#{pool}"
+    path << "&quantity=#{quantity}" if quantity
+
+    post(path)
   end
 
   def consume_product(product, quantity = nil)
