@@ -46,6 +46,7 @@ import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509CRLEntryWrapper;
+import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
 import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
@@ -104,7 +105,7 @@ public class CrlGeneratorTest {
     
     @Before
     public void init() throws Exception {
-        this.pkiUtility = new PKIUtility(pkiReader);
+        this.pkiUtility = new CandlepinPKIUtility(pkiReader);
         this.generator = new CrlGenerator(curator, pkiUtility);
         
         when(pkiReader.getCaKey()).thenReturn(KP.getPrivate());
@@ -262,7 +263,7 @@ public class CrlGeneratorTest {
 
         X509CRL x509crl = g.generate(kp.getPrivate());
 
-        assertEquals("10", PKIUtility.decodeDERValue(x509crl.getExtensionValue(
+        assertEquals("10", pkiUtility.decodeDERValue(x509crl.getExtensionValue(
             X509Extensions.CRLNumber.getId())));
     }
 
@@ -281,7 +282,7 @@ public class CrlGeneratorTest {
 
         X509CRL x509crl = g.generate(kp.getPrivate());
 
-        assertEquals("10", PKIUtility.decodeDERValue(x509crl.getExtensionValue(
+        assertEquals("10", pkiUtility.decodeDERValue(x509crl.getExtensionValue(
             X509Extensions.CRLNumber.getId())));
     }
     

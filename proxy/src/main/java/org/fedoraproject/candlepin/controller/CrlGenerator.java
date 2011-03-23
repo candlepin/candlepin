@@ -167,7 +167,7 @@ public class CrlGenerator {
         if (x509crl == null) {
             return BigInteger.ZERO; 
         }
-        return new BigInteger(PKIUtility.decodeDERValue(x509crl.getExtensionValue(
+        return new BigInteger(pkiUtility.decodeDERValue(x509crl.getExtensionValue(
             OIDUtil.CRL_NUMBER)));
     }
     
