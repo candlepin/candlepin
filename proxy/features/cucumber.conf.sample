@@ -1,7 +1,0 @@
-# Login credentials for a super admin:
-username=admin
-password=admin
-
-# Candlepin server to connect to:
-hostname=localhost
-port=443
