@@ -21,7 +21,6 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyPair;
-import java.security.Security;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -44,7 +43,6 @@ import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
@@ -61,13 +59,12 @@ import com.google.inject.Inject;
 /**
  * CandlepinPKIUtility
  */
-public class CandlepinPKIUtility extends PKIUtility {
-    protected static Logger log = Logger.getLogger(CandlepinPKIUtility.class);
+public class BouncyCastlePKIUtility extends PKIUtility {
+    protected static Logger log = Logger.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
-    public CandlepinPKIUtility(PKIReader reader) {
+    public BouncyCastlePKIUtility(PKIReader reader) {
         super(reader);
-        Security.addProvider(new BouncyCastleProvider());
     }
 
     @Override

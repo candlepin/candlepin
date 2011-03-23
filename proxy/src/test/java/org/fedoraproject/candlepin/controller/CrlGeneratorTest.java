@@ -46,7 +46,7 @@ import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509CRLEntryWrapper;
-import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
+import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,7 +105,7 @@ public class CrlGeneratorTest {
     
     @Before
     public void init() throws Exception {
-        this.pkiUtility = new CandlepinPKIUtility(pkiReader);
+        this.pkiUtility = new BouncyCastlePKIUtility(pkiReader);
         this.generator = new CrlGenerator(curator, pkiUtility);
         
         when(pkiReader.getCaKey()).thenReturn(KP.getPrivate());

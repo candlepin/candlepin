@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin.service.impl.test;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.pki.PKIReader;
-import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
+import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Assert;
 import org.junit.Test;
@@ -78,7 +78,7 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
+            bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
         }
     }
     

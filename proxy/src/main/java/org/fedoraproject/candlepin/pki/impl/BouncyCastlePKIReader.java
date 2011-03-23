@@ -41,7 +41,7 @@ import com.google.inject.Inject;
  * the CA certificate and CA private key, as well as an optional password, from
  * the config system.  These values are customizable via /etc/candlepin/candlepin.conf.
  */
-public class CandlepinPKIReader implements PKIReader, PasswordFinder {
+public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
 
     private CertificateFactory certFactory;
     private String caCertPath;
@@ -55,9 +55,9 @@ public class CandlepinPKIReader implements PKIReader, PasswordFinder {
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
-
+    
     @Inject
-    public CandlepinPKIReader(Config config) throws CertificateException {
+    public BouncyCastlePKIReader(Config config) throws CertificateException {
         certFactory = CertificateFactory.getInstance("X.509");
         this.caCertPath = config.getString(ConfigProperties.CA_CERT);
         this.upstreamCaCertPath = config.getString(ConfigProperties.CA_CERT_UPSTREAM);
