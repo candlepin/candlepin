@@ -177,17 +177,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
             null).size());
     }
     
-    @Test(expected = ForbiddenException.class)
-    public void ownerAdminCannotCreatePoolsDirectly() {
-        setupPrincipal(owner1, Role.OWNER_ADMIN);
-        
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-
-        poolResource.createPool(
-            TestUtil.createPool(owner1, TestUtil.createProduct()));
-    }
-    
     @Test
     public void ownerAdminCannotListAnotherOwnersPools() {
         List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null);

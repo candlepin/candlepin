@@ -184,15 +184,27 @@ public class UtilTest {
         assertEquals(today - 1, c.get(Calendar.DAY_OF_MONTH));
     }
 
+    // This is pretty silly - basically doing the same thing the
+    // method under test does...
     @Test
     public void addDaysToDt() {
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
-        int today = c.get(Calendar.DAY_OF_MONTH);
+        c.add(Calendar.DAY_OF_MONTH, 10);
+        int future = c.get(Calendar.DAY_OF_MONTH);
         c.setTime(Util.addDaysToDt(10));
-        assertEquals(today + 10, c.get(Calendar.DAY_OF_MONTH));
+        assertEquals(future, c.get(Calendar.DAY_OF_MONTH));
+    }
+
+    @Test
+    public void negativeAddDaysToDt() {
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.DAY_OF_MONTH, -10);
+        int past = c.get(Calendar.DAY_OF_MONTH);
+        
         c.setTime(Util.addDaysToDt(-10));
-        assertEquals(today - 10, c.get(Calendar.DAY_OF_MONTH));
+        assertEquals(past, c.get(Calendar.DAY_OF_MONTH));
     }
 
     @Test
