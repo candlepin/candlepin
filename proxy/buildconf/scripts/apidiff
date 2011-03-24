@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# Generate a diff file of the candlepin api between two points in history.
+# 
+# Useage:
+# apidiff PERIOD
+#
+# ie apidiff "one day ago"
+
+function gen_api() {
+    local out_file=$1
+    buildr -s clean compile candlepin:apicrawl
+    cp target/candlepin_methods.json $out_file
+}
+
+function diff_apis() {
+    diff -u $1 $2
+   
+    return $?
+}
+
+since=$1
+
+echo "API diff run for $(date)"
+echo
+
+git checkout -f master &> /dev/null
+git pull &> /dev/null
+
+echo "master - $(git log --pretty=format:%h -n1)"
+
+gen_api api1.json
+git checkout -f "@{$since}" &> /dev/null
+
+echo "$since - $(git log --pretty=format:%h -n1)"
+echo
+
+gen_api api2.json
+git checkout -f master &> /dev/null
+
+diff_apis api2.json api1.json
+
+retcode=$?
+if [ "$retcode" -eq "0" ]; then
+    echo "No changes detected"
+fi
+
+rm api1.json
+rm api2.json
+
+exit $retcode

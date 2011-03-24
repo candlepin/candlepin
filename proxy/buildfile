@@ -233,7 +233,7 @@ define "candlepin" do
       end
     end
 
-    File.open('target/candlepin_methods.json', 'w') { |f| JSON.dump(combined.values, f) }
+    File.open('target/candlepin_methods.json', 'w') { |f| f.write JSON.pretty_generate(combined.values) }
 
     # Cleanup
     rm 'target/candlepin_api.json'
