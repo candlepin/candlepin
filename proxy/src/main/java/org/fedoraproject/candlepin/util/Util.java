@@ -18,8 +18,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.ClosureUtils;
 import org.apache.log4j.Logger;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.DEROctetString;
 import org.fedoraproject.candlepin.model.CuratorException;
 
 import java.io.BufferedReader;
@@ -29,7 +27,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.security.cert.X509Extension;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -131,44 +128,6 @@ public class Util {
 
     public static BigInteger toBigInt(long l) {
         return new BigInteger(String.valueOf(l));
-    }
-    
-    public static String decodeValue(byte[] value) {
-        ASN1InputStream vis = null;
-        ASN1InputStream decoded = null;
-        try {
-            vis = new ASN1InputStream(value);
-            decoded = new ASN1InputStream(
-                ((DEROctetString) vis.readObject()).getOctets());
-
-            return decoded.readObject().toString();
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            if (vis != null) {
-                try {
-                    vis.close();
-                }
-                catch (IOException e) {
-                    log.warn("failed to close ASN1 stream", e);
-                }
-            }
-
-            if (decoded != null) {
-                try {
-                    decoded.close();
-                }
-                catch (IOException e) {
-                    log.warn("failed to close ASN1 stream", e);
-                }
-            }
-        }
-    }
-    
-    public static String getValue(X509Extension cert, String extension) {
-        return decodeValue(cert.getExtensionValue(extension));
     }
     
     public static Date toDate(String dt) {

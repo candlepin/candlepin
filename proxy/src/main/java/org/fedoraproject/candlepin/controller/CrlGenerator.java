@@ -14,32 +14,26 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import static org.fedoraproject.candlepin.util.Util.getValue;
 import static org.fedoraproject.candlepin.util.Util.newList;
 import static org.fedoraproject.candlepin.util.Util.newMap;
 
 import java.math.BigInteger;
 import java.security.cert.X509CRL;
 import java.security.cert.X509CRLEntry;
-import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.bouncycastle.asn1.x509.CRLNumber;
-import org.bouncycastle.asn1.x509.CRLReason;
-import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.x509.X509V2CRLGenerator;
-import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
-import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.X509CRLEntryWrapper;
+import org.fedoraproject.candlepin.util.OIDUtil;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 // TODO:  Clean up these protected methods - most are protected only for unit testing!
 /**
@@ -47,53 +41,22 @@ import com.google.inject.name.Named;
  */
 public class CrlGenerator {
 
-    /** The pki reader. */
-    private PKIReader pkiReader;
-    
-    /** The certificate serial curator. */
+    private PKIUtility pkiUtility;
     private CertificateSerialCurator certificateSerialCurator;
-    
-    /** The algorithm. */
-    private String algorithm;
 
-    private static Logger log = Logger.getLogger(CrlGenerator.class); 
+    private static Logger log = Logger.getLogger(CrlGenerator.class);
+    
     /**
      * Instantiates a new certificate revocation list task.
      * 
-     * @param rdr the rdr
      * @param curator the curator
-     * @param algorithm the algorithm
+     * @param pkiUtility PKIUtility for crl creation
      */
     @Inject
-    public CrlGenerator(PKIReader rdr, CertificateSerialCurator curator, 
-        @Named("crlSignatureAlgo") String algorithm) {
+    public CrlGenerator(CertificateSerialCurator curator, PKIUtility pkiUtility) {
         
-        this.pkiReader = rdr;
         this.certificateSerialCurator = curator;
-        this.algorithm = algorithm;
-    }
-
-    /**
-     * The Class SimpleCRLEntry.
-     */
-    protected static class SimpleCRLEntry{
-        
-        /** The serial number. */
-        protected BigInteger serialNumber;
-        
-        /** The revocation date. */
-        protected Date revocationDate;
-
-        /**
-         * Instantiates a new simple crl entry.
-         * 
-         * @param serialNumber the serial number
-         * @param revocationDate the revocation date
-         */
-        private SimpleCRLEntry(BigInteger serialNumber, Date revocationDate) {
-            this.serialNumber = serialNumber;
-            this.revocationDate = revocationDate;
-        }
+        this.pkiUtility = pkiUtility;
     }
 
     /**
@@ -103,7 +66,7 @@ public class CrlGenerator {
      * @return the x509 crl
      */
     public X509CRL updateCRL(X509CRL x509crl) {
-        List<SimpleCRLEntry> crlEntries = null;
+        List<X509CRLEntryWrapper> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
         log.info("Old CRLNumber is : " + no);
         
@@ -118,7 +81,7 @@ public class CrlGenerator {
         crlEntries.addAll(getNewSerialsToAppendAndSetThemConsumed());
         this.certificateSerialCurator.deleteExpiredSerials();
         
-        return this.generateCRL(crlEntries, no
+        return pkiUtility.createX509CRL(crlEntries, no
             .add(BigInteger.ONE));
     }
     
@@ -130,51 +93,18 @@ public class CrlGenerator {
     public X509CRL createCRL() {
         return updateCRL(null);
     }
-    
-    /**
-     * Generate crl.
-     * 
-     * @param entries the entries
-     * @param principal the principal
-     * @return the x509 crl
-     */
-    private X509CRL generateCRL(List<SimpleCRLEntry> entries, BigInteger crlNumber) {
-        
-        try {
-            X509Certificate caCert = pkiReader.getCACert();
-            X509V2CRLGenerator generator = new X509V2CRLGenerator();
-            generator.setIssuerDN(caCert.getIssuerX500Principal());
-            generator.setThisUpdate(new Date());
-            generator.setNextUpdate(Util.tomorrow());
-            generator.setSignatureAlgorithm(algorithm);
-            //add all the crl entries.
-            for (SimpleCRLEntry entry : entries) {
-                generator.addCRLEntry(entry.serialNumber, entry.revocationDate,
-                    CRLReason.privilegeWithdrawn);
-            }
-            log.info("Completed adding CRL numbers to the certificate.");
-            generator.addExtension(X509Extensions.AuthorityKeyIdentifier,
-                false, new AuthorityKeyIdentifierStructure(caCert));
-            generator.addExtension(X509Extensions.CRLNumber, false,
-                new CRLNumber(crlNumber));
-            return generator.generate(pkiReader.getCaKey());
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     /**
      * Gets the new serials to append and set them consumed.
      * 
      * @return the new serials to append and set them consumed
      */
-    protected List<SimpleCRLEntry> getNewSerialsToAppendAndSetThemConsumed() {
-        List<SimpleCRLEntry> entries = Util.newList();
+    protected List<X509CRLEntryWrapper> getNewSerialsToAppendAndSetThemConsumed() {
+        List<X509CRLEntryWrapper> entries = Util.newList();
         List<CertificateSerial> serials =  
             this.certificateSerialCurator.retrieveTobeCollectedSerials();
         for (CertificateSerial cs : serials) {
-            entries.add(new SimpleCRLEntry(cs.getSerial(),
+            entries.add(new X509CRLEntryWrapper(cs.getSerial(),
                    new Date()));
             cs.setCollected(true);
         }
@@ -227,7 +157,6 @@ public class CrlGenerator {
         return revokedEntries;
     }
 
-
     /**
      * Gets the cRL number.
      * 
@@ -238,7 +167,8 @@ public class CrlGenerator {
         if (x509crl == null) {
             return BigInteger.ZERO; 
         }
-        return new BigInteger(getValue(x509crl, X509Extensions.CRLNumber.getId()));
+        return new BigInteger(pkiUtility.decodeDERValue(x509crl.getExtensionValue(
+            OIDUtil.CRL_NUMBER)));
     }
     
     /**
@@ -247,11 +177,11 @@ public class CrlGenerator {
      * @param entries the entries
      * @return the list
      */
-    private List<SimpleCRLEntry> toSimpleCRLEntries(
+    private List<X509CRLEntryWrapper> toSimpleCRLEntries(
         Set<? extends X509CRLEntry> entries) {
-        List<SimpleCRLEntry> crlEntries = newList();
+        List<X509CRLEntryWrapper> crlEntries = newList();
         for (X509CRLEntry entry : entries) {
-            crlEntries.add(new SimpleCRLEntry(entry.getSerialNumber(), entry
+            crlEntries.add(new X509CRLEntryWrapper(entry.getSerialNumber(), entry
                 .getRevocationDate()));
         }
         return crlEntries;

@@ -41,10 +41,12 @@ import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
-import org.fedoraproject.candlepin.controller.CrlGenerator.SimpleCRLEntry;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.pki.PKIReader;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.X509CRLEntryWrapper;
+import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +65,7 @@ public class CrlGeneratorTest {
     
     @Mock private PKIReader pkiReader;
     @Mock private CertificateSerialCurator curator;
+    private PKIUtility pkiUtility;
     
     private CrlGenerator generator;
 
@@ -102,7 +105,8 @@ public class CrlGeneratorTest {
     
     @Before
     public void init() throws Exception {
-        this.generator = new CrlGenerator(pkiReader, curator, "SHA1withRSA");
+        this.pkiUtility = new BouncyCastlePKIUtility(pkiReader);
+        this.generator = new CrlGenerator(curator, pkiUtility);
         
         when(pkiReader.getCaKey()).thenReturn(KP.getPrivate());
         when(pkiReader.getCACert()).thenReturn(CERT);
@@ -133,13 +137,13 @@ public class CrlGeneratorTest {
         
         when(this.curator.retrieveTobeCollectedSerials())
             .thenReturn(serials);
-        List<SimpleCRLEntry> entries = this.generator
+        List<X509CRLEntryWrapper> entries = this.generator
             .getNewSerialsToAppendAndSetThemConsumed();
         assertEquals(entries.size(), serials.size());
         verify(this.curator).saveOrUpdateAll(serials);
         for (int i = 0; i < serials.size(); i++) {
             CertificateSerial cs = serials.get(i);
-            assertEquals(cs.getSerial(), entries.get(i).serialNumber);
+            assertEquals(cs.getSerial(), entries.get(i).getSerialNumber());
         }
     }
     
@@ -147,7 +151,7 @@ public class CrlGeneratorTest {
     public void serialsEmptyList() {
         when(this.curator.retrieveTobeCollectedSerials())
             .thenReturn(new ArrayList<CertificateSerial>());
-        List<SimpleCRLEntry> entries = this.generator
+        List<X509CRLEntryWrapper> entries = this.generator
             .getNewSerialsToAppendAndSetThemConsumed();
         assertEquals(0, entries.size());
     }
@@ -245,6 +249,42 @@ public class CrlGeneratorTest {
         }
     }
         
+    @Test
+    public void decodeValue() throws Exception {
+        // there's gotta be a way to reduce to a set of mocks
+        KeyPair kp = CrlGeneratorTest.generateKP();
+        X509V2CRLGenerator g = new X509V2CRLGenerator();
+        g.setIssuerDN(new X500Principal("CN=test, UID=" + UUID.randomUUID()));
+        g.setThisUpdate(new Date());
+        g.setNextUpdate(Util.tomorrow());
+        g.setSignatureAlgorithm("SHA1withRSA");
+        g.addExtension(X509Extensions.CRLNumber, false,
+            new CRLNumber(BigInteger.TEN));
+
+        X509CRL x509crl = g.generate(kp.getPrivate());
+
+        assertEquals("10", pkiUtility.decodeDERValue(x509crl.getExtensionValue(
+            X509Extensions.CRLNumber.getId())));
+    }
+
+    @Test
+    public void getValue() throws Exception {
+        // there's gotta be a way to reduce to a set of mocks
+
+        KeyPair kp = CrlGeneratorTest.generateKP();
+        X509V2CRLGenerator g = new X509V2CRLGenerator();
+        g.setIssuerDN(new X500Principal("CN=test, UID=" + UUID.randomUUID()));
+        g.setThisUpdate(new Date());
+        g.setNextUpdate(Util.tomorrow());
+        g.setSignatureAlgorithm("SHA1withRSA");
+        g.addExtension(X509Extensions.CRLNumber, false,
+            new CRLNumber(BigInteger.TEN));
+
+        X509CRL x509crl = g.generate(kp.getPrivate());
+
+        assertEquals("10", pkiUtility.decodeDERValue(x509crl.getExtensionValue(
+            X509Extensions.CRLNumber.getId())));
+    }
     
     @SuppressWarnings("serial")
     private List<CertificateSerial> getStubCSList() {

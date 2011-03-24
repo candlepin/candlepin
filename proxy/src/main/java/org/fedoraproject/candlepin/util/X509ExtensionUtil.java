@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
@@ -52,7 +51,7 @@ public class X509ExtensionUtil {
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.SYSTEM_NAMESPACE_KEY);
         toReturn.add(new X509ExtensionWrapper(consumerOid + "." +
             OIDUtil.SYSTEM_OIDS.get(OIDUtil.UUID_KEY), false,
-            new DERUTF8String(consumer.getUuid())));
+            consumer.getUuid()));
 
         return toReturn;
     }
@@ -70,24 +69,24 @@ public class X509ExtensionUtil {
         if (sub.getProduct().getId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false,
-                new DERUTF8String(ent.getPool().getProductName())));
+                ent.getPool().getProductName()));
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false,
-            new DERUTF8String(sub.getId().toString())));
+            sub.getId().toString()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false,
-            new DERUTF8String(sub.getProduct().getId().toString())));
+            sub.getProduct().getId().toString()));
         // TODO: regnum? virtlimit/socketlimit?
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false,
-            new DERUTF8String(sub.getQuantity().toString())));
+            sub.getQuantity().toString()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STARTDATE_KEY), false,
-            new DERUTF8String(iso8601DateFormat.format(sub.getStartDate()))));
+            iso8601DateFormat.format(sub.getStartDate())));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
-            new DERUTF8String(iso8601DateFormat.format(sub.getEndDate()))));
+            iso8601DateFormat.format(sub.getEndDate())));
         // TODO : use keys
         String warningPeriod = sub.getProduct().getAttributeValue("warning_period");
         if (warningPeriod == null) {
@@ -95,36 +94,33 @@ public class X509ExtensionUtil {
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_WARNING_PERIOD), false,
-            new DERUTF8String(warningPeriod)));
+            warningPeriod));
         if (sub.getContractNumber() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
-                false, new DERUTF8String(sub.getContractNumber())));
+                false, sub.getContractNumber()));
         }
         // Add the account number
         if (sub.getAccountNumber() != null) { 
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ACCOUNT_NUMBER_KEY),
-                false, new DERUTF8String(sub.getAccountNumber())));
+                false, sub.getAccountNumber()));
         }
         // Add Smart Management, default to "not managed"
         String mgmt = sub.getProduct().getAttributeValue("management_enabled");
         mgmt = (mgmt == null) ? "0" : mgmt;
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY), false,
-            new DERUTF8String(mgmt)));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY), false, mgmt));
         
         String supportLevel = sub.getProduct().getAttributeValue("support_level");
         String supportType = sub.getProduct().getAttributeValue("support_type");
         if (supportLevel != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false,
-                new DERUTF8String(supportLevel)));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false, supportLevel));
         }
         if (supportType != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
-                new DERUTF8String(supportType)));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false, supportType));
         }
         
         return toReturn;
@@ -137,7 +133,7 @@ public class X509ExtensionUtil {
         return Collections.singletonList(new X509ExtensionWrapper(
             entitlementOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_USED), false,
-            new DERUTF8String(entitlement.getQuantity().toString())));
+            entitlement.getQuantity().toString()));
     }
 
     public Set<X509ExtensionWrapper> productExtensions(Product product) {
@@ -153,7 +149,7 @@ public class X509ExtensionUtil {
         // faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false,
-            new DERUTF8String(product.getName())));
+            product.getName()));
 
         // XXX include version, arch, and provides here (after defined in attributes)
         
@@ -185,39 +181,37 @@ public class X509ExtensionUtil {
                 pc.getContent().getId().toString() + "." +
                 OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
             toReturn.add(new X509ExtensionWrapper(contentOid, false,
-                new DERUTF8String(pc.getContent().getType())));
+                pc.getContent().getType()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY), false,
-                new DERUTF8String(pc.getContent().getName())));
+                pc.getContent().getName()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_LABEL_KEY), false,
-                new DERUTF8String(pc.getContent().getLabel())));
+                pc.getContent().getLabel()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_VENDOR_ID_KEY),
-                false, new DERUTF8String(pc.getContent().getVendor())));
+                false, pc.getContent().getVendor()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_DOWNLOAD_URL_KEY),
-                false, new DERUTF8String(contentPath)));
+                false, contentPath));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY), false,
-                new DERUTF8String(pc.getContent().getGpgUrl())));
+                pc.getContent().getGpgUrl()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_FLEX_QUANTITY_KEY),
-                false, new DERUTF8String(pc.getFlexEntitlement().toString())));
+                false, pc.getFlexEntitlement().toString()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_PHYS_QUANTITY_KEY),
-                false,
-                new DERUTF8String(pc.getPhysicalEntitlement().toString())));
+                false, pc.getPhysicalEntitlement().toString()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false,
-                new DERUTF8String((pc.getEnabled()) ? "1" : "0")));
+                (pc.getEnabled()) ? "1" : "0"));
 
             // Include metadata expiry if specified on the content:
             if (pc.getContent().getMetadataExpire() != null) {
                 toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
-                    false, new DERUTF8String(pc.getContent()
-                        .getMetadataExpire().toString())));
+                    false, pc.getContent().getMetadataExpire().toString()));
             }
 
             // Include required tags if specified on the content set:
@@ -225,7 +219,7 @@ public class X509ExtensionUtil {
             if ((requiredTags != null) && !requiredTags.equals("")) {
                 toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_REQUIRED_TAGS),
-                    false, new DERUTF8String(requiredTags)));
+                    false, requiredTags));
             }
 
         }

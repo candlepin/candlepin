@@ -31,7 +31,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.bouncycastle.asn1.DERUTF8String;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Content;
@@ -362,8 +361,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new HashMap<String, X509ExtensionWrapper>();
 
         for (X509ExtensionWrapper ext : contentExtensions) {
-            encodedContent.put(
-                ((DERUTF8String) ext.getAsn1Encodable()).getString(), ext);
+            encodedContent.put(ext.getValue(), ext);
         }
         return encodedContent;
     }
@@ -446,8 +444,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             }
 
             return encodedContent.containsKey("1.3.6.1.4.1.2312.9.4.11") &&
-                ((DERUTF8String) encodedContent.get("1.3.6.1.4.1.2312.9.4.11")
-                    .getAsn1Encodable()).toString()
+                encodedContent.get("1.3.6.1.4.1.2312.9.4.11")
+                    .getValue()
                     .equals(ENTITLEMENT_QUANTITY);
         }
     }
@@ -472,8 +470,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             }
 
             return encodedContent.containsKey(oid) &&
-                ((DERUTF8String) encodedContent.get(oid).getAsn1Encodable())
-                    .toString().equals(value);
+                encodedContent.get(oid).getValue().equals(value);
         }
     }
 

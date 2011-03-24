@@ -25,6 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,10 +49,11 @@ public class CertificateRevocationListTaskTest {
      
     @Mock private CrlGenerator generator; 
     @Mock private Config config;
+    @Mock private PKIUtility pkiUtility;
 
     @Before
     public void init() {
-        this.task = new CertificateRevocationListTask(generator, config);
+        this.task = new CertificateRevocationListTask(generator, config, pkiUtility);
     }
 
     @Test(expected = JobExecutionException.class)
@@ -74,6 +76,7 @@ public class CertificateRevocationListTaskTest {
         X509CRL crl = mock(X509CRL.class);
         when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
         when(generator.updateCRL(any(X509CRL.class))).thenReturn(crl);
+        when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
         task.execute(null);
         File f = new File("/tmp/biteme.crl");
         assertTrue(f.exists());
@@ -92,6 +95,7 @@ public class CertificateRevocationListTaskTest {
             X509CRL crl = mock(X509CRL.class);
             when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
             when(generator.updateCRL(any(X509CRL.class))).thenReturn(crl);
+            when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
 
             task.execute(null);
             assertTrue(f.length() > 0);

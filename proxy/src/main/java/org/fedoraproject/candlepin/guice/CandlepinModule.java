@@ -37,8 +37,8 @@ import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
-import org.fedoraproject.candlepin.pki.impl.CandlepinPKIReader;
-import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
+import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIReader;
+import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EnforcerDispatcher;
 import org.fedoraproject.candlepin.policy.PoolRules;
@@ -110,8 +110,8 @@ public class CandlepinModule extends AbstractModule {
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(Config.class);
-        bind(PKIUtility.class).to(CandlepinPKIUtility.class).asEagerSingleton();
-        bind(PKIReader.class).to(CandlepinPKIReader.class).asEagerSingleton();
+        bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
+        bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
         bind(X509ExtensionUtil.class);
         bind(CrlGenerator.class);
         bind(ConsumerResource.class);
@@ -152,8 +152,6 @@ public class CandlepinModule extends AbstractModule {
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
         bind(JobCleaner.class);
-        bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
-            .toInstance("SHA1withRSA");
                     
         bind(Exporter.class).asEagerSingleton();
         bind(MetaExporter.class);

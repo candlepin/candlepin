@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.security.cert.CRLException;
 import java.security.cert.X509CRL;
 
@@ -25,11 +24,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.bouncycastle.openssl.PEMWriter;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
+import org.fedoraproject.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
 
@@ -40,10 +39,12 @@ import com.google.inject.Inject;
 public class CrlResource {
 
     private CrlGenerator crlGenerator;
+    private PKIUtility pkiUtility;
     
     @Inject
-    public CrlResource(CrlGenerator crlGenerator) {
+    public CrlResource(CrlGenerator crlGenerator, PKIUtility pkiUtility) {
         this.crlGenerator = crlGenerator;
+        this.pkiUtility = pkiUtility;
     }
     
     /**
@@ -58,13 +59,6 @@ public class CrlResource {
         throws CRLException, IOException {
         
         X509CRL crl = this.crlGenerator.createCRL();
-        
-        StringWriter stringWriter = new StringWriter();
-        PEMWriter pemWriter = new PEMWriter(stringWriter);
-        
-        pemWriter.writeObject(crl);
-        pemWriter.close();
-        
-        return stringWriter.toString();
+        return new String(pkiUtility.getPemEncoded(crl));
     }
 }

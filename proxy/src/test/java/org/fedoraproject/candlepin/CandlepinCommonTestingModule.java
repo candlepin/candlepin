@@ -35,7 +35,7 @@ import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
-import org.fedoraproject.candlepin.pki.impl.CandlepinPKIUtility;
+import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
@@ -102,7 +102,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(DateSource.class).to(DateSourceForTesting.class)
             .asEagerSingleton();
         bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
-        bind(PKIUtility.class).to(CandlepinPKIUtility.class);
+        bind(PKIUtility.class).to(BouncyCastlePKIUtility.class);
         bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
@@ -139,8 +139,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(EnforceAccessControl.class), crudInterceptor);
         bind(CertificateRevocationListTask.class);
-        bind(String.class).annotatedWith(Names.named("crlSignatureAlgo"))
-            .toInstance("SHA1withRSA");
         // temporary
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);
