@@ -57,7 +57,32 @@ import org.fedoraproject.candlepin.util.Util;
 import com.google.inject.Inject;
 
 /**
- * CandlepinPKIUtility
+ * The default {@link PKIUtility} for Candlepin.
+ * This class implements methods to create X509 Certificates, X509 CRLs, encode
+ * objects in PEM format (for saving to the db or sending to the client), and
+ * decode raw ASN.1 DER values (as read from a Certificate/CRL).
+ * 
+ * All code that imports bouncycastle should live either in this module,
+ * or in {@link BouncyCastlePKIReader}
+ * 
+ * (March 24, 2011) Notes on implementing a PKIUtility with NSS/JSS:
+ * 
+ * JSS provides classes and functions to generate X509Certificates (see CertificateInfo,
+ * for example).
+ * 
+ * PEM encoding requires us to determine the object type (which we know), add the correct
+ * header and footer to the output, base64 encode the DER for the object, and line wrap
+ * the base64 encoding.
+ * 
+ * decodeDERValue should be simple, as JSS provides code to parse ASN.1, but I wasn't
+ * able to get it to work.
+ * 
+ * The big one is CRL generation. JSS has no code to generate CRLs in any format. We'll
+ * have to use the raw ASN.1 libraries to build up our own properly formatted CRL DER
+ * representation, then PEM encode it. 
+ * 
+ * See also {@link BouncyCastlePKIReader} for more notes on using NSS/JSS, and a note
+ * about not using bouncycastle as the JSSE provider.
  */
 public class BouncyCastlePKIUtility extends PKIUtility {
     protected static Logger log = Logger.getLogger(BouncyCastlePKIUtility.class);
