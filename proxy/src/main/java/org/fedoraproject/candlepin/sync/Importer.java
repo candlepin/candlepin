@@ -220,7 +220,8 @@ public class Importer {
         }
     }
     
-    @Transactional
+    @Transactional(rollbackOn = {IOException.class,
+            ImporterException.class, RuntimeException.class})
     public void importObjects(Owner owner, Map<String, File> importFiles)
         throws IOException, ImporterException {
         
