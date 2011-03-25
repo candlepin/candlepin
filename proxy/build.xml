@@ -23,6 +23,14 @@
     </sequential>
   </macrodef>
 
+  <taskdef name="schema" classname="org.hibernate.tool.ant.HibernateToolTask">
+    <classpath>
+      <fileset dir="${lib.dir}">
+        <include name="**/*.jar" />
+      </fileset>
+    </classpath>
+  </taskdef>
+
   <target name="why">
     <echo message="This is for building in an rpm environment," />
     <echo message="don't use otherwise. Please use buildr instead." />
@@ -126,6 +134,25 @@
         <exclude name="**/schemaSpy*.jar" />
       </lib>
     </war>
+  </target>
+
+  <target name="genschema" depends="compile">
+    <mkdir dir="${target.dir}/schema" />
+    <mkdir dir="${target.dir}/schema/quartz" />
+    <copy file="${res.main.dir}/META-INF/persistence.xml"
+          tofile="${target.dir}/classes/META-INF/persistence.xml" />
+    <schema destdir="${target.dir}/schema">
+      <classpath>
+        <path location="${target.dir}/classes" />
+      </classpath>
+      <jpaconfiguration persistenceunit="production" />
+      <hbm2ddl export="false" update="false" drop="false" create="true"
+               outputfilename="candlepin-proxy.sql" delimiter=";"
+               format="false" haltonerror="true" />
+    </schema>
+    <copy todir="${target.dir}/schema/quartz">
+      <fileset dir="${cp-home}/code/schema/quartz" />
+    </copy>
   </target>
 
   <target name="clean">

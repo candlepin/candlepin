@@ -262,15 +262,15 @@ define "candlepin" do
   task :genschema do
     begin
       ant('gen-schema') do |ant|
-        rm_rf 'target/schemagen'
-        mkdir_p 'target/schemagen'
+        rm_rf 'target/schema'
+        mkdir_p 'target/schema'
         filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
           :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
       
-        ant.schema :destdir=>'target/schemagen' do
+        ant.schema :destdir=>'target/schema' do
           ant.classpath :path=>_('target/classes')
           ant.jpaconfiguration :persistenceunit=>'production'
           ant.hbm2ddl :export=>'false', :update=>'false', :drop=>'false', :create=>'true', 
@@ -280,6 +280,8 @@ define "candlepin" do
     ensure
       rm_rf 'target/classes/META-INF'
     end
+    # copy over the quartz schema files
+    cp_r 'code/schema/quartz/', 'target/schema/quartz'
   end
 
   #

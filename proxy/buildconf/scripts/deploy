@@ -19,10 +19,10 @@ function gendb ()
     createdb -U candlepin candlepin
     evalrc $? "createdb failed"
 
-    psql -U candlepin candlepin < target/schemagen/candlepin-proxy.sql
+    psql -U candlepin candlepin < target/schema/candlepin-proxy.sql
     evalrc $? "schema creation failed"
 
-    psql -U candlepin < code/schema/quartz/tables_postgres.sql
+    psql -U candlepin < target/schema/quartz/tables_postgres.sql
     evalrc $? "quartz schema failed"
 }
 

@@ -64,24 +64,31 @@ Development libraries for candlepin integration
 %setup -q 
 
 %build
-ant -Dlibdir=/usr/share/candlepin/lib/ clean package
+ant -Dlibdir=/usr/share/candlepin/lib/ clean package genschema
 
 %install
 rm -rf $RPM_BUILD_ROOT
 # Create the directory structure required to lay down our files
 # common
+install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
+install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/
+install -m 755 code/setup/cpsetup $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpsetup
 touch $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
 
 # tomcat5
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/
+install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat5/
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/
+ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat5/keystore
 
 # tomcat6
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
+install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
+ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/keystore
 
 # jbossas
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
@@ -98,11 +105,18 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/log/%{name}
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/cache/%{name}
 
+# schema
+install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/schema/
+cp -r target/schema/* $RPM_BUILD_ROOT/%{_datadir}/%{name}/schema/
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+%{_datadir}/%{name}/cpsetup
+%{_datadir}/%{name}/schema/
+%{_sysconfdir}/%{name}/certs/
 
 %files jboss
 %defattr(-,jboss,jboss,-)
@@ -117,6 +131,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/%{name}
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
+%{_sysconfdir}/tomcat5/keystore
 
 %files tomcat6
 %defattr(644,tomcat,tomcat,775)
@@ -124,6 +139,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/%{name}
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
+%{_sysconfdir}/tomcat6/keystore
 
 %files devel
 %defattr(644,root,root,775)

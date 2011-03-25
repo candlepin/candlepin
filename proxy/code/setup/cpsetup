@@ -1,0 +1,187 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2010 Red Hat, Inc.
+#
+# This software is licensed to you under the GNU General Public License,
+# version 2 (GPLv2). There is NO WARRANTY for this software, express or
+# implied, including the implied warranties of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+# along with this software; if not, see
+# http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+#
+# Red Hat trademarks are not licensed under GPLv2. No permission is
+# granted to use or replicate Red Hat trademarks that are incorporated
+# in this software or its documentation.
+#
+
+import sys
+import commands
+import os.path, os
+import socket
+import re
+import time
+
+def run_command(command):
+    #debug(command)
+    (status, output) = commands.getstatusoutput(command)
+    if status > 0:
+        sys.stderr.write("\n########## ERROR ############\n")
+        sys.stderr.write("Error running command: %s\n" % command)
+        sys.stderr.write("Status code: %s\n" % status)
+        sys.stderr.write("Command output: %s\n" % output)
+        raise Exception("Error running command")
+    return output
+
+class TomcatSetup(object):
+    def __init__(self, conf_dir):
+        self.conf_dir = conf_dir
+        self.comment_pattern = '<!--\s*?\n*?<Connector port="8443".*?-->'
+        self.existing_pattern = '<Connector port="8443".*?/>'
+        self.https_conn = """
+    <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true"
+               maxThreads="150" scheme="https" secure="true"
+               clientAuth="want" SSLProtocol="TLS"
+               keystoreFile="conf/keystore"
+               truststoreFile="conf/keystore"
+               keystorePass="password"
+               keystoreType="PKCS12"
+               ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,
+                    TLS_RSA_WITH_AES_256_CBC_SHA,
+                    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
+                    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
+                    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
+                    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
+                    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
+                    TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA,
+                    TLS_ECDH_anon_WITH_AES_128_CBC_SHA,
+                    TLS_ECDH_anon_WITH_AES_256_CBC_SHA"
+               truststorePass="password" />"""
+
+
+    def _backup_config(self, conf_dir):
+        run_command('cp %s/server.xml %s/server.xml.original' % (conf_dir, conf_dir))
+
+    def _replace_current(self, original):
+        regex = re.compile(self.existing_pattern, re.DOTALL)
+        return regex.sub(self.https_conn, original)
+
+    def _replace_commented(self, original):
+        regex = re.compile(self.comment_pattern, re.DOTALL)
+        return regex.sub(self.https_conn, original)
+
+    def update_config(self):
+        self._backup_config(self.conf_dir)
+        original = open(os.path.join(self.conf_dir, 'server.xml'), 'r').read()
+
+        if re.search(self.comment_pattern, original, re.DOTALL):
+            updated = self._replace_commented(original)
+        else:
+            updated = self._replace_current(original)
+
+        config = open(os.path.join(self.conf_dir, 'server.xml'), 'w')
+        config.write(updated)
+        file.close
+
+    def restart(self):
+        run_command("/sbin/service tomcat6 restart")
+
+class CertSetup(object):
+    def __init__(self):
+        self.cert_home = '/etc/candlepin/certs'
+        self.ca_key_passwd = self.cert_home + '/candlepin-ca-password.txt'
+        self.ca_key = self.cert_home + '/candlepin-ca.key'
+        self.ca_upstream_cert = self.cert_home + '/candlepin-upstream-ca.crt'
+        self.ca_pub_key = self.cert_home + '/candlepin-ca-pub.key'
+        self.ca_cert = self.cert_home + '/candlepin-ca.crt'
+        self.keystore = self.cert_home + '/keystore'
+
+    def generate(self):
+        if not os.path.exists(self.cert_home):
+            run_command('sudo mkdir -p %s' % self.cert_home)
+
+        if os.path.exists(self.ca_key) and os.path.exists(self.ca_cert):
+            print("Certificates are already present.")
+            return
+
+        print("Creating CA private key password")
+        output = run_command('sudo su -c "echo $RANDOM > %s"' % self.ca_key_passwd)
+        print(output)
+        print("Creating CA private key")
+        output = run_command('sudo openssl genrsa -out %s -passout "file:%s" 1024' % (self.ca_key, self.ca_key_passwd))
+        print(output)
+        print("Creating CA public key")
+        output = run_command('sudo openssl rsa -pubout -in %s -out %s' % (self.ca_key, self.ca_pub_key))
+        print(output)
+        print("Creating CA certificate")
+        output = run_command('sudo openssl req -new -x509 -days 365 -key %s -out %s -subj "/CN=%s/C=US/L=Raleigh/"' % (self.ca_key, self.ca_cert, socket.gethostname()))
+        print(output)
+        output = run_command('sudo openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s -caname root -chain -password pass:password' % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
+        print(output)
+        output = run_command('sudo cp %s %s' % (self.ca_cert, self.ca_upstream_cert))
+        print(output)
+        output = run_command('sudo chmod a+r %s' % self.keystore)
+        print(output)
+
+class DbSetup(object):
+    def __init__(self, username, db):
+        self.username = username
+        self.db = db
+
+    def _dropdb(self):
+        command = "dropdb -U %s %s" % (self.username, self.db)
+        (status, output) = commands.getstatusoutput(command)
+        if status > 0 and output.find('does not exist') > 0:
+            return output
+        elif status > 0:
+            sys.stderr.write("\n########## ERROR ############\n")
+            sys.stderr.write("Error running command: %s\n" % command)
+            sys.stderr.write("Status code: %s\n" % status)
+            sys.stderr.write("Command output: %s\n" % output)
+            raise Exception("Error running command")
+
+    def _createdb(self):
+        run_command("createdb -U %s %s" % (self.username, self.db))
+
+    def _runschema(self):
+        run_command("psql -U %s %s < /usr/share/candlepin/schema/candlepin-proxy.sql"
+            % (self.username, self.db))
+        run_command("psql -U %s < /usr/share/candlepin/schema/quartz/tables_postgres.sql" % self.username)
+
+    def initdb(self):
+        self._dropdb()
+        self._createdb()
+        self._runschema()
+
+    def configurecp(self):
+        f = open('/etc/candlepin/candlepin.conf', 'w')
+        f.write('jpa.config.hibernate.connection.driver_class=org.postgresql.Driver\n')
+        f.write('jpa.config.hibernate.connection.url=jdbc:postgresql:candlepin\n')
+        f.write('jpa.config.hibernate.hbm2ddl.auto=validate\n')
+        f.write('jpa.config.hibernate.connection.username=candlepin\n')
+        f.write('jpa.config.hibernate.connection.password=candlepin\n')
+        f.close()
+
+def main(argv):
+    dbsetup = DbSetup("candlepin", "candlepin")
+    dbsetup.initdb()
+    dbsetup.configurecp()
+
+    certsetup = CertSetup()
+    certsetup.generate()
+
+    tsetup = TomcatSetup('/etc/tomcat6')
+    tsetup.update_config()
+    tsetup.restart()
+
+    print "Waiting for tomcat to restart..."
+    time.sleep(5)
+
+    run_command("wget -qO- http://localhost:8080/candlepin/admin/init")
+
+    print "Candlepin has been configured."
+
+#
+# MAIN
+#
+if __name__ == "__main__":
+    main(sys.argv[1:])
