@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
@@ -153,6 +154,11 @@ public class ProductResource {
         if (product == null) {
             throw new NotFoundException(
                 i18n.tr("Product with UUID '{0}' could not be found", pid));
+        }
+        if (product.getSubscriptions() != null && product.getSubscriptions().size() > 0) {
+            throw new BadRequestException(
+                i18n.tr("Product with UUID '{0}' cannot be deleted " + 
+                    "while subscriptions exist.", pid));
         }
 
         prodAdapter.deleteProduct(product);
