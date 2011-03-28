@@ -341,8 +341,9 @@ class Candlepin
     get("/consumers/#{consumer_id}")
   end
 
-  def unbind_entitlement(eid)
-    delete("/consumers/#{@uuid}/entitlements/#{eid}")
+  def unbind_entitlement(eid, params={})
+    uuid = params[:uuid] || @uuid
+    delete("/consumers/#{uuid}/entitlements/#{eid}")
   end
 
   def list_subscriptions(owner_key, params={})
