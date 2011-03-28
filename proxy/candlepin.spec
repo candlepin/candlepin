@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.14
+Version: 0.2.15
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Mon Mar 28 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.15-1
+- Fixing pool update with virt_limit=unlimited (jharris@redhat.com)
+
 * Fri Mar 18 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.14-1
 - 688707: add X-Candlepin-Version header to all responses. (jesusr@redhat.com)
 - 670831: use subscription start date for start of certs instead of entitlement date (alikins@redhat.com)
