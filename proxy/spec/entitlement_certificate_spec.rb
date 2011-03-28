@@ -102,7 +102,7 @@ describe 'Entitlement Certificate' do
       sub = @cp.create_subscription(@owner.key, prod.id, 10)
       @cp.refresh_pools(@owner.key)
 
-      @system.consume_product(prod.id, 6)
+      @system.consume_product(prod.id, {:quantity => 6})
       sub.quantity = sub.quantity.to_i - 5
       @cp.update_subscription(sub)
 

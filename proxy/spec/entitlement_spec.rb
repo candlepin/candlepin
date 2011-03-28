@@ -51,7 +51,7 @@ describe 'Entitlements' do
 
   it 'should allow consumption of quatity 10' do
     pool = find_pool @virt
-    @system.consume_pool(pool.id, 10)
+    @system.consume_pool(pool.id, {:quantity => 10})
 
     @system.list_entitlements.first.quantity.should == 10
   end

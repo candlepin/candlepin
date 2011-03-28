@@ -42,8 +42,8 @@ consumer = org_admin_cp.register(random_string('dummyconsumer'), "candlepin",
   nil, {}, nil)
 consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'],
   HOST, PORT)
-consumer_cp.consume_pool(pool1['id'], 20)
-consumer_cp.consume_pool(pool2['id'], 30)
+consumer_cp.consume_pool(pool1['id'], {:quantity => 20})
+consumer_cp.consume_pool(pool2['id'], {:quantity => 30})
 
 # Make a temporary directory where we can safely extract our archive:
 tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-export'))
