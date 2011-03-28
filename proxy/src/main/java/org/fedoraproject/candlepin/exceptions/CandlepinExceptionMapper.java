@@ -79,14 +79,16 @@ public class CandlepinExceptionMapper implements
             responseMediaType = headerMediaTypes.size() == 0 ? MediaType.TEXT_PLAIN_TYPE :
                 getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
         }
-        if(responseMediaType == null || (responseMediaType.getType().equals("*") && responseMediaType.getSubtype().equals("*"))){
+        if (responseMediaType == null || (responseMediaType.getType().equals("*") && 
+                responseMediaType.getSubtype().equals("*"))) {
             responseMediaType = MediaType.APPLICATION_JSON_TYPE;
         }
 
         ResponseBuilder bldr = null;
         // Resteasy wraps the actual exception sometimes
         Throwable cause = exception.getCause() == null ? exception : exception.getCause();
-        if (cause instanceof CandlepinException || exception instanceof CandlepinException) {
+        if (cause instanceof CandlepinException || 
+                exception instanceof CandlepinException) {
             bldr = getBuilder((CandlepinException) cause, responseMediaType);
         }
         else if (cause instanceof DefaultOptionsMethodException) {
