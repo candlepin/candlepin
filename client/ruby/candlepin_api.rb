@@ -336,6 +336,12 @@ class Candlepin
     get(query)
   end
 
+  def list_owner_consumers(owner_key)
+    query = "/owners/#{owner_key}/consumers"
+    get(query)
+  end
+
+
   def get_consumer(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}")
