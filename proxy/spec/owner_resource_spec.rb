@@ -22,7 +22,7 @@ describe 'Owner Resource' do
     }
     
     lambda do
-      @cp.create_owner(random_string('child owner'), fake_parent_owner)
+      @cp.create_owner(random_string('child owner'), {:parent => fake_parent_owner})
     end.should raise_exception(RestClient::BadRequest)
   end
 

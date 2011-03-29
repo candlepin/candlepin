@@ -106,10 +106,12 @@ class Candlepin
     get("/owners/#{owner}/info")
   end
 
-  def create_owner(owner_name, parent=nil)
+  def create_owner(key, params={})
+    parent = params[:parent] || nil
+    name = params[:name] || key
     owner = {
-      'key' => owner_name,
-      'displayName' => owner_name
+      'key' => key,
+      'displayName' => name
     }
     owner['parentOwner'] = parent if !parent.nil?
     post('/owners', owner)

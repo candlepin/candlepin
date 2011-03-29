@@ -24,7 +24,7 @@ module CandlepinMethods
   # up. Note that this entails cleanup of all objects beneath that owner, so
   # most other objects can be created using the ruby API.
   def create_owner(owner_name, parent=nil)
-    owner = @cp.create_owner(owner_name, parent)
+    owner = @cp.create_owner(owner_name, {:parent => parent})
     @owners << owner
 
     return owner
