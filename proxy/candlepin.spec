@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.3.1
+Version: 0.3.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Mar 29 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.2-1
+- subpackages should require candlepin. (jesusr@redhat.com)
+- Allow Ruby API owner creation with a name and key. (dgoodwin@redhat.com)
+- update readme to explain what's in this directory. (jesusr@redhat.com)
+- changed the way the content type for the return message is handled. Allows
+  the default to JSON to work correctly. (wpoteat@redhat.com)
+
 * Mon Mar 28 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.1-1
 - util to generate an export zip that is consuming all products (mmccune@redhat.com)
 - 684941: Added exception handling for deletion of product with subscription. (wpoteat@wpoteat.desktop)
