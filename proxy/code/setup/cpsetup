@@ -154,6 +154,7 @@ class DbSetup(object):
 
     def configurecp(self):
         f = open('/etc/candlepin/candlepin.conf', 'w')
+        f.write('jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect\n')
         f.write('jpa.config.hibernate.connection.driver_class=org.postgresql.Driver\n')
         f.write('jpa.config.hibernate.connection.url=jdbc:postgresql:candlepin\n')
         f.write('jpa.config.hibernate.hbm2ddl.auto=validate\n')
