@@ -16,7 +16,6 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Vendor: Red Hat, Inc
 BuildArch: noarch
 
-Requires: candlepin-webapp
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
@@ -29,7 +28,7 @@ Candlepin is an open source entitlement management system.
 %package tomcat5
 Summary: Candlepin web application for tomcat5
 Requires: tomcat5 >= 5.5
-Provides: candlepin-webapp
+Requires: candlepin
 Group: Internet/Applications
 
 %description tomcat5
@@ -38,7 +37,7 @@ Candlepin web application for tomcat5
 %package tomcat6
 Summary: Candlepin web application for tomcat6
 Requires: tomcat6
-Provides: candlepin-webapp
+Requires: candlepin
 Group: Internet/Applications
 
 %description tomcat6
@@ -47,7 +46,7 @@ Candlepin web application for tomcat6
 %package jboss
 Summary: Candlepin web application for jboss
 Requires: jbossas >= 4.3
-Provides: candlepin-webapp
+Requires: candlepin
 Group: Internet/Applications
 
 %description jboss
