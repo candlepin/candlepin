@@ -320,7 +320,8 @@ public class ConsumerResource {
     @Transactional
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public void updateConsumer(@PathParam("consumer_uuid") String uuid,
-        Consumer consumer) {
+        Consumer consumer,
+        @Context Principal principal) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
 
         log.debug("Updating");
