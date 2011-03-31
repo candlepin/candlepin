@@ -104,23 +104,16 @@ class CertSetup(object):
             return
 
         print("Creating CA private key password")
-        output = run_command('sudo su -c "echo $RANDOM > %s"' % self.ca_key_passwd)
-        print(output)
+        run_command('sudo su -c "echo $RANDOM > %s"' % self.ca_key_passwd)
         print("Creating CA private key")
-        output = run_command('sudo openssl genrsa -out %s -passout "file:%s" 1024' % (self.ca_key, self.ca_key_passwd))
-        print(output)
+        run_command('sudo openssl genrsa -out %s -passout "file:%s" 1024' % (self.ca_key, self.ca_key_passwd))
         print("Creating CA public key")
-        output = run_command('sudo openssl rsa -pubout -in %s -out %s' % (self.ca_key, self.ca_pub_key))
-        print(output)
+        run_command('sudo openssl rsa -pubout -in %s -out %s' % (self.ca_key, self.ca_pub_key))
         print("Creating CA certificate")
-        output = run_command('sudo openssl req -new -x509 -days 365 -key %s -out %s -subj "/CN=%s/C=US/L=Raleigh/"' % (self.ca_key, self.ca_cert, socket.gethostname()))
-        print(output)
-        output = run_command('sudo openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s -caname root -chain -password pass:password' % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
-        print(output)
-        output = run_command('sudo cp %s %s' % (self.ca_cert, self.ca_upstream_cert))
-        print(output)
-        output = run_command('sudo chmod a+r %s' % self.keystore)
-        print(output)
+        run_command('sudo openssl req -new -x509 -days 365 -key %s -out %s -subj "/CN=%s/C=US/L=Raleigh/"' % (self.ca_key, self.ca_cert, socket.gethostname()))
+        run_command('sudo openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s -caname root -chain -password pass:password' % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
+        run_command('sudo cp %s %s' % (self.ca_cert, self.ca_upstream_cert))
+        run_command('sudo chmod a+r %s' % self.keystore)
 
 class DbSetup(object):
     def __init__(self, username, db):
@@ -128,6 +121,7 @@ class DbSetup(object):
         self.db = db
 
     def _dropdb(self):
+        print("Dropping candlepin database")
         command = "dropdb -U %s %s" % (self.username, self.db)
         (status, output) = commands.getstatusoutput(command)
         if status > 0 and output.find('does not exist') > 0:
@@ -140,9 +134,11 @@ class DbSetup(object):
             raise Exception("Error running command")
 
     def _createdb(self):
+        print("Creating candlepin database")
         run_command("createdb -U %s %s" % (self.username, self.db))
 
     def _runschema(self):
+        print("Loading candlepin schema")
         run_command("psql -U %s %s < /usr/share/candlepin/schema/candlepin-proxy.sql"
             % (self.username, self.db))
         run_command("psql -U %s < /usr/share/candlepin/schema/quartz/tables_postgres.sql" % self.username)
@@ -153,6 +149,7 @@ class DbSetup(object):
         self._runschema()
 
     def configurecp(self):
+        print("Writing configuration file")
         f = open('/etc/candlepin/candlepin.conf', 'w')
         f.write('jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect\n')
         f.write('jpa.config.hibernate.connection.driver_class=org.postgresql.Driver\n')
@@ -174,12 +171,12 @@ def main(argv):
     tsetup.update_config()
     tsetup.restart()
 
-    print "Waiting for tomcat to restart..."
+    print("Waiting for tomcat to restart...")
     time.sleep(5)
 
     run_command("wget -qO- http://localhost:8080/candlepin/admin/init")
 
-    print "Candlepin has been configured."
+    print("Candlepin has been configured.")
 
 #
 # MAIN
