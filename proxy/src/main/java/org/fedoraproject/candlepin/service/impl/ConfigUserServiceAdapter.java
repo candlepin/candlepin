@@ -175,6 +175,11 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
+    public boolean isReadyOnly() {
+        return true;
+    }
+
+    @Override
     public User createUser(User user) {
         throw new UnsupportedOperationException(
             "This implementation does not support creating new Users!");

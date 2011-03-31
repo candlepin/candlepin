@@ -97,6 +97,12 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
+    public boolean isReadyOnly() {
+        // We only read from LDAP
+        return true;
+    }
+
+    @Override
     public User createUser(User user) {
         return user;
         //throw new UnsupportedOperationException(

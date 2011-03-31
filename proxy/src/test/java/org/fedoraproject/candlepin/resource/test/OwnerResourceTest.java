@@ -236,6 +236,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
     }
 
+    @Test
     public void testComplexDeleteOwner() throws Exception {
 
         // Create some consumers:

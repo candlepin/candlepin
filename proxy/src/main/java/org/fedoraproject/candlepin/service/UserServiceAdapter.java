@@ -37,6 +37,15 @@ public interface UserServiceAdapter {
     Owner getOwner(String username);
 
     List<Role> getRoles(String username);
+
+    /**
+     * Does this user service implementation support creation/deletion
+     * of {@link User}s?
+     *
+     * @return if this implementation prohibits user creation/deletion via
+     *          this API
+     */
+    boolean isReadyOnly();
     
     User createUser(User user);
     

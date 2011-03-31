@@ -236,8 +236,10 @@ public class OwnerResource {
 
     private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: " + owner);
-        for (User u : userService.listByOwner(owner)) {
-            userService.deleteUser(u);
+        if (!userService.isReadyOnly()) {
+            for (User u : userService.listByOwner(owner)) {
+                userService.deleteUser(u);
+            }
         }
         for (Consumer c : consumerCurator.listByOwner(owner)) {
             log.info("Deleting consumer: " + c);
