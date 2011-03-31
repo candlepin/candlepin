@@ -10,7 +10,7 @@
 function gen_api() {
     local out_file=$1
     buildr -s clean compile candlepin:apicrawl
-    cp target/candlepin_methods.json $out_file
+    cat target/candlepin_methods.json | json_reformat > $out_file
 }
 
 function diff_apis() {
