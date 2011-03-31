@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import org.junit.Ignore;
 
 /**
  * Test Class for the Util class
@@ -157,6 +158,7 @@ public class UtilTest {
         assertFalse(curyear == c.get(Calendar.YEAR));
     }
 
+    @Ignore("This will fail on the last day of each month!")
     @Test
     public void tomorrow() {
         Calendar c = Calendar.getInstance();
@@ -166,6 +168,7 @@ public class UtilTest {
         assertEquals(today + 1, c.get(Calendar.DAY_OF_MONTH));
     }
 
+    @Ignore("This will fail on the first day of each month!")
     @Test
     public void yesterday() {
         Calendar c = Calendar.getInstance();
@@ -198,6 +201,7 @@ public class UtilTest {
         assertEquals(past, c.get(Calendar.DAY_OF_MONTH));
     }
 
+    @Ignore("This will fail on the last day of each month, or any time after July!")
     @Test
     public void addToFields() {
         Calendar c = Calendar.getInstance();
