@@ -14,12 +14,27 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
+import org.fedoraproject.candlepin.util.Util;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.MapKeyManyToMany;
+import org.hibernate.annotations.ParamDef;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -37,20 +52,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
-import org.fedoraproject.candlepin.util.Util;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.MapKeyManyToMany;
-import org.hibernate.annotations.ParamDef;
 
 
 /**
@@ -375,6 +376,14 @@ public class Consumer extends AbstractHibernateObject
         this.facts.put(name, value);
     }
 
+
+    public int getEntitlementCount() {
+        int total = 0;
+        for (Entitlement ent : this.getEntitlements()) {
+            total += ent.getQuantity();
+        }
+        return total;
+    }
     /**
      * @return Returns the entitlements.
      */
