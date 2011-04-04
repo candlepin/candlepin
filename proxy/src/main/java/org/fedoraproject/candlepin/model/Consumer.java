@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.Util;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Filter;
@@ -84,6 +85,7 @@ import javax.xml.bind.annotation.XmlTransient;
     )
 })
 @Table(name = "cp_consumer")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Consumer extends AbstractHibernateObject
     implements AccessControlEnforced, Linkable {
 
@@ -376,6 +378,9 @@ public class Consumer extends AbstractHibernateObject
         this.facts.put(name, value);
     }
 
+    public void setEntitlementCount(int ignore) {
+
+    }
 
     public int getEntitlementCount() {
         int total = 0;
