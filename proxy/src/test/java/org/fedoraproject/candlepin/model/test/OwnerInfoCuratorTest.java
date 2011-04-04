@@ -16,9 +16,6 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -30,8 +27,12 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * OwnerInfoCuratorTest
@@ -212,6 +213,65 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         
         assertEquals(expectedConsumers, info.getConsumerCounts());
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
+    }
+
+    @Test
+    public void testOwnerPoolEntitlementCountPoolOnly() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
+        pool1.setAttribute("requires_consumer_type", type.getLabel());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("system", 0);
+                put("domain", 1);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testOwnerPoolEntitlementCountProductOnly() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("requires_consumer_type", "");
+        Product prod = productCurator.lookupById(pool1.getProductId());
+        prod.setAttribute("requires_consumer_type", type.getLabel());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("system", 1);
+                put("domain", 0);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testOwnerPoolEntitlementCountBoth() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
+        ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("requires_consumer_type", type.getLabel());
+        Product prod = productCurator.lookupById(pool1.getProductId());
+        prod.setAttribute("requires_consumer_type", type2.getLabel());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("system", 0);
+                put("domain", 1);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getConsumerTypeCountByPool());
     }
 
 }

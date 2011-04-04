@@ -16,23 +16,25 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * OwnerInfo
- * 
- * NOTE: this class only contains dynamic values. it should *not* be saved to the db.
+ * OwnerInfo NOTE: this class only contains dynamic values. it should *not* be
+ * saved to the db.
  */
 public class OwnerInfo {
 
     private Map<String, Integer> consumerCounts;
     private Map<String, Integer> entitlementsConsumedByType;
-    
+    private Map<String, Integer> consumerTypeCountByPool;
+
     public OwnerInfo() {
         consumerCounts = new HashMap<String, Integer>();
         entitlementsConsumedByType = new HashMap<String, Integer>();
+        consumerTypeCountByPool = new HashMap<String, Integer>();
     }
-    
+
     public Map<String, Integer> getConsumerCounts() {
         return consumerCounts;
     }
@@ -40,9 +42,27 @@ public class OwnerInfo {
     public Map<String, Integer> getEntitlementsConsumedByType() {
         return entitlementsConsumedByType;
     }
-    
+
+    public Map<String, Integer> getConsumerTypeCountByPool() {
+        return consumerTypeCountByPool;
+    }
+
     public void addTypeTotal(ConsumerType type, int consumers, int entitlements) {
         consumerCounts.put(type.getLabel(), consumers);
         entitlementsConsumedByType.put(type.getLabel(), entitlements);
+    }
+
+    public void addToConsumerTypeCountByPool(ConsumerType type) {
+        Integer count = consumerTypeCountByPool.get(type.getLabel());
+        if (count == null) {
+            count = 0;
+        }
+        consumerTypeCountByPool.put(type.getLabel(), ++count);
+    }
+
+    public void setConsumerTypesByPool(List<ConsumerType> consumerTypes) {
+        for (ConsumerType c : consumerTypes) {
+            consumerTypeCountByPool.put(c.getLabel(), 0);
+        }
     }
 }
