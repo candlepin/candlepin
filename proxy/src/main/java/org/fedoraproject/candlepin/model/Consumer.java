@@ -378,10 +378,6 @@ public class Consumer extends AbstractHibernateObject
         this.facts.put(name, value);
     }
 
-    public void setEntitlementCount(int ignore) {
-
-    }
-
     public int getEntitlementCount() {
         int total = 0;
         for (Entitlement ent : this.getEntitlements()) {
