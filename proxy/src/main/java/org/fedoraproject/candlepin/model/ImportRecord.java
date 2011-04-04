@@ -58,6 +58,7 @@ public class ImportRecord extends AbstractHibernateObject {
     private Status status;
     private String statusMessage;
 
+    @SuppressWarnings("unused")
     private ImportRecord() {
         // JPA
     }
