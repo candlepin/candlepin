@@ -14,45 +14,51 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.List;
-
-import javax.persistence.EntityManager;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import java.util.List;
+
+import javax.persistence.EntityManager;
 
 /**
  * OwnerInfoCurator
  */
+
 public class OwnerInfoCurator {
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
-    
+    private ProductCurator productCurator;
+
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
-        ConsumerTypeCurator consumerTypeCurator) {
+        ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator) {
         this.entityManager = entityManager;
         this.consumerTypeCurator = consumerTypeCurator;
+        this.productCurator = productCurator;
     }
 
     public OwnerInfo lookupByOwner(Owner owner) {
         OwnerInfo info = new OwnerInfo();
-        
+
         List<ConsumerType> types = consumerTypeCurator.listAll();
         for (ConsumerType type : types) {
-            Criteria c = currentSession().createCriteria(Consumer.class).add(
-                Restrictions.eq("owner", owner)).add(Restrictions.eq("type", type));
+            Criteria c = currentSession().createCriteria(Consumer.class)
+                .add(Restrictions.eq("owner", owner))
+                .add(Restrictions.eq("type", type));
             c.setProjection(Projections.rowCount());
             int consumers = (Integer) c.uniqueResult();
-            
-            c = currentSession().createCriteria(Entitlement.class).setProjection(
-                Projections.sum("quantity")).createCriteria("consumer").
-                add(Restrictions.eq("owner", owner)).add(Restrictions.eq("type", type));
+
+            c = currentSession().createCriteria(Entitlement.class)
+                .setProjection(Projections.sum("quantity"))
+                .createCriteria("consumer")
+                .add(Restrictions.eq("owner", owner))
+                .add(Restrictions.eq("type", type));
 
             // If there's no rows summed, quantity returns null.
             Object result = c.uniqueResult();
@@ -60,13 +66,31 @@ public class OwnerInfoCurator {
             if (result != null) {
                 entitlements = (Integer) result;
             }
-            
+
             info.addTypeTotal(type, consumers, entitlements);
         }
-                
+
+        info.setConsumerTypesByPool(consumerTypeCurator.listAll());
+        for (Pool p : owner.getPools()) {
+            String conType = p.getAttributeValue("requires_consumer_type");
+            if (conType != null && !conType.trim().equals("")) {
+                ConsumerType ct = consumerTypeCurator.lookupByLabel(conType);
+                info.addToConsumerTypeCountByPool(ct);
+                continue;
+            }
+
+            String prodId = p.getProductId();
+            Product prod = productCurator.lookupById(prodId);
+            conType = prod.getAttributeValue("requires_consumer_type");
+            if (conType != null && !conType.trim().equals("")) {
+                ConsumerType ct = consumerTypeCurator.lookupByLabel(conType);
+                info.addToConsumerTypeCountByPool(ct);
+            }
+        }
+
         return info;
     }
-    
+
     protected Session currentSession() {
         Session sess = (Session) entityManager.get().getDelegate();
         return sess;
