@@ -160,6 +160,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * 
      * @param userName the username to match, or null to ignore 
      * @param type the type to match, or null to ignore
+     * @param owner Optional owner to filter on, pass null to skip.
      * @return a list of matching Consumers
      */
     @AllowRoles(roles = {Role.SUPER_ADMIN, Role.OWNER_ADMIN})
@@ -167,7 +168,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     @EnforceAccessControl
     public List<Consumer> listByUsernameAndType(String userName,
-        ConsumerType type) {
+        ConsumerType type, Owner owner) {
+        
         Criteria criteria = currentSession().createCriteria(Consumer.class);
 
         if (userName != null) {
@@ -175,6 +177,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         if (type != null) {
             criteria.add(Restrictions.eq("type", type));
+        }
+        if (owner != null) {
+            criteria.add(Restrictions.eq("owner", owner));
         }
 
         return (List<Consumer>) criteria.list();

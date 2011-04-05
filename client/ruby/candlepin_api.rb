@@ -335,6 +335,7 @@ class Candlepin
     query = "/consumers?"
     query << "username=#{args[:username]}&" if args[:username]
     query << "type=#{args[:type]}" if args[:type]
+    query << "owner=#{args[:owner]}" if args[:owner]
     get(query)
   end
 

@@ -37,6 +37,20 @@ describe 'Consumer Resource' do
     user2.list_consumers.length.should == 1
   end
 
+  it 'lets a super admin filter consumers by owner' do
+    owner1 = create_owner random_string('test_owner1')
+    user1 = user_client(owner1, random_string("user1"))
+    consumer1 = consumer_client(user1, random_string("consumer1"))
+
+    owner2 = create_owner random_string('test_owner2')
+    user2 = user_client(owner2, random_string("user2"))
+    consumer2 = consumer_client(user2, random_string("consumer2"))
+
+    @cp.list_consumers.size.should > 1
+    @cp.list_consumers({:owner => owner1.key}).size.should == 1
+  end
+
+
   it 'lets an owner see only their system consumer types' do
     owner1 = create_owner random_string('test_owner1')
     user1 = user_client(owner1, random_string("user1"))

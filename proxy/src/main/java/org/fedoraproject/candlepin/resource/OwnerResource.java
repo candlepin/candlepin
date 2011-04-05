@@ -433,14 +433,15 @@ public class OwnerResource {
     @Path("{owner_key}")
     @Transactional
     @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public void updateOwner(@PathParam("owner_key") String key,
+    public Owner updateOwner(@PathParam("owner_key") String key,
         Owner owner) {
         Owner toUpdate = findOwner(key);
         log.debug("Updating");
         toUpdate.setDisplayName(owner.getDisplayName());
         toUpdate.setKey(owner.getKey());
         toUpdate.setParentOwner(owner.getParentOwner());
-        ownerCurator.merge(toUpdate);    
+        ownerCurator.merge(toUpdate);
+        return toUpdate;
     }
 
 

@@ -157,16 +157,26 @@ public class ConsumerResource {
     @Wrapped(element = "consumers")
     @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Consumer> list(@QueryParam("username") String userName,
-        @QueryParam("type") String typeLabel) {
+        @QueryParam("type") String typeLabel, @QueryParam("owner") String ownerKey) {
         ConsumerType type = null;
         
         if (typeLabel != null) {
             type = lookupConsumerType(typeLabel);
         }
 
+        Owner owner = null;
+        if (ownerKey != null) {
+            owner = ownerCurator.lookupByKey(ownerKey);
+            
+            if (owner == null) {
+                throw new NotFoundException(
+                    i18n.tr("owner with key: {0} was not found.", ownerKey));
+            }
+        }
+        
         // We don't look up the user and warn if it doesn't exist here to not
         // give away usernames
-        return consumerCurator.listByUsernameAndType(userName, type);
+        return consumerCurator.listByUsernameAndType(userName, type, owner);
     }
 
     /**
