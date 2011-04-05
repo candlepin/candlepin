@@ -42,6 +42,7 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -79,6 +80,7 @@ import org.fedoraproject.candlepin.sync.Exporter;
 import org.fedoraproject.candlepin.util.Util;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -225,7 +227,7 @@ public class ConsumerResource {
             user = userService.findByLogin(userName);
         }
 
-        setOwner(user);
+        setupOwner(user, principal);
 
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
@@ -284,16 +286,40 @@ public class ConsumerResource {
         return CONSUMER_NAME_PATTERN.matcher(name).matches();
     }
 
-    private void setOwner(User user) {
+    /*
+     * During registration of new consumers we support an edge case where the user
+     * service may have authenticated a username/password for an owner which we have
+     * not yet created in the Candlepin database. If we detect this during
+     * registration we need to create the new owner, and adjust
+     * the principal that was created during authentication to carry it.
+     */
+    private void setupOwner(User user, Principal principal) {
         Owner owner = userService.getOwner(user.getUsername());
-        owner = ownerCurator.lookupByKey(owner.getKey());
-        if (owner == null) {
-            owner = userService.getOwner(user.getUsername());
-            ownerCurator.create(owner);
-            poolManager.refreshPools(owner);
+        Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
+
+        if (existingOwner == null) {
+            log.info("Creating new owner: " + owner.getKey());
+
+            // Need elevated privileges to create a new owner:
+            Principal systemPrincipal = new SystemPrincipal();
+            ResteasyProviderFactory.pushContext(Principal.class,
+                systemPrincipal);
+
+            existingOwner = ownerCurator.create(owner);
+            poolManager.refreshPools(existingOwner);
+
+            ResteasyProviderFactory.popContextData(Principal.class);
+
+            // Set the new owner on the existing principal, which previously had a
+            // detached owner:
+            principal.setOwner(existingOwner);
+
+            // Restore the old principal having elevated privileges earlier:
+            ResteasyProviderFactory.pushContext(Principal.class,
+                principal);
         }
         
-        user.setOwner(owner);
+        user.setOwner(existingOwner);
     }
 
     private ConsumerType lookupConsumerType(String label) {

@@ -124,11 +124,10 @@ class BasicAuth implements AuthProvider {
                     "An owner does not exist for a null org id");
             }
 
-            Principal systemPrincipal = new SystemPrincipal();
-            ResteasyProviderFactory.pushContext(Principal.class,
-                systemPrincipal);
-            o = this.ownerCurator.create(owner);
-            ResteasyProviderFactory.popContextData(Principal.class);
+            log.warn("Creating principal for owner not yet in database: " +
+                owner.getKey());
+
+            o = owner;
         }
 
         return o;

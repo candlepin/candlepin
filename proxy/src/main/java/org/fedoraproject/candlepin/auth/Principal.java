@@ -40,6 +40,10 @@ public abstract class Principal implements Serializable {
         return owner;
     }
 
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
+
     public List<Role> getRoles() {
         return roles;
     }
