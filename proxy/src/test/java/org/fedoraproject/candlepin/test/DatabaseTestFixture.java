@@ -58,6 +58,7 @@ import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
+import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -85,6 +86,7 @@ public class DatabaseTestFixture {
     protected Injector injector;
     
     protected OwnerCurator ownerCurator;
+    protected UserCurator userCurator;
     protected ProductCurator productCurator;
     protected ProductCertificateCurator productCertificateCurator;
     protected ProductServiceAdapter productAdapter;
@@ -139,6 +141,7 @@ public class DatabaseTestFixture {
         emf = injector.getProvider(EntityManagerFactory.class).get();
         
         ownerCurator = injector.getInstance(OwnerCurator.class);
+        userCurator = injector.getInstance(UserCurator.class);
         productCurator = injector.getInstance(ProductCurator.class);
         productCertificateCurator = injector.getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);

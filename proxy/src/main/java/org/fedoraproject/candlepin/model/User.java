@@ -32,6 +32,8 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
+import org.fedoraproject.candlepin.util.Util;
+
 /**
  * Represents the user.
  *
@@ -58,8 +60,7 @@ public class User extends AbstractHibernateObject{
     @Column(nullable = false, unique = true)
     private String username;
 
-    // TODO: Hash!
-    private String password;
+    private String hashedPassword;
 
     private boolean superAdmin;
 
@@ -73,7 +74,7 @@ public class User extends AbstractHibernateObject{
     public User(Owner owner, String login, String password, boolean superAdmin) {
         this.owner = owner;
         this.username = login;
-        this.password = password;
+        this.hashedPassword = Util.hash(password);
         this.superAdmin = superAdmin;
     }
 
@@ -104,16 +105,16 @@ public class User extends AbstractHibernateObject{
         this.username = username;
     }
     /**
-     * @return the password
+     * @return the hashed password
      */
-    public String getPassword() {
-        return password;
+    public String getHashedPassword() {
+        return hashedPassword;
     }
     /**
      * @param password the password to set
      */
     public void setPassword(String password) {
-        this.password = password;
+        this.hashedPassword = Util.hash(password);
     }
     /**
      * @return the owner
@@ -149,7 +150,7 @@ public class User extends AbstractHibernateObject{
      */
     public String toString() {
         return new Formatter().format("User :{login: %s, password: %s}",
-                username, password).toString();
+                username, hashedPassword).toString();
     }
 
 }

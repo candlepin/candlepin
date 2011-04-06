@@ -56,8 +56,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     public void validationPass() {
         User user = new User(owner, "test_user", "mypassword");
         this.service.createUser(user);
-        
-        Assert.assertTrue(this.service.validateUser("test_user", "mypassword"));
+        Assert.assertTrue(this.service.validateUser("test_user",
+                           "mypassword"));
     }
     
     @Test

@@ -30,6 +30,7 @@ public class UserTest extends DatabaseTestFixture {
 
         String username = "TESTUSER";
         String password = "sekretpassword";
+        String hashedPassword = "b58db974af4ea7b7b1b51a999f93ab5b67173799";
         User user = new User(o, username, password);
 
         beginTransaction();
@@ -39,7 +40,7 @@ public class UserTest extends DatabaseTestFixture {
 
         User lookedUp = entityManager().find(User.class, user.getId());
         assertEquals(username, lookedUp.getUsername());
-        assertEquals(password, lookedUp.getPassword());
+        assertEquals(hashedPassword, lookedUp.getHashedPassword());
     }
 
 }

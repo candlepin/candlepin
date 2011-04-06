@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.util;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.ClosureUtils;
 import org.apache.log4j.Logger;
@@ -26,6 +27,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -271,6 +274,32 @@ public class Util {
         return builder.toString();
     }
     
+    public static String hash(String password) {
+        //This is secure because even if the salt is known, a cracker
+        //would still need to generate their own rainbow table, which
+        //is the same as brute-forcing the password in the first place.
+        
+        String salt = "b669e3274a43f20769d3dedf03e9ac180e160f92";
+        String combined = salt + password;
+
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-1");
+        }
+        catch (NoSuchAlgorithmException nsae) {
+            throw new RuntimeException(nsae);
+        }
+        byte[] sha1hash = new byte[40];
+        try {
+            md.update(combined.getBytes("UTF-8"), 0, combined.length());
+        }
+        catch (UnsupportedEncodingException uee) {
+            throw new RuntimeException(uee);
+        }
+
+        sha1hash = md.digest();
+        return new String(Hex.encodeHex(sha1hash));
+    }
 
     
 }

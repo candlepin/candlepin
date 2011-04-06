@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
@@ -76,9 +77,10 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     @Override
     public boolean validateUser(String username, String password) {
         User user = this.userCurator.findByLogin(username);
-    
-        if (user != null && password != null) {
-            return password.equals(user.getPassword());
+        String hashedPassword = Util.hash(password);
+        
+        if (user != null && password != null && hashedPassword != null) {
+            return hashedPassword.equals(user.getHashedPassword());
         }
         
         return false;

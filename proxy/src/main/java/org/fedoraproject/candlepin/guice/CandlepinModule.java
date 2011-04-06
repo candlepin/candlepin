@@ -47,6 +47,7 @@ import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
+import org.fedoraproject.candlepin.resource.UserResource;
 import org.fedoraproject.candlepin.resource.CertificateSerialResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
@@ -141,6 +142,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRulesProvider.class).asEagerSingleton();
         bind(JsRules.class).toProvider(JsRulesProvider.class);
+        bind(UserResource.class);
 
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);

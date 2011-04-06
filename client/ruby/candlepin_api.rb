@@ -84,6 +84,10 @@ class Candlepin
     put("#{path}/#{uuid}", consumer)
   end
 
+  def get_user_info(user)
+    get("/user/#{user}")
+  end
+
   def list_owners(params = {})
     path = "/owners"
     results = get(path)
