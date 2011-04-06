@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resteasy;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.codehaus.jackson.JsonGenerator;
@@ -37,19 +38,30 @@ public class CandlepinSerializer extends JsonSerializer<Linkable> {
         // If serializing a nested object, we just want to serialize ID and href, if the
         // object supports it.
         if (context.inObject()) {
-            Class<Linkable> c = (Class<Linkable>) obj.getClass();
             // Assuming here the getHref method exists, as this serializer is only
             // called for classes we register:
             try {
-                Method getHref = c.getMethod("getHref", new Class []{});
-                String s = (String) getHref.invoke(obj, new Object []{});
                 jg.writeStartObject();
-                jg.writeStringField("href", s);
-                
+
+                // These two properties are standard.
+                jg.writeStringField("href", obj.getHref());
                 // IDs can be strings on some objects. :O
-                Method getId = c.getMethod("getId", new Class []{});
-                Object id = getId.invoke(obj, new Object []{});
-                jg.writeStringField("id", id.toString());
+                jg.writeStringField("id", obj.getId().toString());
+
+                for (Method method : obj.getClass().getMethods()) {
+                    InfoProperty info = method.getAnnotation(InfoProperty.class);
+
+                    if (info != null) {
+                        try {
+                            jg.writeStringField(info.value(),
+                                    method.invoke(obj).toString());
+                        }
+                        catch (InvocationTargetException e) {
+                            // just skip over it if there is a problem
+                        }
+                    }
+                }
+
                 jg.writeEndObject();
             }
             catch (Exception e) {

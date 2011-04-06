@@ -12,14 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.resteasy;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Linkable - Interface for objects which are linkable in the REST interface.
+ *
  */
-public interface Linkable extends Persisted {
-
-    String getHref();
-
-    void setHref(String href);
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface InfoProperty {
+    String value();
 }

@@ -26,7 +26,6 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -43,7 +42,7 @@ import org.fedoraproject.candlepin.util.Util;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_user")
-public class User extends AbstractHibernateObject{
+public class User extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -81,6 +80,7 @@ public class User extends AbstractHibernateObject{
     /**
      * @return the id
      */
+    @Override
     public String getId() {
         return id;
     }
@@ -119,7 +119,6 @@ public class User extends AbstractHibernateObject{
     /**
      * @return the owner
      */
-    @XmlTransient
     public Owner getOwner() {
         return owner;
     }
@@ -148,6 +147,7 @@ public class User extends AbstractHibernateObject{
      * Return string representation of the user object
      * @return string representation of the user object
      */
+    @Override
     public String toString() {
         return new Formatter().format("User :{login: %s, password: %s}",
                 username, hashedPassword).toString();

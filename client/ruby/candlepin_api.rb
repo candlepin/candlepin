@@ -85,7 +85,7 @@ class Candlepin
   end
 
   def get_user_info(user)
-    get("/user/#{user}")
+    get("/users/#{user}")
   end
 
   def list_owners(params = {})

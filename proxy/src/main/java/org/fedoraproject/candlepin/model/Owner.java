@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.fedoraproject.candlepin.resteasy.InfoProperty;
 
 /**
  * Represents the owner of entitlements. This is akin to an organization,
@@ -123,6 +124,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         this.id = id;
     }
 
+    @InfoProperty("key")
     public String getKey() {
         return key;
     }
@@ -134,6 +136,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     /**
      * @return the name
      */
+    @InfoProperty("displayName")
     public String getDisplayName() {
         return this.displayName;
     }
