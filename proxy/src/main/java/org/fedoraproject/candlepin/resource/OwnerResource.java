@@ -427,6 +427,8 @@ public class OwnerResource {
      * expose updates for owners
      * @param key
      * @param owner
+     *
+     * @return the update {@link Owner}
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
