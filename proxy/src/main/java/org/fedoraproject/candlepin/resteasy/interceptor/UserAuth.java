@@ -23,7 +23,6 @@ import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Injector;
@@ -31,7 +30,7 @@ import com.google.inject.Injector;
 /**
  * UserAuth
  */
-public class UserAuth implements AuthProvider {
+public abstract class UserAuth implements AuthProvider {
 
     protected UserServiceAdapter userServiceAdapter;
     protected OwnerCurator ownerCurator;
@@ -46,19 +45,6 @@ public class UserAuth implements AuthProvider {
         i18n = this.injector.getInstance(I18n.class);
     }
 
-    public Principal getPrincipal(HttpRequest request) {
-        return null;
-    }
-
-    /**
-     * Retrieve a header, or the empty string if it is not there.
-     * 
-     * @return the header or a blank string (no nils)
-     */
-    public String getHeader(HttpRequest request, String name) {
-        return AuthUtil.getHeader(request, name);
-    }
-
     /**
      * Creates a user principal for a given username
      */
@@ -70,19 +56,10 @@ public class UserAuth implements AuthProvider {
             throw new BadRequestException(msg);
         }
         else {
-            owner = lookupOwner(owner);
+            owner = AuthUtil.lookupOwner(owner, ownerCurator);
             List<Role> roles = this.userServiceAdapter.getRoles(username);
             principal = new UserPrincipal(username, owner, roles);
         }
         return principal;
     }
-
-    /**
-     * Ensure that an owner exists in the db, and throw an exception if not
-     * found.
-     */
-    protected Owner lookupOwner(Owner owner) {
-        return AuthUtil.lookupOwner(owner, ownerCurator);
-    }
-
 }

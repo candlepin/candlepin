@@ -39,7 +39,7 @@ class TrustedUserAuth extends UserAuth {
     public Principal getPrincipal(HttpRequest request) {
 
         Principal principal = null;
-        String username = getHeader(request, USER_HEADER);
+        String username = AuthUtil.getHeader(request, USER_HEADER);
 
         if (username != null && username.length() > 0) {
             principal = this.createPrincipal(username);
