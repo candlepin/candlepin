@@ -18,16 +18,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.jboss.resteasy.specimpl.HttpHeadersImpl;
+import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,16 +36,18 @@ import com.google.inject.Injector;
 public class BasicAuthViaUserServiceTest {
 
     @Mock private HttpRequest request;
-    @Mock private HttpHeaders headers;
+    private HttpHeadersImpl headers;
     @Mock private UserServiceAdapter userService;
     @Mock private OwnerCurator ownerCurator;
     @Mock private Injector injector;
-
     private BasicAuth auth;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        headers = new HttpHeadersImpl();
+        headers.setRequestHeaders(new MultivaluedMapImpl<String, String>());
+        when(request.getHttpHeaders()).thenReturn(headers);
         this.auth = new BasicAuth(userService, ownerCurator, injector);
     }
 
@@ -59,7 +58,6 @@ public class BasicAuthViaUserServiceTest {
      */
     @Test
     public void noAuth() throws Exception {
-        when(request.getHttpHeaders()).thenReturn(headers);
         assertNull(this.auth.getPrincipal(request));
     }
 
@@ -70,10 +68,7 @@ public class BasicAuthViaUserServiceTest {
      */
     @Test
     public void notBasicAuth() throws Exception {
-        List<String> header = new LinkedList<String>();
-        header.add("DIGEST username=billy");
-        when(headers.getRequestHeader("Authorization")).thenReturn(header);
-        when(request.getHttpHeaders()).thenReturn(headers);
+        headers.getRequestHeaders().add("Authorization", "DIGEST username=billy");
         assertNull(this.auth.getPrincipal(request));
     }
 
@@ -109,10 +104,8 @@ public class BasicAuthViaUserServiceTest {
     // TODO:  Add in owner creation/retrieval tests?
 
     private void setUserAndPassword(String username, String password) {
-        List<String> header = new LinkedList<String>();
-        header.add("BASIC " + encodeUserAndPassword(username, password));        
-        when(headers.getRequestHeader("Authorization")).thenReturn(header);
-        when(request.getHttpHeaders()).thenReturn(headers);
+        headers.getRequestHeaders().add("Authorization", 
+            "BASIC " + encodeUserAndPassword(username, password));
     }
 
     private String encodeUserAndPassword(String username, String password) {
@@ -121,5 +114,4 @@ public class BasicAuthViaUserServiceTest {
 
         return new String(encoded);
     }
-
 }

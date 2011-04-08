@@ -28,7 +28,7 @@ import com.google.inject.Injector;
  */
 class TrustedUserAuth extends UserAuth {
 
-    private static final String HEADER = "cp-user";
+    public static final String USER_HEADER = "cp-user";
 
     @Inject
     TrustedUserAuth(UserServiceAdapter userServiceAdaper,
@@ -39,7 +39,7 @@ class TrustedUserAuth extends UserAuth {
     public Principal getPrincipal(HttpRequest request) {
 
         Principal principal = null;
-        String username = getHeader(request, HEADER);
+        String username = getHeader(request, USER_HEADER);
 
         if (username != null && username.length() > 0) {
             principal = this.createPrincipal(username);

@@ -83,8 +83,11 @@ public class AuthInterceptor implements PreProcessInterceptor {
         if (config.oAuthEnabled()) {
             providerCount++;
             log.debug("OAuth Authentication is enabled.");
+            TrustedConsumerAuth cAuth = new TrustedConsumerAuth(consumerCurator);
+            TrustedUserAuth uAuth = new TrustedUserAuth(userService, ownerCurator,
+                injector);
             providers
-                .add(new OAuth(userService, ownerCurator, injector, config));
+                .add(new OAuth(cAuth, uAuth, injector, config));
         }
 
         // basic http access

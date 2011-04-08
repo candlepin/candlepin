@@ -20,7 +20,6 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -57,18 +56,7 @@ public class UserAuth implements AuthProvider {
      * @return the header or a blank string (no nils)
      */
     public String getHeader(HttpRequest request, String name) {
-        String headerValue = "";
-        List<String> header = null;
-        for (String key : request.getHttpHeaders().getRequestHeaders().keySet()) {
-            if (key.equalsIgnoreCase(name)) {
-                header = request.getHttpHeaders().getRequestHeader(key);
-                break;
-            }
-        }
-        if (null != header && header.size() > 0) {
-            headerValue = header.get(0);
-        }
-        return headerValue;
+        return AuthUtil.getHeader(request, name);
     }
 
     /**
@@ -94,15 +82,7 @@ public class UserAuth implements AuthProvider {
      * found.
      */
     protected Owner lookupOwner(Owner owner) {
-        Owner o = this.ownerCurator.lookupByKey(owner.getKey());
-        if (o == null) {
-            if (owner.getKey() == null) {
-                throw new NotFoundException(
-                    i18n.tr("An owner does not exist for a null org id"));
-            }
-        }
-
-        return o;
+        return AuthUtil.lookupOwner(owner, ownerCurator);
     }
 
 }

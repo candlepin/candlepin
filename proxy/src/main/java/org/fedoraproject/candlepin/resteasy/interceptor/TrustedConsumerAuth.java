@@ -30,7 +30,7 @@ import com.google.inject.Inject;
  */
 class TrustedConsumerAuth extends ConsumerAuth {
 
-    private static final String HEADER = "cp-consumer";
+    public static final String CONSUMER_HEADER = "cp-consumer";
     
     @Inject
     TrustedConsumerAuth(ConsumerCurator consumerCurator) {
@@ -42,7 +42,7 @@ class TrustedConsumerAuth extends ConsumerAuth {
         ConsumerPrincipal principal = null;
 
         List<String> header = request.getHttpHeaders().getRequestHeader(
-            HEADER);
+            CONSUMER_HEADER);
         String consumerUUID = null;
         if (null != header && header.size() > 0) {
             consumerUUID = header.get(0);

@@ -20,7 +20,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -29,7 +28,6 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -56,12 +54,7 @@ class BasicAuth implements AuthProvider {
     public Principal getPrincipal(HttpRequest request) {
         I18n i18n = injector.getInstance(I18n.class);
         try {
-            List<String> header = request.getHttpHeaders().getRequestHeader(
-                "Authorization");
-            String auth = null;
-            if (null != header && header.size() > 0) {
-                auth = header.get(0);
-            }
+            String auth = AuthUtil.getHeader(request, "Authorization");
 
             if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
                 String userpassEncoded = auth.substring(6);
@@ -116,6 +109,10 @@ class BasicAuth implements AuthProvider {
         return new UserPrincipal(username, owner, roles);
     }
 
+    /*
+     * This does not use the auth util code, since it does
+     * allow basic auth with no owner.
+     */
     private Owner lookupOwner(Owner owner) {
         Owner o = this.ownerCurator.lookupByKey(owner.getKey());
         if (o == null) {

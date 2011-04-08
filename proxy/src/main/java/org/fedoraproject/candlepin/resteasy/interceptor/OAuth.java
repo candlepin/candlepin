@@ -39,9 +39,8 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.IseException;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -49,7 +48,7 @@ import com.google.inject.Inject;
  * Uses two legged OAuth. If it succeeds, then it pulls the username off of a
  * headers and creates a principal based only on the username
  */
-public class OAuth extends UserAuth {
+public class OAuth implements AuthProvider {
 
     protected static final String HEADER = "cp-user";
     protected static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
@@ -57,13 +56,20 @@ public class OAuth extends UserAuth {
 
     private Logger log = Logger.getLogger(OAuth.class);;
     private Config config;
+    private TrustedUserAuth userAuth;
+    private TrustedConsumerAuth consumerAuth;
+    protected I18n i18n;
+    protected Injector injector;
     private Map<String, OAuthAccessor> accessors = new HashMap<String, OAuthAccessor>();
 
     @Inject
-    OAuth(UserServiceAdapter userServiceAdapter, OwnerCurator ownerCurator,
+    OAuth(TrustedConsumerAuth consumerAuth, TrustedUserAuth userAuth,
         Injector injector, Config config) {
-        super(userServiceAdapter, ownerCurator, injector);
         this.config = config;
+        this.injector = injector;
+        this.userAuth = userAuth;
+        this.consumerAuth = consumerAuth;
+        i18n = this.injector.getInstance(I18n.class);
         this.setupAccessors();
         this.setupSigners();
     }
@@ -78,27 +84,25 @@ public class OAuth extends UserAuth {
 
         log.debug("Checking for oauth authentication");
         try {
-            if (getHeader(request, "Authorization").contains("oauth")) {
+            if (AuthUtil.getHeader(request, "Authorization").contains("oauth")) {
                 OAuthMessage requestMessage = new RestEasyOAuthMessage(request);
                 OAuthAccessor accessor = this.getAccessor(requestMessage);
 
                 // TODO: This is known to be memory intensive.
                 VALIDATOR.validateMessage(requestMessage, accessor);
 
-                // If we got here, it is a valid oauth message
-                String username = getHeader(request, HEADER);
+                // If we got here, it is a valid oauth message. Now look first for
+                // a user header.
+                String userHeader =
+                    AuthUtil.getHeader(request, TrustedUserAuth.USER_HEADER);
 
-                if ((username == null) || (username.equals(""))) {
-                    String msg = i18n
-                        .tr("No username provided for oauth request");
-                    throw new BadRequestException(msg);
+                // If it is found, return a user principal
+                // If not, look for a consumer.
+                if (userHeader != null) {
+                    principal = userAuth.getPrincipal(request);
                 }
-
-                principal = createPrincipal(username);
-                if (log.isDebugEnabled()) {
-                    log.debug("principal created for owner '" +
-                        principal.getOwner().getDisplayName() +
-                        "' with username '" + username + "'");
+                else {
+                    principal = consumerAuth.getPrincipal(request);
                 }
             }
         }
