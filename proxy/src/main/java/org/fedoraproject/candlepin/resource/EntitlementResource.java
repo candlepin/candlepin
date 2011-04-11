@@ -103,6 +103,7 @@ public class EntitlementResource {
     
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
     public List<Entitlement> listAllForConsumer(
         @QueryParam("consumer") String consumerUuid) {
 
