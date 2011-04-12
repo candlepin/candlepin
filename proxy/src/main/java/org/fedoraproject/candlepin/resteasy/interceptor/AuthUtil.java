@@ -37,8 +37,6 @@ public class AuthUtil {
     public static String getHeader(HttpRequest request, String name) {
         String headerValue = "";
         List<String> header = null;
-        System.out.println(request.getHttpHeaders());
-        System.out.println(request.getHttpHeaders().getRequestHeaders());
         for (String key : request.getHttpHeaders().getRequestHeaders().keySet()) {
             if (key.equalsIgnoreCase(name)) {
                 header = request.getHttpHeaders().getRequestHeader(key);
