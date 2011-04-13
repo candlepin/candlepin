@@ -48,10 +48,8 @@
   <target name="da_popo">
     <apply executable="${script.dir}/antmsgfmt"
            dest="${target.dir}/generated-source">
-      <arg value="--java" />
-      <arg value="-r org.fedoraproject.candlepin.i18n.Messages" />
-      <arg value="-d ${target.dir}/generated-source" />
-      <arg value="-l de" />
+      <arg value="org.fedoraproject.candlepin.i18n.Messages" />
+      <arg value="${target.dir}/generated-source" />
       <fileset dir="${cp-home}/po">
         <include name="**/*.po" />
       </fileset>
