@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.3.3
+Version: 0.3.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,42 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Apr 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.4-1
+- fix the rpm to actually generate all of the po files. (jesusr@redhat.com)
+- fix it so that the block comments aren't mangled (jesusr@redhat.com)
+- Extra system.out.printlns crept in (bkearney@redhat.com)
+- Allowing owners and consumer to see consumer entitlements.
+  (jharris@redhat.com)
+- remove superclass code in the aut layer which is not providing any real value
+  (bkearney@redhat.com)
+- Missed the new file (bkearney@redhat.com)
+- Enhance oauth to accept cp-user or cp-consumer (bkearney@redhat.com)
+- up the memory for the build file (bkearney@redhat.com)
+- 684350: Stop creating new owners during basic authentication.
+  (dgoodwin@redhat.com)
+- Adding @InfoProperty for hateoas serialization. (jharris@redhat.com)
+- Checkstyle (jharris@redhat.com)
+- Adding in Chris' auth work. (jharris@redhat.com)
+- Add a /consumers query param to filter on owner key. (dgoodwin@redhat.com)
+- Counts of cunsumer types added to OwnerInfo. These counts are based on the
+  owner's pools and the requires_consumer_type attribute. (wpoteat@redhat.com)
+- Suppress the warning about unused ctor since this is for JPA
+  (jmrodri@gmail.com)
+- Corrected issue with test. No longer using noop setter. (wpoteat@redhat.com)
+- Put in noop setter for test to pass. Looking for better solution.
+  (wpoteat@redhat.com)
+- ignore some tests for now, gotta figure out how to fix jaxb deserialization.
+  (jesusr@redhat.com)
+- New  method returns entitlement count for consumer. (wpoteat@redhat.com)
+- Moving json prettification to bash so that hudson will work.
+  (jharris@redhat.com)
+- Ignoring a lot of date-dependent unit tests until we get in a proper fix.
+  (jharris@redhat.com)
+- Skipping user deletion if service is read-only. (jharris@redhat.com)
+- cleanup the output. (jesusr@redhat.com)
+- Makes sure that owner is confirmed on consumer update. (wpoteat@wpoteat-
+  desktop.usersys.redhat.com)
+
 * Wed Mar 30 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.3-1
 - write dialect to avoid exception (jesusr@redhat.com)
 
