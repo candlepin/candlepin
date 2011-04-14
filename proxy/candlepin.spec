@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.15
+Version: 0.2.16
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Thu Apr 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.16-1
+- fix the rpm to actually generate all of the po files. (jesusr@redhat.com)
+- 684350: Stop creating new owners during basic authentication. (dgoodwin@redhat.com)
+
 * Mon Mar 28 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.15-1
 - Fixing pool update with virt_limit=unlimited (jharris@redhat.com)
 
