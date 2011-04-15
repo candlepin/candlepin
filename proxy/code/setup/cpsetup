@@ -82,6 +82,9 @@ class TomcatSetup(object):
         config.write(updated)
         file.close
 
+    def stop(self):
+        run_command("/sbin/service tomcat6 stop")
+
     def restart(self):
         run_command("/sbin/service tomcat6 restart")
 
@@ -160,6 +163,10 @@ class DbSetup(object):
         f.close()
 
 def main(argv):
+    # Stop tomcat before we wipe the DB otherwise you get errors from pg
+    tsetup = TomcatSetup('/etc/tomcat6')
+    tsetup.stop()
+    
     dbsetup = DbSetup("candlepin", "candlepin")
     dbsetup.initdb()
     dbsetup.configurecp()
