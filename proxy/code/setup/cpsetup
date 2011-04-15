@@ -20,6 +20,8 @@ import os.path, os
 import socket
 import re
 import time
+from optparse import OptionParser
+
 
 def run_command(command):
     #debug(command)
@@ -163,13 +165,26 @@ class DbSetup(object):
         f.close()
 
 def main(argv):
+
+    parser = OptionParser()
+    parser.add_option("-s", "--skipdbcfg",
+                  action="store_true", dest="skipdbcfg", default=False,
+                  help="don't configure the /etc/candlepin/candlepin.conf file")
+                  
+    (options, args) = parser.parse_args()
+   
     # Stop tomcat before we wipe the DB otherwise you get errors from pg
     tsetup = TomcatSetup('/etc/tomcat6')
     tsetup.stop()
     
     dbsetup = DbSetup("candlepin", "candlepin")
     dbsetup.initdb()
-    dbsetup.configurecp()
+    
+    if not options.skipdbcfg:
+        dbsetup.configurecp()
+    else:
+        print "** Skipping configuration file setup"
+        
 
     certsetup = CertSetup()
     certsetup.generate()
