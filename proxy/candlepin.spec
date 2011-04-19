@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.3.4
+Version: 0.3.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Apr 19 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.5-1
+- require exact version of candlepin rpm (jesusr@redhat.com)
+- option to skip the candlepin conf setup step (mmccune@redhat.com)
+- make sure we stop tomcat before initalizing the db otherwise you error (mmccune@redhat.com)
+
 * Wed Apr 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.4-1
 - fix the rpm to actually generate all of the po files. (jesusr@redhat.com)
 - fix it so that the block comments aren't mangled (jesusr@redhat.com)
