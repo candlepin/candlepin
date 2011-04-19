@@ -34,6 +34,7 @@ public class OwnerInfoCurator {
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
+    private final static String DEFAULT_CONSUMER_TYPE = "system";
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
@@ -73,19 +74,16 @@ public class OwnerInfoCurator {
         info.setConsumerTypesByPool(consumerTypeCurator.listAll());
         for (Pool p : owner.getPools()) {
             String conType = p.getAttributeValue("requires_consumer_type");
-            if (conType != null && !conType.trim().equals("")) {
-                ConsumerType ct = consumerTypeCurator.lookupByLabel(conType);
-                info.addToConsumerTypeCountByPool(ct);
-                continue;
+            if (conType == null || conType.trim().equals("")) {
+                String prodId = p.getProductId();
+                Product prod = productCurator.lookupById(prodId);
+                conType = prod.getAttributeValue("requires_consumer_type");
             }
-
-            String prodId = p.getProductId();
-            Product prod = productCurator.lookupById(prodId);
-            conType = prod.getAttributeValue("requires_consumer_type");
-            if (conType != null && !conType.trim().equals("")) {
-                ConsumerType ct = consumerTypeCurator.lookupByLabel(conType);
-                info.addToConsumerTypeCountByPool(ct);
+            if (conType == null || conType.trim().equals("")) {
+                conType = DEFAULT_CONSUMER_TYPE;
             }
+            ConsumerType ct = consumerTypeCurator.lookupByLabel(conType);
+            info.addToConsumerTypeCountByPool(ct);
         }
 
         return info;
