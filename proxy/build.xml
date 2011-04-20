@@ -46,6 +46,7 @@
   </target>
 
   <target name="da_popo">
+    <mkdir dir="${target.dir}/generated-source" />
     <apply executable="${script.dir}/antmsgfmt"
            dest="${target.dir}/generated-source">
       <arg value="org.fedoraproject.candlepin.i18n.Messages" />
@@ -62,7 +63,6 @@
   <target name="compile" depends="init">
     <mkdir dir="${target.dir}/classes" />
     <mkdir dir="${target.dir}/resources" />
-    <mkdir dir="${target.dir}/generated-source" />
     <javac destdir="${target.dir}/classes"
            optimize="off"
            debug="on"
