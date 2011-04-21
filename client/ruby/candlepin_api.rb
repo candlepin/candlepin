@@ -262,6 +262,10 @@ class Candlepin
     post("/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
   end
 
+  def remove_content_from_product(product_id, content_id)
+    delete("/products/#{product_id}/content/#{content_id}")
+  end
+
   def create_product(id, name, params={}, dependentProductIds=[])
 
     multiplier = params[:multiplier] || 1

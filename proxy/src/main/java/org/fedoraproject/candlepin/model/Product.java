@@ -268,7 +268,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     public void addEnabledContent(Content content) {
         productContent.add(new ProductContent(this, content, true));
     }
-
+    
     /**
      * @param productContent the productContent to set
      */

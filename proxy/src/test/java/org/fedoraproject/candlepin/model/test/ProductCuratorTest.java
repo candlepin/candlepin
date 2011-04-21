@@ -33,6 +33,7 @@ import javax.persistence.PersistenceException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -297,6 +298,21 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         }
         // Old attributes should get cleaned up:
         assertEquals(3, all.size());
+    }
+    
+    public void testRemoveProductContent() {
+        Product p = createTestProduct();
+        Content content = new Content("test-content", "test-content",
+            "test-content", "yum", "us", "here", "here");
+        p.addContent(content);
+        productCurator.create(p);
+        
+        p = productCurator.find(p.getId());
+        assertEquals(1, p.getProductContent().size());
+        
+        productCurator.removeProductContent(p, content);
+        p = productCurator.find(p.getId());
+        assertEquals(0, p.getProductContent().size());
     }
     
 }

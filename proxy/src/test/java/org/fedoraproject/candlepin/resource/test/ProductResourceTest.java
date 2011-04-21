@@ -88,7 +88,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
         toSubmit.setContent(contentSet);
         
         productResource.createProduct(toSubmit);
-            
     }
     
     @Test(expected = BadRequestException.class)

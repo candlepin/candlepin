@@ -147,6 +147,15 @@ public class ProductResource {
     
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @Path("/{product_uuid}/content/{content_id}")
+    public void removeContent(@PathParam("product_uuid") String pid,
+                              @PathParam("content_id") String contentId) {
+        prodAdapter.removeContent(pid, contentId);
+    }
+    
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public void deleteProduct(@PathParam("product_uuid") String pid) {

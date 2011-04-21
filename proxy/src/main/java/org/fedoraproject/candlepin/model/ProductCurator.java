@@ -87,5 +87,17 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         return super.create(entity);
     }
+    
+    @Transactional
+    @EnforceAccessControl
+    public void removeProductContent(Product prod, Content content) {
+        for (ProductContent pc : prod.getProductContent()) {
+            if (content.getId().equals(pc.getContent().getId())) {
+                prod.getProductContent().remove(pc);
+                break;
+            }
+        }
+        merge(prod);
+    }
 
 }

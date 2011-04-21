@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
@@ -46,6 +48,8 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         .getLogger(DefaultProductServiceAdapter.class);
 
     private ProductCurator prodCurator;
+    
+    private ContentCurator contentCurator;
 
     // for product cert storage/generation - not sure if this should go in
     // a separate service?
@@ -56,12 +60,13 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Inject
     public DefaultProductServiceAdapter(ProductCurator prodCurator,
         ProductCertificateCurator prodCertCurator, PKIUtility pki,
-        X509ExtensionUtil extensionUtil) {
+        X509ExtensionUtil extensionUtil, ContentCurator contentCurator) {
 
         this.prodCurator = prodCurator;
         this.prodCertCurator = prodCertCurator;
         this.pki = pki;
         this.extensionUtil = extensionUtil;
+        this.contentCurator = contentCurator;
     }
 
     @Override
@@ -158,6 +163,13 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     public void purgeCache() {        
         
+    }
+    
+    @Override
+    public void removeContent(String productId, String contentId) {
+        Product product = prodCurator.find(productId);
+        Content content = contentCurator.find(contentId);
+        prodCurator.removeProductContent(product, content);
     }
 
 }
