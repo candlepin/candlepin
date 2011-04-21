@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.17
+Version: 0.2.18
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Thu Apr 21 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.18-1
+- use ProductServiceAdapter not ProductCurator. (jesusr@redhat.com)
+- cleanup checkstyle for a cleaner merge. (jesusr@redhat.com)
+
 * Thu Apr 21 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.17-1
 - Correction to the counts. Any non-specified pool gets put in the 'system'
   bucket. (wpoteat@redhat.com)
