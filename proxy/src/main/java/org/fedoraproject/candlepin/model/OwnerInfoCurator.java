@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -33,15 +35,15 @@ import javax.persistence.EntityManager;
 public class OwnerInfoCurator {
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ProductCurator productCurator;
+    private ProductServiceAdapter productAdapter;
     private static final String DEFAULT_CONSUMER_TYPE = "system";
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
-        ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator) {
+        ConsumerTypeCurator consumerTypeCurator, ProductServiceAdapter psa) {
         this.entityManager = entityManager;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.productCurator = productCurator;
+        this.productAdapter = psa;
     }
 
     public OwnerInfo lookupByOwner(Owner owner) {
@@ -76,8 +78,10 @@ public class OwnerInfoCurator {
             String conType = p.getAttributeValue("requires_consumer_type");
             if (conType == null || conType.trim().equals("")) {
                 String prodId = p.getProductId();
-                Product prod = productCurator.lookupById(prodId);
-                conType = prod.getAttributeValue("requires_consumer_type");
+                Product prod = productAdapter.getProductById(prodId);
+                if (prod != null) {
+                    conType = prod.getAttributeValue("requires_consumer_type");
+                }
             }
             if (conType == null || conType.trim().equals("")) {
                 conType = DEFAULT_CONSUMER_TYPE;
