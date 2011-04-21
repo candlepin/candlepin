@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.2.16
+Version: 0.2.17
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Thu Apr 21 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.17-1
+- Correction to the counts. Any non-specified pool gets put in the 'system'
+  bucket. (wpoteat@redhat.com)
+- Counts of cunsumer types added to OwnerInfo. These counts are based on the
+  owner's pools and the requires_consumer_type attribute. (wpoteat@redhat.com)
+- Corrected issue with test. No longer using noop setter. (wpoteat@redhat.com)
+- Put in noop setter for test to pass. Looking for better solution.
+  (wpoteat@redhat.com)
+- New  method returns entitlement count for consumer. (wpoteat@redhat.com)
+- create generated-source dir for po compilation via ant (jbowes@redhat.com)
+
 * Thu Apr 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.16-1
 - fix the rpm to actually generate all of the po files. (jesusr@redhat.com)
 - 684350: Stop creating new owners during basic authentication. (dgoodwin@redhat.com)
