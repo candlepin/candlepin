@@ -34,7 +34,7 @@ public class OwnerInfoCurator {
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
-    private final static String DEFAULT_CONSUMER_TYPE = "system";
+    private static final String DEFAULT_CONSUMER_TYPE = "system";
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
