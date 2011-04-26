@@ -58,17 +58,19 @@ public class OAuth implements AuthProvider {
     private Config config;
     private TrustedUserAuth userAuth;
     private TrustedConsumerAuth consumerAuth;
+    private TrustedExternalSystemAuth systemAuth;
     protected I18n i18n;
     protected Injector injector;
     private Map<String, OAuthAccessor> accessors = new HashMap<String, OAuthAccessor>();
 
     @Inject
     OAuth(TrustedConsumerAuth consumerAuth, TrustedUserAuth userAuth,
-        Injector injector, Config config) {
+        TrustedExternalSystemAuth systemAuth, Injector injector, Config config) {
         this.config = config;
         this.injector = injector;
         this.userAuth = userAuth;
         this.consumerAuth = consumerAuth;
+        this.systemAuth = systemAuth;
         i18n = this.injector.getInstance(I18n.class);
         this.setupAccessors();
         this.setupSigners();
@@ -91,18 +93,18 @@ public class OAuth implements AuthProvider {
                 // TODO: This is known to be memory intensive.
                 VALIDATOR.validateMessage(requestMessage, accessor);
 
-                // If we got here, it is a valid oauth message. Now look first for
-                // a user header.
-                String userHeader =
-                    AuthUtil.getHeader(request, TrustedUserAuth.USER_HEADER);
-
-                // If it is found, return a user principal
-                // If not, look for a consumer.
-                if (userHeader != null) {
+                // If we got here, it is a valid oauth message.
+                // Figure out which kind of principal we should create, based on header
+                if (!AuthUtil.getHeader(request, TrustedUserAuth.USER_HEADER).equals("")) {
                     principal = userAuth.getPrincipal(request);
                 }
-                else {
+                else if (!AuthUtil.getHeader(request,
+                    TrustedConsumerAuth.CONSUMER_HEADER).equals("")) {
                     principal = consumerAuth.getPrincipal(request);
+                }
+                else {
+                    // The external system is acting on behalf of itself
+                    principal = systemAuth.getPrincipal(request);
                 }
             }
         }

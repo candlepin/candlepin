@@ -73,6 +73,7 @@ public class SubscriptionResource {
     @GET
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowRoles(roles = { Role.TRUSTED_SYSTEM })
     public Subscription getSubscription(
         @PathParam("subscription_id") String subscriptionId) {
         
