@@ -2,7 +2,7 @@ require 'candlepin_scenarios'
 
 describe 'Entitlement Certificate' do
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   class String
       def to_date

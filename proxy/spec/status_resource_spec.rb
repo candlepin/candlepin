@@ -3,7 +3,7 @@ require 'candlepin_scenarios'
 describe 'Status Resource' do
 
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   it 'should return a valid candlepin version and release' do
     json = @cp.get_status()

@@ -2,7 +2,7 @@ require 'candlepin_scenarios'
 
 describe 'Product Certificate' do
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   # Static map of extension labels to OID values
   @@oid_map = {

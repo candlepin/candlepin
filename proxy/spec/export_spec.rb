@@ -6,7 +6,7 @@ describe 'Candlepin Export' do
 
   include CandlepinMethods
   include ExportMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   before(:all) do
     create_candlepin_export()

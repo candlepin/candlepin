@@ -8,7 +8,7 @@ COPYRIGHT = ""
 
 require 'buildr/java/emma'
 require 'net/http'
-require 'spec/rake/spectask'
+require 'rspec/core/rake_task'
 require 'json'
 
 #############################################################################
@@ -408,7 +408,7 @@ end
 #==========================================================================
 # RSpec functional tests
 #==========================================================================
-Spec::Rake::SpecTask.new do |task|
+RSpec::Core::RakeTask.new do |task|
 
   # Support optional features env variable, specify the spec files to run
   # without the trailing '_spec.rb'. Specify multiple by separating with ':'.
@@ -422,21 +422,21 @@ Spec::Rake::SpecTask.new do |task|
     task.spec_files = feature_files
   end
 
-  task.libs << '../client/ruby' 
-  task.spec_opts << '-c'
+  task.rspec_opts = ["-I#{File.expand_path '../client/ruby/'}"]
+  task.rspec_opts << '-c'
 
   # Allow specify only="should do something" to run only a specific
   # test. The text must completely match the contents of your "it" string.
   only_run = ENV['only']
   if not only_run.nil?
-    task.spec_opts << "-e '#{only_run}'"
+    task.rspec_opts << "-e '#{only_run}'"
   end
 
   dots = ENV['dots']
   if not dots.nil?
-    task.spec_opts << "-fp"
+    task.rspec_opts << "-fp"
   else
-    task.spec_opts << "-f specdoc"
+    task.rspec_opts << "-fd"
   end
 end
 task :spec => :deploy_check

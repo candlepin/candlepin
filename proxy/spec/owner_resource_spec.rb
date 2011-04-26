@@ -1,12 +1,11 @@
 require 'candlepin_scenarios'
-require 'candlepin_api'
 
 require 'rubygems'
 require 'rest_client'
 
 describe 'Owner Resource' do
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   it 'should allow a client to create an owner with parent' do
     owner = create_owner random_string('test_owner')   

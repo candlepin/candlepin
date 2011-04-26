@@ -3,7 +3,7 @@ require 'candlepin_scenarios'
 describe 'Consumer serialization' do
 
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   before(:each) do
     @owner = @cp.create_owner(random_string("test_owner"))
@@ -23,7 +23,7 @@ end
 describe 'Pool serialization' do
 
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   before(:each) do
     @owner = @cp.create_owner(random_string("test_owner"))
@@ -47,7 +47,7 @@ end
 describe 'Entitlement serialization' do
 
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   before(:each) do
     @owner = @cp.create_owner(random_string("test_owner"))

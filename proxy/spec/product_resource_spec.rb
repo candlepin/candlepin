@@ -3,7 +3,7 @@ require 'candlepin_scenarios'
 describe 'Product Resource' do
 
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   it 'removes content from products.' do
     prod = create_product

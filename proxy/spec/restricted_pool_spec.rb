@@ -2,7 +2,7 @@ require 'candlepin_scenarios'
 
 describe 'Products with "user-license" attributes' do
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner 'awesome-shop'

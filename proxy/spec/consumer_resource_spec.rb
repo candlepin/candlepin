@@ -3,7 +3,7 @@ require 'candlepin_scenarios'
 describe 'Consumer Resource' do
 
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   it 'allows super admins to see all consumers' do
     owner1 = create_owner random_string('test_owner1')

@@ -3,7 +3,7 @@ require 'candlepin_scenarios'
 describe 'Subscription Resource' do
 
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   before do
     @owner = create_owner random_string('test_owner')

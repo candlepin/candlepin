@@ -3,7 +3,7 @@ require 'candlepin_scenarios'
 describe 'Pool Resource' do
 
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   it 'lets consumers view pools' do
     owner1 = create_owner random_string('test_owner')

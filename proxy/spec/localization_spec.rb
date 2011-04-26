@@ -1,11 +1,9 @@
 require 'candlepin_scenarios'
-require 'candlepin_api'
-
 require 'json'
 
 describe 'Localization' do
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   it 'returns a translated error message on a failed login' do
       lambda { Candlepin.new('admin', 'badpass', nil, nil, 'localhost', 8443,

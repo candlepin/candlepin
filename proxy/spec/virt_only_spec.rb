@@ -2,7 +2,7 @@ require 'candlepin_scenarios'
 
 describe 'Virt Only Pools' do
   include CandlepinMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner random_string('virt_owner')

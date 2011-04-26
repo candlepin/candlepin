@@ -1,20 +1,25 @@
 require 'candlepin_api'
+
 require 'pp'
 require 'zip/zip'
 
 # Provides initialization and cleanup of data that was used in the scenario
-shared_examples_for 'Candlepin Scenarios' do
+module CandlepinScenarios
 
-  before do
-    @cp = Candlepin.new('admin', 'admin')
-    @owners = []
-    @products = []
-  end
+  def self.included(base)
+    base.class_eval do
+      before(:each) do
+        @cp = Candlepin.new('admin', 'admin')
+        @owners = []
+        @products = []
+      end
 
-  after do
-    @owners.reverse_each { |owner| @cp.delete_owner owner.key }
+      after do
+        @owners.reverse_each { |owner| @cp.delete_owner owner.key }
 
-    # TODO:  delete products?
+        # TODO:  delete products?
+      end
+    end
   end
 end
 
