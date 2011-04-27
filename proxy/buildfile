@@ -419,7 +419,7 @@ RSpec::Core::RakeTask.new do |task|
     features.split(":").each do |part|
       feature_files << "spec/#{part}_spec.rb"
     end
-    task.spec_files = feature_files
+    task.pattern = feature_files
   end
 
   task.rspec_opts = ["-I#{File.expand_path '../client/ruby/'}"]
