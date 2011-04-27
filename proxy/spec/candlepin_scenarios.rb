@@ -159,8 +159,8 @@ module ExportMethods
 
     @candlepin_client = consumer_client(owner_client, random_string(),
         "candlepin")
-    @flex_entitlement = @candlepin_client.consume_pool(pool1.id)[0]
-    @candlepin_client.consume_pool(pool2.id)
+    @entitlement1 = @candlepin_client.consume_pool(pool1.id)[0]
+    @entitlement2 = @candlepin_client.consume_pool(pool2.id)[0]
     @candlepin_client.consume_pool(pool3.id)
 
     # Make a temporary directory where we can safely extract our archive:
@@ -177,12 +177,59 @@ module ExportMethods
     unzip_export_file(File.join(@tmp_dir, "consumer_export.zip"), @tmp_dir)
   end
 
+  def create_candlepin_export_update
+  ## to determine if the process of updating the entitlement import is successful
+  ## use the process for creating the import above to make one that is an update
+    product1 = create_product(random_string(), random_string(),
+        {:attributes => {"flex_expiry" => @flex_days.to_s}})
+    product2 = create_product()
+    content = create_content({:metadata_expire => 6000,
+      :required_tags => "TAG1,TAG2"})
+    @cp.add_content_to_product(product1.id, content.id)
+    @cp.add_content_to_product(product2.id, content.id)
+    @end_date = Date.new(2025, 5, 29)
+
+    sub1 = @cp.create_subscription(@owner.key, product1.id, 12, [], '', '12345', nil, @end_date)
+    sub2 = @cp.create_subscription(@owner.key, product2.id, 14, [], '', '12345', nil, @end_date)
+    @cp.refresh_pools(@owner.key)
+
+    pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
+    pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
+
+    @candlepin_client.consume_pool(pool1.id)
+    @candlepin_client.consume_pool(pool2.id)
+
+    @cp.unbind_entitlement(@entitlement2.id, :uuid => @candlepin_client.uuid)
+    @candlepin_client.regenerate_entitlement_certificates_for_entitlement(@entitlement1.id)
+
+    # Make a temporary directory where we can safely extract our archive:
+    @tmp_dir_update = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
+    @export_dir_update = File.join(@tmp_dir_update, "export")
+    Dir.mkdir(@tmp_dir_update)
+
+    @export_filename_update = @candlepin_client.export_consumer(@tmp_dir_update)
+    # Save current working dir so we can return later:
+    @orig_working_dir_update = Dir.pwd()
+
+    File.exist?(@export_filename_update).should == true
+    unzip_export_file(@export_filename_update, @tmp_dir_update)
+    unzip_export_file(File.join(@tmp_dir_update, "consumer_export.zip"), @tmp_dir_update)
+
+  end
+
   def cleanup_candlepin_export
     Dir.chdir(@orig_working_dir)
 
     FileUtils.rm_rf(@tmp_dir)
     @cp.delete_owner(@owner.key)
   end
+
+  def cleanup_candlepin_export_update
+    Dir.chdir(@orig_working_dir_update)
+
+    FileUtils.rm_rf(@tmp_dir_update)
+  end
+
 
   def unzip_export_file(filename, dest_dir)
     Zip::ZipFile::open(filename) do |zf|
