@@ -39,6 +39,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.IseException;
+import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.xnap.commons.i18n.I18n;
 
@@ -110,6 +111,13 @@ public class OAuth implements AuthProvider {
         }
         catch (OAuthProblemException e) {
             log.debug("OAuth Problem", e);
+            
+            // XXX: for some reason invalid signature (like bad password) has a
+            // status code of 200. make it 401 unauthorized instead.
+            if (e.getProblem().equals("signature_invalid")) {
+                throw new UnauthorizedException(
+                    i18n.tr("Invalid oauth consumer or secret"));
+            }
             Response.Status returnCode = Response.Status.fromStatusCode(e
                 .getHttpStatusCode());
             String message = i18n.tr("OAuth problem encountered. Internal message is: {0}",
@@ -143,9 +151,8 @@ public class OAuth implements AuthProvider {
         try {
             OAuthAccessor accessor = accessors.get(msg.getConsumerKey());
             if (accessor == null) {
-                throw new BadRequestException(
-                    i18n.tr("No oauth consumer found for key {0}",
-                        msg.getConsumerKey()));
+                throw new UnauthorizedException(
+                    i18n.tr("Invalid oauth consumer or secret"));
             }
             return accessor;
         }

@@ -1,0 +1,110 @@
+require 'candlepin_scenarios'
+
+require 'rubygems'
+require 'rest_client'
+require 'oauth'
+
+# silence the peer certificate won't be verified message
+class Net::HTTP
+  alias_method :old_initialize, :initialize
+  def initialize(*args)
+    old_initialize(*args)
+    @ssl_context = OpenSSL::SSL::SSLContext.new
+    @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  end
+end
+
+describe 'OAuth' do
+  include CandlepinMethods
+  include CandlepinScenarios
+
+  @@site = "https://localhost:8443"
+  @@oauth_params = { 
+   :site => @@site,
+   :http_method => :post, 
+   :request_token_path => "",
+   :authorize_path => "",
+   :access_token_path => "",
+  }
+
+  # XXX you must set these in your candlepin.conf
+  oauth_consumer = "rspec"
+  oauth_secret = "rspec-oauth-secret"
+
+  before(:each) do
+    @owner = create_owner "oauth-owner"
+    @user = @cp.create_user(@owner.key, "oauth-user", 'password')
+    @consumer = @cp.register("oauth-consumer", :system, nil, {},
+                             @user.username)
+  end
+
+  def make_request(oauth_consumer, oauth_secret, uri, headers = {})
+    consumer = OAuth::Consumer.new(oauth_consumer, oauth_secret, @@oauth_params)
+
+    request = Net::HTTP::Get.new("#{@@site}#{uri}")
+    consumer.sign!(request)
+    url = URI.parse("#{@@site}#{uri}")
+
+    headers.each_pair do |k, v|
+      request[k] = v
+    end
+    
+    req = Net::HTTP.new(url.host, url.port)
+    req.use_ssl = true
+    req.request(request)
+  end
+
+  it 'returns a 401 if oauth user is not configured' do
+    res = make_request('baduser', 'badsecret', "/candlepin/subscriptions/")
+    res.code.should == '401'
+  end
+
+  it 'returns a 401 if oauth secret does not match' do
+    res = make_request(oauth_consumer, 'badsecret', "/candlepin/subscriptions/")
+    res.code.should == '401'
+  end
+
+  it 'lets a caller act as a user' do
+    res = make_request(oauth_consumer, oauth_secret,
+                       "/candlepin/users/#{@user.username}",
+                       {'cp-user' => @user.username})
+    res.code.should == '200'
+  end
+
+  it 'returns 400 if an unknown user is given' do
+    res = make_request(oauth_consumer, oauth_secret,
+                       "/candlepin/entitlements",
+                       {'cp-user' => "some unknown user"})
+    res.code.should == '400'
+  end
+
+  it 'lets a caller act as a consumer' do
+    res = make_request(oauth_consumer, oauth_secret,
+                       "/candlepin/consumers/#{@consumer.uuid}",
+                       {'cp-consumer' => @consumer.uuid})
+    res.code.should == '200'
+  end
+
+  it 'returns 401 if an unknown consumer is given' do
+    res = make_request(oauth_consumer, oauth_secret,
+                       "/candlepin/consumers/#{@consumer.uuid}",
+                       {'cp-consumer' => "some unknown consumer"})
+    res.code.should == '401'
+  end
+
+  it 'falls back to trusted system auth if no headers are set' do
+    res = make_request(oauth_consumer, oauth_secret,
+                       "/candlepin/consumers/#{@consumer.uuid}")
+    # a trusted system can't access consumer info 
+    res.code.should == '403'
+
+    prod = create_product('product', random_string('product-multiple-arch'),
+                          :attribute => { :arch => 'i386, x86_64'})
+    subscription = @cp.create_subscription(@owner.key, prod.id)
+
+    res = make_request(oauth_consumer, oauth_secret,
+                       "/candlepin/subscriptions/#{subscription.id}")
+    # but it can access subscriptions
+    res.code.should == '200'
+  end
+end
