@@ -1,10 +1,10 @@
 require 'candlepin_scenarios'
 
-describe 'Candlepin Import' do
+describe 'Candlepin Import Update' do
 
   include CandlepinMethods
   include ExportMethods
-  it_should_behave_like 'Candlepin Scenarios'
+  include CandlepinScenarios
 
   before(:all) do
     create_candlepin_export()
@@ -12,18 +12,16 @@ describe 'Candlepin Import' do
     @import_owner_client = user_client(@import_owner, random_string('testuser'))
     @cp.import(@import_owner.key, @export_filename)
     @sublist = @cp.list_subscriptions(@import_owner.key)
-    @sublist.size().should == 2
+    create_candlepin_export_update()
+    @cp.import(@import_owner.key, @export_filename_update)
   end
 
   after(:all) do
-    cleanup_candlepin_export()
     cleanup_candlepin_export_update()
-    @cp.delete_owner(@import_owner.key)
   end
 
   it 'should successfully update the import' do
-    create_candlepin_export_update()
-    @cp.import(@import_owner.key, @export_filename_update)
+    @sublist.size().should == 2
     new_sublist = @cp.list_subscriptions(@import_owner.key)
     new_sublist.size().should == 3
 

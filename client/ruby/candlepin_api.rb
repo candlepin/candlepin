@@ -501,7 +501,7 @@ class Candlepin
   end
 
   def post_file(uri, file=nil)
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(:import => file, :accept => :json)
+    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(:import => file)
     return JSON.parse(response.body) unless response.body.empty?
   end
 

@@ -159,7 +159,7 @@ module ExportMethods
 
     @candlepin_client = consumer_client(owner_client, random_string(),
         "candlepin")
-    @entitlement1 = @candlepin_client.consume_pool(pool1.id)[0]
+    @flex_entitlement = @candlepin_client.consume_pool(pool1.id)[0]
     @entitlement2 = @candlepin_client.consume_pool(pool2.id)[0]
     @candlepin_client.consume_pool(pool3.id)
 
@@ -178,8 +178,10 @@ module ExportMethods
   end
 
   def create_candlepin_export_update
-  ## to determine if the process of updating the entitlement import is successful
-  ## use the process for creating the import above to make one that is an update
+    ## to determine if the process of updating the entitlement import is successful
+    ## use the process for creating the import above to make one that is an update
+    ## You must execute the create_candlepin_export method in the same test before 
+    ## this one.
     product1 = create_product(random_string(), random_string(),
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
     product2 = create_product()
@@ -200,7 +202,7 @@ module ExportMethods
     @candlepin_client.consume_pool(pool2.id)
 
     @cp.unbind_entitlement(@entitlement2.id, :uuid => @candlepin_client.uuid)
-    @candlepin_client.regenerate_entitlement_certificates_for_entitlement(@entitlement1.id)
+    @candlepin_client.regenerate_entitlement_certificates_for_entitlement(@flex_entitlement.id)
 
     # Make a temporary directory where we can safely extract our archive:
     @tmp_dir_update = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
@@ -208,26 +210,22 @@ module ExportMethods
     Dir.mkdir(@tmp_dir_update)
 
     @export_filename_update = @candlepin_client.export_consumer(@tmp_dir_update)
-    # Save current working dir so we can return later:
-    @orig_working_dir_update = Dir.pwd()
-
     File.exist?(@export_filename_update).should == true
     unzip_export_file(@export_filename_update, @tmp_dir_update)
     unzip_export_file(File.join(@tmp_dir_update, "consumer_export.zip"), @tmp_dir_update)
-
   end
 
   def cleanup_candlepin_export
     Dir.chdir(@orig_working_dir)
-
     FileUtils.rm_rf(@tmp_dir)
     @cp.delete_owner(@owner.key)
   end
 
   def cleanup_candlepin_export_update
-    Dir.chdir(@orig_working_dir_update)
-
+    Dir.chdir(@orig_working_dir)
+    FileUtils.rm_rf(@tmp_dir)
     FileUtils.rm_rf(@tmp_dir_update)
+    @cp.delete_owner(@owner.key)
   end
 
 
