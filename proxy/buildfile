@@ -424,6 +424,10 @@ RSpec::Core::RakeTask.new do |task|
 
   task.rspec_opts = ["-I#{File.expand_path '../client/ruby/'}"]
   task.rspec_opts << '-c'
+  skipbundler = ENV['skipbundler']
+  if not skipbundler.nil?
+      task.skip_bundler = true
+  end
 
   # Allow specify only="should do something" to run only a specific
   # test. The text must completely match the contents of your "it" string.
