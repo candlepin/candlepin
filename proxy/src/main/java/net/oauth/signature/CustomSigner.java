@@ -15,7 +15,6 @@
 package net.oauth.signature;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.resteasy.interceptor.OAuth;
 
 import net.oauth.OAuthException;
 
