@@ -74,23 +74,53 @@ public class OwnerInfoCurator {
         }
 
         info.setConsumerTypesByPool(consumerTypeCurator.listAll());
-        for (Pool p : owner.getPools()) {
-            String conType = p.getAttributeValue("requires_consumer_type");
-            if (conType == null || conType.trim().equals("")) {
-                String prodId = p.getProductId();
-                Product prod = productAdapter.getProductById(prodId);
-                if (prod != null) {
-                    conType = prod.getAttributeValue("requires_consumer_type");
-                }
+        for (Pool pool : owner.getPools()) {
+            // do consumerTypeCountByPool
+            String consumerType = getAttribute(pool, "requires_consumer_type");
+            if (consumerType == null || consumerType.trim().equals("")) {
+                consumerType = DEFAULT_CONSUMER_TYPE;
             }
-            if (conType == null || conType.trim().equals("")) {
-                conType = DEFAULT_CONSUMER_TYPE;
-            }
-            ConsumerType ct = consumerTypeCurator.lookupByLabel(conType);
+            ConsumerType ct = consumerTypeCurator.lookupByLabel(consumerType);
             info.addToConsumerTypeCountByPool(ct);
-        }
 
+            // now do entitlementsConsumedByFamily
+            String productFamily = getAttribute(pool, "product_family");
+            // default bucket for familyless entitlements
+            if (productFamily == null || productFamily.trim().equals("")) {
+                productFamily = "none";
+            }
+            
+            int count = 0;
+            for (Entitlement entitlement : pool.getEntitlements()) {
+                count += entitlement.getQuantity();
+            }
+
+            if ("true".equals(getAttribute(pool, "virt_only"))) {
+                info.addToEntitlementsConsumedByFamily(productFamily, 0, count);
+            }
+            else {
+                info.addToEntitlementsConsumedByFamily(productFamily, count, 0);
+            }
+        }
+        
         return info;
+    }
+
+    /**
+     * @param pool
+     * @return
+     */
+    private String getAttribute(Pool pool, String attribute) {
+        // XXX dealing with attributes in java. that's bad!
+        String productFamily = pool.getAttributeValue(attribute);
+        if (productFamily == null || productFamily.trim().equals("")) {
+            String productId = pool.getProductId();
+            Product product = productAdapter.getProductById(productId);
+            if (product != null) {
+                productFamily = product.getAttributeValue(attribute);
+            }
+        }
+        return productFamily;
     }
 
     protected Session currentSession() {

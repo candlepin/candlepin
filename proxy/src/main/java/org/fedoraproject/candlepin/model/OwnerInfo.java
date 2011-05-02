@@ -28,11 +28,13 @@ public class OwnerInfo {
     private Map<String, Integer> consumerCounts;
     private Map<String, Integer> entitlementsConsumedByType;
     private Map<String, Integer> consumerTypeCountByPool;
+    private Map<String, ConsumptionTypeCounts> entitlementsConsumedByFamily;
 
     public OwnerInfo() {
         consumerCounts = new HashMap<String, Integer>();
         entitlementsConsumedByType = new HashMap<String, Integer>();
         consumerTypeCountByPool = new HashMap<String, Integer>();
+        entitlementsConsumedByFamily = new HashMap<String, ConsumptionTypeCounts>();
     }
 
     public Map<String, Integer> getConsumerCounts() {
@@ -45,6 +47,10 @@ public class OwnerInfo {
 
     public Map<String, Integer> getConsumerTypeCountByPool() {
         return consumerTypeCountByPool;
+    }
+    
+    public Map<String, ConsumptionTypeCounts> getEntitlementsConsumedByFamily() {
+        return entitlementsConsumedByFamily;
     }
 
     public void addTypeTotal(ConsumerType type, int consumers, int entitlements) {
@@ -63,6 +69,61 @@ public class OwnerInfo {
     public void setConsumerTypesByPool(List<ConsumerType> consumerTypes) {
         for (ConsumerType c : consumerTypes) {
             consumerTypeCountByPool.put(c.getLabel(), 0);
+        }
+    }
+    
+    public void addToEntitlementsConsumedByFamily(String family, int physical,
+        int virtual) {
+        ConsumptionTypeCounts typeCounts;
+        if (!entitlementsConsumedByFamily.containsKey(family)) {
+            typeCounts = new ConsumptionTypeCounts(0, 0);
+            entitlementsConsumedByFamily.put(family, typeCounts);
+        }
+        else {
+            typeCounts = entitlementsConsumedByFamily.get(family);
+        }
+        
+        typeCounts.physical += physical;
+        typeCounts.virtual += virtual;
+    }
+
+    /**
+     * ConsumptionTypeCounts - stores virtual / physical entitlement consumption counts
+     */
+    public static class ConsumptionTypeCounts {
+        private int physical;
+        private int virtual;
+        
+        public ConsumptionTypeCounts(int physical, int virtual) {
+            this.physical = physical;
+            this.virtual = virtual;
+        }
+        
+        int getPhysical() {
+            return physical;
+        }
+        
+        int getVirtual() {
+            return virtual;
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof ConsumptionTypeCounts)) {
+                return false;
+            }
+            
+            ConsumptionTypeCounts other = (ConsumptionTypeCounts) o;
+            return this.physical == other.physical && this.virtual == other.virtual;
+        }
+        
+        @Override
+        public int hashCode() {
+            return physical * virtual;
+        }
+        
+        public String toString() {
+            return String.format("Physical: %d, Virtual: %d", physical, virtual);
         }
     }
 }
