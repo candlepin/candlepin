@@ -360,4 +360,30 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
     }
+
+    public void testConsumerGuestCount() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        Consumer guest1 = new Consumer("test-consumer", "test-user", owner, type);
+        guest1.setFact("virt.is_guest", "true");
+        consumerCurator.create(guest1);
+
+        Consumer guest2 = new Consumer("test-consumer", "test-user", owner, type);
+        guest2.setFact("virt.is_guest", "true");
+        consumerCurator.create(guest2);
+
+        Consumer physical1 = new Consumer("test-consumer", "test-user", owner, type);
+        physical1.setFact("virt.is_guest", "false");
+        consumerCurator.create(physical1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
+        assertEquals((Integer) 1, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
+
+        // Create another owner to make sure we don't see another owners consumers:
+        Owner anotherOwner = createOwner();
+        ownerCurator.create(anotherOwner);
+        info = ownerInfoCurator.lookupByOwner(anotherOwner);
+        assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
+        assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
+    }
 }

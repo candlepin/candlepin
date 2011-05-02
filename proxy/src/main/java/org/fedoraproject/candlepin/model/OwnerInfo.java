@@ -26,15 +26,23 @@ import java.util.Map;
 public class OwnerInfo {
 
     private Map<String, Integer> consumerCounts;
+    private Map<String, Integer> consumerGuestCounts;
     private Map<String, Integer> entitlementsConsumedByType;
     private Map<String, Integer> consumerTypeCountByPool;
     private Map<String, ConsumptionTypeCounts> entitlementsConsumedByFamily;
+
+    public static final String GUEST = "guest";
+    public static final String PHYSICAL = "physical";
 
     public OwnerInfo() {
         consumerCounts = new HashMap<String, Integer>();
         entitlementsConsumedByType = new HashMap<String, Integer>();
         consumerTypeCountByPool = new HashMap<String, Integer>();
         entitlementsConsumedByFamily = new HashMap<String, ConsumptionTypeCounts>();
+
+        consumerGuestCounts = new HashMap<String, Integer>();
+        consumerGuestCounts.put(GUEST, 0);
+        consumerGuestCounts.put(PHYSICAL, 0);
     }
 
     public Map<String, Integer> getConsumerCounts() {
@@ -125,5 +133,17 @@ public class OwnerInfo {
         public String toString() {
             return String.format("Physical: %d, Virtual: %d", physical, virtual);
         }
+    }
+
+    public Map<String, Integer> getConsumerGuestCounts() {
+        return consumerGuestCounts;
+    }
+
+    public void setGuestCount(Integer count) {
+        consumerGuestCounts.put(GUEST, count);
+    }
+
+    public void setPhysicalCount(Integer count) {
+        consumerGuestCounts.put(PHYSICAL, count);
     }
 }

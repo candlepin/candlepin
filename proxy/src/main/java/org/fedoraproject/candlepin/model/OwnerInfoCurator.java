@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -103,6 +104,8 @@ public class OwnerInfoCurator {
             }
         }
         
+        setConsumerGuestCounts(owner, info);
+        
         return info;
     }
 
@@ -121,6 +124,31 @@ public class OwnerInfoCurator {
             }
         }
         return productFamily;
+    }
+
+    private void setConsumerGuestCounts(Owner owner, OwnerInfo info) {
+
+        String guestQueryStr = "select count(c) from Consumer c join c.facts as fact " +
+            "where c.owner = :owner and index(fact) = 'virt.is_guest' and fact = 'true'";
+        Query guestQuery = currentSession().createQuery(guestQueryStr)
+            .setEntity("owner", owner);
+        Integer guestCount = ((Long) guestQuery.iterate().next()).intValue();
+        info.setGuestCount(guestCount);
+
+        /*
+         * Harder to query for all consumers without this fact, or with fact set to false,
+         * so we'll assume all owner consumers, minus the value above is the count of
+         * non-guest consumers.
+         *
+         * This also assumes non-system consumers will be counted as physical. (i.e.
+         * person/domain consumers who do not have this fact set at all)
+         */
+        String physicalQueryStr = "select count(c) from Consumer c where owner = :owner";
+        Query physicalQuery = currentSession().createQuery(physicalQueryStr)
+            .setEntity("owner", owner);
+        Integer physicalCount = ((Long) physicalQuery.iterate().next()).intValue() -
+            guestCount;
+        info.setPhysicalCount(physicalCount);
     }
 
     protected Session currentSession() {
