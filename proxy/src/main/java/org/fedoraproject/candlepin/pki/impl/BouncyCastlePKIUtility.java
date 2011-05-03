@@ -47,9 +47,9 @@ import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
-import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.fedoraproject.candlepin.pki.X509CRLEntryWrapper;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.util.Util;
@@ -88,8 +88,8 @@ public class BouncyCastlePKIUtility extends PKIUtility {
     protected static Logger log = Logger.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
-    public BouncyCastlePKIUtility(PKIReader reader) {
-        super(reader);
+    public BouncyCastlePKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter) {
+        super(reader, subjectKeyWriter);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
         certGen.addExtension(X509Extensions.AuthorityKeyIdentifier, false,
             new AuthorityKeyIdentifierStructure(caCert));
         certGen.addExtension(X509Extensions.SubjectKeyIdentifier, false,
-            new SubjectKeyIdentifierStructure(clientKeyPair.getPublic()));
+              subjectKeyWriter.getSubjectKeyIdentifier(clientKeyPair, extensions));
         certGen.addExtension(X509Extensions.ExtendedKeyUsage, false,
             new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
 

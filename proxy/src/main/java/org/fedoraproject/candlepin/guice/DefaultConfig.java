@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.guice;
 
 import org.fedoraproject.candlepin.config.LoggingConfig;
+import org.fedoraproject.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.fedoraproject.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -49,5 +51,6 @@ class DefaultConfig extends AbstractModule {
             DefaultEntitlementCertServiceAdapter.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
         bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
+        bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
     }
 }
