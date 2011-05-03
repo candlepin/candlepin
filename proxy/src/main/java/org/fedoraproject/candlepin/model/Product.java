@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,62 +34,60 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
-
 /**
- * Represents a Product that can be consumed and entitled. Products define
- * the software or entity they want to entitle i.e. RHEL Server. They also 
- * contain descriptive meta data that might limit the Product i.e. 4 cores
- * per server with 4 guests. 
+ * Represents a Product that can be consumed and entitled. Products define the
+ * software or entity they want to entitle i.e. RHEL Server. They also contain
+ * descriptive meta data that might limit the Product i.e. 4 cores per server
+ * with 4 guests.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_product")
 public class Product extends AbstractHibernateObject implements Linkable {
-   
+
     // Product ID is stored as a string.
     // This is a subset of the product OID known as the hash.
     @Id
     @Column(length = 32, unique = true)
     private String id;
-    
+
     @Column(nullable = false, unique = true)
     private String name;
-    
+
     /**
-     * How many entitlements per quantity 
+     * How many entitlements per quantity
      */
     @Column
     private Long multiplier;
 
-    
+    @Column
+    private boolean custom = false;
+
     // NOTE: we need a product "type" so we can tell what class of
-    //       product we are... 
+    // product we are...
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL, 
+    @Cascade({ org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
     private Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
-    
+
     @CollectionOfElements
     @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
     private Set<ProductContent> productContent = new HashSet<ProductContent>();
 
     @ManyToMany(mappedBy = "providedProducts")
     private Set<Subscription> subscriptions = new HashSet<Subscription>();
-    
+
     @CollectionOfElements(targetElement = String.class)
     @JoinTable(name = "cp_product_dependent_products")
     private Set<String> dependentProductIds = new HashSet<String>();
 
-    
+    public static final String CUSTOM_PREFIX = "23";
+
     /**
-     * Constructor
-     * 
-     * Use this variant when creating a new object to persist.
+     * Constructor Use this variant when creating a new object to persist.
      * 
      * @param id Product label
      * @param name Human readable Product name
@@ -94,15 +95,15 @@ public class Product extends AbstractHibernateObject implements Linkable {
     public Product(String id, String name) {
         this(id, name, 1L);
     }
-    
+
     public Product(String id, String name, Long multiplier) {
         setId(id);
         setName(name);
         setMultiplier(multiplier);
     }
-    
-    public Product(String id, String name, String variant,
-                   String version, String arch, String type) {
+
+    public Product(String id, String name, String variant, String version,
+        String arch, String type) {
         setId(id);
         setName(name);
         setMultiplier(1L);
@@ -112,17 +113,15 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setAttribute("arch", arch);
     }
 
-    
     protected Product() {
     }
 
-   
     /** {@inheritDoc} */
     public String getId() {
         return id;
-        
+
     }
- 
+
     /**
      * @param id product id
      */
@@ -130,13 +129,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
         this.id = id;
     }
 
-  
-    
     @Override
     public String toString() {
         return "Product [id = " + id + ", name = " + name + "]";
     }
-    
+
     /**
      * @return the product name
      */
@@ -146,19 +143,20 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     /**
      * sets the product name.
+     *
      * @param name name of the product
      */
     public void setName(String name) {
         this.name = name;
     }
-    
+
     /**
-     * @return the number of entitlements to create from a single subscription 
+     * @return the number of entitlements to create from a single subscription
      */
     public Long getMultiplier() {
         return multiplier;
     }
-    
+
     /**
      * @param multiplier the multiplier to set
      */
@@ -169,6 +167,22 @@ public class Product extends AbstractHibernateObject implements Linkable {
         else {
             this.multiplier = Math.max(1L, multiplier);
         }
+    }
+
+    /**
+     * @return is this a custom product
+     */
+    public boolean getCustom() {
+        return custom;
+    }
+
+    /**
+     * sets custom product state.
+     *
+     * @param boolean custom?
+     */
+    public void setCustom(boolean custom) {
+        this.custom = custom;
     }
 
     public void setAttributes(Set<ProductAttribute> attributes) {
@@ -191,11 +205,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
         attrib.setProduct(this);
         this.attributes.add(attrib);
     }
-    
+
     public Set<ProductAttribute> getAttributes() {
         return attributes;
     }
-    
+
     public ProductAttribute getAttribute(String key) {
         for (ProductAttribute a : attributes) {
             if (a.getName().equals(key)) {
@@ -204,7 +218,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
         }
         return null;
     }
-    
+
     public String getAttributeValue(String key) {
         for (ProductAttribute a : attributes) {
             if (a.getName().equals(key)) {
@@ -217,7 +231,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @XmlTransient
     public Set<String> getAttributeNames() {
         Set<String> toReturn = new HashSet<String>();
-        
+
         for (ProductAttribute attribute : attributes) {
             toReturn.add(attribute.getName());
         }
@@ -244,9 +258,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
         Product another = (Product) anObject;
 
-        return
-            id.equals(another.getId()) &&
-            name.equals(another.getName());
+        return id.equals(another.getId()) && name.equals(another.getName());
     }
 
     @Override
@@ -254,7 +266,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
         return id.hashCode() * 31;
     }
 
-  
     /**
      * @param content
      */
@@ -268,7 +279,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     public void addEnabledContent(Content content) {
         productContent.add(new ProductContent(this, content, true));
     }
-    
+
     /**
      * @param productContent the productContent to set
      */
@@ -282,17 +293,16 @@ public class Product extends AbstractHibernateObject implements Linkable {
     public Set<ProductContent> getProductContent() {
         return productContent;
     }
-    
-    
+
     public void setContent(Set<Content> content) {
         if (content == null) {
             return;
         }
         for (Content newContent : content) {
             productContent.add(new ProductContent(this, newContent, false));
-        }    
-    }   
-    
+        }
+    }
+
     public void setEnabledContent(Set<Content> content) {
         if (content == null) {
             return;
@@ -329,17 +339,19 @@ public class Product extends AbstractHibernateObject implements Linkable {
     public String getHref() {
         return "/products/" + getId();
     }
-    
+
     @Override
     public void setHref(String href) {
         /*
-         * No-op, here to aid with updating objects which have nested objects that were
-         * originally sent down to the client in HATEOAS form.
+         * No-op, here to aid with updating objects which have nested objects
+         * that were originally sent down to the client in HATEOAS form.
          */
     }
 
     /**
-     * Returns true if this product has a content set which modifies the given product:
+     * Returns true if this product has a content set which modifies the given
+     * product:
+     *
      * @param productId
      * @return true if this product modifies the given product ID
      */
@@ -351,5 +363,5 @@ public class Product extends AbstractHibernateObject implements Linkable {
         }
         return false;
     }
-    
+
 }

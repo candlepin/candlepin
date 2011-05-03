@@ -269,6 +269,7 @@ class Candlepin
   def create_product(id, name, params={}, dependentProductIds=[])
 
     multiplier = params[:multiplier] || 1
+    custom = params[:custom] || false
     attributes = params[:attributes] || {}
     #if product don't have type attributes, create_product will fail on server
     #side.
@@ -276,6 +277,7 @@ class Candlepin
     product = {
       'name' => name,
       'id' => id,
+      'custom' => custom,
       'multiplier' => multiplier,
       'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}},
       'dependentProductIds' => dependentProductIds

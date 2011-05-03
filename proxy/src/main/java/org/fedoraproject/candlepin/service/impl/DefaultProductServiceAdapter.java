@@ -14,18 +14,6 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -39,6 +27,19 @@ import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
 
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Default implementation of the ProductserviceAdapter.
  */
@@ -48,7 +49,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         .getLogger(DefaultProductServiceAdapter.class);
 
     private ProductCurator prodCurator;
-    
+
     private ContentCurator contentCurator;
 
     // for product cert storage/generation - not sure if this should go in
@@ -81,18 +82,27 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     // TODO: Looks like this needs to change, there should probably be an error
-    // thrown if you try to create a product that already exists, not a silent return.
-    // This may have been done for the tests, so those may need to be modified to only
+    // thrown if you try to create a product that already exists, not a silent
+    // return.
+    // This may have been done for the tests, so those may need to be modified
+    // to only
     // create the products if they do not exist.
     @Override
     public Product createProduct(Product product) {
         if ((prodCurator.find(product.getId()) == null)) {
+            if (product.getCustom()) {
+                product.setId(generateId(product.getName()));
+            }
             Product newProduct = prodCurator.create(product);
             return newProduct;
         }
         return prodCurator.find(product.getId());
     }
-    
+
+    private String generateId(String name) {
+        return Product.CUSTOM_PREFIX + "." + (new Date()).getTime();
+    }
+
     @Override
     public void deleteProduct(Product product) {
         prodCurator.delete(product);
@@ -139,8 +149,8 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
         KeyPair keyPair = pki.generateNewKeyPair();
 
-        Set<X509ExtensionWrapper> extensions = 
-            this.extensionUtil.productExtensions(product);
+        Set<X509ExtensionWrapper> extensions = this.extensionUtil
+            .productExtensions(product);
 
         BigInteger serial = BigInteger.valueOf(product.getId().hashCode())
             .abs();
@@ -161,10 +171,10 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
-    public void purgeCache() {        
-        
+    public void purgeCache() {
+
     }
-    
+
     @Override
     public void removeContent(String productId, String contentId) {
         Product product = prodCurator.find(productId);
