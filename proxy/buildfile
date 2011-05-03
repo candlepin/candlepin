@@ -70,12 +70,6 @@ DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
-CHECKSTYLE = ['checkstyle:checkstyle:jar:5.0',
-              'antlr:antlr:jar:2.7.6',
-              'com.google.collections:google-collections:jar:0.9',
-              COMMONS]
-
-
 BOUNCYCASTLE = group('bcprov-jdk16', 'bcpg-jdk16', :under=>'org.bouncycastle', :version=>'1.44')
 
 GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet', 'guice-throwing-providers', :under=>'com.google.inject.extensions', :version=>'2.0'),
@@ -123,6 +117,9 @@ repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 
+
+require 'buildr/checkstyle'
+
 #############################################################################
 # PROJECT BUILD
 #############################################################################
@@ -141,9 +138,7 @@ define "candlepin" do
   # http://buildr.apache.org/more_stuff.html#eclipse
   #
   eclipse.natures 'org.eclipse.jdt.core.javanature'
-  eclipse.natures 'net.sf.eclipsecs.core.CheckstyleNature'
   eclipse.builders 'org.eclipse.jdt.core.javabuilder'
-  eclipse.builders 'net.sf.eclipsecs.core.CheckstyleBuilder'
 
   # download the stuff we do not have in the repositories
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
@@ -286,60 +281,6 @@ define "candlepin" do
     cp_r 'code/schema/quartz/', 'target/schema/quartz'
   end
 
-  #
-  # CHECKSTYLE task, a Buildr plugin would be better, but this is faster
-  #
-  desc 'Run Checkstyle to make sure the code looks neat'
-  task :checkstyle => :compile do
-    begin
-      ant('checkstyle') do |ant|
-        rm_rf 'reports/checkstyle_report.xml'
-        mkdir_p 'reports'
-
-        ant.taskdef :resource=>"checkstyletask.properties",
-          :classpath=>Buildr.artifacts(CHECKSTYLE).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-
-        # check the main src
-        ant.checkstyle :config=>"buildconf/checkstyle.xml",
-                       :classpath=>Buildr.artifacts(CHECKSTYLE, JDOM, RESTEASY, OAUTH).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR) do
-
-
-          ant.classpath :path=>_('target/classes')
-          ant.formatter :type=>'plain'
-          ant.formatter :type=>'xml', :toFile=>"reports/checkstyle_report.xml"
-
-          ant.property :key=>'javadoc.method.scope', :value=>'public'
-          ant.property :key=>'javadoc.type.scope', :value=>'package'
-          ant.property :key=>'javadoc.var.scope', :value=>'package'
-          ant.property :key=>'javadoc.lazy', :value=>'false'
-          ant.property :key=>'javadoc.missing.param', :value=>'true'
-          ant.property :key=>'checkstyle.cache.file', :value=>'target/checkstyle.cache.src'
-          ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
-
-          ant.fileset :dir=>"src/main/java", :includes=>'**/*.java', :excludes=>'**/OIDUtil.java'
-        end
-
-        # check the test src
-        ant.checkstyle :config=>"buildconf/checkstyle.xml" do
-
-          ant.classpath :path=>_('target/test/classes')
-          ant.formatter :type=>'plain'
-          ant.formatter :type=>'xml', :toFile=>"reports/checkstyle_report.xml"
-
-          ant.property :key=>'javadoc.method.scope', :value=>'nothing'
-          ant.property :key=>'javadoc.type.scope', :value=>'nothing'
-          ant.property :key=>'javadoc.var.scope', :value=>'nothing'
-          ant.property :key=>'javadoc.lazy', :value=>'true'
-          ant.property :key=>'javadoc.missing.param', :value=>'false'
-          ant.property :key=>'checkstyle.cache.file', :value=>'target/checkstyle.cache.src'
-          ant.property :key=>'checkstyle.header.file', :value=>'buildconf/LICENSE.txt'
-
-          ant.fileset :dir=>"src/test/java", :includes=>'**/*.java'
-        end
-      end
-    end
-  end
-  
   desc 'Create an html report of the schema'
   task :schemaspy do
    cp = Buildr.artifacts(DB, SCHEMASPY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
@@ -384,7 +325,7 @@ namespace "gettext" do
 end
 
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, 'candlepin:checkstyle', :test, :deploy, :spec]
+task :check_all => [:clean, :checkstyle, :test, :deploy, :spec]
 
 #==========================================================================
 # Tomcat deployment
