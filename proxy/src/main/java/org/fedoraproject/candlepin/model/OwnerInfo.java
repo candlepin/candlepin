@@ -107,11 +107,11 @@ public class OwnerInfo {
             this.virtual = virtual;
         }
         
-        int getPhysical() {
+        public int getPhysical() {
             return physical;
         }
         
-        int getVirtual() {
+        public int getVirtual() {
             return virtual;
         }
         
