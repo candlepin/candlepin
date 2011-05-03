@@ -53,9 +53,11 @@ public abstract class PKIUtility {
     private static final int RSA_KEY_SIZE = 2048;
     protected static final String SIGNATURE_ALGO = "SHA1WITHRSA";
     protected PKIReader reader;
+    protected SubjectKeyIdentifierWriter subjectKeyWriter;
     
-    public PKIUtility(PKIReader reader) { 
+    public PKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter) {
         this.reader = reader;
+        this.subjectKeyWriter = subjectKeyWriter;
     }
  
     public abstract X509Certificate createX509Certificate(String dn,
