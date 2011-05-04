@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.3.5
+Version: 0.3.6
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,32 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed May 04 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.6-1
+- Add public modifiers to OwnerInfo.ConsumptionTypeCounts so jackson can work
+  (jbowes@redhat.com)
+- pull the checkstyle task out into its own extension (jbowes@redhat.com)
+- Spec test for custom product creation (wpoteat@redhat.com)
+- Generation of id when the incoming REST designates that the product is
+  custom. (wpoteat@redhat.com)
+- Add guest/physical consumer counts to OwnerInfo. (dgoodwin@redhat.com)
+- Extend ownerInfo to count used entitlements by product family
+  (jbowes@redhat.com)
+- skip bundler if you're using rpms (jesusr@redhat.com)
+- checkstyle fixup (jbowes@redhat.com)
+- Add specs for oauth (jbowes@redhat.com)
+- Add a new principal and role for trusted external systems (jbowes@redhat.com)
+- Update to Ruby scripts to refine the code and fix an issue with the Candlepin
+  API calls. (wpoteat@redhat.com)
+- Spec test for entitlement import update (wpoteat@redhat.com)
+- fix features= spec task option (jbowes@redhat.com)
+- Upgrading to buildr 1.4.5 and rspec 2 (jharris@redhat.com)
+- use ProductServiceAdapter not ProductCurator. (jesusr@redhat.com)
+- Add support for removing a product content association. (dgoodwin@redhat.com)
+- checkstyle fixup (jbowes@redhat.com)
+- create generated-source dir for po compilation via ant (jbowes@redhat.com)
+- Correction to the counts. Any non-specified pool gets put in the 'system'
+  bucket. (wpoteat@redhat.com)
+
 * Tue Apr 19 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.5-1
 - require exact version of candlepin rpm (jesusr@redhat.com)
 - option to skip the candlepin conf setup step (mmccune@redhat.com)
