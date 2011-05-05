@@ -10,7 +10,7 @@ function evalrc ()
 function gendb ()
 {
 	echo "============ generating a new db =============="
-    buildr candlepin:genschema
+    buildr --offline candlepin:genschema
     evalrc $? "schema generation failed"
 
     dropdb -U candlepin candlepin
@@ -139,10 +139,10 @@ eval $STOP
 
 if [ "$LOGDRIVER" == "logdriver" ]; then
     echo "using logdriver"
-    buildr -e logdriver clean package test=no
+    buildr --offline -e logdriver clean package test=no
 else
     echo "using NO logdriver"
-    buildr clean package test=no
+    buildr --offline clean package test=no
 fi
 
 if [ "$GENDB" == "1" ]; then
