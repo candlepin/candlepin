@@ -19,6 +19,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.ClosureUtils;
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.model.CuratorException;
 
 import java.io.BufferedReader;
@@ -53,6 +54,7 @@ public class Util {
      */
     public static final String UTC_STR = "UTC";
     private static Logger log = Logger.getLogger(Util.class);
+    private static ObjectMapper mapper = new ObjectMapper();    
 
     private Util() {
         // default ctor
@@ -300,6 +302,28 @@ public class Util {
         sha1hash = md.digest();
         return new String(Hex.encodeHex(sha1hash));
     }
+    
+    public static String toJson(Object anObject) {
+        String output = "";
+        try {
+            output = mapper.writeValueAsString(anObject);
+        }
+        catch (Exception e) {
+            log.error("Could no serialize the object to json " + anObject, e);
+        }
+        return output;        
+    }
+    
+    public static Object fromJson(String json, Class clazz) {
+        Object output = null;
+        try {
+            output = mapper.readValue(json, clazz);
+        }
+        catch (Exception e) {
+            log.error("Could no de-serialize the following json " + json, e);
+        }
+        return output;        
+    }    
 
     
 }

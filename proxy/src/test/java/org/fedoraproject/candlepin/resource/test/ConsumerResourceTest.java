@@ -167,7 +167,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, null, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null,
-            null, null, null, null, null);
+            null, null, null, null, null, null);
 
         List<CertificateSerialDto> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
@@ -721,7 +721,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            mgr, null, null, null);
+            null, mgr, null, null, null);
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(), null);
         Mockito.verify(mgr, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(this.consumer));
@@ -735,7 +735,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, this.entitlementCurator, null, null, null, null, null,
-            null, null, null, this.poolManager, null, null, null);
+            null, null, null, null, this.poolManager, null, null, null);
 
         List<Entitlement> resultList = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, null, 1, null,
@@ -788,7 +788,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, mockedIdSvc, null, null, sink, factory, null,
-            null, null, null, null, null, null);
+            null, null, null, null, null, null, ownerCurator);
 
         Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid());
 

@@ -30,10 +30,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.PrincipalData;
 import org.fedoraproject.candlepin.model.AccessControlEnforced;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Persisted;
+import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -44,7 +46,7 @@ import org.hibernate.annotations.ParamDef;
 /**
  * Event - Base class for Candlepin events.
  *
- * Servers as both our semi-permanent audit history in the database, as well as an
+ * Serves as both our semi-permanent audit history in the database, as well as an
  * integral part of the event queue.
  */
 @Entity
@@ -93,10 +95,15 @@ public class Event implements Persisted, AccessControlEnforced {
     @Enumerated(EnumType.STRING)
     private Target target;
 
+    //This should be there, but may not be
+    //moo
+    @Column(nullable = true)
+    private String targetName;
+
     // String representation of the principal. We probably should not be reconstructing
     // any stored principal object.
-    @Column(nullable = false)
-    private String principal;
+    @Column(nullable = false, name = "principal")
+    private String principalStore;
 
     @Column(nullable = false)
     private Date timestamp;
@@ -120,18 +127,22 @@ public class Event implements Persisted, AccessControlEnforced {
     private String oldEntity;
     @Transient
     private String newEntity;
+    
+    @Transient
+    private String messageText;    
 
     public Event() {
     }
 
-    public Event(Type type, Target target, Principal principal,
+    public Event(Type type, Target target, String targetName, Principal principal,
         String ownerId, String consumerId, String entityId,
         String oldEntity, String newEntity) {
         this.type = type;
         this.target = target;
+        this.targetName = targetName;
 
         // TODO: toString good enough? Need something better?
-        this.principal = principal.toString();
+        this.principalStore = Util.toJson(principal.getData());
         this.ownerId = ownerId;
         
         this.entityId = entityId;
@@ -167,12 +178,12 @@ public class Event implements Persisted, AccessControlEnforced {
         this.target = target;
     }
     
-    public String getPrincipal() {
-        return principal;
+    public PrincipalData getPrincipal() {
+        return (PrincipalData) Util.fromJson(this.principalStore, PrincipalData.class);
     }
 
-    public void setPrincipal(String principal) {
-        this.principal = principal;
+    public void setPrincipal(PrincipalData principal) {
+        this.principalStore = Util.toJson(principal);
     }
 
     public Date getTimestamp() {
@@ -191,13 +202,22 @@ public class Event implements Persisted, AccessControlEnforced {
         this.ownerId = ownerId;
     }
     
+    @XmlTransient    
+    public String getPrincipalStore() {
+        return principalStore;
+    }
+
+    public void setPrincipalStore(String principalStore) {
+        this.principalStore = principalStore;
+    }
+    
     public String getEntityId() {
         return entityId;
     }
 
     public void setEntityId(String entityId) {
         this.entityId = entityId;
-    }
+    }    
 
     @XmlTransient
     public String getOldEntity() {
@@ -250,4 +270,32 @@ public class Event implements Persisted, AccessControlEnforced {
     public void setConsumerId(String consumerId) {
         this.consumerId = consumerId;
     }
+
+    /**
+     * @return the targetName
+     */
+    public String getTargetName() {
+        return targetName;
+    }
+
+    /**
+     * @param targetName the targetName to set
+     */
+    public void setTargetName(String targetName) {
+        this.targetName = targetName;
+    }    
+    
+    /**
+     * @return the messageText
+     */
+    public String getMessageText() {
+        return messageText;
+    }
+
+    /**
+     * @param messageText the messageText to set
+     */
+    public void setMessageText(String messageText) {
+        this.messageText = messageText;
+    }    
 }

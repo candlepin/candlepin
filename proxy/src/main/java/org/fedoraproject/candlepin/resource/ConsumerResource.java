@@ -38,6 +38,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -109,6 +110,7 @@ public class ConsumerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private EventCurator eventCurator;
+    private EventAdapter eventAdapter;
     private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
     private PoolManager poolManager;
@@ -125,8 +127,9 @@ public class ConsumerResource {
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
         EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
-        UserServiceAdapter userService, Exporter exporter,
-        PoolManager poolManager, ConsumerRules consumerRules,
+        EventAdapter eventAdapter, UserServiceAdapter userService, 
+        Exporter exporter, PoolManager poolManager, 
+        ConsumerRules consumerRules, 
         ConsumerDeleteHelper consumerDeleteHelper,
         OwnerCurator ownerCurator) {
 
@@ -147,6 +150,7 @@ public class ConsumerResource {
         this.consumerRules = consumerRules;
         this.consumerDeleteHelper = consumerDeleteHelper;
         this.ownerCurator = ownerCurator;
+        this.eventAdapter = eventAdapter;
     }
 
     /**
@@ -812,11 +816,23 @@ public class ConsumerResource {
     @AllowRoles(roles = { Role.OWNER_ADMIN })
     public Feed getConsumerAtomFeed(
         @PathParam("consumer_uuid") String consumerUuid) {
+        String path = String.format("/consumers/%s/atom", consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        Feed feed = this.eventCurator.toFeed(this.eventCurator.listMostRecent(
-            FEED_LIMIT, consumer));
+        Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(
+            FEED_LIMIT, consumer),  path);
         feed.setTitle("Event feed for consumer " + consumer.getUuid());
         return feed;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{consumer_uuid}/events")
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public List<Event> getConsumerEvents(
+        @PathParam("consumer_uuid") String consumerUuid) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        return this.eventCurator.listMostRecent(
+            FEED_LIMIT, consumer);
     }
 
     @PUT

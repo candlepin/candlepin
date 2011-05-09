@@ -66,7 +66,7 @@ public class OwnerDeleteResourceTest {
         this.ownerResource = new OwnerResource(ownerCurator, poolCurator,
                 null, subscriptionCurator, subscriptionTokenCurator,
                 consumerCurator, null, userService, eventSink, eventFactory,
-                null, null, poolManager, exportCurator, null, importRecordCurator);
+                null, null, null, poolManager, exportCurator, null, importRecordCurator);
     }
 
     @Test

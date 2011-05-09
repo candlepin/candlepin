@@ -26,5 +26,6 @@ import com.google.inject.ImplementedBy;
 @ImplementedBy(EventAdapterImpl.class)
 public interface EventAdapter {
 
-    Feed toFeed(List<Event> events);
+    Feed toFeed(List<Event> events, String path);
+    void addMessageText(List<Event> events);
 }

@@ -34,7 +34,7 @@ import com.google.inject.ProvisionException;
 public class I18nProvider implements Provider<I18n> {
     private I18n i18n;
 
-    static final String BASENAME = "org.fedoraproject.candlepin.i18n.Messages";
+    public static final String BASENAME = "org.fedoraproject.candlepin.i18n.Messages";
 
     private static Logger log = Logger.getLogger(I18nProvider.class);
 

@@ -25,7 +25,11 @@ public class NoAuthPrincipal extends Principal {
         super(null, Arrays.asList(Role.values()));
     }
 
-    public String toString() {
-        return "NoAuthPrincipal";
+    public String getType() {
+        return "noAuth";
     }
+    
+    public String getPrincipalName() {       
+        return "Anonymous";
+    }     
 }

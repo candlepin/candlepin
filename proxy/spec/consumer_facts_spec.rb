@@ -64,7 +64,8 @@ describe 'Consumer Facts' do
     events = @cp.list_consumer_events(@consumer.uuid)
 
     # Punting on this for now...
-    events.should include("CONSUMER MODIFIED")
+    events.should include("consumer")
+    events.should include("updated")
   end
 
   it 'does not emit an event when facts do not change' do
@@ -77,6 +78,7 @@ describe 'Consumer Facts' do
     events = @cp.list_consumer_events(@consumer.uuid)
 
     # Punting on this for now...
-    events.should_not include("CONSUMER MODIFIED")
+    events.should include("consumer")
+    events.should include("updated")
   end
 end

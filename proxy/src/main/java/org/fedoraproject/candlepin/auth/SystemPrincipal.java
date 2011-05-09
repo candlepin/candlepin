@@ -28,8 +28,11 @@ public class SystemPrincipal extends Principal{
         super(null, Arrays.asList(new Role[]{Role.SUPER_ADMIN}));
     }
     
-    public String toString() {
-        return "SystemPrincipal [roles=" + getRoles() + "]";
+    public String getType() {
+        return "system";
     }
-    
+
+    public String getPrincipalName() {       
+        return "System";
+    } 
 }

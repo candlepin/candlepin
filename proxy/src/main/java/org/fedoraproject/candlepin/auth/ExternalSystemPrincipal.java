@@ -30,9 +30,12 @@ public class ExternalSystemPrincipal extends Principal {
         super(null, Arrays.asList(new Role[]{Role.TRUSTED_SYSTEM}));
     }
     
-    public String toString() {
-        return "SystemPrincipal [roles=" + getRoles() + "]";
+    public String getType() {
+        return "system";
     }
     
+    public String getPrincipalName() {       
+        return "External System";
+    }     
 
 }

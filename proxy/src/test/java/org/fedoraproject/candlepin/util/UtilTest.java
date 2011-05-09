@@ -411,6 +411,14 @@ public class UtilTest {
         tmpfile.delete();
     }
 
+    @Test
+    public void json() {
+        String test = "I Love JSON";
+        String json = Util.toJson(test);
+        String result = (String) Util.fromJson(json, String.class);
+        assertEquals(result, test);
+    }
+
     private interface TestClosable {
         void close();
     }

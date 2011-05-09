@@ -21,11 +21,14 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
+import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventAdapterImpl;
 import org.fedoraproject.candlepin.audit.Event.Target;
 import org.fedoraproject.candlepin.audit.Event.Type;
+import org.fedoraproject.candlepin.auth.PrincipalData;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.EventCurator;
@@ -34,6 +37,12 @@ import org.fedoraproject.candlepin.resource.AtomFeedResource;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.wideplay.warp.persist.PersistenceService;
+import com.wideplay.warp.persist.UnitOfWork;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,11 +55,21 @@ public class AtomFeedResourceTest {
     private EventCurator ec;
     private EventAdapter ea;
     private AtomFeedResource afr;
-    
+    private Injector injector;
+    private I18n i18n;
+     
     @Before
     public void setUp() {
+        injector = Guice.createInjector(
+            new CandlepinCommonTestingModule(),
+            new CandlepinNonServletEnvironmentTestingModule(),
+            PersistenceService.usingJpa()
+                .across(UnitOfWork.REQUEST)
+                .buildModule()
+        );        
+        i18n = injector.getInstance(I18n.class);        
         ec = mock(EventCurator.class);
-        ea = new EventAdapterImpl(new ConfigForTesting());
+        ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
         afr = new AtomFeedResource(ec, ea);
     }
     
@@ -76,10 +95,11 @@ public class AtomFeedResourceTest {
         Target[] targets = Target.values();
         Type[] types = Type.values();
         for (int i = 0; i < count; i++) {
-            Event e = mock(Event.class);
-            when(e.getTarget()).thenReturn(targets[i % targets.length]);
-            when(e.getType()).thenReturn(types[i % types.length]);
-            when(e.getTimestamp()).thenReturn(new Date());
+            Event e = new Event();
+            e.setTarget(targets[i % targets.length]);
+            e.setType(types[i % types.length]);    
+            e.setTimestamp(new Date());
+            e.setPrincipal(new PrincipalData());
             list.add(e);
         }
         return list;

@@ -59,13 +59,11 @@ public class ConsumerPrincipal extends Principal {
         return hash;
     }
     
-    public String toString() {
-        return "ConsumerPrincipal [ownerId=" + getOwner().getId() +
-            ", uuid=" + consumer.getUuid() + ", roles=" + getRoles() + "]";
-    }
-    
     public boolean isConsumer() {
         return true;
     }
 
+    public String getPrincipalName() {       
+        return consumer.getName();
+    }     
 }

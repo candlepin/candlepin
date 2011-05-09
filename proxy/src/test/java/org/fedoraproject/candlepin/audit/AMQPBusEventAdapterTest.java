@@ -96,7 +96,7 @@ public class AMQPBusEventAdapterTest {
 
         // given
         this.eventAdapter = new AMQPBusEventAdapter(mapper, reader, pkiutil);
-        this.event = new Event(this.type, this.target, principal, "1", "1", "42",
+        this.event = new Event(this.type, this.target, "name", principal, "1", "1", "42",
             "Old Entity", "New Entity");
     }
 

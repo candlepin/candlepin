@@ -36,6 +36,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -99,6 +100,7 @@ public class OwnerResource {
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
+    private EventAdapter eventAdapter;
     private static Logger log = Logger.getLogger(OwnerResource.class);
     private EventCurator eventCurator;
     private ProductCurator productCurator;
@@ -116,7 +118,8 @@ public class OwnerResource {
         SubscriptionTokenCurator subscriptionTokenCurator,
         ConsumerCurator consumerCurator, I18n i18n,
         UserServiceAdapter userService, EventSink sink,
-        EventFactory eventFactory, EventCurator eventCurator, Importer importer,
+        EventFactory eventFactory, EventCurator eventCurator, 
+        EventAdapter eventAdapter, Importer importer,
         PoolManager poolManager, ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator, ImportRecordCurator importRecordCurator) {
 
@@ -136,6 +139,7 @@ public class OwnerResource {
         this.exportCurator = exportCurator;
         this.importRecordCurator = importRecordCurator;
         this.poolManager = poolManager;
+        this.eventAdapter = eventAdapter;
     }
 
     /**
@@ -380,12 +384,22 @@ public class OwnerResource {
     @AllowRoles(roles = {Role.OWNER_ADMIN})
     public Feed getOwnerAtomFeed(@PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
-        Feed feed = this.eventCurator.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
-            o));
+        String path = String.format("/owners/%s/atom", ownerKey);        
+        Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT,
+            o), path);
         feed.setTitle("Event feed for owner " + o.getDisplayName());
         return feed;
     }
-    
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    @Path("{owner_key}/events")
+    public List<Event> getEvents(@PathParam("owner_key") String ownerKey) {
+        Owner o = findOwner(ownerKey);
+        return this.eventCurator.listMostRecent(FEED_LIMIT, o);
+    }
+
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

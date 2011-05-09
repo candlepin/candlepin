@@ -29,6 +29,8 @@ import com.wideplay.warp.persist.UnitOfWork;
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
+import org.fedoraproject.candlepin.auth.PrincipalData;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.resource.EventResource;
@@ -62,28 +64,40 @@ public class EventResourceTest {
 
     @Test
     public void getevent() {
-        Event e = mock(Event.class);
+        Event e = getEvent();
         when(ec.find(eq("8aba"))).thenReturn(e);
-        EventResource er = new EventResource(ec, null);
+        EventResource er = new EventResource(ec, null, 
+            injector.getInstance(EventAdapter.class));
         assertEquals(e, er.getEvent("8aba"));
     }
 
     @Test(expected = NotFoundException.class)
     public void notfound() {
         when(ec.find(anyString())).thenReturn(null);
-        EventResource er = new EventResource(ec, injector.getInstance(I18n.class));
+        EventResource er = new EventResource(ec, 
+            injector.getInstance(I18n.class),
+            injector.getInstance(EventAdapter.class));
         er.getEvent("foo");
     }
 
     @Test
     public void listevents() {
         when(ec.listAll()).thenReturn(null);
-        EventResource er = new EventResource(ec, null);
+        EventResource er = new EventResource(ec, null, 
+            injector.getInstance(EventAdapter.class));
         assertNull(er.listEvents());
 
         List<Event> events = new ArrayList<Event>();
-        events.add(mock(Event.class));
+        events.add(getEvent());
         when(ec.listAll()).thenReturn(events);
         assertEquals(events, er.listEvents());
+    }
+    
+    protected Event getEvent() {
+        Event e = new Event();
+        e.setTarget(Event.Target.CONSUMER);
+        e.setType(Event.Type.CREATED);
+        e.setPrincipal(new PrincipalData());
+        return e; 
     }
 }

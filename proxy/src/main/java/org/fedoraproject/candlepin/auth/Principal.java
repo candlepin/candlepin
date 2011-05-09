@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.auth;
 
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.util.Util;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -26,7 +27,7 @@ import java.util.List;
 public abstract class Principal implements Serializable {
 
     private Owner owner;
-    private List<Role> roles;
+    private List<Role> roles;     
 
     public Principal(Owner owner, List<Role> roles) {
         this.owner = owner;
@@ -54,5 +55,25 @@ public abstract class Principal implements Serializable {
 
     public boolean isConsumer() {
         return false;
+    }
+    
+    public String getType() {
+        return "principal";
+    }
+    
+    public String getPrincipalName() {
+        return "";
+    }
+    
+    public PrincipalData getData() {
+        String ownerId = getOwner() != null ? getOwner().getId() : null;
+        PrincipalData data = new PrincipalData(ownerId, getRoles(),
+            this.getType(), this.getPrincipalName());
+        
+        return data;
+    }
+    
+    public String toString() {
+        return Util.toJson(this.getData());
     }
 }

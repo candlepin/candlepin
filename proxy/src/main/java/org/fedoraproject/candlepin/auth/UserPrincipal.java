@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.auth;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.Owner;
-
 /**
  *
  */
@@ -60,13 +59,12 @@ public class UserPrincipal extends Principal {
         return hash;
     }
 
-    public String toString() {
-        String ownerId = getOwner() != null ? getOwner().getId() : null;
-        
-        return "UserPrincipal [ownerId=" + ownerId +
-            ", username=" + username + ", roles=" +
-            getRoles() + "]"; 
-         
+    public String getType() {
+        return "user";
+    }
+    
+    public String getPrincipalName() {       
+        return username;
     }
 
 }

@@ -75,7 +75,7 @@ public class AMQPSubscriptionEventTest {
     private void verifySubscriptionEvent(Event.Type type) throws Exception {
         // given
         Event event = new Event(type, Event.Target.SUBSCRIPTION,
-            principal, "1", "1", "33", "Old Subscription", "New Subscription");
+            "name", principal, "1", "1", "33", "Old Subscription", "New Subscription");
 
         Subscription sub = mock(Subscription.class, Mockito.RETURNS_DEEP_STUBS);
 
@@ -130,7 +130,7 @@ public class AMQPSubscriptionEventTest {
     public void subscriptionDeleted() throws IOException {
         // given
         Event event = new Event(Event.Type.DELETED, Event.Target.SUBSCRIPTION,
-            principal, "1", "1", "33", "Old Subscription", "New Subscription");
+            "name", principal, "1", "1", "33", "Old Subscription", "New Subscription");
 
         Subscription sub = mock(Subscription.class, Mockito.RETURNS_DEEP_STUBS);
         
