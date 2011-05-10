@@ -178,8 +178,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     /**
      * sets custom product state.
-     *
-     * @param boolean custom?
      */
     public void setCustom(boolean custom) {
         this.custom = custom;
