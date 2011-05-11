@@ -92,7 +92,7 @@ public class OwnerInfo {
         }
         
         typeCounts.physical += physical;
-        typeCounts.virtual += virtual;
+        typeCounts.guest += virtual;
     }
 
     /**
@@ -100,19 +100,19 @@ public class OwnerInfo {
      */
     public static class ConsumptionTypeCounts {
         private int physical;
-        private int virtual;
+        private int guest;
         
-        public ConsumptionTypeCounts(int physical, int virtual) {
+        public ConsumptionTypeCounts(int physical, int guest) {
             this.physical = physical;
-            this.virtual = virtual;
+            this.guest = guest;
         }
         
         public int getPhysical() {
             return physical;
         }
         
-        public int getVirtual() {
-            return virtual;
+        public int getGuest() {
+            return guest;
         }
         
         @Override
@@ -122,16 +122,16 @@ public class OwnerInfo {
             }
             
             ConsumptionTypeCounts other = (ConsumptionTypeCounts) o;
-            return this.physical == other.physical && this.virtual == other.virtual;
+            return this.physical == other.physical && this.guest == other.guest;
         }
         
         @Override
         public int hashCode() {
-            return physical * virtual;
+            return physical * guest;
         }
         
         public String toString() {
-            return String.format("Physical: %d, Virtual: %d", physical, virtual);
+            return String.format("Physical: %d, Virtual: %d", physical, guest);
         }
     }
 
