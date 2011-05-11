@@ -17,5 +17,5 @@ function flatten ()
     echo "candlepin deps located in $M2_REPO"
 }
 
-buildr artifacts
+buildr nocheckstyle=1 artifacts
 flatten

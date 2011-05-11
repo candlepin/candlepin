@@ -119,7 +119,10 @@ repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-reposito
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 
 
-require 'buildr/checkstyle'
+nocstyle = ENV['nocheckstyle']
+if nocstyle.nil?
+   require 'buildr/checkstyle'
+end
 
 #############################################################################
 # PROJECT BUILD
