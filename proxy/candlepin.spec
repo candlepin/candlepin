@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.3.8
+Version: 0.3.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Thu May 12 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.9-1
+- require candlepin-deps 0.0.15 (jesusr@redhat.com)
+- fix checkstyle (jesusr@redhat.com)
+- cpbc: allow parsing of encrypted private keys (jesusr@redhat.com)
+
 * Wed May 11 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.8-1
 - require candlepin-deps 0.0.14 or later. (jesusr@redhat.com)
 - Allowing the Subject Key Identifier to be injected (bleanhar@redhat.com)
