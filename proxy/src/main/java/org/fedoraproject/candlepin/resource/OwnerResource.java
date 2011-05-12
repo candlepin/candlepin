@@ -397,7 +397,11 @@ public class OwnerResource {
     @Path("{owner_key}/events")
     public List<Event> getEvents(@PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
-        return this.eventCurator.listMostRecent(FEED_LIMIT, o);
+        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o);
+        if (events != null) {
+            eventAdapter.addMessageText(events);
+        }
+        return events;
     }
 
     @GET

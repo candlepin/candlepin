@@ -831,8 +831,12 @@ public class ConsumerResource {
     public List<Event> getConsumerEvents(
         @PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        return this.eventCurator.listMostRecent(
+        List<Event> events = this.eventCurator.listMostRecent(
             FEED_LIMIT, consumer);
+        if (events != null) {
+            eventAdapter.addMessageText(events);
+        }
+        return events;
     }
 
     @PUT
