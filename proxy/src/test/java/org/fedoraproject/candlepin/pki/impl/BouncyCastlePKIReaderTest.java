@@ -33,7 +33,8 @@ public class BouncyCastlePKIReaderTest {
             new HashMap<String, String>() {
 
                 {
-                    put(ConfigProperties.CA_KEY, "target/test/resources/keys/DEStestkey.pem");
+                    put(ConfigProperties.CA_KEY,
+                        "target/test/resources/keys/DEStestkey.pem");
                     put(ConfigProperties.CA_KEY_PASSWORD, "dog8code");
                 }
             });
