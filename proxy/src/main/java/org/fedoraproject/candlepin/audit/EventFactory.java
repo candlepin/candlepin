@@ -70,7 +70,7 @@ public class EventFactory {
         Principal principal = principalProvider.get();
         
         Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, 
-            newConsumer.getName(), principal, principal.getOwner().getId(), 
+            newConsumer.getName(), principal, newConsumer.getOwner().getId(),
             newConsumer.getId(), newConsumer.getId(), null, newEntityJson);
         return e;
     }    
@@ -80,7 +80,7 @@ public class EventFactory {
         Principal principal = principalProvider.get();
         
         return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER, 
-            newConsumer.getName(), principal, principal.getOwner().getId(), 
+            newConsumer.getName(), principal, newConsumer.getOwner().getId(),
             newConsumer.getId(), newConsumer.getId(), null, newEntityJson);
     }
     
@@ -90,7 +90,7 @@ public class EventFactory {
         Principal principal = principalProvider.get();
         
         return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER, 
-            oldConsumer.getName(), principal, principal.getOwner().getId(), 
+            oldConsumer.getName(), principal, newConsumer.getOwner().getId(),
             oldConsumer.getId(), oldConsumer.getId(), oldEntityJson, newEntityJson);
     }
 
@@ -204,7 +204,7 @@ public class EventFactory {
     public Event exportCreated(Consumer consumer) {
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.CREATED, Event.Target.EXPORT, consumer.getName(), 
-            principal, principal.getOwner().getId(), consumer.getId(),
+            principal, consumer.getOwner().getId(), consumer.getId(),
             consumer.getId(), null, entityToJson(consumer));
         return e;
     }
@@ -220,8 +220,9 @@ public class EventFactory {
         Principal principal = principalProvider.get();
 
         Event e = new Event(Event.Type.CREATED, Event.Target.SUBSCRIPTION,
-            subscription.getProduct().getName(), principal, principal.getOwner().getId(),
-            null, subscription.getId(), null, entityToJson(subscription));
+            subscription.getProduct().getName(), principal, 
+            subscription.getOwner().getId(), null, subscription.getId(), null,
+            entityToJson(subscription));
         return e;
     }
 
@@ -230,7 +231,7 @@ public class EventFactory {
         String news = entityToJson(newSub);
         Principal principal = principalProvider.get();
         return new Event(Event.Type.MODIFIED, Event.Target.SUBSCRIPTION,
-            oldSub.getProduct().getName(), principal, principal.getOwner().getId(), 
+            oldSub.getProduct().getName(), principal, newSub.getOwner().getId(),
             null, newSub.getId(), olds, news);
     }
 

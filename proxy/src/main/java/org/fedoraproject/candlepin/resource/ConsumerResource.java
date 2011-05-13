@@ -219,7 +219,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public Consumer create(Consumer consumer, @Context Principal principal,
-        @QueryParam("username") String userName)
+        @QueryParam("username") String userName, @QueryParam("owner") String ownerKey)
         throws BadRequestException {
         // API:registerConsumer
         
@@ -241,7 +241,7 @@ public class ConsumerResource {
             user = userService.findByLogin(userName);
         }
 
-        setupOwner(user, principal);
+        setupOwners(user, principal);
 
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
@@ -257,8 +257,17 @@ public class ConsumerResource {
             consumer.setName(user.getUsername());
         }
 
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new BadRequestException(i18n.tr("Owner {0} does not exist", ownerKey));
+        }
+        if (!user.getOwners().contains(owner)) {
+            throw new BadRequestException(i18n.tr("User {0} is not a member of owner {1}",
+                    user.getUsername(), ownerKey));
+        }
+
         consumer.setUsername(user.getUsername());
-        consumer.setOwner(user.getOwner());
+        consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
 
@@ -304,36 +313,40 @@ public class ConsumerResource {
      * During registration of new consumers we support an edge case where the user
      * service may have authenticated a username/password for an owner which we have
      * not yet created in the Candlepin database. If we detect this during
-     * registration we need to create the new owner, and adjust
+     * registration we need to create the new owners, and adjust
      * the principal that was created during authentication to carry it.
      */
-    private void setupOwner(User user, Principal principal) {
-        Owner owner = userService.getOwner(user.getUsername());
-        Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
+    private void setupOwners(User user, Principal principal) {
+        Set<Owner> existingOwners = new HashSet<Owner>();
 
-        if (existingOwner == null) {
-            log.info("Creating new owner: " + owner.getKey());
+        for (Owner owner : userService.getOwners(user.getUsername())) {
+            Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
 
-            // Need elevated privileges to create a new owner:
-            Principal systemPrincipal = new SystemPrincipal();
-            ResteasyProviderFactory.pushContext(Principal.class,
-                systemPrincipal);
+            if (existingOwner == null) {
+                log.info("Creating new owner: " + owner.getKey());
 
-            existingOwner = ownerCurator.create(owner);
-            poolManager.refreshPools(existingOwner);
+                // Need elevated privileges to create a new owner:
+                Principal systemPrincipal = new SystemPrincipal();
+                ResteasyProviderFactory.pushContext(Principal.class,
+                    systemPrincipal);
 
-            ResteasyProviderFactory.popContextData(Principal.class);
+                existingOwner = ownerCurator.create(owner);
+                poolManager.refreshPools(existingOwner);
 
-            // Set the new owner on the existing principal, which previously had a
-            // detached owner:
-            principal.setOwner(existingOwner);
+                ResteasyProviderFactory.popContextData(Principal.class);
 
-            // Restore the old principal having elevated privileges earlier:
-            ResteasyProviderFactory.pushContext(Principal.class,
-                principal);
+                // Restore the old principal having elevated privileges earlier:
+                ResteasyProviderFactory.pushContext(Principal.class,
+                    principal);
+            }
+
+            existingOwners.add(existingOwner);
         }
         
-        user.setOwner(existingOwner);
+        // Set the new owner on the existing principal, which previously had a
+        // detached owner:
+        principal.setOwners(existingOwners);
+        user.setOwners(existingOwners);
     }
 
     private ConsumerType lookupConsumerType(String label) {

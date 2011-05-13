@@ -21,7 +21,6 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.AccessControlEnforced;
-import org.fedoraproject.candlepin.model.Owner;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -33,6 +32,7 @@ import org.apache.log4j.Logger;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import org.fedoraproject.candlepin.model.Owner;
 
 /**
  * AccessControlInterceptor
@@ -106,8 +106,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
             }
         }
         else if (Role.OWNER_ADMIN == role) {
-            if (!((AccessControlEnforced) entity)
-                .shouldGrantAccessTo(currentUser.getOwners())) {
+            if (!hasAccessTo(currentUser, (AccessControlEnforced) entity)) {
                 log.warn("Denying: " + currentUser + " access to: " + entity);
                 throw new ForbiddenException("access denied.");
             }
@@ -116,6 +115,17 @@ public class AccessControlInterceptor implements MethodInterceptor {
             log.warn("Denying: " + currentUser + " access to: " + entity);
             throw new ForbiddenException("access denied.");
         }
+    }
+
+    // Grant access if ANY of the principal's owners has permission to see the entity
+    private boolean hasAccessTo(Principal principal, AccessControlEnforced entity) {
+        for (Owner owner : principal.getOwners()) {
+            if (entity.shouldGrantAccessTo(owner)) {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     private void enableConsumerFilter(Principal currentUser, Object target, Role role) {
@@ -126,10 +136,14 @@ public class AccessControlInterceptor implements MethodInterceptor {
         curator.enableFilter(filterName, "consumer_id", user.consumer().getId());
     }
 
-    // TODO: Address this once User -> Owner relationship is N-M
-    private List<String> convertOwner(Owner owner) {
+    // Gets the owner ids for a user principal
+    private List<String> getOwnerIds(UserPrincipal principal) {
         List<String> ownerIds = new LinkedList<String>();
-        ownerIds.add(owner.getId());
+
+        for (Owner owner : principal.getOwners()) {
+            ownerIds.add(owner.getId());
+        }
+
         return ownerIds;
     }
 
@@ -138,7 +152,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         UserPrincipal user = (UserPrincipal) currentUser;
 
         String filterName = filterName(curator.entityType(), role); 
-        curator.enableFilterList(filterName, "owner_ids", convertOwner(user.getOwner()));
+        curator.enableFilterList(filterName, "owner_ids", getOwnerIds(user));
     }
     
     private String filterName(Class<?> entity, Role role) {

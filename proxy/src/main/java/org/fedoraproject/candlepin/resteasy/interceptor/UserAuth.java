@@ -26,6 +26,8 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Injector;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * UserAuth
@@ -49,17 +51,21 @@ public abstract class UserAuth implements AuthProvider {
      * Creates a user principal for a given username
      */
     protected Principal createPrincipal(String username) {
-        Owner owner = this.userServiceAdapter.getOwner(username);
+        List<Owner> owners = this.userServiceAdapter.getOwners(username);
         UserPrincipal principal = null;
-        if (owner == null) {
-            String msg = i18n.tr("No owner found for user {0}", username);
+        if (owners == null || owners.isEmpty()) {
+            String msg = i18n.tr("No owners found for user {0}", username);
             throw new BadRequestException(msg);
         }
         else {
-            owner = AuthUtil.lookupOwner(owner, ownerCurator);
+            Set<Owner> fullOwners = new HashSet<Owner>();
+            for (Owner owner : owners) {
+                fullOwners.add(AuthUtil.lookupOwner(owner, ownerCurator));
+            }
             List<Role> roles = this.userServiceAdapter.getRoles(username);
-            principal = new UserPrincipal(username, owner, roles);
+            principal = new UserPrincipal(username, fullOwners, roles);
         }
         return principal;
     }
+
 }

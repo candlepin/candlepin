@@ -15,7 +15,10 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Owner;
 
 /**
  *
@@ -25,9 +28,16 @@ public class ConsumerPrincipal extends Principal {
     private Consumer consumer;
 
     public ConsumerPrincipal(Consumer consumer) {
-        super(consumer.getOwner(), Arrays.asList(new Role[]{Role.CONSUMER}));
+        super(getOwners(consumer), Arrays.asList(new Role[]{Role.CONSUMER}));
 
         this.consumer = consumer;
+    }
+
+    private static Set<Owner> getOwners(Consumer consumer) {
+        Set<Owner> owners = new HashSet<Owner>();
+        owners.add(consumer.getOwner());
+
+        return owners;
     }
     
     public Consumer consumer() {
@@ -58,11 +68,13 @@ public class ConsumerPrincipal extends Principal {
         hash = 83 * hash + (this.consumer != null ? this.consumer.hashCode() : 0);
         return hash;
     }
-    
+
+    @Override
     public boolean isConsumer() {
         return true;
     }
 
+    @Override
     public String getPrincipalName() {       
         return consumer.getName();
     }     

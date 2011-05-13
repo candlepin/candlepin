@@ -18,6 +18,8 @@ import com.google.inject.Inject;
 import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -72,20 +74,20 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     //FIXME this seems hacky
-    public Owner getOwner(String username) {
-        Owner owner = null;
+    public List<Owner> getOwners(String username) {
+        List<Owner> owners = new ArrayList<Owner>();
         try {
             String dn = getDN(username);
             LDAPConnection lc = getConnection();
             LDAPEntry entry = lc.read(dn);
             String orgName = entry.getAttribute("ou").getStringValue();
-            owner = new Owner(orgName);
+            owners.add(new Owner(orgName));
         } 
         catch (LDAPException e) {
             //eat it
         }        
         
-        return owner;
+        return owners;
     }
 
     @Override
@@ -131,7 +133,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             LDAPConnection lc = new LDAPConnection();
             lc.connect(ldapServer, ldapPort);
             lc.read(dn);
-            user = new User(getOwner(username), username, null);
+            user = new User(new HashSet<Owner>(getOwners(username)), username, null);
         } 
         catch (LDAPException e) {
             //eat it
