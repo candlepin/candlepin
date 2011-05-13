@@ -70,8 +70,8 @@ DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
-#BOUNCYCASTLE = group('bcprov-jdk16', 'bcpg-jdk16', :under=>'org.bouncycastle', :version=>'1.44')
-BOUNCYCASTLE = 'org.bouncycastle:cp-bouncycastle:jar:1.44'
+BOUNCYCASTLE = group('bcprov-jdk16', 'bcpg-jdk16', :under=>'org.bouncycastle', :version=>'1.44')
+#BOUNCYCASTLE = 'org.bouncycastle:cp-bouncycastle:jar:1.44'
 
 GUICE =  [group('guice-assisted-inject', 'guice-multibindings', 'guice-servlet', 'guice-throwing-providers', :under=>'com.google.inject.extensions', :version=>'2.0'),
            'com.google.inject:guice:jar:2.0',
