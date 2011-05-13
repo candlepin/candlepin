@@ -52,7 +52,7 @@ import org.hibernate.annotations.ParamDef;
     ),
     @FilterDef(
         name = "EntitlementCertificate_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_id", type = "string")
+        parameters = @ParamDef(name = "owner_ids", type = "string")
     )
 })
 @Filters({
@@ -62,7 +62,7 @@ import org.hibernate.annotations.ParamDef;
     @Filter(name = "Consumer_CONSUMER_FILTER", 
         condition = "id in (select c.id from cp_ent_certificate c " +
             "inner join cp_entitlement e on c.entitlement_id = e.id " +
-                "and c.owner_id = :owner_id)")
+                "and c.owner_id in (:owner_ids))")
 })
 public class EntitlementCertificate extends AbstractCertificate
     implements AccessControlEnforced {

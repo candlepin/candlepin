@@ -56,12 +56,12 @@ import org.hibernate.annotations.ParamDef;
 @FilterDefs({
     @FilterDef(
         name = "Event_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_id", type = "string")
+        parameters = @ParamDef(name = "owner_ids", type = "string")
     )
 })
 @Filters({
     @Filter(name = "Event_OWNER_FILTER", 
-        condition = "ownerId = :owner_id"
+        condition = "ownerId in (:owner_ids)"
     )
 })
 public class Event implements Persisted, AccessControlEnforced {

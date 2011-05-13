@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.model.AccessControlEnforced;
+import org.fedoraproject.candlepin.model.Owner;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -30,6 +31,8 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * AccessControlInterceptor
@@ -123,12 +126,19 @@ public class AccessControlInterceptor implements MethodInterceptor {
         curator.enableFilter(filterName, "consumer_id", user.consumer().getId());
     }
 
+    // TODO: Address this once User -> Owner relationship is N-M
+    private List<String> convertOwner(Owner owner) {
+        List<String> ownerIds = new LinkedList<String>();
+        ownerIds.add(owner.getId());
+        return ownerIds;
+    }
+
     private void enableOwnerFilter(Principal currentUser, Object target, Role role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         UserPrincipal user = (UserPrincipal) currentUser;
 
         String filterName = filterName(curator.entityType(), role); 
-        curator.enableFilter(filterName, "owner_id", user.getOwner().getId());
+        curator.enableFilterList(filterName, "owner_ids", convertOwner(user.getOwner()));
     }
     
     private String filterName(Class<?> entity, Role role) {

@@ -69,7 +69,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @FilterDefs({
     @FilterDef(
         name = "Consumer_OWNER_FILTER",
-        parameters = @ParamDef(name = "owner_id", type = "string")
+        parameters = @ParamDef(name = "owner_ids", type = "string")
     ),
     @FilterDef(
         name = "Consumer_CONSUMER_FILTER",
@@ -78,7 +78,7 @@ import javax.xml.bind.annotation.XmlTransient;
 })
 @Filters({
     @Filter(name = "Consumer_OWNER_FILTER",
-        condition = "owner_id = :owner_id"
+        condition = "owner_id in (:owner_ids)"
     ),
     @Filter(name = "Consumer_CONSUMER_FILTER",
         condition = "id = :consumer_id"
