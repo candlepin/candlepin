@@ -65,7 +65,7 @@ import org.hibernate.annotations.ParamDef;
 @FilterDefs({
     @FilterDef(
         name = "Entitlement_OWNER_FILTER",
-        parameters = @ParamDef(name = "owner_id", type = "string")
+        parameters = @ParamDef(name = "owner_ids", type = "string")
     ),
     @FilterDef(
         name = "Entitlement_CONSUMER_FILTER",
@@ -74,7 +74,7 @@ import org.hibernate.annotations.ParamDef;
 })
 @Filters({
     @Filter(name = "Entitlement_OWNER_FILTER",
-        condition = "owner_id = :owner_id"
+        condition = "owner_id in (:owner_ids)"
     ),
     @Filter(name = "Entitlement_CONSUMER_FILTER",
         condition = "consumer_id = :consumer_id"

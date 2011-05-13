@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -50,6 +51,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     
     public void enableFilter(String filterName, String parameterName, Object value) {
         currentSession().enableFilter(filterName).setParameter(parameterName, value);
+    }
+
+    public void enableFilterList(String filterName, String parameterName,
+        Collection value) {
+        currentSession().enableFilter(filterName).setParameterList(parameterName, value);
     }
 
     /**

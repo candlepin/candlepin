@@ -16,6 +16,9 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
@@ -70,7 +73,9 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
 
         assertEquals(2, poolCurator.listAll().size());
         
-        poolCurator.enableFilter("Pool_OWNER_FILTER", "owner_id", anotherOwner.getId());
+        List<String> ownerIds = new LinkedList<String>();
+        ownerIds.add(anotherOwner.getId());
+        poolCurator.enableFilterList("Pool_OWNER_FILTER", "owner_ids", ownerIds);
         assertEquals(1, poolCurator.listAll().size());
     }
     
