@@ -25,6 +25,7 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}
@@ -45,13 +46,14 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     }
     
     @Override
-    public Owner getOwner(String username) {
+    public List<Owner> getOwners(String username) {
         User user = this.userCurator.findByLogin(username);
         
         if (user != null) {
-            return user.getOwner();
+            return new ArrayList<Owner>(user.getOwners());
         }
-        
+
+        // TODO:  Should this be an empty list instead?
         return null;
     }
 

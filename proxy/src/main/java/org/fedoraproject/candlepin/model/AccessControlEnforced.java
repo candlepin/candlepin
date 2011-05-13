@@ -14,10 +14,12 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.Set;
+
 /**
  * AccessControlEnforced
  */
 public interface AccessControlEnforced {
-    boolean shouldGrantAccessTo(Owner owner);
+    boolean shouldGrantAccessTo(Set<Owner> owners);
     boolean shouldGrantAccessTo(Consumer consumer);
 }

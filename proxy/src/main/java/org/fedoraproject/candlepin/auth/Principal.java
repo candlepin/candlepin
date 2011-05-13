@@ -18,31 +18,33 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.util.Util;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * An entity interacting with Candlepin
  */
 public abstract class Principal implements Serializable {
 
-    private Owner owner;
+    private Set<Owner> owners;
     private List<Role> roles;     
 
-    public Principal(Owner owner, List<Role> roles) {
-        this.owner = owner;
+    public Principal(Set<Owner> owners, List<Role> roles) {
+        this.owners = owners;
         this.roles = roles;
         if (roles == null) {
             this.roles = new LinkedList<Role>();
         }
     }
 
-    public Owner getOwner() {
-        return owner;
+    public Set<Owner> getOwners() {
+        return owners;
     }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    public void setOwners(Set<Owner> owners) {
+        this.owners = owners;
     }
 
     public List<Role> getRoles() {
@@ -66,8 +68,12 @@ public abstract class Principal implements Serializable {
     }
     
     public PrincipalData getData() {
-        String ownerId = getOwner() != null ? getOwner().getId() : null;
-        PrincipalData data = new PrincipalData(ownerId, getRoles(),
+        List<String> ownerIds = new ArrayList<String>();
+        for (Owner owner : getOwners()) {
+            ownerIds.add(owner.getId());
+        }
+        
+        PrincipalData data = new PrincipalData(ownerIds, getRoles(),
             this.getType(), this.getPrincipalName());
         
         return data;

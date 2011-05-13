@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -155,14 +156,14 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
-    public Owner getOwner(String username) {
+    public List<Owner> getOwners(String username) {
         String ownerName = this.userOwners.get(username);
 
         if (ownerName == null) {
             ownerName = DEFAULT_ORG;
         }
 
-        return new Owner(ownerName, ownerName);
+        return Arrays.asList(new Owner(ownerName));
     }
 
     @Override
@@ -200,11 +201,13 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public User findByLogin(String login) {
+        Set<Owner> owners = new HashSet<Owner>(getOwners(login));
+
         if (userPasswords.isEmpty()) {
-            return new User(getOwner(login), login, null);
+            return new User(owners, login, null);
         }
         else if (userPasswords.containsKey(login)) {
-            return new User(getOwner(login), login, userPasswords.get(login));
+            return new User(owners, login, userPasswords.get(login));
         }
         
         return null;

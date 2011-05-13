@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class PrincipalData {
 
-    private String ownerId;
+    private List<String> ownerIds;
     private List<Role> roles;
     private String type;
     private String name;
@@ -33,10 +33,11 @@ public class PrincipalData {
      * @param type
      * @param name
      */
-    public PrincipalData(String ownerId, List<Role> roles, String type,
+    public PrincipalData(List<String> ownerIds, List<Role> roles, String type,
         String name) {
         super();
-        this.ownerId = ownerId;
+        
+        this.ownerIds = ownerIds;
         this.roles = roles;
         this.type = type;
         this.name = name;
@@ -48,14 +49,14 @@ public class PrincipalData {
     /**
      * @return the ownerId
      */
-    public String getOwnerId() {
-        return ownerId;
+    public List<String> getOwnerIds() {
+        return ownerIds;
     }
     /**
      * @param ownerId the ownerId to set
      */
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+    public void setOwnerIds(List<String> ownerIds) {
+        this.ownerIds = ownerIds;
     }
     /**
      * @return the roles

@@ -26,6 +26,8 @@ import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
 
 /**
  * UserResource
@@ -48,5 +50,11 @@ public class UserResource {
         return userService.findByLogin(username);
     }
 
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public User createUser(User user) {
+        return userService.createUser(user);
+    }
 
 }

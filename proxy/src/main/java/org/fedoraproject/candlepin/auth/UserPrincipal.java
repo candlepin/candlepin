@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Owner;
 /**
@@ -24,8 +25,8 @@ public class UserPrincipal extends Principal {
 
     private String username;
 
-    public UserPrincipal(String username, Owner owner, List<Role> roles) {
-        super(owner, roles);
+    public UserPrincipal(String username, Set<Owner> owners, List<Role> roles) {
+        super(owners, roles);
 
         this.username = username;
     }
@@ -59,10 +60,12 @@ public class UserPrincipal extends Principal {
         return hash;
     }
 
+    @Override
     public String getType() {
         return "user";
     }
-    
+
+    @Override
     public String getPrincipalName() {       
         return username;
     }

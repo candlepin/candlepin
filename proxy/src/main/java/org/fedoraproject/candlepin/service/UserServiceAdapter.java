@@ -34,7 +34,7 @@ public interface UserServiceAdapter {
      */
     boolean validateUser(String username, String password) throws Exception;
 
-    Owner getOwner(String username);
+    List<Owner> getOwners(String username);
 
     List<Role> getRoles(String username);
 

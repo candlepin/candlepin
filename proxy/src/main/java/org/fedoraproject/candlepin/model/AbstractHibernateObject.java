@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -28,7 +29,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @MappedSuperclass
 @XmlType(name = "CandlepinObject")
-public abstract class AbstractHibernateObject implements Persisted {
+public abstract class AbstractHibernateObject implements Persisted, Serializable {
 
     private Date created;
     private Date updated;

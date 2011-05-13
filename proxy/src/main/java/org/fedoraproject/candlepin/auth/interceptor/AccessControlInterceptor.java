@@ -104,7 +104,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         }
         else if (Role.OWNER_ADMIN == role) {
             if (!((AccessControlEnforced) entity)
-                .shouldGrantAccessTo(currentUser.getOwner())) {
+                .shouldGrantAccessTo(currentUser.getOwners())) {
                 log.warn("Denying: " + currentUser + " access to: " + entity);
                 throw new ForbiddenException("access denied.");
             }

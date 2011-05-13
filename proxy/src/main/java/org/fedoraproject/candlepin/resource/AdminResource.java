@@ -31,6 +31,8 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Candlepin server administration REST calls.
@@ -85,10 +87,12 @@ public class AdminResource {
 
         log.info("Creating Admin owner.");
         Owner adminOwner = ownerCurator.create(new Owner("admin"));
+        Set<Owner> owners = new HashSet<Owner>();
+        owners.add(adminOwner);
         
         log.info("Creating default super admin.");
         try {
-            User defaultAdmin = new User(adminOwner, "admin", "admin", true);
+            User defaultAdmin = new User(owners, "admin", "admin", true);
             userService.createUser(defaultAdmin);
         } 
         catch (UnsupportedOperationException e) {

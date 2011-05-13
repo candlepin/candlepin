@@ -32,6 +32,8 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * BasicAuth
@@ -75,9 +77,7 @@ class BasicAuth implements AuthProvider {
                 if (userServiceAdapter.validateUser(username, password)) {
                     Principal principal = createPrincipal(username);
                     if (log.isDebugEnabled()) {
-                        log.debug("principal created for owner '" +
-                            principal.getOwner().getDisplayName() +
-                            "' with username '" + username + "'");
+                        log.debug("principal created for user '" + username);
                     }
 
                     return principal;
@@ -103,10 +103,13 @@ class BasicAuth implements AuthProvider {
     }
 
     private Principal createPrincipal(String username) {
-        Owner owner = this.userServiceAdapter.getOwner(username);
-        owner = lookupOwner(owner);
         List<Role> roles = this.userServiceAdapter.getRoles(username);
-        return new UserPrincipal(username, owner, roles);
+        Set<Owner> owners = new HashSet<Owner>();
+        for (Owner owner : this.userServiceAdapter.getOwners(username)) {
+            owners.add(lookupOwner(owner));
+        }
+
+        return new UserPrincipal(username, owners, roles);
     }
 
     /*

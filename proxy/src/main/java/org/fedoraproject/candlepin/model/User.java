@@ -15,13 +15,15 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Formatter;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -29,7 +31,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import org.fedoraproject.candlepin.util.Util;
 
@@ -50,11 +51,13 @@ public class User extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @ManyToOne
-    @ForeignKey(name = "fk_user_owner_id")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_user_owner_fk_idx")
-    private Owner owner;
+    @ManyToMany(targetEntity = Owner.class)
+    @ForeignKey(name = "fk_owner_id",
+            inverseName = "fk_user_id")
+    @JoinTable(name = "cp_user_owners",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "owner_id"))
+    private Set<Owner> owners;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -66,12 +69,12 @@ public class User extends AbstractHibernateObject {
     public User() {
     }
 
-    public User(Owner owner, String login, String password) {
-        this(owner, login, password, false);
+    public User(Set<Owner> owners, String login, String password) {
+        this(owners, login, password, false);
     }
 
-    public User(Owner owner, String login, String password, boolean superAdmin) {
-        this.owner = owner;
+    public User(Set<Owner> owners, String login, String password, boolean superAdmin) {
+        this.owners = owners;
         this.username = login;
         this.hashedPassword = Util.hash(password);
         this.superAdmin = superAdmin;
@@ -117,16 +120,23 @@ public class User extends AbstractHibernateObject {
         this.hashedPassword = Util.hash(password);
     }
     /**
-     * @return the owner
+     * @return the owners
      */
-    public Owner getOwner() {
-        return owner;
+    public Set<Owner> getOwners() {
+        return owners;
     }
     /**
-     * @param owner the owner to set
+     * @param owners the owners to set
      */
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    public void setOwners(Set<Owner> owners) {
+        this.owners = owners;
+    }
+
+    /**
+     * @param owner the owner to add to the collection
+     */
+    public void addOwner(Owner owner) {
+        this.owners.add(owner);
     }
 
     /**

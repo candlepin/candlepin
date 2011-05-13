@@ -376,11 +376,14 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/users")
-    public User createUser(@PathParam("owner_key") String ownerKey, User user) {
+    public User associateUser(@PathParam("owner_key") String ownerKey,
+                              @QueryParam("user_login") String userLogin) {
+        User user = findUser(userLogin);
         Owner owner = findOwner(ownerKey);
-        user.setOwner(owner);
+        user.addOwner(owner);
 
-        return userService.createUser(user);
+        //ownerCurator.merge(owner);
+        return user;
     }
 
     @POST
@@ -461,6 +464,17 @@ public class OwnerResource {
         }
 
         return owner;
+    }
+
+    private User findUser(String login) {
+        User user = userService.findByLogin(login);
+
+        if (user == null) {
+            throw new NotFoundException(i18n.tr(
+                "user with login: {0} was not found.", login));
+        }
+
+        return user;
     }
 
     /**
