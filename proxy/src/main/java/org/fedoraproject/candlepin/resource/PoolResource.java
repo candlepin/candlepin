@@ -14,6 +14,24 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
+
+import com.google.inject.Inject;
+
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.Date;
 import java.util.List;
 
@@ -25,23 +43,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.DatatypeConverter;
-
-import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * API gateway for the EntitlementPool
@@ -57,10 +58,8 @@ public class PoolResource {
     private I18n i18n;
 
     @Inject
-    public PoolResource(
-        PoolCurator poolCurator,
-        ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
-        I18n i18n,
+    public PoolResource(PoolCurator poolCurator,
+        ConsumerCurator consumerCurator, OwnerCurator ownerCurator, I18n i18n,
         EventSink eventSink, PoolManager poolManager) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
@@ -75,7 +74,8 @@ public class PoolResource {
             d = DatatypeConverter.parseDateTime(activeOn).getTime();
         }
         catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid date, must use ISO 8601 format");
+            throw new BadRequestException(
+                "Invalid date, must use ISO 8601 format");
         }
         return d;
     }
@@ -83,36 +83,32 @@ public class PoolResource {
     /**
      * Returns the list of available entitlement pools.
      * 
-     * @param ownerId
-     *            optional parameter to limit the search by owner
-     * @param productId
-     *            optional parameter to limit the search by product
-     * @param consumerUuid
-     *            optional parameter to limit the search by consumer,
-     *            and only for applicable pools      
-     * @param listAll
-     *            Use with consumerUuid to list all pools available to the consumer. This
-     *            will include pools which would otherwise be omitted due to a rules
-     *            warning. (i.e. not recommended) Pools that trigger an error however will
-     *            still be omitted. (no entitlements available, consumer type mismatch,
-     *            etc)
+     * @param ownerId optional parameter to limit the search by owner
+     * @param productId optional parameter to limit the search by product
+     * @param consumerUuid optional parameter to limit the search by consumer,
+     *        and only for applicable pools
+     * @param listAll Use with consumerUuid to list all pools available to the
+     *        consumer. This will include pools which would otherwise be omitted
+     *        due to a rules warning. (i.e. not recommended) Pools that trigger
+     *        an error however will still be omitted. (no entitlements
+     *        available, consumer type mismatch, etc)
      * @return the list of available entitlement pools.
-     *
      * @httpcode 200 if the request succeeded
      * @httpcode 400 if both consumer and owner are given, or if a product id is
-     *               specified without a consumer or owner
+     *           specified without a consumer or owner
      * @httpcode 404 if a specified consumer or owner is not found
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "pools")
-    @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
+    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
+    @Deprecated
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @QueryParam("activeon") String activeOn) {
-        
+
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
             throw new BadRequestException(
@@ -127,13 +123,14 @@ public class PoolResource {
         if (activeOn != null) {
             activeOnDate = parseActiveOnString(activeOn);
         }
-        
+
         Consumer c = null;
         Owner o = null;
         if (consumerUuid != null) {
             c = consumerCurator.findByUuid(consumerUuid);
             if (c == null) {
-                throw new NotFoundException(i18n.tr("consumer: {0}", consumerUuid));
+                throw new NotFoundException(i18n.tr("consumer: {0} not found",
+                    consumerUuid));
             }
             if (listAll) {
                 o = c.getOwner();
@@ -145,24 +142,22 @@ public class PoolResource {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }
         }
-        return poolCurator.listAvailableEntitlementPools(c, o, productId, activeOnDate,
-            true, listAll);
+        return poolCurator.listAvailableEntitlementPools(c, o, productId,
+            activeOnDate, true, listAll);
     }
 
     /**
      * Return the Entitlement Pool for the given id
      * 
-     * @param id
-     *            the id of the pool
+     * @param id the id of the pool
      * @return the pool identified by the id
-     *
      * @httpcode 200 if the request succeeded
      * @httpcode 404 if the pool with the specified id is not found
      */
     @GET
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.OWNER_ADMIN, Role.CONSUMER})
+    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
     public Pool getPool(@PathParam("pool_id") String id) {
         Pool toReturn = poolCurator.find(id);
 
@@ -170,9 +165,8 @@ public class PoolResource {
             return toReturn;
         }
 
-        throw new NotFoundException(
-            i18n.tr("Entitlement Pool with ID '{0}' could not be found", id));
+        throw new NotFoundException(i18n.tr(
+            "Entitlement Pool with ID '{0}' could not be found", id));
     }
-
 
 }

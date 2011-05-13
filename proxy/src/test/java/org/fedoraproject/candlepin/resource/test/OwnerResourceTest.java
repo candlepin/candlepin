@@ -19,12 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
@@ -46,10 +40,17 @@ import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * OwnerResourceTest
@@ -63,7 +64,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private Product product;
     private EventFactory eventFactory;
     private CandlepinCommonTestConfig config;
-    
+
     @Before
     public void setUp() {
         this.ownerResource = injector.getInstance(OwnerResource.class);
@@ -82,14 +83,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(ownerCurator.find(owner.getId()));
         assertTrue(owner.getPools().size() == 0);
     }
-    
-    @Test    
+
+    @Test
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
-        ownerResource.deleteOwner(
-            owner.getKey(),
-            true,
-            new UserPrincipal("someuser", owner, new LinkedList<Role>()));
+        ownerResource.deleteOwner(owner.getKey(), true, new UserPrincipal(
+            "someuser", owner, new LinkedList<Role>()));
         owner = ownerCurator.find(id);
         assertTrue(owner == null);
     }
@@ -133,16 +132,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
 
-        Subscription sub = new Subscription(owner, prod, new HashSet<Product>(),
-                2000L, TestUtil.createDate(2010, 2, 9), TestUtil
-                        .createDate(3000, 2, 9),
-                        TestUtil.createDate(2010, 2, 12));
+        Subscription sub = new Subscription(owner, prod,
+            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
 
         // Trigger the refresh:
         poolManager.refreshPools(owner);
-        List<Pool> pools = poolCurator
-                .listByOwnerAndProduct(owner, prod.getId());
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
+            prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
 
@@ -151,20 +149,19 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(sub.getStartDate(), newPool.getStartDate());
         assertEquals(sub.getEndDate(), newPool.getEndDate());
     }
-    
+
     @Test
     public void testRefreshPoolsWithChangedSubscriptions() {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(createOwner(), prod,
-            1000L, TestUtil.createDate(2009, 11, 30),
+        Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
+            TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
 
-        Subscription sub = new Subscription(owner, prod, new HashSet<Product>(),
-                2000L, TestUtil.createDate(2010, 2, 9), TestUtil
-                        .createDate(3000, 2, 9),
-                        TestUtil.createDate(2010, 2, 12));
+        Subscription sub = new Subscription(owner, prod,
+            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         assertTrue(pool.getQuantity() < sub.getQuantity());
         assertTrue(pool.getStartDate() != sub.getStartDate());
@@ -187,17 +184,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
 
-        Subscription sub = new Subscription(owner, prod, new HashSet<Product>(),
-                2000L, TestUtil.createDate(2010, 2, 9), TestUtil
-                        .createDate(3000, 2, 9),
-                        TestUtil.createDate(2010, 2, 12));
+        Subscription sub = new Subscription(owner, prod,
+            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
 
         // Trigger the refresh:
         poolManager.refreshPools(owner);
 
-        List<Pool> pools = poolCurator
-                .listByOwnerAndProduct(owner, prod.getId());
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
+            prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
         String poolId = newPool.getId();
@@ -216,17 +212,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(prod);
         Product prod2 = TestUtil.createProduct();
         productCurator.create(prod2);
-        
-        Subscription sub = new Subscription(owner, prod, new HashSet<Product>(),
-            2000L, TestUtil.createDate(2010, 2, 9), TestUtil
-                    .createDate(3000, 2, 9),
-                    TestUtil.createDate(2010, 2, 12));
+
+        Subscription sub = new Subscription(owner, prod,
+            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
 
-        Subscription sub2 = new Subscription(owner, prod2, new HashSet<Product>(),
-                800L, TestUtil.createDate(2010, 2, 9), TestUtil
-                        .createDate(3000, 2, 9),
-                        TestUtil.createDate(2010, 2, 12));
+        Subscription sub2 = new Subscription(owner, prod2,
+            new HashSet<Product>(), 800L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub2);
 
         // Trigger the refresh:
@@ -273,10 +267,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
         setupPrincipal(new ConsumerPrincipal(c));
-        
+
         securityInterceptor.enable();
         crudInterceptor.enable();
-
 
         ownerResource.getOwner(owner.getKey());
     }
@@ -292,7 +285,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 
-        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getKey());
+        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getKey(),
+            null, null, true, null);
         assertEquals(2, pools.size());
     }
 
@@ -311,9 +305,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        
+
         // Filtering should just cause this to return no results:
-        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getKey());
+        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getKey(),
+            null, null, true, null);
         assertEquals(0, pools.size());
     }
 
@@ -323,7 +318,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        
+
         ownerResource.list(null);
     }
 
@@ -333,12 +328,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        
+
         ownerResource.deleteOwner(owner.getKey(), true, principal);
     }
-    
+
     private Event createConsumerCreatedEvent(Owner o) {
-        // Rather than run through an entire call to ConsumerResource, we'll fake the 
+        // Rather than run through an entire call to ConsumerResource, we'll
+        // fake the
         // events in the db:
         setupPrincipal(o, Role.OWNER_ADMIN);
         Consumer consumer = TestUtil.createConsumer(o);
@@ -348,59 +344,59 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         eventCurator.create(e1);
         return e1;
     }
-    
+
     @Test
     public void testOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
-        
+
         securityInterceptor.enable();
         crudInterceptor.enable();
 
         Event e1 = createConsumerCreatedEvent(owner);
         // Make an event from another owner:
         createConsumerCreatedEvent(owner2);
-        
+
         // Make sure we're acting as the correct owner admin:
         setupPrincipal(owner, Role.OWNER_ADMIN);
-        
+
         Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         assertEquals(1, feed.getEntries().size());
         Entry entry = feed.getEntries().get(0);
         assertEquals(e1.getTimestamp(), entry.getPublished());
     }
-    
+
     @Test
     public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
-        
+
         securityInterceptor.enable();
         crudInterceptor.enable();
 
         // Or more specifically, gets no results, the call will not error out
         // because he has the correct role.
         createConsumerCreatedEvent(owner);
-        
+
         setupPrincipal(owner2, Role.OWNER_ADMIN);
         Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         System.out.println(feed);
         assertEquals(0, feed.getEntries().size());
     }
-    
+
     @Test(expected = ForbiddenException.class)
     public void testConsumerRoleCannotAccessOwnerAtomFeed() {
         Consumer c = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
         setupPrincipal(new ConsumerPrincipal(c));
-        
+
         securityInterceptor.enable();
         crudInterceptor.enable();
 
         ownerResource.getOwnerAtomFeed(owner.getKey());
     }
-    
+
     @Test
     public void testEntitlementsRevocationWithFifoOrder() {
         Pool pool = doTestEntitlementsRevocationCommon(7, 4, 4, true);
@@ -410,9 +406,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testEntitlementsRevocationWithLifoOrder() {
         Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5, false);
-        assertEquals(5L, this.poolCurator.find(pool.getId()).getConsumed().longValue());
+        assertEquals(5L, this.poolCurator.find(pool.getId()).getConsumed()
+            .longValue());
     }
-    
+
     @Test
     public void testEntitlementsRevocationWithNoOverflow() {
         Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5, false);
@@ -423,8 +420,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         boolean fifo) {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(createOwner(), prod,
-            1000L, TestUtil.createDate(2009, 11, 30),
+        Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
+            TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
         Consumer consumer = createConsumer(owner);
@@ -432,18 +429,19 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Subscription sub = this.subCurator.find(pool.getSubscriptionId());
         sub.setQuantity(subQ);
         this.subCurator.merge(sub);
-       // this.ownerResource.refreshEntitlementPools(owner.getKey(), false);
+        // this.ownerResource.refreshEntitlementPools(owner.getKey(), false);
         pool = this.poolCurator.find(pool.getId());
         createEntitlementWithQ(pool, owner, consumer, e1, "01/02/2010");
         createEntitlementWithQ(pool, owner, consumer1, e2, "01/01/2010");
         assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
-        this.config.setProperty(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, 
-            fifo ? "true" : "false");
+        this.config.setProperty(
+            ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true"
+                : "false");
         poolManager.refreshPools(owner);
         pool = poolCurator.find(pool.getId());
         return pool;
     }
-    
+
     /**
      * @param pool
      * @param owner
@@ -453,7 +451,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private Entitlement createEntitlementWithQ(Pool pool, Owner owner,
         Consumer consumer, int quantity, String date) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        Entitlement e1 = createEntitlement(owner, consumer, pool, null); 
+        Entitlement e1 = createEntitlement(owner, consumer, pool, null);
         e1.setQuantity(quantity);
         pool.getEntitlements().add(e1);
 
@@ -469,7 +467,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         }
         return e1;
     }
-    
+
     @Test
     public void ownerWithParentOwnerCanBeCreated() {
         Owner child = new Owner("name", "name1");
@@ -479,7 +477,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(child.getParentOwner());
         assertEquals(this.owner.getId(), child.getParentOwner().getId());
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void ownerWithInvalidParentCannotBeCreated() {
         Owner child = new Owner("name", "name1");
@@ -487,16 +485,17 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         owner1.setId("xyz");
         child.setParentOwner(owner1);
         this.ownerResource.createOwner(child);
-        throw new RuntimeException("OwnerResource should have thrown BadRequestException");
+        throw new RuntimeException(
+            "OwnerResource should have thrown BadRequestException");
     }
-      
+
     @Test(expected = BadRequestException.class)
     public void ownerWithInvalidParentWhoseIdIsNullCannotBeCreated() {
         Owner child = new Owner("name", "name1");
         Owner owner1 = new Owner("name2", "name3");
         child.setParentOwner(owner1);
         this.ownerResource.createOwner(child);
-        throw new RuntimeException("OwnerResource should have thrown BadRequestException");
+        throw new RuntimeException(
+            "OwnerResource should have thrown BadRequestException");
     }
 }
-
