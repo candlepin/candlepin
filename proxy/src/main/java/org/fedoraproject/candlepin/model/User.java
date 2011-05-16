@@ -22,15 +22,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
 import org.fedoraproject.candlepin.util.Util;
@@ -52,13 +49,8 @@ public class User extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @ManyToMany(targetEntity = Owner.class)
-    @ForeignKey(name = "fk_owner_id",
-            inverseName = "fk_user_id")
-    @JoinTable(name = "cp_user_owners",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "owner_id"))
-    private Set<Owner> owners;
+    @OneToMany(mappedBy = "user", targetEntity = Membership.class)
+    private Set<Membership> memberships;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -70,17 +62,11 @@ public class User extends AbstractHibernateObject {
     public User() {
     }
 
-    public User(Owner owner, String login, String password) {
-        this(new HashSet<Owner>(), login, password, false);
-        this.owners.add(owner);
-    }
-    
-    public User(Set<Owner> owners, String login, String password) {
-        this(owners, login, password, false);
+    public User(String login, String password) {
+        this(login, password, false);
     }
 
-    public User(Set<Owner> owners, String login, String password, boolean superAdmin) {
-        this.owners = owners;
+    public User(String login, String password, boolean superAdmin) {
         this.username = login;
         this.hashedPassword = Util.hash(password);
         this.superAdmin = superAdmin;
@@ -125,24 +111,34 @@ public class User extends AbstractHibernateObject {
     public void setPassword(String password) {
         this.hashedPassword = Util.hash(password);
     }
+
     /**
-     * @return the owners
+     * Looks up memberships to find associated owners.
+     *
+     * @return associated owners
+     *
+     * @deprecated use {@link #getMemberships()} instead
      */
     public Set<Owner> getOwners() {
+        Set<Owner> owners = new HashSet<Owner>();
+        for (Membership membership : getMemberships()) {
+            owners.add(membership.getOwner());
+        }
+
         return owners;
-    }
-    /**
-     * @param owners the owners to set
-     */
-    public void setOwners(Set<Owner> owners) {
-        this.owners = owners;
     }
 
     /**
-     * @param owner the owner to add to the collection
+     * @return the memberships
      */
-    public void addOwner(Owner owner) {
-        this.owners.add(owner);
+    public Set<Membership> getMemberships() {
+        return memberships;
+    }
+    /**
+     * @param memberships the memberships to set
+     */
+    public void setMemberships(Set<Membership> memberships) {
+        this.memberships = memberships;
     }
 
     /**

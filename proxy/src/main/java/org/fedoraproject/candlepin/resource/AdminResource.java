@@ -24,15 +24,11 @@ import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Candlepin server administration REST calls.
@@ -43,14 +39,12 @@ public class AdminResource {
     private static Logger log = Logger.getLogger(AdminResource.class);
     
     private ConsumerTypeCurator consumerTypeCurator;
-    private OwnerCurator ownerCurator;
     private UserServiceAdapter userService;
 
     @Inject
-    public AdminResource(ConsumerTypeCurator consumerTypeCurator, 
-        OwnerCurator ownerCurator, UserServiceAdapter userService) {
+    public AdminResource(ConsumerTypeCurator consumerTypeCurator,
+            UserServiceAdapter userService) {
         this.consumerTypeCurator = consumerTypeCurator;
-        this.ownerCurator = ownerCurator;
         this.userService = userService;
     }
 
@@ -85,14 +79,9 @@ public class AdminResource {
             log.debug("Created: " + created);
         }
 
-        log.info("Creating Admin owner.");
-        Owner adminOwner = ownerCurator.create(new Owner("admin"));
-        Set<Owner> owners = new HashSet<Owner>();
-        owners.add(adminOwner);
-        
         log.info("Creating default super admin.");
         try {
-            User defaultAdmin = new User(owners, "admin", "admin", true);
+            User defaultAdmin = new User("admin", "admin", true);
             userService.createUser(defaultAdmin);
         } 
         catch (UnsupportedOperationException e) {
