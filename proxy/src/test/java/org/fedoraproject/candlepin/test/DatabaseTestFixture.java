@@ -73,6 +73,7 @@ import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
+import java.util.Arrays;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -273,7 +274,8 @@ public class DatabaseTestFixture {
     protected Principal setupPrincipal(Owner owner, Role role) {
         List<Role> roles = new LinkedList<Role>();
         roles.add(role);
-        Principal ownerAdmin = new UserPrincipal("someuser", owner, roles);
+        Principal ownerAdmin = new UserPrincipal("someuser", 
+                Arrays.asList(new Owner[] {owner}), roles);
         
         setupPrincipal(ownerAdmin);
         return ownerAdmin;

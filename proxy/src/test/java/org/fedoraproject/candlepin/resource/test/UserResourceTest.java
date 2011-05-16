@@ -30,16 +30,10 @@ import org.junit.Test;
 public class UserResourceTest extends DatabaseTestFixture {
     
     private UserResource userResource;
-    private OwnerResource ownerResource;
-    private Owner owner;
 
-
-    
     @Before
     public void setUp() {
-        owner = createOwner();       
         userResource = injector.getInstance(UserResource.class);
-        ownerResource = injector.getInstance(OwnerResource.class);
     }
     
     @Test
@@ -49,9 +43,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         user.setUsername("henri");
         user.setPassword("password");
 
-        String ownerKey = owner.getKey();
-        ownerResource.createUser(ownerKey, user);
-
+        userResource.createUser(user);
         User u = userResource.getUserInfo("henri");
 
         assertEquals(user.getId(), u.getId());

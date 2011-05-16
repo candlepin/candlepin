@@ -32,6 +32,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.google.inject.Injector;
+import java.util.Arrays;
+import java.util.List;
 
 public class BasicAuthViaUserServiceTest {
 
@@ -92,12 +94,13 @@ public class BasicAuthViaUserServiceTest {
     @Test
     public void correctPrincipal() throws Exception {
         Owner owner = new Owner("user", "user");
+        List<Owner> owners = Arrays.asList(new Owner[] {owner});
         
         setUserAndPassword("user", "redhat");
         when(userService.validateUser("user", "redhat")).thenReturn(true);
-        when(userService.getOwner("user")).thenReturn(owner);
+        when(userService.getOwners("user")).thenReturn(owners);
         when(ownerCurator.lookupByKey("user")).thenReturn(owner);
-        UserPrincipal expected = new UserPrincipal("user", owner, null);
+        UserPrincipal expected = new UserPrincipal("user", owners, null);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 

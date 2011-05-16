@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.service.impl.test;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -119,7 +122,7 @@ public class ConfigUserServiceAdapterTest extends DatabaseTestFixture {
         this.config.addUser("billy", "password", "Megacorp");
         UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
-        Owner owner = userService.getOwner("billy");
+        Owner owner = userService.getOwners("billy").get(0);
 
         Assert.assertEquals("Megacorp", owner.getDisplayName());
     }
@@ -133,7 +136,8 @@ public class ConfigUserServiceAdapterTest extends DatabaseTestFixture {
         UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
 
-        Assert.assertNull(userService.getOwner("richard"));
+        // TODO:  empty() is not in this version of hamcrest?
+        Assert.assertThat(userService.getOwners("richard").size(), is(equalTo(0)));
     }
 
     //@Test
@@ -142,7 +146,7 @@ public class ConfigUserServiceAdapterTest extends DatabaseTestFixture {
         UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
 
-        Assert.assertNull(userService.getOwner("someone"));
+        Assert.assertThat(userService.getOwners("someone").size(), is(equalTo(0)));
     }
 
     //@Test
@@ -151,7 +155,7 @@ public class ConfigUserServiceAdapterTest extends DatabaseTestFixture {
         UserServiceAdapter userService = new ConfigUserServiceAdapter(config, 
             ownerCurator);
 
-        Assert.assertNull(userService.getOwner(null));
+        Assert.assertThat(userService.getOwners(null).size(), is(equalTo(0)));
     }
 
     @Test

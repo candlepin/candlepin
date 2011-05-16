@@ -14,7 +14,10 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
@@ -77,7 +80,9 @@ public class ConsumerResourceCreationTest {
         this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
 
         Owner owner = new Owner("test_owner");
-        User user = new User(owner, USER, "");
+        Set<Owner> owners = new HashSet<Owner>();
+        owners.add(owner);
+        User user = new User(owners, USER, "");
 
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer() {
             @Override
@@ -86,7 +91,7 @@ public class ConsumerResourceCreationTest {
             }
         });
         when(consumerTypeCurator.lookupByLabel(system.getLabel())).thenReturn(system);
-        when(userService.getOwner(USER)).thenReturn(owner);
+        when(userService.getOwners(USER)).thenReturn(new ArrayList<Owner>(owners));
         when(userService.findByLogin(USER)).thenReturn(user);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
                 .thenReturn(new IdentityCertificate());
@@ -97,7 +102,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer(consumerName, null, null, system);
         Principal principal = new UserPrincipal(USER, null, null);
 
-        return this.resource.create(consumer, principal, USER);
+        return this.resource.create(consumer, principal, USER, null);
     }
 
     @Test

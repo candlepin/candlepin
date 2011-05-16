@@ -48,6 +48,7 @@ import org.junit.Test;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,6 +62,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     private OwnerResource ownerResource;
     private Owner owner;
+    private List<Owner> owners;
     private Product product;
     private EventFactory eventFactory;
     private CandlepinCommonTestConfig config;
@@ -70,6 +72,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.ownerResource = injector.getInstance(OwnerResource.class);
 
         owner = ownerCurator.create(new Owner(OWNER_NAME));
+        owners = new ArrayList<Owner>();
+        owners.add(owner);
         product = TestUtil.createProduct();
         productCurator.create(product);
         eventFactory = injector.getInstance(EventFactory.class);
@@ -81,26 +85,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testCreateOwner() {
         assertNotNull(owner);
         assertNotNull(ownerCurator.find(owner.getId()));
-        assertTrue(owner.getPools().size() == 0);
+        assertTrue(owner.getPools().isEmpty());
     }
 
     @Test
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
         ownerResource.deleteOwner(owner.getKey(), true, new UserPrincipal(
-            "someuser", owner, new LinkedList<Role>()));
+            "someuser", owners, new LinkedList<Role>()));
         owner = ownerCurator.find(id);
-        assertTrue(owner == null);
-    }
-
-    @Test
-    public void testCreateUser() {
-        User user = new User();
-        user.setUsername("someusername");
-        user.setPassword("somepassword");
-
-        String ownerKey = owner.getKey();
-        assertNotNull(ownerResource.createUser(ownerKey, user));
+        assertNull(owner);
     }
 
     @Test

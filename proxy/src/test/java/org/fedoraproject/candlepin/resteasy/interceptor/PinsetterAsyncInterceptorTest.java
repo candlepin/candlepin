@@ -20,6 +20,8 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 
 import com.google.inject.Provider;
+import java.util.ArrayList;
+import java.util.List;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
@@ -58,7 +60,9 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void noJobMapPrincipal() {
-        Principal principal = new UserPrincipal("testing", new Owner("test_owner"), null);
+        List<Owner> owners = new ArrayList<Owner>();
+        owners.add(new Owner("test_owner"));
+        Principal principal = new UserPrincipal("testing", owners, null);
         when(this.principalProvider.get()).thenReturn(principal);
 
         JobDetail detail = new JobDetail();
@@ -72,7 +76,9 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void existingJobMapPrincipal() {
-        Principal principal = new UserPrincipal("testing", new Owner("test_owner"), null);
+        List<Owner> owners = new ArrayList<Owner>();
+        owners.add(new Owner("test_owner"));
+        Principal principal = new UserPrincipal("testing", owners, null);
         when(this.principalProvider.get()).thenReturn(principal);
 
         JobDetail detail = new JobDetail();
