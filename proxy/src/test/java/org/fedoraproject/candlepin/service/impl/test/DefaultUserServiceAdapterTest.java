@@ -32,7 +32,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * DefaultUserServiceAdapterTest
@@ -83,12 +85,14 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User(owner, "test_name", "password");
         this.service.createUser(user);
         
-        Assert.assertEquals(owner, this.service.getOwner("test_name"));
+        List<Owner> owners = this.service.getOwners("test_name");
+        Assert.assertEquals(1, owners.size());
+        Assert.assertEquals(owner, owners.iterator().next());
     }
     
     @Test
     public void findOwnerFail() {
-        Assert.assertNull(this.service.getOwner("i_dont_exist"));
+        Assert.assertNull(this.service.getOwners("i_dont_exist"));
     }
     
     @Test
@@ -101,7 +105,9 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void superAdminRole() {
-        User user = new User(owner, "super_admin", "password", true);
+        Set<Owner> owners = new HashSet<Owner>();
+        owners.add(owner);
+        User user = new User(owners, "super_admin", "password", true);
         this.service.createUser(user);
         
         Assert.assertTrue(this.service.getRoles("super_admin").contains(Role.SUPER_ADMIN));

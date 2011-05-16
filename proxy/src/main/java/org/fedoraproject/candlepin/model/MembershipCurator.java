@@ -15,26 +15,12 @@
 package org.fedoraproject.candlepin.model;
 
 /**
- *
+ * MembershipCurator
  */
-public class Membership extends AbstractHibernateObject {
-
-    private Owner owner;
-    private User user;
-
-    public Owner getOwner() {
-        return owner;
+public class MembershipCurator extends AbstractHibernateCurator<Membership> {
+    
+    protected MembershipCurator() {
+        super(Membership.class);
     }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 }

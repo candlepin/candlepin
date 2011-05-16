@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Formatter;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -69,6 +70,11 @@ public class User extends AbstractHibernateObject {
     public User() {
     }
 
+    public User(Owner owner, String login, String password) {
+        this(new HashSet<Owner>(), login, password, false);
+        this.owners.add(owner);
+    }
+    
     public User(Set<Owner> owners, String login, String password) {
         this(owners, login, password, false);
     }
