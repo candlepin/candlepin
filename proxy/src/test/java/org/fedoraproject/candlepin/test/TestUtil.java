@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.test;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -187,7 +188,7 @@ public class TestUtil {
         Base64 encoder = new Base64();
         byte [] bytes = encoder.encode(xml.getBytes());
         
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (byte b : bytes) {
             buf.append((char) Integer.parseInt(Integer.toHexString(b), 16));
         }
@@ -199,7 +200,8 @@ public class TestUtil {
     public static Principal createPrincipal(Owner owner, Role role) {
         List<Role> roles = new LinkedList<Role>();
         roles.add(role);
-        Principal ownerAdmin = new UserPrincipal("someuser", owner, roles);
+        Principal ownerAdmin = new UserPrincipal("someuser", 
+                Arrays.asList(new Owner[] {owner}), roles);
         return ownerAdmin;
     }
 

@@ -32,8 +32,7 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * BasicAuth
@@ -104,7 +103,7 @@ class BasicAuth implements AuthProvider {
 
     private Principal createPrincipal(String username) {
         List<Role> roles = this.userServiceAdapter.getRoles(username);
-        Set<Owner> owners = new HashSet<Owner>();
+        List<Owner> owners = new ArrayList<Owner>();
         for (Owner owner : this.userServiceAdapter.getOwners(username)) {
             owners.add(lookupOwner(owner));
         }

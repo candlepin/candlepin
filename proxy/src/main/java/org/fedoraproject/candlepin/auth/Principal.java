@@ -21,17 +21,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * An entity interacting with Candlepin
  */
 public abstract class Principal implements Serializable {
 
-    private Set<Owner> owners;
+    private List<Owner> owners;
     private List<Role> roles;     
 
-    public Principal(Set<Owner> owners, List<Role> roles) {
+    public Principal(List<Owner> owners, List<Role> roles) {
         this.owners = owners;
         this.roles = roles;
         if (roles == null) {
@@ -39,11 +38,11 @@ public abstract class Principal implements Serializable {
         }
     }
 
-    public Set<Owner> getOwners() {
+    public List<Owner> getOwners() {
         return owners;
     }
 
-    public void setOwners(Set<Owner> owners) {
+    public void setOwners(List<Owner> owners) {
         this.owners = owners;
     }
 
@@ -78,7 +77,8 @@ public abstract class Principal implements Serializable {
         
         return data;
     }
-    
+
+    @Override
     public String toString() {
         return Util.toJson(this.getData());
     }

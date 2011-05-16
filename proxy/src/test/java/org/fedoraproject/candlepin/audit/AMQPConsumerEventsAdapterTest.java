@@ -68,7 +68,8 @@ public class AMQPConsumerEventsAdapterTest {
     public void init() {
         this.factory = new EventFactory(mockPrincipalProvider);
         this.principal = TestUtil.createOwnerPrincipal();
-        this.principal.getOwner().setId(String.valueOf(new Random().nextLong()));
+        this.principal.getOwners().iterator().next().setId(
+                String.valueOf(new Random().nextLong()));
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         this.adapter = new AMQPBusEventAdapter(spiedMapper, reader, pkiutil);
     }
@@ -76,7 +77,8 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerCreatedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(this.principal.getOwner());
+        Consumer consumer = TestUtil.createConsumer(
+                this.principal.getOwners().iterator().next());
         storeFacts(consumer);
         IdentityCertificate idCert = TestUtil.createIdCert();
         consumer.setIdCert(idCert);
@@ -130,7 +132,8 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerModifiedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(this.principal.getOwner());
+        Consumer consumer = TestUtil.createConsumer(
+                this.principal.getOwners().iterator().next());
         storeFacts(consumer);
         IdentityCertificate idCert = TestUtil.createIdCert();
         consumer.setIdCert(idCert);
@@ -142,7 +145,8 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerDeletedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(this.principal.getOwner());
+        Consumer consumer = TestUtil.createConsumer(
+                this.principal.getOwners().iterator().next());
         Event event = factory.consumerDeleted(consumer);
         Map<String, Object> map = unmarshallEvent(event);
 
@@ -190,6 +194,7 @@ public class AMQPConsumerEventsAdapterTest {
 
     private Matcher<Map<String, Object>> containsEntry(String key, final String value) {
         return hasEntry(equalTo(key), new BaseMatcher<Object>() {
+            @Override
             public boolean matches(Object arg0) {
                 if (arg0 == null) {
                     return arg0 == value;
@@ -197,6 +202,7 @@ public class AMQPConsumerEventsAdapterTest {
                 return Util.equals(arg0.toString(), value);
             }
 
+            @Override
             public void describeTo(Description arg0) {
                 arg0.appendText("does not match: " + value);
             }

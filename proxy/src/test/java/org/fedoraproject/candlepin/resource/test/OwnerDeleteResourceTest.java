@@ -15,7 +15,9 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
@@ -88,9 +90,11 @@ public class OwnerDeleteResourceTest {
     @Test
     public void usersAreDeleted() {
         Owner compucorp = new Owner("compucorp");
+        Set<Owner> owners = new HashSet<Owner>();
+        owners.add(compucorp);
         List<User> users = new ArrayList<User>();
-        users.add(new User(compucorp, "billy", "password"));
-        users.add(new User(compucorp, "sally", "password"));
+        users.add(new User(owners, "billy", "password"));
+        users.add(new User(owners, "sally", "password"));
 
         when(ownerCurator.lookupByKey("compucorp")).thenReturn(compucorp);
         when(userService.isReadyOnly()).thenReturn(false);

@@ -70,6 +70,7 @@ import org.xnap.commons.i18n.I18n;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -319,7 +320,7 @@ public class ConsumerResource {
      * the principal that was created during authentication to carry it.
      */
     private void setupOwners(User user, Principal principal) {
-        Set<Owner> existingOwners = new HashSet<Owner>();
+        List<Owner> existingOwners = new ArrayList<Owner>();
 
         for (Owner owner : userService.getOwners(user.getUsername())) {
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
@@ -348,7 +349,7 @@ public class ConsumerResource {
         // Set the new owner on the existing principal, which previously had a
         // detached owner:
         principal.setOwners(existingOwners);
-        user.setOwners(existingOwners);
+        user.setOwners(new HashSet<Owner>(existingOwners));
 
     }
 

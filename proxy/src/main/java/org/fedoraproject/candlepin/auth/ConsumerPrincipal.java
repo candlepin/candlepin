@@ -28,16 +28,10 @@ public class ConsumerPrincipal extends Principal {
     private Consumer consumer;
 
     public ConsumerPrincipal(Consumer consumer) {
-        super(getOwners(consumer), Arrays.asList(new Role[]{Role.CONSUMER}));
+        super(Arrays.asList(new Owner[] {consumer.getOwner()}),
+                Arrays.asList(new Role[]{Role.CONSUMER}));
 
         this.consumer = consumer;
-    }
-
-    private static Set<Owner> getOwners(Consumer consumer) {
-        Set<Owner> owners = new HashSet<Owner>();
-        owners.add(consumer.getOwner());
-
-        return owners;
     }
     
     public Consumer consumer() {

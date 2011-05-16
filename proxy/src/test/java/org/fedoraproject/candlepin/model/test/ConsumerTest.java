@@ -21,7 +21,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
@@ -445,8 +447,10 @@ public class ConsumerTest extends DatabaseTestFixture {
         
         ConsumerType personType = new ConsumerType(ConsumerTypeEnum.PERSON);
         consumerTypeCurator.create(personType);
-        
-        User user = new User(owner, newUsername, "password");
+
+        Set<Owner> owners = new HashSet<Owner>();
+        owners.add(owner);
+        User user = new User(owners, newUsername, "password");
         assertNull(consumerCurator.findByUser(user));
 
         consumer = new Consumer(CONSUMER_NAME, newUsername, owner, personType);

@@ -20,6 +20,8 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -47,7 +49,9 @@ public class TestPrincipalProvider extends PrincipalProvider {
                 owner = new Owner(OWNER_NAME);
                 ownerCurator.create(owner);
             }
-            principal = new UserPrincipal("Default User", owner, null);
+
+            List<Owner> owners = Arrays.asList(new Owner[] {owner});
+            principal = new UserPrincipal("Default User", owners, null);
         }   
         return principal;
     }

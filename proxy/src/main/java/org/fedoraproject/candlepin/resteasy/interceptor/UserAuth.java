@@ -26,8 +26,7 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Injector;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * UserAuth
@@ -58,7 +57,7 @@ public abstract class UserAuth implements AuthProvider {
             throw new BadRequestException(msg);
         }
         else {
-            Set<Owner> fullOwners = new HashSet<Owner>();
+            List<Owner> fullOwners = new ArrayList<Owner>();
             for (Owner owner : owners) {
                 fullOwners.add(AuthUtil.lookupOwner(owner, ownerCurator));
             }
