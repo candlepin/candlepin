@@ -14,10 +14,24 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+import org.hibernate.annotations.GenericGenerator;
+
 /**
- *
+ * Membership represents the relationship between a user account and an owner.
+ * In the future, it may also carry information specific to this users roles and 
+ * permissions on that owner.
  */
 public class Membership extends AbstractHibernateObject {
+
+    @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
+    private String id;
 
     private Owner owner;
     private User user;
@@ -36,5 +50,13 @@ public class Membership extends AbstractHibernateObject {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
