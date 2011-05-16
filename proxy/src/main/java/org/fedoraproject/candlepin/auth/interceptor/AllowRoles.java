@@ -26,6 +26,9 @@ import org.fedoraproject.candlepin.auth.Role;
  * Annotation specifying which roles can access a given method. 
  * Can be applied to both the class, or a method within the class, where the latter takes
  * precedence. 
+ *
+ * Other attributes are available to request verification that the current principal is
+ * accessing a user / owner / consumer they should have access to.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD/*, ElementType.TYPE*/})
@@ -33,4 +36,6 @@ import org.fedoraproject.candlepin.auth.Role;
 public @interface AllowRoles {
 
     Role [] roles() default {};
+
+    String verifyUser() default "";
 }

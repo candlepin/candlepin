@@ -26,7 +26,7 @@ public class NoAuthPrincipal extends Principal {
     }
 
     public String getType() {
-        return "noAuth";
+        return Principal.NO_AUTH_TYPE;
     }
     
     public String getPrincipalName() {       

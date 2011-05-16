@@ -14,15 +14,21 @@
  */
 package org.fedoraproject.candlepin.auth.interceptor;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.ws.rs.PathParam;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.IseException;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -80,15 +86,73 @@ public class SecurityInterceptor implements MethodInterceptor {
             }
         }
         
+        I18n i18n = this.i18nProvider.get();
         if (!foundRole) {
             log.warn("Refusing principal: " + currentUser + " access to: " + 
                 invocation.getMethod().getName());
-            I18n i18n = this.i18nProvider.get();
+
             String error = "Insufficient permission";
             throw new ForbiddenException(i18n.tr(error));
         }
         
+        // Verify a username path param. If the current principal is a user principal, who
+        // does *not* have the super admin role, we need to make sure their username matches
+        // the username being requested:
+        if (annotation != null && !annotation.verifyUser().equals("")) {
+            verifyUser(invocation, currentUser, annotation, i18n);
+        }
+
         return invocation.proceed();
+    }
+
+    /*
+     * Verify a username PathParam matches the currently authenticated user. (if the
+     * current principal is a user principal who does not have the super admin role)
+     */
+    private void verifyUser(MethodInvocation invocation, Principal currentUser,
+        AllowRoles annotation, I18n i18n) {
+        String usernameAccessed = findParameterValue(invocation,
+            annotation.verifyUser(), i18n);
+        if (currentUser.getType().equals(Principal.USER_TYPE) &&
+            !currentUser.hasRole(Role.SUPER_ADMIN)) {
+            if (!usernameAccessed.equals(((UserPrincipal) currentUser).getUsername())) {
+                throw new ForbiddenException(i18n.tr("Access denied for user: " +
+                    usernameAccessed));
+            }
+
+        }
+    }
+
+    /**
+     * Scans the parameters for the method being invoked. When we find one annotated with
+     * PathParam of the given name, we return the value of that parameter. (assumed to be
+     * a string)
+     *
+     * @param pathParamName
+     * @return
+     */
+    private String findParameterValue(MethodInvocation invocation, String pathParamName,
+        I18n i18n) {
+        Method m = invocation.getMethod();
+
+        for (int i = 0; i < m.getParameterAnnotations().length; i++) {
+            for (Annotation a : m.getParameterAnnotations()[i]) {
+                if (a instanceof PathParam) {
+
+                    String pathParam = ((PathParam) a).value();
+                    if (pathParam.equals(pathParamName)) {
+                        return (String) invocation.getArguments()[i];
+                    }
+                }
+            }
+        }
+
+        // If we reach this point the code is probably incorrect (AcceptRoles annotation
+        // trying to verify a PathParam that couldn't be found in the method signature)
+        log.error("Unable to find PathParam: " + pathParamName);
+
+        // Intentionally being vague for message that end client will see:
+        throw new IseException(i18n.tr("Internal server error"));
     }
     
 }

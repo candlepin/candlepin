@@ -29,7 +29,7 @@ public class SystemPrincipal extends Principal{
     }
     
     public String getType() {
-        return "system";
+        return Principal.SYSTEM_TYPE;
     }
 
     public String getPrincipalName() {       

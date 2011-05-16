@@ -60,7 +60,7 @@ public class UserPrincipal extends Principal {
     }
 
     public String getType() {
-        return "user";
+        return Principal.USER_TYPE;
     }
     
     public String getPrincipalName() {       

@@ -26,6 +26,11 @@ import java.util.List;
  */
 public abstract class Principal implements Serializable {
 
+    public static final String USER_TYPE = "user";
+    public static final String CONSUMER_TYPE = "consumer";
+    public static final String NO_AUTH_TYPE = "no_auth";
+    public static final String SYSTEM_TYPE = "system";
+
     private Owner owner;
     private List<Role> roles;     
 
@@ -36,6 +41,8 @@ public abstract class Principal implements Serializable {
             this.roles = new LinkedList<Role>();
         }
     }
+
+    public abstract String getType();
 
     public Owner getOwner() {
         return owner;
@@ -55,10 +62,6 @@ public abstract class Principal implements Serializable {
 
     public boolean isConsumer() {
         return false;
-    }
-    
-    public String getType() {
-        return "principal";
     }
     
     public String getPrincipalName() {
