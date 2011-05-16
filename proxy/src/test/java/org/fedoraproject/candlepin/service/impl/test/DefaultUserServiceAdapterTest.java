@@ -56,7 +56,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void validationPass() {
-        User user = new User(owner, "test_user", "mypassword");
+        User user = new User("test_user", "mypassword");
         this.service.createUser(user);
         Assert.assertTrue(this.service.validateUser("test_user",
                            "mypassword"));
@@ -64,7 +64,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void validationBadPassword() {
-        User user = new User(owner, "dude", "password");
+        User user = new User("dude", "password");
         this.service.createUser(user);
         
         Assert.assertFalse(this.service.validateUser("dude", "invalid"));
@@ -82,12 +82,13 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void findOwner() {
-        User user = new User(owner, "test_name", "password");
+        User user = new User("test_name", "password");
+        user.addMembershipTo(owner);
         this.service.createUser(user);
         
         List<Owner> owners = this.service.getOwners("test_name");
         Assert.assertEquals(1, owners.size());
-        Assert.assertEquals(owner, owners.iterator().next());
+        Assert.assertEquals(owner, owners.get(0));
     }
     
     @Test
@@ -97,7 +98,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void ownerAdminRole() {
-        User user = new User(owner, "regular_user", "password");
+        User user = new User("regular_user", "password");
         this.service.createUser(user);
         
         Assert.assertTrue(this.service.getRoles("regular_user").contains(Role.OWNER_ADMIN));
@@ -107,7 +108,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     public void superAdminRole() {
         Set<Owner> owners = new HashSet<Owner>();
         owners.add(owner);
-        User user = new User(owners, "super_admin", "password", true);
+        User user = new User("super_admin", "password", true);
         this.service.createUser(user);
         
         Assert.assertTrue(this.service.getRoles("super_admin").contains(Role.SUPER_ADMIN));
@@ -120,7 +121,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void deletionValidationFail() {
-        User user = new User(owner, "guy", "pass");
+        User user = new User("guy", "pass");
         user = this.service.createUser(user);
         this.service.deleteUser(user);
         
@@ -135,7 +136,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void listByOwnerSingle() {
-        User user = new User(owner, "dude", "man");
+        User user = new User("dude", "man");
+        user.addMembershipTo(owner);
         this.service.createUser(user);
         
         Assert.assertArrayEquals(new User[] {user}, 
@@ -147,7 +149,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         List<User> users = new ArrayList<User>();
      
         for (int i = 0; i < 5; i++) {
-            User user = new User(owner, "user" + i, "password" + i);
+            User user = new User("user" + i, "password" + i);
+            user.addMembershipTo(owner);
             this.service.createUser(user);
             
             users.add(user);
@@ -156,9 +159,14 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         // add in a few others to filter out
         Owner different = new Owner("different_owner");
         this.ownerCurator.create(different);
-        
-        this.service.createUser(new User(different, "different_user", "password"));
-        this.service.createUser(new User(different, "another_different_user", "pass"));
+
+        User user = new User("different_user", "password");
+        user.addMembershipTo(different);
+        this.service.createUser(user);
+
+        user = new User("another_different_user", "pass");
+        user.addMembershipTo(different);
+        this.service.createUser(user);
         
         Assert.assertArrayEquals(users.toArray(), 
             this.service.listByOwner(owner).toArray());

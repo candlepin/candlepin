@@ -155,6 +155,10 @@ public class User extends AbstractHibernateObject {
         this.superAdmin = superAdmin;
     }
 
+    public void addMembershipTo(Owner owner) {
+        this.memberships.add(new Membership(owner, this));
+    }
+
     /**
      * Return string representation of the user object
      * @return string representation of the user object

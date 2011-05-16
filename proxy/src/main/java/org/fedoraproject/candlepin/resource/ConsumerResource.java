@@ -319,6 +319,7 @@ public class ConsumerResource {
      * registration we need to create the new owners, and adjust
      * the principal that was created during authentication to carry it.
      */
+    // TODO:  Reevaluate if this is still an issue with the new membership scheme!
     private void setupOwners(User user, Principal principal) {
         List<Owner> existingOwners = new ArrayList<Owner>();
 
@@ -349,8 +350,7 @@ public class ConsumerResource {
         // Set the new owner on the existing principal, which previously had a
         // detached owner:
         principal.setOwners(existingOwners);
-        user.setOwners(new HashSet<Owner>(existingOwners));
-
+        //user.setOwners(new HashSet<Owner>(existingOwners));
     }
 
     private ConsumerType lookupConsumerType(String label) {

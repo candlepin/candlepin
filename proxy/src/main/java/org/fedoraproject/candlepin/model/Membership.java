@@ -36,6 +36,15 @@ public class Membership extends AbstractHibernateObject {
     private Owner owner;
     private User user;
 
+    public Membership(Owner owner, User user) {
+        this.owner = owner;
+        this.user = user;
+    }
+
+    private Membership() {
+        // JPA
+    }
+
     public Owner getOwner() {
         return owner;
     }
@@ -52,6 +61,7 @@ public class Membership extends AbstractHibernateObject {
         this.user = user;
     }
 
+    @Override
     public String getId() {
         return id;
     }

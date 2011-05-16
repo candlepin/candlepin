@@ -133,7 +133,11 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             LDAPConnection lc = new LDAPConnection();
             lc.connect(ldapServer, ldapPort);
             lc.read(dn);
-            user = new User(new HashSet<Owner>(getOwners(username)), username, null);
+            user = new User(username, null);
+
+            for (Owner owner : getOwners(username)) {
+                user.addMembershipTo(owner);
+            }
         } 
         catch (LDAPException e) {
             //eat it

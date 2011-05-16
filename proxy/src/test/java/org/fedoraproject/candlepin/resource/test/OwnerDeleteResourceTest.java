@@ -90,11 +90,13 @@ public class OwnerDeleteResourceTest {
     @Test
     public void usersAreDeleted() {
         Owner compucorp = new Owner("compucorp");
-        Set<Owner> owners = new HashSet<Owner>();
-        owners.add(compucorp);
         List<User> users = new ArrayList<User>();
-        users.add(new User(owners, "billy", "password"));
-        users.add(new User(owners, "sally", "password"));
+        User billy = new User("billy", "password");
+        User sally = new User("sally", "password");
+        billy.addMembershipTo(compucorp);
+        sally.addMembershipTo(compucorp);
+        users.add(billy);
+        users.add(sally);
 
         when(ownerCurator.lookupByKey("compucorp")).thenReturn(compucorp);
         when(userService.isReadyOnly()).thenReturn(false);

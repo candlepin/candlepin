@@ -372,6 +372,15 @@ public class OwnerResource {
     }
 
     // ----- User -----
+    /**
+     * Associates a user with this owner.
+     *
+     * @param ownerKey
+     * @param userLogin
+     * @return
+     *
+     * @deprecated use the membership resource instead!
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -380,7 +389,7 @@ public class OwnerResource {
                               @QueryParam("user_login") String userLogin) {
         User user = findUser(userLogin);
         Owner owner = findOwner(ownerKey);
-        user.addOwner(owner);
+        user.addMembershipTo(owner);
 
         //ownerCurator.merge(owner);
         return user;

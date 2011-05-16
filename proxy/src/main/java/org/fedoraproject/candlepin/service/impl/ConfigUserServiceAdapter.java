@@ -201,16 +201,20 @@ public class ConfigUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public User findByLogin(String login) {
-        Set<Owner> owners = new HashSet<Owner>(getOwners(login));
+        User user = null;
 
         if (userPasswords.isEmpty()) {
-            return new User(owners, login, null);
+            user = new User(login, null);
         }
         else if (userPasswords.containsKey(login)) {
-            return new User(owners, login, userPasswords.get(login));
+            user = new User(login, userPasswords.get(login));
+        }
+
+        for (Owner owner : getOwners(login)) {
+            user.addMembershipTo(owner);
         }
         
-        return null;
+        return user;
     }
 
 }

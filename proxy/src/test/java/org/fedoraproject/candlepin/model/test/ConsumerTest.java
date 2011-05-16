@@ -448,9 +448,8 @@ public class ConsumerTest extends DatabaseTestFixture {
         ConsumerType personType = new ConsumerType(ConsumerTypeEnum.PERSON);
         consumerTypeCurator.create(personType);
 
-        Set<Owner> owners = new HashSet<Owner>();
-        owners.add(owner);
-        User user = new User(owners, newUsername, "password");
+        User user = new User(newUsername, "password");
+        user.addMembershipTo(owner);
         assertNull(consumerCurator.findByUser(user));
 
         consumer = new Consumer(CONSUMER_NAME, newUsername, owner, personType);
