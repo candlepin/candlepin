@@ -48,7 +48,7 @@ public class User extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    private Set<NewRole> membershipGroups;
+    private Set<NewRole> roles;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -119,7 +119,7 @@ public class User extends AbstractHibernateObject {
      */
     public Set<Owner> getOwners() {
         Set<Owner> owners = new HashSet<Owner>();
-        for (NewRole membership : getMembershipGroups()) {
+        for (NewRole membership : getRoles()) {
             for (Permission m : membership.getMemberships()) {
                 owners.add(m.getOwner());
             }
@@ -131,8 +131,8 @@ public class User extends AbstractHibernateObject {
     /**
      * @return the memberships
      */
-    public Set<NewRole> getMembershipGroups() {
-        return membershipGroups;
+    public Set<NewRole> getRoles() {
+        return roles;
     }
 
     /**
