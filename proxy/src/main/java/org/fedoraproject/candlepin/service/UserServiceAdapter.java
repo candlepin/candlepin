@@ -15,9 +15,11 @@
 package org.fedoraproject.candlepin.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.User;
 
 /**
@@ -37,7 +39,7 @@ public interface UserServiceAdapter {
     List<Owner> getOwners(String username);
 
     List<Role> getRoles(String username);
-
+    
     /**
      * Does this user service implementation support creation/deletion
      * of {@link User}s?

@@ -15,9 +15,11 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.fedoraproject.candlepin.model.Permission;
 
 /**
@@ -36,7 +38,7 @@ public class PrincipalData {
      * @param type
      * @param name
      */
-    public PrincipalData(List<Permission> permissions, String type, String name) {
+    public PrincipalData(Collection<Permission> permissions, String type, String name) {
         super();
         
         this.permissions = new HashMap<String, List<Role>>();

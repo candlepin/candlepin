@@ -140,6 +140,14 @@ public class User extends AbstractHibernateObject {
         this.roles.add(r);
         r.addUser(this);
     }
+    
+    public Set<Permission> getPermissions() {
+        Set<Permission> perms = new HashSet<Permission>();
+        for (NewRole r : getRoles()) {
+            perms.addAll(r.getPermissions());
+        }
+        return perms;
+    }
 
     /**
      * @return if the user has the SUPER_ADMIN role

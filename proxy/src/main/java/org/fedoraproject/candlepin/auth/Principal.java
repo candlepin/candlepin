@@ -17,8 +17,9 @@ package org.fedoraproject.candlepin.auth;
 import org.fedoraproject.candlepin.util.Util;
 
 import java.io.Serializable;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.fedoraproject.candlepin.model.Permission;
 
 /**
@@ -26,21 +27,21 @@ import org.fedoraproject.candlepin.model.Permission;
  */
 public abstract class Principal implements Serializable {
 
-    private List<Permission> permissions;
+    private Collection<Permission> permissions;
 
-    public Principal(List<Permission> permissions) {
+    public Principal(Collection<Permission> permissions) {
         this.permissions = permissions;
 
         if (this.permissions == null) {
-            this.permissions = new LinkedList<Permission>();
+            this.permissions = new HashSet<Permission>();
         }
     }
 
-    public List<Permission> getPermissions() {
+    public Collection<Permission> getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(List<Permission> permissions) {
+    public void setPermissions(Collection<Permission> permissions) {
         this.permissions = permissions;
     }
 

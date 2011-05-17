@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.fedoraproject.candlepin.model.Permission;
 /**
@@ -24,7 +24,7 @@ public class UserPrincipal extends Principal {
 
     private String username;
 
-    public UserPrincipal(String username, List<Permission> permissions) {
+    public UserPrincipal(String username, Collection<Permission> permissions) {
         super(permissions);
 
         this.username = username;

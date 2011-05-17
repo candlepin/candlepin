@@ -16,9 +16,11 @@ package org.fedoraproject.candlepin.service.impl;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -107,6 +109,5 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     public User findByLogin(String login) {
         return userCurator.findByLogin(login);
     }
-
 
 }

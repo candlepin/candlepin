@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resteasy.interceptor;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -102,13 +103,8 @@ class BasicAuth implements AuthProvider {
     }
 
     private Principal createPrincipal(String username) {
-        List<Role> roles = this.userServiceAdapter.getRoles(username);
-        List<Owner> owners = new ArrayList<Owner>();
-        for (Owner owner : this.userServiceAdapter.getOwners(username)) {
-            owners.add(lookupOwner(owner));
-        }
-
-        return new UserPrincipal(username, owners, roles);
+        return new UserPrincipal(username, userServiceAdapter.findByLogin(username).
+            getPermissions());
     }
 
     /*

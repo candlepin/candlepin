@@ -17,8 +17,6 @@ package org.fedoraproject.candlepin.test;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -29,7 +27,6 @@ import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.TestingInterceptor;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.CertificateSerial;
@@ -78,7 +75,6 @@ import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
-import java.util.Arrays;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -281,11 +277,7 @@ public class DatabaseTestFixture {
     }
     
     protected Principal setupPrincipal(Owner owner, Role role) {
-        List<Role> roles = new LinkedList<Role>();
-        roles.add(role);
-        Principal ownerAdmin = new UserPrincipal("someuser", 
-                Arrays.asList(new Owner[] {owner}), roles);
-        
+        Principal ownerAdmin = TestUtil.createPrincipal("someuser", owner, role);
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
     }
