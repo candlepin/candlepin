@@ -15,12 +15,14 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Locale;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -28,8 +30,10 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
+import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -79,7 +83,10 @@ public class ConsumerResourceCreationTest {
 
         Owner owner = new Owner("test_owner");
         User user = new User(USER, "");
-        user.addMembershipTo(owner);
+        Permission p = new Permission(owner, EnumSet.of(Role.OWNER_ADMIN));
+        NewRole role = new NewRole();
+        role.addPermission(p);
+        role.addUser(user);
 
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer() {
             @Override

@@ -91,8 +91,8 @@ public class OwnerDeleteResourceTest {
         List<User> users = new ArrayList<User>();
         User billy = new User("billy", "password");
         User sally = new User("sally", "password");
-        billy.addMembershipTo(compucorp);
-        sally.addMembershipTo(compucorp);
+//        billy.addMembershipTo(compucorp);
+//        sally.addMembershipTo(compucorp);
         users.add(billy);
         users.add(sally);
 

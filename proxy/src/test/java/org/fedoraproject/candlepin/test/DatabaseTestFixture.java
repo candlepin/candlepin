@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.test;
 
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,8 +44,11 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EventCurator;
+import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.PermissionCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -52,6 +56,7 @@ import org.fedoraproject.candlepin.model.ProductAttributeCurator;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
@@ -108,6 +113,8 @@ public class DatabaseTestFixture {
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
     protected CertificateSerialCurator certSerialCurator;
+    protected PermissionCurator permissionCurator;
+    protected RoleCurator roleCurator;
     protected I18n i18n;
     protected TestingInterceptor crudInterceptor;
     protected TestingInterceptor securityInterceptor;
@@ -147,6 +154,8 @@ public class DatabaseTestFixture {
         productCertificateCurator = injector.getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
         eventCurator = injector.getInstance(EventCurator.class);
+        permissionCurator = injector.getInstance(PermissionCurator.class);
+        roleCurator = injector.getInstance(RoleCurator.class);
 
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         certificateCurator = injector.getInstance(SubscriptionsCertificateCurator.class);
@@ -284,6 +293,13 @@ public class DatabaseTestFixture {
     protected void setupPrincipal(Principal p) {
         // TODO: might be good to get rid of this singleton
         TestPrincipalProviderSetter.get().setPrincipal(p);
+    }
+
+    public NewRole createAdminRole(Owner owner) {
+        Permission p = new Permission(owner, EnumSet.of(Role.OWNER_ADMIN));
+        NewRole role = new NewRole();
+        role.addPermission(p);
+        return role;
     }
 
 }

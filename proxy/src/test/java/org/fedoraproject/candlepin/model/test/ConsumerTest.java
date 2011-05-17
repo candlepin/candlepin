@@ -33,6 +33,7 @@ import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -447,7 +448,12 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(personType);
 
         User user = new User(newUsername, "password");
-        user.addMembershipTo(owner);
+        userCurator.create(user);
+
+        NewRole adminRole = createAdminRole(owner);
+        adminRole.addUser(user);
+        roleCurator.create(adminRole);
+
         assertNull(consumerCurator.findByUser(user));
 
         consumer = new Consumer(CONSUMER_NAME, newUsername, owner, personType);

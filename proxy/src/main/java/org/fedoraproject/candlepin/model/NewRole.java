@@ -35,14 +35,14 @@ public class NewRole extends AbstractHibernateObject {
     private String id;
 
     private Set<User> users = new HashSet<User>();
-    private Set<Permission> memberships = new HashSet<Permission>();
+    private Set<Permission> permissions = new HashSet<Permission>();
 
     public NewRole(Set<User> users, Set<Permission> memberships) {
         this.users = users;
-        this.memberships = memberships;
+        this.permissions = memberships;
     }
 
-    private NewRole() {
+    public NewRole() {
         // JPA
     }
 
@@ -62,12 +62,21 @@ public class NewRole extends AbstractHibernateObject {
     public void setUsers(Set<User> users) {
         this.users = users;
     }
-
-    public Set<Permission> getMemberships() {
-        return memberships;
+    
+    public void addUser(User u) {
+        this.users.add(u);
+        u.addRole(this);
+    }
+    
+    public Set<Permission> getPermissions() {
+        return permissions;
     }
 
-    public void setMemberships(Set<Permission> memberships) {
-        this.memberships = memberships;
+    public void setPermissions(Set<Permission> permissions) {
+        this.permissions = permissions;
+    }
+    
+    public void addPermission(Permission p) {
+        this.permissions.add(p);
     }
 }

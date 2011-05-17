@@ -389,7 +389,6 @@ public class OwnerResource {
                               @QueryParam("user_login") String userLogin) {
         User user = findUser(userLogin);
         Owner owner = findOwner(ownerKey);
-        user.addMembershipTo(owner);
 
         //ownerCurator.merge(owner);
         return user;

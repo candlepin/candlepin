@@ -40,6 +40,7 @@ import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
+import org.fedoraproject.candlepin.model.User;
 
 /**
  * TestUtil for creating various testing objects.
@@ -251,6 +252,12 @@ public class TestUtil {
         owner.setId(String.valueOf(RANDOM.nextLong()));
         return createEntitlement(owner, createConsumer(owner), createPool(
             owner, createProduct()), null);
+    }
+    
+    public void addPermissionToUser(User u, Role role, Owner o) {
+        // Check if a permission already exists for this verb and owner:
+        
+        
     }
 
 }

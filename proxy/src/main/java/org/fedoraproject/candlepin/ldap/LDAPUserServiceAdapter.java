@@ -20,13 +20,16 @@ import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
 import java.util.ArrayList;
 
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
@@ -135,7 +138,10 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             user = new User(username, null);
 
             for (Owner owner : getOwners(username)) {
-                user.addMembershipTo(owner);
+                Permission p = new Permission(owner, EnumSet.of(Role.OWNER_ADMIN));
+                NewRole r = new NewRole();
+                r.addPermission(p);
+                r.addUser(user);
             }
         } 
         catch (LDAPException e) {

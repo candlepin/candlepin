@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
@@ -83,8 +84,12 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     @Test
     public void findOwner() {
         User user = new User("test_name", "password");
-        user.addMembershipTo(owner);
+
         this.service.createUser(user);
+        
+        NewRole adminRole = createAdminRole(owner);
+        adminRole.addUser(user);
+        roleCurator.create(adminRole);
         
         List<Owner> owners = this.service.getOwners("test_name");
         Assert.assertEquals(1, owners.size());
@@ -137,8 +142,11 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     @Test
     public void listByOwnerSingle() {
         User user = new User("dude", "man");
-        user.addMembershipTo(owner);
         this.service.createUser(user);
+        
+        NewRole adminRole = createAdminRole(owner);
+        adminRole.addUser(user);
+        roleCurator.create(adminRole);
         
         Assert.assertArrayEquals(new User[] {user}, 
             this.service.listByOwner(owner).toArray());
@@ -150,8 +158,11 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
      
         for (int i = 0; i < 5; i++) {
             User user = new User("user" + i, "password" + i);
-            user.addMembershipTo(owner);
             this.service.createUser(user);
+            
+            NewRole adminRole = createAdminRole(owner);
+            adminRole.addUser(user);
+            roleCurator.create(adminRole);
             
             users.add(user);
         }
@@ -161,13 +172,18 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         this.ownerCurator.create(different);
 
         User user = new User("different_user", "password");
-        user.addMembershipTo(different);
-        this.service.createUser(user);
-
-        user = new User("another_different_user", "pass");
-        user.addMembershipTo(different);
         this.service.createUser(user);
         
+        NewRole adminRole = createAdminRole(different);
+        adminRole.addUser(user);
+        
+        user = new User("another_different_user", "pass");
+        this.service.createUser(user);
+
+        adminRole.addUser(user);
+
+        roleCurator.create(adminRole);
+
         Assert.assertArrayEquals(users.toArray(), 
             this.service.listByOwner(owner).toArray());
     }

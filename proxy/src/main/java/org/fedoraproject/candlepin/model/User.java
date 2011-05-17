@@ -119,9 +119,9 @@ public class User extends AbstractHibernateObject {
      */
     public Set<Owner> getOwners() {
         Set<Owner> owners = new HashSet<Owner>();
-        for (NewRole membership : getRoles()) {
-            for (Permission m : membership.getMemberships()) {
-                owners.add(m.getOwner());
+        for (NewRole role : getRoles()) {
+            for (Permission p : role.getPermissions()) {
+                owners.add(p.getOwner());
             }
         }
 
@@ -133,6 +133,11 @@ public class User extends AbstractHibernateObject {
      */
     public Set<NewRole> getRoles() {
         return roles;
+    }
+    
+    public void addRole(NewRole r) {
+        this.roles.add(r);
+        r.addUser(this);
     }
 
     /**
