@@ -15,12 +15,12 @@
 package org.fedoraproject.candlepin.model;
 
 /**
- * MembershipCurator
+ * PermissionCurator
  */
-public class MembershipCurator extends AbstractHibernateCurator<Membership> {
+public class RoleCurator extends AbstractHibernateCurator<NewRole> {
     
-    protected MembershipCurator() {
-        super(Membership.class);
+    protected RoleCurator() {
+        super(NewRole.class);
     }
 
 }

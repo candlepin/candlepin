@@ -14,18 +14,21 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.fedoraproject.candlepin.auth.Role;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
- * Membership represents the relationship between a user account and an owner.
- * In the future, it may also carry information specific to this users roles and 
- * permissions on that owner.
+ * A permission represents an owner to be accessed in some fashion, and a verb which
+ * the permissions is granting.
  */
-public class Membership extends AbstractHibernateObject {
+public class Permission extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -34,14 +37,16 @@ public class Membership extends AbstractHibernateObject {
     private String id;
 
     private Owner owner;
-    private User user;
+    private Set<Role> roles = new HashSet<Role>();
+    private NewRole membershipGroup;
 
-    public Membership(Owner owner, User user) {
+    public Permission(Owner owner, NewRole membershipGroup, Set<Role> roles) {
         this.owner = owner;
-        this.user = user;
+        this.roles = roles;
+        this.membershipGroup = membershipGroup;
     }
 
-    private Membership() {
+    private Permission() {
         // JPA
     }
 
@@ -53,14 +58,6 @@ public class Membership extends AbstractHibernateObject {
         this.owner = owner;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
     @Override
     public String getId() {
         return id;
@@ -68,5 +65,21 @@ public class Membership extends AbstractHibernateObject {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public NewRole getMembershipGroup() {
+        return membershipGroup;
+    }
+
+    public void setMembershipGroup(NewRole membershipGroup) {
+        this.membershipGroup = membershipGroup;
     }
 }

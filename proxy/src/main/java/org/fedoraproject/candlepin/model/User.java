@@ -22,7 +22,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -49,8 +48,7 @@ public class User extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @OneToMany(mappedBy = "user", targetEntity = Membership.class)
-    private Set<Membership> memberships;
+    private Set<NewRole> membershipGroups;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -121,8 +119,10 @@ public class User extends AbstractHibernateObject {
      */
     public Set<Owner> getOwners() {
         Set<Owner> owners = new HashSet<Owner>();
-        for (Membership membership : getMemberships()) {
-            owners.add(membership.getOwner());
+        for (NewRole membership : getMembershipGroups()) {
+            for (Permission m : membership.getMemberships()) {
+                owners.add(m.getOwner());
+            }
         }
 
         return owners;
@@ -131,14 +131,8 @@ public class User extends AbstractHibernateObject {
     /**
      * @return the memberships
      */
-    public Set<Membership> getMemberships() {
-        return memberships;
-    }
-    /**
-     * @param memberships the memberships to set
-     */
-    public void setMemberships(Set<Membership> memberships) {
-        this.memberships = memberships;
+    public Set<NewRole> getMembershipGroups() {
+        return membershipGroups;
     }
 
     /**
@@ -155,9 +149,9 @@ public class User extends AbstractHibernateObject {
         this.superAdmin = superAdmin;
     }
 
-    public void addMembershipTo(Owner owner) {
-        this.memberships.add(new Membership(owner, this));
-    }
+//    public void addMembershipTo(Owner owner) {
+//        this.membershipGroups.add(new Membership(owner, this));
+//    }
 
     /**
      * Return string representation of the user object
