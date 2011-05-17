@@ -19,10 +19,13 @@ import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Role;
@@ -75,28 +78,27 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
-    //FIXME this seems hacky
-    public List<Owner> getOwners(String username) {
-        List<Owner> owners = new ArrayList<Owner>();
+    public List<NewRole> getRoles(String username) {
+        List<NewRole> roles = new ArrayList<NewRole>();
+        Set<User> users = new HashSet<User>();
+        users.add(new User(username, null));
+
         try {
             String dn = getDN(username);
             LDAPConnection lc = getConnection();
             LDAPEntry entry = lc.read(dn);
             String orgName = entry.getAttribute("ou").getStringValue();
-            owners.add(new Owner(orgName));
-        } 
+
+            Set<Permission> permissions = new HashSet<Permission>();
+            permissions.add(new Permission(new Owner(orgName),
+                    EnumSet.of(Role.SUPER_ADMIN)));
+
+            roles.add(new NewRole(users, permissions));
+        }
         catch (LDAPException e) {
             //eat it
-        }        
-        
-        return owners;
-    }
+        }
 
-    @Override
-    // FIXME This is hacky
-    public List<Role> getRoles(String username) {
-        List<Role> roles = new LinkedList<Role>();
-        roles.add(Role.SUPER_ADMIN);
         return roles;
     }
 

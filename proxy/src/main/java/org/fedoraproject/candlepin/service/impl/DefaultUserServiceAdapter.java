@@ -14,11 +14,9 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.User;
@@ -28,6 +26,8 @@ import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
+import org.fedoraproject.candlepin.model.NewRole;
 
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}
@@ -46,38 +46,18 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     public User createUser(User user) {
         return this.userCurator.create(user);
     }
+
+    @Override
+    public List<NewRole> getRoles(String username) {
+        User user = this.userCurator.findByLogin(username);
+
+        if (user != null) {
+            return new ArrayList<NewRole>(user.getRoles());
+        }
+
+        return Collections.emptyList();
+    }
     
-    @Override
-    public List<Owner> getOwners(String username) {
-        User user = this.userCurator.findByLogin(username);
-        
-        if (user != null) {
-            return new ArrayList<Owner>(user.getOwners());
-        }
-
-        // TODO:  Should this be an empty list instead?
-        return null;
-    }
-
-    @Override
-    public List<Role> getRoles(String username) {
-        List<Role> roles = new LinkedList<Role>();
-        User user = this.userCurator.findByLogin(username);
-        
-        // this might not be the best way to do this
-        // should we have a list of roles stored rather than this flag?
-        if (user != null) {
-            if (user.isSuperAdmin()) {
-                roles.add(Role.SUPER_ADMIN);
-            }
-            else {
-                roles.add(Role.OWNER_ADMIN);
-            }
-        }
-        
-        return roles;
-    }
-
     @Override
     public boolean validateUser(String username, String password) {
         User user = this.userCurator.findByLogin(username);

@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.auth.interceptor;
 
-import java.util.HashSet;
-import java.util.Set;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -27,6 +25,8 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import java.util.EnumSet;
+import org.fedoraproject.candlepin.model.Permission;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -51,7 +51,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         Principal currentUser = this.principalProvider.get();
         log.debug("Invoked.");
         
-        Set<Role> allowedRoles = new HashSet<Role>();
+        EnumSet<Role> allowedRoles = EnumSet.noneOf(Role.class);
         
         // Super admins can access any URL:
         allowedRoles.add(Role.SUPER_ADMIN);
@@ -70,7 +70,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         
         boolean foundRole = false;
         for (Role allowed : allowedRoles) {
-            if (currentUser.hasRole(allowed)) {
+            if (hasRole(currentUser, allowed)) {
                 foundRole = true;
                 if (log.isDebugEnabled()) {
                     log.debug("Granting access for " + currentUser + " due to role: " + 
@@ -89,6 +89,17 @@ public class SecurityInterceptor implements MethodInterceptor {
         }
         
         return invocation.proceed();
+    }
+
+    // TODO:  This should also go away - when this whole interceptor dies!!!
+    private boolean hasRole(Principal principal, Role role) {
+        for (Permission permission : principal.getPermissions()) {
+            if (permission.getRoles().contains(role)) {
+                return true;
+            }
+        }
+
+        return false;
     }
     
 }

@@ -90,6 +90,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import org.fedoraproject.candlepin.model.NewRole;
 
 /**
  * API Gateway for Consumers
@@ -321,6 +322,8 @@ public class ConsumerResource {
      */
     // TODO:  Reevaluate if this is still an issue with the new membership scheme!
     private void setupOwners(User user, Principal principal) {
+    //private void setOwner(Consumer consumer, Principal principal) {
+
         List<Owner> existingOwners = new ArrayList<Owner>();
 
         for (Owner owner : userService.getOwners(user.getUsername())) {
@@ -340,8 +343,7 @@ public class ConsumerResource {
                 ResteasyProviderFactory.popContextData(Principal.class);
 
                 // Restore the old principal having elevated privileges earlier:
-                ResteasyProviderFactory.pushContext(Principal.class,
-                    principal);
+                ResteasyProviderFactory.pushContext(Principal.class, principal);
             }
 
             existingOwners.add(existingOwner);
@@ -349,8 +351,11 @@ public class ConsumerResource {
         
         // Set the new owner on the existing principal, which previously had a
         // detached owner:
-        principal.setOwners(existingOwners);
+        //principal.setOwners(existingOwners);
         //user.setOwners(new HashSet<Owner>(existingOwners));
+        for (NewRole role : user.getRoles()) {
+        //    role.getMemberships()
+        }
     }
 
     private ConsumerType lookupConsumerType(String label) {

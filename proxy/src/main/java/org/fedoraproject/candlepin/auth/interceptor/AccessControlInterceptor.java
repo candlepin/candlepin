@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Permission;
 
 /**
  * AccessControlInterceptor
@@ -79,7 +80,9 @@ public class AccessControlInterceptor implements MethodInterceptor {
 
     private void listFilter(MethodInvocation invocation) {
         Principal currentUser = this.principalProvider.get();
-        Role role = currentUser.getRoles().get(0);
+        // TODO:  This was already checking only the first role on the principal,
+        // which seems bad - this is basically doing this same thing...
+        Role role = currentUser.getPermissions().get(0).getRoles().iterator().next();
         
         if (Role.OWNER_ADMIN == role) { 
             enableOwnerFilter(currentUser, invocation.getThis(), role);
@@ -91,10 +94,12 @@ public class AccessControlInterceptor implements MethodInterceptor {
 
     private void crudAccessControl(Object entity) {
         Principal currentUser = this.principalProvider.get();
-        Role role = currentUser.getRoles().get(0);
+        // TODO:  This was already checking only the first role on the principal,
+        // which seems bad - this is basically doing this same thing...
+        Role role = currentUser.getPermissions().get(0).getRoles().iterator().next();
 
         // Only available on entities that implement AccessControlEnforced interface
-        if (currentUser.getRoles().contains(Role.SUPER_ADMIN)) {
+        if (currentUser.isSuperAdmin()) {
             return;
         }
         else if (Role.CONSUMER == role) {
@@ -118,9 +123,10 @@ public class AccessControlInterceptor implements MethodInterceptor {
     }
 
     // Grant access if ANY of the principal's owners has permission to see the entity
+    // TODO:  This will need to be changed for checking specific permissions!
     private boolean hasAccessTo(Principal principal, AccessControlEnforced entity) {
-        for (Owner owner : principal.getOwners()) {
-            if (entity.shouldGrantAccessTo(owner)) {
+        for (Permission permission : principal.getPermissions()) {
+            if (entity.shouldGrantAccessTo(permission.getOwner())) {
                 return true;
             }
         }
@@ -140,8 +146,8 @@ public class AccessControlInterceptor implements MethodInterceptor {
     private List<String> getOwnerIds(UserPrincipal principal) {
         List<String> ownerIds = new LinkedList<String>();
 
-        for (Owner owner : principal.getOwners()) {
-            ownerIds.add(owner.getId());
+        for (Permission permission : principal.getPermissions()) {
+            ownerIds.add(permission.getOwner().getId());
         }
 
         return ownerIds;

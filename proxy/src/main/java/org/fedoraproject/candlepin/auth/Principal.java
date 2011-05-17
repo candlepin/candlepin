@@ -37,6 +37,16 @@ public abstract class Principal implements Serializable {
         }
     }
 
+    public boolean isSuperAdmin() {
+        for (Permission permission : this.permissions) {
+            if (permission.getRoles().contains(Role.SUPER_ADMIN)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public Collection<Permission> getPermissions() {
         return permissions;
     }
