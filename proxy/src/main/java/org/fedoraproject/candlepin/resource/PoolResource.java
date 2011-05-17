@@ -83,6 +83,7 @@ public class PoolResource {
     /**
      * Returns the list of available entitlement pools.
      * 
+     * @deprecated Use the method on /owners
      * @param ownerId optional parameter to limit the search by owner
      * @param productId optional parameter to limit the search by product
      * @param consumerUuid optional parameter to limit the search by consumer,

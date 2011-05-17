@@ -26,9 +26,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;

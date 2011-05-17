@@ -549,8 +549,8 @@ public class ConsumerResource {
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
                 msg = i18n.tr(
-                    "This consumer is already subscribed to the product matching pool "
-                        + "with id ''{0}''", pool.getId().toString());
+                    "This consumer is already subscribed to the product matching pool " +
+                        "with id ''{0}''", pool.getId().toString());
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
                 msg = i18n
@@ -559,8 +559,8 @@ public class ConsumerResource {
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
                 msg = i18n.tr(
-                    "Consumers of this type are not allowed to subscribe to the pool "
-                        + "with id ''{0}''", pool.getId().toString());
+                    "Consumers of this type are not allowed to subscribe to the pool " +
+                        "with id ''{0}''", pool.getId().toString());
             }
             else {
                 msg = i18n
