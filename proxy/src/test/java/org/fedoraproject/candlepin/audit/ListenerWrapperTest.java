@@ -27,6 +27,7 @@ import java.util.Arrays;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.auth.PrincipalData;
+import org.fedoraproject.candlepin.model.Permission;
 import org.hornetq.api.core.HornetQBuffer;
 import org.hornetq.api.core.HornetQBuffers;
 import org.hornetq.api.core.HornetQException;
@@ -96,8 +97,8 @@ public class ListenerWrapperTest {
         Event e = new Event();
         e.setId("10");
         e.setConsumerId("20");
-        e.setPrincipal(new PrincipalData(Arrays.asList(new String[] {"1234"}),
-                null, "5678", "910112"));
+        e.setPrincipal(new PrincipalData(Arrays.asList(new Permission [] {}),
+                "5678", "910112"));
         mapper.writeValue(sw, e);
         return sw.toString();
     }

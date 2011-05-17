@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.test;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
@@ -198,17 +200,19 @@ public class TestUtil {
     }
 
 
-    public static Principal createPrincipal(Owner owner, Role role) {
+    public static Principal createPrincipal(String username, Owner owner, Role role) {
         List<Role> roles = new LinkedList<Role>();
         roles.add(role);
-        Principal ownerAdmin = new UserPrincipal("someuser", 
-                Arrays.asList(new Owner[] {owner}), roles);
+        Principal ownerAdmin = new UserPrincipal(username, 
+                Arrays.asList(new Permission[] {
+                    new Permission(owner, EnumSet.of(Role.OWNER_ADMIN))
+                }));
         return ownerAdmin;
     }
 
     public static Principal createOwnerPrincipal() {
         Owner owner = new Owner("Test Owner " + randomInt());
-        return createPrincipal(owner, Role.OWNER_ADMIN);
+        return createPrincipal("someuser", owner, Role.OWNER_ADMIN);
     }
 
 

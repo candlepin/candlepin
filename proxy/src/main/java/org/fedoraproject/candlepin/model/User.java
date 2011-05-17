@@ -117,6 +117,7 @@ public class User extends AbstractHibernateObject {
      *
      * @deprecated use {@link #getMemberships()} instead
      */
+    @Deprecated
     public Set<Owner> getOwners() {
         Set<Owner> owners = new HashSet<Owner>();
         for (NewRole role : getRoles()) {
