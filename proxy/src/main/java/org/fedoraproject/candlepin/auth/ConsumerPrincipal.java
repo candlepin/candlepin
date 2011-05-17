@@ -15,8 +15,9 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Permission;
 
 /**
  *
@@ -26,8 +27,8 @@ public class ConsumerPrincipal extends Principal {
     private Consumer consumer;
 
     public ConsumerPrincipal(Consumer consumer) {
-        super(Arrays.asList(new Owner[] {consumer.getOwner()}),
-                Arrays.asList(new Role[]{Role.CONSUMER}));
+        super(Arrays.asList(new Permission[]
+            {new Permission(consumer.getOwner(), EnumSet.of(Role.CONSUMER))}));
 
         this.consumer = consumer;
     }

@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -37,13 +37,11 @@ public class Permission extends AbstractHibernateObject {
     private String id;
 
     private Owner owner;
-    private Set<Role> roles = new HashSet<Role>();
-    private NewRole membershipGroup;
+    private EnumSet<Role> roles = EnumSet.noneOf(Role.class);
 
-    public Permission(Owner owner, NewRole membershipGroup, Set<Role> roles) {
+    public Permission(Owner owner, EnumSet<Role> roles) {
         this.owner = owner;
         this.roles = roles;
-        this.membershipGroup = membershipGroup;
     }
 
     private Permission() {
@@ -71,15 +69,7 @@ public class Permission extends AbstractHibernateObject {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
+    public void setRoles(EnumSet<Role> roles) {
         this.roles = roles;
-    }
-
-    public NewRole getMembershipGroup() {
-        return membershipGroup;
-    }
-
-    public void setMembershipGroup(NewRole membershipGroup) {
-        this.membershipGroup = membershipGroup;
     }
 }

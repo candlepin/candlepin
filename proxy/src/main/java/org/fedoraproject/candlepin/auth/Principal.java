@@ -14,44 +14,34 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.util.Util;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import org.fedoraproject.candlepin.model.Permission;
 
 /**
  * An entity interacting with Candlepin
  */
 public abstract class Principal implements Serializable {
 
-    private List<Owner> owners;
-    private List<Role> roles;     
+    private List<Permission> permissions;
 
-    public Principal(List<Owner> owners, List<Role> roles) {
-        this.owners = owners;
-        this.roles = roles;
-        if (roles == null) {
-            this.roles = new LinkedList<Role>();
+    public Principal(List<Permission> permissions) {
+        this.permissions = permissions;
+
+        if (this.permissions == null) {
+            this.permissions = new LinkedList<Permission>();
         }
     }
 
-    public List<Owner> getOwners() {
-        return owners;
+    public List<Permission> getPermissions() {
+        return permissions;
     }
 
-    public void setOwners(List<Owner> owners) {
-        this.owners = owners;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-    
-    public Boolean hasRole(Role role) {
-        return roles.contains(role);
+    public void setPermissions(List<Permission> permissions) {
+        this.permissions = permissions;
     }
 
     public boolean isConsumer() {
@@ -67,15 +57,8 @@ public abstract class Principal implements Serializable {
     }
     
     public PrincipalData getData() {
-        List<String> ownerIds = new ArrayList<String>();
-        for (Owner owner : getOwners()) {
-            ownerIds.add(owner.getId());
-        }
-        
-        PrincipalData data = new PrincipalData(ownerIds, getRoles(),
-            this.getType(), this.getPrincipalName());
-        
-        return data;
+        return new PrincipalData(getPermissions(), this.getType(),
+                this.getPrincipalName());
     }
 
     @Override

@@ -14,7 +14,11 @@
  */
 package org.fedoraproject.candlepin.auth;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.fedoraproject.candlepin.model.Permission;
 
 /**
  * PrincipalData is a DTO for principal information until we move to 
@@ -22,8 +26,7 @@ import java.util.List;
  */
 public class PrincipalData {
 
-    private List<String> ownerIds;
-    private List<Role> roles;
+    private Map<String, List<Role>> permissions;  // Map of owner key -> roles
     private String type;
     private String name;
     
@@ -33,43 +36,26 @@ public class PrincipalData {
      * @param type
      * @param name
      */
-    public PrincipalData(List<String> ownerIds, List<Role> roles, String type,
-        String name) {
+    public PrincipalData(List<Permission> permissions, String type, String name) {
         super();
         
-        this.ownerIds = ownerIds;
-        this.roles = roles;
+        this.permissions = new HashMap<String, List<Role>>();
+
+        for (Permission permission : permissions) {
+            this.permissions.put(permission.getOwner().getKey(),
+                    new ArrayList<Role>(permission.getRoles()));
+        }
         this.type = type;
         this.name = name;
     }
     
     public PrincipalData() {
     }
+
+    public Map<String, List<Role>> getPermissions() {
+        return permissions;
+    }
     
-    /**
-     * @return the ownerId
-     */
-    public List<String> getOwnerIds() {
-        return ownerIds;
-    }
-    /**
-     * @param ownerId the ownerId to set
-     */
-    public void setOwnerIds(List<String> ownerIds) {
-        this.ownerIds = ownerIds;
-    }
-    /**
-     * @return the roles
-     */
-    public List<Role> getRoles() {
-        return roles;
-    }
-    /**
-     * @param roles the roles to set
-     */
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
-    }
     /**
      * @return the type
      */

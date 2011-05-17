@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.model.test;
 
 import java.util.HashSet;
 import java.util.Set;
-import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
@@ -34,8 +33,10 @@ public class MembershipTest extends DatabaseTestFixture {
 
         String username = "TESTUSER";
         String password = "sekretpassword";
-        User user = new User(owners, username, password);
+        User user = new User(username, password);
         userCurator.create(user);
+
+        // TODO:  Finish up here...
     }
 
 }

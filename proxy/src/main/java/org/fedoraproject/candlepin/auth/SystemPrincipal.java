@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import org.fedoraproject.candlepin.model.Permission;
 
 /**
  * SystemPrincipal
@@ -25,13 +27,16 @@ public class SystemPrincipal extends Principal{
      * This principle will have super admin rights
      */
     public SystemPrincipal() {
-        super(null, Arrays.asList(new Role[]{Role.SUPER_ADMIN}));
+        super(Arrays.asList(new Permission[]
+            {new Permission(null, EnumSet.of(Role.SUPER_ADMIN))}));
     }
-    
+
+    @Override
     public String getType() {
         return "system";
     }
 
+    @Override
     public String getPrincipalName() {       
         return "System";
     } 

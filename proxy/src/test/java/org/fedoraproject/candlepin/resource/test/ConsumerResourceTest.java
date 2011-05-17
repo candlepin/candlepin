@@ -127,9 +127,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner);
 
         userCurator = injector.getInstance(UserCurator.class);
-        someuser = userCurator.create(new User(owner, USER_NAME, "dontcare"));
+        someuser = userCurator.create(new User(USER_NAME, "dontcare"));
+        someuser.addMembershipTo(owner);
 
-        principal = new UserPrincipal(USER_NAME, owner,
+        principal = new UserPrincipal(USER_NAME, Arrays.asList(new Owner[] {owner}),
             Lists.newArrayList(Role.OWNER_ADMIN));
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
@@ -227,8 +228,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer submitted = consumerResource.create(
             toSubmit,
-            new UserPrincipal(someuser.getUsername(), owner, Collections
-                .singletonList(Role.OWNER_ADMIN)), null);
+            new UserPrincipal(someuser.getUsername(), Arrays.asList(new Owner[] {owner}),
+            Collections.singletonList(Role.OWNER_ADMIN)), someuser.getUsername(),
+            owner.getKey());
 
         assertNotNull(submitted);
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -246,7 +248,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.setUuid(uuid);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted = consumerResource.create(toSubmit, principal, null);
+        Consumer submitted = consumerResource.create(toSubmit, principal, null,
+                owner.getKey());
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -262,7 +265,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         anotherToSubmit.setUuid(uuid);
         anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
-        consumerResource.create(anotherToSubmit, principal, null);
+        consumerResource.create(anotherToSubmit, principal, null, owner.getKey());
     }
 
     public void testDeleteResource() {
@@ -281,7 +284,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("random-consumer", null, null,
             standardSystemType);
 
-        consumer = consumerResource.create(consumer, principal, null);
+        consumer = consumerResource.create(consumer, principal, null, null);
 
         assertEquals(USER_NAME, consumer.getUsername());
     }

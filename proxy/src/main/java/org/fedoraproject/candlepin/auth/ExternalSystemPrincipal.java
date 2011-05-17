@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import org.fedoraproject.candlepin.model.Permission;
 
 /**
  * ExternalSystemPrincipal - A principal representing a trusted external system
@@ -27,13 +29,16 @@ public class ExternalSystemPrincipal extends Principal {
      * @param roles
      */
     public ExternalSystemPrincipal() {
-        super(null, Arrays.asList(new Role[]{Role.TRUSTED_SYSTEM}));
+        super(Arrays.asList(new Permission[] 
+            {new Permission(null, EnumSet.of(Role.TRUSTED_SYSTEM))}));
     }
-    
+
+    @Override
     public String getType() {
         return "system";
     }
-    
+
+    @Override
     public String getPrincipalName() {       
         return "External System";
     }     
