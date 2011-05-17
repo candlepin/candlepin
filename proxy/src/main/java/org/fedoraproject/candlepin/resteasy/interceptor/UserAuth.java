@@ -17,16 +17,15 @@ package org.fedoraproject.candlepin.resteasy.interceptor;
 import java.util.List;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Injector;
 import java.util.ArrayList;
+import org.fedoraproject.candlepin.model.NewRole;
+import org.fedoraproject.candlepin.model.Permission;
 
 /**
  * UserAuth
@@ -50,20 +49,18 @@ public abstract class UserAuth implements AuthProvider {
      * Creates a user principal for a given username
      */
     protected Principal createPrincipal(String username) {
-        List<Owner> owners = this.userServiceAdapter.getOwners(username);
-        UserPrincipal principal = null;
-        if (owners == null || owners.isEmpty()) {
-            String msg = i18n.tr("No owners found for user {0}", username);
-            throw new BadRequestException(msg);
+        List<Permission> permissions = new ArrayList<Permission>();
+
+        // flatten out the permissions from the combined roles
+        for (NewRole role : this.userServiceAdapter.getRoles(username)) {
+            permissions.addAll(role.getPermissions());
         }
-        else {
-            List<Owner> fullOwners = new ArrayList<Owner>();
-            for (Owner owner : owners) {
-                fullOwners.add(AuthUtil.lookupOwner(owner, ownerCurator));
-            }
-            List<Role> roles = this.userServiceAdapter.getRoles(username);
-            principal = new UserPrincipal(username, fullOwners, roles);
-        }
+
+        Principal principal = new UserPrincipal(username, permissions);
+
+        // TODO:  Look up owner here?
+        // Old code was doing this:  fullOwners.add(AuthUtil.lookupOwner(owner, ownerCurator));
+
         return principal;
     }
 

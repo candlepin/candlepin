@@ -264,7 +264,7 @@ public class PoolManagerTest {
      */
     private Owner getOwner() {
         // just grab the first one
-        return principal.getOwners().iterator().next();
+        return principal.getPermissions().iterator().next().getOwner();
     }
 
     @SuppressWarnings("unchecked")
