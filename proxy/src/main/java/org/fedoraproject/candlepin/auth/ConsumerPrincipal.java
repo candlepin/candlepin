@@ -15,8 +15,6 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 

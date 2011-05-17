@@ -19,7 +19,6 @@ import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import java.util.LinkedList;
 import java.util.List;
