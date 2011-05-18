@@ -44,7 +44,6 @@ import org.fedoraproject.candlepin.test.TestUtil;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -313,9 +312,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, pools.size());
     }
 
-    @Ignore("figure out how to change this")
-    @Test(expected = ForbiddenException.class)
-    public void testOwnerAdminCannotListAllOwners() {
+    @Test
+    public void testOwnerAdminCanListAllOwners() {
         setupPrincipal(owner, Role.OWNER_ADMIN);
 
         securityInterceptor.enable();
@@ -437,8 +435,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createEntitlementWithQ(pool, owner, consumer1, e2, "01/01/2010");
         assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
         this.config.setProperty(
-            ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true" :
-                "false");
+            ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true"
+                : "false");
         poolManager.refreshPools(owner);
         pool = poolCurator.find(pool.getId());
         return pool;
