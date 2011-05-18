@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.fedoraproject.candlepin.model.Owner;
 
 import org.fedoraproject.candlepin.model.Permission;
 
@@ -46,12 +47,16 @@ public class PrincipalData {
         this.ownerVerbs = new HashMap<String, List<Verb>>();
 
         for (Permission permission : permissions) {
-            String ownerKey = permission.getOwner().getKey();
-            if (!ownerVerbs.containsKey(ownerKey)) {
-                this.ownerVerbs.put(ownerKey, new ArrayList<Verb>());
-            }
+            Owner owner = permission.getOwner();
+
+            if (owner != null) {
+                String ownerKey = owner.getKey();
+                if (!ownerVerbs.containsKey(ownerKey)) {
+                    this.ownerVerbs.put(ownerKey, new ArrayList<Verb>());
+                }
             
-            this.ownerVerbs.get(ownerKey).add(permission.getVerb());
+                this.ownerVerbs.get(ownerKey).add(permission.getVerb());
+            }
         }
         this.type = type;
         this.name = name;

@@ -201,13 +201,8 @@ public class TestUtil {
 
 
     public static Principal createPrincipal(String username, Owner owner, Verb role) {
-        List<Verb> roles = new LinkedList<Verb>();
-        roles.add(role);
-        Principal ownerAdmin = new UserPrincipal(username, 
-                Arrays.asList(new Permission[] {
-                    new Permission(owner, Verb.OWNER_ADMIN)
-                }));
-        return ownerAdmin;
+        return new UserPrincipal(username,  Arrays.asList(new Permission[] {
+                    new Permission(owner, role)}));
     }
 
     public static Principal createOwnerPrincipal() {

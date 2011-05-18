@@ -50,14 +50,9 @@ public class SecurityInterceptor implements MethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Principal currentUser = this.principalProvider.get();
         log.debug("Invoked.");
-        
-        EnumSet<Verb> allowedRoles = EnumSet.noneOf(Verb.class);
-        
+
         // Super admins can access any URL:
-        allowedRoles.add(Verb.SUPER_ADMIN);
-        log.debug(invocation.getClass().getName());
-        log.debug(invocation.getClass().getAnnotations().length);
-        
+        EnumSet<Verb> allowedRoles = EnumSet.of(Verb.SUPER_ADMIN);
         
         AllowRoles annotation = invocation.getMethod().getAnnotation(AllowRoles.class);
         log.debug("Method annotation: " + annotation);
