@@ -138,7 +138,8 @@ public class User extends AbstractHibernateObject {
         return roles;
     }
     
-    public void addRole(Role r) {
+    // Protected, Role owns this relationship, so call Role.addUser instead.
+    void addRole(Role r) {
         this.roles.add(r);
     }
     

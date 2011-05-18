@@ -137,7 +137,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             user = new User(username, null);
 
             for (Role role : getRoles(username)) {
-                user.addRole(role);
+                role.addUser(user);
             }
         } 
         catch (LDAPException e) {
