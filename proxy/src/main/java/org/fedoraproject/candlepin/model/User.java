@@ -50,7 +50,7 @@ public class User extends AbstractHibernateObject {
     private String id;
 
     @Transient
-    private Set<NewRole> roles;
+    private Set<Role> roles;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -122,7 +122,7 @@ public class User extends AbstractHibernateObject {
     @Deprecated
     public Set<Owner> getOwners() {
         Set<Owner> owners = new HashSet<Owner>();
-        for (NewRole role : getRoles()) {
+        for (Role role : getRoles()) {
             for (Permission p : role.getPermissions()) {
                 owners.add(p.getOwner());
             }
@@ -134,11 +134,11 @@ public class User extends AbstractHibernateObject {
     /**
      * @return the roles
      */
-    public Set<NewRole> getRoles() {
+    public Set<Role> getRoles() {
         return roles;
     }
     
-    public void addRole(NewRole r) {
+    public void addRole(Role r) {
         this.roles.add(r);
         r.addUser(this);
     }
@@ -149,7 +149,7 @@ public class User extends AbstractHibernateObject {
      */
     public Set<Permission> getPermissions() {
         Set<Permission> perms = new HashSet<Permission>();
-        for (NewRole r : getRoles()) {
+        for (Role r : getRoles()) {
             perms.addAll(r.getPermissions());
         }
         return perms;

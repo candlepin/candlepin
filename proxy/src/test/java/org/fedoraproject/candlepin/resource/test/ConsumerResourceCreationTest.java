@@ -30,7 +30,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
-import org.fedoraproject.candlepin.model.NewRole;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Permission;
@@ -84,7 +84,7 @@ public class ConsumerResourceCreationTest {
         Owner owner = new Owner("test_owner");
         User user = new User(USER, "");
         Permission p = new Permission(owner, Verb.OWNER_ADMIN);
-        NewRole role = new NewRole();
+        Role role = new Role();
         role.addPermission(p);
         role.addUser(user);
 
@@ -95,7 +95,7 @@ public class ConsumerResourceCreationTest {
             }
         });
         when(consumerTypeCurator.lookupByLabel(system.getLabel())).thenReturn(system);
-        when(userService.getRoles(USER)).thenReturn(Arrays.asList(new NewRole[] {role}));
+        when(userService.getRoles(USER)).thenReturn(Arrays.asList(new Role[] {role}));
         when(userService.findByLogin(USER)).thenReturn(user);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
                 .thenReturn(new IdentityCertificate());

@@ -21,7 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.auth.Verb;
-import org.fedoraproject.candlepin.model.NewRole;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
@@ -89,7 +89,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
 
         this.service.createUser(user);
         
-        NewRole adminRole = createAdminRole(owner);
+        Role adminRole = createAdminRole(owner);
         adminRole.addUser(user);
         roleCurator.create(adminRole);
         
@@ -149,7 +149,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("dude", "man");
         this.service.createUser(user);
         
-        NewRole adminRole = createAdminRole(owner);
+        Role adminRole = createAdminRole(owner);
         adminRole.addUser(user);
         roleCurator.create(adminRole);
         
@@ -165,7 +165,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
             User user = new User("user" + i, "password" + i);
             this.service.createUser(user);
             
-            NewRole adminRole = createAdminRole(owner);
+            Role adminRole = createAdminRole(owner);
             adminRole.addUser(user);
             roleCurator.create(adminRole);
             
@@ -179,7 +179,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("different_user", "password");
         this.service.createUser(user);
         
-        NewRole adminRole = createAdminRole(different);
+        Role adminRole = createAdminRole(different);
         adminRole.addUser(user);
         
         user = new User("another_different_user", "pass");

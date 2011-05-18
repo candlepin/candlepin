@@ -50,7 +50,7 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
-import org.fedoraproject.candlepin.model.NewRole;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.Pool;
@@ -131,7 +131,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         userCurator = injector.getInstance(UserCurator.class);
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));
         
-        NewRole adminRole = createAdminRole(owner);
+        Role adminRole = createAdminRole(owner);
         adminRole.addUser(someuser);
         roleCurator.create(adminRole);
 

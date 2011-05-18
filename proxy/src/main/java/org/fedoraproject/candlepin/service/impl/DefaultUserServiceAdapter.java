@@ -27,7 +27,7 @@ import org.fedoraproject.candlepin.util.Util;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
-import org.fedoraproject.candlepin.model.NewRole;
+import org.fedoraproject.candlepin.model.Role;
 
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}
@@ -48,11 +48,11 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
-    public List<NewRole> getRoles(String username) {
+    public List<Role> getRoles(String username) {
         User user = this.userCurator.findByLogin(username);
 
         if (user != null) {
-            return new ArrayList<NewRole>(user.getRoles());
+            return new ArrayList<Role>(user.getRoles());
         }
 
         return Collections.emptyList();

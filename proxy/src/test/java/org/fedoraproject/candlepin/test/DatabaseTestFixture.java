@@ -41,7 +41,7 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EventCurator;
-import org.fedoraproject.candlepin.model.NewRole;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Permission;
@@ -287,9 +287,9 @@ public class DatabaseTestFixture {
         TestPrincipalProviderSetter.get().setPrincipal(p);
     }
 
-    public NewRole createAdminRole(Owner owner) {
+    public Role createAdminRole(Owner owner) {
         Permission p = new Permission(owner, Verb.OWNER_ADMIN);
-        NewRole role = new NewRole();
+        Role role = new Role();
         role.addPermission(p);
         return role;
     }

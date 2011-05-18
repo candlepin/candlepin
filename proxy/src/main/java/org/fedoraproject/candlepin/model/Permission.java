@@ -39,11 +39,11 @@ public class Permission extends AbstractHibernateObject {
 
     private Owner owner;
     
-    private Verb role;
+    private Verb verb;
 
     public Permission(Owner owner, Verb roles) {
         this.owner = owner;
-        this.role = roles;
+        this.verb = roles;
     }
 
     private Permission() {
@@ -67,11 +67,11 @@ public class Permission extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public Verb getRole() {
-        return role;
+    public Verb getVerb() {
+        return verb;
     }
 
-    public void setRole(Verb role) {
-        this.role = role;
+    public void setVerb(Verb verb) {
+        this.verb = verb;
     }
 }

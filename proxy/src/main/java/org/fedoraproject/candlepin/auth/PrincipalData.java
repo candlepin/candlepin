@@ -51,7 +51,7 @@ public class PrincipalData {
                 this.ownerVerbs.put(ownerKey, new ArrayList<Verb>());
             }
             
-            this.ownerVerbs.get(ownerKey).add(permission.getRole());
+            this.ownerVerbs.get(ownerKey).add(permission.getVerb());
         }
         this.type = type;
         this.name = name;

@@ -24,7 +24,7 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Injector;
 import java.util.ArrayList;
-import org.fedoraproject.candlepin.model.NewRole;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Permission;
 
 /**
@@ -52,7 +52,7 @@ public abstract class UserAuth implements AuthProvider {
         List<Permission> permissions = new ArrayList<Permission>();
 
         // flatten out the permissions from the combined roles
-        for (NewRole role : this.userServiceAdapter.getRoles(username)) {
+        for (Role role : this.userServiceAdapter.getRoles(username)) {
             permissions.addAll(role.getPermissions());
         }
 

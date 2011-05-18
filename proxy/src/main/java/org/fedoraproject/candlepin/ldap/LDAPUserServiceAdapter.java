@@ -27,7 +27,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.model.NewRole;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.User;
@@ -75,8 +75,8 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
-    public List<NewRole> getRoles(String username) {
-        List<NewRole> roles = new ArrayList<NewRole>();
+    public List<Role> getRoles(String username) {
+        List<Role> roles = new ArrayList<Role>();
         Set<User> users = new HashSet<User>();
         users.add(new User(username, null));
 
@@ -90,7 +90,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             permissions.add(new Permission(new Owner(orgName),
                     Verb.OWNER_ADMIN));
 
-            roles.add(new NewRole(users, permissions));
+            roles.add(new Role(users, permissions));
         }
         catch (LDAPException e) {
             //eat it
@@ -136,7 +136,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             lc.read(dn);
             user = new User(username, null);
 
-            for (NewRole role : getRoles(username)) {
+            for (Role role : getRoles(username)) {
                 user.addRole(role);
             }
         } 

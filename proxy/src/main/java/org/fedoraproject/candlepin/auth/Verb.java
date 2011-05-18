@@ -12,15 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.auth;
 
 /**
- * PermissionCurator
+ *
  */
-public class RoleCurator extends AbstractHibernateCurator<Role> {
-    
-    protected RoleCurator() {
-        super(Role.class);
-    }
-
+public enum Verb {
+    CONSUMER, OWNER_ADMIN, SUPER_ADMIN, TRUSTED_SYSTEM, NO_AUTH;
 }

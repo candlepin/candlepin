@@ -26,7 +26,7 @@ import org.hibernate.annotations.GenericGenerator;
 /**
  * Roles represent the relationship between users and the permissions they have. 
  */
-public class NewRole extends AbstractHibernateObject {
+public class Role extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -37,12 +37,12 @@ public class NewRole extends AbstractHibernateObject {
     private Set<User> users = new HashSet<User>();
     private Set<Permission> permissions = new HashSet<Permission>();
 
-    public NewRole(Set<User> users, Set<Permission> memberships) {
+    public Role(Set<User> users, Set<Permission> memberships) {
         this.users = users;
         this.permissions = memberships;
     }
 
-    public NewRole() {
+    public Role() {
         // JPA
     }
 
