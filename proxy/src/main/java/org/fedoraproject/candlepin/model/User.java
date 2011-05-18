@@ -60,6 +60,7 @@ public class User extends AbstractHibernateObject {
     private boolean superAdmin;
 
     public User() {
+        this.roles = new HashSet<Role>();
     }
 
     public User(String login, String password) {
@@ -67,6 +68,8 @@ public class User extends AbstractHibernateObject {
     }
 
     public User(String login, String password, boolean superAdmin) {
+        this();
+
         this.username = login;
         this.hashedPassword = Util.hash(password);
         this.superAdmin = superAdmin;
@@ -138,9 +141,10 @@ public class User extends AbstractHibernateObject {
         return roles;
     }
     
-    // Protected, Role owns this relationship, so call Role.addUser instead.
-    void addRole(Role r) {
-        this.roles.add(r);
+    public void addRole(Role r) {
+        if (this.roles.add(r)) {
+            r.addUser(this);
+        }
     }
     
     /**

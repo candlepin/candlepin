@@ -89,8 +89,9 @@ public class Role extends AbstractHibernateObject {
     }
     
     public void addUser(User u) {
-        this.users.add(u);
-        u.addRole(this);
+        if (this.users.add(u)) {
+            u.addRole(this);
+        }
     }
     
     public Set<Permission> getPermissions() {
