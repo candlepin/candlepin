@@ -21,7 +21,6 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.model.Permission;

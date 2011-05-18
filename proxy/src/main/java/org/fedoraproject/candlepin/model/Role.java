@@ -18,14 +18,22 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
 
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Roles represent the relationship between users and the permissions they have. 
  */
+@Entity
+@Table(name = "cp_role")
 public class Role extends AbstractHibernateObject {
 
     @Id
@@ -34,7 +42,24 @@ public class Role extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
+    @ManyToMany(targetEntity = User.class)
+    @ForeignKey(
+        name = "fk_user_id",
+        inverseName = "fk_role_id")
+    @JoinTable(
+        name = "cp_role_users",
+        joinColumns = @JoinColumn(name = "role_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users = new HashSet<User>();
+    
+    @ManyToMany(targetEntity = Permission.class)
+    @ForeignKey(
+        name = "fk_permission_id",
+        inverseName = "fk_role_id")
+    @JoinTable(
+        name = "cp_role_permissions",
+        joinColumns = @JoinColumn(name = "role_id"),
+        inverseJoinColumns = @JoinColumn(name = "permission_id"))
     private Set<Permission> permissions = new HashSet<Permission>();
 
     public Role(Set<User> users, Set<Permission> memberships) {

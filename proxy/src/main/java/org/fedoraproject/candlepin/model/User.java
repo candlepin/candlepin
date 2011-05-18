@@ -22,8 +22,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -49,8 +49,8 @@ public class User extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @Transient
-    private Set<Role> roles;
+    @ManyToMany(targetEntity = Role.class, mappedBy = "users")
+    private Set<Role> roles = new HashSet<Role>();
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -140,7 +140,6 @@ public class User extends AbstractHibernateObject {
     
     public void addRole(Role r) {
         this.roles.add(r);
-        r.addUser(this);
     }
     
     /**
@@ -168,10 +167,6 @@ public class User extends AbstractHibernateObject {
     public void setSuperAdmin(boolean superAdmin) {
         this.superAdmin = superAdmin;
     }
-
-//    public void addMembershipTo(Owner owner) {
-//        this.membershipGroups.add(new Membership(owner, this));
-//    }
 
     /**
      * Return string representation of the user object
