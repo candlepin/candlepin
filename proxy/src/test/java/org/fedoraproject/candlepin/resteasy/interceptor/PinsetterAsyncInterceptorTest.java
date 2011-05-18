@@ -21,11 +21,15 @@ import static org.mockito.Mockito.never;
 
 import com.google.inject.Provider;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterException;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
@@ -60,9 +64,10 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void noJobMapPrincipal() {
-        List<Owner> owners = new ArrayList<Owner>();
-        owners.add(new Owner("test_owner"));
-        Principal principal = new UserPrincipal("testing", owners, null);
+        List<Permission> permissions = Arrays.asList(new Permission[] {
+            new Permission(new Owner("test_owner"), EnumSet.of(Role.OWNER_ADMIN))
+        });
+        Principal principal = new UserPrincipal("testing", permissions);
         when(this.principalProvider.get()).thenReturn(principal);
 
         JobDetail detail = new JobDetail();
@@ -76,9 +81,11 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void existingJobMapPrincipal() {
-        List<Owner> owners = new ArrayList<Owner>();
-        owners.add(new Owner("test_owner"));
-        Principal principal = new UserPrincipal("testing", owners, null);
+        List<Permission> permissions = Arrays.asList(new Permission[] {
+            new Permission(new Owner("test_owner"), EnumSet.of(Role.OWNER_ADMIN))
+        });
+        Principal principal = new UserPrincipal("testing", permissions);
+
         when(this.principalProvider.get()).thenReturn(principal);
 
         JobDetail detail = new JobDetail();

@@ -104,7 +104,7 @@ public class ConsumerResourceCreationTest {
 
     private Consumer createConsumer(String consumerName) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
-        Principal principal = new UserPrincipal(USER, null, null);
+        Principal principal = new UserPrincipal(USER, null);
 
         return this.resource.create(consumer, principal, USER, null);
     }
