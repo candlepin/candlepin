@@ -70,7 +70,8 @@ public class EventSinkImpl implements EventSink {
         return HornetQClient.createClientSessionFactory(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
     }
-    
+
+    @Override
     public void sendEvent(Event event) {
         if (log.isDebugEnabled()) {
             log.debug("Sending event - " + event);

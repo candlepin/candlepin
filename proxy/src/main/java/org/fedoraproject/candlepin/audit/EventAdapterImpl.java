@@ -38,7 +38,7 @@ import com.google.inject.Inject;
  */
 public class EventAdapterImpl implements EventAdapter {
     
-    private static HashMap<String, String> messages;
+    private static final HashMap<String, String> messages;
     
     private I18n i18n;
     private Config config;

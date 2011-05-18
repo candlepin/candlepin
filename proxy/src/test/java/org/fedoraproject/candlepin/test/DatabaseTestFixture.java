@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.test;
 
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.HashSet;
 
 import javax.persistence.EntityManager;

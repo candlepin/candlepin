@@ -69,6 +69,7 @@ public class ConsumerResourceCreationTest {
 
     private ConsumerResource resource;
     private ConsumerType system;
+    private Owner owner;
 
     @Before
     public void init() throws Exception {
@@ -81,7 +82,7 @@ public class ConsumerResourceCreationTest {
 
         this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
 
-        Owner owner = new Owner("test_owner");
+        owner = new Owner("test_owner");
         User user = new User(USER, "");
         Permission p = new Permission(owner, Verb.OWNER_ADMIN);
         Role role = new Role();
@@ -106,7 +107,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer(consumerName, null, null, system);
         Principal principal = new UserPrincipal(USER, null);
 
-        return this.resource.create(consumer, principal, USER, null);
+        return this.resource.create(consumer, principal, USER, owner.getKey());
     }
 
     @Test

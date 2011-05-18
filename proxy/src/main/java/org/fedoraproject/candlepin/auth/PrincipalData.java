@@ -68,7 +68,7 @@ public class PrincipalData {
     public Map<String, List<Verb>> getPermissions() {
         return ownerVerbs;
     }
-    
+
     public void setPermissions(Map<String, List<Verb>> permissions) {
         this.ownerVerbs = permissions;
     }
@@ -97,4 +97,5 @@ public class PrincipalData {
     public void setName(String name) {
         this.name = name;
     }
+
 }
