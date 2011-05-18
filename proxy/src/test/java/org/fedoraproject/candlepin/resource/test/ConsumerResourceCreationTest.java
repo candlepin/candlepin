@@ -95,7 +95,7 @@ public class ConsumerResourceCreationTest {
             }
         });
         when(consumerTypeCurator.lookupByLabel(system.getLabel())).thenReturn(system);
-        when(userService.getOwners(USER)).thenReturn(Arrays.asList(new Owner[] {owner}));
+        when(userService.getRoles(USER)).thenReturn(Arrays.asList(new NewRole[] {role}));
         when(userService.findByLogin(USER)).thenReturn(user);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
                 .thenReturn(new IdentityCertificate());
