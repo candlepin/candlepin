@@ -105,6 +105,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private ConsumerResource consumerResource;
     private Principal principal;
     private Owner owner;
+    private Role ownerAdminRole;
     private EventFactory eventFactory;
 
     private UserCurator userCurator;
@@ -130,7 +131,13 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         userCurator = injector.getInstance(UserCurator.class);
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));
         
-        principal = setupPrincipal(USER_NAME, owner, Verb.OWNER_ADMIN);
+        ownerAdminRole = createAdminRole(owner);
+        ownerAdminRole.addUser(someuser);
+        roleCurator.create(ownerAdminRole);
+
+        principal = new UserPrincipal(USER_NAME, ownerAdminRole.getPermissions());
+        setupPrincipal(principal);
+
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
@@ -447,7 +454,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testCanGetConsumersCerts() {
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(owner, Verb.OWNER_ADMIN);
 
         assertEquals(
             0,
@@ -547,7 +553,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(owner, Verb.OWNER_ADMIN);
 
         assertEquals(3,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());
@@ -612,7 +617,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void userwithEmail() {
         String username = "(foo)@{baz}.[com]&?";
-        userCurator.create(new User(username, "dontcare"));
+        User u = userCurator.create(new User(username, "dontcare"));
+        ownerAdminRole.addUser(u);
+        roleCurator.merge(ownerAdminRole);
 
         Principal emailuser = TestUtil.createPrincipal(username, owner, 
             Verb.OWNER_ADMIN);
@@ -639,7 +646,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // Rather than run through an entire call to ConsumerResource, we'll
         // fake the
         // events in the db:
-        setupPrincipal(o, Verb.OWNER_ADMIN);
+
         Consumer consumer = TestUtil.createConsumer(o);
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
@@ -666,10 +673,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         // Create another consumer in a different org, again do not want to see
         // this:
+        setupPrincipal(owner2, Verb.OWNER_ADMIN);
         createConsumerCreatedEvent(owner2);
 
         // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Verb.OWNER_ADMIN);
+        setupPrincipal(principal);
 
         Feed feed = consumerResource.getConsumerAtomFeed(c.getUuid());
         assertEquals(1, feed.getEntries().size());

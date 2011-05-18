@@ -202,7 +202,7 @@ public class TestUtil {
 
     public static Principal createPrincipal(String username, Owner owner, Verb role) {
         return new UserPrincipal(username,  Arrays.asList(new Permission[] {
-                    new Permission(owner, role)}));
+            new Permission(owner, role)}));
     }
 
     public static Principal createOwnerPrincipal() {

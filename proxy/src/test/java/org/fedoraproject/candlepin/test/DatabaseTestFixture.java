@@ -280,8 +280,8 @@ public class DatabaseTestFixture {
         return setupPrincipal("someuser", owner, role);
     }
 
-    protected Principal setupPrincipal(String username, Owner owner, Verb role) {
-        Principal ownerAdmin = TestUtil.createPrincipal(username, owner, role);
+    protected Principal setupPrincipal(String username, Owner owner, Verb verb) {
+        Principal ownerAdmin = TestUtil.createPrincipal(username, owner, verb);
         for (Permission p : ownerAdmin.getPermissions()) {
             permissionCurator.create(p);
         }
