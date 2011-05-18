@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.CollectionOfElements;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,13 +26,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.CollectionOfElements;
 
 /**
  * ProductContent
@@ -41,31 +41,31 @@ public class Content extends AbstractHibernateObject {
 
     @Id
     private String id;
-    
+
     @Column(nullable = false)
     private String type;
-    
+
     @Column(nullable = false, unique = true)
     private String label;
-    
+
     // Description?
-    
+
     @Column(nullable = false)
     private String name;
-    
+
     @Column(nullable = false)
     private String vendor;
-    
+
     @Column(nullable = true)
     private String contentUrl;
-    
+
     @Column(nullable = true)
     private String requiredTags;
 
     // attribute?
     @Column(nullable = true)
     private String gpgUrl;
-    
+
     @Column(nullable = true)
     private Long metadataExpire;
 
@@ -74,8 +74,7 @@ public class Content extends AbstractHibernateObject {
     private Set<String> modifiedProductIds = new HashSet<String>();
 
     public Content(String name, String id, String label, String type,
-                    String vendor, String contentUrl,
-                    String gpgUrl) {
+        String vendor, String contentUrl, String gpgUrl) {
         setName(name);
         setId(id);
         setLabel(label);
@@ -84,55 +83,66 @@ public class Content extends AbstractHibernateObject {
         setContentUrl(contentUrl);
         setGpgUrl(gpgUrl);
     }
-    
+
     public Content() {
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
      * @see org.fedoraproject.candlepin.model.Persisted#getId()
      */
     @Override
     public String getId() {
         return id;
     }
-    
+
     /**
      * @param id product id
      */
     public void setId(String id) {
         this.id = id;
     }
-    
+
     public String getLabel() {
         return label;
     }
+
     public void setLabel(String label) {
         this.label = label;
     }
+
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
+
     public String getVendor() {
         return vendor;
     }
+
     public void setVendor(String vendor) {
         this.vendor = vendor;
     }
+
     public String getContentUrl() {
-        return contentUrl;
+        return "/$owner/$env" + contentUrl;
     }
+
     public void setContentUrl(String contentUrl) {
         this.contentUrl = contentUrl;
     }
+
     public String getGpgUrl() {
         return gpgUrl;
     }
+
     public void setGpgUrl(String gpgUrl) {
         this.gpgUrl = gpgUrl;
     }
+
     /**
      * @param modifiedProductIds the modifiedProductIds to set
      */
@@ -146,14 +156,15 @@ public class Content extends AbstractHibernateObject {
     public Set<String> getModifiedProductIds() {
         return modifiedProductIds;
     }
-    
+
     public String getType() {
         return type;
     }
+
     public void setType(String type) {
         this.type = type;
     }
-    
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -163,22 +174,17 @@ public class Content extends AbstractHibernateObject {
             Content that = (Content) other;
             return new EqualsBuilder().append(this.contentUrl, that.contentUrl)
                 .append(this.gpgUrl, that.gpgUrl)
-                .append(this.label, that.label)
-                .append(this.type, that.type)
-                .append(this.vendor, that.vendor)
-                .isEquals();
+                .append(this.label, that.label).append(this.type, that.type)
+                .append(this.vendor, that.vendor).isEquals();
         }
         return false;
     }
-    
-    
+
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(37, 7)
-            .append(this.contentUrl).append(this.gpgUrl)
-            .append(this.label).append(this.name)
-            .append(this.type).append(this.vendor)
-            .toHashCode();
+        return new HashCodeBuilder(37, 7).append(this.contentUrl)
+            .append(this.gpgUrl).append(this.label).append(this.name)
+            .append(this.type).append(this.vendor).toHashCode();
     }
 
     public Long getMetadataExpire() {
@@ -190,14 +196,16 @@ public class Content extends AbstractHibernateObject {
     }
 
     /**
-     * @return Comma separated list of tags this content set requires to be enabled.
+     * @return Comma separated list of tags this content set requires to be
+     *         enabled.
      */
     public String getRequiredTags() {
         return requiredTags;
     }
 
     /**
-     * @param requiredTags Comma separated list of tags this content set requires.
+     * @param requiredTags Comma separated list of tags this content set
+     *        requires.
      */
     public void setRequiredTags(String requiredTags) {
         this.requiredTags = requiredTags;
