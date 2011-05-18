@@ -40,7 +40,7 @@ public abstract class Principal implements Serializable {
 
     public boolean isSuperAdmin() {
         for (Permission permission : this.permissions) {
-            if (permission.getRole().equals(Role.SUPER_ADMIN)) {
+            if (permission.getRole().equals(Verb.SUPER_ADMIN)) {
                 return true;
             }
         }
@@ -60,7 +60,7 @@ public abstract class Principal implements Serializable {
      * @param verb Verb to search for.
      * @return All permissions with this verb for any owner.
      */
-    public Set<Permission> getPermissionsWithVerb(Role verb) {
+    public Set<Permission> getPermissionsWithVerb(Verb verb) {
         Set<Permission> perms = new HashSet<Permission>();
         for (Permission p : getPermissions()) {
             if (p.getRole().equals(verb)) {

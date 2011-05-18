@@ -19,7 +19,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.xnap.commons.i18n.I18n;
 
@@ -51,10 +51,10 @@ public class SecurityInterceptor implements MethodInterceptor {
         Principal currentUser = this.principalProvider.get();
         log.debug("Invoked.");
         
-        EnumSet<Role> allowedRoles = EnumSet.noneOf(Role.class);
+        EnumSet<Verb> allowedRoles = EnumSet.noneOf(Verb.class);
         
         // Super admins can access any URL:
-        allowedRoles.add(Role.SUPER_ADMIN);
+        allowedRoles.add(Verb.SUPER_ADMIN);
         log.debug(invocation.getClass().getName());
         log.debug(invocation.getClass().getAnnotations().length);
         
@@ -62,14 +62,14 @@ public class SecurityInterceptor implements MethodInterceptor {
         AllowRoles annotation = invocation.getMethod().getAnnotation(AllowRoles.class);
         log.debug("Method annotation: " + annotation);
         if (annotation != null) {
-            for (Role allowed : annotation.roles()) {
+            for (Verb allowed : annotation.roles()) {
                 log.debug("   allowing role: " + allowed);
                 allowedRoles.add(allowed);
             }
         }
         
         boolean foundRole = false;
-        for (Role allowed : allowedRoles) {
+        for (Verb allowed : allowedRoles) {
             if (hasRole(currentUser, allowed)) {
                 foundRole = true;
                 if (log.isDebugEnabled()) {
@@ -92,7 +92,7 @@ public class SecurityInterceptor implements MethodInterceptor {
     }
 
     // TODO:  This should also go away - when this whole interceptor dies!!!
-    private boolean hasRole(Principal principal, Role role) {
+    private boolean hasRole(Principal principal, Verb role) {
         for (Permission permission : principal.getPermissions()) {
             if (permission.getRole().equals(role)) {
                 return true;

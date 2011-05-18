@@ -15,7 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.util.Util;
 
@@ -92,17 +92,17 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         return new Date(rulesFile.lastModified());
     }
     
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @AllowRoles(roles = Verb.SUPER_ADMIN)
     public Rules create(Rules entity) {
         return super.create(entity);
     }
     
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @AllowRoles(roles = Verb.SUPER_ADMIN)
     public void delete(Rules entity) {
         super.delete(entity);
     }
     
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @AllowRoles(roles = Verb.SUPER_ADMIN)
     public Rules merge(Rules entity) {
         return super.merge(entity);
     }

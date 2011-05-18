@@ -25,7 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -103,7 +103,7 @@ public class EntitlementResource {
     
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = {Verb.CONSUMER, Verb.OWNER_ADMIN})
     public List<Entitlement> listAllForConsumer(
         @QueryParam("consumer") String consumerUuid) {
 
@@ -129,7 +129,7 @@ public class EntitlementResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{dbid}")
-    @AllowRoles(roles = {Role.CONSUMER, Role.OWNER_ADMIN})
+    @AllowRoles(roles = {Verb.CONSUMER, Verb.OWNER_ADMIN})
     public Entitlement getEntitlement(@PathParam("dbid") String dbid) {
         Entitlement toReturn = entitlementCurator.find(dbid);
         if (toReturn != null) {
@@ -158,7 +158,7 @@ public class EntitlementResource {
     
     @PUT
     @Path("product/{product_id}")
-    @AllowRoles(roles = {Role.OWNER_ADMIN})
+    @AllowRoles(roles = {Verb.OWNER_ADMIN})
     public JobDetail regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId) {
         prodAdapter.purgeCache();

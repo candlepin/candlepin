@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -72,7 +72,7 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
         assertEquals(2, entitlementCurator.listAll().size());
 
         crudInterceptor.enable();
-        setupPrincipal(owner, Role.OWNER_ADMIN);
+        setupPrincipal(owner, Verb.OWNER_ADMIN);
         
         assertEquals(2, entitlementCurator.listByCriteria(
             DetachedCriteria.forClass(Entitlement.class)).size());
@@ -86,7 +86,7 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
         ownerCurator.create(evilOwner);
 
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Verb.OWNER_ADMIN);
         
         assertEquals(0, entitlementCurator.listByCriteria(
             DetachedCriteria.forClass(Entitlement.class)).size());

@@ -20,7 +20,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 
 /**
  * Annotation specifying which roles can access a given method. 
@@ -32,5 +32,5 @@ import org.fedoraproject.candlepin.auth.Role;
 @Inherited
 public @interface AllowRoles {
 
-    Role [] roles() default {};
+    Verb [] roles() default {};
 }

@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -29,7 +29,7 @@ public class OwnerCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void superAdminCanCreateAnOwner() {
-        setupPrincipal(null, Role.SUPER_ADMIN);
+        setupPrincipal(null, Verb.SUPER_ADMIN);
         securityInterceptor.enable();
         
         Owner owner = createOwner();
@@ -39,7 +39,7 @@ public class OwnerCuratorAccessControlTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotCreateAnOwner() {
         Owner owner = createOwner();
-        setupPrincipal(owner, Role.OWNER_ADMIN);
+        setupPrincipal(owner, Verb.OWNER_ADMIN);
         securityInterceptor.enable();
         
         createOwner();
@@ -48,7 +48,7 @@ public class OwnerCuratorAccessControlTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void consumerCannotCreateAnOwner() {
         Owner owner = createOwner();
-        setupPrincipal(owner, Role.CONSUMER);
+        setupPrincipal(owner, Verb.CONSUMER);
         securityInterceptor.enable();
         createOwner();
     }

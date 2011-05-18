@@ -20,7 +20,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -39,9 +39,9 @@ public class Permission extends AbstractHibernateObject {
 
     private Owner owner;
     
-    private Role role;
+    private Verb role;
 
-    public Permission(Owner owner, Role roles) {
+    public Permission(Owner owner, Verb roles) {
         this.owner = owner;
         this.role = roles;
     }
@@ -67,11 +67,11 @@ public class Permission extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public Role getRole() {
+    public Verb getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(Verb role) {
         this.role = role;
     }
 }

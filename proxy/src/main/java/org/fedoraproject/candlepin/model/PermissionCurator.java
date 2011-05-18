@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -26,7 +26,7 @@ public class PermissionCurator extends AbstractHibernateCurator<Permission> {
         super(Permission.class);
     }
 
-    public Permission findByOwnerAndVerb(Owner owner, Role verb) {
+    public Permission findByOwnerAndVerb(Owner owner, Verb verb) {
         return (Permission) currentSession().createCriteria(Permission.class)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("verb", verb)).uniqueResult();

@@ -20,7 +20,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -43,7 +43,7 @@ public class UserResource {
     }
     
     @GET
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     public User getUserInfo(@PathParam("username") String username) {        

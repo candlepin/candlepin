@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Owner;
@@ -88,7 +88,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
 
             Set<Permission> permissions = new HashSet<Permission>();
             permissions.add(new Permission(new Owner(orgName),
-                    Role.OWNER_ADMIN));
+                    Verb.OWNER_ADMIN));
 
             roles.add(new NewRole(users, permissions));
         }

@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -99,7 +99,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         consumerCurator.create(foreignConsumer);
 
         // Run these tests as an owner admin:
-        setupPrincipal(owner1, Role.OWNER_ADMIN);
+        setupPrincipal(owner1, Verb.OWNER_ADMIN);
     }
     
     @Test
@@ -112,7 +112,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListForOrg() {
         List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null);
         assertEquals(2, pools.size());
-        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        setupPrincipal(owner2, Verb.OWNER_ADMIN);
         pools = poolResource.list(owner2.getId(), null, null, false, null);
         assertEquals(1, pools.size());
     }
@@ -182,7 +182,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null);
         assertEquals(2, pools.size());
         
-        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        setupPrincipal(owner2, Verb.OWNER_ADMIN);
         securityInterceptor.enable();
         crudInterceptor.enable();
         

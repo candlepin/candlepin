@@ -19,7 +19,7 @@ import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -175,7 +175,7 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     public Owner getOwner(@PathParam("owner_key") String ownerKey) {
         return findOwner(ownerKey);
     }
@@ -189,7 +189,7 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}/info")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     public OwnerInfo getOwnerInfo(@PathParam("owner_key") String ownerKey) {
         Owner owner = findOwner(ownerKey);
         return ownerInfoCurator.lookupByOwner(owner);
@@ -302,7 +302,7 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_key") String ownerKey) {
         Owner owner = findOwner(ownerKey);
@@ -324,7 +324,7 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     public List<Consumer> ownerConsumers(@PathParam("owner_key") String ownerKey) {
 
         Owner owner = findOwner(ownerKey);
@@ -340,7 +340,7 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN, Verb.CONSUMER })
     public List<Pool> ownerEntitlementPools(
         @PathParam("owner_key") String ownerKey,
         @QueryParam("consumer") String consumerUuid,
@@ -416,7 +416,7 @@ public class OwnerResource {
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     public Feed getOwnerAtomFeed(@PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
@@ -428,7 +428,7 @@ public class OwnerResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     @Path("{owner_key}/events")
     public List<Event> getEvents(@PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
@@ -443,7 +443,7 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     public List<Subscription> getSubscriptions(
         @PathParam("owner_key") String ownerKey) {
         return subscriptionCurator.listByOwner(findOwner(ownerKey));
@@ -457,7 +457,7 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/users")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     public List<User> getUsers(@PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
         return userService.listByOwner(o);
@@ -496,7 +496,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN })
     public Owner updateOwner(@PathParam("owner_key") String key, Owner owner) {
         Owner toUpdate = findOwner(key);
         log.debug("Updating");
@@ -551,7 +551,7 @@ public class OwnerResource {
 
     @POST
     @Path("{owner_key}/imports")
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @AllowRoles(roles = Verb.SUPER_ADMIN)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public void importData(@PathParam("owner_key") String ownerKey,
         MultipartInput input) {
@@ -606,7 +606,7 @@ public class OwnerResource {
 
     @GET
     @Path("{owner_key}/imports")
-    @AllowRoles(roles = { Role.SUPER_ADMIN, Role.OWNER_ADMIN })
+    @AllowRoles(roles = { Verb.SUPER_ADMIN, Verb.OWNER_ADMIN })
     public List<ImportRecord> getImports(@PathParam("owner_key") String ownerKey) {
         Owner owner = findOwner(ownerKey);
 

@@ -29,7 +29,7 @@ public class ExternalSystemPrincipal extends Principal {
      */
     public ExternalSystemPrincipal() {
         super(Arrays.asList(new Permission[] 
-            {new Permission(null, Role.TRUSTED_SYSTEM)}));
+            {new Permission(null, Verb.TRUSTED_SYSTEM)}));
     }
 
     @Override

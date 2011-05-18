@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
@@ -272,7 +272,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .uniqueResult();
     }
 
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @AllowRoles(roles = Verb.SUPER_ADMIN)
     @Transactional
     public Entitlement replicate(Entitlement ent) {
         for (EntitlementCertificate ec : ent.getCertificates()) {

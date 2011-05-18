@@ -25,7 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -89,7 +89,7 @@ public class ProductResource {
     @GET
     @Path("/{product_uuid}")    
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN, Verb.CONSUMER })
     public Product getProduct(@PathParam("product_uuid") String pid) {
         Product toReturn = prodAdapter.getProductById(pid);
 
@@ -125,14 +125,14 @@ public class ProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @AllowRoles(roles = {Verb.SUPER_ADMIN})
     public Product createProduct(Product product) {
         return prodAdapter.createProduct(product);
     }   
     
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @AllowRoles(roles = {Verb.SUPER_ADMIN})
     @Path("/{product_uuid}/content/{content_id}")
     public Product addContent(@PathParam("product_uuid") String pid,
                               @PathParam("content_id") String contentId, 
@@ -147,7 +147,7 @@ public class ProductResource {
     
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @AllowRoles(roles = {Verb.SUPER_ADMIN})
     @Path("/{product_uuid}/content/{content_id}")
     public void removeContent(@PathParam("product_uuid") String pid,
                               @PathParam("content_id") String contentId) {
@@ -157,7 +157,7 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")
-    @AllowRoles(roles = {Role.SUPER_ADMIN})
+    @AllowRoles(roles = {Verb.SUPER_ADMIN})
     public void deleteProduct(@PathParam("product_uuid") String pid) {
         Product product = prodAdapter.getProductById(pid);
         if (product == null) {

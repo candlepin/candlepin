@@ -15,7 +15,7 @@
 package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -101,7 +101,7 @@ public class PoolResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "pools")
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN, Verb.CONSUMER })
     @Deprecated
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
@@ -157,7 +157,7 @@ public class PoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
+    @AllowRoles(roles = { Verb.OWNER_ADMIN, Verb.CONSUMER })
     public Pool getPool(@PathParam("pool_id") String id) {
         Pool toReturn = poolCurator.find(id);
 

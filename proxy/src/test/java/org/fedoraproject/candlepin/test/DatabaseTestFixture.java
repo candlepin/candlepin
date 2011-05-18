@@ -26,7 +26,7 @@ import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.TestingInterceptor;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.CertificateSerial;
@@ -276,7 +276,7 @@ public class DatabaseTestFixture {
         return toReturn;
     }
     
-    protected Principal setupPrincipal(Owner owner, Role role) {
+    protected Principal setupPrincipal(Owner owner, Verb role) {
         Principal ownerAdmin = TestUtil.createPrincipal("someuser", owner, role);
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
@@ -288,7 +288,7 @@ public class DatabaseTestFixture {
     }
 
     public NewRole createAdminRole(Owner owner) {
-        Permission p = new Permission(owner, Role.OWNER_ADMIN);
+        Permission p = new Permission(owner, Verb.OWNER_ADMIN);
         NewRole role = new NewRole();
         role.addPermission(p);
         return role;

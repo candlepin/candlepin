@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
@@ -135,8 +135,8 @@ public class AuthInterceptor implements PreProcessInterceptor {
         // Check to see if authentication is required.
         AllowRoles roles = method.getMethod().getAnnotation(AllowRoles.class);
         if (roles != null) {
-            for (Role role : roles.roles()) {
-                if (role == Role.NO_AUTH) {
+            for (Verb role : roles.roles()) {
+                if (role == Verb.NO_AUTH) {
                     noAuthAllowed = true;
                 }
             }

@@ -34,7 +34,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.schema.JsonSchema;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.resource.RootResource;
@@ -125,7 +125,7 @@ public class ApiCrawler {
     private void processAllowedRoles(Method m, RestApiCall apiCall) {
         AllowRoles allowRoles = m.getAnnotation(AllowRoles.class);
         if (allowRoles != null) {
-            for (Role allow : allowRoles.roles()) {
+            for (Verb allow : allowRoles.roles()) {
                 apiCall.addRole(allow);
             }
         }
@@ -157,14 +157,14 @@ public class ApiCrawler {
     static class RestApiCall {
         private String method;
         private String url;
-        private List<Role> allowedRoles;
+        private List<Verb> allowedRoles;
         private List<String> httpVerbs;
         private List<ApiParam> queryParams;
         private JsonNode returnType;
 
         public RestApiCall() {
-            allowedRoles = new LinkedList<Role>();
-            allowedRoles.add(Role.SUPER_ADMIN); // assumed to always have access
+            allowedRoles = new LinkedList<Verb>();
+            allowedRoles.add(Verb.SUPER_ADMIN); // assumed to always have access
             httpVerbs = new LinkedList<String>();
             queryParams = new LinkedList<ApiParam>();
         }
@@ -181,7 +181,7 @@ public class ApiCrawler {
             this.httpVerbs.add(verb);
         }
 
-        public void addRole(Role role) {
+        public void addRole(Verb role) {
             allowedRoles.add(role);
         }
 
@@ -197,7 +197,7 @@ public class ApiCrawler {
             return returnType;
         }
 
-        public List<Role> getAllowedRoles() {
+        public List<Verb> getAllowedRoles() {
             return allowedRoles;
         }
 

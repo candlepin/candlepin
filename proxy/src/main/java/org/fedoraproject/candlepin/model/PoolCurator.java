@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.policy.Enforcer;
@@ -274,7 +274,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         .add(Restrictions.eq("subscriptionId", subId)).uniqueResult();
     }
 
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @AllowRoles(roles = Verb.SUPER_ADMIN)
     @Transactional
     public Pool replicate(Pool pool) {
         for (ProvidedProduct pp : pool.getProvidedProducts()) {

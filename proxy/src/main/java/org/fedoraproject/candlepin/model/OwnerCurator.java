@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.hibernate.criterion.Restrictions;
 
@@ -30,7 +30,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         super(Owner.class);
     }
 
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @AllowRoles(roles = Verb.SUPER_ADMIN)
     @Transactional
     public Owner replicate(Owner owner) {
         this.currentSession().replicate(owner, ReplicationMode.EXCEPTION);
@@ -38,7 +38,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return owner;
     }
     
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @AllowRoles(roles = Verb.SUPER_ADMIN)
     @Transactional
     @Override
     public Owner create(Owner entity) {

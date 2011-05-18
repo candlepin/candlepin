@@ -19,7 +19,7 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
 import org.apache.commons.codec.binary.Base64;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -103,7 +103,7 @@ public class BasicAuthViaUserServiceTest {
         
         when(ownerCurator.lookupByKey("user")).thenReturn(owner);
         List<Permission> permissions = Arrays.asList(new Permission[] {
-            new Permission(owner, Role.OWNER_ADMIN)
+            new Permission(owner, Verb.OWNER_ADMIN)
         });
         UserPrincipal expected = new UserPrincipal("user", permissions);
         assertEquals(expected, this.auth.getPrincipal(request));

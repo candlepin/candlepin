@@ -37,7 +37,7 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -135,7 +135,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         adminRole.addUser(someuser);
         roleCurator.create(adminRole);
 
-        principal = TestUtil.createPrincipal(USER_NAME, owner, Role.OWNER_ADMIN);
+        principal = TestUtil.createPrincipal(USER_NAME, owner, Verb.OWNER_ADMIN);
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
@@ -233,7 +233,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer submitted = consumerResource.create(
             toSubmit,
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] { 
-                new Permission(owner, Role.OWNER_ADMIN) })),
+                new Permission(owner, Verb.OWNER_ADMIN) })),
             someuser.getUsername(),
             owner.getKey());
 
@@ -332,7 +332,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         Consumer submitted = consumerResource.create(
             toSubmit,
-            TestUtil.createPrincipal(someuser.getUsername(), owner, Role.OWNER_ADMIN),
+            TestUtil.createPrincipal(someuser.getUsername(), owner, Verb.OWNER_ADMIN),
             null, null);
 
         assertNotNull(submitted);
@@ -348,7 +348,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(
             nulltypeid,
-            TestUtil.createPrincipal(someuser.getUsername(), owner, Role.OWNER_ADMIN),
+            TestUtil.createPrincipal(someuser.getUsername(), owner, Verb.OWNER_ADMIN),
             null, null);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
@@ -452,7 +452,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testCanGetConsumersCerts() {
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(owner, Role.OWNER_ADMIN);
+        setupPrincipal(owner, Verb.OWNER_ADMIN);
 
         assertEquals(
             0,
@@ -471,7 +471,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Verb.OWNER_ADMIN);
 
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
@@ -536,7 +536,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Verb.OWNER_ADMIN);
 
         consumerResource.listEntitlements(consumer.getUuid(), null);
     }
@@ -552,7 +552,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(owner, Role.OWNER_ADMIN);
+        setupPrincipal(owner, Verb.OWNER_ADMIN);
 
         assertEquals(3,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());
@@ -580,7 +580,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void bindByTokenPreExistingSubscription() {
-        setupPrincipal(owner, Role.CONSUMER);
+        setupPrincipal(owner, Verb.CONSUMER);
 
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
@@ -620,7 +620,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         userCurator.create(new User(username, "dontcare"));
 
         Principal emailuser = TestUtil.createPrincipal(username, owner, 
-            Role.OWNER_ADMIN);
+            Verb.OWNER_ADMIN);
 
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(((UserPrincipal) emailuser).getUsername());
@@ -644,7 +644,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // Rather than run through an entire call to ConsumerResource, we'll
         // fake the
         // events in the db:
-        setupPrincipal(o, Role.OWNER_ADMIN);
+        setupPrincipal(o, Verb.OWNER_ADMIN);
         Consumer consumer = TestUtil.createConsumer(o);
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
@@ -674,7 +674,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         createConsumerCreatedEvent(owner2);
 
         // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Role.OWNER_ADMIN);
+        setupPrincipal(owner, Verb.OWNER_ADMIN);
 
         Feed feed = consumerResource.getConsumerAtomFeed(c.getUuid());
         assertEquals(1, feed.getEntries().size());
@@ -694,7 +694,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer c = consumerCurator.find(e1.getEntityId());
 
         // Should see no results:
-        setupPrincipal(owner2, Role.OWNER_ADMIN);
+        setupPrincipal(owner2, Verb.OWNER_ADMIN);
         consumerResource.getConsumerAtomFeed(c.getUuid());
     }
 

@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.Owner;
@@ -65,7 +65,7 @@ public class PinsetterAsyncInterceptorTest {
     @Test
     public void noJobMapPrincipal() {
         List<Permission> permissions = Arrays.asList(new Permission[] {
-            new Permission(new Owner("test_owner"), Role.OWNER_ADMIN)
+            new Permission(new Owner("test_owner"), Verb.OWNER_ADMIN)
         });
         Principal principal = new UserPrincipal("testing", permissions);
         when(this.principalProvider.get()).thenReturn(principal);
@@ -82,7 +82,7 @@ public class PinsetterAsyncInterceptorTest {
     @Test
     public void existingJobMapPrincipal() {
         List<Permission> permissions = Arrays.asList(new Permission[] {
-            new Permission(new Owner("test_owner"), Role.OWNER_ADMIN)
+            new Permission(new Owner("test_owner"), Verb.OWNER_ADMIN)
         });
         Principal principal = new UserPrincipal("testing", permissions);
 

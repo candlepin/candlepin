@@ -23,7 +23,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.model.Status;
 
@@ -75,7 +75,7 @@ public class StatusResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON})
-    @AllowRoles(roles = {Role.NO_AUTH})
+    @AllowRoles(roles = {Verb.NO_AUTH})
     public Status status() {
         Status status = new Status(true, version, release);
         return status;

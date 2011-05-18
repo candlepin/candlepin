@@ -20,7 +20,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
@@ -110,7 +110,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("regular_user", "password");
         this.service.createUser(user);
         
-        Assert.assertTrue(this.service.getRoles("regular_user").contains(Role.OWNER_ADMIN));
+        Assert.assertTrue(this.service.getRoles("regular_user").contains(Verb.OWNER_ADMIN));
     }
     
     @Test
@@ -121,12 +121,12 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("super_admin", "password", true);
         this.service.createUser(user);
         
-        Assert.assertTrue(this.service.getRoles("super_admin").contains(Role.SUPER_ADMIN));
+        Assert.assertTrue(this.service.getRoles("super_admin").contains(Verb.SUPER_ADMIN));
     }
     
     @Test
     public void emtpyRolesForNoLogin() {
-        Assert.assertArrayEquals(new Role[] {}, this.service.getRoles("made_up").toArray());
+        Assert.assertArrayEquals(new Verb[] {}, this.service.getRoles("made_up").toArray());
     }
     
     @Test

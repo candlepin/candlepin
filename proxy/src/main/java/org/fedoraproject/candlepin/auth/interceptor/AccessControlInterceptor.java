@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.auth.interceptor;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
@@ -82,13 +82,13 @@ public class AccessControlInterceptor implements MethodInterceptor {
         Principal currentUser = this.principalProvider.get();
         // TODO:  This was already checking only the first role on the principal,
         // which seems bad - this is basically doing this same thing...
-        Role role = currentUser.getPermissions().iterator().next()
+        Verb role = currentUser.getPermissions().iterator().next()
                 .getRole();
         
-        if (Role.OWNER_ADMIN == role) { 
+        if (Verb.OWNER_ADMIN == role) { 
             enableOwnerFilter(currentUser, invocation.getThis(), role);
         } 
-        else if (Role.CONSUMER == role) {
+        else if (Verb.CONSUMER == role) {
             enableConsumerFilter(currentUser, invocation.getThis(), role);
         }
     }
@@ -97,14 +97,14 @@ public class AccessControlInterceptor implements MethodInterceptor {
         Principal currentUser = this.principalProvider.get();
         // TODO:  This was already checking only the first role on the principal,
         // which seems bad - this is basically doing this same thing...
-        Role role = currentUser.getPermissions().iterator().next()
+        Verb role = currentUser.getPermissions().iterator().next()
                 .getRole();
 
         // Only available on entities that implement AccessControlEnforced interface
         if (currentUser.isSuperAdmin()) {
             return;
         }
-        else if (Role.CONSUMER == role) {
+        else if (Verb.CONSUMER == role) {
             ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
             if (!((AccessControlEnforced) entity).shouldGrantAccessTo(
                 consumer.consumer())) {
@@ -112,7 +112,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
                 throw new ForbiddenException("access denied.");
             }
         }
-        else if (Role.OWNER_ADMIN == role) {
+        else if (Verb.OWNER_ADMIN == role) {
             if (!hasAccessTo(currentUser, (AccessControlEnforced) entity)) {
                 log.warn("Denying: " + currentUser + " access to: " + entity);
                 throw new ForbiddenException("access denied.");
@@ -136,7 +136,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         return false;
     }
     
-    private void enableConsumerFilter(Principal currentUser, Object target, Role role) {
+    private void enableConsumerFilter(Principal currentUser, Object target, Verb role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         ConsumerPrincipal user = (ConsumerPrincipal) currentUser;
         
@@ -155,7 +155,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         return ownerIds;
     }
 
-    private void enableOwnerFilter(Principal currentUser, Object target, Role role) {
+    private void enableOwnerFilter(Principal currentUser, Object target, Verb role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         UserPrincipal user = (UserPrincipal) currentUser;
 
@@ -163,8 +163,8 @@ public class AccessControlInterceptor implements MethodInterceptor {
         curator.enableFilterList(filterName, "owner_ids", getOwnerIds(user));
     }
     
-    private String filterName(Class<?> entity, Role role) {
+    private String filterName(Class<?> entity, Verb role) {
         return entity.getSimpleName() +
-            (role == Role.CONSUMER ? "_CONSUMER_FILTER" : "_OWNER_FILTER");
+            (role == Verb.CONSUMER ? "_CONSUMER_FILTER" : "_OWNER_FILTER");
     }
 }
