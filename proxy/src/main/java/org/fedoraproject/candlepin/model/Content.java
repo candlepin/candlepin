@@ -128,7 +128,7 @@ public class Content extends AbstractHibernateObject {
     }
 
     public String getContentUrl() {
-        return "/$owner/$env" + contentUrl;
+        return contentUrl;
     }
 
     public void setContentUrl(String contentUrl) {
