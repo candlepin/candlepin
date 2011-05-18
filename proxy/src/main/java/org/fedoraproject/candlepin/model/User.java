@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.util.Util;
 
 /**
@@ -111,7 +112,7 @@ public class User extends AbstractHibernateObject {
     }
 
     /**
-     * Looks up memberships to find associated owners.
+     * Looks up permissions to find associated owners.
      *
      * @return associated owners
      *
@@ -130,7 +131,7 @@ public class User extends AbstractHibernateObject {
     }
 
     /**
-     * @return the memberships
+     * @return the roles
      */
     public Set<NewRole> getRoles() {
         return roles;
@@ -141,6 +142,10 @@ public class User extends AbstractHibernateObject {
         r.addUser(this);
     }
     
+    /**
+     * Iterates user's roles and returns all unique permissions.
+     * @return all of this user's unique permissions.
+     */
     public Set<Permission> getPermissions() {
         Set<Permission> perms = new HashSet<Permission>();
         for (NewRole r : getRoles()) {

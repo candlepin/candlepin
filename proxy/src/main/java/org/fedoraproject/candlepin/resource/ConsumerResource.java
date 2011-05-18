@@ -42,6 +42,7 @@ import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -70,7 +71,6 @@ import org.xnap.commons.i18n.I18n;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -90,7 +90,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import org.fedoraproject.candlepin.model.NewRole;
 
 /**
  * API Gateway for Consumers
@@ -238,6 +237,17 @@ public class ConsumerResource {
                 i18n.tr("System name cannot begin with # character"));
         }
 
+        // If no owner was specified, try to assume based on which owners the principal
+        // has admin rights for. If more than one, we have to error out.
+        if (ownerKey == null) {
+            Set<Permission> perms = principal.getPermissionsWithVerb(Role.OWNER_ADMIN);
+            if (perms.size() != 1) {
+                throw new BadRequestException(
+                    i18n.tr("Must specify owner for new consumer."));
+            }
+            ownerKey = perms.iterator().next().getOwner().getKey();
+        }
+
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
         User user = getCurrentUsername(principal);
@@ -322,14 +332,13 @@ public class ConsumerResource {
      */
     // TODO:  Reevaluate if this is still an issue with the new membership scheme!
     private void setupOwners(User user, Principal principal) {
-    //private void setOwner(Consumer consumer, Principal principal) {
 
-        List<Owner> existingOwners = new ArrayList<Owner>();
-
-        for (Owner owner : userService.getOwners(user.getUsername())) {
+        for (Permission p : principal.getPermissions()) {
+            Owner owner = p.getOwner();
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
 
             if (existingOwner == null) {
+                log.info("Principal carries permission for owner that does not exist.");
                 log.info("Creating new owner: " + owner.getKey());
 
                 // Need elevated privileges to create a new owner:
@@ -339,6 +348,7 @@ public class ConsumerResource {
 
                 existingOwner = ownerCurator.create(owner);
                 poolManager.refreshPools(existingOwner);
+                p.setOwner(existingOwner);
 
                 ResteasyProviderFactory.popContextData(Principal.class);
 
@@ -346,15 +356,6 @@ public class ConsumerResource {
                 ResteasyProviderFactory.pushContext(Principal.class, principal);
             }
 
-            existingOwners.add(existingOwner);
-        }
-        
-        // Set the new owner on the existing principal, which previously had a
-        // detached owner:
-        //principal.setOwners(existingOwners);
-        //user.setOwners(new HashSet<Owner>(existingOwners));
-        for (NewRole role : user.getRoles()) {
-        //    role.getMemberships()
         }
     }
 

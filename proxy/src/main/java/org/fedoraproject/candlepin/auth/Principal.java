@@ -19,7 +19,9 @@ import org.fedoraproject.candlepin.util.Util;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
+import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Permission;
 
 /**
@@ -53,6 +55,20 @@ public abstract class Principal implements Serializable {
 
     public void setPermissions(Collection<Permission> permissions) {
         this.permissions = permissions;
+    }
+
+    /**
+     * @param verb Verb to search for.
+     * @return All permissions with this verb for any owner.
+     */
+    public Set<Permission> getPermissionsWithVerb(Role verb) {
+        Set<Permission> perms = new HashSet<Permission>();
+        for (Permission p : getPermissions()) {
+            if (p.getRoles().contains(verb)) {
+                perms.add(p);
+            }
+        }
+        return perms;
     }
 
     public boolean isConsumer() {
