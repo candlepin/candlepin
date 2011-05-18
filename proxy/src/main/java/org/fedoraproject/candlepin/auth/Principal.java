@@ -28,7 +28,7 @@ import org.fedoraproject.candlepin.model.Permission;
  */
 public abstract class Principal implements Serializable {
 
-    private Collection<Permission> permissions;
+    private Collection<Permission> permissions = new HashSet<Permission>();
 
     public Principal(Collection<Permission> permissions) {
         this.permissions = permissions;

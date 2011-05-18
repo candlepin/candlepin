@@ -69,6 +69,7 @@ public class EventFactory {
         String newEntityJson = entityToJson(newConsumer);
         Principal principal = principalProvider.get();
         
+        
         Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, 
             newConsumer.getName(), principal, newConsumer.getOwner().getId(),
             newConsumer.getId(), newConsumer.getId(), null, newEntityJson);

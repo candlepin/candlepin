@@ -69,6 +69,10 @@ public class PrincipalData {
         return ownerVerbs;
     }
     
+    public void setPermissions(Map<String, List<Verb>> permissions) {
+        this.ownerVerbs = permissions;
+    }
+    
     /**
      * @return the type
      */
