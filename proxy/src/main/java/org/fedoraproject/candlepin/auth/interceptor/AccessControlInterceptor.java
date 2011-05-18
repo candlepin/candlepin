@@ -83,7 +83,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         // TODO:  This was already checking only the first role on the principal,
         // which seems bad - this is basically doing this same thing...
         Role role = currentUser.getPermissions().iterator().next()
-                .getRoles().iterator().next();
+                .getRole();
         
         if (Role.OWNER_ADMIN == role) { 
             enableOwnerFilter(currentUser, invocation.getThis(), role);
@@ -98,7 +98,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         // TODO:  This was already checking only the first role on the principal,
         // which seems bad - this is basically doing this same thing...
         Role role = currentUser.getPermissions().iterator().next()
-                .getRoles().iterator().next();
+                .getRole();
 
         // Only available on entities that implement AccessControlEnforced interface
         if (currentUser.isSuperAdmin()) {

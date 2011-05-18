@@ -233,7 +233,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer submitted = consumerResource.create(
             toSubmit,
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] { 
-                new Permission(owner, EnumSet.of(Role.OWNER_ADMIN)) })),
+                new Permission(owner, Role.OWNER_ADMIN) })),
             someuser.getUsername(),
             owner.getKey());
 

@@ -54,7 +54,7 @@ public class TestPrincipalProvider extends PrincipalProvider {
             }
 
             List<Permission> permissions = new ArrayList<Permission>();
-            permissions.add(new Permission(owner, EnumSet.of(Role.OWNER_ADMIN)));
+            permissions.add(new Permission(owner, Role.OWNER_ADMIN));
 
             principal = new UserPrincipal("Default User", permissions);
         }   

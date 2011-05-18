@@ -205,7 +205,7 @@ public class TestUtil {
         roles.add(role);
         Principal ownerAdmin = new UserPrincipal(username, 
                 Arrays.asList(new Permission[] {
-                    new Permission(owner, EnumSet.of(Role.OWNER_ADMIN))
+                    new Permission(owner, Role.OWNER_ADMIN)
                 }));
         return ownerAdmin;
     }

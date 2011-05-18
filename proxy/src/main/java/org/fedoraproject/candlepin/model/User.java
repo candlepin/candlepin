@@ -23,13 +23,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.util.Util;
 
 /**
@@ -49,6 +49,7 @@ public class User extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
+    @Transient
     private Set<NewRole> roles;
 
     @Column(nullable = false, unique = true)

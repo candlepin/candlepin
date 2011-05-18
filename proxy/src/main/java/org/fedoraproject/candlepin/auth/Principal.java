@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.fedoraproject.candlepin.model.NewRole;
 import org.fedoraproject.candlepin.model.Permission;
 
 /**
@@ -41,7 +40,7 @@ public abstract class Principal implements Serializable {
 
     public boolean isSuperAdmin() {
         for (Permission permission : this.permissions) {
-            if (permission.getRoles().contains(Role.SUPER_ADMIN)) {
+            if (permission.getRole().equals(Role.SUPER_ADMIN)) {
                 return true;
             }
         }
@@ -64,7 +63,7 @@ public abstract class Principal implements Serializable {
     public Set<Permission> getPermissionsWithVerb(Role verb) {
         Set<Permission> perms = new HashSet<Permission>();
         for (Permission p : getPermissions()) {
-            if (p.getRoles().contains(verb)) {
+            if (p.getRole().equals(verb)) {
                 perms.add(p);
             }
         }

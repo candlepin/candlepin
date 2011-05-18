@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import org.fedoraproject.candlepin.model.Permission;
 
 /**
@@ -30,7 +29,7 @@ public class ExternalSystemPrincipal extends Principal {
      */
     public ExternalSystemPrincipal() {
         super(Arrays.asList(new Permission[] 
-            {new Permission(null, EnumSet.of(Role.TRUSTED_SYSTEM))}));
+            {new Permission(null, Role.TRUSTED_SYSTEM)}));
     }
 
     @Override

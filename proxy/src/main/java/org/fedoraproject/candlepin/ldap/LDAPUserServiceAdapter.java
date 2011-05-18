@@ -19,11 +19,8 @@ import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
-import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -91,7 +88,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
 
             Set<Permission> permissions = new HashSet<Permission>();
             permissions.add(new Permission(new Owner(orgName),
-                    EnumSet.of(Role.OWNER_ADMIN)));
+                    Role.OWNER_ADMIN));
 
             roles.add(new NewRole(users, permissions));
         }

@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import org.fedoraproject.candlepin.model.Permission;
 
 /**
@@ -24,8 +23,7 @@ import org.fedoraproject.candlepin.model.Permission;
 public class NoAuthPrincipal extends Principal {
 
     public NoAuthPrincipal() {
-        super(Arrays.asList(new Permission[]
-            {new Permission(null, EnumSet.allOf(Role.class))}));
+        super(Arrays.asList(new Permission[] {new Permission(null, null)}));
     }
 
     @Override

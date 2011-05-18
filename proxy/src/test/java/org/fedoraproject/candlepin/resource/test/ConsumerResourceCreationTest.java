@@ -83,7 +83,7 @@ public class ConsumerResourceCreationTest {
 
         Owner owner = new Owner("test_owner");
         User user = new User(USER, "");
-        Permission p = new Permission(owner, EnumSet.of(Role.OWNER_ADMIN));
+        Permission p = new Permission(owner, Role.OWNER_ADMIN);
         NewRole role = new NewRole();
         role.addPermission(p);
         role.addUser(user);

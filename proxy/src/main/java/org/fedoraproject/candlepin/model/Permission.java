@@ -14,12 +14,11 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.fedoraproject.candlepin.auth.Role;
 import org.hibernate.annotations.GenericGenerator;
@@ -28,6 +27,8 @@ import org.hibernate.annotations.GenericGenerator;
  * A permission represents an owner to be accessed in some fashion, and a verb which
  * the permissions is granting.
  */
+@Entity
+@Table(name = "cp_permission")
 public class Permission extends AbstractHibernateObject {
 
     @Id
@@ -37,11 +38,12 @@ public class Permission extends AbstractHibernateObject {
     private String id;
 
     private Owner owner;
-    private EnumSet<Role> roles = EnumSet.noneOf(Role.class);
+    
+    private Role role;
 
-    public Permission(Owner owner, EnumSet<Role> roles) {
+    public Permission(Owner owner, Role roles) {
         this.owner = owner;
-        this.roles = roles;
+        this.role = roles;
     }
 
     private Permission() {
@@ -65,11 +67,11 @@ public class Permission extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
+    public Role getRole() {
+        return role;
     }
 
-    public void setRoles(EnumSet<Role> roles) {
-        this.roles = roles;
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

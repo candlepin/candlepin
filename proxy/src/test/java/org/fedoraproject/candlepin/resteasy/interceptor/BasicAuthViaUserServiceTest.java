@@ -35,7 +35,6 @@ import org.mockito.MockitoAnnotations;
 
 import com.google.inject.Injector;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 
 public class BasicAuthViaUserServiceTest {
@@ -104,7 +103,7 @@ public class BasicAuthViaUserServiceTest {
         
         when(ownerCurator.lookupByKey("user")).thenReturn(owner);
         List<Permission> permissions = Arrays.asList(new Permission[] {
-            new Permission(owner, EnumSet.of(Role.OWNER_ADMIN))
+            new Permission(owner, Role.OWNER_ADMIN)
         });
         UserPrincipal expected = new UserPrincipal("user", permissions);
         assertEquals(expected, this.auth.getPrincipal(request));

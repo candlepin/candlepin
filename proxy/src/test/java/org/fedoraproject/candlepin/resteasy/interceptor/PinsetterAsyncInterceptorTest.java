@@ -65,7 +65,7 @@ public class PinsetterAsyncInterceptorTest {
     @Test
     public void noJobMapPrincipal() {
         List<Permission> permissions = Arrays.asList(new Permission[] {
-            new Permission(new Owner("test_owner"), EnumSet.of(Role.OWNER_ADMIN))
+            new Permission(new Owner("test_owner"), Role.OWNER_ADMIN)
         });
         Principal principal = new UserPrincipal("testing", permissions);
         when(this.principalProvider.get()).thenReturn(principal);
@@ -82,7 +82,7 @@ public class PinsetterAsyncInterceptorTest {
     @Test
     public void existingJobMapPrincipal() {
         List<Permission> permissions = Arrays.asList(new Permission[] {
-            new Permission(new Owner("test_owner"), EnumSet.of(Role.OWNER_ADMIN))
+            new Permission(new Owner("test_owner"), Role.OWNER_ADMIN)
         });
         Principal principal = new UserPrincipal("testing", permissions);
 

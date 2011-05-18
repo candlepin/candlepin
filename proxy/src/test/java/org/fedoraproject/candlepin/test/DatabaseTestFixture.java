@@ -288,7 +288,7 @@ public class DatabaseTestFixture {
     }
 
     public NewRole createAdminRole(Owner owner) {
-        Permission p = new Permission(owner, EnumSet.of(Role.OWNER_ADMIN));
+        Permission p = new Permission(owner, Role.OWNER_ADMIN);
         NewRole role = new NewRole();
         role.addPermission(p);
         return role;
