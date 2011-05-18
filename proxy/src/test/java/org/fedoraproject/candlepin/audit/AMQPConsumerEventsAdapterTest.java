@@ -52,6 +52,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Random;
+import org.fedoraproject.candlepin.model.Owner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AMQPConsumerEventsAdapterTest {
@@ -60,6 +61,7 @@ public class AMQPConsumerEventsAdapterTest {
     @Spy private ObjectMapper spiedMapper = new ObjectMapper();
     private ObjectMapper mapper = new ObjectMapper();
     private Principal principal;
+    private Owner owner;
     private EventFactory factory;
     @Mock private PKIReader reader;
     @Mock private PKIUtility pkiutil;
@@ -68,8 +70,8 @@ public class AMQPConsumerEventsAdapterTest {
     public void init() {
         this.factory = new EventFactory(mockPrincipalProvider);
         this.principal = TestUtil.createOwnerPrincipal();
-        this.principal.getOwners().iterator().next().setId(
-                String.valueOf(new Random().nextLong()));
+        this.owner = this.principal.getPermissions().iterator().next().getOwner();
+        this.owner.setId(String.valueOf(new Random().nextLong()));
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         this.adapter = new AMQPBusEventAdapter(spiedMapper, reader, pkiutil);
     }
@@ -77,8 +79,7 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerCreatedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(
-                this.principal.getOwners().iterator().next());
+        Consumer consumer = TestUtil.createConsumer(owner);
         storeFacts(consumer);
         IdentityCertificate idCert = TestUtil.createIdCert();
         consumer.setIdCert(idCert);
@@ -132,8 +133,7 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerModifiedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(
-                this.principal.getOwners().iterator().next());
+        Consumer consumer = TestUtil.createConsumer(owner);
         storeFacts(consumer);
         IdentityCertificate idCert = TestUtil.createIdCert();
         consumer.setIdCert(idCert);
@@ -145,8 +145,7 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerDeletedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(
-                this.principal.getOwners().iterator().next());
+        Consumer consumer = TestUtil.createConsumer(owner);
         Event event = factory.consumerDeleted(consumer);
         Map<String, Object> map = unmarshallEvent(event);
 

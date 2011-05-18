@@ -77,7 +77,7 @@ public class JsPoolRulesTest {
         JsRulesProvider provider = new JsRulesProvider(rulesCuratorMock);
         poolRules = new JsPoolRules(provider.get(), poolManagerMock, productAdapterMock);
         principal = TestUtil.createOwnerPrincipal();
-        owner = principal.getOwners().get(0);
+        owner = principal.getPermissions().iterator().next().getOwner();
     }
     
     private Pool copyFromSub(Subscription sub) {
