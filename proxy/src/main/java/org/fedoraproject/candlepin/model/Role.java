@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -52,7 +53,9 @@ public class Role extends AbstractHibernateObject {
         inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users = new HashSet<User>();
     
-    @ManyToMany(targetEntity = Permission.class)
+    @ManyToMany(
+        targetEntity = Permission.class,
+        cascade = { CascadeType.PERSIST})
     @ForeignKey(
         name = "fk_permission_id",
         inverseName = "fk_role_id")

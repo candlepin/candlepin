@@ -19,6 +19,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.fedoraproject.candlepin.auth.Verb;
 import org.hibernate.annotations.GenericGenerator;
@@ -28,7 +29,8 @@ import org.hibernate.annotations.GenericGenerator;
  * the permissions is granting.
  */
 @Entity
-@Table(name = "cp_permission")
+@Table(name = "cp_permission",
+    uniqueConstraints = { @UniqueConstraint(columnNames = {"owner", "verb"}) })
 public class Permission extends AbstractHibernateObject {
 
     @Id

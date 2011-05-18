@@ -277,7 +277,14 @@ public class DatabaseTestFixture {
     }
     
     protected Principal setupPrincipal(Owner owner, Verb role) {
-        Principal ownerAdmin = TestUtil.createPrincipal("someuser", owner, role);
+        return setupPrincipal("someuser", owner, role);
+    }
+
+    protected Principal setupPrincipal(String username, Owner owner, Verb role) {
+        Principal ownerAdmin = TestUtil.createPrincipal(username, owner, role);
+        for (Permission p : ownerAdmin.getPermissions()) {
+            permissionCurator.create(p);
+        }
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
     }

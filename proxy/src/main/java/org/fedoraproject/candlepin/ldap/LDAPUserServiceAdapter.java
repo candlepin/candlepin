@@ -142,6 +142,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
         } 
         catch (LDAPException e) {
             //eat it
+            // TODO: don't eat it... this will bite someone eventually :)
         }        
         
         return user;

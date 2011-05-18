@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -131,11 +130,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         userCurator = injector.getInstance(UserCurator.class);
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));
         
-        Role adminRole = createAdminRole(owner);
-        adminRole.addUser(someuser);
-        roleCurator.create(adminRole);
-
-        principal = TestUtil.createPrincipal(USER_NAME, owner, Verb.OWNER_ADMIN);
+        principal = setupPrincipal(USER_NAME, owner, Verb.OWNER_ADMIN);
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
