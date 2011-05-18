@@ -91,7 +91,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
 
             Set<Permission> permissions = new HashSet<Permission>();
             permissions.add(new Permission(new Owner(orgName),
-                    EnumSet.of(Role.SUPER_ADMIN)));
+                    EnumSet.of(Role.OWNER_ADMIN)));
 
             roles.add(new NewRole(users, permissions));
         }
@@ -139,11 +139,8 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             lc.read(dn);
             user = new User(username, null);
 
-            for (Owner owner : getOwners(username)) {
-                Permission p = new Permission(owner, EnumSet.of(Role.OWNER_ADMIN));
-                NewRole r = new NewRole();
-                r.addPermission(p);
-                r.addUser(user);
+            for (NewRole role : getRoles(username)) {
+                user.addRole(role);
             }
         } 
         catch (LDAPException e) {
