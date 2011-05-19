@@ -14,17 +14,20 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.LinkedList;
 
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import org.fedoraproject.candlepin.model.Role;
@@ -36,10 +39,12 @@ import org.fedoraproject.candlepin.model.Role;
 public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     private UserCurator userCurator;
+    private RoleCurator roleCurator;
     
     @Inject
-    public DefaultUserServiceAdapter(UserCurator userCurator) {
+    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator) {
         this.userCurator = userCurator;
+        this.roleCurator = roleCurator;
     }
     
     @Override
@@ -82,7 +87,12 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public List<User> listByOwner(Owner owner) {
-        return userCurator.findByOwner(owner);
+        List<Role> roles = roleCurator.listForOwner(owner);
+        Set<User> users = new HashSet<User>();
+        for (Role r : roles) {
+            users.addAll(r.getUsers());
+        }
+        return new LinkedList<User>(users);
     }
 
     @Override

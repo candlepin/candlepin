@@ -16,6 +16,9 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
+import org.apache.commons.lang.RandomStringUtils;
 import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Permission;
@@ -32,21 +35,41 @@ public class RoleTest extends DatabaseTestFixture {
     public void testCreate() throws Exception {
         
         Owner o = createOwner();
+        
+        Role r = createRole(o);
+        
+        Role lookedUp = roleCurator.find(r.getId());
+        assertEquals(1, lookedUp.getPermissions().size());
+        assertEquals(1, lookedUp.getUsers().size());
+    }
+    
+    private Role createRole(Owner o) {
         Permission p = new Permission(o, Verb.OWNER_ADMIN);
         permissionCurator.create(p);
         
-        
-        User user = new User("bill", "pass");
+        User user = new User(RandomStringUtils.random(5), "pass");
         userCurator.create(user);
         
         Role r = new Role();
         r.addPermission(p);
         r.addUser(user);
         roleCurator.create(r);
+        return r;
+    }
+    
+    @Test
+    public void testListForOwner() {
+        Owner o = createOwner();
+        Owner o2 = createOwner();
         
-        Role lookedUp = roleCurator.find(r.getId());
-        assertEquals(1, lookedUp.getPermissions().size());
-        assertEquals(1, lookedUp.getUsers().size());
+        Role r1 = createRole(o);
+        createRole(o2);
+        
+        List<Role> roles = roleCurator.listForOwner(o);
+        assertEquals(1, roles.size());
+        assertEquals(r1, roles.get(0));
+        assertEquals(1, roles.get(0).getUsers().size());
+        assertEquals(1, roles.get(0).getPermissions().size());
     }
 
 }

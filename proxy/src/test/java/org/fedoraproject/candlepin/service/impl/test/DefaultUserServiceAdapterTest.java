@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -53,7 +54,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         this.owner = this.ownerCurator.create(new Owner("default_owner"));
         
         UserCurator curator = this.injector.getInstance(UserCurator.class);
-        this.service = new DefaultUserServiceAdapter(curator);
+        RoleCurator roleCurator = this.injector.getInstance(RoleCurator.class);
+        this.service = new DefaultUserServiceAdapter(curator, roleCurator);
     }
     
     @Test
@@ -161,11 +163,11 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     public void listByOwnerMultiple() {
         List<User> users = new ArrayList<User>();
      
+        Role adminRole = createAdminRole(owner);
         for (int i = 0; i < 5; i++) {
             User user = new User("user" + i, "password" + i);
             this.service.createUser(user);
             
-            Role adminRole = createAdminRole(owner);
             adminRole.addUser(user);
             roleCurator.create(adminRole);
             
@@ -179,25 +181,26 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("different_user", "password");
         this.service.createUser(user);
         
-        Role adminRole = createAdminRole(different);
-        adminRole.addUser(user);
+        Role differentAdminRole = createAdminRole(different);
+        differentAdminRole.addUser(user);
         
         user = new User("another_different_user", "pass");
         this.service.createUser(user);
 
-        adminRole.addUser(user);
+        differentAdminRole.addUser(user);
 
-        roleCurator.create(adminRole);
+        roleCurator.create(differentAdminRole);
 
-        Assert.assertArrayEquals(users.toArray(), 
-            this.service.listByOwner(owner).toArray());
+        assertEquals(new HashSet<User>(users), 
+            new HashSet<User>(service.listByOwner(owner)));
     }
     
     @Test
     public void findByLogin() {
         User u = mock(User.class);
         UserCurator curator = mock(UserCurator.class);
-        UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator);
+        RoleCurator roleCurator = mock(RoleCurator.class);
+        UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator, roleCurator);
         when(curator.findByLogin(anyString())).thenReturn(u);
         
         User foo = dusa.findByLogin("foo");
