@@ -14,17 +14,17 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.Parent;
+
 import java.io.Serializable;
 
 import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.Parent;
 
 /**
  * ProductContent
@@ -35,42 +35,30 @@ public class ProductContent extends AbstractHibernateObject implements
 
     @Parent
     private Product product;
-    
+
     @ManyToOne
-    @JoinColumn(name = "content_id", nullable = false, updatable = false)   
-    @Index(name = "cp_prodcont_cont_fk_idx")    
+    @JoinColumn(name = "content_id", nullable = false, updatable = false)
+    @Index(name = "cp_prodcont_cont_fk_idx")
     private Content content;
-    
+
     private Boolean enabled;
-    private Long flexEntitlement = 0L;
-    private Long physicalEntitlement = 0L;
-    
+
     public ProductContent() {
-        
+
     }
-    
+
     public ProductContent(Product product, Content content, Boolean enabled) {
         this.setContent(content);
         this.setProduct(product);
         this.setEnabled(enabled);
     }
-    
-    public ProductContent(Product product, Content content, Boolean enabled,
-            Long flexEntitlement, Long physicalEntitlement) {
-        this.setContent(content);
-        this.setProduct(product);
-        this.setEnabled(enabled);
-        this.flexEntitlement = flexEntitlement;
-        this.physicalEntitlement = physicalEntitlement;
-    }
-    
+
     @Override
     public boolean shouldGrantAccessTo(Owner owner) {
         // TODO Auto-generated method stub
         return false;
     }
 
-    
     @Override
     public boolean shouldGrantAccessTo(Consumer consumer) {
         // TODO Auto-generated method stub
@@ -82,7 +70,7 @@ public class ProductContent extends AbstractHibernateObject implements
         // TODO: just here to appease AbstractHibernateObject
         return null;
     }
-    
+
     /**
      * @param content the content to set
      */
@@ -126,45 +114,13 @@ public class ProductContent extends AbstractHibernateObject implements
         return enabled;
     }
 
-    /**
-     * @param physicalEntitlement the physicalEntitlement to set
-     */
-    public void setPhysicalEntitlement(Long physicalEntitlement) {
-        this.physicalEntitlement = physicalEntitlement;
-    }
-
-    /**
-     * @return the physicalEntitlement
-     */
-    public Long getPhysicalEntitlement() {
-        return physicalEntitlement;
-    }
-
-    /**
-     * @param flexEntitlement the flexEntitlement to set
-     */
-    public void setFlexEntitlement(Long flexEntitlement) {
-        this.flexEntitlement = flexEntitlement;
-    }
-
-    /**
-     * @return the flexEntitlement
-     */
-    public Long getFlexEntitlement() {
-        return flexEntitlement;
-    }
-    
     @Override
     public int hashCode() {
-        //TODO: Should we include the product here? 
-        return new HashCodeBuilder(3, 23)
-            .append(this.enabled)
-            .append(this.flexEntitlement)
-            .append(this.physicalEntitlement)
-            .append(this.content.hashCode())
-            .toHashCode();
+        // TODO: Should we include the product here?
+        return new HashCodeBuilder(3, 23).append(this.enabled)
+            .append(this.content.hashCode()).toHashCode();
     }
-    
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -173,11 +129,9 @@ public class ProductContent extends AbstractHibernateObject implements
         if (other instanceof ProductContent) {
             ProductContent that = (ProductContent) other;
             return new EqualsBuilder().append(this.enabled, that.enabled)
-                .append(this.flexEntitlement, that.flexEntitlement)
-                .append(this.physicalEntitlement, that.flexEntitlement)
                 .isEquals() && this.content.equals(that.content);
         }
         return false;
     }
-    
+
 }
