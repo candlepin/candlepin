@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.test;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 
@@ -25,6 +26,7 @@ import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.TestingInterceptor;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
@@ -280,10 +282,9 @@ public class DatabaseTestFixture {
     }
 
     protected Principal setupPrincipal(String username, Owner owner, Verb verb) {
-        Principal ownerAdmin = TestUtil.createPrincipal(username, owner, verb);
-        for (Permission p : ownerAdmin.getPermissions()) {
-            permissionCurator.create(p);
-        }
+        Permission p = permissionCurator.findOrCreate(owner, verb);
+        Principal ownerAdmin = new UserPrincipal(username,  Arrays.asList(new Permission[] {
+            p}));
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
     }
