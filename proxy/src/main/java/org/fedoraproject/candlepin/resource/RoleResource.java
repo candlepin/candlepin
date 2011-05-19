@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,7 @@ public class RoleResource {
     private RoleCurator roleCurator;
     private PermissionCurator permissionCurator;
 
+    @Inject
     public RoleResource(RoleCurator roleCurator, PermissionCurator permissionCurator) {
         this.roleCurator = roleCurator;
         this.permissionCurator = permissionCurator;
