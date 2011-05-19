@@ -52,7 +52,6 @@ import java.util.HashSet;
 import java.util.List;
 import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.Role;
-import org.fedoraproject.candlepin.model.UserCurator;
 
 /**
  * OwnerResourceTest
