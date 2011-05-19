@@ -26,6 +26,21 @@ public class PermissionCurator extends AbstractHibernateCurator<Permission> {
         super(Permission.class);
     }
 
+    /**
+     * Return the permission for this owner and verb if it exists, create it otherwise.
+     * @param owner Owner
+     * @param verb Verb
+     * @return Permission object.
+     */
+    public Permission findOrCreate(Owner owner, Verb verb) {
+        Permission p = findByOwnerAndVerb(owner, verb);
+        if (p == null) {
+            p = new Permission(owner, verb);
+            create(p);
+        }
+        return p;
+    }
+
     public Permission findByOwnerAndVerb(Owner owner, Verb verb) {
         return (Permission) currentSession().createCriteria(Permission.class)
             .add(Restrictions.eq("owner", owner))
