@@ -94,6 +94,12 @@ class Candlepin
     return results
   end
 
+  def list_users_owners(username, params = {})
+    path = "/users/#{username}/owners"
+    results = get(path)
+    return results
+  end
+
   # Can pass an owner key, or an href to follow:
   def get_owner(owner)
     # Looks like a path to follow:

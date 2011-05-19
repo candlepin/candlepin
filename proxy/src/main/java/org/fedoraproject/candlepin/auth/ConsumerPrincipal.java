@@ -70,4 +70,8 @@ public class ConsumerPrincipal extends Principal {
     public String getPrincipalName() {       
         return consumer.getName();
     }     
+
+    public String getType() {
+        return Principal.CONSUMER_TYPE;
+    }
 }

@@ -28,6 +28,11 @@ import org.fedoraproject.candlepin.model.Permission;
  */
 public abstract class Principal implements Serializable {
 
+    public static final String USER_TYPE = "user";
+    public static final String CONSUMER_TYPE = "consumer";
+    public static final String NO_AUTH_TYPE = "no_auth";
+    public static final String SYSTEM_TYPE = "system";
+
     private Collection<Permission> permissions = new HashSet<Permission>();
 
     public Principal(Collection<Permission> permissions) {
@@ -47,6 +52,8 @@ public abstract class Principal implements Serializable {
 
         return false;
     }
+
+    public abstract String getType();
 
     public Collection<Permission> getPermissions() {
         return permissions;
@@ -72,10 +79,6 @@ public abstract class Principal implements Serializable {
 
     public boolean isConsumer() {
         return false;
-    }
-    
-    public String getType() {
-        return "principal";
     }
     
     public String getPrincipalName() {

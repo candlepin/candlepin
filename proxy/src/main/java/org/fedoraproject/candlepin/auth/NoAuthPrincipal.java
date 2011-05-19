@@ -28,7 +28,7 @@ public class NoAuthPrincipal extends Principal {
 
     @Override
     public String getType() {
-        return "noAuth";
+        return Principal.NO_AUTH_TYPE;
     }
 
     @Override

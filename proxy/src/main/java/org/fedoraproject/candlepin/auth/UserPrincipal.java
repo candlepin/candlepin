@@ -61,7 +61,7 @@ public class UserPrincipal extends Principal {
 
     @Override
     public String getType() {
-        return "user";
+        return Principal.USER_TYPE;
     }
 
     @Override

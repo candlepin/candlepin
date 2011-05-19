@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -24,6 +25,7 @@ import org.fedoraproject.candlepin.auth.Verb;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -36,10 +38,12 @@ import javax.ws.rs.POST;
 public class UserResource {
   
     private UserServiceAdapter userService;
+    private I18n i18n;
     
     @Inject
-    public UserResource(UserServiceAdapter userService) {
+    public UserResource(UserServiceAdapter userService, I18n i18n) {
         this.userService = userService;
+        this.i18n = i18n;
     }
     
     @GET

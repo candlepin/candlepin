@@ -151,6 +151,7 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
+    @AllowRoles(roles = { Verb.OWNER_ADMIN, Verb.CONSUMER })
     public List<Owner> list(@QueryParam("key") String keyFilter) {
 
         // For now, assuming key filter is just one key:
@@ -362,7 +363,7 @@ public class OwnerResource {
                 throw new NotFoundException(i18n.tr("consumer: {0} not found",
                     consumerUuid));
             }
-            if (c.getOwner().getId() != owner.getId()) {
+            if (c.getOwner().getId().equals(owner.getId())) {
                 throw new BadRequestException(
                     "Consumer specified does not belong to owner on path");
             }

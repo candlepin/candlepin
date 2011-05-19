@@ -31,7 +31,7 @@ public class SystemPrincipal extends Principal{
 
     @Override
     public String getType() {
-        return "system";
+        return Principal.SYSTEM_TYPE;
     }
 
     @Override
