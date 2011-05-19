@@ -24,6 +24,8 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.specimpl.HttpHeadersImpl;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
@@ -35,7 +37,9 @@ import org.mockito.MockitoAnnotations;
 
 import com.google.inject.Injector;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class BasicAuthViaUserServiceTest {
 
@@ -100,11 +104,15 @@ public class BasicAuthViaUserServiceTest {
         setUserAndPassword("user", "redhat");
         when(userService.validateUser("user", "redhat")).thenReturn(true);
         // TODO: test will fail, need to mock the permissions setup
+
+        Set<Permission> permissions = new HashSet<Permission>();
+        permissions.add(new Permission(owner, Verb.OWNER_ADMIN));
+        
+        List<Role> roles = Arrays.asList(new Role [] {new Role(new HashSet<User>(), 
+            permissions)});
+        when(userService.getRoles("user")).thenReturn(roles);
         
         when(ownerCurator.lookupByKey("user")).thenReturn(owner);
-        List<Permission> permissions = Arrays.asList(new Permission[] {
-            new Permission(owner, Verb.OWNER_ADMIN)
-        });
         UserPrincipal expected = new UserPrincipal("user", permissions);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
