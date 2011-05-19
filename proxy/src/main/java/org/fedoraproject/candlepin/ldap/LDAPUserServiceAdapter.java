@@ -90,7 +90,8 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             permissions.add(new Permission(new Owner(orgName),
                     Verb.OWNER_ADMIN));
 
-            roles.add(new Role(users, permissions));
+            // not persisting this, so I think it is ok to give it a dummy name
+            roles.add(new Role("ldap", users, permissions));
         }
         catch (LDAPException e) {
             //eat it

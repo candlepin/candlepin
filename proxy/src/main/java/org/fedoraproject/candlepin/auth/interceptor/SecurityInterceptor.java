@@ -103,7 +103,7 @@ public class SecurityInterceptor implements MethodInterceptor {
     // TODO:  This should also go away - when this whole interceptor dies!!!
     private boolean hasRole(Principal principal, Verb role) {
         for (Permission permission : principal.getPermissions()) {
-            if (permission.getVerb().equals(role)) {
+            if (permission.getVerb() == role) {
                 return true;
             }
         }

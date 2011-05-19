@@ -48,7 +48,7 @@ public class Permission extends AbstractHibernateObject {
         this.verb = roles;
     }
 
-    private Permission() {
+    protected Permission() {
         // JPA
     }
 
