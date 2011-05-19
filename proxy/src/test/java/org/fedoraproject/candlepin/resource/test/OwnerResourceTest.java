@@ -50,6 +50,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.UserCurator;
 
 /**
  * OwnerResourceTest
@@ -97,27 +100,31 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testGetUsers() {
-        // TODO: Yeah this is failing, update to actually create users!
         String ownerName = owner.getKey();
 
         User user = new User();
         user.setUsername("someusername");
         user.setPassword("somepassword");
+        userCurator.create(user);
 
-        String ownerKey = owner.getKey();
-//        ownerResource.createUser(ownerKey, user);
+        Role role = new Role();
+        role.addUser(user);
+        role.addPermission(new Permission(owner, Verb.OWNER_ADMIN));
+        user.addRole(role);
+        roleCurator.create(role);
 
         User user2 = new User();
         user2.setUsername("someotherusername");
         user2.setPassword("someotherpassword");
 
-        String ownerKey2 = owner.getKey();
-//        user2 = ownerResource.createUser(ownerKey2, user2);
+        user2.addRole(role);
+        userCurator.create(user2);
+        roleCurator.merge(role);
 
         List<User> users = ownerResource.getUsers(ownerName);
 
-        assertEquals(users.get(1), user2);
         assertEquals(users.size(), 2);
+        assertEquals(users.get(1), user2);
     }
 
     @Test
