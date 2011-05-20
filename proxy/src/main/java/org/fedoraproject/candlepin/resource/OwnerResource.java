@@ -151,7 +151,6 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
     public List<Owner> list(@QueryParam("key") String keyFilter) {
 
         // For now, assuming key filter is just one key:
