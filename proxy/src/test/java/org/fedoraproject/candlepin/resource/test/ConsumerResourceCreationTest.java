@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -84,7 +84,7 @@ public class ConsumerResourceCreationTest {
 
         owner = new Owner("test_owner");
         User user = new User(USER, "");
-        Permission p = new Permission(owner, Verb.OWNER_ADMIN);
+        Permission p = new Permission(owner, Access.OWNER_ADMIN);
         Role role = new Role();
         role.addPermission(p);
         role.addUser(user);

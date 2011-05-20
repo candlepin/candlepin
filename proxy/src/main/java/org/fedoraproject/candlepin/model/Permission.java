@@ -21,7 +21,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -41,9 +41,9 @@ public class Permission extends AbstractHibernateObject {
 
     private Owner owner;
     
-    private Verb verb;
+    private Access verb;
 
-    public Permission(Owner owner, Verb roles) {
+    public Permission(Owner owner, Access roles) {
         this.owner = owner;
         this.verb = roles;
     }
@@ -69,11 +69,11 @@ public class Permission extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public Verb getVerb() {
+    public Access getVerb() {
         return verb;
     }
 
-    public void setVerb(Verb verb) {
+    public void setVerb(Access verb) {
         this.verb = verb;
     }
 }

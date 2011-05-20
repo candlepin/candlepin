@@ -23,7 +23,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.IseException;
@@ -58,19 +58,22 @@ public class SecurityInterceptor implements MethodInterceptor {
         log.debug("Invoked.");
 
         // Super admins can access any URL:
-        EnumSet<Verb> allowedRoles = EnumSet.of(Verb.SUPER_ADMIN);
+        // TODO: Re-address this, is implied super admin access better than explicit?
+        // should super admin be handled outside of roles/permissions and in principals
+        // instead.
+        EnumSet<Access> allowedRoles = EnumSet.of(Access.SUPER_ADMIN);
         
-        AllowRoles annotation = invocation.getMethod().getAnnotation(AllowRoles.class);
+        AllowAccess annotation = invocation.getMethod().getAnnotation(AllowAccess.class);
         log.debug("Method annotation: " + annotation);
         if (annotation != null) {
-            for (Verb allowed : annotation.roles()) {
+            for (Access allowed : annotation.types()) {
                 log.debug("   allowing role: " + allowed);
                 allowedRoles.add(allowed);
             }
         }
         
         boolean foundRole = false;
-        for (Verb allowed : allowedRoles) {
+        for (Access allowed : allowedRoles) {
             if (hasRole(currentUser, allowed)) {
                 foundRole = true;
                 if (log.isDebugEnabled()) {
@@ -101,7 +104,7 @@ public class SecurityInterceptor implements MethodInterceptor {
     }
 
     // TODO:  This should also go away - when this whole interceptor dies!!!
-    private boolean hasRole(Principal principal, Verb role) {
+    private boolean hasRole(Principal principal, Access role) {
         for (Permission permission : principal.getPermissions()) {
             if (permission.getVerb() == role) {
                 return true;
@@ -116,7 +119,7 @@ public class SecurityInterceptor implements MethodInterceptor {
      * current principal is a user principal who does not have the super admin role)
      */
     private void verifyUser(MethodInvocation invocation, Principal currentUser,
-        AllowRoles annotation, I18n i18n) {
+        AllowAccess annotation, I18n i18n) {
         String usernameAccessed = findParameterValue(invocation,
             annotation.verifyUser(), i18n);
         if (currentUser.getType().equals(Principal.USER_TYPE) && 

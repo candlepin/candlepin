@@ -22,8 +22,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.auth.Verb;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 
@@ -44,7 +44,7 @@ public class CertificateSerialResource {
     
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Verb.SUPER_ADMIN})
+    @AllowAccess(types = {Access.SUPER_ADMIN})
     public List<CertificateSerial> getCertificateSerials() {
         return this.certificateSerialCurator.listAll();
     }
@@ -52,7 +52,7 @@ public class CertificateSerialResource {
     @GET
     @Path("/{serial_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Verb.SUPER_ADMIN})
+    @AllowAccess(types = {Access.SUPER_ADMIN})
     public CertificateSerial getCertificateSerial(@PathParam("serial_id") Long serialId) {
         return this.certificateSerialCurator.find(serialId);
     }

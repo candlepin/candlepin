@@ -20,7 +20,7 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
@@ -175,7 +175,7 @@ public class CandlepinModule extends AbstractModule {
         
         bindInterceptor(
             Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(AllowRoles.class), 
+            Matchers.annotatedWith(AllowAccess.class), 
             securityEnforcer);
         
         AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();

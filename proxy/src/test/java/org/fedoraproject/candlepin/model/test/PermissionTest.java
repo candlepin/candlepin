@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -30,21 +30,21 @@ public class PermissionTest extends DatabaseTestFixture {
     public void testCreate() throws Exception {
         
         Owner o = createOwner();
-        Permission p = new Permission(o, Verb.OWNER_ADMIN);
+        Permission p = new Permission(o, Access.OWNER_ADMIN);
         permissionCurator.create(p);
         
         Permission lookedUp = permissionCurator.find(p.getId());
         assertNotNull(lookedUp);
         assertEquals(o.getId(), lookedUp.getOwner().getId());
-        assertEquals(Verb.OWNER_ADMIN, lookedUp.getVerb());
+        assertEquals(Access.OWNER_ADMIN, lookedUp.getVerb());
     }
     
     @Test
     public void testEquality() throws Exception {
         Owner o = createOwner();
-        Permission basePerm = new Permission(o, Verb.OWNER_ADMIN);
+        Permission basePerm = new Permission(o, Access.OWNER_ADMIN);
         
-        Permission equalPerm = new Permission(o, Verb.OWNER_ADMIN);
+        Permission equalPerm = new Permission(o, Access.OWNER_ADMIN);
         assertFalse(basePerm == equalPerm);
     }
 

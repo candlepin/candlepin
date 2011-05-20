@@ -15,8 +15,8 @@
 package org.fedoraproject.candlepin.model;
 
 
-import org.fedoraproject.candlepin.auth.Verb;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.wideplay.warp.persist.Transactional;
@@ -92,17 +92,17 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         return new Date(rulesFile.lastModified());
     }
     
-    @AllowRoles(roles = Verb.SUPER_ADMIN)
+    @AllowAccess(types = Access.SUPER_ADMIN)
     public Rules create(Rules entity) {
         return super.create(entity);
     }
     
-    @AllowRoles(roles = Verb.SUPER_ADMIN)
+    @AllowAccess(types = Access.SUPER_ADMIN)
     public void delete(Rules entity) {
         super.delete(entity);
     }
     
-    @AllowRoles(roles = Verb.SUPER_ADMIN)
+    @AllowAccess(types = Access.SUPER_ADMIN)
     public Rules merge(Rules entity) {
         return super.merge(entity);
     }

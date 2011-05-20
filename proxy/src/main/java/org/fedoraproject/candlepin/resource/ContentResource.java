@@ -24,8 +24,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.auth.Verb;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
@@ -70,7 +70,7 @@ public class ContentResource {
     
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Verb.SUPER_ADMIN})
+    @AllowAccess(types = {Access.SUPER_ADMIN})
     public Content createContent(Content content) {
         Content lookedUp  = contentCurator.find(content.getId());
         if (lookedUp != null) {
@@ -81,7 +81,7 @@ public class ContentResource {
 
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Verb.SUPER_ADMIN})
+    @AllowAccess(types = {Access.SUPER_ADMIN})
     @Path("/{content_id}")
     public void remove(@PathParam("content_id") String cid) {
         Content nuke = getContent(cid);

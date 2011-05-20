@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Permission;
 import org.fedoraproject.candlepin.model.Role;
@@ -44,7 +44,7 @@ public class RoleTest extends DatabaseTestFixture {
     }
     
     private Role createRole(Owner o) {
-        Permission p = new Permission(o, Verb.OWNER_ADMIN);
+        Permission p = new Permission(o, Access.OWNER_ADMIN);
         permissionCurator.create(p);
         
         User user = new User(RandomStringUtils.random(5), "pass");

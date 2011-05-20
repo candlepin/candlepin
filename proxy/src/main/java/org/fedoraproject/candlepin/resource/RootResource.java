@@ -27,8 +27,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Verb;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 
 import com.google.inject.Inject;
 
@@ -70,7 +70,7 @@ public class RootResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Verb.NO_AUTH})
+    @AllowAccess(types = {Access.NO_AUTH})
     public List<Link> getRootResources() {
         List<Link> links = new LinkedList<Link>();
         for (Class c : RESOURCE_CLASSES) {
