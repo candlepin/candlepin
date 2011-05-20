@@ -34,8 +34,8 @@ import org.codehaus.jackson.map.JsonMappingException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.schema.JsonSchema;
-import org.fedoraproject.candlepin.auth.Verb;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.resource.RootResource;
 import org.fedoraproject.candlepin.resteasy.JsonProvider;
@@ -123,9 +123,9 @@ public class ApiCrawler {
     }
 
     private void processAllowedRoles(Method m, RestApiCall apiCall) {
-        AllowRoles allowRoles = m.getAnnotation(AllowRoles.class);
+        AllowAccess allowRoles = m.getAnnotation(AllowAccess.class);
         if (allowRoles != null) {
-            for (Verb allow : allowRoles.roles()) {
+            for (Access allow : allowRoles.types()) {
                 apiCall.addRole(allow);
             }
         }
@@ -157,14 +157,14 @@ public class ApiCrawler {
     static class RestApiCall {
         private String method;
         private String url;
-        private List<Verb> allowedRoles;
+        private List<Access> allowedRoles;
         private List<String> httpVerbs;
         private List<ApiParam> queryParams;
         private JsonNode returnType;
 
         public RestApiCall() {
-            allowedRoles = new LinkedList<Verb>();
-            allowedRoles.add(Verb.SUPER_ADMIN); // assumed to always have access
+            allowedRoles = new LinkedList<Access>();
+            allowedRoles.add(Access.SUPER_ADMIN); // assumed to always have access
             httpVerbs = new LinkedList<String>();
             queryParams = new LinkedList<ApiParam>();
         }
@@ -181,7 +181,7 @@ public class ApiCrawler {
             this.httpVerbs.add(verb);
         }
 
-        public void addRole(Verb role) {
+        public void addRole(Access role) {
             allowedRoles.add(role);
         }
 
@@ -197,7 +197,7 @@ public class ApiCrawler {
             return returnType;
         }
 
-        public List<Verb> getAllowedRoles() {
+        public List<Access> getAllowedRoles() {
             return allowedRoles;
         }
 

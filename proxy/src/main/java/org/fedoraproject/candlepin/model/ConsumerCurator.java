@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.fedoraproject.candlepin.auth.Verb;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
@@ -50,7 +50,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         super(Consumer.class);
     }
 
-    @AllowRoles(roles = {Verb.SUPER_ADMIN, Verb.OWNER_ADMIN})
+    @AllowAccess(types = {Access.SUPER_ADMIN, Access.OWNER_ADMIN})
     @Transactional
     @EnforceAccessControl
     public Consumer create(Consumer entity) {
@@ -69,7 +69,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
     }
     
-    @AllowRoles(roles = Verb.SUPER_ADMIN)
+    @AllowAccess(types = Access.SUPER_ADMIN)
     @Transactional
     public Consumer replicate(Consumer consumer) {
         for (Entitlement entitlement : consumer.getEntitlements()) {
@@ -114,7 +114,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @param user User
      * @return Consumer for this user if one exists, null otherwise.
      */
-    @AllowRoles(roles = {Verb.SUPER_ADMIN, Verb.OWNER_ADMIN})
+    @AllowAccess(types = {Access.SUPER_ADMIN, Access.OWNER_ADMIN})
     @Transactional
     @EnforceAccessControl
     public Consumer findByUser(User user) {
@@ -146,7 +146,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .uniqueResult();
     }
 
-    @AllowRoles(roles = {Verb.SUPER_ADMIN, Verb.OWNER_ADMIN})
+    @AllowAccess(types = {Access.SUPER_ADMIN, Access.OWNER_ADMIN})
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
@@ -163,7 +163,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @param owner Optional owner to filter on, pass null to skip.
      * @return a list of matching Consumers
      */
-    @AllowRoles(roles = {Verb.SUPER_ADMIN, Verb.OWNER_ADMIN})
+    @AllowAccess(types = {Access.SUPER_ADMIN, Access.OWNER_ADMIN})
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl

@@ -31,7 +31,7 @@ public class ConsumerPrincipal extends Principal {
 
     public ConsumerPrincipal(Consumer consumer) {
         super(Arrays.asList(new Permission[] {new Permission(consumer.getOwner(), 
-            Verb.CONSUMER)}));
+            Access.CONSUMER)}));
 
         this.consumer = consumer;
     }

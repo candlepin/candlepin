@@ -49,7 +49,7 @@ public abstract class Principal implements Serializable {
 
     public boolean isSuperAdmin() {
         for (Permission permission : this.permissions) {
-            if (permission.getVerb().equals(Verb.SUPER_ADMIN)) {
+            if (permission.getVerb().equals(Access.SUPER_ADMIN)) {
                 return true;
             }
         }

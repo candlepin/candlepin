@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
@@ -33,7 +33,7 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void superAdminCanCreateAConsumer() {
-        setupPrincipal(null, Verb.SUPER_ADMIN);
+        setupPrincipal(null, Access.SUPER_ADMIN);
         securityInterceptor.enable();
         crudInterceptor.enable();
         
@@ -45,7 +45,7 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     public void ownerAdminCanCreateAConsumer() {
         Owner owner = createOwner();
         
-        setupPrincipal(owner, Verb.OWNER_ADMIN);
+        setupPrincipal(owner, Access.OWNER_ADMIN);
         securityInterceptor.enable();
         crudInterceptor.enable();
         
@@ -57,7 +57,7 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     public void consumerCannnotCreateAConsumer() {
         Owner owner = createOwner();
         
-        setupPrincipal(owner, Verb.CONSUMER);
+        setupPrincipal(owner, Access.CONSUMER);
         securityInterceptor.enable();
         crudInterceptor.enable();
         
@@ -88,7 +88,7 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
         createConsumer(anotherOwner); // make a 1st
         createConsumer(anotherOwner); // make a 2nd
         
-        setupPrincipal(owner, Verb.OWNER_ADMIN);
+        setupPrincipal(owner, Access.OWNER_ADMIN);
         crudInterceptor.enable();
         
         List<Consumer> all = consumerCurator.listAll();

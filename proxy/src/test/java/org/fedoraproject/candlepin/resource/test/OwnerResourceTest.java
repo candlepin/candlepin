@@ -23,7 +23,7 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
@@ -92,7 +92,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
         ownerResource.deleteOwner(owner.getKey(), true, TestUtil.createPrincipal(
-            "someuser", owner, Verb.OWNER_ADMIN));
+            "someuser", owner, Access.OWNER_ADMIN));
         owner = ownerCurator.find(id);
         assertNull(owner);
     }
@@ -108,7 +108,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Role role = new Role();
         role.addUser(user);
-        role.addPermission(new Permission(owner, Verb.OWNER_ADMIN));
+        role.addPermission(new Permission(owner, Access.OWNER_ADMIN));
         user.addRole(role);
         roleCurator.create(role);
 
@@ -275,7 +275,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerAdminCanGetPools() {
-        setupPrincipal(owner, Verb.OWNER_ADMIN);
+        setupPrincipal(owner, Access.OWNER_ADMIN);
 
         Product p = TestUtil.createProduct();
         productCurator.create(p);
@@ -293,7 +293,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testOwnerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
         ownerCurator.create(evilOwner);
-        setupPrincipal(evilOwner, Verb.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Access.OWNER_ADMIN);
 
         Product p = TestUtil.createProduct();
         productCurator.create(p);
@@ -313,7 +313,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testOwnerAdminCannotListAllOwners() {
-        setupPrincipal(owner, Verb.OWNER_ADMIN);
+        setupPrincipal(owner, Access.OWNER_ADMIN);
 
         securityInterceptor.enable();
         crudInterceptor.enable();
@@ -323,7 +323,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testOwnerAdminCannotDelete() {
-        Principal principal = setupPrincipal(owner, Verb.OWNER_ADMIN);
+        Principal principal = setupPrincipal(owner, Access.OWNER_ADMIN);
 
         securityInterceptor.enable();
         crudInterceptor.enable();
@@ -335,7 +335,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Rather than run through an entire call to ConsumerResource, we'll
         // fake the
         // events in the db:
-        setupPrincipal(o, Verb.OWNER_ADMIN);
+        setupPrincipal(o, Access.OWNER_ADMIN);
         Consumer consumer = TestUtil.createConsumer(o);
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
@@ -357,7 +357,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createConsumerCreatedEvent(owner2);
 
         // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Verb.OWNER_ADMIN);
+        setupPrincipal(owner, Access.OWNER_ADMIN);
 
         Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         assertEquals(1, feed.getEntries().size());
@@ -377,7 +377,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // because he has the correct role.
         createConsumerCreatedEvent(owner);
 
-        setupPrincipal(owner2, Verb.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.OWNER_ADMIN);
         Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         System.out.println(feed);
         assertEquals(0, feed.getEntries().size());

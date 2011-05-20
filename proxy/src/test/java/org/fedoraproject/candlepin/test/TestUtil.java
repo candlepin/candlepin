@@ -26,7 +26,7 @@ import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -200,14 +200,14 @@ public class TestUtil {
     }
 
 
-    public static Principal createPrincipal(String username, Owner owner, Verb role) {
+    public static Principal createPrincipal(String username, Owner owner, Access role) {
         return new UserPrincipal(username,  Arrays.asList(new Permission[] {
             new Permission(owner, role)}));
     }
 
     public static Principal createOwnerPrincipal() {
         Owner owner = new Owner("Test Owner " + randomInt());
-        return createPrincipal("someuser", owner, Verb.OWNER_ADMIN);
+        return createPrincipal("someuser", owner, Access.OWNER_ADMIN);
     }
 
 
@@ -253,7 +253,7 @@ public class TestUtil {
             owner, createProduct()), null);
     }
     
-    public void addPermissionToUser(User u, Verb role, Owner o) {
+    public void addPermissionToUser(User u, Access role, Owner o) {
         // Check if a permission already exists for this verb and owner:
         
         

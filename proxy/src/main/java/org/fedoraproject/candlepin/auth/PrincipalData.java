@@ -29,7 +29,7 @@ import org.fedoraproject.candlepin.model.Permission;
  */
 public class PrincipalData {
 
-    private Map<String, List<Verb>> ownerVerbs;  // Map of owner key -> roles
+    private Map<String, List<Access>> ownerVerbs;  // Map of owner key -> roles
     private String type;
     private String name;
     
@@ -44,7 +44,7 @@ public class PrincipalData {
         
         // Maps owner to list of verbs. Accumulates across all permissions, many
         // of which could be for the same owner.
-        this.ownerVerbs = new HashMap<String, List<Verb>>();
+        this.ownerVerbs = new HashMap<String, List<Access>>();
 
         for (Permission permission : permissions) {
             Owner owner = permission.getOwner();
@@ -52,7 +52,7 @@ public class PrincipalData {
             if (owner != null) {
                 String ownerKey = owner.getKey();
                 if (!ownerVerbs.containsKey(ownerKey)) {
-                    this.ownerVerbs.put(ownerKey, new ArrayList<Verb>());
+                    this.ownerVerbs.put(ownerKey, new ArrayList<Access>());
                 }
             
                 this.ownerVerbs.get(ownerKey).add(permission.getVerb());
@@ -65,11 +65,11 @@ public class PrincipalData {
     public PrincipalData() {
     }
 
-    public Map<String, List<Verb>> getPermissions() {
+    public Map<String, List<Access>> getPermissions() {
         return ownerVerbs;
     }
 
-    public void setPermissions(Map<String, List<Verb>> permissions) {
+    public void setPermissions(Map<String, List<Access>> permissions) {
         this.ownerVerbs = permissions;
     }
     

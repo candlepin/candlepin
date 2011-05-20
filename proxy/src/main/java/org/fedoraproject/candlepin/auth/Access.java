@@ -17,6 +17,6 @@ package org.fedoraproject.candlepin.auth;
 /**
  *
  */
-public enum Verb {
+public enum Access {
     CONSUMER, OWNER_ADMIN, SUPER_ADMIN, TRUSTED_SYSTEM, NO_AUTH;
 }

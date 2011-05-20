@@ -22,7 +22,7 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.model.Permission;
 
 /**
@@ -53,7 +53,7 @@ public class TestPrincipalProvider extends PrincipalProvider {
             }
 
             List<Permission> permissions = new ArrayList<Permission>();
-            permissions.add(new Permission(owner, Verb.OWNER_ADMIN));
+            permissions.add(new Permission(owner, Access.OWNER_ADMIN));
 
             principal = new UserPrincipal("Default User", permissions);
         }   

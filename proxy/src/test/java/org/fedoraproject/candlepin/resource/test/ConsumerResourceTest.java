@@ -36,7 +36,7 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -235,7 +235,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer submitted = consumerResource.create(
             toSubmit,
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] { 
-                new Permission(owner, Verb.OWNER_ADMIN) })),
+                new Permission(owner, Access.OWNER_ADMIN) })),
             someuser.getUsername(),
             owner.getKey());
 
@@ -334,7 +334,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         Consumer submitted = consumerResource.create(
             toSubmit,
-            TestUtil.createPrincipal(someuser.getUsername(), owner, Verb.OWNER_ADMIN),
+            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.OWNER_ADMIN),
             null, null);
 
         assertNotNull(submitted);
@@ -350,7 +350,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(
             nulltypeid,
-            TestUtil.createPrincipal(someuser.getUsername(), owner, Verb.OWNER_ADMIN),
+            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.OWNER_ADMIN),
             null, null);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
@@ -472,7 +472,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Verb.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Access.OWNER_ADMIN);
 
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
@@ -537,7 +537,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Verb.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Access.OWNER_ADMIN);
 
         consumerResource.listEntitlements(consumer.getUuid(), null);
     }
@@ -580,7 +580,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void bindByTokenPreExistingSubscription() {
-        setupPrincipal(owner, Verb.CONSUMER);
+        setupPrincipal(owner, Access.CONSUMER);
 
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
@@ -622,7 +622,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         roleCurator.merge(ownerAdminRole);
 
         Principal emailuser = TestUtil.createPrincipal(username, owner, 
-            Verb.OWNER_ADMIN);
+            Access.OWNER_ADMIN);
 
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(((UserPrincipal) emailuser).getUsername());
@@ -673,7 +673,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         // Create another consumer in a different org, again do not want to see
         // this:
-        setupPrincipal(owner2, Verb.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.OWNER_ADMIN);
         createConsumerCreatedEvent(owner2);
 
         // Make sure we're acting as the correct owner admin:
@@ -697,7 +697,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer c = consumerCurator.find(e1.getEntityId());
 
         // Should see no results:
-        setupPrincipal(owner2, Verb.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.OWNER_ADMIN);
         consumerResource.getConsumerAtomFeed(c.getUuid());
     }
 

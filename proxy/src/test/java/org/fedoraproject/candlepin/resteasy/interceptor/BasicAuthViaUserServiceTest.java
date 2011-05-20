@@ -19,7 +19,7 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
 import org.apache.commons.codec.binary.Base64;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -106,7 +106,7 @@ public class BasicAuthViaUserServiceTest {
         // TODO: test will fail, need to mock the permissions setup
 
         Set<Permission> permissions = new HashSet<Permission>();
-        permissions.add(new Permission(owner, Verb.OWNER_ADMIN));
+        permissions.add(new Permission(owner, Access.OWNER_ADMIN));
         
         List<Role> roles = Arrays.asList(new Role [] {new Role("test_role",
             new HashSet<User>(), permissions)});

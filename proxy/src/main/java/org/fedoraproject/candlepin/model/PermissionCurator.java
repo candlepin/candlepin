@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -32,7 +32,7 @@ public class PermissionCurator extends AbstractHibernateCurator<Permission> {
      * @param verb Verb
      * @return Permission object.
      */
-    public Permission findOrCreate(Owner owner, Verb verb) {
+    public Permission findOrCreate(Owner owner, Access verb) {
         Permission p = findByOwnerAndVerb(owner, verb);
         if (p == null) {
             p = new Permission(owner, verb);
@@ -41,7 +41,7 @@ public class PermissionCurator extends AbstractHibernateCurator<Permission> {
         return p;
     }
 
-    public Permission findByOwnerAndVerb(Owner owner, Verb verb) {
+    public Permission findByOwnerAndVerb(Owner owner, Access verb) {
         return (Permission) currentSession().createCriteria(Permission.class)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("verb", verb)).uniqueResult();

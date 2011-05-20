@@ -16,7 +16,7 @@ package org.fedoraproject.candlepin.auth.interceptor;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
@@ -82,13 +82,13 @@ public class AccessControlInterceptor implements MethodInterceptor {
         Principal currentUser = this.principalProvider.get();
         // TODO:  This was already checking only the first role on the principal,
         // which seems bad - this is basically doing this same thing...
-        Verb role = currentUser.getPermissions().iterator().next()
+        Access role = currentUser.getPermissions().iterator().next()
                 .getVerb();
         
-        if (Verb.OWNER_ADMIN == role) { 
+        if (Access.OWNER_ADMIN == role) { 
             enableOwnerFilter(currentUser, invocation.getThis(), role);
         } 
-        else if (Verb.CONSUMER == role) {
+        else if (Access.CONSUMER == role) {
             enableConsumerFilter(currentUser, invocation.getThis(), role);
         }
     }
@@ -97,14 +97,14 @@ public class AccessControlInterceptor implements MethodInterceptor {
         Principal currentUser = this.principalProvider.get();
         // TODO:  This was already checking only the first role on the principal,
         // which seems bad - this is basically doing this same thing...
-        Verb role = currentUser.getPermissions().iterator().next()
+        Access role = currentUser.getPermissions().iterator().next()
                 .getVerb();
 
         // Only available on entities that implement AccessControlEnforced interface
         if (currentUser.isSuperAdmin()) {
             return;
         }
-        else if (Verb.CONSUMER == role) {
+        else if (Access.CONSUMER == role) {
             ConsumerPrincipal consumer = (ConsumerPrincipal) currentUser;
             if (!((AccessControlEnforced) entity).shouldGrantAccessTo(
                 consumer.consumer())) {
@@ -112,7 +112,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
                 throw new ForbiddenException("access denied.");
             }
         }
-        else if (Verb.OWNER_ADMIN == role) {
+        else if (Access.OWNER_ADMIN == role) {
             if (!hasAccessTo(currentUser, (AccessControlEnforced) entity)) {
                 log.warn("Denying: " + currentUser + " access to: " + entity);
                 throw new ForbiddenException("access denied.");
@@ -136,7 +136,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         return false;
     }
     
-    private void enableConsumerFilter(Principal currentUser, Object target, Verb role) {
+    private void enableConsumerFilter(Principal currentUser, Object target, Access role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         ConsumerPrincipal user = (ConsumerPrincipal) currentUser;
         
@@ -155,7 +155,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         return ownerIds;
     }
 
-    private void enableOwnerFilter(Principal currentUser, Object target, Verb role) {
+    private void enableOwnerFilter(Principal currentUser, Object target, Access role) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
         UserPrincipal user = (UserPrincipal) currentUser;
 
@@ -163,8 +163,8 @@ public class AccessControlInterceptor implements MethodInterceptor {
         curator.enableFilterList(filterName, "owner_ids", getOwnerIds(user));
     }
     
-    private String filterName(Class<?> entity, Verb role) {
+    private String filterName(Class<?> entity, Access role) {
         return entity.getSimpleName() +
-            (role == Verb.CONSUMER ? "_CONSUMER_FILTER" : "_OWNER_FILTER");
+            (role == Access.CONSUMER ? "_CONSUMER_FILTER" : "_OWNER_FILTER");
     }
 }

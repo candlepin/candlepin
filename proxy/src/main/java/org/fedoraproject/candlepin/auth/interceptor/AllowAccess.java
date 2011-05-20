@@ -20,10 +20,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 
 /**
- * Annotation specifying which roles can access a given method. 
+ * Annotation specifying what access is allowed for an exposed REST resource method. 
  * Can be applied to both the class, or a method within the class, where the latter takes
  * precedence. 
  *
@@ -31,11 +31,11 @@ import org.fedoraproject.candlepin.auth.Verb;
  * accessing a user / owner / consumer they should have access to.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD/*, ElementType.TYPE*/})
+@Target({ElementType.METHOD})
 @Inherited
-public @interface AllowRoles {
+public @interface AllowAccess {
 
-    Verb [] roles() default {};
+    Access [] types() default {};
 
     String verifyUser() default "";
 }

@@ -17,7 +17,7 @@ package org.fedoraproject.candlepin;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
@@ -133,7 +133,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
             .getPackage("org.fedoraproject.candlepin.resource")), Matchers
             .any(), securityInterceptor);
         bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(AllowRoles.class), securityInterceptor);
+            Matchers.annotatedWith(AllowAccess.class), securityInterceptor);
 
         AccessControlInterceptor crud = new AccessControlInterceptor();
         requestInjection(crud);

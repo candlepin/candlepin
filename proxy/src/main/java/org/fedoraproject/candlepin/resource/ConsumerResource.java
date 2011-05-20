@@ -19,10 +19,10 @@ import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Verb;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -162,7 +162,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
-    @AllowRoles(roles = { Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.OWNER_ADMIN })
     public List<Consumer> list(@QueryParam("username") String userName,
         @QueryParam("type") String typeLabel,
         @QueryParam("owner") String ownerKey) {
@@ -196,7 +196,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
 
@@ -220,7 +220,7 @@ public class ConsumerResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName, @QueryParam("owner") String ownerKey)
         throws BadRequestException {
@@ -240,7 +240,7 @@ public class ConsumerResource {
         // If no owner was specified, try to assume based on which owners the principal
         // has admin rights for. If more than one, we have to error out.
         if (ownerKey == null) {
-            Set<Permission> perms = principal.getPermissionsWithVerb(Verb.OWNER_ADMIN);
+            Set<Permission> perms = principal.getPermissionsWithVerb(Access.OWNER_ADMIN);
             if (perms.size() != 1) {
                 throw new BadRequestException(
                     i18n.tr("Must specify owner for new consumer."));
@@ -382,7 +382,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void updateConsumer(@PathParam("consumer_uuid") String uuid,
         Consumer consumer, @Context Principal principal) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
@@ -408,7 +408,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid,
         @Context Principal principal) {
         log.debug("deleting  consumer_uuid" + uuid);
@@ -440,7 +440,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
@@ -481,7 +481,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "serials")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -666,7 +666,7 @@ public class ConsumerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public List<Entitlement> bind(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") String poolIdString,
@@ -743,7 +743,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("product") String productId) {
@@ -766,7 +766,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/owner")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public Owner getOwner(@PathParam("consumer_uuid") String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
@@ -780,7 +780,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void unbindAll(@PathParam("consumer_uuid") String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
@@ -809,7 +809,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("dbid") String dbid, @Context Principal principal) {
 
@@ -827,7 +827,7 @@ public class ConsumerResource {
 
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("serial") Long serial) {
 
@@ -848,7 +848,7 @@ public class ConsumerResource {
     @GET
     @Produces("application/atom+xml")
     @Path("{consumer_uuid}/atom")
-    @AllowRoles(roles = { Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.OWNER_ADMIN })
     public Feed getConsumerAtomFeed(
         @PathParam("consumer_uuid") String consumerUuid) {
         String path = String.format("/consumers/%s/atom", consumerUuid);
@@ -862,7 +862,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
-    @AllowRoles(roles = { Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.OWNER_ADMIN })
     public List<Event> getConsumerEvents(
         @PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
@@ -875,7 +875,7 @@ public class ConsumerResource {
     }
 
     @PUT
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
@@ -893,7 +893,7 @@ public class ConsumerResource {
     @GET
     @Produces("application/zip")
     @Path("{consumer_uuid}/export")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public File exportData(@Context HttpServletResponse response,
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -929,7 +929,7 @@ public class ConsumerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
-    @AllowRoles(roles = { Verb.CONSUMER, Verb.OWNER_ADMIN })
+    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public Consumer regenerateIdentityCertificates(
         @PathParam("consumer_uuid") String uuid) {
 
