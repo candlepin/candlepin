@@ -312,8 +312,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, pools.size());
     }
 
-    @Test
-    public void testOwnerAdminCanListAllOwners() {
+    @Test(expected = ForbiddenException.class)
+    public void testOwnerAdminCannotListAllOwners() {
         setupPrincipal(owner, Role.OWNER_ADMIN);
 
         securityInterceptor.enable();
