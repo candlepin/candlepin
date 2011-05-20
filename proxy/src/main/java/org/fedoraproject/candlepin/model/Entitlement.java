@@ -81,8 +81,7 @@ import org.hibernate.annotations.ParamDef;
     )
 })
 @Table(name = "cp_entitlement")
-public class Entitlement extends AbstractHibernateObject
-    implements AccessControlEnforced, Linkable {
+public class Entitlement extends AbstractHibernateObject implements Linkable {
 
     private static final long serialVersionUID = 1L;
 
@@ -135,6 +134,7 @@ public class Entitlement extends AbstractHibernateObject
     /**
      * @return the id
      */
+    @Override
     public String getId() {
         return id;
     }
@@ -271,16 +271,6 @@ public class Entitlement extends AbstractHibernateObject
     public String toString() {
         return "Entitlement[id=" + getId() + ", product=" + getProductId() +
             ", consumer= " + (consumer == null ? "null" : consumer.getUuid()) + "]";
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return this.consumer.getOwner().equals(owner);
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return this.consumer.equals(consumer);
     }
 
     public Integer getFlexExpiryDays() {

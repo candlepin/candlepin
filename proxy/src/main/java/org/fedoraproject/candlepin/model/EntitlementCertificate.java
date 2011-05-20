@@ -27,7 +27,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -64,8 +63,7 @@ import org.hibernate.annotations.ParamDef;
             "inner join cp_entitlement e on c.entitlement_id = e.id " +
                 "and c.owner_id in (:owner_ids))")
 })
-public class EntitlementCertificate extends AbstractCertificate
-    implements AccessControlEnforced {
+public class EntitlementCertificate extends AbstractCertificate {
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -89,6 +87,7 @@ public class EntitlementCertificate extends AbstractCertificate
         this.serial = serialNumber;
     }
 
+    @Override
     public String getId() {
         return id;
     }
@@ -104,16 +103,6 @@ public class EntitlementCertificate extends AbstractCertificate
 
     public void setEntitlement(Entitlement entitlement) {
         this.entitlement = entitlement;
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return AccessControlValidator.shouldGrantAccess(this, owner);
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
 
     @Override

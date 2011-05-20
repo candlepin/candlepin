@@ -57,6 +57,9 @@ public class SecurityInterceptor implements MethodInterceptor {
         Principal currentUser = this.principalProvider.get();
         log.debug("Invoked.");
 
+
+
+
         // Super admins can access any URL:
         EnumSet<Verb> allowedRoles = EnumSet.of(Verb.SUPER_ADMIN);
         

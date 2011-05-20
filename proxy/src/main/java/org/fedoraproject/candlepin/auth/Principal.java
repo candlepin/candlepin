@@ -19,9 +19,13 @@ import org.fedoraproject.candlepin.util.Util;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.Owner;
 
 import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * An entity interacting with Candlepin
@@ -62,24 +66,6 @@ public abstract class Principal implements Serializable {
     public void setPermissions(Collection<Permission> permissions) {
         this.permissions = permissions;
     }
-
-    /**
-     * @param verb Verb to search for.
-     * @return All permissions with this verb for any owner.
-     */
-    public Set<Permission> getPermissionsWithVerb(Verb verb) {
-        Set<Permission> perms = new HashSet<Permission>();
-        for (Permission p : getPermissions()) {
-            if (p.getVerb().equals(verb)) {
-                perms.add(p);
-            }
-        }
-        return perms;
-    }
-
-    public boolean isConsumer() {
-        return false;
-    }
     
     public String getPrincipalName() {
         return "";
@@ -94,4 +80,17 @@ public abstract class Principal implements Serializable {
     public String toString() {
         return Util.toJson(this.getData());
     }
+
+    // Access permissions
+
+    public abstract boolean canAccess(Owner owner);
+
+    public abstract boolean canAccess(Consumer consumer);
+
+    public abstract boolean canAccess(Entitlement entitlement);
+
+    public abstract boolean canAccess(EntitlementCertificate entitlementCert);
+
+    public abstract boolean canAccess(Pool pool);
+
 }

@@ -32,7 +32,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Filter;
@@ -76,8 +75,7 @@ import org.hibernate.annotations.ParamDef;
     )
 })
 @Table(name = "cp_pool")
-public class Pool extends AbstractHibernateObject
-    implements AccessControlEnforced, Linkable {
+public class Pool extends AbstractHibernateObject implements Linkable {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -168,6 +166,7 @@ public class Pool extends AbstractHibernateObject
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getId() {
         return id;
     }
@@ -439,16 +438,6 @@ public class Pool extends AbstractHibernateObject
             ", products = " + productId + " - " + getProvidedProducts() +
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return AccessControlValidator.shouldGrantAccess(this, owner);
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
 
     public Set<ProvidedProduct> getProvidedProducts() {

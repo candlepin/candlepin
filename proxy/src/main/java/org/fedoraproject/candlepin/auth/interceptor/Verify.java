@@ -12,12 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.auth.interceptor;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * AccessControlEnforced
+ * Annotation for specifying RESTful parameters that represent some protected
+ * entity, such as a Consumer or Owner.
  */
-public interface AccessControlEnforced {
-    boolean shouldGrantAccessTo(Owner owner);
-    boolean shouldGrantAccessTo(Consumer consumer);
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.PARAMETER})
+public @interface Verify {
+
+    Class value();
 }

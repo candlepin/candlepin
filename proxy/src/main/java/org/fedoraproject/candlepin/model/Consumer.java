@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.Util;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -86,8 +85,7 @@ import javax.xml.bind.annotation.XmlTransient;
 })
 @Table(name = "cp_consumer")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Consumer extends AbstractHibernateObject
-    implements AccessControlEnforced, Linkable {
+public class Consumer extends AbstractHibernateObject implements Linkable {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -194,6 +192,7 @@ public class Consumer extends AbstractHibernateObject
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getId() {
         return id;
     }
@@ -444,15 +443,6 @@ public class Consumer extends AbstractHibernateObject
     }
 
     @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return AccessControlValidator.shouldGrantAccess(this, owner);
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return AccessControlValidator.shouldGrantAccess(this, consumer);
-    }
-
     public String getHref() {
         return "/consumers/" + getUuid();
     }

@@ -15,7 +15,12 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Arrays;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * ExternalSystemPrincipal - A principal representing a trusted external system
@@ -40,6 +45,31 @@ public class ExternalSystemPrincipal extends Principal {
     @Override
     public String getPrincipalName() {       
         return "External System";
-    }     
+    }
+
+    @Override
+    public boolean canAccess(Owner owner) {
+        return true;
+    }
+
+    @Override
+    public boolean canAccess(Consumer consumer) {
+        return true;
+    }
+
+    @Override
+    public boolean canAccess(Entitlement entitlement) {
+        return true;
+    }
+
+    @Override
+    public boolean canAccess(EntitlementCertificate entitlementCert) {
+        return true;
+    }
+
+    @Override
+    public boolean canAccess(Pool pool) {
+        return true;
+    }
 
 }

@@ -30,8 +30,7 @@ import org.hibernate.annotations.Parent;
  * ProductContent
  */
 @Embeddable
-public class ProductContent extends AbstractHibernateObject implements
-    AccessControlEnforced {
+public class ProductContent extends AbstractHibernateObject {
 
     @Parent
     private Product product;
@@ -62,19 +61,6 @@ public class ProductContent extends AbstractHibernateObject implements
         this.setEnabled(enabled);
         this.flexEntitlement = flexEntitlement;
         this.physicalEntitlement = physicalEntitlement;
-    }
-    
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        // TODO Auto-generated method stub
-        return false;
     }
 
     @XmlTransient
