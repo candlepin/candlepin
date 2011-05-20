@@ -108,8 +108,8 @@ public class BasicAuthViaUserServiceTest {
         Set<Permission> permissions = new HashSet<Permission>();
         permissions.add(new Permission(owner, Verb.OWNER_ADMIN));
         
-        List<Role> roles = Arrays.asList(new Role [] {new Role(new HashSet<User>(), 
-            permissions)});
+        List<Role> roles = Arrays.asList(new Role [] {new Role("test_role",
+            new HashSet<User>(), permissions)});
         when(userService.getRoles("user")).thenReturn(roles);
         
         when(ownerCurator.lookupByKey("user")).thenReturn(owner);
