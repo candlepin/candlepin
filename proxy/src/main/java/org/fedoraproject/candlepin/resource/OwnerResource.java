@@ -14,59 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventAdapter;
-import org.fedoraproject.candlepin.audit.EventFactory;
-import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.PoolManager;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.CandlepinException;
-import org.fedoraproject.candlepin.exceptions.IseException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EventCurator;
-import org.fedoraproject.candlepin.model.ExporterMetadata;
-import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
-import org.fedoraproject.candlepin.model.ImportRecord;
-import org.fedoraproject.candlepin.model.ImportRecordCurator;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.OwnerInfo;
-import org.fedoraproject.candlepin.model.OwnerInfoCurator;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.ProductCurator;
-import org.fedoraproject.candlepin.model.Statistic;
-import org.fedoraproject.candlepin.model.StatisticCurator;
-import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionToken;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.fedoraproject.candlepin.sync.Importer;
-import org.fedoraproject.candlepin.sync.ImporterException;
-import org.fedoraproject.candlepin.sync.SyncDataFormatException;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.jboss.resteasy.util.GenericType;
-import org.quartz.JobDetail;
-import org.xnap.commons.i18n.I18n;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -87,6 +34,58 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
+import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.CandlepinException;
+import org.fedoraproject.candlepin.exceptions.IseException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EventCurator;
+import org.fedoraproject.candlepin.model.ExporterMetadata;
+import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
+import org.fedoraproject.candlepin.model.ImportRecord;
+import org.fedoraproject.candlepin.model.ImportRecordCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerInfo;
+import org.fedoraproject.candlepin.model.OwnerInfoCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.Statistic;
+import org.fedoraproject.candlepin.model.StatisticCurator;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.sync.Importer;
+import org.fedoraproject.candlepin.sync.ImporterException;
+import org.fedoraproject.candlepin.sync.SyncDataFormatException;
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.jboss.resteasy.util.GenericType;
+import org.quartz.JobDetail;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
 /**
  * Owner Resource
  */
@@ -96,7 +95,7 @@ public class OwnerResource {
     private OwnerInfoCurator ownerInfoCurator;
     private PoolCurator poolCurator;
     private SubscriptionCurator subscriptionCurator;
-    private SubscriptionTokenCurator subscriptionTokenCurator;
+    private ActivationKeyCurator subscriptionTokenCurator;
     private UserServiceAdapter userService;
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
@@ -117,8 +116,9 @@ public class OwnerResource {
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
         ProductCurator productCurator, SubscriptionCurator subscriptionCurator,
-        SubscriptionTokenCurator subscriptionTokenCurator,
-        ConsumerCurator consumerCurator, StatisticCurator statisticCurator, I18n i18n,
+        ActivationKeyCurator subscriptionTokenCurator,
+        ConsumerCurator consumerCurator,
+        StatisticCurator statisticCurator, I18n i18n,
         UserServiceAdapter userService, EventSink sink,
         EventFactory eventFactory, EventCurator eventCurator,
         EventAdapter eventAdapter, Importer importer, PoolManager poolManager,
@@ -150,7 +150,7 @@ public class OwnerResource {
 
     /**
      * Return list of Owners.
-     * 
+     *
      * @return list of Owners
      */
     @GET
@@ -173,7 +173,7 @@ public class OwnerResource {
 
     /**
      * Return the owner identified by the given ID.
-     * 
+     *
      * @param ownerKey Owner ID.
      * @return the owner identified by the given id.
      */
@@ -187,7 +187,7 @@ public class OwnerResource {
 
     /**
      * Return the owner's info identified by the given ID.
-     * 
+     *
      * @param ownerKey Owner ID.
      * @return the info of the owner identified by the given id.
      */
@@ -202,7 +202,7 @@ public class OwnerResource {
 
     /**
      * Creates a new Owner
-     * 
+     *
      * @return the new owner
      */
     @POST
@@ -270,7 +270,7 @@ public class OwnerResource {
                 consumerCurator.delete(c);
             }
         }
-        for (SubscriptionToken token : subscriptionTokenCurator
+        for (ActivationKey token : subscriptionTokenCurator
             .listByOwner(owner)) {
             log.info("Deleting subscription token: " + token);
             subscriptionTokenCurator.delete(token);
@@ -300,7 +300,7 @@ public class OwnerResource {
 
     /**
      * Return the entitlements for the owner of the given id.
-     * 
+     *
      * @param ownerKey id of the owner whose entitlements are sought.
      * @return the entitlements for the owner of the given id.
      */
@@ -322,7 +322,7 @@ public class OwnerResource {
 
     /**
      * Return the consumers for the owner of the given id.
-     * 
+     *
      * @param ownerKey id of the owner whose consumers are sought.
      * @return the consumers for the owner of the given id.
      */
@@ -338,7 +338,7 @@ public class OwnerResource {
 
     /**
      * Return the entitlement pools for the owner of the given id.
-     * 
+     *
      * @param ownerKey id of the owner whose entitlement pools are sought.
      * @return the entitlement pools for the owner of the given id.
      */
@@ -463,7 +463,7 @@ public class OwnerResource {
 
     /**
      * expose updates for owners
-     * 
+     *
      * @param key
      * @param owner
      * @return the update {@link Owner}
@@ -487,7 +487,7 @@ public class OwnerResource {
      * 'Tickle' an owner to have all of their entitlement pools synced with
      * their subscriptions. This method (and the one below may not be entirely
      * RESTful, as the updated data is not supplied as an argument.
-     * 
+     *
      * @param ownerKey unique id key of the owner whose pools should be updated
      * @return the status of the pending job
      */

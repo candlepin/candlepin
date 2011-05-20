@@ -27,14 +27,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -86,10 +84,6 @@ public class Subscription extends AbstractHibernateObject {
 
     private String accountNumber;
 
-    @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    @OneToMany(mappedBy = "subscription")
-    private Set<SubscriptionToken> tokens;
-
     private Date modified;
 
     @Column(name = "upstream_pool_id")
@@ -111,8 +105,6 @@ public class Subscription extends AbstractHibernateObject {
         this.startDate = startDateIn;
         this.endDate = endDateIn;
         this.modified = modified;
-
-        this.tokens = new HashSet<SubscriptionToken>();
     }
 
     public String toString() {
@@ -247,15 +239,6 @@ public class Subscription extends AbstractHibernateObject {
      */
     public String getAccountNumber() {
         return accountNumber;
-    }
-
-
-    public Set<SubscriptionToken> getTokens() {
-        return tokens;
-    }
-
-    public void setTokens(Set<SubscriptionToken> tokens) {
-        this.tokens = tokens;
     }
 
     /**

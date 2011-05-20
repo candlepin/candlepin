@@ -26,8 +26,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.model.SubscriptionToken;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -39,11 +39,11 @@ import com.google.inject.Inject;
 public class SubscriptionTokenResource {
     private static Logger log = Logger
         .getLogger(SubscriptionTokenResource.class);
-    private SubscriptionTokenCurator subTokenCurator;
+    private ActivationKeyCurator subTokenCurator;
     private I18n i18n;
 
     @Inject
-    public SubscriptionTokenResource(SubscriptionTokenCurator subTokenCurator,
+    public SubscriptionTokenResource(ActivationKeyCurator subTokenCurator,
         I18n i18n) {
         this.subTokenCurator = subTokenCurator;
         this.i18n = i18n;
@@ -51,18 +51,18 @@ public class SubscriptionTokenResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<SubscriptionToken> getSubscriptionTokens() {
-        List<SubscriptionToken> subTokenList = subTokenCurator.listAll();
+    public List<ActivationKey> getSubscriptionTokens() {
+        List<ActivationKey> subTokenList = subTokenCurator.listAll();
         log.debug("sub token list" + subTokenList);
         return subTokenList;
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public SubscriptionToken createSubscriptionToken(
-        SubscriptionToken subscriptionToken) {
+    public ActivationKey createSubscriptionToken(
+        ActivationKey subscriptionToken) {
         log.debug("subscriptionToken" + subscriptionToken);
-        SubscriptionToken newSubscriptionToken = subTokenCurator
+        ActivationKey newSubscriptionToken = subTokenCurator
             .create(subscriptionToken);
 
         return newSubscriptionToken;
@@ -73,7 +73,7 @@ public class SubscriptionTokenResource {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubscriptionToken(
         @PathParam("subscription_token_id") String subscriptionTokenId) {
-        SubscriptionToken subscriptionToken = subTokenCurator
+        ActivationKey subscriptionToken = subTokenCurator
             .find(subscriptionTokenId);
 
         if (subscriptionToken == null) {

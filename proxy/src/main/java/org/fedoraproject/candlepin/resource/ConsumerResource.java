@@ -44,7 +44,6 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.js.consumer.ConsumerDeleteHelper;
@@ -571,46 +570,6 @@ public class ConsumerResource {
         }
     }
 
-    /**
-     * Grants entitlements based on a registration token.
-     *
-     * @param registrationToken registration token.
-     * @param consumer Consumer to bind
-     * @return token
-     */
-    private List<Entitlement> bindByToken(String registrationToken,
-        Consumer consumer, Integer quantity, String email, String emailLocale) {
-
-        List<Subscription> subs = subAdapter.getSubscriptionForToken(
-            consumer.getOwner(), registrationToken, email, emailLocale);
-        if ((subs == null) || (subs.isEmpty())) {
-            log.debug("token: " + registrationToken);
-            throw new BadRequestException(i18n.tr("No such token: {0}",
-                registrationToken));
-        }
-
-        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-        for (Subscription sub : subs) {
-
-            // Make sure we have created/updated a pool for this subscription:
-            Pool pool = poolManager.lookupBySubscriptionId(sub.getId());
-            if (pool == null) {
-                // WARNING: Assumption here that a bind by token subscription
-                // will only link up to one pool, or at least that we'll try to
-                // bind
-                // to the *first* one it created:
-                pool = poolManager.createPoolsForSubscription(sub).get(0);
-            }
-            else {
-                poolManager.updatePoolForSubscription(pool, sub);
-            }
-
-            entitlementList.add(createEntitlementByPool(consumer, pool,
-                quantity));
-        }
-        return entitlementList;
-    }
-
     private List<Entitlement> bindByPool(String poolId, Consumer consumer,
         Integer quantity) {
         Pool pool = poolManager.find(poolId);
@@ -648,16 +607,13 @@ public class ConsumerResource {
     public List<Entitlement> bind(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") String poolIdString,
-        @QueryParam("token") String token,
         @QueryParam("product") String[] productIds,
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale) {
 
         // Check that only one query param was set:
-        if ((poolIdString != null && token != null) ||
-            (poolIdString != null && productIds != null && productIds.length > 0) ||
-            (token != null && productIds != null && productIds.length > 0)) {
+        if (poolIdString != null && productIds != null && productIds.length > 0) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
         }
@@ -668,11 +624,7 @@ public class ConsumerResource {
         try {
             if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
 
-                if (token != null) {
-                    entitlements = bindByToken(token, consumer, quantity,
-                        email, emailLocale);
-                }
-                else if (productIds != null && productIds.length > 0) {
+                if (productIds != null && productIds.length > 0) {
                     entitlements = bindByProducts(productIds, consumer,
                         quantity);
                 }

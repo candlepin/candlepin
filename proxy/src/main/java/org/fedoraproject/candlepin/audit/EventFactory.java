@@ -262,6 +262,7 @@ public class EventFactory {
             newEntityJson = mapper.writeValueAsString(entity);
         }
         catch (Exception e) {
+            e.printStackTrace();
             logger.warn("Unable to jsonify: {}", entity);
             logger.error("jsonification failed!", e);
         }

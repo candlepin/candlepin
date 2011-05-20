@@ -21,18 +21,14 @@ import org.hibernate.criterion.Restrictions;
 /**
  * SubscriptionTokenCurator
  */
-public class SubscriptionTokenCurator extends AbstractHibernateCurator<SubscriptionToken> {
+public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey> {
 
-    protected SubscriptionTokenCurator() {
-        super(SubscriptionToken.class);
+    protected ActivationKeyCurator() {
+        super(ActivationKey.class);
     }
 
-    public List<SubscriptionToken> listByOwner(Owner o) {
-        List<SubscriptionToken> tokens = currentSession().createCriteria(
-            SubscriptionToken.class)
-            .createAlias("subscription", "sub")
-            .add(Restrictions.eq("sub.owner", o)).list();
-        return tokens;
+    public List<ActivationKey> listByOwner(Owner owner) {
+        return (List<ActivationKey>) currentSession().createCriteria(ActivationKey.class)
+        .add(Restrictions.eq("owner", owner)).list();
     }
-
 }

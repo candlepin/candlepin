@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
+import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -47,8 +48,7 @@ import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionToken;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
@@ -103,7 +103,7 @@ public class DatabaseTestFixture {
     protected RulesCurator rulesCurator;
     protected EventCurator eventCurator;
     protected SubscriptionCurator subCurator;
-    protected SubscriptionTokenCurator subTokenCurator;
+    protected ActivationKeyCurator activationKeyCurator;
     protected ContentCurator contentCurator;
     protected WorkManager unitOfWork;
     protected HttpServletRequest httpServletRequest;
@@ -153,7 +153,7 @@ public class DatabaseTestFixture {
         attributeCurator = injector.getInstance(ProductAttributeCurator.class);
         rulesCurator = injector.getInstance(RulesCurator.class);
         subCurator = injector.getInstance(SubscriptionCurator.class);
-        subTokenCurator = injector.getInstance(SubscriptionTokenCurator.class);
+        activationKeyCurator = injector.getInstance(ActivationKeyCurator.class);
         contentCurator = injector.getInstance(ContentCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
 
@@ -245,18 +245,9 @@ public class DatabaseTestFixture {
         return sub;
 
     }
-
-    protected SubscriptionToken createSubscriptionToken() {
-        Subscription sub = createSubscription();
-
-        SubscriptionToken token = new SubscriptionToken();
-        token.setToken("this_is_a_test_token");
-
-        token.setSubscription(sub);
-        sub.getTokens().add(token);
-        subCurator.create(sub);
-        subTokenCurator.create(token);
-        return token;
+    
+    protected ActivationKey createActivationKey(Owner owner) {
+        return TestUtil.createActivationKey(owner, null, false);
     }
 
     protected Entitlement createEntitlement(Owner owner, Consumer consumer,

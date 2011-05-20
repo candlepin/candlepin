@@ -68,17 +68,6 @@ public interface SubscriptionServiceAdapter {
      * given date.
      */
     List<Subscription> getSubscriptionsSince(Date sinceDate);
-
-    /**
-     * Return a subscription for the given token.
-     * @param owner the owner
-     * @param token token for subscription.
-     * @param email
-     * @param emailLocale
-     * @return a subscription for the given token.
-     */
-    List<Subscription> getSubscriptionForToken(Owner owner, String token, 
-        String email, String emailLocale);
     
     /**
      * Lookup a specific subscription.
