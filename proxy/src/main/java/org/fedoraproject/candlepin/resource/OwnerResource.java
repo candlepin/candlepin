@@ -95,7 +95,7 @@ public class OwnerResource {
     private OwnerInfoCurator ownerInfoCurator;
     private PoolCurator poolCurator;
     private SubscriptionCurator subscriptionCurator;
-    private ActivationKeyCurator subscriptionTokenCurator;
+    private ActivationKeyCurator activationKeyCurator;
     private UserServiceAdapter userService;
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
@@ -116,7 +116,7 @@ public class OwnerResource {
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
         ProductCurator productCurator, SubscriptionCurator subscriptionCurator,
-        ActivationKeyCurator subscriptionTokenCurator,
+        ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
         StatisticCurator statisticCurator, I18n i18n,
         UserServiceAdapter userService, EventSink sink,
@@ -132,7 +132,7 @@ public class OwnerResource {
         this.productCurator = productCurator;
         this.poolCurator = poolCurator;
         this.subscriptionCurator = subscriptionCurator;
-        this.subscriptionTokenCurator = subscriptionTokenCurator;
+        this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
         this.statisticCurator = statisticCurator;
         this.userService = userService;
@@ -270,10 +270,10 @@ public class OwnerResource {
                 consumerCurator.delete(c);
             }
         }
-        for (ActivationKey token : subscriptionTokenCurator
+        for (ActivationKey key : activationKeyCurator
             .listByOwner(owner)) {
-            log.info("Deleting subscription token: " + token);
-            subscriptionTokenCurator.delete(token);
+            log.info("Deleting activation key: " + key);
+            activationKeyCurator.delete(key);
         }
         for (Subscription s : subscriptionCurator.listByOwner(owner)) {
             log.info("Deleting subscription: " + s);
@@ -318,6 +318,23 @@ public class OwnerResource {
         }
 
         return toReturn;
+    }
+
+    /**
+     * Return the activation keys for the owner of the given id.
+     *
+     * @param ownerKey id of the owner whose keys are sought.
+     * @return the activation keys for the owner of the given id.
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/activation_keys")
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public List<ActivationKey> ownerActivationKeys(
+        @PathParam("owner_key") String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+
+        return this.activationKeyCurator.listByOwner(owner);
     }
 
     /**
