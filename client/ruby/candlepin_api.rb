@@ -318,10 +318,6 @@ class Candlepin
     post(path)
   end
 
-  def consume_token(token)
-    post("/consumers/#{@uuid}/entitlements?token=#{token}")
-  end
-
   def list_users_by_owner(owner_key)
 
     path = "/owners/#{owner_key}/users"
@@ -408,16 +404,32 @@ class Candlepin
     return delete("/subscriptions/#{subscription_id}")
   end
 
-  def list_subscription_tokens
-    return get("/subscriptiontokens")
+  def list_activation_keys
+    return get("/activation_keys")
   end
 
-  def create_subscription_token(data)
-    return post("/subscriptiontokens", data)
+  def create_activation_key(data)
+    return post("/activation_keys", data)
   end
 
-  def delete_subscription_token(subscription)
-    return delete("/subscriptiontokens/#{subscription}")
+  def get_activation_key(key_id)
+    return get("/activation_keys/#{key_id}")
+  end
+
+  def delete_activation_key(key_id)
+    return delete("/activation_keys/#{key_id}")
+  end
+
+  def activation_key_pools(key_id)
+    return get("/activation_keys/#{key_id}/pools")
+  end
+
+  def add_pool_to_key(key_id, pool_id)
+    return post("/activation_keys/#{key_id}/pools/#{pool_id}")
+  end
+
+  def remove_pool_from_key(key_id, pool_id)
+    return delete("/activation_keys/#{key_id}/pools/#{pool_id}")
   end
 
   def list_certificates(serials = [])
