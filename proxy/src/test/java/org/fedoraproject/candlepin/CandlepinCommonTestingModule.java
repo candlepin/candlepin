@@ -44,13 +44,13 @@ import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
+import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.SubscriptionResource;
-import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -68,16 +68,15 @@ import org.fedoraproject.candlepin.test.PKIReaderForTesting;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.ExpiryDateFunction;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
@@ -98,7 +97,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
         bind(SubscriptionResource.class);
-        bind(SubscriptionTokenResource.class);
+        bind(ActivationKeyResource.class);
         bind(ProductServiceAdapter.class)
             .to(DefaultProductServiceAdapter.class);
         bind(ProductResource.class);
@@ -150,7 +149,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(PoolRules.class).to(JsPoolRules.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
 
-        // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
     }

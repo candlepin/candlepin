@@ -18,6 +18,8 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
+import com.wideplay.warp.persist.Transactional;
+
 /**
  * SubscriptionTokenCurator
  */
@@ -30,5 +32,11 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
     public List<ActivationKey> listByOwner(Owner owner) {
         return (List<ActivationKey>) currentSession().createCriteria(ActivationKey.class)
         .add(Restrictions.eq("owner", owner)).list();
+    }
+
+    @Transactional
+    public ActivationKey update(ActivationKey key) {
+        save(key);
+        return key;
     }
 }

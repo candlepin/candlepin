@@ -242,7 +242,8 @@ public class TestUtil {
             owner, createProduct()), null);
     }
 
-    public static ActivationKey createActivationKey(Owner owner, List<Pool> pools, boolean autosubscribe) {
+    public static ActivationKey createActivationKey(Owner owner, List<Pool> pools,
+        boolean autosubscribe) {
         ActivationKey key = new ActivationKey();
         key.setOwner(owner);
         key.setName("A Test Key");

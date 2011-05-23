@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import java.util.Properties;
+
 import org.fedoraproject.candlepin.audit.AMQPBusEventAdapter;
 import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -45,9 +47,9 @@ import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
+import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
-import org.fedoraproject.candlepin.resource.UserResource;
 import org.fedoraproject.candlepin.resource.CertificateSerialResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
@@ -64,7 +66,7 @@ import org.fedoraproject.candlepin.resource.RootResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.SubscriptionResource;
-import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
+import org.fedoraproject.candlepin.resource.UserResource;
 import org.fedoraproject.candlepin.resteasy.JsonProvider;
 import org.fedoraproject.candlepin.resteasy.interceptor.AuthInterceptor;
 import org.fedoraproject.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
@@ -78,6 +80,9 @@ import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 import org.fedoraproject.candlepin.util.ExpiryDateFunction;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -86,12 +91,6 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
-
-import java.util.Properties;
 
 /**
  * CandlepinProductionConfiguration
@@ -127,7 +126,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ProductResource.class);
         bind(MigrationResource.class);
         bind(SubscriptionResource.class);
-        bind(SubscriptionTokenResource.class);
+        bind(ActivationKeyResource.class);
         bind(CertificateSerialResource.class);
         bind(CrlResource.class);
         bind(JobResource.class);
@@ -138,7 +137,7 @@ public class CandlepinModule extends AbstractModule {
         bind(RulesResource.class);
         bind(AdminResource.class);
         bind(StatusResource.class);
-        bind(CandlepinExceptionMapper.class);   
+        bind(CandlepinExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRulesProvider.class).asEagerSingleton();
         bind(JsRules.class).toProvider(JsRulesProvider.class);
@@ -154,7 +153,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
         bind(JobCleaner.class);
-                    
+
         bind(Exporter.class).asEagerSingleton();
         bind(MetaExporter.class);
         bind(ConsumerTypeExporter.class);
@@ -164,7 +163,7 @@ public class CandlepinModule extends AbstractModule {
 
         // Async Jobs
         bind(RefreshPoolsJob.class);
-        
+
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(
@@ -172,28 +171,28 @@ public class CandlepinModule extends AbstractModule {
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();
         requestInjection(securityEnforcer);
         bindInterceptor(resourcePkgMatcher, Matchers.any(), securityEnforcer);
-        
+
         bindInterceptor(
             Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(AllowRoles.class), 
+            Matchers.annotatedWith(AllowRoles.class),
             securityEnforcer);
-        
+
         AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
         requestInjection(accessControlInterceptor);
-        
+
         bindInterceptor(
             Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(EnforceAccessControl.class), 
+            Matchers.annotatedWith(EnforceAccessControl.class),
             accessControlInterceptor);
-        
+
         //amqp stuff below...
-        
+
         bind(Function.class).annotatedWith(Names.named("abc"))
                 .to(AMQPBusEventAdapter.class).in(Singleton.class);
       //for lazy loading.
-        bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class) 
+        bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
                 .in(Singleton.class);
-        
+
         //flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);

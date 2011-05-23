@@ -46,7 +46,7 @@ public class RootResource {
         RESOURCE_CLASSES = new LinkedList<Class>();
         RESOURCE_CLASSES.add(AdminResource.class);
         RESOURCE_CLASSES.add(UserResource.class);
-        RESOURCE_CLASSES.add(AtomFeedResource.class);  
+        RESOURCE_CLASSES.add(AtomFeedResource.class);
         RESOURCE_CLASSES.add(CertificateSerialResource.class);
         RESOURCE_CLASSES.add(ConsumerResource.class);
         RESOURCE_CLASSES.add(ConsumerTypeResource.class);
@@ -61,7 +61,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(RulesResource.class);
         RESOURCE_CLASSES.add(StatusResource.class);
         RESOURCE_CLASSES.add(SubscriptionResource.class);
-        RESOURCE_CLASSES.add(SubscriptionTokenResource.class);
+        RESOURCE_CLASSES.add(ActivationKeyResource.class);
     }
 
     @Inject
