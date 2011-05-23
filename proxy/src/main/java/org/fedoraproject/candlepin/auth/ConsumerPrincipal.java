@@ -14,13 +14,7 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.Arrays;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Permission;
-import org.fedoraproject.candlepin.model.Pool;
 
 /**
  *
@@ -30,9 +24,6 @@ public class ConsumerPrincipal extends Principal {
     private Consumer consumer;
 
     public ConsumerPrincipal(Consumer consumer) {
-        super(Arrays.asList(new Permission[] {new Permission(consumer.getOwner(), 
-            Access.CONSUMER)}));
-
         this.consumer = consumer;
     }
     
@@ -71,32 +62,16 @@ public class ConsumerPrincipal extends Principal {
     }     
 
     public String getType() {
-        return Principal.CONSUMER_TYPE;
-    }
-
-    // Access controls
-    @Override
-    public boolean canAccess(Owner owner) {
-        return false;
+        return "consumer";
     }
 
     @Override
-    public boolean canAccess(Consumer consumer) {
-        return this.consumer.getUuid().equals(consumer.getUuid());
+    public boolean hasFullAccess() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public boolean canAccess(Entitlement entitlement) {
-        return canAccess(entitlement.getConsumer());
-    }
-
-    @Override
-    public boolean canAccess(EntitlementCertificate entitlementCert) {
-        return canAccess(entitlementCert.getEntitlement());
-    }
-
-    @Override
-    public boolean canAccess(Pool pool) {
-        return this.consumer.getOwner().getKey().equals(pool.getOwner().getKey());
+    public boolean canAccess(Class targetType, String key, Access access) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

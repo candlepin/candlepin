@@ -126,7 +126,7 @@ public class User extends AbstractHibernateObject {
     public Set<Owner> getOwners() {
         Set<Owner> owners = new HashSet<Owner>();
         for (Role role : getRoles()) {
-            for (Permission p : role.getPermissions()) {
+            for (OwnerPermission p : role.getPermissions()) {
                 owners.add(p.getOwner());
             }
         }
@@ -151,8 +151,8 @@ public class User extends AbstractHibernateObject {
      * Iterates user's roles and returns all unique permissions.
      * @return all of this user's unique permissions.
      */
-    public Set<Permission> getPermissions() {
-        Set<Permission> perms = new HashSet<Permission>();
+    public Set<OwnerPermission> getPermissions() {
+        Set<OwnerPermission> perms = new HashSet<OwnerPermission>();
         for (Role r : getRoles()) {
             perms.addAll(r.getPermissions());
         }

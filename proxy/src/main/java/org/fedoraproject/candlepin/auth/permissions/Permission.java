@@ -12,17 +12,15 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth;
+package org.fedoraproject.candlepin.auth.permissions;
+
+import org.fedoraproject.candlepin.auth.Access;
 
 /**
- * ExternalSystemPrincipal - A principal representing a trusted external system
- * (ie another candlepin instance, a proxy)
+ *
  */
-public class ExternalSystemPrincipal extends SystemPrincipal {
+public interface Permission {
 
-    @Override
-    public String getPrincipalName() {       
-        return "External System";
-    }
+    boolean canAccess(Object target, Access access);
 
 }

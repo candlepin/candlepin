@@ -14,29 +14,14 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.Arrays;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Permission;
-import org.fedoraproject.candlepin.model.Pool;
-
 /**
  * SystemPrincipal
  */
-public class SystemPrincipal extends Principal{
-   
-    /**
-     * This principle will have super admin rights
-     */
-    public SystemPrincipal() {
-        super(Arrays.asList(new Permission[] {new Permission(null, Access.SUPER_ADMIN)}));
-    }
+public class SystemPrincipal extends Principal {
 
     @Override
     public String getType() {
-        return Principal.SYSTEM_TYPE;
+        return "system";
     }
 
     @Override
@@ -45,27 +30,13 @@ public class SystemPrincipal extends Principal{
     }
 
     @Override
-    public boolean canAccess(Owner owner) {
+    public boolean hasFullAccess() {
         return true;
     }
 
     @Override
-    public boolean canAccess(Consumer consumer) {
+    public boolean canAccess(Class targetType, String key, Access access) {
         return true;
     }
 
-    @Override
-    public boolean canAccess(Entitlement entitlement) {
-        return true;
-    }
-
-    @Override
-    public boolean canAccess(EntitlementCertificate entitlementCert) {
-        return true;
-    }
-
-    @Override
-    public boolean canAccess(Pool pool) {
-        return true;
-    }
 }

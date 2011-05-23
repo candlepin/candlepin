@@ -12,17 +12,30 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth;
+package org.fedoraproject.candlepin.auth.permissions;
+
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.model.Consumer;
 
 /**
- * ExternalSystemPrincipal - A principal representing a trusted external system
- * (ie another candlepin instance, a proxy)
+ *
  */
-public class ExternalSystemPrincipal extends SystemPrincipal {
+public class ConsumerPermission extends TypedPermission<Consumer> {
+
+    private Consumer consumer;
+
+    public ConsumerPermission(Consumer consumer) {
+        this.consumer = consumer;
+    }
 
     @Override
-    public String getPrincipalName() {       
-        return "External System";
+    public Class<Consumer> getTargetType() {
+        return Consumer.class;
+    }
+
+    @Override
+    public boolean canAccessTarget(Consumer target, Access action) {
+       return this.consumer.getUuid().equals(target.getUuid());
     }
 
 }

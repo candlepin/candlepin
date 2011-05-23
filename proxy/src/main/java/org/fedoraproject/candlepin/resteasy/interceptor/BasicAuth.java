@@ -26,7 +26,7 @@ import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -103,7 +103,7 @@ class BasicAuth implements AuthProvider {
     }
 
     private Principal createPrincipal(String username) {
-        Set<Permission> perms = new HashSet<Permission>();
+        Set<OwnerPermission> perms = new HashSet<OwnerPermission>();
         for (Role r : userServiceAdapter.getRoles(username)) {
             perms.addAll(r.getPermissions());
         }

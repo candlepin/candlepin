@@ -33,7 +33,7 @@ import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -84,7 +84,7 @@ public class ConsumerResourceCreationTest {
 
         owner = new Owner("test_owner");
         User user = new User(USER, "");
-        Permission p = new Permission(owner, Access.OWNER_ADMIN);
+        OwnerPermission p = new OwnerPermission(owner, Access.OWNER_ADMIN);
         Role role = new Role();
         role.addPermission(p);
         role.addUser(user);

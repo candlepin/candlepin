@@ -18,5 +18,5 @@ package org.fedoraproject.candlepin.auth;
  *
  */
 public enum Access {
-    CONSUMER, OWNER_ADMIN, SUPER_ADMIN, TRUSTED_SYSTEM, NO_AUTH;
+    ALL, READ_ONLY;
 }

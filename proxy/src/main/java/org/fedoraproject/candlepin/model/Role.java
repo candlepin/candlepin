@@ -54,7 +54,7 @@ public class Role extends AbstractHibernateObject {
     private Set<User> users = new HashSet<User>();
     
     @ManyToMany(
-        targetEntity = Permission.class,
+        targetEntity = OwnerPermission.class,
         cascade = { CascadeType.PERSIST})
     @ForeignKey(
         name = "fk_permission_id",
@@ -63,12 +63,12 @@ public class Role extends AbstractHibernateObject {
         name = "cp_role_permissions",
         joinColumns = @JoinColumn(name = "role_id"),
         inverseJoinColumns = @JoinColumn(name = "permission_id"))
-    private Set<Permission> permissions = new HashSet<Permission>();
+    private Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
 
     @Column(unique=true)
     private String name;
 
-    public Role(String name, Set<User> users, Set<Permission> memberships) {
+    public Role(String name, Set<User> users, Set<OwnerPermission> memberships) {
         this.name = name;
         this.users = users;
         this.permissions = memberships;
@@ -109,15 +109,15 @@ public class Role extends AbstractHibernateObject {
         }
     }
     
-    public Set<Permission> getPermissions() {
+    public Set<OwnerPermission> getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(Set<Permission> permissions) {
+    public void setPermissions(Set<OwnerPermission> permissions) {
         this.permissions = permissions;
     }
     
-    public void addPermission(Permission p) {
+    public void addPermission(OwnerPermission p) {
         this.permissions.add(p);
     }
 }

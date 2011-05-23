@@ -29,7 +29,7 @@ import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
@@ -86,8 +86,8 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             LDAPEntry entry = lc.read(dn);
             String orgName = entry.getAttribute("ou").getStringValue();
 
-            Set<Permission> permissions = new HashSet<Permission>();
-            permissions.add(new Permission(new Owner(orgName),
+            Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+            permissions.add(new OwnerPermission(new Owner(orgName),
                     Access.OWNER_ADMIN));
 
             // not persisting this, so I think it is ok to give it a dummy name

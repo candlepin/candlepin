@@ -50,7 +50,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 
 /**
@@ -108,7 +108,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Role role = new Role();
         role.addUser(user);
-        role.addPermission(new Permission(owner, Access.OWNER_ADMIN));
+        role.addPermission(new OwnerPermission(owner, Access.OWNER_ADMIN));
         user.addRole(role);
         roleCurator.create(role);
 

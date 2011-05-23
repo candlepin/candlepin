@@ -42,7 +42,7 @@ import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -240,7 +240,7 @@ public class ConsumerResource {
         // If no owner was specified, try to assume based on which owners the principal
         // has admin rights for. If more than one, we have to error out.
         if (ownerKey == null) {
-            Set<Permission> perms = principal.getPermissionsWithVerb(Access.OWNER_ADMIN);
+            Set<OwnerPermission> perms = principal.getPermissionsWithVerb(Access.OWNER_ADMIN);
             if (perms.size() != 1) {
                 throw new BadRequestException(
                     i18n.tr("Must specify owner for new consumer."));
@@ -333,7 +333,7 @@ public class ConsumerResource {
     // TODO:  Reevaluate if this is still an issue with the new membership scheme!
     private void setupOwners(User user, Principal principal) {
 
-        for (Permission p : principal.getPermissions()) {
+        for (OwnerPermission p : principal.getPermissions()) {
             Owner owner = p.getOwner();
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
 

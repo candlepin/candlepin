@@ -17,22 +17,25 @@ package org.fedoraproject.candlepin.auth.interceptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-import javax.ws.rs.PathParam;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
-import org.fedoraproject.candlepin.exceptions.IseException;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import java.util.EnumSet;
-import org.fedoraproject.candlepin.model.Permission;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -46,6 +49,11 @@ public class SecurityInterceptor implements MethodInterceptor {
 
     @Inject private Provider<Principal> principalProvider;
     @Inject private Provider<I18n> i18nProvider;
+
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private EntitlementCertificateCurator entitlementCertificateCurator;
     
     private static Logger log = Logger.getLogger(SecurityInterceptor.class);
 
@@ -54,9 +62,17 @@ public class SecurityInterceptor implements MethodInterceptor {
      */
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        Principal currentUser = this.principalProvider.get();
+        Principal principal = this.principalProvider.get();
         log.debug("Invoked.");
 
+
+        if (isProtected(invocation)) {
+            Map<Object, Class> parameters = findVerifiedParameters(invocation);
+
+            for (Entry<Object, Class> param : parameters.entrySet()) {
+                //principal.
+            }
+        }
 
 
 
@@ -106,35 +122,10 @@ public class SecurityInterceptor implements MethodInterceptor {
         return invocation.proceed();
     }
 
-    // TODO:  This should also go away - when this whole interceptor dies!!!
-    private boolean hasRole(Principal principal, Access role) {
-        for (Permission permission : principal.getPermissions()) {
-            if (permission.getVerb() == role) {
-                return true;
-            }
-        }
-
-        return false;
+    private boolean isProtected(MethodInvocation invocation) {
+        return invocation.getMethod().isAnnotationPresent(Protected.class);
     }
-
-    /*
-     * Verify a username PathParam matches the currently authenticated user. (if the
-     * current principal is a user principal who does not have the super admin role)
-     */
-    private void verifyUser(MethodInvocation invocation, Principal currentUser,
-        AllowAccess annotation, I18n i18n) {
-        String usernameAccessed = findParameterValue(invocation,
-            annotation.verifyUser(), i18n);
-        if (currentUser.getType().equals(Principal.USER_TYPE) && 
-                !currentUser.isSuperAdmin()) {
-            if (!usernameAccessed.equals(((UserPrincipal) currentUser).getUsername())) {
-                throw new ForbiddenException(i18n.tr("Access denied for user: " +
-                    usernameAccessed));
-            }
-
-        }
-    }
-
+    
     /**
      * Scans the parameters for the method being invoked. When we find one annotated with
      * PathParam of the given name, we return the value of that parameter. (assumed to be
@@ -143,28 +134,49 @@ public class SecurityInterceptor implements MethodInterceptor {
      * @param pathParamName
      * @return
      */
-    private String findParameterValue(MethodInvocation invocation, String pathParamName,
-        I18n i18n) {
+    private Map<String, Class> findVerifiedParameters(MethodInvocation invocation) {
+        Map<String, Class> parameters = new HashMap<String, Class>();
         Method m = invocation.getMethod();
 
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             for (Annotation a : m.getParameterAnnotations()[i]) {
-                if (a instanceof PathParam) {
+                if (a instanceof Verify) {
 
-                    String pathParam = ((PathParam) a).value();
-                    if (pathParam.equals(pathParamName)) {
-                        return (String) invocation.getArguments()[i];
-                    }
+                    Class verifyType = ((Verify) a).value();
+                    String verifyParam = (String) invocation.getArguments()[i];
+                    
+                    parameters.put(verifyParam, verifyType);
                 }
             }
         }
 
-        // If we reach this point the code is probably incorrect (AcceptRoles annotation
-        // trying to verify a PathParam that couldn't be found in the method signature)
-        log.error("Unable to find PathParam: " + pathParamName);
+        return parameters;
+    }
 
-        // Intentionally being vague for message that end client will see:
-        throw new IseException(i18n.tr("Internal server error"));
+    private interface EntityStore {
+        Object lookup(String key);
+    }
+
+    private class OwnerStore implements EntityStore {
+        @Override
+        public Object lookup(String key) {
+            return ownerCurator.lookupByKey(key);
+        }
+    }
+
+    private class ConsumerStore implements EntityStore {
+        @Override
+        public Object lookup(String key) {
+            return consumerCurator.findByUuid(key);
+        }
+    }
+
+    private class EntitlementStore implements EntityStore {
+        @Override
+        public Object lookup(String key) {
+            return entitlementCurator.findByCertificateSerial(Long.parseLong(key));
+        }
     }
     
+
 }

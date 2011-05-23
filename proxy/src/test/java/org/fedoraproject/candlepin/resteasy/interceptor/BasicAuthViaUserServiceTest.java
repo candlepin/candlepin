@@ -23,7 +23,7 @@ import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -105,8 +105,8 @@ public class BasicAuthViaUserServiceTest {
         when(userService.validateUser("user", "redhat")).thenReturn(true);
         // TODO: test will fail, need to mock the permissions setup
 
-        Set<Permission> permissions = new HashSet<Permission>();
-        permissions.add(new Permission(owner, Access.OWNER_ADMIN));
+        Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+        permissions.add(new OwnerPermission(owner, Access.OWNER_ADMIN));
         
         List<Role> roles = Arrays.asList(new Role [] {new Role("test_role",
             new HashSet<User>(), permissions)});

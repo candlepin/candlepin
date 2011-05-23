@@ -15,8 +15,13 @@
 package org.fedoraproject.candlepin.auth;
 
 import java.util.Collection;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.Owner;
 
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.Pool;
 /**
  *
  */
@@ -24,7 +29,7 @@ public class UserPrincipal extends Principal {
 
     private String username;
 
-    public UserPrincipal(String username, Collection<Permission> permissions) {
+    public UserPrincipal(String username, Collection<OwnerPermission> permissions) {
         super(permissions);
 
         this.username = username;
@@ -67,6 +72,39 @@ public class UserPrincipal extends Principal {
     @Override
     public String getPrincipalName() {       
         return username;
+    }
+
+    @Override
+    public boolean canAccess(Owner owner, Access access) {
+        for (OwnerPermission permission : getPermissions()) {
+            if (permission.getOwner().getKey().equals(owner.getKey())) {
+                if (permission.getVerb() == access) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean canAccess(Consumer consumer, Access access) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean canAccess(Entitlement entitlement, Access access) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean canAccess(EntitlementCertificate entitlementCert, Access access) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean canAccess(Pool pool, Access access) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

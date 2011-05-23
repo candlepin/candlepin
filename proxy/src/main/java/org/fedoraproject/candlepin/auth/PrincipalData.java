@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import org.fedoraproject.candlepin.model.Owner;
 
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 
 /**
  * PrincipalData is a DTO for principal information until we move to 
@@ -29,7 +29,6 @@ import org.fedoraproject.candlepin.model.Permission;
  */
 public class PrincipalData {
 
-    private Map<String, List<Access>> ownerVerbs;  // Map of owner key -> roles
     private String type;
     private String name;
     
@@ -39,38 +38,12 @@ public class PrincipalData {
      * @param type
      * @param name
      */
-    public PrincipalData(Collection<Permission> permissions, String type, String name) {
-        super();
-        
-        // Maps owner to list of verbs. Accumulates across all permissions, many
-        // of which could be for the same owner.
-        this.ownerVerbs = new HashMap<String, List<Access>>();
-
-        for (Permission permission : permissions) {
-            Owner owner = permission.getOwner();
-
-            if (owner != null) {
-                String ownerKey = owner.getKey();
-                if (!ownerVerbs.containsKey(ownerKey)) {
-                    this.ownerVerbs.put(ownerKey, new ArrayList<Access>());
-                }
-            
-                this.ownerVerbs.get(ownerKey).add(permission.getVerb());
-            }
-        }
+    public PrincipalData(String type, String name) {
         this.type = type;
         this.name = name;
     }
     
     public PrincipalData() {
-    }
-
-    public Map<String, List<Access>> getPermissions() {
-        return ownerVerbs;
-    }
-
-    public void setPermissions(Map<String, List<Access>> permissions) {
-        this.ownerVerbs = permissions;
     }
     
     /**

@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 
 /**
  * AccessControlInterceptor
@@ -127,7 +127,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
     // Grant access if ANY of the principal's owners has permission to see the entity
     // TODO:  This will need to be changed for checking specific permissions!
     private boolean hasAccessTo(Principal principal, AccessControlEnforced entity) {
-        for (Permission permission : principal.getPermissions()) {
+        for (OwnerPermission permission : principal.getPermissions()) {
             if (entity.shouldGrantAccessTo(permission.getOwner())) {
                 return true;
             }
@@ -148,7 +148,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
     private List<String> getOwnerIds(UserPrincipal principal) {
         List<String> ownerIds = new LinkedList<String>();
 
-        for (Permission permission : principal.getPermissions()) {
+        for (OwnerPermission permission : principal.getPermissions()) {
             ownerIds.add(permission.getOwner().getId());
         }
 

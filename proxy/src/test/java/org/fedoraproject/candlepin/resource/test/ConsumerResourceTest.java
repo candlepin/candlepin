@@ -51,7 +51,7 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -234,8 +234,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer submitted = consumerResource.create(
             toSubmit,
-            new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] { 
-                new Permission(owner, Access.OWNER_ADMIN) })),
+            new UserPrincipal(someuser.getUsername(), Arrays.asList(new OwnerPermission [] {
+                new OwnerPermission(owner, Access.OWNER_ADMIN) })),
             someuser.getUsername(),
             owner.getKey());
 

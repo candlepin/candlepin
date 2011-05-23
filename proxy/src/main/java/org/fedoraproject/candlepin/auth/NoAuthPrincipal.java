@@ -14,26 +14,18 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.Arrays;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Permission;
-import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  *
  */
 public class NoAuthPrincipal extends Principal {
 
-    public NoAuthPrincipal() {
-        super(Arrays.asList(new Permission[] {new Permission(null, null)}));
-    }
-
     @Override
     public String getType() {
-        return Principal.NO_AUTH_TYPE;
+        return "no_auth";
     }
 
     @Override
@@ -42,27 +34,13 @@ public class NoAuthPrincipal extends Principal {
     }
 
     @Override
-    public boolean canAccess(Owner owner) {
+    public boolean hasFullAccess() {
         return false;
     }
 
     @Override
-    public boolean canAccess(Consumer consumer) {
+    public boolean canAccess(Class targetType, String key, Access access) {
         return false;
     }
-
-    @Override
-    public boolean canAccess(Entitlement entitlement) {
-        return false;
-    }
-
-    @Override
-    public boolean canAccess(EntitlementCertificate entitlementCert) {
-        return false;
-    }
-
-    @Override
-    public boolean canAccess(Pool pool) {
-        return false;
-    }
+   
 }

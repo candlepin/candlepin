@@ -20,10 +20,10 @@ import org.hibernate.criterion.Restrictions;
 /**
  * PermissionCurator
  */
-public class PermissionCurator extends AbstractHibernateCurator<Permission> {
+public class PermissionCurator extends AbstractHibernateCurator<OwnerPermission> {
     
     protected PermissionCurator() {
-        super(Permission.class);
+        super(OwnerPermission.class);
     }
 
     /**
@@ -32,17 +32,17 @@ public class PermissionCurator extends AbstractHibernateCurator<Permission> {
      * @param verb Verb
      * @return Permission object.
      */
-    public Permission findOrCreate(Owner owner, Access verb) {
-        Permission p = findByOwnerAndVerb(owner, verb);
+    public OwnerPermission findOrCreate(Owner owner, Access verb) {
+        OwnerPermission p = findByOwnerAndVerb(owner, verb);
         if (p == null) {
-            p = new Permission(owner, verb);
+            p = new OwnerPermission(owner, verb);
             create(p);
         }
         return p;
     }
 
-    public Permission findByOwnerAndVerb(Owner owner, Access verb) {
-        return (Permission) currentSession().createCriteria(Permission.class)
+    public OwnerPermission findByOwnerAndVerb(Owner owner, Access verb) {
+        return (OwnerPermission) currentSession().createCriteria(OwnerPermission.class)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("verb", verb)).uniqueResult();
     }

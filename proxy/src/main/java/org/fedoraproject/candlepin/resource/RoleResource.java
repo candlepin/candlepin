@@ -24,7 +24,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.PermissionCurator;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.RoleCurator;
@@ -47,9 +47,9 @@ public class RoleResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void createRole(Role role) {
-        Set<Permission> actualPermissions = new HashSet<Permission>();
+        Set<OwnerPermission> actualPermissions = new HashSet<OwnerPermission>();
 
-        for (Permission permission : role.getPermissions()) {
+        for (OwnerPermission permission : role.getPermissions()) {
             actualPermissions.add(this.permissionCurator.findOrCreate(
                     permission.getOwner(), permission.getVerb()));
         }

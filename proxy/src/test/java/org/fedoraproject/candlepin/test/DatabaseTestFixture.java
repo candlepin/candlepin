@@ -45,7 +45,7 @@ import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.PermissionCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
@@ -282,8 +282,8 @@ public class DatabaseTestFixture {
     }
 
     protected Principal setupPrincipal(String username, Owner owner, Access verb) {
-        Permission p = permissionCurator.findOrCreate(owner, verb);
-        Principal ownerAdmin = new UserPrincipal(username,  Arrays.asList(new Permission[] {
+        OwnerPermission p = permissionCurator.findOrCreate(owner, verb);
+        Principal ownerAdmin = new UserPrincipal(username,  Arrays.asList(new OwnerPermission[] {
             p}));
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
@@ -295,7 +295,7 @@ public class DatabaseTestFixture {
     }
 
     public Role createAdminRole(Owner owner) {
-        Permission p = new Permission(owner, Access.OWNER_ADMIN);
+        OwnerPermission p = new OwnerPermission(owner, Access.OWNER_ADMIN);
         Role role = new Role();
         role.addPermission(p);
         return role;

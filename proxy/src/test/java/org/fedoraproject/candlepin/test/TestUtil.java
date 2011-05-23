@@ -35,7 +35,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
@@ -201,8 +201,8 @@ public class TestUtil {
 
 
     public static Principal createPrincipal(String username, Owner owner, Access role) {
-        return new UserPrincipal(username,  Arrays.asList(new Permission[] {
-            new Permission(owner, role)}));
+        return new UserPrincipal(username,  Arrays.asList(new OwnerPermission[] {
+            new OwnerPermission(owner, role)}));
     }
 
     public static Principal createOwnerPrincipal() {

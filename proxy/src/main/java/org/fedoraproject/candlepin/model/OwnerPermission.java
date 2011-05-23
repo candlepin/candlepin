@@ -22,6 +22,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -29,9 +30,9 @@ import org.hibernate.annotations.GenericGenerator;
  * the permissions is granting.
  */
 @Entity
-@Table(name = "cp_permission",
+@Table(name = "cp_owner_permission",
     uniqueConstraints = { @UniqueConstraint(columnNames = {"owner", "verb"}) })
-public class Permission extends AbstractHibernateObject {
+public class OwnerPermission extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -43,12 +44,12 @@ public class Permission extends AbstractHibernateObject {
     
     private Access verb;
 
-    public Permission(Owner owner, Access roles) {
+    public OwnerPermission(Owner owner, Access roles) {
         this.owner = owner;
         this.verb = roles;
     }
 
-    protected Permission() {
+    protected OwnerPermission() {
         // JPA
     }
 

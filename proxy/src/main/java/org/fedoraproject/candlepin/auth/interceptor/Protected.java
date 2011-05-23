@@ -12,17 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth;
+package org.fedoraproject.candlepin.auth.interceptor;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * ExternalSystemPrincipal - A principal representing a trusted external system
- * (ie another candlepin instance, a proxy)
+ * Annotation to indicate that this method should pass through the Security
+ * Interceptor to match Verify parameters.
  */
-public class ExternalSystemPrincipal extends SystemPrincipal {
-
-    @Override
-    public String getPrincipalName() {       
-        return "External System";
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD})
+public @interface Protected {
 
 }
