@@ -44,14 +44,6 @@ public class AccessControlValidator {
         return accessed.getOwner().getKey().equals(owner.getKey());
     }
     
-    public static boolean shouldGrantAccess(EntitlementCertificate c, Consumer consumer) {
-        return consumer.getUuid().equals(c.getEntitlement().getConsumer().getUuid());
-    }
-    
-    public static boolean shouldGrantAccess(EntitlementCertificate c, Owner owner) {
-        return owner.getKey().equals(c.getEntitlement().getOwner().getKey());
-    }
-    
     public static boolean shouldGrantAccess(Entitlement e, Consumer consumer) {
         return consumer.getUuid().equals(e.getConsumer().getUuid());
     }

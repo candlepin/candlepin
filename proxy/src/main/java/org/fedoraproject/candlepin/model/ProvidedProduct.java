@@ -105,11 +105,6 @@ public class ProvidedProduct extends AbstractHibernateObject
         this.productName = productName;
     }
 
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return AccessControlValidator.shouldGrantAccess(pool, owner);
-    }
-
     /**
      * @return the id
      */

@@ -12,31 +12,32 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth;
+package org.fedoraproject.candlepin.auth.permissions;
+
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Pool;
 
 /**
  *
  */
-public class NoAuthPrincipal extends Principal {
+public class ConsumerPoolPermission extends TypedPermission<Pool> {
 
-    @Override
-    public String getType() {
-        return "no_auth";
+    private Consumer consumer;
+
+    public ConsumerPoolPermission(Consumer consumer) {
+        this.consumer = consumer;
     }
 
     @Override
-    public String getPrincipalName() {       
-        return "Anonymous";
+    public Class<Pool> getTargetType() {
+        return Pool.class;
     }
 
     @Override
-    public boolean hasFullAccess() {
-        return false;
+    public boolean canAccessTarget(Pool target, Access action) {
+        // should we mess with username restrictions here?
+        return target.getOwner().getKey().equals(consumer.getOwner().getKey());
     }
 
-    @Override
-    public boolean canAccess(Object target, Access access) {
-        return false;
-    }
-   
 }

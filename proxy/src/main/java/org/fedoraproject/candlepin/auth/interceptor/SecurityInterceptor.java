@@ -28,14 +28,19 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import java.util.EnumSet;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -53,9 +58,23 @@ public class SecurityInterceptor implements MethodInterceptor {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private EntitlementCurator entitlementCurator;
-    @Inject private EntitlementCertificateCurator entitlementCertificateCurator;
+    @Inject private PoolCurator poolCurator;
     
+    // TODO:  This would not really be needed if we were consistent about what
+    //        we use as IDs in our urls!
+    private final Map<Class, EntityStore> storeMap;
+
     private static Logger log = Logger.getLogger(SecurityInterceptor.class);
+
+
+    public SecurityInterceptor() {
+        this.storeMap = new HashMap<Class, EntityStore>();
+
+        storeMap.put(Owner.class, new OwnerStore());
+        storeMap.put(Consumer.class, new ConsumerStore());
+        storeMap.put(Entitlement.class, new EntitlementStore());
+        storeMap.put(Pool.class, new PoolStore());
+    }
 
     /**
      * {@inheritDoc}
@@ -65,58 +84,25 @@ public class SecurityInterceptor implements MethodInterceptor {
         Principal principal = this.principalProvider.get();
         log.debug("Invoked.");
 
-
         if (isProtected(invocation)) {
-            Map<Object, Class> parameters = findVerifiedParameters(invocation);
+            // Temp!  If we are going to introspect the HTTP request, then we
+            //        are going to have to move this to be a RestEasy interceptor
+            //        instead!
+            Access access = Access.ALL;
 
-            for (Entry<Object, Class> param : parameters.entrySet()) {
-                //principal.
-            }
-        }
+            for (Object param : findVerifiedParameters(invocation)) {
 
+                // if this principal cannot access any of the annotated parameters,
+                // then deny access here
+                if (!principal.canAccess(param, access)) {
+                    I18n i18n = this.i18nProvider.get();
+                    log.warn("Refusing principal: " + principal + " access to: " +
+                        invocation.getMethod().getName());
 
-
-        // Super admins can access any URL:
-        // TODO: Re-address this, is implied super admin access better than explicit?
-        // should super admin be handled outside of roles/permissions and in principals
-        // instead.
-        EnumSet<Access> allowedRoles = EnumSet.of(Access.SUPER_ADMIN);
-        
-        AllowAccess annotation = invocation.getMethod().getAnnotation(AllowAccess.class);
-        log.debug("Method annotation: " + annotation);
-        if (annotation != null) {
-            for (Access allowed : annotation.types()) {
-                log.debug("   allowing role: " + allowed);
-                allowedRoles.add(allowed);
-            }
-        }
-        
-        boolean foundRole = false;
-        for (Access allowed : allowedRoles) {
-            if (hasRole(currentUser, allowed)) {
-                foundRole = true;
-                if (log.isDebugEnabled()) {
-                    log.debug("Granting access for " + currentUser + " due to role: " + 
-                        allowed);
+                    String error = "Insufficient permission";
+                    throw new ForbiddenException(i18n.tr(error));
                 }
-                break;
             }
-        }
-        
-        I18n i18n = this.i18nProvider.get();
-        if (!foundRole) {
-            log.warn("Refusing principal: " + currentUser + " access to: " + 
-                invocation.getMethod().getName());
-
-            String error = "Insufficient permission";
-            throw new ForbiddenException(i18n.tr(error));
-        }
-        
-        // Verify a username path param. If the current principal is a user principal, who
-        // does *not* have the super admin role, we need to make sure their username matches
-        // the username being requested:
-        if (annotation != null && !annotation.verifyUser().equals("")) {
-            verifyUser(invocation, currentUser, annotation, i18n);
         }
 
         return invocation.proceed();
@@ -127,25 +113,23 @@ public class SecurityInterceptor implements MethodInterceptor {
     }
     
     /**
-     * Scans the parameters for the method being invoked. When we find one annotated with
-     * PathParam of the given name, we return the value of that parameter. (assumed to be
-     * a string)
+     * Scans the parameters for the method being invoked.
      *
-     * @param pathParamName
      * @return
      */
-    private Map<String, Class> findVerifiedParameters(MethodInvocation invocation) {
-        Map<String, Class> parameters = new HashMap<String, Class>();
+    private Collection<Object> findVerifiedParameters(MethodInvocation invocation) {
+        List<Object> parameters = new LinkedList<Object>();
         Method m = invocation.getMethod();
 
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             for (Annotation a : m.getParameterAnnotations()[i]) {
                 if (a instanceof Verify) {
-
                     Class verifyType = ((Verify) a).value();
                     String verifyParam = (String) invocation.getArguments()[i];
-                    
-                    parameters.put(verifyParam, verifyType);
+
+                    // Use the correct curator (in storeMap) to look up the actual
+                    // entity with the annotated argument
+                    parameters.add(storeMap.get(verifyType).lookup(verifyParam));
                 }
             }
         }
@@ -174,7 +158,14 @@ public class SecurityInterceptor implements MethodInterceptor {
     private class EntitlementStore implements EntityStore {
         @Override
         public Object lookup(String key) {
-            return entitlementCurator.findByCertificateSerial(Long.parseLong(key));
+            return entitlementCurator.find(key);
+        }
+    }
+
+    private class PoolStore implements EntityStore {
+        @Override
+        public Object lookup(String key) {
+            return poolCurator.find(key);
         }
     }
     

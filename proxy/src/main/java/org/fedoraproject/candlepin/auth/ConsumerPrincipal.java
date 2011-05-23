@@ -14,6 +14,12 @@
  */
 package org.fedoraproject.candlepin.auth;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.fedoraproject.candlepin.auth.permissions.ConsumerEntitlementPermission;
+import org.fedoraproject.candlepin.auth.permissions.ConsumerPermission;
+import org.fedoraproject.candlepin.auth.permissions.ConsumerPoolPermission;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.model.Consumer;
 
 /**
@@ -22,9 +28,15 @@ import org.fedoraproject.candlepin.model.Consumer;
 public class ConsumerPrincipal extends Principal {
 
     private Consumer consumer;
+    private List<Permission> permissions;
 
     public ConsumerPrincipal(Consumer consumer) {
         this.consumer = consumer;
+        this.permissions = new ArrayList<Permission>();
+
+        this.permissions.add(new ConsumerPermission(consumer));
+        this.permissions.add(new ConsumerEntitlementPermission(consumer));
+        this.permissions.add(new ConsumerPoolPermission(consumer));
     }
     
     public Consumer consumer() {
@@ -61,6 +73,7 @@ public class ConsumerPrincipal extends Principal {
         return consumer.getName();
     }     
 
+    @Override
     public String getType() {
         return "consumer";
     }
@@ -71,7 +84,13 @@ public class ConsumerPrincipal extends Principal {
     }
 
     @Override
-    public boolean canAccess(Class targetType, String key, Access access) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean canAccess(Object target, Access access) {
+        for (Permission permission : permissions) {
+            if (permission.canAccess(target, access)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
