@@ -23,6 +23,7 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -48,7 +49,6 @@ import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
@@ -194,8 +194,13 @@ public class DatabaseTestFixture {
     }
 
     /**
+<<<<<<< HEAD
      * Helper to commit the current db transaction. Pretty simple for now, but
      * may require additional logic and error handling down the road.
+=======
+     * Helper to commit the current db transaction. Pretty simple for now, but may
+     * require additional logic and error handling down the road.
+>>>>>>> Remove autosubscribe, since we really do not need it
      */
     protected void commitTransaction() {
         entityManager().getTransaction().commit();
@@ -206,6 +211,7 @@ public class DatabaseTestFixture {
      *
      * @return an entitlement pool and matching subscription.
      */
+<<<<<<< HEAD
     protected Pool createPoolAndSub(Owner owner, Product product,
         Long quantity, Date startDate, Date endDate) {
         Pool p = new Pool(owner, product.getId(), product.getName(),
@@ -214,6 +220,15 @@ public class DatabaseTestFixture {
         Subscription sub = new Subscription(owner, product,
             new HashSet<Product>(), quantity, startDate, endDate,
             TestUtil.createDate(2010, 2, 12));
+=======
+    protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
+        Date startDate, Date endDate) {
+        Pool p = new Pool(owner, product.getId(), product.getName(),
+            new HashSet<ProvidedProduct>(), quantity,
+                startDate, endDate, DEFAULT_CONTRACT, DEFAULT_ACCOUNT);
+        Subscription sub = new Subscription(owner, product, new HashSet<Product>(),
+            quantity, startDate, endDate, TestUtil.createDate(2010, 2, 12));
+>>>>>>> Remove autosubscribe, since we really do not need it
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
         poolCurator.create(p);
@@ -238,16 +253,25 @@ public class DatabaseTestFixture {
     protected Subscription createSubscription() {
         Product p = TestUtil.createProduct();
         productCurator.create(p);
+<<<<<<< HEAD
         Subscription sub = new Subscription(createOwner(), p,
             new HashSet<Product>(), 1000L, TestUtil.createDate(2000, 1, 1),
             TestUtil.createDate(2010, 1, 1), TestUtil.createDate(2000, 1, 1));
+=======
+        Subscription sub = new Subscription(createOwner(),
+                                            p, new HashSet<Product>(),
+                                            1000L,
+                                            TestUtil.createDate(2000, 1, 1),
+                                            TestUtil.createDate(2010, 1, 1),
+                                            TestUtil.createDate(2000, 1, 1));
+>>>>>>> Remove autosubscribe, since we really do not need it
         subCurator.create(sub);
         return sub;
 
     }
-    
+
     protected ActivationKey createActivationKey(Owner owner) {
-        return TestUtil.createActivationKey(owner, null, false);
+        return TestUtil.createActivationKey(owner, null);
     }
 
     protected Entitlement createEntitlement(Owner owner, Consumer consumer,
@@ -255,8 +279,12 @@ public class DatabaseTestFixture {
         return TestUtil.createEntitlement(owner, consumer, pool, cert);
     }
 
+<<<<<<< HEAD
     protected EntitlementCertificate createEntitlementCertificate(String key,
         String cert) {
+=======
+    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
+>>>>>>> Remove autosubscribe, since we really do not need it
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
         certSerialCurator.create(certSerial);

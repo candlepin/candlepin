@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Date;
 
 import org.fedoraproject.candlepin.model.ActivationKey;
@@ -25,15 +29,11 @@ import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 /**
  * ActivationKeyTest
  */
 public class ActivationKeyTest extends DatabaseTestFixture {
-   
+
     private Owner owner;
 
     @Before
@@ -41,7 +41,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         owner = createOwner();
         ownerCurator.create(owner);
     }
-    
+
     @Test
     public void testCreate() {
         ActivationKey key = createActivationKey(owner);
@@ -49,9 +49,8 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
         assertNotNull(key.getName());
         assertEquals(owner, key.getOwner());
-        assertEquals(false, key.getAutosubscribe());
     }
-    
+
     @Test
     public void testOwnerRelationship() {
         ActivationKey key = createActivationKey(owner);
@@ -59,8 +58,8 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         ownerCurator.refresh(owner);
         assertNotNull(owner.getActivationKeys());
         assertTrue("The count of keys should be 1", owner.getActivationKeys().size() == 1);
-    }    
-    
+    }
+
     @Test
     public void testPoolRelationship() {
         ActivationKey key = createActivationKey(owner);
@@ -72,6 +71,6 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         activationKeyCurator.create(key);
         activationKeyCurator.refresh(key);
         assertNotNull(key.getPools());
-        assertTrue("The count of pools should be 1", key.getPools().size() == 1);        
+        assertTrue("The count of pools should be 1", key.getPools().size() == 1);
     }
 }

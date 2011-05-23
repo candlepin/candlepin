@@ -45,30 +45,27 @@ public class ActivationKey extends AbstractHibernateObject {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     private String id;
-    
+
     @Column(nullable = false)
     private String name;
-    
-    @Column(nullable = false)
-    private Boolean autosubscribe = false; 
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_activation_key_owner")
     @JoinColumn(nullable = false)
     @Index(name = "cp_activation_key_owner_fk_idx")
     private Owner owner;
-    
+
     @OneToMany
     @JoinTable(name = "cp_activationkey_pool",
         joinColumns = @JoinColumn(name = "key_id"),
         inverseJoinColumns = @JoinColumn(name = "pool_id")
     )
     private List<Pool> pools = new ArrayList<Pool>();
-    
+
     public String getId() {
         return this.id;
     }
-    
+
     public void setId(String id) {
         this.id = id;
     }
@@ -85,20 +82,6 @@ public class ActivationKey extends AbstractHibernateObject {
      */
     public void setName(String name) {
         this.name = name;
-    }
-
-    /**
-     * @return the autosubscribe
-     */
-    public Boolean getAutosubscribe() {
-        return autosubscribe;
-    }
-
-    /**
-     * @param autosubscribe the autosubscribe to set
-     */
-    public void setAutosubscribe(Boolean autosubscribe) {
-        this.autosubscribe = autosubscribe;
     }
 
     /**
