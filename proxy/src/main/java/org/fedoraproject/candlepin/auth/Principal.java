@@ -18,7 +18,8 @@ import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.util.Util;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -26,11 +27,28 @@ import java.util.Collection;
  */
 public abstract class Principal implements Serializable {
 
+    protected List<Permission> permissions = new ArrayList<Permission>();
+
     public abstract String getType();
 
     public abstract boolean hasFullAccess();
 
-    public abstract boolean canAccess(Object target, Access access);
+    protected void addPermission(Permission permission) {
+        this.permissions.add(permission);
+    }
+
+    public final boolean canAccess(Object target, Access access) {
+        for (Permission permission : permissions) {
+            if (permission.canAccess(target, access)) {
+                // if any of the principal's permissions allows access, then
+                // we are good to go
+                return true;
+            }
+        }
+
+        // none of the permissions grants access, so this target is not allowed
+        return false;
+    }
     
     public String getPrincipalName() {
         return "";

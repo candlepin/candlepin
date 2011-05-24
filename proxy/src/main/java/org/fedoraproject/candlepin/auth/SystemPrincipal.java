@@ -34,9 +34,4 @@ public class SystemPrincipal extends Principal {
         return true;
     }
 
-    @Override
-    public boolean canAccess(Object target, Access access) {
-        return true;
-    }
-
 }

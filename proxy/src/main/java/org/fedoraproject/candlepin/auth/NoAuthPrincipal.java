@@ -33,10 +33,5 @@ public class NoAuthPrincipal extends Principal {
     public boolean hasFullAccess() {
         return false;
     }
-
-    @Override
-    public boolean canAccess(Object target, Access access) {
-        return false;
-    }
    
 }

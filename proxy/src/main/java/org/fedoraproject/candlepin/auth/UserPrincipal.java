@@ -13,15 +13,6 @@
  * in this software or its documentation.
  */
 package org.fedoraproject.candlepin.auth;
-
-import java.util.Collection;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCertificate;
-import org.fedoraproject.candlepin.model.Owner;
-
-import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.Pool;
 /**
  *
  */
@@ -29,10 +20,10 @@ public class UserPrincipal extends Principal {
 
     private String username;
 
-    public UserPrincipal(String username, Collection<OwnerPermission> permissions) {
-        super(permissions);
-
+    public UserPrincipal(String username) {
         this.username = username;
+
+        // TODO:  Pull user's OwnerPermissions from the database here!
     }
 
     public String getUsername() {
@@ -66,45 +57,18 @@ public class UserPrincipal extends Principal {
 
     @Override
     public String getType() {
-        return Principal.USER_TYPE;
+        return "user";
     }
 
     @Override
-    public String getPrincipalName() {       
+    public String getPrincipalName() {
         return username;
     }
 
     @Override
-    public boolean canAccess(Owner owner, Access access) {
-        for (OwnerPermission permission : getPermissions()) {
-            if (permission.getOwner().getKey().equals(owner.getKey())) {
-                if (permission.getVerb() == access) {
-                    return true;
-                }
-            }
-        }
-
+    public boolean hasFullAccess() {
+        // Temp!  If this user is a SUPER_ADMIN, then this should be true...
         return false;
-    }
-
-    @Override
-    public boolean canAccess(Consumer consumer, Access access) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public boolean canAccess(Entitlement entitlement, Access access) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public boolean canAccess(EntitlementCertificate entitlementCert, Access access) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public boolean canAccess(Pool pool, Access access) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }
