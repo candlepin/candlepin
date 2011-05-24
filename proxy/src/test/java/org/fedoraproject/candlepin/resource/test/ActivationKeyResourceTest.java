@@ -14,14 +14,21 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Date;
 
+import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -108,6 +115,53 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         activationKeyResource.removePoolFromKey(key.getId(), pool.getId());
         key = activationKeyResource.createActivationKey(key);
         assertTrue(key.getPools().size() == 0);
+    }
+
+    @Test
+    public void testCustomerCreateWithNoStringFails() {
+        ActivationKey key = new ActivationKey();
+        Owner owner = createOwner();
+        key.setOwner(owner);
+        key.setName("dd");
+        key = activationKeyResource.createActivationKey(key);
+        Consumer con = new Consumer();
+        con.setName("test");
+        Principal principal = new NoAuthPrincipal();
+        ArrayList<String> keys = new ArrayList<String>();
+        try {
+            activationKeyResource.activate(con, principal, "test", keys);
+        }
+        catch (BadRequestException e) {
+            // expected, lets try null
+            try {
+                activationKeyResource.activate(con, principal, "test", null);
+            }
+            catch (BadRequestException ee) {
+                // expected, lets try null
+                return;
+            }
+        }
+        fail("No excpetion was thrown");
+    }
+
+    @Test
+    public void testCustomerCreateWithOneKeyWorks() {
+        ActivationKey key = new ActivationKey();
+        ConsumerType system = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        consumerTypeCurator.create(system);
+        Owner owner = createOwner();
+        key.setOwner(owner);
+        key.setName("dd");
+        key = activationKeyResource.createActivationKey(key);
+        Consumer con = new Consumer();
+        con.setName("test");
+        con.setType(system);
+        Principal principal = new NoAuthPrincipal();
+        ArrayList<String> keys = new ArrayList<String>();
+        keys.add(key.getId());
+        con = activationKeyResource.activate(con, principal, "test", keys);
+        assertEquals(owner.getId(), con.getOwner().getId());
+        fail("No excpetion was thrown");
     }
 
 }
