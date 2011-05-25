@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.LinkedList;
 
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.PermissionCurator;
 import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
@@ -40,9 +42,11 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     private UserCurator userCurator;
     private RoleCurator roleCurator;
+    private PermissionCurator permCurator;
     
     @Inject
-    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator) {
+    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator,
+        PermissionCurator permCurator) {
         this.userCurator = userCurator;
         this.roleCurator = roleCurator;
     }
@@ -63,6 +67,25 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         return Collections.emptyList();
     }
     
+    @Override
+    public List<Role> listRoles() {
+        return roleCurator.listAll();
+    }
+
+    @Override
+    public Role createRole(Role role) {
+        Set<OwnerPermission> actualPermissions = new HashSet<OwnerPermission>();
+
+        for (OwnerPermission permission : role.getPermissions()) {
+            actualPermissions.add(this.permCurator.findOrCreate(
+                    permission.getOwner(), permission.getVerb()));
+        }
+
+        role.setPermissions(actualPermissions);
+        this.roleCurator.create(role);
+        return role;
+    }
+
     @Override
     public boolean validateUser(String username, String password) {
         User user = this.userCurator.findByLogin(username);

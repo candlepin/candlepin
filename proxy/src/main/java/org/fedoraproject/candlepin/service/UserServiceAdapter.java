@@ -34,7 +34,11 @@ public interface UserServiceAdapter {
      */
     boolean validateUser(String username, String password) throws Exception;
 
+    Role createRole(Role r);
+
     List<Role> getRoles(String username);
+
+    List<Role> listRoles();
 
     /**
      * Does this user service implementation support creation/deletion
