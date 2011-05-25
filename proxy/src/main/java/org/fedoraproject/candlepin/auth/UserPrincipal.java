@@ -20,6 +20,7 @@ import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 
 import java.util.Collection;
+import org.fedoraproject.candlepin.model.Owner;
 
 
 /**
@@ -82,13 +83,33 @@ public class UserPrincipal extends Principal {
     public List<String> getOwnerIds() {
         List<String> ownerIds = new LinkedList<String>();
 
-        for (Permission permission : permissions) {
-            if (permission instanceof OwnerPermission) {
-                ownerIds.add(((OwnerPermission) permission).getOwner().getId());
-            }
+        for (Owner owner : getOwners()) {
+            ownerIds.add(owner.getId());
         }
 
         return ownerIds;
+    }
+
+    public List<String> getOwnerKeys() {
+        List<String> ownerKeys = new LinkedList<String>();
+
+        for (Owner owner : getOwners()) {
+            ownerKeys.add(owner.getKey());
+        }
+
+        return ownerKeys;
+    }
+
+    public List<Owner> getOwners() {
+        List<Owner> owners = new LinkedList<Owner>();
+
+        for (Permission permission : permissions) {
+            if (permission instanceof OwnerPermission) {
+                owners.add(((OwnerPermission) permission).getOwner());
+            }
+        }
+
+        return owners;
     }
 
 }

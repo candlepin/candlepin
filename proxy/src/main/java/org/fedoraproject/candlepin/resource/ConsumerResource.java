@@ -19,7 +19,6 @@ import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.PoolManager;
@@ -41,7 +40,6 @@ import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -236,12 +234,15 @@ public class ConsumerResource {
         // If no owner was specified, try to assume based on which owners the principal
         // has admin rights for. If more than one, we have to error out.
         if (ownerKey == null) {
-            Set<OwnerPermission> perms = principal.getPermissionsWithVerb(Access.OWNER_ADMIN);
-            if (perms.size() != 1) {
+            // check for this cast?
+            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
+
+            if (ownerKeys.size() != 1) {
                 throw new BadRequestException(
                     i18n.tr("Must specify owner for new consumer."));
             }
-            ownerKey = perms.iterator().next().getOwner().getKey();
+
+            ownerKey = ownerKeys.get(0);
         }
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
@@ -251,7 +252,7 @@ public class ConsumerResource {
             user = userService.findByLogin(userName);
         }
 
-        setupOwners(user, principal);
+        setupOwners((UserPrincipal) principal);
 
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
@@ -327,10 +328,9 @@ public class ConsumerResource {
      * the principal that was created during authentication to carry it.
      */
     // TODO:  Reevaluate if this is still an issue with the new membership scheme!
-    private void setupOwners(User user, Principal principal) {
+    private void setupOwners(UserPrincipal principal) {
 
-        for (OwnerPermission p : principal.getPermissions()) {
-            Owner owner = p.getOwner();
+        for (Owner owner : principal.getOwners()) {
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
 
             if (existingOwner == null) {
@@ -344,7 +344,7 @@ public class ConsumerResource {
 
                 existingOwner = ownerCurator.create(owner);
                 poolManager.refreshPools(existingOwner);
-                p.setOwner(existingOwner);
+                //p.setOwner(existingOwner);
 
                 ResteasyProviderFactory.popContextData(Principal.class);
 
