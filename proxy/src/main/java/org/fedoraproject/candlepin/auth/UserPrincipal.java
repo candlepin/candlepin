@@ -13,6 +13,12 @@
  * in this software or its documentation.
  */
 package org.fedoraproject.candlepin.auth;
+
+import java.util.LinkedList;
+import java.util.List;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+
 /**
  *
  */
@@ -69,6 +75,18 @@ public class UserPrincipal extends Principal {
     public boolean hasFullAccess() {
         // Temp!  If this user is a SUPER_ADMIN, then this should be true...
         return false;
+    }
+
+    public List<String> getOwnerIds() {
+        List<String> ownerIds = new LinkedList<String>();
+
+        for (Permission permission : permissions) {
+            if (permission instanceof OwnerPermission) {
+                ownerIds.add(((OwnerPermission) permission).getOwner().getId());
+            }
+        }
+
+        return ownerIds;
     }
 
 }

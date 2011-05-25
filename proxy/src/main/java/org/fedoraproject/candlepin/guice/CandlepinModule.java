@@ -20,7 +20,6 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
@@ -92,6 +91,7 @@ import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Properties;
+import org.fedoraproject.candlepin.auth.interceptor.Protected;
 
 /**
  * CandlepinProductionConfiguration
@@ -171,12 +171,8 @@ public class CandlepinModule extends AbstractModule {
             "org.fedoraproject.candlepin.resource"));
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();
         requestInjection(securityEnforcer);
-        bindInterceptor(resourcePkgMatcher, Matchers.any(), securityEnforcer);
-        
-        bindInterceptor(
-            Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(AllowAccess.class), 
-            securityEnforcer);
+        bindInterceptor(resourcePkgMatcher, 
+                Matchers.annotatedWith(Protected.class), securityEnforcer);
         
         AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
         requestInjection(accessControlInterceptor);

@@ -162,7 +162,6 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public List<Consumer> list(@QueryParam("username") String userName,
         @QueryParam("type") String typeLabel,
         @QueryParam("owner") String ownerKey) {
@@ -196,7 +195,6 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
 
