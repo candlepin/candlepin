@@ -31,9 +31,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.PrincipalData;
-import org.fedoraproject.candlepin.model.AccessControlEnforced;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Persisted;
 import org.fedoraproject.candlepin.util.Util;
 import org.hibernate.annotations.Filter;
@@ -64,7 +61,7 @@ import org.hibernate.annotations.ParamDef;
         condition = "ownerId in (:owner_ids)"
     )
 })
-public class Event implements Persisted, AccessControlEnforced {
+public class Event implements Persisted {
 
     private static final long serialVersionUID = 1L;
     
@@ -154,6 +151,7 @@ public class Event implements Persisted, AccessControlEnforced {
         this.timestamp = new Date();
     }
 
+    @Override
     public String getId() {
         return id;
     }
@@ -239,28 +237,6 @@ public class Event implements Persisted, AccessControlEnforced {
         return "Event [" + "id=" + getId() + ", target=" + getTarget() +
                ", type=" + getType() + ", time=" + getTimestamp() +
                ", entity=" + getEntityId() + "]";
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.fedoraproject.candlepin.model.AccessControlEnforced#shouldGrantAccessTo
-     * (org.fedoraproject.candlepin.model.Owner)
-     */
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return this.ownerId.equals(owner.getId());
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.fedoraproject.candlepin.model.AccessControlEnforced#shouldGrantAccessTo
-     * (org.fedoraproject.candlepin.model.Consumer)
-     */
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return false;
     }
 
     public String getConsumerId() {

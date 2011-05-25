@@ -87,8 +87,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             String orgName = entry.getAttribute("ou").getStringValue();
 
             Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
-            permissions.add(new OwnerPermission(new Owner(orgName),
-                    Access.OWNER_ADMIN));
+            permissions.add(new OwnerPermission(new Owner(orgName), Access.ALL));
 
             // not persisting this, so I think it is ok to give it a dummy name
             roles.add(new Role("ldap", users, permissions));

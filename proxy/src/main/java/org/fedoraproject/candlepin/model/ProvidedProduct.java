@@ -134,9 +134,4 @@ public class ProvidedProduct extends AbstractHibernateObject
         this.pool = pool;
     }
 
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return AccessControlValidator.shouldGrantAccess(pool, consumer);
-    }
-
 }
