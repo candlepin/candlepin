@@ -151,7 +151,7 @@
     "products": [
         {
             "name": "Clustering Bits",
-            "id": "37065.1",
+            "id": "37065",
             "attributes": {
                     "sockets": 2
             },
@@ -162,7 +162,7 @@
         },
         {
             "name": "Load Balancing Bits",
-            "id": "37070.2",
+            "id": "37070",
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30
@@ -174,7 +174,7 @@
         },
         {
             "name": "Shared Storage Bits",
-            "id": "37067.29",
+            "id": "37067",
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30
@@ -186,7 +186,7 @@
         },
         {
             "name": "Large File Support Bits",
-            "id": "37068.911",
+            "id": "37068",
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30
@@ -275,10 +275,10 @@
             "id": "awesomeos-server",
             "type": "MKT",
             "provided_products": [
-                "37065.1",
-                "37070.2",
-                "37067.29",
-                "37068.911",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
                 "37069",
                 "37060"
             ],
@@ -353,10 +353,10 @@
             "type": "MKT",
             "provided_products": [
                 "awesomeos-server",
-                "37065.1",
-                "37070.2",
-                "37067.29",
-                "37068.911",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
                 "37069",
                 "37060"
             ],
@@ -375,10 +375,10 @@
             "type": "MKT",
             "provided_products": [
                 "awesomeos-server",
-                "37065.1",
-                "37070.2",
-                "37067.29",
-                "37068.911",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
                 "37069",
                 "37060"
             ],
@@ -397,10 +397,10 @@
             "type": "MKT",
             "provided_products": [
                 "awesomeos-server",
-                "37065.1",
-                "37070.2",
-                "37067.29",
-                "37068.911",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
                 "37069",
                 "37060"
             ],
@@ -419,10 +419,10 @@
             "type": "MKT",
             "provided_products": [
                 "awesomeos-server",
-                "37065.1",
-                "37070.2",
-                "37067.29",
-                "37068.911",
+                "37065",
+                "37070",
+                "37067",
+                "37068",
                 "37069",
                 "37060"
             ],
