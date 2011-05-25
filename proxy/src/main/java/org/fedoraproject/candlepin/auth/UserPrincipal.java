@@ -19,6 +19,9 @@ import java.util.List;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 
+import java.util.Collection;
+
+
 /**
  *
  */
@@ -26,10 +29,9 @@ public class UserPrincipal extends Principal {
 
     private String username;
 
-    public UserPrincipal(String username) {
+    public UserPrincipal(String username, Collection<Permission> permissions) {
         this.username = username;
-
-        // TODO:  Pull user's OwnerPermissions from the database here!
+        permissions.addAll(permissions);
     }
 
     public String getUsername() {
