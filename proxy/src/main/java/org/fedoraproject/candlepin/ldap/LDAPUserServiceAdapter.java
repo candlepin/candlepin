@@ -158,4 +158,14 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
         return String.format("uid=%s,%s", username, base);
     }
 
+    @Override
+    public Role createRole(Role r) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public List<Role> listRoles() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }
