@@ -19,7 +19,9 @@ import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
 import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
@@ -175,6 +177,14 @@ public class CandlepinModule extends AbstractModule {
             Matchers.subclassesOf(AbstractHibernateCurator.class),
             Matchers.annotatedWith(AllowAccess.class), 
             securityEnforcer);
+        
+        AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
+        requestInjection(accessControlInterceptor);
+        
+        bindInterceptor(
+            Matchers.subclassesOf(AbstractHibernateCurator.class),
+            Matchers.annotatedWith(EnforceAccessControl.class), 
+            accessControlInterceptor);
         
         //amqp stuff below...
         
