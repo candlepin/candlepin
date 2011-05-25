@@ -100,7 +100,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     private String generateId(String name) {
-        return Product.CUSTOM_PREFIX + "." + (new Date()).getTime();
+        return "" + (new Date()).getTime();
     }
 
     @Override
