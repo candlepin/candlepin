@@ -92,7 +92,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
         ownerResource.deleteOwner(owner.getKey(), true, TestUtil.createPrincipal(
-            "someuser", owner, Access.OWNER_ADMIN));
+            "someuser", owner, Access.ALL));
         owner = ownerCurator.find(id);
         assertNull(owner);
     }
@@ -108,7 +108,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Role role = new Role();
         role.addUser(user);
-        role.addPermission(new OwnerPermission(owner, Access.OWNER_ADMIN));
+        role.addPermission(new OwnerPermission(owner, Access.ALL));
         user.addRole(role);
         roleCurator.create(role);
 
@@ -275,7 +275,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerAdminCanGetPools() {
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
 
         Product p = TestUtil.createProduct();
         productCurator.create(p);
@@ -293,7 +293,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testOwnerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
         ownerCurator.create(evilOwner);
-        setupPrincipal(evilOwner, Access.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Access.ALL);
 
         Product p = TestUtil.createProduct();
         productCurator.create(p);
@@ -313,7 +313,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testOwnerAdminCannotListAllOwners() {
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
 
         securityInterceptor.enable();
         crudInterceptor.enable();
@@ -323,7 +323,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testOwnerAdminCannotDelete() {
-        Principal principal = setupPrincipal(owner, Access.OWNER_ADMIN);
+        Principal principal = setupPrincipal(owner, Access.ALL);
 
         securityInterceptor.enable();
         crudInterceptor.enable();
@@ -335,7 +335,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Rather than run through an entire call to ConsumerResource, we'll
         // fake the
         // events in the db:
-        setupPrincipal(o, Access.OWNER_ADMIN);
+        setupPrincipal(o, Access.ALL);
         Consumer consumer = TestUtil.createConsumer(o);
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
@@ -357,7 +357,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createConsumerCreatedEvent(owner2);
 
         // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
 
         Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         assertEquals(1, feed.getEntries().size());
@@ -377,7 +377,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // because he has the correct role.
         createConsumerCreatedEvent(owner);
 
-        setupPrincipal(owner2, Access.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.ALL);
         Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         System.out.println(feed);
         assertEquals(0, feed.getEntries().size());

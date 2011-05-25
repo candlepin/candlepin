@@ -40,7 +40,7 @@ import java.util.Set;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -109,7 +109,7 @@ public class PoolManagerTest {
     private EventFactory eventFactory;
 
     private CandlepinPoolManager manager;
-    private Principal principal;
+    private UserPrincipal principal;
     
     private Owner o;
     private Pool pool;
@@ -264,7 +264,7 @@ public class PoolManagerTest {
      */
     private Owner getOwner() {
         // just grab the first one
-        return principal.getPermissions().iterator().next().getOwner();
+        return principal.getOwners().get(0);
     }
 
     @SuppressWarnings("unchecked")

@@ -14,13 +14,13 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolAttribute;
@@ -61,7 +61,7 @@ public class JsPoolRulesTest {
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
 
-    private Principal principal;
+    private UserPrincipal principal;
     private Owner owner;
 
     @Before
@@ -77,7 +77,7 @@ public class JsPoolRulesTest {
         JsRulesProvider provider = new JsRulesProvider(rulesCuratorMock);
         poolRules = new JsPoolRules(provider.get(), poolManagerMock, productAdapterMock);
         principal = TestUtil.createOwnerPrincipal();
-        owner = principal.getPermissions().iterator().next().getOwner();
+        owner = principal.getOwners().get(0);
     }
     
     private Pool copyFromSub(Subscription sub) {

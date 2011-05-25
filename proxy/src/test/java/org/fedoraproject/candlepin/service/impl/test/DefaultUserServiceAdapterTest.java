@@ -54,7 +54,6 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         this.owner = this.ownerCurator.create(new Owner("default_owner"));
         
         UserCurator curator = this.injector.getInstance(UserCurator.class);
-        RoleCurator roleCurator = this.injector.getInstance(RoleCurator.class);
         this.service = new DefaultUserServiceAdapter(curator, roleCurator);
     }
     
@@ -112,7 +111,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("regular_user", "password");
         this.service.createUser(user);
         
-        Assert.assertTrue(this.service.getRoles("regular_user").contains(Access.OWNER_ADMIN));
+        Assert.assertTrue(this.service.getRoles("regular_user").contains(Access.ALL));
     }
     
     @Test
@@ -123,7 +122,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("super_admin", "password", true);
         this.service.createUser(user);
         
-        Assert.assertTrue(this.service.getRoles("super_admin").contains(Access.SUPER_ADMIN));
+        Assert.assertTrue(this.service.getRoles("super_admin").contains(Access.ALL));
     }
     
     @Test

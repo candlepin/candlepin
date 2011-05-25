@@ -19,8 +19,6 @@ import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -151,7 +149,6 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
-    @AllowAccess(types = { Access.OWNER_ADMIN, Access.CONSUMER })
     public List<Owner> list(@QueryParam("key") String keyFilter) {
 
         // For now, assuming key filter is just one key:
@@ -176,7 +173,6 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public Owner getOwner(@PathParam("owner_key") String ownerKey) {
         return findOwner(ownerKey);
     }
@@ -190,7 +186,6 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}/info")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public OwnerInfo getOwnerInfo(@PathParam("owner_key") String ownerKey) {
         Owner owner = findOwner(ownerKey);
         return ownerInfoCurator.lookupByOwner(owner);
@@ -303,7 +298,6 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_key") String ownerKey) {
         Owner owner = findOwner(ownerKey);
@@ -325,7 +319,6 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public List<Consumer> ownerConsumers(@PathParam("owner_key") String ownerKey) {
 
         Owner owner = findOwner(ownerKey);
@@ -341,7 +334,6 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    @AllowAccess(types = { Access.OWNER_ADMIN, Access.CONSUMER })
     public List<Pool> ownerEntitlementPools(
         @PathParam("owner_key") String ownerKey,
         @QueryParam("consumer") String consumerUuid,
@@ -417,7 +409,6 @@ public class OwnerResource {
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public Feed getOwnerAtomFeed(@PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
@@ -429,7 +420,6 @@ public class OwnerResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     @Path("{owner_key}/events")
     public List<Event> getEvents(@PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
@@ -444,7 +434,6 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public List<Subscription> getSubscriptions(
         @PathParam("owner_key") String ownerKey) {
         return subscriptionCurator.listByOwner(findOwner(ownerKey));
@@ -458,7 +447,6 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/users")
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public List<User> getUsers(@PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
         return userService.listByOwner(o);
@@ -497,7 +485,6 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public Owner updateOwner(@PathParam("owner_key") String key, Owner owner) {
         Owner toUpdate = findOwner(key);
         log.debug("Updating");
@@ -552,7 +539,6 @@ public class OwnerResource {
 
     @POST
     @Path("{owner_key}/imports")
-    @AllowAccess(types = Access.SUPER_ADMIN)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public void importData(@PathParam("owner_key") String ownerKey,
         MultipartInput input) {
@@ -607,7 +593,6 @@ public class OwnerResource {
 
     @GET
     @Path("{owner_key}/imports")
-    @AllowAccess(types = { Access.SUPER_ADMIN, Access.OWNER_ADMIN })
     public List<ImportRecord> getImports(@PathParam("owner_key") String ownerKey) {
         Owner owner = findOwner(ownerKey);
 

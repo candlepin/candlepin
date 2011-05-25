@@ -48,7 +48,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
         consumerTypeCurator.create(newConsumer.getType());
         consumerCurator.create(newConsumer);
 
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
         EventFactory eventFactory = injector.getInstance(EventFactory.class);
         Event event = eventFactory.consumerCreated(newConsumer);
         eventCurator.create(event);

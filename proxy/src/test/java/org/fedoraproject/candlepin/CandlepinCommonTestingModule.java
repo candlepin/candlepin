@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
@@ -72,6 +71,7 @@ import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.js.JsRules;
@@ -130,10 +130,9 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         securityInterceptor = new TestingInterceptor(se);
 
         bindInterceptor(Matchers.inPackage(Package
-            .getPackage("org.fedoraproject.candlepin.resource")), Matchers
-            .any(), securityInterceptor);
-        bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(AllowAccess.class), securityInterceptor);
+            .getPackage("org.fedoraproject.candlepin.resource")), 
+            Matchers.not(Matchers.annotatedWith(SecurityHole.class)),
+            securityInterceptor);
 
         AccessControlInterceptor crud = new AccessControlInterceptor();
         requestInjection(crud);

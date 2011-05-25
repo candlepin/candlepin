@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
@@ -272,7 +270,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .uniqueResult();
     }
 
-    @AllowAccess(types = Access.SUPER_ADMIN)
     @Transactional
     public Entitlement replicate(Entitlement ent) {
         for (EntitlementCertificate ec : ent.getCertificates()) {

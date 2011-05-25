@@ -20,13 +20,12 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 
 import com.google.inject.Provider;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
@@ -64,8 +63,8 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void noJobMapPrincipal() {
-        List<OwnerPermission> permissions = Arrays.asList(new OwnerPermission[] {
-            new OwnerPermission(new Owner("test_owner"), Access.OWNER_ADMIN)
+        List<Permission> permissions = Arrays.asList(new Permission[] {
+            new OwnerPermission(new Owner("test_owner"), Access.ALL)
         });
         Principal principal = new UserPrincipal("testing", permissions);
         when(this.principalProvider.get()).thenReturn(principal);
@@ -81,8 +80,8 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void existingJobMapPrincipal() {
-        List<OwnerPermission> permissions = Arrays.asList(new OwnerPermission[] {
-            new OwnerPermission(new Owner("test_owner"), Access.OWNER_ADMIN)
+        List<Permission> permissions = Arrays.asList(new Permission[] {
+            new OwnerPermission(new Owner("test_owner"), Access.ALL)
         });
         Principal principal = new UserPrincipal("testing", permissions);
 

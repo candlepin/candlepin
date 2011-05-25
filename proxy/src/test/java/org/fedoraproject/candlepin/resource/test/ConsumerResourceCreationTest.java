@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Locale;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
@@ -84,7 +83,7 @@ public class ConsumerResourceCreationTest {
 
         owner = new Owner("test_owner");
         User user = new User(USER, "");
-        OwnerPermission p = new OwnerPermission(owner, Access.OWNER_ADMIN);
+        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
         Role role = new Role();
         role.addPermission(p);
         role.addUser(user);

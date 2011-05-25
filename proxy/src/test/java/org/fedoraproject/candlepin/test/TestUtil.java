@@ -17,17 +17,14 @@ package org.fedoraproject.candlepin.test;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -200,14 +197,14 @@ public class TestUtil {
     }
 
 
-    public static Principal createPrincipal(String username, Owner owner, Access role) {
-        return new UserPrincipal(username,  Arrays.asList(new OwnerPermission[] {
+    public static UserPrincipal createPrincipal(String username, Owner owner, Access role) {
+        return new UserPrincipal(username,  Arrays.asList(new Permission[] {
             new OwnerPermission(owner, role)}));
     }
 
-    public static Principal createOwnerPrincipal() {
+    public static UserPrincipal createOwnerPrincipal() {
         Owner owner = new Owner("Test Owner " + randomInt());
-        return createPrincipal("someuser", owner, Access.OWNER_ADMIN);
+        return createPrincipal("someuser", owner, Access.ALL);
     }
 
 

@@ -22,12 +22,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.StringWriter;
-import java.util.Arrays;
 
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.auth.PrincipalData;
-import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.hornetq.api.core.HornetQBuffer;
 import org.hornetq.api.core.HornetQBuffers;
 import org.hornetq.api.core.HornetQException;
@@ -97,8 +95,7 @@ public class ListenerWrapperTest {
         Event e = new Event();
         e.setId("10");
         e.setConsumerId("20");
-        e.setPrincipal(new PrincipalData(Arrays.asList(new OwnerPermission [] {}),
-                "5678", "910112"));
+        e.setPrincipal(new PrincipalData("5678", "910112"));
         mapper.writeValue(sw, e);
         return sw.toString();
     }

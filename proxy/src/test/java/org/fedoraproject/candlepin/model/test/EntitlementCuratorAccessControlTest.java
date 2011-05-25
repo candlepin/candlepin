@@ -72,7 +72,7 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
         assertEquals(2, entitlementCurator.listAll().size());
 
         crudInterceptor.enable();
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
         
         assertEquals(2, entitlementCurator.listByCriteria(
             DetachedCriteria.forClass(Entitlement.class)).size());
@@ -86,7 +86,7 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
         ownerCurator.create(evilOwner);
 
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Access.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Access.ALL);
         
         assertEquals(0, entitlementCurator.listByCriteria(
             DetachedCriteria.forClass(Entitlement.class)).size());

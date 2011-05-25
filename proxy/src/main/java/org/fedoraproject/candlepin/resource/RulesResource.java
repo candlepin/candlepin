@@ -25,8 +25,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.CuratorException;
@@ -60,7 +58,6 @@ public class RulesResource {
      * @param rulesBuffer rules to upload.
      * @return a copy of the uploaded rules.
      */
-    @AllowAccess(types = Access.SUPER_ADMIN)
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })

@@ -29,7 +29,7 @@ public class OwnerCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void superAdminCanCreateAnOwner() {
-        setupPrincipal(null, Access.SUPER_ADMIN);
+        setupPrincipal(null, Access.ALL);
         securityInterceptor.enable();
         
         Owner owner = createOwner();
@@ -39,7 +39,7 @@ public class OwnerCuratorAccessControlTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotCreateAnOwner() {
         Owner owner = createOwner();
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
         
         createOwner();
@@ -48,7 +48,7 @@ public class OwnerCuratorAccessControlTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void consumerCannotCreateAnOwner() {
         Owner owner = createOwner();
-        setupPrincipal(owner, Access.CONSUMER);
+        setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
         createOwner();
     }

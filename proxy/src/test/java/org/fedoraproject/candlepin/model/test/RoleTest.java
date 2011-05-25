@@ -44,7 +44,7 @@ public class RoleTest extends DatabaseTestFixture {
     }
     
     private Role createRole(Owner o) {
-        OwnerPermission p = new OwnerPermission(o, Access.OWNER_ADMIN);
+        OwnerPermission p = new OwnerPermission(o, Access.ALL);
         permissionCurator.create(p);
         
         User user = new User(RandomStringUtils.random(5), "pass");

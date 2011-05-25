@@ -14,12 +14,10 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import static org.junit.Assert.*;
-
 import org.fedoraproject.candlepin.model.Consumer;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -32,10 +30,10 @@ public class ConsumerPrincipalTest {
     @Mock private Consumer consumer;
     
     @Test
-    public void testIsConsumer() {
-        Mockito.mock(this.getClass());
-        Principal prin = new ConsumerPrincipal(consumer);
-        assertTrue("No Auth should not be a consumer", prin.isConsumer());
+    public void noFullAccess() {
+        Assert.assertFalse(new ConsumerPrincipal(consumer).hasFullAccess());
     }
+
+    // TODO:  Lots more testing!
 
 }

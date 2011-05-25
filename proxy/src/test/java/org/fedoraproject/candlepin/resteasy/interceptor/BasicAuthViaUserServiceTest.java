@@ -36,10 +36,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.google.inject.Injector;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 
 public class BasicAuthViaUserServiceTest {
 
@@ -106,14 +108,15 @@ public class BasicAuthViaUserServiceTest {
         // TODO: test will fail, need to mock the permissions setup
 
         Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
-        permissions.add(new OwnerPermission(owner, Access.OWNER_ADMIN));
+        permissions.add(new OwnerPermission(owner, Access.ALL));
         
         List<Role> roles = Arrays.asList(new Role [] {new Role("test_role",
             new HashSet<User>(), permissions)});
         when(userService.getRoles("user")).thenReturn(roles);
         
         when(ownerCurator.lookupByKey("user")).thenReturn(owner);
-        UserPrincipal expected = new UserPrincipal("user", permissions);
+        UserPrincipal expected = new UserPrincipal("user", 
+                new ArrayList<Permission>(permissions));
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 

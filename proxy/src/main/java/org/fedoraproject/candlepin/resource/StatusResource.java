@@ -23,11 +23,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.model.Status;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 
 /**
  * Status Resource
@@ -75,7 +74,7 @@ public class StatusResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON})
-    @AllowAccess(types = {Access.NO_AUTH})
+    @SecurityHole
     public Status status() {
         Status status = new Status(true, version, release);
         return status;

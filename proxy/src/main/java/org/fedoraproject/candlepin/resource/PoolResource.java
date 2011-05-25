@@ -15,8 +15,6 @@
 package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -102,7 +100,6 @@ public class PoolResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "pools")
-    @AllowAccess(types = { Access.OWNER_ADMIN, Access.CONSUMER })
     @Deprecated
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
@@ -158,7 +155,6 @@ public class PoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowAccess(types = { Access.OWNER_ADMIN, Access.CONSUMER })
     public Pool getPool(@PathParam("pool_id") String id) {
         Pool toReturn = poolCurator.find(id);
 

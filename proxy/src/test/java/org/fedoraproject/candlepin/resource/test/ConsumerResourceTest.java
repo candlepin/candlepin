@@ -78,6 +78,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
+import java.util.ArrayList;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 
 /**
  * ConsumerResourceTest
@@ -135,7 +137,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(someuser);
         roleCurator.create(ownerAdminRole);
 
-        principal = new UserPrincipal(USER_NAME, ownerAdminRole.getPermissions());
+        principal = new UserPrincipal(USER_NAME, 
+                new ArrayList<Permission>(ownerAdminRole.getPermissions()));
         setupPrincipal(principal);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);
@@ -234,8 +237,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer submitted = consumerResource.create(
             toSubmit,
-            new UserPrincipal(someuser.getUsername(), Arrays.asList(new OwnerPermission [] {
-                new OwnerPermission(owner, Access.OWNER_ADMIN) })),
+            new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
+                new OwnerPermission(owner, Access.ALL) })),
             someuser.getUsername(),
             owner.getKey());
 
@@ -334,7 +337,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         Consumer submitted = consumerResource.create(
             toSubmit,
-            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.OWNER_ADMIN),
+            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
             null, null);
 
         assertNotNull(submitted);
@@ -350,7 +353,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(
             nulltypeid,
-            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.OWNER_ADMIN),
+            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
             null, null);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
@@ -472,7 +475,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Access.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Access.ALL);
 
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
@@ -537,7 +540,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Access.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Access.ALL);
 
         consumerResource.listEntitlements(consumer.getUuid(), null);
     }
@@ -580,7 +583,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void bindByTokenPreExistingSubscription() {
-        setupPrincipal(owner, Access.CONSUMER);
+        setupPrincipal(owner, Access.ALL);
 
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
@@ -622,7 +625,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         roleCurator.merge(ownerAdminRole);
 
         Principal emailuser = TestUtil.createPrincipal(username, owner, 
-            Access.OWNER_ADMIN);
+            Access.ALL);
 
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(((UserPrincipal) emailuser).getUsername());
@@ -673,7 +676,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         // Create another consumer in a different org, again do not want to see
         // this:
-        setupPrincipal(owner2, Access.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.ALL);
         createConsumerCreatedEvent(owner2);
 
         // Make sure we're acting as the correct owner admin:
@@ -697,7 +700,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer c = consumerCurator.find(e1.getEntityId());
 
         // Should see no results:
-        setupPrincipal(owner2, Access.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.ALL);
         consumerResource.getConsumerAtomFeed(c.getUuid());
     }
 

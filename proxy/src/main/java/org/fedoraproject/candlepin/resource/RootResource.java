@@ -27,10 +27,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 
 /**
  * A root resource, responsible for returning client a struct of links to the
@@ -70,7 +69,7 @@ public class RootResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowAccess(types = {Access.NO_AUTH})
+    @SecurityHole
     public List<Link> getRootResources() {
         List<Link> links = new LinkedList<Link>();
         for (Class c : RESOURCE_CLASSES) {

@@ -30,21 +30,21 @@ public class PermissionTest extends DatabaseTestFixture {
     public void testCreate() throws Exception {
         
         Owner o = createOwner();
-        OwnerPermission p = new OwnerPermission(o, Access.OWNER_ADMIN);
+        OwnerPermission p = new OwnerPermission(o, Access.ALL);
         permissionCurator.create(p);
         
         OwnerPermission lookedUp = permissionCurator.find(p.getId());
         assertNotNull(lookedUp);
         assertEquals(o.getId(), lookedUp.getOwner().getId());
-        assertEquals(Access.OWNER_ADMIN, lookedUp.getVerb());
+        assertEquals(Access.ALL, lookedUp.getVerb());
     }
     
     @Test
     public void testEquality() throws Exception {
         Owner o = createOwner();
-        OwnerPermission basePerm = new OwnerPermission(o, Access.OWNER_ADMIN);
+        OwnerPermission basePerm = new OwnerPermission(o, Access.ALL);
         
-        OwnerPermission equalPerm = new OwnerPermission(o, Access.OWNER_ADMIN);
+        OwnerPermission equalPerm = new OwnerPermission(o, Access.ALL);
         assertFalse(basePerm == equalPerm);
     }
 

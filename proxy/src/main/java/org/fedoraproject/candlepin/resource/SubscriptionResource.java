@@ -34,8 +34,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -73,7 +71,6 @@ public class SubscriptionResource {
     @GET
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowAccess(types = { Access.TRUSTED_SYSTEM })
     public Subscription getSubscription(
         @PathParam("subscription_id") String subscriptionId) {
         
@@ -82,7 +79,6 @@ public class SubscriptionResource {
     }
 
     @POST
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void activateSubscription(@QueryParam("consumer_uuid") String consumerUuid,
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,

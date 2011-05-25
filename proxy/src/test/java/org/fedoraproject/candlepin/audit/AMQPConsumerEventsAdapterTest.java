@@ -24,7 +24,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -52,6 +51,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Random;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.model.Owner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -60,7 +60,7 @@ public class AMQPConsumerEventsAdapterTest {
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Spy private ObjectMapper spiedMapper = new ObjectMapper();
     private ObjectMapper mapper = new ObjectMapper();
-    private Principal principal;
+    private UserPrincipal principal;
     private Owner owner;
     private EventFactory factory;
     @Mock private PKIReader reader;
@@ -70,7 +70,7 @@ public class AMQPConsumerEventsAdapterTest {
     public void init() {
         this.factory = new EventFactory(mockPrincipalProvider);
         this.principal = TestUtil.createOwnerPrincipal();
-        this.owner = this.principal.getPermissions().iterator().next().getOwner();
+        this.owner = this.principal.getOwners().get(0);
         this.owner.setId(String.valueOf(new Random().nextLong()));
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         this.adapter = new AMQPBusEventAdapter(spiedMapper, reader, pkiutil);
@@ -159,7 +159,7 @@ public class AMQPConsumerEventsAdapterTest {
     public void entitlementCreatedEventShouldSerializeSuccessfuly() throws Exception {
         Entitlement ent = TestUtil.createEntitlement();
         storeFacts(ent.getConsumer());
-        this.principal = new ConsumerPrincipal(ent.getConsumer());
+        //this.principal = new ConsumerPrincipal(ent.getConsumer());
         Event event = factory.entitlementCreated(ent);
         verifyMap(ent, event);
     }
@@ -186,7 +186,7 @@ public class AMQPConsumerEventsAdapterTest {
     public void entitlementDeletedEventShouldSerializeSuccessfully() throws Exception {
         Entitlement ent = TestUtil.createEntitlement();
         storeFacts(ent.getConsumer());
-        this.principal = new ConsumerPrincipal(ent.getConsumer());
+        //this.principal = new ConsumerPrincipal(ent.getConsumer());
         Event event = factory.entitlementDeleted(ent);
         verifyMap(ent, event);
     }

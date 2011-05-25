@@ -21,8 +21,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
@@ -274,7 +272,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         .add(Restrictions.eq("subscriptionId", subId)).uniqueResult();
     }
 
-    @AllowAccess(types = Access.SUPER_ADMIN)
     @Transactional
     public Pool replicate(Pool pool) {
         for (ProvidedProduct pp : pool.getProvidedProducts()) {

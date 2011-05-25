@@ -76,6 +76,7 @@ import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -283,7 +284,7 @@ public class DatabaseTestFixture {
 
     protected Principal setupPrincipal(String username, Owner owner, Access verb) {
         OwnerPermission p = permissionCurator.findOrCreate(owner, verb);
-        Principal ownerAdmin = new UserPrincipal(username,  Arrays.asList(new OwnerPermission[] {
+        Principal ownerAdmin = new UserPrincipal(username,  Arrays.asList(new Permission[] {
             p}));
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
@@ -295,7 +296,7 @@ public class DatabaseTestFixture {
     }
 
     public Role createAdminRole(Owner owner) {
-        OwnerPermission p = new OwnerPermission(owner, Access.OWNER_ADMIN);
+        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
         Role role = new Role();
         role.addPermission(p);
         return role;

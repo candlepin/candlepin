@@ -158,7 +158,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
         
-        setupPrincipal(owner2, Access.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.ALL);
         crudInterceptor.enable();
         
         poolCurator.delete(pool);
@@ -175,7 +175,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         
         assertEquals(2, poolCurator.listAll().size());
         
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
         crudInterceptor.enable();
         
         poolCurator.delete(pool);
@@ -192,7 +192,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
-        setupPrincipal(owner2, Access.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.ALL);
         crudInterceptor.enable();
 
         poolCurator.merge(pool);
@@ -213,7 +213,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
             pool.getEntitlements().add(e);
         }
         
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
         crudInterceptor.enable();
         
         poolCurator.merge(pool);
@@ -226,7 +226,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotCreateAnotherOwnersPools() {
         Owner owner2 = createOwner();
-        setupPrincipal(owner2, Access.OWNER_ADMIN);
+        setupPrincipal(owner2, Access.ALL);
         crudInterceptor.enable();
 
         createPoolAndSub(owner, product, 100L,
@@ -235,7 +235,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void ownerAdminCanCreatePools() {
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
         crudInterceptor.enable();
         
         createPoolAndSub(owner, product, 100L,
@@ -275,7 +275,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         createPoolAndSub(owner, product, 100L,
             TestUtil.createDate(2009, 3, 2), TestUtil.createDate(2055, 3, 2));
         
-        setupPrincipal(owner, Access.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
         crudInterceptor.enable();
         
         assertEquals(1,
@@ -288,7 +288,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         createPoolAndSub(owner, product, 100L,
             TestUtil.createDate(2009, 3, 2), TestUtil.createDate(2055, 3, 2));
         
-        setupPrincipal(createOwner(), Access.OWNER_ADMIN);
+        setupPrincipal(createOwner(), Access.ALL);
         crudInterceptor.enable();
         
         assertEquals(0,
