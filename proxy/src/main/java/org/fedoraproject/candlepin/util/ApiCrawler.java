@@ -34,8 +34,6 @@ import org.codehaus.jackson.map.JsonMappingException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.schema.JsonSchema;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.resource.RootResource;
 import org.fedoraproject.candlepin.resteasy.JsonProvider;
@@ -98,7 +96,6 @@ public class ApiCrawler {
         }
 
         processHttpVerb(m, apiCall);
-        processAllowedRoles(m, apiCall);
         processQueryParams(m, apiCall);
 
         try {
@@ -118,15 +115,6 @@ public class ApiCrawler {
         for (Class httpClass : httpClasses) {
             if (m.getAnnotation(httpClass) != null) {
                 apiCall.addHttpVerb(httpClass.getSimpleName());
-            }
-        }
-    }
-
-    private void processAllowedRoles(Method m, RestApiCall apiCall) {
-        AllowAccess allowRoles = m.getAnnotation(AllowAccess.class);
-        if (allowRoles != null) {
-            for (Access allow : allowRoles.types()) {
-                apiCall.addRole(allow);
             }
         }
     }
@@ -157,14 +145,11 @@ public class ApiCrawler {
     static class RestApiCall {
         private String method;
         private String url;
-        private List<Access> allowedRoles;
         private List<String> httpVerbs;
         private List<ApiParam> queryParams;
         private JsonNode returnType;
 
         public RestApiCall() {
-            allowedRoles = new LinkedList<Access>();
-            allowedRoles.add(Access.SUPER_ADMIN); // assumed to always have access
             httpVerbs = new LinkedList<String>();
             queryParams = new LinkedList<ApiParam>();
         }
@@ -181,10 +166,6 @@ public class ApiCrawler {
             this.httpVerbs.add(verb);
         }
 
-        public void addRole(Access role) {
-            allowedRoles.add(role);
-        }
-
         public void addQueryParam(String name, String type) {
             queryParams.add(new ApiParam(name, type));
         }
@@ -195,10 +176,6 @@ public class ApiCrawler {
 
         public JsonNode getReturnType() {
             return returnType;
-        }
-
-        public List<Access> getAllowedRoles() {
-            return allowedRoles;
         }
 
         public List<String> getHttpVerbs() {

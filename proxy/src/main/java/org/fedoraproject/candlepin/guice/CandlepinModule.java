@@ -91,7 +91,7 @@ import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Properties;
-import org.fedoraproject.candlepin.auth.interceptor.Protected;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 
 /**
  * CandlepinProductionConfiguration
@@ -172,7 +172,8 @@ public class CandlepinModule extends AbstractModule {
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();
         requestInjection(securityEnforcer);
         bindInterceptor(resourcePkgMatcher, 
-                Matchers.annotatedWith(Protected.class), securityEnforcer);
+                Matchers.not(Matchers.annotatedWith(SecurityHole.class)),
+                securityEnforcer);
         
         AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
         requestInjection(accessControlInterceptor);

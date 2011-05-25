@@ -20,11 +20,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to indicate that this method should pass through the Security
- * Interceptor to match Verify parameters.
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface Protected {
+public @interface SecurityHole {
 
 }

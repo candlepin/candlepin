@@ -25,8 +25,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 
@@ -53,7 +51,6 @@ public class CrlResource {
      * @throws IOException if there is a problem serializing the CRL
      */
     @GET
-    @AllowAccess(types = Access.SUPER_ADMIN)
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     public String getCurrentCrl(@Context Principal principal) 
         throws CRLException, IOException {

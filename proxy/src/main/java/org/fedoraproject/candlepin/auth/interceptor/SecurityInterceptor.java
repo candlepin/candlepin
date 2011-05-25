@@ -84,32 +84,28 @@ public class SecurityInterceptor implements MethodInterceptor {
         Principal principal = this.principalProvider.get();
         log.debug("Invoked.");
 
-        if (isProtected(invocation)) {
-            // Temp!  If we are going to introspect the HTTP request, then we
-            //        are going to have to move this to be a RestEasy interceptor
-            //        instead!
-            Access access = Access.ALL;
+        // TODO:  Check for no-arg methods???  Should we do an explicit check
+        //        for principal.hasFullAccess() ?
 
-            for (Object param : findVerifiedParameters(invocation)) {
+        // Temp!  If we are going to introspect the HTTP request, then we
+        //        are going to have to move this to be a RestEasy interceptor
+        //        instead!
+        Access access = Access.ALL;
 
-                // if this principal cannot access any of the annotated parameters,
-                // then deny access here
-                if (!principal.canAccess(param, access)) {
-                    I18n i18n = this.i18nProvider.get();
-                    log.warn("Refusing principal: " + principal + " access to: " +
-                        invocation.getMethod().getName());
+        for (Object param : findVerifiedParameters(invocation)) {
+            // if this principal cannot access any of the annotated parameters,
+            // then deny access here
+            if (!principal.canAccess(param, access)) {
+                I18n i18n = this.i18nProvider.get();
+                log.warn("Refusing principal: " + principal + " access to: " +
+                    invocation.getMethod().getName());
 
-                    String error = "Insufficient permission";
-                    throw new ForbiddenException(i18n.tr(error));
-                }
+                String error = "Insufficient permission";
+                throw new ForbiddenException(i18n.tr(error));
             }
         }
 
         return invocation.proceed();
-    }
-
-    private boolean isProtected(MethodInvocation invocation) {
-        return invocation.getMethod().isAnnotationPresent(Protected.class);
     }
     
     /**

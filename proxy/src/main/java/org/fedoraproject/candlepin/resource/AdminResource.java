@@ -20,8 +20,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.User;
@@ -29,6 +27,7 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 
 /**
  * Candlepin server administration REST calls.
@@ -60,7 +59,7 @@ public class AdminResource {
     @GET
     @Produces({MediaType.TEXT_PLAIN})
     @Path("init")
-    @AllowAccess(types = {Access.NO_AUTH})
+    @SecurityHole
     public String initialize() {
         log.debug("Called initialize()");
 

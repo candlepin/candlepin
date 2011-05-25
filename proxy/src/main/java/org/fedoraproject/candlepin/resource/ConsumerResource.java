@@ -22,7 +22,6 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.auth.interceptor.AllowAccess;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -218,7 +217,6 @@ public class ConsumerResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName, @QueryParam("owner") String ownerKey)
         throws BadRequestException {
@@ -380,7 +378,6 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void updateConsumer(@PathParam("consumer_uuid") String uuid,
         Consumer consumer, @Context Principal principal) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
@@ -406,7 +403,6 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void deleteConsumer(@PathParam("consumer_uuid") String uuid,
         @Context Principal principal) {
         log.debug("deleting  consumer_uuid" + uuid);
@@ -438,7 +434,6 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public List<EntitlementCertificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("serials") String serials) {
@@ -479,7 +474,6 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "serials")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -664,7 +658,6 @@ public class ConsumerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public List<Entitlement> bind(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("pool") String poolIdString,
@@ -741,7 +734,6 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") String consumerUuid,
         @QueryParam("product") String productId) {
@@ -764,7 +756,6 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/owner")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public Owner getOwner(@PathParam("consumer_uuid") String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
@@ -778,7 +769,6 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void unbindAll(@PathParam("consumer_uuid") String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
@@ -807,7 +797,6 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void unbind(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("dbid") String dbid, @Context Principal principal) {
 
@@ -825,7 +814,6 @@ public class ConsumerResource {
 
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("serial") Long serial) {
 
@@ -846,7 +834,6 @@ public class ConsumerResource {
     @GET
     @Produces("application/atom+xml")
     @Path("{consumer_uuid}/atom")
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public Feed getConsumerAtomFeed(
         @PathParam("consumer_uuid") String consumerUuid) {
         String path = String.format("/consumers/%s/atom", consumerUuid);
@@ -860,7 +847,6 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
-    @AllowAccess(types = { Access.OWNER_ADMIN })
     public List<Event> getConsumerEvents(
         @PathParam("consumer_uuid") String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
@@ -873,7 +859,6 @@ public class ConsumerResource {
     }
 
     @PUT
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") String consumerUuid,
@@ -891,7 +876,6 @@ public class ConsumerResource {
     @GET
     @Produces("application/zip")
     @Path("{consumer_uuid}/export")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public File exportData(@Context HttpServletResponse response,
         @PathParam("consumer_uuid") String consumerUuid) {
 
@@ -927,7 +911,6 @@ public class ConsumerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
-    @AllowAccess(types = { Access.CONSUMER, Access.OWNER_ADMIN })
     public Consumer regenerateIdentityCertificates(
         @PathParam("consumer_uuid") String uuid) {
 
