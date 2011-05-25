@@ -26,7 +26,6 @@ import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -34,6 +33,8 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 
 /**
  * BasicAuth
@@ -82,6 +83,9 @@ class BasicAuth implements AuthProvider {
 
                     return principal;
                 }
+                else {
+                    throw new UnauthorizedException(i18n.tr("Invalid Credentials"));
+                }
             }
         }
         catch (CandlepinException e) {
@@ -103,10 +107,11 @@ class BasicAuth implements AuthProvider {
     }
 
     private Principal createPrincipal(String username) {
-        Set<OwnerPermission> perms = new HashSet<OwnerPermission>();
+        Set<Permission> perms = new HashSet<Permission>();
         for (Role r : userServiceAdapter.getRoles(username)) {
             perms.addAll(r.getPermissions());
         }
+        
         return new UserPrincipal(username, perms);
     }
 

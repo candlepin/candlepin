@@ -32,7 +32,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "cp_owner_permission",
     uniqueConstraints = { @UniqueConstraint(columnNames = {"owner", "verb"}) })
-public class OwnerPermission extends AbstractHibernateObject {
+public class OwnerPermission extends AbstractHibernateObject implements Permission {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -76,5 +76,10 @@ public class OwnerPermission extends AbstractHibernateObject {
 
     public void setVerb(Access verb) {
         this.verb = verb;
+    }
+
+    @Override
+    public boolean canAccess(Object target, Access access) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

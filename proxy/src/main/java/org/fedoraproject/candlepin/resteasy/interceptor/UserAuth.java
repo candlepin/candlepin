@@ -24,8 +24,8 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Injector;
 import java.util.ArrayList;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.model.Role;
-import org.fedoraproject.candlepin.model.OwnerPermission;
 
 /**
  * UserAuth
@@ -49,7 +49,7 @@ public abstract class UserAuth implements AuthProvider {
      * Creates a user principal for a given username
      */
     protected Principal createPrincipal(String username) {
-        List<OwnerPermission> permissions = new ArrayList<OwnerPermission>();
+        List<Permission> permissions = new ArrayList<Permission>();
 
         // flatten out the permissions from the combined roles
         for (Role role : this.userServiceAdapter.getRoles(username)) {
