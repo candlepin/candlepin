@@ -78,7 +78,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
         for (OwnerPermission permission : role.getPermissions()) {
             actualPermissions.add(this.permCurator.findOrCreate(
-                    permission.getOwner(), permission.getVerb()));
+                    permission.getOwner(), permission.getAccess()));
         }
 
         role.setPermissions(actualPermissions);

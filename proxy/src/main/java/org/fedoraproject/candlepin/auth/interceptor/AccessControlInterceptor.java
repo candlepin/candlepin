@@ -88,7 +88,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
             return;
         }
         else {
-            // TODO:  Here we need to figure out how to the the Access mode.
+            // TODO:  Here we need to figure out how to get the the Access mode.
             if (!currentUser.canAccess(entity, Access.ALL)) {
                 throw new ForbiddenException("access denied.");
             }

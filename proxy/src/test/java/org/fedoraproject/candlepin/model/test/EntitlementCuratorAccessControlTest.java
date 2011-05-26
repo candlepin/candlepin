@@ -71,6 +71,7 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
     public void ownerCanGetConsumersEntitlementsUsingListByCriteria() {
         assertEquals(2, entitlementCurator.listAll().size());
 
+        securityInterceptor.enable();
         crudInterceptor.enable();
         setupPrincipal(owner, Access.ALL);
         

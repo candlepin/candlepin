@@ -18,6 +18,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -31,7 +32,7 @@ import org.hibernate.annotations.GenericGenerator;
  */
 @Entity
 @Table(name = "cp_owner_permission",
-    uniqueConstraints = { @UniqueConstraint(columnNames = {"owner", "verb"}) })
+    uniqueConstraints = { @UniqueConstraint(columnNames = {"owner", "access"}) })
 public class OwnerPermission extends AbstractHibernateObject implements Permission {
 
     @Id
@@ -41,12 +42,11 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     private String id;
 
     private Owner owner;
-    
-    private Access verb;
+    private Access access;
 
-    public OwnerPermission(Owner owner, Access roles) {
+    public OwnerPermission(Owner owner, Access access) {
         this.owner = owner;
-        this.verb = roles;
+        this.access = access;
     }
 
     protected OwnerPermission() {
@@ -70,12 +70,12 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
         this.id = id;
     }
 
-    public Access getVerb() {
-        return verb;
+    public Access getAccess() {
+        return access;
     }
 
-    public void setVerb(Access verb) {
-        this.verb = verb;
+    public void setAccess(Access access) {
+        this.access = access;
     }
 
     @Override

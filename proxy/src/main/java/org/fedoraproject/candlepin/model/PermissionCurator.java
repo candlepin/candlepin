@@ -41,9 +41,9 @@ public class PermissionCurator extends AbstractHibernateCurator<OwnerPermission>
         return p;
     }
 
-    public OwnerPermission findByOwnerAndVerb(Owner owner, Access verb) {
+    public OwnerPermission findByOwnerAndVerb(Owner owner, Access access) {
         return (OwnerPermission) currentSession().createCriteria(OwnerPermission.class)
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("verb", verb)).uniqueResult();
+            .add(Restrictions.eq("access", access)).uniqueResult();
     }
 }

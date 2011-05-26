@@ -36,7 +36,7 @@ public class PermissionTest extends DatabaseTestFixture {
         OwnerPermission lookedUp = permissionCurator.find(p.getId());
         assertNotNull(lookedUp);
         assertEquals(o.getId(), lookedUp.getOwner().getId());
-        assertEquals(Access.ALL, lookedUp.getVerb());
+        assertEquals(Access.ALL, lookedUp.getAccess());
     }
     
     @Test
