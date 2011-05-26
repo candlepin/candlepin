@@ -33,7 +33,8 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     
     @Test
     public void superAdminCanCreateAConsumer() {
-        setupPrincipal(null, Access.ALL);
+        setupAdminPrincipal("dude");
+
         securityInterceptor.enable();
         crudInterceptor.enable();
         
@@ -45,7 +46,7 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     public void ownerAdminCanCreateAConsumer() {
         Owner owner = createOwner();
         
-        setupPrincipal(owner, Access.ALL);
+        setupAdminPrincipal("another_guy");
         securityInterceptor.enable();
         crudInterceptor.enable();
         

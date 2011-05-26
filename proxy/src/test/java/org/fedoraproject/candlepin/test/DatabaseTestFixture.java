@@ -290,6 +290,13 @@ public class DatabaseTestFixture {
         return ownerAdmin;
     }
 
+    protected Principal setupAdminPrincipal(String username) {
+        UserPrincipal principal = new UserPrincipal(username);
+        setupPrincipal(principal);
+        
+        return principal;
+    }
+
     protected void setupPrincipal(Principal p) {
         // TODO: might be good to get rid of this singleton
         TestPrincipalProviderSetter.get().setPrincipal(p);

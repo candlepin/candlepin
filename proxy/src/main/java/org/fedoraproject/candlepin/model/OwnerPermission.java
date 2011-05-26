@@ -80,6 +80,11 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
 
     @Override
     public boolean canAccess(Object target, Access access) {
-        throw new UnsupportedOperationException("Not supported yet.");
+       if (target instanceof Owned) {
+           // TODO:  Just check the key here?
+           return this.owner.equals(((Owned) target).getOwner());
+       }
+
+       return false;
     }
 }

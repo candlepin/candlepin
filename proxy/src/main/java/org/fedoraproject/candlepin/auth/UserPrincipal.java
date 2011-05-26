@@ -29,10 +29,27 @@ import org.fedoraproject.candlepin.model.Owner;
 public class UserPrincipal extends Principal {
 
     private String username;
+    private boolean admin;
+
+    /**
+     * Create a user principal with full system access.
+     * 
+     * @param username
+     */
+    public UserPrincipal(String username) {
+        this(username, null);
+
+        this.admin = true;
+    }
 
     public UserPrincipal(String username, Collection<Permission> permissions) {
         this.username = username;
-        this.permissions.addAll(permissions);
+
+        if (permissions != null) {
+            this.permissions.addAll(permissions);
+        }
+        
+        this.admin = false;
     }
 
     public String getUsername() {
@@ -76,8 +93,7 @@ public class UserPrincipal extends Principal {
 
     @Override
     public boolean hasFullAccess() {
-        // Temp!  If this user is a SUPER_ADMIN, then this should be true...
-        return false;
+        return this.admin;
     }
 
     public List<String> getOwnerIds() {

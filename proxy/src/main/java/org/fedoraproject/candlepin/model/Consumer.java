@@ -85,7 +85,7 @@ import javax.xml.bind.annotation.XmlTransient;
 })
 @Table(name = "cp_consumer")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Consumer extends AbstractHibernateObject implements Linkable {
+public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -294,6 +294,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable {
     /**
      * @return the owner of this Consumer.
      */
+    @Override
     public Owner getOwner() {
         return owner;
     }
