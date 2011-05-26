@@ -40,7 +40,6 @@ import org.fedoraproject.candlepin.model.OwnerInfo;
 import org.fedoraproject.candlepin.model.OwnerInfoCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
@@ -48,6 +47,7 @@ import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.Importer;
 import org.fedoraproject.candlepin.sync.ImporterException;
@@ -68,10 +68,8 @@ import org.xnap.commons.i18n.I18n;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -98,6 +96,7 @@ public class OwnerResource {
     private SubscriptionCurator subscriptionCurator;
     private SubscriptionTokenCurator subscriptionTokenCurator;
     private UserServiceAdapter userService;
+    private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
     private EventSink sink;
@@ -122,7 +121,8 @@ public class OwnerResource {
         EventAdapter eventAdapter, Importer importer, PoolManager poolManager,
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
-        ImportRecordCurator importRecordCurator) {
+        ImportRecordCurator importRecordCurator,
+        SubscriptionServiceAdapter subService) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -141,6 +141,7 @@ public class OwnerResource {
         this.importRecordCurator = importRecordCurator;
         this.poolManager = poolManager;
         this.eventAdapter = eventAdapter;
+        this.subService = subService;
     }
 
     /**
@@ -391,15 +392,7 @@ public class OwnerResource {
         @PathParam("owner_key") String ownerKey, Subscription subscription) {
         Owner o = findOwner(ownerKey);
         subscription.setOwner(o);
-        subscription.setProduct(productCurator.find(subscription.getProduct()
-            .getId()));
-        Set<Product> provided = new HashSet<Product>();
-        for (Product incoming : subscription.getProvidedProducts()) {
-            provided.add(productCurator.find(incoming.getId()));
-        }
-        subscription.setProvidedProducts(provided);
-        Subscription s = subscriptionCurator.create(subscription);
-        return s;
+        return subService.createSubscription(subscription);
     }
 
     @GET
@@ -435,7 +428,8 @@ public class OwnerResource {
     @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Subscription> getSubscriptions(
         @PathParam("owner_key") String ownerKey) {
-        return subscriptionCurator.listByOwner(findOwner(ownerKey));
+        Owner o = findOwner(ownerKey);
+        return subService.getSubscriptions(o);
     }
 
     /**

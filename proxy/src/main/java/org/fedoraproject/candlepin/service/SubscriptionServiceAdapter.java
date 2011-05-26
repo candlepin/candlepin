@@ -128,4 +128,25 @@ public interface SubscriptionServiceAdapter {
      */
     void activateSubscription(Consumer consumer, String email,
             String emailLocale);
+    
+    /**
+     * Create the given subscription. 
+     * 
+     * Raise not implemented exception if you do not wish to support this 
+     * in your subscription service.
+     * 
+     * @param s Subscription to create.
+     * @return Newly created Subscription.
+     */
+    Subscription createSubscription(Subscription s);
+    
+    /**
+     * Delete the given subscription.
+     * 
+     * Raise not implemented exception if you do not wish to support this 
+     * in your subscription service.
+     * 
+     * @param s Subscription to destroy.
+     */
+    void deleteSubscription(Subscription s);
 }

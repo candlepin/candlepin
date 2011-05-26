@@ -20,7 +20,6 @@ import java.util.Locale;
 import org.xnap.commons.i18n.I18nFactory;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.junit.Before;
@@ -40,7 +39,6 @@ import static org.mockito.Mockito.verify;
 public class SubscriptionResourceTest  {
     private SubscriptionResource subResource;
 
-    @Mock private SubscriptionCurator subCurator;
     @Mock private SubscriptionServiceAdapter subService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private HttpServletResponse response;
@@ -53,7 +51,7 @@ public class SubscriptionResourceTest  {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
 
-        this.subResource = new SubscriptionResource(subCurator, subService,
+        this.subResource = new SubscriptionResource(subService,
                 consumerCurator, i18n);
     }
 
