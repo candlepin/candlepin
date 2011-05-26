@@ -32,7 +32,7 @@ public class UserPrincipal extends Principal {
 
     public UserPrincipal(String username, Collection<Permission> permissions) {
         this.username = username;
-        permissions.addAll(permissions);
+        this.permissions.addAll(permissions);
     }
 
     public String getUsername() {
