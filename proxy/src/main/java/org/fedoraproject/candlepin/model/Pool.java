@@ -75,7 +75,7 @@ import org.hibernate.annotations.ParamDef;
     )
 })
 @Table(name = "cp_pool")
-public class Pool extends AbstractHibernateObject implements Linkable {
+public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -239,6 +239,7 @@ public class Pool extends AbstractHibernateObject implements Linkable {
     /**
      * @return owner of the pool.
      */
+    @Override
     public Owner getOwner() {
         return owner;
     }

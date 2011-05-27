@@ -218,8 +218,7 @@ public class DatabaseTestFixture {
             quantity, startDate, endDate, TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
-        poolCurator.create(p);
-        return p;
+        return poolCurator.create(p);
     }
 
     protected Owner createOwner() {

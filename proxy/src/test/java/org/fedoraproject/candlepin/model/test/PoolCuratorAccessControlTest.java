@@ -145,7 +145,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     }
     
     @Test(expected = ForbiddenException.class)
-    public void ownerAdminCannotDeleteAnotherOwnersPools() {
+    public void userCannotDeleteAnotherOwnersPools() {
         Pool pool = createPoolAndSub(owner, product, 100L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
@@ -165,7 +165,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void ownerAdminCanDeletePools() {
+    public void userCanDeletePools() {
         Pool pool = createPoolAndSub(owner, product, 100L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
@@ -175,7 +175,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
         
         assertEquals(2, poolCurator.listAll().size());
         
-        setupPrincipal(owner, Access.ALL);
+        setupAdminPrincipal("guy");
         crudInterceptor.enable();
         
         poolCurator.delete(pool);
@@ -183,7 +183,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     }
     
     @Test(expected = ForbiddenException.class)
-    public void ownerAdminCannotUpdateAnotherOwnersPools() {
+    public void userCannotUpdateAnotherOwnersPools() {
         Pool pool = createPoolAndSub(owner, product, 100L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
@@ -199,7 +199,7 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void ownerAdminCanUpdatePools() {
+    public void userCanUpdatePools() {
         Pool pool = createPoolAndSub(owner, product, 100L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
@@ -234,8 +234,8 @@ public class PoolCuratorAccessControlTest extends DatabaseTestFixture {
     }
     
     @Test
-    public void ownerAdminCanCreatePools() {
-        setupPrincipal(owner, Access.ALL);
+    public void adminCanCreatePools() {
+        setupAdminPrincipal("admin");
         crudInterceptor.enable();
         
         createPoolAndSub(owner, product, 100L,

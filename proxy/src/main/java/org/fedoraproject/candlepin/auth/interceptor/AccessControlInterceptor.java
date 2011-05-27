@@ -40,6 +40,11 @@ public class AccessControlInterceptor implements MethodInterceptor {
     
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
+
+        // bypass anyone with full access
+        if (principalProvider.get().hasFullAccess()) {
+            return invocation.proceed();
+        }
         
         String invokedMethodName = invocation.getMethod().getName();
         if (invokedMethodName.startsWith("list")) {
@@ -83,15 +88,9 @@ public class AccessControlInterceptor implements MethodInterceptor {
     private void crudAccessControl(Object entity) {
         Principal currentUser = this.principalProvider.get();
 
-        // Don't bother if this principal has full system access
-        if (currentUser.hasFullAccess()) {
-            return;
-        }
-        else {
-            // TODO:  Here we need to figure out how to get the the Access mode.
-            if (!currentUser.canAccess(entity, Access.ALL)) {
-                throw new ForbiddenException("access denied.");
-            }
+        // TODO:  Here we need to figure out how to get the the Access mode.
+        if (!currentUser.canAccess(entity, Access.ALL)) {
+            throw new ForbiddenException("access denied.");
         }
     }
     
