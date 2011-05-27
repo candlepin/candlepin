@@ -45,10 +45,10 @@ import org.fedoraproject.candlepin.model.PoolCurator;
 /**
  * Interceptor for enforcing role based access to REST API methods.
  * 
- * This interceptor deals with coarse grained access, it only answers the question of
- * can a principal with these roles access this method. It does not support any paramaters
- * such as verifying the call is being made on a visible consumer/owner, this is handled
- * instead by the filtering mechanism.
+ * This interceptor deals with coarse grained access, it only answers the
+ * question of can a principal with these roles access this method. It does not
+ * support any paramaters such as verifying the call is being made on a visible
+ * consumer/owner, this is handled instead by the filtering mechanism.
  */
 public class SecurityInterceptor implements MethodInterceptor {
 
