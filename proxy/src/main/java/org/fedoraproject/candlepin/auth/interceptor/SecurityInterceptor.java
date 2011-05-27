@@ -113,7 +113,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         log.warn("Refusing principal: " + principal + " access to: " +
                     invocation.getMethod().getName());
 
-        String error = "Insufficient permission";
+        String error = "Insufficient permissions";
         throw new ForbiddenException(i18n.tr(error));
     }
     

@@ -87,6 +87,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 
 /**
  * API Gateway for Consumers
@@ -735,7 +736,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
     public List<Entitlement> listEntitlements(
-        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("product") String productId) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
@@ -835,7 +836,7 @@ public class ConsumerResource {
     @Produces("application/atom+xml")
     @Path("{consumer_uuid}/atom")
     public Feed getConsumerAtomFeed(
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         String path = String.format("/consumers/%s/atom", consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         Feed feed = this.eventAdapter.toFeed(

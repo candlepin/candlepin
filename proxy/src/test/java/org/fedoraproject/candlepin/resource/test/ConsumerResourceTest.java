@@ -110,7 +110,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private Role ownerAdminRole;
     private EventFactory eventFactory;
 
-    private UserCurator userCurator;
     private User someuser;
 
     @Override
@@ -130,7 +129,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
         
-        userCurator = injector.getInstance(UserCurator.class);
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));
         
         ownerAdminRole = createAdminRole(owner);
@@ -454,12 +452,12 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCanGetConsumersCerts() {
+    public void getConsumersCerts() {
+        setupAdminPrincipal("admin");
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        assertEquals(
-            0,
+        assertEquals(0,
             consumerResource.getEntitlementCertificates(consumer.getUuid(),
                 null).size());
     }
@@ -473,18 +471,18 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
         ownerCurator.create(evilOwner);
 
+        setupPrincipal(evilOwner, Access.ALL);
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Access.ALL);
 
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
 
     @Test(expected = ForbiddenException.class)
     public void testConsumerCannotListAllConsumers() {
+        setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(new ConsumerPrincipal(consumer));
 
         consumerResource.list(null, null, null);
     }
@@ -650,8 +648,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         // fake the
         // events in the db:
 
-        Consumer consumer = TestUtil.createConsumer(o);
-        consumerTypeCurator.create(consumer.getType());
+        Consumer consumer = TestUtil.createConsumer(this.consumer.getType(), o);
         consumerCurator.create(consumer);
         Event e1 = eventFactory.consumerCreated(consumer);
         eventCurator.create(e1);
@@ -676,11 +673,19 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         // Create another consumer in a different org, again do not want to see
         // this:
+        securityInterceptor.disable();
+        crudInterceptor.disable();
         setupPrincipal(owner2, Access.ALL);
+        securityInterceptor.enable();
+        crudInterceptor.enable();
         createConsumerCreatedEvent(owner2);
 
         // Make sure we're acting as the correct owner admin:
+        securityInterceptor.disable();
+        crudInterceptor.disable();
         setupPrincipal(principal);
+        securityInterceptor.enable();
+        crudInterceptor.enable();
 
         Feed feed = consumerResource.getConsumerAtomFeed(c.getUuid());
         assertEquals(1, feed.getEntries().size());

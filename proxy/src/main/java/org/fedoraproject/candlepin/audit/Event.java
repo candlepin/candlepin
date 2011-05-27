@@ -233,6 +233,7 @@ public class Event implements Persisted {
         this.newEntity = newEntity;
     }
 
+    @Override
     public String toString() {
         return "Event [" + "id=" + getId() + ", target=" + getTarget() +
                ", type=" + getType() + ", time=" + getTimestamp() +

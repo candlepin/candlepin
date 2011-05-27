@@ -69,11 +69,8 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer(Owner owner) {
-        ConsumerType consumerType = new ConsumerType("test-consumer-type-" +
-                randomInt());
-
         Consumer consumer = new Consumer("testconsumer" + randomInt(),
-            "User", owner, consumerType);
+            "User", owner, createConsumerType());
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");
 
