@@ -71,9 +71,11 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
     public void ownerCanGetConsumersEntitlementsUsingListByCriteria() {
         assertEquals(2, entitlementCurator.listAll().size());
 
+        // need to create the principal before the interceptors are enabled,
+        // otherwise the basic user principal can't create the correct permissions
+        setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
         crudInterceptor.enable();
-        setupPrincipal(owner, Access.ALL);
         
         assertEquals(2, entitlementCurator.listByCriteria(
             DetachedCriteria.forClass(Entitlement.class)).size());
@@ -85,9 +87,10 @@ public class EntitlementCuratorAccessControlTest extends DatabaseTestFixture {
 
         Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
         ownerCurator.create(evilOwner);
+        // again - setting up the principal before turning on the interceptors
+        setupPrincipal(evilOwner, Access.ALL);
 
         crudInterceptor.enable();
-        setupPrincipal(evilOwner, Access.ALL);
         
         assertEquals(0, entitlementCurator.listByCriteria(
             DetachedCriteria.forClass(Entitlement.class)).size());
