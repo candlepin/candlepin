@@ -84,28 +84,37 @@ public class SecurityInterceptor implements MethodInterceptor {
         Principal principal = this.principalProvider.get();
         log.debug("Invoked.");
 
-        // TODO:  Check for no-arg methods???  Should we do an explicit check
-        //        for principal.hasFullAccess() ?
-
         // Temp!  If we are going to introspect the HTTP request, then we
         //        are going to have to move this to be a RestEasy interceptor
         //        instead!
         Access access = Access.ALL;
 
-        for (Object param : findVerifiedParameters(invocation)) {
+        Collection<Object> params = findVerifiedParameters(invocation);
+
+        // if there are no params, then deny access if the principal doesn't
+        // have full system access
+        if (params.isEmpty() && !principal.hasFullAccess()) {
+            denyAccess(principal, invocation);
+        }
+
+        for (Object param : params) {
             // if this principal cannot access any of the annotated parameters,
             // then deny access here
             if (!principal.canAccess(param, access)) {
-                I18n i18n = this.i18nProvider.get();
-                log.warn("Refusing principal: " + principal + " access to: " +
-                    invocation.getMethod().getName());
-
-                String error = "Insufficient permission";
-                throw new ForbiddenException(i18n.tr(error));
+                denyAccess(principal, invocation);
             }
         }
 
         return invocation.proceed();
+    }
+
+    private void denyAccess(Principal principal, MethodInvocation invocation) {
+        I18n i18n = this.i18nProvider.get();
+        log.warn("Refusing principal: " + principal + " access to: " +
+                    invocation.getMethod().getName());
+
+        String error = "Insufficient permission";
+        throw new ForbiddenException(i18n.tr(error));
     }
     
     /**

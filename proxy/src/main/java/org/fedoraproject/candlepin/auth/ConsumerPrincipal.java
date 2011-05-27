@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.auth;
 
 import org.fedoraproject.candlepin.auth.permissions.ConsumerEntitlementPermission;
+import org.fedoraproject.candlepin.auth.permissions.ConsumerOwnerPermission;
 import org.fedoraproject.candlepin.auth.permissions.ConsumerPermission;
 import org.fedoraproject.candlepin.auth.permissions.ConsumerPoolPermission;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -32,6 +33,7 @@ public class ConsumerPrincipal extends Principal {
         addPermission(new ConsumerPermission(consumer));
         addPermission(new ConsumerEntitlementPermission(consumer));
         addPermission(new ConsumerPoolPermission(consumer));
+        addPermission(new ConsumerOwnerPermission(consumer));
     }
 
     public Consumer getConsumer() {
