@@ -18,21 +18,25 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import org.fedoraproject.candlepin.audit.Event;
 
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * A permission represents an owner to be accessed in some fashion, and a verb which
  * the permissions is granting.
  */
 @Entity
-@Table(name = "cp_owner_permission",
-    uniqueConstraints = { @UniqueConstraint(columnNames = {"owner", "access"}) })
+@Table(name = "cp_owner_permission")
+//    uniqueConstraints = { @UniqueConstraint(columnNames = {"owner_id", "access"}) })
 public class OwnerPermission extends AbstractHibernateObject implements Permission {
 
     @Id
@@ -41,7 +45,12 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     @Column(length = 32)
     private String id;
 
+    @ManyToOne
+    @ForeignKey(name = "fk_permission_owner")
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_permission_owner_fk_idx")
     private Owner owner;
+    
     private Access access;
 
     public OwnerPermission(Owner owner, Access access) {
