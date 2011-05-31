@@ -56,6 +56,7 @@ public class OwnerPermissionTest extends DatabaseTestFixture {
         assertEquals(count + 1, permissionCurator.listAll().size());
         OwnerPermission p2 = permissionCurator.findOrCreate(o, Access.ALL);
         assertEquals(count + 1, permissionCurator.listAll().size());
+        assertEquals(p.getId(), p2.getId());
     }
 
     @Test
